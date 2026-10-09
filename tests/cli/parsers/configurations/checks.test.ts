@@ -1,7 +1,9 @@
 import { test, expect, describe } from 'bun:test';
+import { toolName } from '#cli/configurations/contracts.ts';
 import { CHECK_FIELDS } from '#tests/config/harness/tooling.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
+import { assertManifests } from '#cli/configurations/errors/contracts.ts';
 
 describe('parseManifest check declarations', () => {
     test.each(['runs = "once"\ncommand = ["x", "{files}"]', 'command = ["x"]'])(
@@ -55,8 +57,9 @@ test('every tool named by a manifest command is declared by a shipped configurat
         const settings = new Map(manifest.settings.map((setting) => [setting.name, setting]));
         return manifest.checks
             .flatMap((check) => {
+                if (typeof check.tool === 'object') return Object.values(check.tool);
                 if (check.command === undefined) return [];
-                const command = check.tool ?? check.command[0]!;
+                const command = toolName(check)!;
                 if (!command.startsWith('{setting:')) return [command];
                 const name = command.slice('{setting:'.length, -1);
                 const declaration = settings.get(name);
@@ -67,4 +70,41 @@ test('every tool named by a manifest command is declared by a shipped configurat
             .filter((name) => !declared.has(name));
     });
     expect([...new Set(undefinedTools)]).toStrictEqual([]);
+});
+
+test.each([
+    'requires = [1]',
+    'requires = [""]',
+    'when = { setting = 1 }',
+    'when = { setting = "architecture.modules", level = "preview" }',
+    'when = []',
+])('native tool metadata refuses %s', (metadata) => {
+    expect(() =>
+        parseConfigurationManifest('example', {
+            tables: `[[tool]]\nname = "native"\nversion = "1.0.0"\nnpm = "native"\n${metadata}\n`,
+        }),
+    ).toThrow();
+});
+
+test.each(['tool = { "package.json" = 1 }', 'tool = { "package.json" = "" }'])(
+    'native file-to-tool metadata refuses %s',
+    (metadata) => {
+        expect(() =>
+            parseConfigurationManifest('example', {
+                tables: `[[check]]\nname = "parse"\n${CHECK_FIELDS}${metadata}\n`,
+            }),
+        ).toThrow();
+    },
+);
+
+test.each([
+    'requires = ["missing-peer"]',
+    `\n[[check]]\nname = "parse"\n${CHECK_FIELDS}command = ["native"]\ntool = { "package.json" = "missing-peer" }`,
+])('native declaration references refuse an undeclared peer: %s', (metadata) => {
+    const manifest = parseConfigurationManifest('example', {
+        tables: `[[tool]]\nname = "native"\nversion = "1.0.0"\nnpm = "native"\n${metadata}\n`,
+    });
+    expect(() => {
+        assertManifests(new Map([['example', manifest]]));
+    }).toThrow('requires undeclared tool missing-peer');
 });

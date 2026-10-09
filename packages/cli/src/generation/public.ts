@@ -7,13 +7,13 @@ import { GspotError } from '#cli/platform/public.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { bunfigChanges } from '#cli/generation/bunfig.ts';
 import type { RuleFile } from '#cli/types/agent-rules.ts';
-import { npmPins } from '#cli/configurations/contracts.ts';
 import { managedBlock } from '#cli/agent-rules/contracts.ts';
 import { selectRuleFiles } from '#cli/agent-rules/public.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { emitToolFiles } from '#cli/generation/tool-files.ts';
 import { packageRedirects } from '#cli/generation/redirects.ts';
 import { etaInputs } from '#cli/generation/compilation/public.ts';
+import { toolProjectPins } from '#cli/configurations/contracts.ts';
 import { installedDependency } from '#cli/repository/contracts.ts';
 import type { NpmProjectInputs } from '#cli/types/generation/npm.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
@@ -226,7 +226,7 @@ export function generatedPaths(generated: Generated): Set<string> {
  */
 export function npmProject({ root, scopes, manifests, installer, runner }: NpmProjectInputs): GeneratedFile[] {
     if (installer === undefined) return [];
-    const pins = npmPins(manifests, runner);
+    const pins = toolProjectPins(manifests, runner).npm;
     const nextVersions = scopes
         .filter(({ selected }) => selected.some(({ configuration }) => configuration.name === 'nextjs'))
         .flatMap(({ scope }) => {

@@ -3,23 +3,21 @@ import { join, dirname } from 'node:path';
 import { detectPackageManager } from 'nypm';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openRoot } from '#cli/platform/root/public.ts';
-import { lockfileMatches } from '#cli/tools/npm/lockfiles.ts';
+import { locateCandidates } from '#cli/tools/contracts.ts';
+import { NPM_REQUIRES } from '#cli/config/configurations.ts';
 import type { ToolProject } from '#cli/types/tools/project.ts';
 import { GspotError, runBlocking } from '#cli/platform/public.ts';
 import { readPackageManifest } from '#cli/repository/contracts.ts';
 import { SETUP, VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
-import type { PackagePreparation, PackageInstallation } from '#cli/types/tools/npm.ts';
 import { DOT_GSPOT, YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
+import type { PackageRun, PackagePreparation, PackageInstallation } from '#cli/types/tools/npm.ts';
+import { lockfileMatches, stripBunRegistryUrls, stripYarnRegistryUrls } from '#cli/tools/npm/lockfiles.ts';
+import { runPackageInstaller, assertPackageVersions, packageInstallerCommands } from '#cli/tools/npm/contracts.ts';
 import type { PackageInstaller, PackageToolProject, PackageInstallerIdentity } from '#cli/types/parsers/packages.ts';
 
 import {
-    installArgv,
-    lockfileArgv,
-    assertPackageVersions,
-    installPackageLockfile,
-    preparePackageLockfile,
-} from '#cli/tools/npm/contracts.ts';
-import {
+    isYarnBerry,
+    packageLockfile,
     parseToolProject,
     packageManifestSchema,
     parsePackageInstaller,
@@ -59,6 +57,16 @@ function recordedInstaller(bytes: Buffer): PackageInstaller | undefined {
     return parsePackageInstaller(parsed.data.packageManager);
 }
 
+// Private registry routing stays in the installation environment, out of portable lockfiles.
+function stripRegistryUrls(work: string, installer: PackageInstaller, { env, lockfile }: PackageRun): void {
+    const lockfilePath = join(work, packageLockfile(installer.name));
+    if (installer.name === 'bun') writeFileSync(lockfilePath, stripBunRegistryUrls(lockfile, env));
+    if (installer.name !== 'yarn' || isYarnBerry(installer)) return;
+    const registry = env['npm_config_registry'];
+    if (registry === undefined) throw new Error('A Yarn 1 lockfile needs npm_config_registry to relocate its URLs.');
+    writeFileSync(lockfilePath, stripYarnRegistryUrls(lockfile, registry));
+}
+
 /** The npm project's native commands and validations for the shared tool-project flow. */
 export const packageToolProject: ToolProject<PackageToolProject, PackagePreparation, PackageInstallation> = {
     manifestPath: TOOL_PACKAGE_PROJECT,
@@ -70,24 +78,38 @@ export const packageToolProject: ToolProject<PackageToolProject, PackagePreparat
     lockfilePath: (project) => project.lockfilePath,
     matches: (project, recorded) =>
         recorded !== undefined && lockfileMatches(project.installer.name, recorded, project.dependencies),
-    current: (project, recorded, manifest, owner) =>
-        owner.read(TOOL_PACKAGE_PROJECT)?.bytes.equals(Buffer.from(manifest)) === true &&
-        recorded !== undefined &&
-        lockfileMatches(project.installer.name, recorded, project.dependencies)
-            ? recorded
-            : undefined,
-    commands: (project) => ({
-        installer: [],
-        lockfile: [lockfileArgv(project.installer)],
-        environment: [installArgv(project.installer)],
-    }),
+    current: (project, recorded, manifest, owner, { root }) => {
+        if (
+            owner.read(TOOL_PACKAGE_PROJECT)?.bytes.equals(Buffer.from(manifest)) === true &&
+            recorded !== undefined &&
+            packageToolProject.matches(project, recorded)
+        )
+            return recorded;
+        if (locateCandidates(root, NPM_REQUIRES[0], { searchFolders: [root] }).length === 0)
+            throw new GspotError(
+                'tool',
+                'node is required by the npm tool project. Install it before resolving its lockfile.',
+            );
+        return undefined;
+    },
+    commands: (project) => {
+        const { lockfile, install } = packageInstallerCommands(project.installer);
+        return { installer: [], lockfile: [lockfile], environment: [install] };
+    },
     createLockfile: async (work, { root, yarn }, recorded, project) => {
         if (yarn !== undefined) writeFileSync(join(work, '.yarnrc.yml'), yarn);
-        if (recorded !== undefined && lockfileMatches(project.installer.name, recorded, project.dependencies))
+        if (recorded !== undefined && packageToolProject.matches(project, recorded))
             writeFileSync(join(work, project.lockfile), recorded);
-        await preparePackageLockfile(root, work, project.installer);
+        const resolved = await runPackageInstaller(
+            root,
+            work,
+            project.installer,
+            packageInstallerCommands(project.installer).lockfile,
+            'lockfile resolution failed',
+        );
+        stripRegistryUrls(work, project.installer, resolved);
         const lockfile = readFileSync(join(work, project.lockfile), 'utf8');
-        if (!lockfileMatches(project.installer.name, lockfile, project.dependencies))
+        if (!packageToolProject.matches(project, lockfile))
             throw new GspotError(
                 'installation',
                 `${project.installer.name} produced a mismatched tool lockfile. Existing files were preserved.`,
@@ -95,7 +117,13 @@ export const packageToolProject: ToolProject<PackageToolProject, PackagePreparat
         return lockfile;
     },
     install: async (work, { root, tools }, guards, project) => {
-        await installPackageLockfile(root, work, project.installer);
+        await runPackageInstaller(
+            root,
+            work,
+            project.installer,
+            packageInstallerCommands(project.installer).install,
+            'immutable installation failed',
+        );
         await assertPackageVersions(work, project.dependencies, tools);
         guards.scratch(`${project.installer.name} changed locked inputs. No installed files were written. ${SETUP}`);
         guards.source('Tool project inputs changed during installation. Retry the command.');

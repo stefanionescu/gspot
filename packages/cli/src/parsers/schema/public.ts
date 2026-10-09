@@ -5,6 +5,7 @@ import { commandSchema } from '#cli/parsers/schema/command.ts';
 import type { InstallerPin } from '#cli/types/parsers/tool.ts';
 import { MAX_EXIT_CODE } from '#cli/config/platform/runtime.ts';
 import type { EslintPresets } from '#cli/types/parsers/eslint.ts';
+import { conditionSchema } from '#cli/parsers/schema/contracts.ts';
 import { VERSION_FLOOR } from '#cli/config/parsers/tool/version.ts';
 import { PYTHON_TOOL_PROJECT } from '#cli/config/parsers/packages.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
@@ -43,6 +44,8 @@ const installerFields = {
     winget: installerSchema.optional(),
     scoop: installerSchema.optional(),
 };
+
+const toolConditionSchema = conditionSchema.pick({ setting: true, level: true }).partial({ level: true });
 
 const suppressionPattern = z
     .string()
@@ -155,6 +158,11 @@ export const toolSchema = z
             .optional(),
         // The file types an ESLint plugin or parser lints; a configuration whose files take plugins owns them while it is selected.
         eslint: z.strictObject({ extensions: z.array(z.string().regex(/^\.[a-z0-9]+$/u)).min(1) }).optional(),
+        requires: z.array(z.string().min(1)).optional(),
+        when: z
+            .union([toolConditionSchema, z.array(toolConditionSchema).min(1)])
+            .transform((conditions) => (Array.isArray(conditions) ? conditions : [conditions]))
+            .optional(),
         replaces: z.array(z.string().min(1)).default([]),
         replace: z
             .array(

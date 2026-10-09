@@ -18,7 +18,7 @@ import { registryEnvironment } from '#cli/tools/npm/contracts.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import type { LockfilePreparation } from '#cli/types/tools/install.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
-import { toolPin, pythonPins, collectPins } from '#cli/configurations/contracts.ts';
+import { toolPin, collectPins, toolProjectPins } from '#cli/configurations/contracts.ts';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/state/public.ts';
 import { runTool, installToolProject, toolInstallationPlan } from '#cli/tools/contracts.ts';
 import { getHookPlan, installHooks, hasValePackages, installValePackages } from '#cli/lifecycle/install/contracts.ts';
@@ -62,7 +62,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
         },
         run: async (session, manifests, context) => {
             const { log, inputs, refreshLockfiles, generated } = context;
-            if (pythonPins(manifests).length > 0) await session.pythonInstaller(session.cancelSignal);
+            if (toolProjectPins(manifests).python.length > 0) await session.pythonInstaller(session.cancelSignal);
             for (const path of [POLICY_FILE, TOOL_PACKAGE_PROJECT, TOOL_PYTHON_PROJECT, YARN_SETTINGS])
                 inputs.read(path);
             await prepareToolProjects(session, generated.files, inputs, { refreshLockfiles });
@@ -184,12 +184,12 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
         preview: (session, manifests, generated) => ({
             notes: [],
             steps:
-                pythonPins(manifests).length === 0
+                toolProjectPins(manifests).python.length === 0
                     ? []
                     : projectPreview(session, generated, pythonToolProject).environment,
         }),
         run: async (session, manifests, context) => {
-            if (pythonPins(manifests).length === 0) return '';
+            if (toolProjectPins(manifests).python.length === 0) return '';
             const executable = await session.pythonInstaller(session.cancelSignal);
             return installToolProject(pythonToolProject, context.inputs, {
                 root: session.root,

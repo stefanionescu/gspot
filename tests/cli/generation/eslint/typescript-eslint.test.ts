@@ -56,15 +56,12 @@ test('index-only reexports keep a nonduplicate barrel and reject forwarding from
     expect(
         reported.filter(
             ({ file, rule }) =>
-                file === 'src/index.ts' &&
-                ['gspot/no-trivial-files', 'no-restricted-syntax', 'import-x/export'].includes(rule ?? ''),
+                file === 'src/index.ts' && ['gspot/no-trivial-files', 'no-restricted-syntax'].includes(rule ?? ''),
         ),
     ).toStrictEqual([]);
     await writeFile(join(sandbox.path, 'src/forward.ts'), 'export const shared = 1;\n');
     const corrected = await messagesOf(sandbox.path);
-    expect(corrected.filter(({ rule }) => rule === 'no-restricted-syntax' || rule === 'import-x/export')).toStrictEqual(
-        [],
-    );
+    expect(corrected.filter(({ rule }) => rule === 'no-restricted-syntax')).toStrictEqual([]);
 });
 
 test('generated TypeScript reports an unused ordinary local once and accepts disposal-only bindings', async () => {

@@ -1,21 +1,21 @@
 import { join } from 'node:path';
+import * as filesystem from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import * as spawn from '#cli/platform/public.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openRoot } from '#cli/platform/root/public.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { prepareToolProject } from '#cli/tools/contracts.ts';
 import { YARN_MANAGERS } from '#tests/config/samples/npm.ts';
+import { useEnvironment } from '#tests/harness/environment.ts';
+import { NPM_TOOL_PROJECT } from '#cli/config/parsers/packages.ts';
+import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import { fakeCommand, prepareTestCommand } from '#tests/harness/command.ts';
-import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/public.ts';
+import { githubRefusalNote, runPackageInstaller, packageInstallerCommands } from '#cli/tools/npm/contracts.ts';
+import { packageToolProject, selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/public.ts';
 
-import {
-    installArgv,
-    lockfileArgv,
-    githubRefusalNote,
-    installPackageLockfile,
-    preparePackageLockfile,
-} from '#cli/tools/npm/contracts.ts';
 import {
     PACKAGE_FAILURES,
     OTHER_DOWNLOAD_OUTPUT,
@@ -34,8 +34,8 @@ test.each(OTHER_DOWNLOAD_OUTPUT)('output without a refused GitHub download adds 
 test.each(YARN_MANAGERS)(
     'Yarn $installer.version selects compatible generated settings and native lockfile creation',
     ({ installer, lockfile, install }) => {
-        expect(lockfileArgv(installer)).toStrictEqual(lockfile);
-        expect(installArgv(installer)).toStrictEqual(install);
+        expect(packageInstallerCommands(installer).lockfile).toStrictEqual(lockfile);
+        expect(packageInstallerCommands(installer).install).toStrictEqual(install);
     },
 );
 
@@ -59,8 +59,14 @@ test.each(PACKAGE_VERSION_CASES)(
             observed = run(argv, prepared.options);
             return observed;
         });
-        const action = operation === 'lockfile' ? preparePackageLockfile : installPackageLockfile;
-        const failure = await action(repository.path, isolated.path, installer).catch((error: unknown) => error);
+        const command = packageInstallerCommands(installer);
+        const failure = await runPackageInstaller(
+            repository.path,
+            isolated.path,
+            installer,
+            operation === 'lockfile' ? command.lockfile : command.install,
+            operation === 'lockfile' ? 'lockfile resolution failed' : 'immutable installation failed',
+        ).catch((error: unknown) => error);
         expect(boundary).toHaveBeenCalledTimes(1);
         const version = await observed;
         expect(version?.code, version?.stderr).toBe(0);
@@ -105,10 +111,15 @@ test.each(PACKAGE_FAILURES)(
                 stderr: version ? '' : `${refusal} from ${registry}private-check-tool`,
             });
         });
-        const failure = (frozen ? installPackageLockfile : preparePackageLockfile)(repository.path, isolated.path, {
-            name: 'bun',
-            version: '1.4.2',
-        });
+        const installer: PackageInstaller = { name: 'bun', version: '1.4.2' };
+        const command = packageInstallerCommands(installer);
+        const failure = runPackageInstaller(
+            repository.path,
+            isolated.path,
+            installer,
+            frozen ? command.install : command.lockfile,
+            frozen ? 'immutable installation failed' : 'lockfile resolution failed',
+        );
         const diagnosticError = await failure.catch((error: unknown) => error);
         expect(diagnosticError).toMatchObject({ name: 'GspotError', code: 'installation' });
         const diagnostic = diagnosticError instanceof Error ? diagnosticError.message : String(diagnosticError);
@@ -143,11 +154,16 @@ test.each([false, true])(
                 stderr: '',
             });
         });
+        const installer: PackageInstaller = { name: 'bun', version: '1.4.2' };
+        const command = packageInstallerCommands(installer);
         const diagnostic = await rejection(
-            (frozen ? installPackageLockfile : preparePackageLockfile)(repository.path, isolated.path, {
-                name: 'bun',
-                version: '1.4.2',
-            }),
+            runPackageInstaller(
+                repository.path,
+                isolated.path,
+                installer,
+                frozen ? command.install : command.lockfile,
+                frozen ? 'immutable installation failed' : 'lockfile resolution failed',
+            ),
         );
         expect(diagnostic).toBe(
             'The package manager included registry credentials in its lockfile. Existing files were preserved.',
@@ -158,3 +174,52 @@ test.each([false, true])(
         expect(boundary).toHaveBeenCalled();
     },
 );
+
+test('missing Node refuses npm lock acquisition before scratch creation and preserves a current cached lock', async () => {
+    const manifest = JSON.stringify({
+        ...NPM_TOOL_PROJECT,
+        packageManager: 'bun@1.4.2',
+        devDependencies: { prettier: '3.8.1' },
+    });
+    const lockfile = JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.1' } } } });
+    await using sandbox = await testdir({ 'source.txt': 'kept\n' });
+    using _path = useEnvironment({ PATH: join(sandbox.path, 'missing-bin') });
+    using _home = spyOn(spawn, 'miseHome').mockReturnValue(join(sandbox.path, 'missing-mise'));
+    using _scratch = spyOn(filesystem, 'mkdtempSync').mockImplementation(() => {
+        throw new Error('Scratch creation preceded the missing Node diagnostic.');
+    });
+    let invoked = false;
+    const description = {
+        ...packageToolProject,
+        createLockfile: () => {
+            invoked = true;
+            return Promise.resolve('unexpected lockfile');
+        },
+    };
+    using owner = openRoot(sandbox.path);
+    const diagnostic = await rejection(
+        prepareToolProject(
+            description,
+            { path: description.manifestPath, content: manifest, kind: 'tool_file' },
+            owner,
+            { refreshLockfiles: false },
+            { root: sandbox.path, yarn: undefined },
+        ),
+    );
+    expect(diagnostic).toBe('node is required by the npm tool project. Install it before resolving its lockfile.');
+    expect(invoked).toBe(false);
+    expect(await pathExists(join(sandbox.path, description.manifestPath))).toBe(false);
+    await createFileTree(sandbox.path, { [description.manifestPath]: manifest, '.gspot/bun.lock': lockfile });
+    const cached = await prepareToolProject(
+        description,
+        { path: description.manifestPath, content: manifest, kind: 'tool_file' },
+        owner,
+        { refreshLockfiles: false },
+        { root: sandbox.path, yarn: undefined },
+    );
+    expect(cached.content).toBe(lockfile);
+    expect(invoked).toBe(false);
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('kept\n');
+    expect(await readFile(join(sandbox.path, description.manifestPath), 'utf8')).toBe(manifest);
+    expect(await readFile(join(sandbox.path, '.gspot/bun.lock'), 'utf8')).toBe(lockfile);
+});

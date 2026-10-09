@@ -1,4 +1,5 @@
 import { join, relative } from 'node:path';
+import { compact } from '#cli/platform/contracts.ts';
 import { misePins } from '#cli/configurations/public.ts';
 import { parseMiseToolKeys } from '#cli/parsers/mise.ts';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
@@ -17,7 +18,6 @@ import { DOT_GSPOT, YARN_SETTINGS, MISE_CONFIG_PATH, NODE_MODULES_DIRECTORY } fr
 
 import {
     installHint,
-    isBelowFloor,
     readToolVersion,
     unavailableNote,
     locateCandidates,
@@ -42,7 +42,7 @@ function libraryInspection(root: string, tool: ToolPin, path: string, found: str
     const want = tool.version === undefined ? {} : { want: tool.version };
     const floor = tool.min_version ?? tool.version ?? found;
     let state = tool.version === undefined ? 'ok' : toolVersionState(found, tool.version, floor);
-    if (tool.system === true) state = isBelowFloor(found, floor) ? 'outdated' : 'host';
+    if (tool.system === true) state = toolVersionState(found, undefined, floor);
     return {
         name: tool.name,
         state,
@@ -67,7 +67,7 @@ function inspectLibraryCommand(context: ToolSearch, cwd: string, tool: ToolPin, 
     const root = context.installedRoot ?? context.root;
     return path === undefined
         ? missingInspection(tool, hint)
-        : hostInspection({
+        : executableInspection({
               root,
               cwd: join(root, relative(context.root, cwd)),
               tool: { ...tool, version_command: args },
@@ -108,33 +108,19 @@ function missingInspection(tool: ToolPin, hint: string): ToolInspection {
     return { name: tool.name, state: 'missing', hint, ...want };
 }
 
-// The inspection of a host tool, or an unpinned one: present, with the version it prints when it has a version command.
-// A version below the floor the manifest names makes it outdated.
-function hostInspection(inspected: Inspected): ToolInspection {
+// Query an executable once and assemble its native host or selected-version inspection.
+function executableInspection(
+    inspected: Inspected,
+    want = inspected.tool.system === true ? undefined : inspected.tool.version,
+): ToolInspection {
     const { root, cwd, tool, path, hint } = inspected;
-    if (tool.version_command === undefined) return { name: tool.name, state: 'host', path, hint };
+    if (want === undefined && tool.version_command === undefined) return { name: tool.name, state: 'host', path, hint };
     const read = readToolVersion(root, cwd, path, tool);
-    if ('state' in read) return { name: tool.name, path, hint, ...read };
-    if (tool.min_version === undefined) return { name: tool.name, state: 'host', path, hint, found: read.version };
-    const isBelow = isBelowFloor(read.version, tool.min_version);
-    return {
-        name: tool.name,
-        state: isBelow ? 'outdated' : 'host',
-        path,
-        hint,
-        found: read.version,
-        floor: tool.min_version,
-    };
-}
-
-// The inspection of a pinned tool: its printed version against the pin and the floor.
-function pinnedInspection(inspected: Inspected, want: string): ToolInspection {
-    const { root, cwd, tool, path, hint } = inspected;
-    const read = readToolVersion(root, cwd, path, tool);
-    if ('state' in read) return { name: tool.name, path, hint, want, ...read };
+    const expected = compact({ want });
+    if ('state' in read) return { name: tool.name, path, hint, ...expected, ...read };
     const floor = tool.min_version ?? want;
     const state = toolVersionState(read.version, want, floor);
-    return { name: tool.name, state, path, want, found: read.version, hint, floor };
+    return { name: tool.name, state, path, hint, found: read.version, ...expected, ...compact({ floor }) };
 }
 
 // Project compilers keep their native ownership; a declared tool-project package supplies the compiler when absent.
@@ -165,16 +151,11 @@ function inspectProjectExecutable(
         installedRoot: context.installedRoot,
     });
     if (toolProjectPath !== undefined)
-        return pinnedInspection({ root, cwd, tool, path: toolProjectPath, hint }, tool.version ?? installation.version);
+        return executableInspection(
+            { root, cwd, tool, path: toolProjectPath, hint },
+            tool.version ?? installation.version,
+        );
     return undefined;
-}
-
-// Both project lookup and ordinary executable discovery apply the same host/pin classification.
-function executableInspection(inspected: Inspected): ToolInspection {
-    const { tool } = inspected;
-    return tool.system === true || tool.version === undefined
-        ? hostInspection(inspected)
-        : pinnedInspection(inspected, tool.version);
 }
 
 function inspectExecutable(context: ToolSearch, cwd: string, tool: ToolPin, runner?: string): ToolInspection {

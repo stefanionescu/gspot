@@ -4,14 +4,15 @@ import { posix } from 'node:path';
 import { compact } from '#cli/platform/contracts.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import type { ToolPin, InstallerPin } from '#cli/types/parsers/tool.ts';
-import { CONFIG_PREFIX, MISE_BACKENDS } from '#cli/config/configurations.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
+import { NPM_REQUIRES, CONFIG_PREFIX, MISE_BACKENDS } from '#cli/config/configurations.ts';
 
 import type {
     MisePin,
     Manifest,
     OwnedCheck,
     PinRequirement,
+    ToolProjectPins,
     CheckDeclaration,
     ToolProjectPackage,
     ToolFileDeclaration,
@@ -115,15 +116,28 @@ export function pinOf(tool: ToolPin): MisePin | undefined {
 }
 
 /**
- * The constraints the Python tools set on the packages they pull in, each once, in order.
- * @param manifests the selected manifests.
- * @returns the constraints, such as `pyjwt>=2.14.0`.
+ * The npm and Python project requirements declared by a selection, in native package order.
+ * @param manifests the selected manifests
+ * @param runner the runner that owns mise-installed npm tools
+ * @returns npm versions, Python pins, and distinct Python constraints
  */
-export function pythonConstraints(manifests: Manifest[]): string[] {
-    const constraints = collectPins(manifests).flatMap((tool) =>
-        toolProjectPackage(tool)?.kind === 'python' ? (tool.installers['pypi']?.constraints ?? []) : [],
-    );
-    return [...new Set(constraints)].toSorted((left, right) => left.localeCompare(right));
+export function toolProjectPins(manifests: Manifest[], runner?: string): ToolProjectPins {
+    const npm: [string, string][] = [];
+    const python: string[] = [];
+    const constraints: string[] = [];
+    for (const tool of collectPins(manifests)) {
+        const installation = toolProjectPackage(tool, runner);
+        if (installation === undefined) continue;
+        if (installation.kind === 'npm') npm.push([installation.name, installation.version]);
+        if (installation.kind !== 'python') continue;
+        python.push(`${installation.name}==${installation.version}`);
+        constraints.push(...(tool.installers['pypi']?.constraints ?? []));
+    }
+    return {
+        npm: Object.fromEntries(npm.toSorted(([a], [b]) => a.localeCompare(b))),
+        python,
+        constraints: [...new Set(constraints)].toSorted((a, b) => a.localeCompare(b)),
+    };
 }
 
 /**
@@ -143,33 +157,6 @@ export function collectPins(manifests: Manifest[]): ToolPin[] {
         .values()
         .toArray()
         .toSorted((a, b) => a.name.localeCompare(b.name));
-}
-
-/**
- * The npm tools the tool project pins, as package name to version.
- * @param manifests the selected manifests.
- * @param runner the task runner; under mise, tools mise can pin stay out.
- * @returns package name to version, sorted.
- */
-export function npmPins(manifests: Manifest[], runner: string | undefined): Record<string, string> {
-    const pins: [string, string][] = [];
-    for (const tool of collectPins(manifests)) {
-        const installation = toolProjectPackage(tool, runner);
-        if (installation?.kind === 'npm') pins.push([installation.name, installation.version]);
-    }
-    return Object.fromEntries(pins.toSorted(([a], [b]) => a.localeCompare(b)));
-}
-
-/**
- * One pinned requirement per Python tool, in `package==version` form.
- * @param manifests the selected manifests.
- * @returns one pinned requirement per Python tool.
- */
-export function pythonPins(manifests: Manifest[]): string[] {
-    return collectPins(manifests).flatMap((tool) => {
-        const installation = toolProjectPackage(tool);
-        return installation?.kind === 'python' ? [`${installation.name}==${installation.version}`] : [];
-    });
 }
 
 /**
@@ -209,7 +196,7 @@ export function checkToolPin(tool: ToolPin, check: CheckDeclaration): ToolPin {
  * @returns the executable name, absent for an internal check without a tool.
  */
 export function toolName(check: CheckDeclaration): string | undefined {
-    return check.tool ?? check.command?.[0];
+    return typeof check.tool === 'string' ? check.tool : check.command?.[0];
 }
 
 /**
@@ -224,7 +211,12 @@ export function toolProjectPackage(tool: ToolPin, runner?: string): ToolProjectP
         return { kind: 'python', name: python.name, version: python.version };
     const npm = tool.installers['npm'];
     if (npm?.version === undefined || (runner === 'mise' && tool.installers['mise'] !== undefined)) return undefined;
-    return { kind: 'npm', name: npm.name, version: npm.version };
+    return {
+        kind: 'npm',
+        name: npm.name,
+        version: npm.version,
+        requires: [NPM_REQUIRES, tool.requires].flatMap((peers) => peers ?? []),
+    };
 }
 
 /**
@@ -254,4 +246,17 @@ export function misePin(tool: ToolPin): InstallerPin | undefined {
     if (backend === undefined) return undefined;
     const pin = tool.installers[backend.installer];
     return pin === undefined ? undefined : { ...pin, name: `${backend.prefix}${pin.name}` };
+}
+
+// The accepted floor applies equally to host tools and pinned tool-project tools.
+/**
+ * Compare a native version with its accepted floor.
+ * @param found the observed version
+ * @param floor the accepted minimum
+ * @returns whether the observed version is below the floor
+ */
+export function isBelowFloor(found: string | undefined, floor: string | undefined): boolean {
+    const version = semver.coerce(found);
+    const lowest = semver.coerce(floor);
+    return version !== null && lowest !== null && semver.lt(version, lowest);
 }

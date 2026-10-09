@@ -31,7 +31,11 @@ function suggestedConfigurations(session: Session, selected: Set<string>): Sugge
 function inactiveFileRow(session: Session, config: ToolFile, manifest: Manifest): SuggestionRow {
     if (manifest.configuration.when?.git === true && !session.repository.hasGit)
         return { path: config.path, note: `${config.tool} requires a Git repository`, command: 'git init' };
-    const checks = manifest.checks.filter((check) => check.tool === config.tool || check.command?.[0] === config.tool);
+    const checks = manifest.checks.filter(
+        (check) =>
+            (typeof check.tool === 'object' ? Object.values(check.tool) : [check.tool]).includes(config.tool) ||
+            check.command?.[0] === config.tool,
+    );
     const note = `no applicable ${config.tool} check at level ${session.policyFiles.policy.level}`;
     if (
         session.policyFiles.policy.level === 'recommended' &&
@@ -102,17 +106,19 @@ function getUnownedOutputs(session: Session): SuggestionRow[] {
  */
 export function getSuggestions(session: Session): Suggestions {
     const { packageManifests } = session;
-    const selected = new Set(everyManifest(session.scopes).map((manifest) => manifest.configuration.name));
+    const selections = everyManifest(session.scopes);
+    const selected = new Set(selections.map((manifest) => manifest.configuration.name));
+    const manifests = applicableManifests(session);
     const tooling = getTooling(session.root, session.repository.files, packageManifests);
     const generated = emitAll(session);
-    const tools = new Set(applicableManifests(session).flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
+    const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
         detected: detectUnselected(
             session.root,
             session.repository.files,
             session.manifests,
-            everyManifest(session.scopes),
+            selections,
             session.packageManifests,
         ),
         suggested: suggestedConfigurations(session, selected),
@@ -123,11 +129,7 @@ export function getSuggestions(session: Session): Suggestions {
                 tooling.ci.filter((path) => !workflows.has(path)),
             ).map((path) => ({ path, note: 'an authored lint job', command: 'none; informational' })),
         ],
-        duplicateMisePins: duplicateMisePins(
-            session.root,
-            applicableManifests(session),
-            session.policyFiles.policy.runner,
-        ).map((pin) => ({
+        duplicateMisePins: duplicateMisePins(session.root, manifests, session.policyFiles.policy.runner).map((pin) => ({
             tool: pin.tool,
             version: pin.version,
             places: ['mise.toml', pin.gspotFile],

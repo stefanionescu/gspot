@@ -6,11 +6,10 @@ import { everyManifest } from '#cli/configurations/public.ts';
 import { ownedBy } from '#cli/repository/selection/public.ts';
 import { GspotError, hostPlatform } from '#cli/platform/public.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { declaredArchitectures } from '#cli/policy/settings/contracts.ts';
 import { filesFor, runsAtRoot, childScopes } from '#cli/planning/files.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
-import { isOutsideChildren, isToolProjectPath } from '#cli/repository/paths/public.ts';
+import { pathMatcher, isOutsideChildren, isToolProjectPath } from '#cli/repository/paths/public.ts';
 import { toolPin, toolName, checkToolPin, toolProjectPackage } from '#cli/configurations/contracts.ts';
 import { skipFor, selectionStatus, coverageArguments, restrictIgnoredPaths } from '#cli/planning/contracts.ts';
 
@@ -264,29 +263,27 @@ export function licenseProjects(
  * Read executable, fixer, and companion tools consumed by an applicable check.
  * @param check the check with its conditions, scopes, and exclusions resolved
  * @param session the effective scope selections and installation integration.
- * @returns required tool names, including manifest-specific scanner branches
+ * @returns required executable, declared peer, and native installation tools
  */
 export function requiredToolNames(check: PlannedCheck, session: Pick<Session, 'scopes' | 'policyFiles'>): string[] {
     const runner = session.policyFiles.policy.runner;
     const names = new Set(
-        [check.tool?.name, ...checkCompanions(check.scope, check.check), check.check.fix?.[0]].flatMap((name) => {
-            if (name === undefined) return [];
-            // v8r loads Ajv through an optional peer in tool project installations.
-            if (name === 'v8r' && toolProjectPackage(toolPin(check.scope.selected, name), runner)?.kind === 'npm')
-                return [name, 'ajv'];
-            return [name];
-        }),
+        [check.tool?.name, ...checkCompanions(check.scope, check.check), check.check.fix?.[0]].filter(
+            (name) => name !== undefined,
+        ),
     );
-    if (check.check.name === 'licenses/packages') {
-        const projects = licenseProjects(check.files, session.scopes, session.policyFiles.policy, check.check).filter(
-            ({ skip }) => skip === undefined,
+    if (typeof check.check.tool === 'object') {
+        const paths = licenseProjects(check.files, session.scopes, session.policyFiles.policy, check.check).flatMap(
+            ({ skip, manifest }) => (skip === undefined ? [manifest] : []),
         );
-        if (projects.some(({ manifest }) => manifest.endsWith('package.json')))
-            names.add('license-checker-rseidelsohn');
-        if (projects.some(({ manifest }) => manifest.endsWith('pyproject.toml'))) names.add('pip-licenses');
+        const fileTools = Object.entries(check.check.tool).filter(([pattern]) =>
+            paths.some(pathMatcher([`**/${pattern}`])),
+        );
+        for (const [, name] of fileTools) names.add(name);
     }
-    if ([...names].some((name) => toolProjectPackage(toolPin(check.scope.selected, name), runner)?.kind === 'npm'))
-        names.add('node');
+    for (const name of names)
+        for (const required of new Set(toolProjectPackage(toolPin(check.scope.selected, name), runner)?.requires))
+            names.add(required);
     return [...names];
 }
 
@@ -298,10 +295,6 @@ export function requiredToolNames(check: PlannedCheck, session: Pick<Session, 's
  */
 export function applicableManifests(session: Session): Manifest[] {
     const checks = configuredChecks(session, true);
-    const boundaries =
-        declaredArchitectures(session.scopes).length > 0 ||
-        (session.policyFiles.policy.level === 'all' &&
-            session.scopes.some(({ view }) => Object.values(view.roles).flat().length > 0));
     const needed = new Set(checks.flatMap((check) => requiredToolNames(check, session)));
     const selected = everyManifest(session.scopes);
     const owners = new Set(selected);
@@ -310,16 +303,33 @@ export function applicableManifests(session: Session): Manifest[] {
         const owner = session.manifests.values().find((manifest) => manifest.tools.some((tool) => tool.name === name));
         if (owner !== undefined) owners.add(owner);
     }
-    return [...owners].map((manifest) => {
+    const manifests: Manifest[] = [];
+    for (const manifest of owners) {
         const consumers = checks.filter((check) => check.scope.selected.includes(manifest));
         const ownsEslint =
             consumers.some((check) => check.tool?.name === 'eslint') &&
             manifest.toolFiles.some((config) => config.target.includes('eslint'));
         const ownsPrettier = needed.has('prettier') && manifest.tools.some((tool) => tool.prettier !== undefined);
-        return {
+        manifests.push({
             ...manifest,
             tools: manifest.tools
-                .filter((tool) => tool.name !== 'eslint-plugin-boundaries' || boundaries)
+                .filter(
+                    ({ when: conditions }) =>
+                        conditions === undefined ||
+                        session.scopes.some(({ view }) =>
+                            conditions.some((condition) => {
+                                if (
+                                    condition.level !== undefined &&
+                                    condition.level !== session.policyFiles.policy.level
+                                )
+                                    return false;
+                                const value = view.settings[condition.setting];
+                                return typeof value === 'object' && value !== null
+                                    ? Object.values(value).flat().length > 0
+                                    : value !== undefined && value !== false && value !== '';
+                            }),
+                        ),
+                )
                 .filter(
                     (tool) =>
                         needed.has(tool.name) ||
@@ -333,6 +343,7 @@ export function applicableManifests(session: Session): Manifest[] {
                     for (const check of checks) pin = checkToolPin(pin, check.check);
                     return pin;
                 }),
-        };
-    });
+        });
+    }
+    return manifests;
 }

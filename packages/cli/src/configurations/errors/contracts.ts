@@ -1,9 +1,8 @@
-import semver from 'semver';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/public.ts';
 import { listAssets } from '#cli/platform/root/public.ts';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
-import { allChecks } from '#cli/configurations/contracts.ts';
+import { allChecks, isBelowFloor } from '#cli/configurations/contracts.ts';
 import { SETTING_PLACEHOLDER, SETTING_DEFAULT_FIELDS, CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
 
 import type {
@@ -76,19 +75,12 @@ function assertReplacement(manifest: Manifest, check: CheckDeclaration, checks: 
     assertNoReplacementCycle(manifest, check, checks);
 }
 
-// Whether a pinned version sits below the floor the manifest names, comparing the versions both can coerce.
-function isBelowFloor(tool: ToolPin): boolean {
-    const pinned = semver.coerce(tool.version);
-    const floor = semver.coerce(tool.min_version);
-    return pinned !== null && floor !== null && semver.lt(pinned, floor);
-}
-
 function assertToolPin(manifest: Manifest, tool: ToolPin): void {
     const isUnpinned =
         tool.version === undefined && Object.values(tool.installers).some((entry) => entry.version === undefined);
     if (isUnpinned && tool.min_version === undefined)
         throw manifestError(manifest.configuration.name, [`tool ${tool.name} has no version and no floor.`]);
-    if (isBelowFloor(tool))
+    if (isBelowFloor(tool.version, tool.min_version))
         throw manifestError(manifest.configuration.name, [
             `tool ${tool.name} pins ${tool.version ?? ''}, below its floor ${tool.min_version ?? ''}.`,
         ]);
@@ -134,10 +126,18 @@ function assertToolFileConsumers(
     tools: Map<string, ToolPin>,
     checks: Map<string, CheckDeclaration>,
 ): void {
-    const unknownTools = manifest.toolFiles.flatMap((config) =>
-        [...config.tool, ...config.required_tools]
-            .filter((name) => !tools.has(name))
-            .map((name) => `config ${config.target} requires undeclared tool ${name}.`),
+    const unknownTools = [
+        ...manifest.toolFiles.map((config) => ({
+            owner: `config ${config.target}`,
+            names: [...config.tool, ...config.required_tools],
+        })),
+        ...manifest.tools.map((tool) => ({ owner: `tool ${tool.name}`, names: tool.requires ?? [] })),
+        ...manifest.checks.map((check) => ({
+            owner: `check ${check.name}`,
+            names: typeof check.tool === 'object' ? Object.values(check.tool) : [],
+        })),
+    ].flatMap(({ owner, names }) =>
+        names.filter((name) => !tools.has(name)).map((name) => `${owner} requires undeclared tool ${name}.`),
     );
     const unknownChecks = manifest.toolFiles.flatMap((config) =>
         config.check
@@ -145,7 +145,9 @@ function assertToolFileConsumers(
             .map((name) => `config ${config.target} requires undeclared check ${name}.`),
     );
     const versionErrors = manifest.checks.flatMap((check) => {
-        const required = new Set([check.tool ?? check.command?.[0], ...(check.other_tools ?? [])]);
+        const declared =
+            typeof check.tool === 'object' ? Object.values(check.tool) : [check.tool ?? check.command?.[0]];
+        const required = new Set([...declared, ...(check.other_tools ?? [])]);
         return (check.min_versions === undefined ? [] : Object.keys(check.min_versions)).flatMap((name) => {
             if (!required.has(name))
                 return [`check ${check.name} sets a version floor for ${name}, which it does not use.`];

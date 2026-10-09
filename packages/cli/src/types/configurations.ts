@@ -89,7 +89,12 @@ export type UnknownConfiguration<Declaration extends Pick<ConfigurationDeclarati
 export type PinRequirement = { version: string; owner: string };
 
 /** A pinned package installed in the npm or Python tool project. */
-export type ToolProjectPackage = { kind: Exclude<InstallationKind, 'vale'>; name: string; version: string };
+export type ToolProjectPackage = {
+    kind: Exclude<InstallationKind, 'vale'>;
+    name: string;
+    version: string;
+    requires?: readonly string[];
+};
 
 /** One tool pin as mise reads it: the version, the operating systems that have a build, and backend options. */
 export type MisePin = {
@@ -110,3 +115,6 @@ export type Level = z.output<typeof levelSchema>;
 
 /** A rule asset and its path inside the rules folder before selection. */
 export type RuleSource = { source: string; path: string };
+
+/** Requirements of the generated npm and Python tool projects. */
+export type ToolProjectPins = { npm: Record<string, string>; python: string[]; constraints: string[] };

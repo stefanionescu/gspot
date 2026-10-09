@@ -16,8 +16,8 @@ import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import type { ToolPin, ParsedToolVersion } from '#cli/types/parsers/tool.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 import { statSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { misePin, toolProjectPackage } from '#cli/configurations/contracts.ts';
 import type { ToolProject, ToolProjectPlan } from '#cli/types/tools/project.ts';
+import { misePin, isBelowFloor, toolProjectPackage } from '#cli/configurations/contracts.ts';
 import { compact, toPosix, environmentBin, executableNames } from '#cli/platform/contracts.ts';
 import { run, miseHome, GspotError, runBlocking, environmentVariables } from '#cli/platform/public.ts';
 import type { ToolOwner, LocateOptions, ToolInspection, LockfilePreparation } from '#cli/types/tools/install.ts';
@@ -128,19 +128,6 @@ export function installHint(tool: ToolPin, runner?: string): string {
     return `Install mise (https://mise.jdx.dev/getting-started.html), then run: mise install ${requirement}`;
 }
 
-// The accepted floor applies equally to host tools and pinned tool-project tools.
-/**
- * Compare a native version with its accepted floor.
- * @param found the observed version
- * @param floor the accepted minimum
- * @returns whether the observed version is below the floor
- */
-export function isBelowFloor(found: string, floor: string): boolean {
-    const version = semver.coerce(found);
-    const lowest = semver.coerce(floor);
-    return version !== null && lowest !== null && semver.lt(version, lowest);
-}
-
 // A missing executable or outdated version needs the install command recorded by its inspection.
 /**
  * Explain why the required tool cannot run.
@@ -163,7 +150,12 @@ export function unavailableNote(tool: ToolPin, inspection: ToolInspection): stri
  * @param floor the lowest version the configuration accepts
  * @returns ok, outdated below the floor, newer above the pin, or error for no version
  */
-export function toolVersionState(found: string, want: string, floor: string): ToolInspection['state'] {
+export function toolVersionState(
+    found: string,
+    want: string | undefined,
+    floor: string | undefined,
+): ToolInspection['state'] {
+    if (want === undefined) return isBelowFloor(found, floor) ? 'outdated' : 'host';
     const version = semver.coerce(found);
     if (version === null) return 'error';
     if (isBelowFloor(found, floor)) return 'outdated';
@@ -264,7 +256,7 @@ export async function prepareToolProject<Parsed, Preparation, Installation>(
     const path = description.lockfilePath(project);
     const original = owner.read(path);
     const recorded = refreshLockfiles ? undefined : original?.bytes.toString('utf8');
-    let content = description.current(project, recorded, manifest.content, owner);
+    let content = description.current(project, recorded, manifest.content, owner, preparation);
     if (content === undefined) {
         using work = scratchFolder(description.lockPrefix);
         writeFileSync(join(work.path, basename(description.manifestPath)), manifest.content);

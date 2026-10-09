@@ -22,6 +22,7 @@ export type ToolProject<Parsed, Preparation, Installation> = {
         recorded: string | undefined,
         manifest: string,
         owner: Pick<ToolOwner, 'read'>,
+        preparation: Preparation,
     ): string | undefined;
     commands(project: Parsed, runner: string | undefined): ToolProjectPlan;
     createLockfile(

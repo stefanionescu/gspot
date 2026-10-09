@@ -5,7 +5,6 @@ import { emitAll } from '#cli/generation/public.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { installUv } from '#cli/tools/python/public.ts';
-import { npmPins } from '#cli/configurations/contracts.ts';
 import { readRepository } from '#cli/repository/public.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
@@ -20,6 +19,7 @@ import { writePolicyFile } from '#cli/policy/document/public.ts';
 import { noteLines, printResult } from '#cli/terminal/public.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
+import { toolProjectPins } from '#cli/configurations/contracts.ts';
 import { readPackageManifests } from '#cli/repository/contracts.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import { XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
@@ -201,7 +201,7 @@ export async function openSession(rootPath: string, policyFiles = readPolicy(roo
         reads,
     };
     const installer: PackageInstallerIdentity | undefined =
-        Object.keys(npmPins(applicableManifests(session), policy.runner)).length > 0
+        Object.keys(toolProjectPins(applicableManifests(session), policy.runner).npm).length > 0
             ? await selectInstaller()
             : undefined;
     return session;

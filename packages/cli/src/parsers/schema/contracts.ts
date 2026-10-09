@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/packages.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 import type { SettingField, SettingItems, SettingFields } from '#cli/types/parsers/settings.ts';
 
@@ -238,3 +239,18 @@ export const settingValueDeclarationSchema = z.strictObject({
 
 /** Rule values captured before serialization, grouped by their declared manifest paths. */
 export const ruleSettingsSchema = z.record(z.string(), z.record(z.string(), z.json()));
+
+// The one way a manifest limits where something applies. It names a selected configuration, a setting with a value, detected
+// files, tags, or dependencies, or a git checkout. `git = false` means a folder with no .git. Each table takes the
+// conditions it can test.
+export const conditionSchema = z.strictObject({
+    configuration: z.string().min(1),
+    level: levelSchema,
+    setting: z.string().min(1),
+    value: z.union([z.string(), z.number(), z.boolean()]),
+    git: z.boolean(),
+    dependencies: z.array(z.string().min(1)).min(1),
+    filenames: z.array(z.string().min(1)).min(1),
+    tags: z.array(z.string().min(1)).min(1),
+    runtimes: z.array(z.enum(JAVASCRIPT_RUNTIMES)).min(1),
+});

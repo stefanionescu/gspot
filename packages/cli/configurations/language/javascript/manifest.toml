@@ -407,6 +407,7 @@ npm = "eslint-import-resolver-typescript"
 
 [[tool]]
 name = "eslint-plugin-boundaries"
+when = [{ setting = "architecture.modules" }, { setting = "architecture.roles", level = "all" }, { setting = "test_files", level = "all" }]
 rule_prefix = "boundaries"
 kind = "library"
 version = "7.2.0"

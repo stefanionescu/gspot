@@ -8,7 +8,7 @@ import { shippedNamingSchema } from '#cli/parsers/schema/naming.ts';
 import { readAsset, listAssets } from '#cli/platform/root/public.ts';
 import { manifestSchema } from '#cli/parsers/schema/configurations.ts';
 import { declaredTools, manifestError } from '#cli/configurations/errors/contracts.ts';
-import { pinOf, allChecks, pythonPins, collectPins } from '#cli/configurations/contracts.ts';
+import { pinOf, allChecks, collectPins, toolProjectPackage } from '#cli/configurations/contracts.ts';
 import { manifestErrors, unknownConfigurationDiagnostic } from '#cli/configurations/errors/public.ts';
 import { CONFIG_PREFIX, NAMING_TERMS_FILE, CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
 
@@ -242,7 +242,8 @@ export function pythonInstallerPin(): MisePin {
 export function misePins(manifests: Manifest[]): MisePin[] {
     const tools = collectPins(manifests);
     const pins = tools.flatMap((tool) => pinOf(tool) ?? []);
-    if (pythonPins(manifests).length > 0 && !tools.some((tool) => tool.name === 'uv')) pins.push(pythonInstallerPin());
+    if (tools.some((tool) => toolProjectPackage(tool)?.kind === 'python') && !tools.some((tool) => tool.name === 'uv'))
+        pins.push(pythonInstallerPin());
     return pins;
 }
 

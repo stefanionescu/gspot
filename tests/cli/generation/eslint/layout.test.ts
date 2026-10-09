@@ -13,15 +13,8 @@ test.each(['recommended', 'all'])('generated %s ESLint configuration selects lay
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
     });
     const eslint = await createEslint(sandbox.path);
-    const [result] = await eslint.lintText('export const value = 1;\nconst internal = 2;\nconsole.log(internal);\n', {
-        filePath: 'src/order.js',
-    });
-    expect(result?.fatalErrorCount).toBe(0);
-    const layout = result!.messages.filter((diagnostic) => diagnostic.ruleId === 'import-x/exports-last');
-    // The layout rule belongs to the all level alone.
-    expect(layout.map(({ ruleId, line }) => ({ ruleId, line }))).toStrictEqual(
-        level === 'recommended' ? [] : [{ ruleId: 'import-x/exports-last', line: 1 }],
-    );
+    const configuration = eslintConfigurationSchema.parse(await eslint.calculateConfigForFile('src/order.js'));
+    expect(configuration.rules['import-x/exports-last']?.[0]).toBe(level === 'all' ? 2 : undefined);
 });
 
 test.each(SORT_LEVELS)(

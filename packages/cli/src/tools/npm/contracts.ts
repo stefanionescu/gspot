@@ -6,15 +6,15 @@ import { SETUP } from '#cli/config/tools/install.ts';
 import { yarnSettings } from '#cli/tools/npm/yarn.ts';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
+import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { parseVersionOutput } from '#cli/parsers/tool/contracts.ts';
 import npmDefinitions from '@npmcli/config/lib/definitions/index.js';
 import { isRecord, executableNames } from '#cli/platform/contracts.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import { sourcePath, canonicalPath } from '#cli/platform/root/reads.ts';
 import { GspotError, environmentVariables } from '#cli/platform/public.ts';
-import type { PackageRun, PackageExecution } from '#cli/types/tools/npm.ts';
+import type { PackageRun, PackageCommands } from '#cli/types/tools/npm.ts';
 import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { stripBunRegistryUrls, stripYarnRegistryUrls } from '#cli/tools/npm/lockfiles.ts';
 import { isYarnBerry, packageLockfile, getPackageInstallerMajor } from '#cli/parsers/packages/contracts.ts';
 
 import {
@@ -69,64 +69,13 @@ function writeNpmrc(work: string, env: Record<string, string>): void {
 }
 
 // Declared and recorded versions are metadata; verify the executable in this scratch project before native work.
-function assertPackageInstallerVersion(installer: PackageInstaller, version: PackageRun['result']): void {
+function assertPackageInstallerVersion(installer: PackageInstaller, version: SpawnResult): void {
     const requirement = `${String(getPackageInstallerMajor(installer))}.x`;
     if (version.code !== 0 || !semver.satisfies(version.stdout.trim(), requirement, { includePrerelease: true }))
         throw new GspotError(
             'tool',
             `The tool project requires ${installer.name}@${requirement}. Install that package manager version first.`,
         );
-}
-
-async function runPackageInstaller(
-    root: string,
-    work: string,
-    installer: PackageInstaller,
-    argv: string[],
-): Promise<PackageRun> {
-    const env = await registryEnvironment(root);
-    const execution: PackageExecution = { work, installer, env };
-    const credentials = credentialsOf(env);
-    writeNpmrc(work, env);
-    env['npm_config_userconfig'] = join(work, '.npmrc');
-    const berry = isYarnBerry(installer);
-    if (berry) delete env['YARN_REGISTRY'];
-    const version = await runTool([installer.name, '--version'], { cwd: work, env });
-    assertPackageInstallerVersion(installer, version);
-    if (berry) credentials.push(...(await yarnSettings(root, work, env)));
-    const result = await runTool(argv, { cwd: work, env });
-    return { execution, credentials, result };
-}
-
-function packageFailure(result: PackageRun['result'], credentials: string[]): string {
-    const cause = githubRefusalNote(`${result.stdout}\n${result.stderr}`);
-    const causeNote = cause === undefined ? '' : ` ${cause}`;
-    return `(exit ${String(result.code)}). ${SETUP}.${causeNote}\n${installationDiagnostics(result, credentials)}`;
-}
-
-// Validate native lockfile output before it enters managed ownership.
-function credentialFreeLockfile(execution: PackageExecution, credentials: string[]): string {
-    const lockfile = readFileSync(join(execution.work, packageLockfile(execution.installer.name)), 'utf8');
-    assertCredentialFreeLockfile(
-        lockfile,
-        credentials,
-        new GspotError(
-            'installation',
-            'The package manager included registry credentials in its lockfile. Existing files were preserved.',
-        ),
-    );
-    return lockfile;
-}
-
-// Private registry routing stays in the installation environment, out of portable lockfiles.
-function stripRegistryUrls(execution: PackageExecution, lockfile: string): void {
-    const { installer, work, env } = execution;
-    const lockfilePath = join(work, packageLockfile(installer.name));
-    if (installer.name === 'bun') writeFileSync(lockfilePath, stripBunRegistryUrls(lockfile, env));
-    if (installer.name !== 'yarn' || isYarnBerry(installer)) return;
-    const registry = env['npm_config_registry'];
-    if (registry === undefined) throw new Error('A Yarn 1 lockfile needs npm_config_registry to relocate its URLs.');
-    writeFileSync(lockfilePath, stripYarnRegistryUrls(lockfile, registry));
 }
 
 // An npm wrapper can declare a package version different from its native executable version.
@@ -189,44 +138,6 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
 }
 
 /**
- * Resolve the tool project's lockfile in an isolated directory before writing generated files.
- * @param root the repository whose connection settings apply
- * @param work the isolated tool project
- * @param installer the package manager and major version required by the project
- */
-export async function preparePackageLockfile(root: string, work: string, installer: PackageInstaller): Promise<void> {
-    const { execution, credentials, result } = await runPackageInstaller(
-        root,
-        work,
-        installer,
-        lockfileArgv(installer),
-    );
-    if (result.code !== 0)
-        throw new GspotError(
-            'installation',
-            `${installer.name} lockfile resolution failed ${packageFailure(result, credentials)}`,
-        );
-    const lockfile = credentialFreeLockfile(execution, credentials);
-    stripRegistryUrls(execution, lockfile);
-}
-
-/**
- * Install the recorded tool lockfile immutably in an isolated directory.
- * @param root the repository whose connection settings apply
- * @param work the isolated tool project and recorded lockfile
- * @param installer the package manager and major version required by the project
- */
-export async function installPackageLockfile(root: string, work: string, installer: PackageInstaller): Promise<void> {
-    const { execution, credentials, result } = await runPackageInstaller(root, work, installer, installArgv(installer));
-    if (result.code !== 0)
-        throw new GspotError(
-            'installation',
-            `${installer.name} immutable installation failed ${packageFailure(result, credentials)}`,
-        );
-    credentialFreeLockfile(execution, credentials);
-}
-
-/**
  * Checks each installed native wrapper whose package version differs from the tool's, before writing installed files.
  * @param work the scratch directory holding the installation
  * @param dependencies the dependencies the tool project declares
@@ -249,25 +160,17 @@ export async function assertPackageVersions(
 }
 
 /**
- * Build the manager's native lockfile creation command.
- * @param installer the declared package manager
- * @returns literal arguments for its Classic, Berry, or other native lockfile operation
+ * The native resolution and immutable-install argv for the selected package manager.
+ * @param installer the declared package manager and major
+ * @returns both actual package operations
  */
-export function lockfileArgv(installer: PackageInstaller): string[] {
-    if (installer.name !== 'yarn') return [...LOCKFILE_ARGUMENTS[installer.name]];
-    const argv = isYarnBerry(installer) ? YARN_ARGUMENTS.berry : YARN_ARGUMENTS.classic;
-    return [...argv.lockfile];
-}
-
-/**
- * Build the manager's native immutable installation command.
- * @param installer the declared package manager
- * @returns literal arguments for its Classic, Berry, or other native installation
- */
-export function installArgv(installer: PackageInstaller): string[] {
-    if (installer.name !== 'yarn') return [...INSTALL_ARGUMENTS[installer.name]];
-    const argv = isYarnBerry(installer) ? YARN_ARGUMENTS.berry : YARN_ARGUMENTS.classic;
-    return [...argv.install];
+export function packageInstallerCommands(installer: PackageInstaller): PackageCommands {
+    const yarn = isYarnBerry(installer) ? YARN_ARGUMENTS.berry : YARN_ARGUMENTS.classic;
+    const args =
+        installer.name === 'yarn'
+            ? yarn
+            : { lockfile: LOCKFILE_ARGUMENTS[installer.name], install: INSTALL_ARGUMENTS[installer.name] };
+    return { lockfile: [...args.lockfile], install: [...args.install] };
 }
 
 /**
@@ -311,4 +214,50 @@ export async function registryEnvironment(root: string): Promise<Record<string, 
         env['YARN_REGISTRY'] = registry;
     }
     return env;
+}
+
+/**
+ * Execute a native package operation and validate its complete lockfile before publication.
+ * @param root the repository whose connection settings apply
+ * @param work the isolated native project
+ * @param installer the native package manager requirement.
+ * @param argv the actual lock or immutable-install command
+ * @param failure the operation's failure description
+ * @returns validated lockfile bytes and the private routing environment
+ */
+export async function runPackageInstaller(
+    root: string,
+    work: string,
+    installer: PackageInstaller,
+    argv: string[],
+    failure: string,
+): Promise<PackageRun> {
+    const env = await registryEnvironment(root);
+    const credentials = credentialsOf(env);
+    writeNpmrc(work, env);
+    env['npm_config_userconfig'] = join(work, '.npmrc');
+    const berry = isYarnBerry(installer);
+    if (berry) delete env['YARN_REGISTRY'];
+    const version = await runTool([installer.name, '--version'], { cwd: work, env });
+    assertPackageInstallerVersion(installer, version);
+    if (berry) credentials.push(...(await yarnSettings(root, work, env)));
+    const result = await runTool(argv, { cwd: work, env });
+    if (result.code !== 0) {
+        const cause = githubRefusalNote(`${result.stdout}\n${result.stderr}`);
+        const causeNote = cause === undefined ? '' : ` ${cause}`;
+        throw new GspotError(
+            'installation',
+            `${installer.name} ${failure} (exit ${String(result.code)}). ${SETUP}.${causeNote}\n${installationDiagnostics(result, credentials)}`,
+        );
+    }
+    const lockfile = readFileSync(join(work, packageLockfile(installer.name)), 'utf8');
+    assertCredentialFreeLockfile(
+        lockfile,
+        credentials,
+        new GspotError(
+            'installation',
+            'The package manager included registry credentials in its lockfile. Existing files were preserved.',
+        ),
+    );
+    return { env, lockfile };
 }

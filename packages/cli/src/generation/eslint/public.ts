@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { readAsset } from '#cli/platform/root/public.ts';
-import { npmPins } from '#cli/configurations/contracts.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { toolProjectPins } from '#cli/configurations/contracts.ts';
 import { ESLINT_RULE_NAMES_FILE } from '#cli/config/generation/eslint.ts';
 import { extensionsTagged } from '#cli/repository/discovery/contracts.ts';
 import type { ResolvedSelector } from '#cli/types/generation/fragments.ts';
@@ -239,7 +239,7 @@ export function readEslintRuleNames(): EslintRuleNames {
  * @param manifests every shipped configuration
  */
 export function validateEslintPresets(manifests: Map<string, Manifest>): void {
-    const versions = npmPins([...manifests.values()], undefined);
+    const versions = toolProjectPins([...manifests.values()]).npm;
     const presets = readEslintRuleNames();
     if (presets.version !== versions['eslint'])
         throw new Error(`Refresh the core rule names: the catalog must use eslint@${String(versions['eslint'])}.`);

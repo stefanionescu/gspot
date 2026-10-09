@@ -29,6 +29,7 @@ replaces = [".yamllint", ".yamllint.yml", ".yamllint.yaml"]
 
 [[tool]]
 name = "v8r"
+requires = ["ajv"]
 version = "6.1.0"
 mise = "npm:v8r"
 npm = "v8r"

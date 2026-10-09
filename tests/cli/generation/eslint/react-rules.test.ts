@@ -1,14 +1,14 @@
-// The React and React Native rules the generated ESLint configuration enables, each seen on a test file.
+// The React and React Native fragments enable their rules and preserve their native correction contracts.
 import { join } from 'node:path';
+import type { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { emitFile, createEslint } from '#tests/harness/generated.ts';
 import { parseToolProject } from '#cli/parsers/packages/contracts.ts';
 import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
-import type { FileRuleFinding } from '#tests/types/cli/generation/eslint/findings.ts';
+import { emitFile, createEslint, eslintConfigurationSchema } from '#tests/harness/generated.ts';
 
 import {
     WEB_TSCONFIG,
@@ -25,13 +25,13 @@ import {
     NATIVE_CORRECTIONS,
 } from '#tests/config/cli/generation/eslint/react-rules.ts';
 
-// Creates the repository at the level and returns every message ESLint reports for its files.
-async function reported(
+// Creates the native configuration for the shared React and React Native project setup.
+async function configured(
     root: string,
     configuration: string,
     level: Level,
     files: Record<string, string>,
-): Promise<FileRuleFinding[]> {
+): Promise<ESLint> {
     const web = configuration === 'react';
     await createFileTree(root, {
         'gspot.toml': buildPolicy(['typescript', configuration, ...(web ? ['react-dom'] : ['expo'])], {
@@ -47,33 +47,33 @@ async function reported(
         'tsconfig.json': JSON.stringify(web ? WEB_TSCONFIG : NATIVE_TSCONFIG, null, 4) + '\n',
         ...files,
     });
-    const eslint = await createEslint(root);
-    const results = await eslint.lintFiles(Object.keys(files));
-    return results.flatMap(({ filePath, messages }) =>
-        messages.map(({ ruleId, line }) => ({
-            rule: ruleId,
-            file: filePath.slice(root.length + 1).replaceAll('\\', '/'),
-            line,
-        })),
-    );
+    return await createEslint(root);
 }
 
 test.each([
     ['react', WEB_FILES, WEB_EXPECTED],
     ['react-native', NATIVE_FILES, NATIVE_EXPECTED],
-] as const)('the generated %s configuration reports each test rule', async (configuration, files, expected) => {
+] as const)('the generated %s fragment enables its declared native rules', async (configuration, files, expected) => {
     await using sandbox = await testdir();
-    const messages = await reported(sandbox.path, configuration, 'all', files);
-    for (const finding of expected) expect(messages).toContainEqual(finding);
+    const eslint = await configured(sandbox.path, configuration, 'all', files);
+    const severities = await Promise.all(
+        expected.map(async ({ file, rule }) => {
+            const configuration = eslintConfigurationSchema.parse(await eslint.calculateConfigForFile(file));
+            return configuration.rules[rule]?.[0];
+        }),
+    );
+    expect(severities).toStrictEqual(expected.map(() => 2));
 });
 
 test('react/self-closing-comp waits for the all level', async () => {
     await using sandbox = await testdir();
     const files = { 'src/Gap.tsx': WEB_FILES['src/Gap.tsx'] };
-    const atRecommended = await reported(sandbox.path, 'react', 'recommended', files);
-    expect(atRecommended.map(({ rule }) => rule)).not.toContain('react/self-closing-comp');
-    const atAll = await reported(sandbox.path, 'react', 'all', files);
-    expect(atAll).toContainEqual({ rule: 'react/self-closing-comp', file: 'src/Gap.tsx', line: 9 });
+    const atRecommended = await configured(sandbox.path, 'react', 'recommended', files);
+    const recommended = eslintConfigurationSchema.parse(await atRecommended.calculateConfigForFile('src/Gap.tsx'));
+    expect(recommended.rules['react/self-closing-comp']).toBeUndefined();
+    const atAll = await configured(sandbox.path, 'react', 'all', files);
+    const all = eslintConfigurationSchema.parse(await atAll.calculateConfigForFile('src/Gap.tsx'));
+    expect(all.rules['react/self-closing-comp']?.[0]).toBe(2);
 });
 
 test('the emitted bare project requires native linting without Expo or DOM tools', async () => {

@@ -12,8 +12,8 @@ import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
-import { toolPin, pythonPins } from '#cli/configurations/contracts.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
+import { toolPin, toolProjectPins } from '#cli/configurations/contracts.ts';
 
 test.each(LOCKFILES.filter(({ client }) => ['uv', 'poetry', 'pdm'].includes(client)))(
     'Python dependency ownership with $file applies only to locked scopes and accepts removal of the duplicate list',
@@ -155,7 +155,7 @@ test('import-linter follows INI precedence and retains separate chains for decor
         '--project',
         session.root,
         '--with',
-        ...pythonPins([...session.manifests.values()]).filter((pin) => pin.startsWith('import-linter==')),
+        ...toolProjectPins([...session.manifests.values()]).python.filter((pin) => pin.startsWith('import-linter==')),
         'lint-imports',
         '--config',
         'setup.cfg',

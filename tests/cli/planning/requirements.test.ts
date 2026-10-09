@@ -4,7 +4,7 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { planRun, applicableManifests } from '#cli/planning/public.ts';
-import { NODE_REQUIREMENTS } from '#tests/config/cli/planning/requirements.ts';
+import { NODE_REQUIREMENTS, ROLE_REQUIREMENTS } from '#tests/config/cli/planning/requirements.ts';
 
 test('a check version prerequisite cannot lower its tool-wide requirement', async () => {
     await using sandbox = await testdir({
@@ -85,3 +85,25 @@ test.each(['bun', 'mise'])('private schema tools include their runtime peer unde
     expect(names).toContain('v8r');
     expect(names.includes('ajv')).toBe(runner === 'bun');
 });
+
+test.each(ROLE_REQUIREMENTS)(
+    'native tool conditions retain $name with root and child selections',
+    async ({ tables, boundary }) => {
+        for (const level of ['recommended', 'all'] as const) {
+            await using sandbox = await testdir({
+                'gspot.toml': buildPolicy(['javascript'], {
+                    level,
+                    tables: `test_files = []\n[reasons]\ntest_files = "The sandbox has no test files."\n[scope.app]\nconfigurations = ["javascript"]\n${tables}`,
+                }),
+                'src/source.js': 'export const value = 1;\n',
+                'app/src/source.js': 'export const value = 2;\n',
+            });
+            const session = await openSession(sandbox.path);
+            expect(session.scopes.map(({ scope }) => scope.path)).toStrictEqual(['', 'app']);
+            expect(session.scopes.every(({ view }) => view.test_files.length > 0)).toBe(true);
+            const names = applicableManifests(session).flatMap((manifest) => manifest.tools.map((tool) => tool.name));
+            expect(names.includes('eslint-plugin-boundaries')).toBe(boundary[level]);
+            expect(names).toContain('@eslint-community/eslint-plugin-eslint-comments');
+        }
+    },
+);

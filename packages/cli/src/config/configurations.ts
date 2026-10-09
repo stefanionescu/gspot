@@ -78,3 +78,6 @@ export const MANIFEST_TABLE_ORDER = [
     'naming.overrides',
     'agent_rules',
 ];
+
+/** Executable runtime required by npm tool-project packages and their native acquisition. */
+export const NPM_REQUIRES = ['node'] as const;

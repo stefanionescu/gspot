@@ -13,9 +13,9 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { applicableManifests } from '#cli/planning/public.ts';
 import { parseTomlText } from '#cli/policy/document/public.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
+import { toolProjectPins } from '#cli/configurations/contracts.ts';
 import { parseToolProject } from '#cli/parsers/packages/contracts.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
-import { npmPins, pythonPins } from '#cli/configurations/contracts.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { readPolicyTable, parseStrictPolicy } from '#cli/policy/public.ts';
 import { COMPONENT, SELECTION_INIT } from '#tests/config/cli/commands/init/selection.ts';
@@ -174,10 +174,10 @@ test('init previews only applicable tool projects and duplicate pins for the sel
             text: policy,
         }),
     );
-    const packages = npmPins(selected, undefined);
+    const packages = toolProjectPins(selected).npm;
     expect(plan.change).toContainEqual({
         path: '.gspot/pyproject.toml',
-        note: `${String(pythonPins(selected).length)} pinned Python tools; matching uv.lock and tool environment`,
+        note: `${String(toolProjectPins(selected).python.length)} pinned Python tools; matching uv.lock and tool environment`,
     });
     expect(plan.change).toContainEqual({
         path: '.gspot/package.json',

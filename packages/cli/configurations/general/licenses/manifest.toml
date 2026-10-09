@@ -26,6 +26,7 @@ per_scope = true
 
 [[check]]
 name = "packages"
+tool = { "package.json" = "license-checker-rseidelsohn", "pyproject.toml" = "pip-licenses" }
 title = "Check dependency licenses"
 example = "An installed package whose reported license is outside the allowed license policy reports a finding for that exact package version. Replace the dependency with an acceptable one or record a reviewed package-and-license exception with a reason. An exception for another version does not apply."
 level = "recommended"

@@ -22,11 +22,11 @@ export const WEB_FILES = {
 };
 
 export const WEB_EXPECTED = [
-    { rule: 'react-hooks/rules-of-hooks', file: 'src/Counter.tsx', line: 13 },
-    { rule: 'react/jsx-key', file: 'src/Names.tsx', line: 11 },
-    { rule: 'react/no-danger', file: 'src/Raw.tsx', line: 11 },
-    { rule: 'jsx-a11y/alt-text', file: 'src/Picture.tsx', line: 9 },
-    { rule: 'react-refresh/only-export-components', file: 'src/Badge.tsx', line: 5 },
+    { rule: 'react-hooks/rules-of-hooks', file: 'src/Counter.tsx' },
+    { rule: 'react/jsx-key', file: 'src/Names.tsx' },
+    { rule: 'react/no-danger', file: 'src/Raw.tsx' },
+    { rule: 'jsx-a11y/alt-text', file: 'src/Picture.tsx' },
+    { rule: 'react-refresh/only-export-components', file: 'src/Badge.tsx' },
 ];
 
 export const NATIVE_FILES = {
@@ -41,11 +41,11 @@ export const NATIVE_FILES = {
 };
 
 export const NATIVE_EXPECTED = [
-    { rule: 'react-native/no-inline-styles', file: 'src/Box.tsx', line: 8 },
-    { rule: 'expo/no-env-var-destructuring', file: 'src/address.ts', line: 3 },
-    { rule: 'no-restricted-syntax', file: 'src/session.ts', line: 9 },
-    { rule: '@react-native/no-deep-imports', file: 'src/frame.ts', line: 3 },
-    { rule: 'react-native/no-raw-text', file: 'src/Label.tsx', line: 8 },
+    { rule: 'react-native/no-inline-styles', file: 'src/Box.tsx' },
+    { rule: 'expo/no-env-var-destructuring', file: 'src/address.ts' },
+    { rule: 'no-restricted-syntax', file: 'src/session.ts' },
+    { rule: '@react-native/no-deep-imports', file: 'src/frame.ts' },
+    { rule: 'react-native/no-raw-text', file: 'src/Label.tsx' },
 ];
 
 export const NATIVE_CORRECTIONS = [

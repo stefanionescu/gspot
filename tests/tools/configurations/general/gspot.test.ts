@@ -9,7 +9,6 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { lockfileArgv } from '#cli/tools/npm/contracts.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { gspotDrift } from '#cli/checks/general/contracts.ts';
@@ -18,6 +17,7 @@ import { textContaining } from '#tests/harness/expectations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { UV_LOCKFILE_ARGUMENTS } from '#cli/config/tools/python.ts';
 import { parseToolProject } from '#cli/parsers/packages/contracts.ts';
+import { packageInstallerCommands } from '#cli/tools/npm/contracts.ts';
 import { GENERATED } from '#tests/config/tools/configurations/general/gspot.ts';
 
 const GENERATED_DRIFT_OPTIONS = buildRunOptions({ only: ['gspot/drift'] });
@@ -37,7 +37,7 @@ test('an edited generated file and one holding merge markers are drift findings,
     }
     const project = parseToolProject(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8'));
     for (const command of [
-        lockfileArgv(project.installer),
+        packageInstallerCommands(project.installer).lockfile,
         ['uv', ...UV_LOCKFILE_ARGUMENTS, '--no-python-downloads'],
     ]) {
         const prepared = await runTestCommand(command, { cwd: join(sandbox.path, '.gspot') });

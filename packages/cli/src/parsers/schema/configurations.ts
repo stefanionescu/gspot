@@ -16,6 +16,7 @@ import {
 import {
     levelSchema,
     outputSchema,
+    conditionSchema,
     operatingSystemSchema,
     settingValidationSchema,
     settingValueDeclarationSchema,
@@ -43,20 +44,6 @@ const filesSchema = z.strictObject({
     // The file types the ESLint plugins of the selected configurations lint, such as .vue, join the owned ones.
     eslint_plugins: z.boolean().default(false),
     kinds: z.array(fileKindSchema).default(['source']),
-});
-
-// The one way a manifest limits where something applies. It names a selected configuration, a setting with a value, detected
-// files, tags, or dependencies, or a git checkout. `git = false` means a folder with no .git. Each table takes the
-// conditions it can test.
-const conditionSchema = z.strictObject({
-    configuration: z.string().min(1),
-    setting: z.string().min(1),
-    value: z.union([z.string(), z.number(), z.boolean()]),
-    git: z.boolean(),
-    dependencies: z.array(z.string().min(1)).min(1),
-    filenames: z.array(z.string().min(1)).min(1),
-    tags: z.array(z.string().min(1)).min(1),
-    runtimes: z.array(z.enum(JAVASCRIPT_RUNTIMES)).min(1),
 });
 
 // An all-level syntax selector a fragment adds to the one no-restricted-syntax rule: everywhere, in the named files, or everywhere except the paths a setting allows.
@@ -87,19 +74,19 @@ const pointerSchema = z
         'Directory pointers require a body or a template.',
     );
 
+// A native tool-file consumer accepts one declared name or a nonempty list of names.
+const consumerNamesSchema = z
+    .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+    .transform((names) => (typeof names === 'string' ? [names] : names))
+    .default([]);
+
 const toolFileSchema = z
     .strictObject({
         source: z.string().optional(),
         target: z.string(),
         // Emit the target when an applicable check in its scope consumes any named tool.
-        tool: z
-            .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-            .transform((tool) => (typeof tool === 'string' ? [tool] : tool))
-            .default([]),
-        check: z
-            .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-            .transform((check) => (typeof check === 'string' ? [check] : check))
-            .default([]),
+        tool: consumerNamesSchema,
+        check: consumerNamesSchema,
         // Companion tools needed only when an applicable check consumes this configuration.
         required_tools: z.array(z.string().min(1)).default([]),
         rule_keys: z.array(z.string()).optional(),
@@ -170,7 +157,9 @@ const checkFields = z.strictObject({
         .min(1)
         .optional(),
     platforms: z.array(operatingSystemSchema).optional(),
-    tool: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]).optional(),
+    tool: z
+        .union([z.string().min(1), z.array(z.string().min(1)).min(1), z.record(z.string().min(1), z.string().min(1))])
+        .optional(),
     min_versions: z.record(z.string().min(1), versionFloorSchema).optional(),
     files: filesSchema.optional(),
     output: outputSchema.optional(),
@@ -193,10 +182,11 @@ const checkFields = z.strictObject({
 // A check runs its command, or gspot runs it itself when the check registry names its ID. A list of tools names the
 // tool the check runs, then the tools its command starts, such as the bash that runs Bats; each must be usable.
 const checkSchema = checkFields.transform(({ tool, ...check }) => {
-    const [first, ...others] = typeof tool === 'string' ? [tool] : (tool ?? []);
+    const [first, ...others] = Array.isArray(tool) ? tool : [];
+    const executable = Array.isArray(tool) ? first : tool;
     return {
         ...check,
-        ...(first === undefined ? {} : { tool: first }),
+        ...(executable === undefined ? {} : { tool: executable }),
         ...(others.length === 0 ? {} : { other_tools: others }),
     };
 });

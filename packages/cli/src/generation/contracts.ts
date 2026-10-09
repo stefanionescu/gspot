@@ -7,12 +7,12 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import type { EtaInputs } from '#cli/types/generation/eta.ts';
 import type { HookName } from '#cli/types/generation/hooks.ts';
 import { runGitBlocking } from '#cli/platform/git/contracts.ts';
+import { toolProjectPins } from '#cli/configurations/contracts.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { PYTHON_TOOL_PROJECT } from '#cli/config/parsers/packages.ts';
 import { isGitRepository } from '#cli/repository/discovery/contracts.ts';
 import { HOOK_ARGS, HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
-import { pythonPins, pythonConstraints } from '#cli/configurations/contracts.ts';
 import { generatedIgnores, hashCommentHeader } from '#cli/generation/documents/contracts.ts';
 import { HOOKS_DIRECTORY, TOOL_PYTHON_PROJECT, CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 
@@ -86,9 +86,8 @@ export function hookFiles(root: string, policy: Policy, version: string): Genera
  * @returns the Python tool project files, or none without Python tools
  */
 export function pythonProject(manifests: Manifest[]): GeneratedFile[] {
-    const dependencies = pythonPins(manifests);
+    const { python: dependencies, constraints } = toolProjectPins(manifests);
     if (dependencies.length === 0) return [];
-    const constraints = pythonConstraints(manifests);
     return [
         {
             path: TOOL_PYTHON_PROJECT,

@@ -4,8 +4,8 @@ import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { format, resolveConfig } from 'prettier';
 import { assetPath } from '#cli/platform/root/public.ts';
-import { npmPins } from '#cli/configurations/contracts.ts';
 import { JSON_INDENT } from '#cli/config/generation/eta.ts';
+import { toolProjectPins } from '#cli/configurations/contracts.ts';
 import { readInstalledNpmPackage } from '#automation/parsers/npm.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { ESLINT_REFRESH_ARGUMENT_COUNT } from '#automation/config/eslint-presets.ts';
@@ -34,7 +34,7 @@ const project = process.argv[2];
 if (project === undefined || process.argv.length !== ESLINT_REFRESH_ARGUMENT_COUNT)
     throw new Error('Pass the folder of the installed tool project: bun scripts/eslint-presets.ts .gspot');
 const manifests = configurationManifests();
-const versions = npmPins([...manifests.values()], undefined);
+const versions = toolProjectPins([...manifests.values()]).npm;
 const prepared = new Map<string, unknown>();
 const eslintEntry = Bun.resolveSync(ESLINT_RULE_NAMES_MODULE, join(process.cwd(), project));
 const eslintPackage = readInstalledNpmPackage(eslintEntry, 'eslint');

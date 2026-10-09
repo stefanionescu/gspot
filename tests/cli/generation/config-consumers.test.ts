@@ -6,8 +6,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { npmPins, toolPin } from '#cli/configurations/contracts.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
+import { toolPin, toolProjectPins } from '#cli/configurations/contracts.ts';
 import { configuredChecks, applicableManifests } from '#cli/planning/public.ts';
 import type { StylelintConfiguration } from '#tests/types/cli/generation/configuration-files.ts';
 
@@ -82,7 +82,7 @@ test.each(STYLELINT_CONSUMERS)('$name installs the HTML parser only for consumed
         ...entry.files,
     });
     const session = await openSession(sandbox.path);
-    const packages = npmPins(applicableManifests(session), undefined);
+    const packages = toolProjectPins(applicableManifests(session)).npm;
     expect(packages['postcss-html']).toBe(
         entry.needsHtmlParser ? toolPin(configurationManifests().values(), 'postcss-html').version : undefined,
     );
@@ -162,13 +162,12 @@ test.each(['recommended', 'all'] as const)(
         expect(paths).toContain('.gspot/config/taplo.toml');
         for (const path of ['.gspot/config/prettier.json', '.prettierrc.json', '.prettierignore'])
             expect(paths).not.toContain(path);
-        const packages = npmPins(applicableManifests(session), undefined);
+        const packages = toolProjectPins(applicableManifests(session)).npm;
         const manifests = configurationManifests();
         const fileManifest = manifests.get('files')!;
-        const expected = npmPins(
-            [{ ...fileManifest, tools: [...fileManifest.tools, toolPin(manifests.values(), 'editorconfig-checker')] }],
-            undefined,
-        );
+        const expected = toolProjectPins([
+            { ...fileManifest, tools: [...fileManifest.tools, toolPin(manifests.values(), 'editorconfig-checker')] },
+        ]).npm;
         expect(Object.keys(packages).toSorted((a, b) => a.localeCompare(b))).toStrictEqual(Object.keys(expected));
         expect(configuredChecks(session).map((check) => check.check.name)).not.toContain('format/prettier');
     },
