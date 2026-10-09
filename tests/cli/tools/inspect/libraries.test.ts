@@ -10,7 +10,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import { HOST_PLUGIN_REPORTS } from '#tests/config/cli/tools/versions.ts';
+import { HOST_PLUGIN_REPORTS } from '#tests/config/cli/tools/inspect.ts';
 
 test('library inspection reads native package metadata without executing an authored ESLint configuration', async () => {
     await using sandbox = await testdir();

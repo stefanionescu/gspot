@@ -6,7 +6,7 @@ import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { FINDINGS_SHOWN } from '#cli/config/terminal.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
-import { VERBOSITY_ARGS, VERBOSITY_CASES } from '#tests/config/cli/commands/verbosity.ts';
+import { VERBOSITY_ARGS, VERBOSITY_CASES } from '#tests/config/cli/commands/check/verbosity.ts';
 
 test.each([...VERBOSITY_CASES])(
     'check uses $name consistently and preserves full JSON',

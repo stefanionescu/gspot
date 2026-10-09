@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
 import { sqlIdentifiers } from '#cli/parsers/naming/public.ts';
-import { SQL_SOURCE } from '#tests/config/cli/checks/general/naming/sql.ts';
+import { SQL_SOURCE } from '#tests/config/cli/parsers/naming.ts';
 
 describe('sqlIdentifiers', () => {
     test('every declared name arrives with its category and its line', async () => {

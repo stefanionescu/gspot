@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { FIXER_FEEDBACK_CASES } from '#tests/config/cli/commands/correction-feedback.ts';
+import { FIXER_FEEDBACK_CASES } from '#tests/config/cli/commands/check/feedback.ts';
 
 test.each(FIXER_FEEDBACK_CASES)(
     'check correction feedback names $name and preserves preview bytes',

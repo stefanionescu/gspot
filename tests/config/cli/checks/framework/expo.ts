@@ -1,6 +1,6 @@
 import { PASSING_REPORT } from '#tests/config/samples/expo.ts';
-import type { DoctorResult } from '#tests/types/cli/checks/expo.ts';
 import { REPORT, EXPECTED_ISSUES } from '#tests/config/cli/parsers/expo.ts';
+import type { DoctorResult } from '#tests/types/cli/checks/framework/expo.ts';
 
 /** The supported Doctor reports and an unstructured process failure. */
 export const DOCTOR_RESULTS: DoctorResult[] = [

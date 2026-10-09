@@ -11,7 +11,7 @@ import { toolPin } from '#cli/configurations/contracts.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { buildBinaryPin, buildLibraryPin, inspectionContext } from '#tests/harness/pins.ts';
-import { VERSION_PROCESS_CASES, PACKAGE_METADATA_FAILURES } from '#tests/config/cli/tools/versions.ts';
+import { VERSION_PROCESS_CASES, PACKAGE_METADATA_FAILURES } from '#tests/config/cli/tools/inspect.ts';
 
 test.each(VERSION_PROCESS_CASES)('a version process classifies %s as %s', async (script, state, found, note) => {
     await using sandbox = await testdir();

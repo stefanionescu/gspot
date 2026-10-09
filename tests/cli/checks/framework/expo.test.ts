@@ -6,7 +6,7 @@ import { openSession } from '#cli/commands/public.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { DOCTOR_RESULTS, DOCTOR_VERSION } from '#tests/config/cli/checks/expo.ts';
+import { DOCTOR_RESULTS, DOCTOR_VERSION } from '#tests/config/cli/checks/framework/expo.ts';
 
 test.each(DOCTOR_RESULTS)('Expo Doctor preserves scoped orchestration for $name', async (entry) => {
     await using sandbox = await testdir();

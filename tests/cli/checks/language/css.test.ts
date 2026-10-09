@@ -8,7 +8,7 @@ import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
-import { DYNAMIC_READS } from '#tests/config/cli/checks/css-usage.ts';
+import { DYNAMIC_READS } from '#tests/config/cli/checks/language/css.ts';
 
 const options = buildRunOptions({ only: ['css/module-classes'] });
 
