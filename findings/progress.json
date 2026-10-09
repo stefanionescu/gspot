@@ -1,5 +1,5 @@
 {
-    "openRecords": 314,
+    "openRecords": 300,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -499,10 +499,68 @@
                 "User reply: Allow this verified size exception.",
                 "/tmp/gspot-lifecycle034035-a566-review/canonical.patch"
             ]
+        },
+        {
+            "id": "managed-native-tool-path-size-exception",
+            "date": "2026-10-09",
+            "scope": "review/tests-tools/061",
+            "decision": "Allow the verified managed Ruff/Vale path fix and duplicate executable lookup deletion, adding five bytes; nine native tests and 38 assertions.",
+            "evidence": ["User reply: yes.", "/tmp/gspot-tests-tools061-canonical.patch"]
+        },
+        {
+            "id": "five-test-owner-consolidation-size-exception",
+            "date": "2026-10-09",
+            "scope": "review/tests-layout/035,036; review/tests-cli/040,093,096",
+            "decision": "Allow the original verified five-record test-owner consolidation, adding 1,182 bytes with preserved parser/source/Git controls. This approval covers that patch only.",
+            "evidence": ["User reply: sure.", "/tmp/gspot-five-test-owner-final.patch"]
+        },
+        {
+            "id": "session-manifest-sharing-coverage-size-exception",
+            "date": "2026-10-09",
+            "scope": "review/code-commands/037",
+            "decision": "Allow the verified manifest sharing and native coverage; production shrinks 57 bytes and the whole change adds 5,238 bytes. One collection per final Session, distinct pre-policy init facts, unchanged Node/Bun emission.",
+            "evidence": ["User reply: sure.", "/tmp/gspot-command011037-261-review/readiness-freeze.json"]
+        },
+        {
+            "id": "generated-ci-setup-command-adoption",
+            "date": "2026-10-09",
+            "scope": "review/repository-root/032",
+            "decision": "Adopt the verified optional ci.setup command before generated install/check jobs with fail-fast behavior on both providers; allow the exact eight-owner 3,870-byte patch, including 474 production/type bytes. Preserve absent-setting outputs and manual job derivation.",
+            "evidence": [
+                "User reply: Adopt the verified CI setup setting.",
+                "/tmp/gspot-rr032-ci-setup-candidate-final-freeze.json"
+            ]
+        },
+        {
+            "id": "plugin-level-metadata-generated-capture-size-exception",
+            "date": "2026-10-09",
+            "scope": "review/code-commands/029",
+            "decision": "Allow the verified plugin configs.all metadata owner and removal of duplicated CLI rule gating. Authored code shrinks; the mandatory generated capture makes the complete change 324 bytes larger.",
+            "evidence": ["User reply: Allow this verified size exception.", "/tmp/gspot-cc029030045-final/freeze.json"]
+        },
+        {
+            "id": "configuration-reconciliation004005-size-exception",
+            "date": "2026-10-09",
+            "scope": "review/policy-exceptions/004,005",
+            "decision": "Allow the verified three-owner configuration reconciliation successor; preserve every authored manual choice while omitting automatic and inherited newly detected choices. Allow 6,035 bytes overall including 1,211 production bytes.",
+            "evidence": [
+                "User reply: Allow the verified reconciliation fix.",
+                "/tmp/gspot-policy-reconciliation004005/successor-final-freeze.json"
+            ]
+        },
+        {
+            "id": "named-release-age-test-data-size-exception",
+            "date": "2026-10-09",
+            "scope": "slices/tests-integration-checks/030",
+            "decision": "Allow the verified literal named release-age values and runner explanation, adding 181 test-only bytes with native TOML equivalence.",
+            "evidence": [
+                "User reply: Allow the verified test-data fix.",
+                "/tmp/gspot-test-contract-five-current/freeze.json"
+            ]
         }
     ],
     "implementationBatches": {
-        "openRecords": 314,
+        "openRecords": 300,
         "records": 1092,
         "batches": [
             {
@@ -1668,8 +1726,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 350,
-                "unresolvedAssignments": 119
+                "completedAssignments": 351,
+                "unresolvedAssignments": 118
             },
             {
                 "id": "scripts-repository",
@@ -2052,8 +2110,8 @@
                     "review/policy-exceptions/061",
                     "review/carve-outs/001"
                 ],
-                "completedAssignments": 31,
-                "unresolvedAssignments": 60
+                "completedAssignments": 43,
+                "unresolvedAssignments": 48
             },
             {
                 "id": "layout",
@@ -2149,8 +2207,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 72,
-                "unresolvedAssignments": 17
+                "completedAssignments": 73,
+                "unresolvedAssignments": 16
             },
             {
                 "id": "configurations",
@@ -7627,46 +7685,67 @@
             "verification": []
         },
         "review/policy-exceptions/009": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "verification": [
+                "Use the exact docs content configuration path instead of a broad prefix exemption.",
+                "Native policy contracts and staged check pass; /tmp/gspot-policy-cleanup12/final-freeze.json and /tmp/gspot-policy12-prose045-native061-main-staged.log."
+            ]
         },
         "review/policy-exceptions/010": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "verification": [
+                "Delete the unused HTML allowance.",
+                "Native policy contracts and staged check pass; /tmp/gspot-policy-cleanup12/final-freeze.json and /tmp/gspot-policy12-prose045-native061-main-staged.log."
+            ]
         },
         "review/policy-exceptions/013": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "verification": [
+                "Flatten the three prescribed config/type mirrors, update imports and remove the obsolete one-file-folder allowance; source move prerequisites are committed.",
+                "Native policy contracts and staged check pass; /tmp/gspot-policy-cleanup12/final-freeze.json and /tmp/gspot-policy12-prose045-native061-main-staged.log."
+            ]
         },
         "review/policy-exceptions/018": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "verification": [
+                "Delete the main-to-main architecture permission.",
+                "Native policy contracts and staged check pass; /tmp/gspot-policy-cleanup12/final-freeze.json and /tmp/gspot-policy12-prose045-native061-main-staged.log."
+            ]
         },
         "review/policy-exceptions/023": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "verification": [
+                "Limit declared test roles to test files; generated ESLint configuration reflects the declaration.",
+                "Native policy contracts and staged check pass; /tmp/gspot-policy-cleanup12/final-freeze.json and /tmp/gspot-policy12-prose045-native061-main-staged.log."
+            ]
         },
         "review/policy-exceptions/024": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "verification": [
+                "Retain actual package scripts paths and remove the redundant script-files override.",
+                "Native policy contracts and staged check pass; /tmp/gspot-policy-cleanup12/final-freeze.json and /tmp/gspot-policy12-prose045-native061-main-staged.log."
+            ]
         },
         "review/policy-exceptions/026": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "verification": [
+                "Delete obsolete fixed-key tables and CSS custom-syntax allowance while retaining owned types.",
+                "Native policy contracts and staged check pass; /tmp/gspot-policy-cleanup12/final-freeze.json and /tmp/gspot-policy12-prose045-native061-main-staged.log."
+            ]
         },
         "review/policy-exceptions/027": {
             "status": "pending",
@@ -7675,10 +7754,13 @@
             "verification": []
         },
         "review/policy-exceptions/028": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "verification": [
+                "Use TOML keys in normalized policy; keep only the exact reasoned naming override.",
+                "Native policy contracts and staged check pass; /tmp/gspot-policy-cleanup12/final-freeze.json and /tmp/gspot-policy12-prose045-native061-main-staged.log."
+            ]
         },
         "review/policy-exceptions/029": {
             "status": "pending",
@@ -7711,16 +7793,22 @@
             "verification": []
         },
         "review/policy-exceptions/037": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "verification": [
+                "Limit the tutorial-path exemption to docs/lychee; external guide checks remain selected.",
+                "Native policy contracts and staged check pass; /tmp/gspot-policy-cleanup12/final-freeze.json and /tmp/gspot-policy12-prose045-native061-main-staged.log."
+            ]
         },
         "review/policy-exceptions/040": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "verification": [
+                "Delete the axe spelling allowance. The actual final spelling/typos run passes in every scope and reports no axe finding; the stated fallback is unnecessary.",
+                "Native policy contracts and staged check pass; /tmp/gspot-policy-cleanup12/final-freeze.json and /tmp/gspot-policy12-prose045-native061-main-staged.log."
+            ]
         },
         "review/policy-exceptions/041": {
             "status": "pending",
@@ -7735,10 +7823,13 @@
             "verification": []
         },
         "review/policy-exceptions/044": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "verification": [
+                "Retain the approved local-action syntax conflict exception; give the checked-out PR and reusable-workflow commit reasons without a false all-jobs checkout claim.",
+                "Native policy contracts and staged check pass; /tmp/gspot-policy-cleanup12/final-freeze.json and /tmp/gspot-policy12-prose045-native061-main-staged.log."
+            ]
         },
         "review/policy-exceptions/046": {
             "status": "pending",
@@ -7747,10 +7838,13 @@
             "verification": []
         },
         "review/policy-exceptions/047": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "verification": [
+                "Remove the Astro collection Knip entry. Native Knip passes in all five scopes, so the stated unused-export fallback is unnecessary.",
+                "Native policy contracts and staged check pass; /tmp/gspot-policy-cleanup12/final-freeze.json and /tmp/gspot-policy12-prose045-native061-main-staged.log."
+            ]
         },
         "review/policy-exceptions/051": {
             "status": "pending",
@@ -10893,9 +10987,9 @@
             ]
         },
         "review/tests-layout/045": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
             "verification": [
                 "Evidence 24c6247ea8974d6e.",
                 "Evidence 5a502a906449f7b3.",
@@ -10923,7 +11017,9 @@
                 "Evidence f170b7b7ac9066d5.",
                 "Evidence bc40e9ab1be2ffdb.",
                 "Evidence cbfc00391f8ce5de.",
-                "Evidence a229ecec0bef1de6."
+                "Evidence a229ecec0bef1de6.",
+                "Delete prescribed boilerplate and replace authored fixture prose with sandbox/sample. Final 943-file AST census finds zero old outer comments, boilerplate or encoded authored prose; native paths, APIs and negative grammar remain.",
+                "The 21-owner final phase removes 115 bytes and preserves 763 assertions and 201 registrations. /tmp/gspot-layout045-prose-current/freeze.json; native CLI and tool controls, types, lint, formatting and mandatory staged check pass."
             ]
         },
         "review/tests-layout/046": {
@@ -11476,10 +11572,13 @@
             ]
         },
         "review/tests-tools/061": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "verification": [
+                "Use explicit managed Ruff/Vale paths and delete the duplicate executable lookup. Exact approved five-byte patch; nine native tests/38 assertions pass.",
+                "/tmp/gspot-tests-tools061-canonical.patch; combined staged and commit checks pass."
+            ]
         },
         "review/verification/002": {
             "status": "pending",
@@ -18645,6 +18744,36 @@
                 "The 45 move-table census is historical ownership evidence, not an unrelated aggregate size allocation.",
                 "Tests-layout/045 remains partial until all authored prose literals are corrected; native identifiers and parser-negative syntax remain exact.",
                 "No Windows-runtime or final full-suite acceptance is claimed."
+            ]
+        },
+        {
+            "commit": "acff97d297045cca054727e72f499181dedefa18",
+            "completedRecords": [
+                "review/policy-exceptions/009",
+                "review/policy-exceptions/010",
+                "review/policy-exceptions/013",
+                "review/policy-exceptions/018",
+                "review/policy-exceptions/023",
+                "review/policy-exceptions/024",
+                "review/policy-exceptions/026",
+                "review/policy-exceptions/028",
+                "review/policy-exceptions/037",
+                "review/policy-exceptions/040",
+                "review/policy-exceptions/044",
+                "review/policy-exceptions/047",
+                "review/tests-layout/045",
+                "review/tests-tools/061"
+            ],
+            "unresolvedRecords": 300,
+            "validation": [
+                "Mandatory staged check: 152 passed, zero failed, 11 skipped, zero findings. Normal commit hooks: 113 passed, zero failed, three skipped; commitlint passed.",
+                "Policy cleanup: 32 tests, 92 assertions; native effective selections and check sets agree across five scopes. Knip passes all five scopes. Normal gspot apply regenerated owned ESLint and Knip files; repeated emission writes zero files.",
+                "Native test prose controls: 85 tests/312 assertions and 154/615 CLI, plus 10/91 and 8/46 executable-tool controls; types, lint and formatting pass.",
+                "CI correctness amendment: 19 tests/60 assertions; actual CodeQL reports one test-file race before and zero after. Existing no-write observations remain.",
+                "Checkpoint removes 2,389 bytes overall. Tool-path five-byte increase uses the exact recorded owner approval."
+            ],
+            "limitations": [
+                "Cross-platform CI remains pending; local checks do not establish Windows behavior. Public npm and documentation-site release dependencies remain external to main/001."
             ]
         }
     ],

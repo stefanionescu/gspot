@@ -1,6 +1,6 @@
 # Tests: Tools, Plugin, Packages, and the Harness
 
-5 unresolved review records remain.
+4 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -307,3 +307,11 @@ Original records and quotations remain above. These records are complete at `38c
 | ID                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                      |
 | ------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/tests-tools/037` | complete | Move live suite-only marker and captured-invocation types to their test mirrors; split empty tooling and shared check declarations into init and sample owners. Existing selected-configuration and secret owners already satisfy the delegated fixes. Consumer support now has one owner. Commit `38ccc4d35eb84863786d6e2d0f1a926774c8a48a`. |
+
+## Implementation checkpoint acff97d29 of October 9, 2026 for policy-twelve-and-test-contracts
+
+Original records and quotations remain above. These records are complete at `acff97d297045cca054727e72f499181dedefa18`.
+
+| ID                       | Status   | Evidence                                                                                                                                                                                                                                                                                     |
+| ------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-tools/061` | complete | Use explicit managed Ruff/Vale paths and delete the duplicate executable lookup. Exact approved five-byte patch; nine native tests/38 assertions pass. /tmp/gspot-tests-tools061-canonical.patch; combined staged and commit checks pass. Commit `acff97d297045cca054727e72f499181dedefa18`. |
