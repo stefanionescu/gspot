@@ -7,6 +7,7 @@ import { fakeTool } from '#tests/harness/platforms.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
 
+// mise reads this sandbox's stub tools from PATH.
 const TOOL_FAILURES_POLICY = buildPolicy(['files'], {
     tables: 'runner = "mise"\n',
     level: 'all',

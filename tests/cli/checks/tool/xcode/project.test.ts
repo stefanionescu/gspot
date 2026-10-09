@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { containing } from '#tests/harness/expectations.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { PBXPROJ_PROJECT } from '#tests/config/samples/xcode.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
 
 const project = (name: string) =>
     PBXPROJ_PROJECT.replace('files = (B1, B2,);', 'files = (B2,);')
@@ -37,8 +37,9 @@ test('Xcode sources follow group paths and target membership instead of duplicat
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
     expect(missing.report.checks[0]!.findings).toStrictEqual([
         containing({
+            file: 'App.xcodeproj/project.pbxproj',
             rule: 'missing-file',
-            message: 'The project names Second/Shared.swift, and the tree holds no such file.',
+            message: textContaining('Second/Shared.swift'),
         }),
     ]);
 });

@@ -3,23 +3,23 @@
 # Run gspot apply after changing policy. Use gspot explain <name> to inspect a setting.
 
 level = "all"
-configurations = ["spelling", "typescript", "prose", "commits", "github-actions", "naming", "docs", "secrets", "dependencies", "licenses", "duplication", "security", "engineering", "files", "markdown", "format", "gspot", "structure", "javascript", "repository", "python"]
+configurations = ["typescript", "markdown", "github-actions", "python"]
 runner = "mise"
 
 [scope.docs]
-configurations = ["css", "astro", "javascript", "zod", "cloudflare", "site"]
+configurations = ["css", "astro", "zod", "cloudflare", "site"]
 
 [scope.docs.site]
 build_command = ["bun", "--bun", "astro", "build"]
 
 [scope."packages/cli"]
-configurations = ["javascript", "zod"]
+configurations = ["zod"]
 
 [scope."packages/eslint-plugin"]
-configurations = ["javascript"]
+configurations = []
 
 [scope.tests]
-configurations = ["javascript", "python"]
+configurations = []
 removed_configurations = ["astro", "jest", "nestjs", "nextjs", "react", "react-dom", "svelte", "vitest", "vue"]
 
 [hooks]

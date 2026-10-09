@@ -14,7 +14,16 @@ import { rm, unlink, readFile, writeFile } from 'node:fs/promises';
 import { openSession, applyCommand } from '#cli/commands/public.ts';
 import type { NpmLockfile } from '#tests/types/cli/commands/reconciliation.ts';
 import { EXPO_DEPENDENCIES, NATIVE_DEPENDENCIES } from '#tests/config/samples/react.ts';
-import { NPM_SUCCESS, NPM_VERSION, MOBILE_RECONCILIATION_POLICY } from '#tests/config/cli/commands/reconciliation.ts';
+
+import {
+    NPM_SUCCESS,
+    NPM_VERSION,
+    NESTED_SELECTION_FILES,
+    REQUIRED_SELECTION_FILES,
+    INHERITED_SELECTION_FILES,
+    INHERITED_SELECTION_TABLE,
+    MOBILE_RECONCILIATION_POLICY,
+} from '#tests/config/cli/commands/reconciliation.ts';
 
 test('Expo choices survive dependency removal while native tool options and previewed writes agree', async () => {
     using registry = mockNpmLockfile();
@@ -171,4 +180,58 @@ test('absent scopes retain authored settings without planning their checks or to
     const stable = await readTree(sandbox.path);
     await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(await readTree(sandbox.path)).toStrictEqual(stable);
+});
+
+test.each(['recommended', 'all'] as const)(
+    '%s apply retains authored choices without adding automatic or inherited selections',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            ...INHERITED_SELECTION_FILES,
+            'gspot.toml': buildPolicy(['typescript', 'python'], { level, tables: INHERITED_SELECTION_TABLE }),
+        });
+        commitAll(sandbox.path);
+        const before = await readTree(sandbox.path);
+        const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
+        expect(await readTree(sandbox.path)).toStrictEqual(before);
+        await applyCommand({ cwd: sandbox.path, isDryRun: false });
+        const path = join(sandbox.path, 'gspot.toml');
+        expect(await readFile(path, 'utf8')).toBe((preview.json as ApplyPlanJson).policy);
+        const session = await openSession(sandbox.path);
+        expect(session.policyFiles.policy.configurations).toStrictEqual(['typescript', 'python']);
+        expect(session.policyFiles.policy.scope['app']?.configurations).toStrictEqual(['python']);
+        const child = session.scopes.find(({ scope }) => scope.path === 'app');
+        const selected = child?.selected.map((manifest) => manifest.configuration.name);
+        for (const name of ['javascript', 'typescript', 'python', 'engineering', 'files', 'format'])
+            expect(selected).toContain(name);
+        const stable = await readTree(sandbox.path);
+        await applyCommand({ cwd: sandbox.path, isDryRun: false });
+        expect(await readTree(sandbox.path)).toStrictEqual(stable);
+        await writeFile(join(sandbox.path, 'run.sh'), 'echo source\n');
+        await applyCommand({ cwd: sandbox.path, isDryRun: false });
+        const detected = await openSession(sandbox.path);
+        expect(detected.policyFiles.policy.configurations).toStrictEqual(['typescript', 'python', 'bash']);
+        expect(detected.policyFiles.policy.scope['app']?.configurations).toStrictEqual(['python']);
+    },
+);
+
+test('apply records a newly detected parent stack once and preserves inherited child choices', async () => {
+    await using sandbox = await testdir({ ...NESTED_SELECTION_FILES, 'gspot.toml': buildPolicy([]) });
+    await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    const session = await openSession(sandbox.path);
+    expect(session.policyFiles.policy.configurations).toStrictEqual([]);
+    expect(session.policyFiles.policy.scope['app']?.configurations).toStrictEqual(['javascript', 'react']);
+    expect(session.policyFiles.policy.scope['app/child']?.configurations).toStrictEqual([]);
+    const child = session.scopes.find(({ scope }) => scope.path === 'app/child');
+    const selected = child?.selected.map((manifest) => manifest.configuration.name);
+    for (const name of ['javascript', 'react']) expect(selected).toContain(name);
+    const stable = await readTree(sandbox.path);
+    await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(await readTree(sandbox.path)).toStrictEqual(stable);
+    await createFileTree(sandbox.path, REQUIRED_SELECTION_FILES);
+    await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    const required = await openSession(sandbox.path);
+    expect(required.policyFiles.policy.configurations).toStrictEqual(['typescript']);
+    expect(required.policyFiles.policy.scope['app']?.configurations).toStrictEqual(['javascript', 'react']);
+    expect(required.policyFiles.policy.scope['app/child']?.configurations).toStrictEqual([]);
 });

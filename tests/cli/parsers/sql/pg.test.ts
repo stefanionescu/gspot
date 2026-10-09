@@ -1,4 +1,3 @@
-// The SQL parser in a fresh process: concurrent parses each keep their own result.
 import { test, expect } from 'bun:test';
 import { parse } from '#cli/parsers/sql/contracts.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
@@ -9,7 +8,7 @@ import { containing, textContaining } from '#tests/harness/expectations.ts';
 test('concurrent SQL parsing returns independent results in a fresh process', async () => {
     const script = `
         import { parse } from ${JSON.stringify(await Bun.resolve('#cli/parsers/sql/contracts.ts', import.meta.dir))};
-        const parsed = await Promise.all(['SELECT 1', '${TYPO.select} 2', 'SELECT 3'].map((sql) => parse(sql)));
+        const parsed = await Promise.all(['SELECT 1', '${TYPO.select} 2', 'SELECT 3'].map(parse));
         console.log(JSON.stringify(parsed.map((result) => result.error ?? null)));
     `;
     const result = runTestCommandBlocking([process.execPath, '-e', script], { cwd: process.cwd() });

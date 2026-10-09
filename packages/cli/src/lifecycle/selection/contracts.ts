@@ -2,9 +2,12 @@
 import { isDeepStrictEqual } from 'node:util';
 import { isRecord } from '#cli/platform/contracts.ts';
 import type { Session } from '#cli/types/planning.ts';
+import { byScopeDepth } from '#cli/repository/paths/public.ts';
 import { npmToolNames } from '#cli/configurations/contracts.ts';
 import { selectForInit } from '#cli/lifecycle/selection/public.ts';
 import { plannedScopes } from '#cli/repository/paths/contracts.ts';
+import { selectConfigurations } from '#cli/configurations/public.ts';
+import { selectForScope } from '#cli/repository/selection/public.ts';
 import type { Policy, Mutation } from '#cli/types/policy/settings.ts';
 import type { InitSelection, ConfigurationMerge, ConfigurationReconciliation } from '#cli/types/lifecycle/selection.ts';
 
@@ -14,20 +17,36 @@ function mergeConfigurationChoices({ saved, found, removed }: ConfigurationMerge
 
 function reconcileChoices(session: Session, detected: InitSelection): ConfigurationReconciliation {
     const { policy } = session.policyFiles;
+    const selected = new Set([
+        ...session.scopes
+            .filter(({ scope }) => scope.path === '')
+            .flatMap(({ selected }) => selected.map((manifest) => manifest.configuration.name)),
+        ...selectConfigurations(detected.rootIds, session.manifests).flatMap(
+            (manifest) => manifest.configuration.requires,
+        ),
+    ]);
     const rootIds = mergeConfigurationChoices({
         saved: policy.configurations,
-        found: detected.rootIds,
+        found: detected.rootIds.filter((id) => !selected.has(id)),
         removed: policy.removed_configurations,
     });
+    const selections = { ...policy, configurations: rootIds, scope: { ...policy.scope } };
     const scopeIds = new Map(
-        [...detected.scopeConfigurations].map(([path, found]) => [
-            path,
-            mergeConfigurationChoices({
-                saved: policy.scope[path]?.configurations ?? [],
-                found,
-                removed: policy.scope[path]?.removed_configurations ?? [],
+        [...detected.scopeConfigurations]
+            .toSorted(([left], [right]) => byScopeDepth(left, right))
+            .map(([path, found]) => {
+                const inherited = new Set(
+                    selectForScope(selections, path, session.manifests).map((manifest) => manifest.configuration.name),
+                );
+                const removed = policy.scope[path]?.removed_configurations ?? [];
+                const configurations = mergeConfigurationChoices({
+                    saved: policy.scope[path]?.configurations ?? [],
+                    found: found.filter((id) => !inherited.has(id)),
+                    removed,
+                });
+                selections.scope[path] = { configurations, removed_configurations: removed };
+                return [path, configurations] as const;
             }),
-        ]),
     );
     const notes: string[] = [];
     const describe = (path: string, saved: string[], wanted: string[]): void => {

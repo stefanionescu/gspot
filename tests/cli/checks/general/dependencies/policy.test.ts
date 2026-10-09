@@ -8,7 +8,7 @@ import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { createTestRepository, prepareCliRepository } from '#tests/harness/repository.ts';
-import { INVALID, REPOSITORY } from '#tests/config/cli/checks/general/dependencies/policy.ts';
+import { INVALID, REPOSITORY, SEVEN_DAYS_S } from '#tests/config/cli/checks/general/dependencies/policy.ts';
 
 describe('the dependencies configuration', () => {
     const resources = new AsyncDisposableStack();
@@ -44,7 +44,7 @@ test.each(['bun.lock', 'bun.lockb'])(
         expect(failed.report.checks).toMatchObject([
             { status: 'failed', findings: [{ file: 'bunfig.toml', line: 1, rule: 'release-age' }] },
         ]);
-        await Bun.write(join(sandbox.path, 'bunfig.toml'), '[install]\nminimumReleaseAge = 604800\n');
+        await Bun.write(join(sandbox.path, 'bunfig.toml'), `[install]\nminimumReleaseAge = ${SEVEN_DAYS_S}\n`);
         const corrected = await checkReport(sandbox.path, [
             'check',
             '--only',
@@ -64,9 +64,9 @@ test('Bun release-age policy reads each project scope and keeps findings inside 
             tables: '[scope."apps/first"]\nconfigurations = ["dependencies"]\n[scope."apps/second"]\nconfigurations = ["dependencies"]\n[scope."apps/second".dependencies]\nmin_release_age_days = 14\n',
         }),
         'apps/first/bun.lock': '{}\n',
-        'apps/first/bunfig.toml': '[install]\nminimumReleaseAge = 604800\n',
+        'apps/first/bunfig.toml': `[install]\nminimumReleaseAge = ${SEVEN_DAYS_S}\n`,
         'apps/second/bun.lockb': 'fixture lockfile bytes',
-        'apps/second/bunfig.toml': '[install]\nminimumReleaseAge = 604800\n',
+        'apps/second/bunfig.toml': `[install]\nminimumReleaseAge = ${SEVEN_DAYS_S}\n`,
     });
     const failed = await checkReport(sandbox.path, ['check', '--only', 'dependencies/bun-release-age', '--json']);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);

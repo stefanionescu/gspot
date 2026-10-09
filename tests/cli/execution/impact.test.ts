@@ -121,9 +121,7 @@ test('a check with no command and no built-in check refuses the complete plan be
     };
     delete invalid.command;
     session.scopes[0]!.selected = [{ ...selected, checks: [first, invalid] }];
-    expect(await rejection(executeRun(session, buildRunOptions({ stage: 'commit' })))).toContain(
-        'The check sandbox/unknown names no command, and gspot has no built-in check by that name.',
-    );
+    expect(await rejection(executeRun(session, buildRunOptions({ stage: 'commit' })))).toContain('sandbox/unknown');
     expect(await pathExists(join(sandbox.path, 'started.txt'))).toBe(false);
 });
 

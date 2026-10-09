@@ -2,6 +2,9 @@ import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { CaseChanges } from '#tests/types/harness/preservation.ts';
 import type { InProcessScenario } from '#tests/types/harness/repository.ts';
 
+export const ONE_HOUR_S = '3600';
+export const SEVEN_DAYS_S = '604800';
+
 export const INVALID: (CaseChanges & Record<'expected', string>)[] = [
     {
         check: 'dependencies/package-json',
@@ -37,20 +40,19 @@ export const REPOSITORY: InProcessScenario = {
 export const CASES: FindingCase[] = [
     {
         check: 'dependencies/bun-release-age',
-        files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 3600\n' },
+        files: { 'bun.lock': '{}\n', 'bunfig.toml': `[install]\nminimumReleaseAge = ${ONE_HOUR_S}\n` },
         expected: { file: 'bunfig.toml', rule: 'release-age', line: 1 },
-        corrected: { files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 604800\n' } },
+        corrected: { files: { 'bun.lock': '{}\n', 'bunfig.toml': `[install]\nminimumReleaseAge = ${SEVEN_DAYS_S}\n` } },
     },
     {
         check: 'dependencies/bun-release-age',
-        files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 604800\n' },
+        files: { 'bun.lock': '{}\n', 'bunfig.toml': `[install]\nminimumReleaseAge = ${SEVEN_DAYS_S}\n` },
         policy: '[dependencies]\nscanner = "@socketsecurity/bun-security-scanner"\n',
         expected: { file: 'bunfig.toml', rule: 'security-scanner', line: 1 },
         corrected: {
             files: {
                 'bun.lock': '{}\n',
-                'bunfig.toml':
-                    '[install]\nminimumReleaseAge = 604800\n[install.security]\nscanner = "@socketsecurity/bun-security-scanner"\n',
+                'bunfig.toml': `[install]\nminimumReleaseAge = ${SEVEN_DAYS_S}\n[install.security]\nscanner = "@socketsecurity/bun-security-scanner"\n`,
             },
         },
     },
