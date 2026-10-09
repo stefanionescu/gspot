@@ -4,8 +4,8 @@ import type { PackageCheckCase } from '#tests/types/packages/check-case.ts';
 export const PROSE_CHECK: PackageCheckCase = {
     only: 'prose/vale',
     path: 'guide.md',
-    sample: '# Schedule\n\nNebulaConfiguration uses TypeScript. Release on 03/04/2026.\n',
-    corrected: '# Schedule\n\nNebulaConfiguration uses TypeScript. Release on March 4, 2026.\n',
+    sample: '# Schedule\n\nNebulaConfiguration uses Python. Release on 03/04/2026.\n',
+    corrected: '# Schedule\n\nNebulaConfiguration uses Python. Release on March 4, 2026.\n',
     findings: [{ line: 3, rule: 'gspot.dates' }],
 };
 

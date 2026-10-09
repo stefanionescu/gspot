@@ -122,7 +122,7 @@ test('one installed consumer runs the pinned language tools against samples and 
             );
             const acceptedWords = vocabulary.trim().split('\n');
             expect(acceptedWords).toContain('NebulaConfiguration');
-            expect(acceptedWords).toContain('TypeScript');
+            expect(acceptedWords).toContain('Python');
         }
     }
     await expectInstalledSql(installation);

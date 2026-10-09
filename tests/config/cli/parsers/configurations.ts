@@ -18,3 +18,11 @@ export const SEMGREP_ASSETS = [
     'configurations/language/example/semgrep/second.yml.eta',
     'configurations/language/example/semgrep/not-a-pack.yml',
 ];
+
+/** Authored paths cannot be hidden through manifest-owned installation ignores. */
+export const IGNORED_PATH_REFUSALS = [
+    { path: 'source/', reason: 'Ignored paths must stay inside .gspot.' },
+    { path: '.gspot/../source/', reason: 'Ignored paths must stay inside .gspot.' },
+    { path: '.gspot/./downloads/', reason: 'Ignored paths must stay inside .gspot.' },
+    { path: '.gspot/downloads/\nsource/', reason: 'Ignored paths must stay inside .gspot.' },
+];

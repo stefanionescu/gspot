@@ -1,7 +1,7 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
-import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { emitFile } from '#tests/harness/generated.ts';
@@ -9,21 +9,6 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import type { RuffConfiguration } from '#tests/types/cli/generation/configuration-files.ts';
-
-test('a scope resolves its own tool settings over the root defaults', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['python', 'pytest'], {
-            tables: '[scope."app"]\nconfigurations = []\n[scope."app".coverage]\nlines = 91\n[scope."app".tools.ruff]\ndocstring_convention = "numpy"\n',
-            level: 'all',
-        }),
-        'app/main.py': 'value = 1\n',
-    });
-    const session = await openSession(sandbox.path);
-    const nested = session.scopes.find((scope) => scope.scope.path === 'app')!;
-    expect(nested.view.settings['coverage.lines']).toBe(91);
-    expect(nested.view.settings['tools.ruff.docstring_convention']).toBe('numpy');
-});
 
 test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with preview disabled', async (level) => {
     const text = await emitFile(

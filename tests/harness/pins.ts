@@ -5,6 +5,7 @@ import { spyOn } from 'bun:test';
 import { join, basename } from 'node:path';
 import * as processes from '#cli/platform/public.ts';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
+import type { ToolSearch } from '#cli/types/tools/install.ts';
 
 /**
  * Replace executable lookup and version processes while a test owns native command output.
@@ -61,4 +62,13 @@ export function buildBinaryPin(name: string, version: string, npm?: string): Too
         version,
         installers: npm === undefined ? {} : { npm: { name: npm, version } },
     };
+}
+
+/**
+ * Start a tool inspection with a cache owned by its test.
+ * @param root the repository whose tools the test inspects
+ * @returns the tool search and its empty inspection cache
+ */
+export function inspectionContext(root: string): ToolSearch {
+    return { root, inspections: new Map() };
 }

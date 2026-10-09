@@ -10,14 +10,14 @@ import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';
+import { buildBinaryPin, buildLibraryPin, inspectionContext } from '#tests/harness/pins.ts';
 import { VERSION_PROCESS_CASES, PACKAGE_METADATA_FAILURES } from '#tests/config/cli/tools/versions.ts';
 
 test.each(VERSION_PROCESS_CASES)('a version process classifies %s as %s', async (script, state, found, note) => {
     await using sandbox = await testdir();
     using _which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     const tool = { ...buildBinaryPin('version-teller', '3.8.1'), version_command: ['-e', script] };
-    const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+    const inspection = inspectTool(inspectionContext(sandbox.path), tool);
     expect(inspection.state).toBe(state);
     expect(inspection.found).toBe(found);
     expect(inspection.note).toBe(note);
@@ -32,10 +32,7 @@ test('an npm package version does not hide a failed executable', async () => {
     await chmod(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
     await mkdir(join(sandbox.path, '.gspot/node_modules/.bin'));
     await symlink('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
-    const inspection = inspectTool(
-        { root: sandbox.path, inspections: new Map() },
-        buildBinaryPin('teller', '5.0.1', 'teller'),
-    );
+    const inspection = inspectTool(inspectionContext(sandbox.path), buildBinaryPin('teller', '5.0.1', 'teller'));
     expect(inspection.state).toBe('error');
     expect(inspection.note).toContain('exited 7');
 });
@@ -48,7 +45,7 @@ test('a manifest can declare its help command status without accepting other fai
         version_command: ['-e', 'console.log("version-help 3.8.1"); process.exitCode = 2;'],
         version_exit_code: 2,
     };
-    const context = { root: sandbox.path, inspections: new Map() };
+    const context = inspectionContext(sandbox.path);
     const inspection = inspectTool(context, tool);
     expect(inspection.state).toBe('ok');
     expect(inspection.found).toBe('3.8.1');
@@ -108,7 +105,7 @@ test.each([
         version_command: ['-e', `console.log("GNU bash, version ${version}(1)-release")`],
         version_pattern: String.raw`version (\d+\.\d+(?:\.\d+)?)`,
     };
-    const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+    const inspection = inspectTool(inspectionContext(sandbox.path), tool);
     expect(inspection).toMatchObject({ state, found: version, floor: '4.4' });
 });
 
@@ -124,10 +121,7 @@ test('an npm tool behind a shim file takes the version of its package', async ()
         ...binEntry,
     });
     for (const path of Object.keys(binEntry)) await chmod(join(sandbox.path, path), EXECUTABLE_FILE);
-    const inspection = inspectTool(
-        { root: sandbox.path, inspections: new Map() },
-        buildBinaryPin('teller', '5.0.1', 'teller'),
-    );
+    const inspection = inspectTool(inspectionContext(sandbox.path), buildBinaryPin('teller', '5.0.1', 'teller'));
     expect(inspection.state, inspection.note).toBe('ok');
     expect(inspection.found).toBe('5.0.1');
 });
@@ -149,7 +143,7 @@ test.each(['gitleaks', 'next'])('the shipped %s pin inspects versions below and 
     for (const version of [belowFloor(floor), floor]) {
         const printed = name === 'next' ? `Next.js v${version}` : version;
         const tool = { ...pin, version_command: ['-e', `console.log(${JSON.stringify(printed)});`] };
-        expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
+        expect(inspectTool(inspectionContext(sandbox.path), tool)).toMatchObject({
             state: version === floor ? available : 'outdated',
             found: version,
             floor,
@@ -164,7 +158,7 @@ test.each([...PACKAGE_METADATA_FAILURES])(
         const path = join(sandbox.path, '.gspot/node_modules/teller/package.json');
         const original = JSON.stringify(manifest);
         await createFileTree(sandbox.path, { '.gspot/node_modules/teller/package.json': original });
-        const context = { root: sandbox.path, inspections: new Map() };
+        const context = inspectionContext(sandbox.path);
         const tool = buildLibraryPin('teller', '5.0.1');
         expect(() => inspectTool(context, tool)).toThrow(`Cannot read package manifest ${path}:`);
         expect(await Bun.file(path).text()).toBe(original);

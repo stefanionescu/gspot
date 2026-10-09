@@ -1,8 +1,8 @@
 import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { inspectTool } from '#cli/tools/public.ts';
 import { readPolicy } from '#cli/policy/public.ts';
+import { inspectTool } from '#cli/tools/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as environment from '#cli/platform/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -13,8 +13,8 @@ import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { chmod, mkdir, unlink, symlink } from 'node:fs/promises';
 import { runTool, locateCandidates } from '#cli/tools/contracts.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { buildBinaryPin, buildLibraryPin, inspectionContext } from '#tests/harness/pins.ts';
 
 test.skipIf(!isPosix)(
     'the tool inspection > version inspections and tool execution prefer helpers from the selected installation',
@@ -30,7 +30,7 @@ test.skipIf(!isPosix)(
             await chmod(join(sandbox.path, path), EXECUTABLE_FILE);
         const env = { PATH: join(sandbox.path, 'unrelated') };
         const tool = { ...buildBinaryPin('teller', '3.8.1'), env };
-        const read = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+        const read = inspectTool(inspectionContext(sandbox.path), tool);
         expect(read).toMatchObject({ state: 'ok', found: '3.8.1' });
         const executed = await runTool([read.path!], { cwd: sandbox.path, env });
         expect(executed.code).toBe(0);
@@ -50,7 +50,7 @@ test('the tool inspection > an active PATH executable wins over an unrelated mis
     await chmod(join(sandbox.path, 'mise/shims/teller'), EXECUTABLE_FILE);
     using _which = spyOn(executables, 'sync').mockReturnValue(active);
     using _home = spyOn(environment, 'miseHome').mockReturnValue(join(sandbox.path, 'mise'));
-    const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, buildBinaryPin('teller', '3.8.1'));
+    const inspection = inspectTool(inspectionContext(sandbox.path), buildBinaryPin('teller', '3.8.1'));
     expect(inspection.state).toBe('ok');
     expect(inspection.path).toBe(active);
 });
@@ -67,7 +67,7 @@ test('the tool inspection > a managed npm inspection refuses a linked manifest b
     await mkdir(join(sandbox.path, '.gspot/node_modules/.bin'));
     await symlink('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
     await symlink(join(outside.path, 'package.json'), manifest);
-    const context = { root: sandbox.path, inspections: new Map() };
+    const context = inspectionContext(sandbox.path);
     const tool = buildBinaryPin('teller', '5.0.1', 'teller');
     expect(() => inspectTool(context, tool)).toThrow('private regular file');
     expect(await pathExists(join(sandbox.path, 'executed'))).toBe(false);
@@ -87,10 +87,7 @@ test('the tool inspection > an npm tool is the version its package holds, whatev
     await chmod(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
     await mkdir(join(sandbox.path, '.gspot/node_modules/.bin'));
     await symlink('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
-    const inspection = inspectTool(
-        { root: sandbox.path, inspections: new Map() },
-        buildBinaryPin('teller', '5.0.1', 'teller'),
-    );
+    const inspection = inspectTool(inspectionContext(sandbox.path), buildBinaryPin('teller', '5.0.1', 'teller'));
     expect(inspection.found).toBe('5.0.1');
     expect(inspection.state).toBe('ok');
 });
@@ -113,7 +110,7 @@ test.each([
         tool.min_version = '0.9.0';
         tool.env = { WRAPPER_NATIVE_VERSION: native };
         tool.installers['npm'] = { name: 'wrapper', version: '0.7.0' };
-        const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+        const inspection = inspectTool(inspectionContext(sandbox.path), tool);
         expect(inspection.found).toBe(native);
         expect(inspection.state).toBe(state);
     },
@@ -125,7 +122,7 @@ test('the tool inspection > a shim that no configuration gives a version is miss
         'node_modules/.bin/shimmed': "#!/bin/sh\necho 'mise ERROR No version is set for shim: shimmed' >&2\nexit 1\n",
     });
     await chmod(join(sandbox.path, 'node_modules/.bin/shimmed'), EXECUTABLE_FILE);
-    const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, buildBinaryPin('shimmed', '3.8.1'));
+    const inspection = inspectTool(inspectionContext(sandbox.path), buildBinaryPin('shimmed', '3.8.1'));
     expect(inspection.state).toBe('missing');
     expect(inspection.want).toBe('3.8.1');
 });
@@ -136,7 +133,7 @@ test('the tool inspection > color codes around a version are no part of it', asy
         'node_modules/.bin/painter': "#!/bin/sh\nprintf 'painter \\033[1;36m26.8.0\\033[0m using more\\n'\n",
     });
     await chmod(join(sandbox.path, 'node_modules/.bin/painter'), EXECUTABLE_FILE);
-    const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, buildBinaryPin('painter', '26.8.0'));
+    const inspection = inspectTool(inspectionContext(sandbox.path), buildBinaryPin('painter', '26.8.0'));
     expect(inspection.found).toBe('26.8.0');
     expect(inspection.state).toBe('ok');
 });
@@ -147,12 +144,10 @@ test('the tool inspection > a library is found only in its tool project installa
         '.gspot/node_modules/globals/package.json': '{"name":"globals","version":"17.12.0"}',
         'api/node_modules/eslint-plugin-n/package.json': '{"name":"eslint-plugin-n","version":"18.3.0"}',
     });
-    expect(
-        inspectTool({ root: sandbox.path, inspections: new Map() }, buildLibraryPin('globals', '17.12.0')).state,
-    ).toBe('ok');
-    expect(
-        inspectTool({ root: sandbox.path, inspections: new Map() }, buildLibraryPin('eslint-plugin-n', '18.3.0')).state,
-    ).toBe('missing');
+    expect(inspectTool(inspectionContext(sandbox.path), buildLibraryPin('globals', '17.12.0')).state).toBe('ok');
+    expect(inspectTool(inspectionContext(sandbox.path), buildLibraryPin('eslint-plugin-n', '18.3.0')).state).toBe(
+        'missing',
+    );
 });
 
 test('the tool inspection > a library that is absent is missing, and one off its pin is reported', async () => {
@@ -160,13 +155,10 @@ test('the tool inspection > a library that is absent is missing, and one off its
     await createFileTree(sandbox.path, {
         '.gspot/node_modules/typescript/package.json': '{"name":"typescript","version":"6.0.0"}',
     });
-    const absent = inspectTool(
-        { root: sandbox.path, inspections: new Map() },
-        buildLibraryPin('eslint-plugin-regexp', '3.3.0'),
-    );
+    const absent = inspectTool(inspectionContext(sandbox.path), buildLibraryPin('eslint-plugin-regexp', '3.3.0'));
     expect(absent.state).toBe('missing');
     expect(absent.want).toBe('3.3.0');
-    const newer = inspectTool({ root: sandbox.path, inspections: new Map() }, buildLibraryPin('typescript', '5.9.3'));
+    const newer = inspectTool(inspectionContext(sandbox.path), buildLibraryPin('typescript', '5.9.3'));
     expect(newer.state).toBe('newer');
     expect(newer.found).toBe('6.0.0');
 });
@@ -193,8 +185,7 @@ test.each(['mise', 'npm'])(
             log.save();
         }
         const context = {
-            root: sandbox.path,
-            inspections: new Map(),
+            ...inspectionContext(sandbox.path),
             policyFiles: readPolicy(sandbox.path),
             getPendingInstallations: (path: string) => getOwnership(path).installing,
         };

@@ -8,6 +8,7 @@ import {
     SEMGREP_ASSETS,
     TOOL_DECLARATION,
     SECURITY_DECLARATION,
+    IGNORED_PATH_REFUSALS,
     SUPPRESSION_DECLARATION,
     SYNTAX_SELECTOR_DECLARATION,
 } from '#tests/config/cli/parsers/configurations.ts';
@@ -198,18 +199,14 @@ test('configuration product names validate once as native manifest words', () =>
     ).toThrow('products');
 });
 
-// One path per refusal: outside .gspot, a parent segment, a current segment, and a character no name holds.
-test.each(['source/', '.gspot/../source/', '.gspot/./downloads/', '.gspot/downloads/\nsource/'])(
-    'a manifest cannot hide authored paths through %s',
-    (path) => {
-        expect(() =>
-            parseManifest(
-                `ignored = [${JSON.stringify(path)}]\n` + CONFIGURATION_TABLE,
-                'configurations/general/local',
-            ),
-        ).toThrow();
-        expect(() =>
-            parseManifest('ignored = [".gspot/downloads/"]\n' + CONFIGURATION_TABLE, 'configurations/general/local'),
-        ).not.toThrow();
-    },
-);
+test.each(IGNORED_PATH_REFUSALS)('a manifest cannot hide authored paths through $path', ({ path, reason }) => {
+    expect(() =>
+        parseManifest(`ignored = [${JSON.stringify(path)}]\n` + CONFIGURATION_TABLE, 'configurations/general/local'),
+    ).toThrow(reason);
+});
+
+test('a manifest can ignore its installation folder inside .gspot', () => {
+    expect(() =>
+        parseManifest('ignored = [".gspot/downloads/"]\n' + CONFIGURATION_TABLE, 'configurations/general/local'),
+    ).not.toThrow();
+});
