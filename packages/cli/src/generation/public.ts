@@ -47,6 +47,7 @@ function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: strin
         (policy.ci.provider === 'github' ? githubFile : gitlabFile)({
             version,
             run: policy.ci.files,
+            setup: policy.ci.setup,
             platforms: policy.ci.platforms,
             hasSwift,
             isMise: policy.runner === 'mise',

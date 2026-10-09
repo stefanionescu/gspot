@@ -37,6 +37,15 @@ The generated mise job installs the committed tool pins. Without mise, native to
 
 When initialization detects an existing lint job, Bitbucket Pipelines, Jenkins, CircleCI, Azure Pipelines, or Buildkite, it prints integration steps instead of creating a second pipeline. Preserve your existing job and add gspot after its tool setup.
 
+To prepare the project before gspot installs its tools, declare one command and its arguments:
+
+```shell
+gspot set ci.setup npm ci
+gspot apply
+```
+
+Both providers run this command after runtime setup and before `gspot install` and `gspot doctor`. A nonzero exit stops the job. Arguments retain spaces and shell characters as literal values. Omit `ci.setup` when the job needs no project preparation.
+
 ## Your own pipeline
 
 Install project dependencies and the native and Python requirements reported by `doctor`. On a POSIX shell:

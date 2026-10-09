@@ -1,5 +1,5 @@
 {
-    "openRecords": 300,
+    "openRecords": 291,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -560,7 +560,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 300,
+        "openRecords": 291,
         "records": 1092,
         "batches": [
             {
@@ -866,8 +866,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 205,
-                "unresolvedAssignments": 86
+                "completedAssignments": 209,
+                "unresolvedAssignments": 82
             },
             {
                 "id": "python",
@@ -1249,8 +1249,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 67,
-                "unresolvedAssignments": 64
+                "completedAssignments": 69,
+                "unresolvedAssignments": 62
             },
             {
                 "id": "test-quality",
@@ -1726,8 +1726,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 351,
-                "unresolvedAssignments": 118
+                "completedAssignments": 355,
+                "unresolvedAssignments": 114
             },
             {
                 "id": "scripts-repository",
@@ -1866,8 +1866,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 90,
-                "unresolvedAssignments": 42
+                "completedAssignments": 92,
+                "unresolvedAssignments": 40
             },
             {
                 "id": "installation-docs",
@@ -2110,8 +2110,8 @@
                     "review/policy-exceptions/061",
                     "review/carve-outs/001"
                 ],
-                "completedAssignments": 43,
-                "unresolvedAssignments": 48
+                "completedAssignments": 45,
+                "unresolvedAssignments": 46
             },
             {
                 "id": "layout",
@@ -2207,8 +2207,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 73,
-                "unresolvedAssignments": 16
+                "completedAssignments": 75,
+                "unresolvedAssignments": 14
             },
             {
                 "id": "configurations",
@@ -3369,10 +3369,13 @@
             ]
         },
         "areas/integration-tests/085": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "49c37336491469e783b82b9e6ff545d1ed17af11",
+            "verification": [
+                "Assert the unknown check ID and Xcode missing-file rule, source file and missing path; preserve full diagnostics where they are an authored public command contract.",
+                "Two-owner amendment removes 58 bytes; /tmp/gspot-test-contract-five-current/085-freeze.json. Native controls and staged checks pass."
+            ]
         },
         "areas/kits/014": {
             "status": "complete",
@@ -5335,15 +5338,14 @@
             ]
         },
         "review/code-commands/037": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "2b3bacbfd6a819ef4bc847310d9e2e131bd3ee8b",
+            "commit": "49c37336491469e783b82b9e6ff545d1ed17af11",
             "verification": [
                 "One required Session.packageManifests capture supplies all six dependency-fact consumers; native final focused42/190 and sixth-init1/21 pass. Pre-policy init facts and final policy-selected Session facts are genuinely distinct inventories; an authored template exclusion changes membership. Consumers add zero collection calls.",
-                "The original same-obligation production packet removes 57 bytes and 79 AST nodes; its native coverage additions grow 5,238 bytes overall. No unrelated savings are allocated. Full readiness and immutable historical costs: /tmp/gspot-command011037-261-review/readiness-freeze.json."
-            ],
-            "remaining": [
-                "Owner adoption of the exact 5,238-byte native-coverage increase remains required before whole-record closure. No universal package.json parse-once claim: alias-field parsing and post-fix refresh remain separate real contracts."
+                "The original same-obligation production packet removes 57 bytes and 79 AST nodes; its native coverage additions grow 5,238 bytes overall. No unrelated savings are allocated. Full readiness and immutable historical costs: /tmp/gspot-command011037-261-review/readiness-freeze.json.",
+                "Use one required packageManifests collection on each final Session across six consumers; retain genuinely separate pre-policy init facts and post-fix refresh contracts.",
+                "/tmp/gspot-command011037-261-review/readiness-freeze.json: current focused 42 tests/190 assertions and sixth-init control 1/21; 160 Node/Bun output files agree. Original production shrinks 57 bytes and full 5,238-byte coverage growth has exact owner approval. Prior implementation is committed; current Main staged check passes."
             ]
         },
         "review/code-commands/038": {
@@ -7654,16 +7656,22 @@
             ]
         },
         "review/policy-exceptions/004": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "49c37336491469e783b82b9e6ff545d1ed17af11",
+            "verification": [
+                "Remove automatic and inherited authored configuration selections. Preserve the current explicitly authored root Python choice, which tests inherit, under the binding manual-choice owner contract; use final github-actions vocabulary.",
+                "The adopted three-owner reconciliation fix retains every saved manual choice, omits redundant new choices, and handles newly detected TypeScript and nested projects. /tmp/gspot-policy-reconciliation004005/successor-final-freeze.json; exact approved growth 6,035 bytes overall/1,211 production. Normal apply and staged checks pass."
+            ]
         },
         "review/policy-exceptions/005": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "49c37336491469e783b82b9e6ff545d1ed17af11",
+            "verification": [
+                "Remove automatic and inherited authored configuration selections. Preserve the current explicitly authored root Python choice, which tests inherit, under the binding manual-choice owner contract; use final github-actions vocabulary.",
+                "The adopted three-owner reconciliation fix retains every saved manual choice, omits redundant new choices, and handles newly detected TypeScript and nested projects. /tmp/gspot-policy-reconciliation004005/successor-final-freeze.json; exact approved growth 6,035 bytes overall/1,211 production. Normal apply and staged checks pass."
+            ]
         },
         "review/policy-exceptions/006": {
             "status": "partial",
@@ -10909,21 +10917,27 @@
             "remaining": "Historical duplicate-case deletion obligation needs reconciliation with the preserved distinct partial-path/count/selector assertions; grouping alone is not closure."
         },
         "review/tests-layout/035": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "49c37336491469e783b82b9e6ff545d1ed17af11",
             "verification": [
                 "Evidence 77acd1051ffb7afa.",
                 "Evidence b1a64aa1d6df4033.",
                 "Evidence fd5350b8889a185c.",
-                "Xcode split for tests-layout/035 is implemented under tests-cli/092 with public command/check/parser owners and shared literal, verified in the six-ID packet. Main commit/push and cross-platform acceptance remain pending."
+                "Xcode split for tests-layout/035 is implemented under tests-cli/092 with public command/check/parser owners and shared literal, verified in the six-ID packet. Main commit/push and cross-platform acceptance remain pending.",
+                "The approved test-owner consolidation is fully integrated; original stale paths and imports are absent. Parser/source/Git controls and shared preparation remain. Xcode test ownership completes the former dependency through tests-cli/092.",
+                "/tmp/gspot-five-owner-035036-current/receipt.json: 36 current owner hashes, exact parser and push assertions, empty remaining projection. Original five-record +1,182 bytes is expressly approved; no unrelated SQL cost is assigned. Historical 110 tests/309 assertions and Xcode 89/283 receipts are retained; Main staged check passes."
             ]
         },
         "review/tests-layout/036": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 27caa63cc7c0697e."]
+            "commit": "49c37336491469e783b82b9e6ff545d1ed17af11",
+            "verification": [
+                "Evidence 27caa63cc7c0697e.",
+                "The approved test-owner consolidation is fully integrated; original stale paths and imports are absent. Parser/source/Git controls and shared preparation remain. Xcode test ownership completes the former dependency through tests-cli/092.",
+                "/tmp/gspot-five-owner-035036-current/receipt.json: 36 current owner hashes, exact parser and push assertions, empty remaining projection. Original five-record +1,182 bytes is expressly approved; no unrelated SQL cost is assigned. Historical 110 tests/309 assertions and Xcode 89/283 receipts are retained; Main staged check passes."
+            ]
         },
         "review/tests-layout/037": {
             "status": "complete",
@@ -12954,10 +12968,13 @@
             ]
         },
         "slices/tests-integration-checks/030": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "49c37336491469e783b82b9e6ff545d1ed17af11",
+            "verification": [
+                "Use ONE_HOUR_S and SEVEN_DAYS_S literal test data and explain why the stub runner is mise. Native TOML values and all original samples remain identical.",
+                "/tmp/gspot-test-contract-five-current/freeze.json; exact approved 181 test-only bytes. Native family and staged checks pass."
+            ]
         },
         "slices/tests-integration-checks/031": {
             "status": "complete",
@@ -13181,13 +13198,16 @@
             "verification": []
         },
         "slices/tests-integration-commands/037": {
-            "status": "partial",
-            "owner": "root",
-            "commit": null,
-            "verification": [],
+            "status": "complete",
+            "owner": "main",
+            "commit": "49c37336491469e783b82b9e6ff545d1ed17af11",
+            "verification": [
+                "Concurrent SQL results assert null/error-containing-typo/null instead of library prose; original concurrency and native result shapes remain. Delete the redundant forwarding callback and title-repeating header.",
+                "/tmp/gspot-sql037-reduction-current/freeze.json: successor removes 98 bytes; original same-record +32 bytes becomes -66. Three native tests/six assertions, Node/Bun parity and 28 negative witnesses pass, followed by Main staged checks."
+            ],
             "additionalChanges": [
                 {
-                    "commit": null,
+                    "commit": "49c37336491469e783b82b9e6ff545d1ed17af11",
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
                     "limitations": ["Evidence 9f7f42cd2c36be5e."]
@@ -13392,10 +13412,13 @@
             ]
         },
         "slices/tests-integration-execution/030": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "49c37336491469e783b82b9e6ff545d1ed17af11",
+            "verification": [
+                "Use buildRunOptions with PROJECT_OPTIONS and positional paths, removing hand-written execution defaults and the unused built-in import.",
+                "Existing committed leaf and import remove 139 bytes. /tmp/gspot-test-contract-five-current/readiness-bridges.json; current native impact tests and Main staged checks pass."
+            ]
         },
         "slices/tests-integration-execution/031": {
             "status": "complete",
@@ -18774,6 +18797,30 @@
             ],
             "limitations": [
                 "Cross-platform CI remains pending; local checks do not establish Windows behavior. Public npm and documentation-site release dependencies remain external to main/001."
+            ]
+        },
+        {
+            "commit": "49c37336491469e783b82b9e6ff545d1ed17af11",
+            "completedRecords": [
+                "review/policy-exceptions/004",
+                "review/policy-exceptions/005",
+                "slices/tests-integration-checks/030",
+                "areas/integration-tests/085",
+                "slices/tests-integration-commands/037",
+                "slices/tests-integration-execution/030",
+                "review/code-commands/037",
+                "review/tests-layout/035",
+                "review/tests-layout/036"
+            ],
+            "unresolvedRecords": 291,
+            "validation": [
+                "Focused integration checkout: 34 tests, 164 assertions across six files; Root with adopted CI source: 50 tests, 237 assertions across seven files.",
+                "Staged check: 152 passed, zero failed, 11 skipped, zero findings. Final ordinary commit hook: 113 passed, zero failed, three skipped, zero findings; commitlint passed after correcting footer formatting.",
+                "Normal apply regenerates policy-dependent Vale data without tool installation. Native Node/Bun reconciliation acceptance covers 24 level/project/manual-choice vectors with idempotent repeated emission.",
+                "The nine-record closure includes previously pushed, audited owner transfers and manifest sharing; those implementations were not replayed."
+            ],
+            "limitations": [
+                "Linux/macOS/Windows CI for this exact integration is not yet complete. The native receipts cited for prior owner transfers retain their original runtime and platform limits."
             ]
         }
     ],

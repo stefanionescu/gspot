@@ -1,6 +1,6 @@
 # Tests: Execution Integration Tests
 
-5 unresolved review records remain.
+4 unresolved review records remain.
 
 ## Open findings
 
@@ -90,3 +90,11 @@ Original records and quotations remain above. These records are complete at `fc2
 | ---------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-execution/004` | complete | Removed the duplicate declared typos loop. The declared regex case now observes verifyFiles with and without a configuration manifest; the current CLI case passes. Commit `fc2af1dd6dda2eb6bd62e42f445879e89b2bb1aa`.                                                                      |
 | `slices/tests-integration-execution/021` | complete | Format inputs use named test.each rows; one local configurationCheck resolves the manifest check. Existing REPORT_ERRORS cases preserve distinct malformed-report diagnostics. Current parser corpus passes 98 cases and 150 assertions. Commit `fc2af1dd6dda2eb6bd62e42f445879e89b2bb1aa`. |
+
+## Implementation checkpoint 49c373364 of October 9, 2026 for reconciliation-and-native-test-contracts
+
+Original records and quotations remain above. These records are complete at `49c37336491469e783b82b9e6ff545d1ed17af11`.
+
+| ID                                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-execution/030` | complete | Use buildRunOptions with PROJECT_OPTIONS and positional paths, removing hand-written execution defaults and the unused built-in import. Existing committed leaf and import remove 139 bytes. /tmp/gspot-test-contract-five-current/readiness-bridges.json; current native impact tests and Main staged checks pass. Commit `49c37336491469e783b82b9e6ff545d1ed17af11`. |

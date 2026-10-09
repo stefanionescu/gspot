@@ -110,6 +110,9 @@ const scopeBody = {
 };
 
 const ciSchema = z.strictObject({
+    setup: commandSchema
+        .optional()
+        .meta({ description: 'Executable and arguments to prepare the project before gspot installs its tools.' }),
     provider: z.enum(['github', 'gitlab']).meta({ description: 'The CI provider that receives generated jobs.' }),
     platforms: authoredDefault(z.array(operatingSystemSchema).min(1).default(['linux'])).meta({
         description: 'Platforms for GitHub check and manual jobs.',
@@ -131,7 +134,7 @@ export const policyTableValuesSchema = z
             .optional(),
         ci: ciSchema
             .transform((raw) => ({
-                provider: raw.provider,
+                ...raw,
                 platforms: defaultValue(ciSchema.shape.platforms, raw.platforms),
                 files: defaultValue(ciSchema.shape.files, raw.files),
             }))

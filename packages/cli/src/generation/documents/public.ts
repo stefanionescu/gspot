@@ -3,12 +3,12 @@
 import { dirname, relative } from 'node:path';
 import { Scalar, Document, stringify } from 'yaml';
 import { CLI_PINS } from '#cli/config/generation/pins.ts';
-import { compact, toPosix } from '#cli/platform/contracts.ts';
 import { HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
 import { everyTable } from '#cli/policy/settings/contracts.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { hashCommentHeader } from '#cli/generation/documents/contracts.ts';
 import type { Policy, FormatSettings } from '#cli/types/policy/settings.ts';
+import { compact, toPosix, quoteArgument } from '#cli/platform/contracts.ts';
 import { UNREPRESENTABLE_SELECTOR } from '#cli/config/generation/formatting.ts';
 import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
 import { literalGlob, byScopeDepth, expandedPaths } from '#cli/repository/paths/public.ts';
@@ -39,21 +39,6 @@ function pinned({ name, sha, version }: ActionPin): Scalar {
     return node;
 }
 
-function setupSteps(pipeline: Pipeline): Record<string, unknown>[] {
-    if (pipeline.isMise)
-        return [
-            { uses: pinned(CLI_PINS.actions.mise), with: { version: CLI_PINS.mise.version, cache: false } },
-            { run: `${HOOK_RUNNERS.mise.command} install` },
-            { run: `${HOOK_RUNNERS.mise.command} doctor` },
-        ];
-    return [
-        { uses: pinned(CLI_PINS.actions.node), with: { 'node-version': CLI_PINS.node } },
-        { run: ciNpmInstall(pipeline.version) },
-        { run: 'gspot install' },
-        { run: 'gspot doctor' },
-    ];
-}
-
 // A first push has no base, so the job checks everything; otherwise it checks what changed after the base commit.
 function buildCheckScript(command: string, isFull: boolean): string {
     if (isFull) return command;
@@ -78,6 +63,7 @@ function buildJob(
     check: GithubCheck,
 ): Record<string, unknown> {
     const runner = CLI_PINS.runners[platform];
+    const command = HOOK_RUNNERS[pipeline.isMise ? 'mise' : 'gspot'].command;
     const cacheFiles = [
         TOOL_PACKAGE_PROJECT,
         `${DOT_GSPOT}/*lock*`,
@@ -101,7 +87,17 @@ function buildJob(
                     path: `${CACHED_PATHS.join('\n')}\n`,
                 },
             },
-            ...setupSteps(pipeline),
+            ...(pipeline.isMise
+                ? [{ uses: pinned(CLI_PINS.actions.mise), with: { version: CLI_PINS.mise.version, cache: false } }]
+                : [
+                      { uses: pinned(CLI_PINS.actions.node), with: { 'node-version': CLI_PINS.node } },
+                      { run: ciNpmInstall(pipeline.version) },
+                  ]),
+            ...(pipeline.setup === undefined
+                ? []
+                : [{ run: pipeline.setup.map((argument) => quoteArgument(argument)).join(' ') }]),
+            { run: `${command} install` },
+            { run: `${command} doctor` },
             structuredClone(check.step),
         ],
     };
@@ -262,9 +258,10 @@ export function githubFile(pipeline: Pipeline): GeneratedFile {
  */
 export function gitlabFile(pipeline: Pipeline): GeneratedFile {
     const command = HOOK_RUNNERS[pipeline.isMise ? 'mise' : 'gspot'].command;
-    const setup = pipeline.isMise
-        ? [`mise trust ${MISE_CONFIG_PATH}`, 'mise install']
-        : [ciNpmInstall(pipeline.version)];
+    const setup = [
+        ...(pipeline.isMise ? [`mise trust ${MISE_CONFIG_PATH}`, 'mise install'] : [ciNpmInstall(pipeline.version)]),
+        ...(pipeline.setup === undefined ? [] : [pipeline.setup.map((argument) => quoteArgument(argument)).join(' ')]),
+    ];
     const check = [
         'GSPOT_CI_BASE="${CI_MERGE_REQUEST_DIFF_BASE_SHA:-${CI_COMMIT_BEFORE_SHA:-}}"',
         buildCheckScript(`${command} check`, pipeline.run === 'all'),

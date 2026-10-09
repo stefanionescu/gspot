@@ -1,6 +1,6 @@
 # Integration Tests Outside the Checks Folder
 
-13 unresolved review records remain.
+12 unresolved review records remain.
 
 ## Findings
 
@@ -255,3 +255,11 @@ Original records and quotations remain above. These records are complete at `3d1
 | `areas/integration-tests/003` | complete | Mechanical move b5df04bcce58ef00790f5a753dbf3c067a76c80d places generated attributes in generation/attributes.test.ts; this checkpoint removes the redundant eol query and retains the actual autocrlf checkout bytes. Full related change removes 295 bytes. Commit `3d180af9dc94cfc800fecf959f8faf43dd43ea3c`.                                                                              |
 | `areas/integration-tests/022` | complete | Copy-and-preserve success controls remain; the duplicate lock-mismatch/recovery suffix is deleted, removing 718 bytes. Direct dependency refusal, stamp and CRLF controls passed nine tests and 28 assertions; the focused checkpoint also passed the actual copy test. Commit `3d180af9dc94cfc800fecf959f8faf43dd43ea3c`.                                                                    |
 | `areas/integration-tests/030` | complete | JavaScript, TypeScript and JSX directive cases now use the suppression owner alongside its original controls; pure parser controls remain in parsers/comments.test.ts. The final two-owner change removes nine bytes. Current parser/suppression/pin replay passed 50 tests and 106 assertions; original callback assertions remain exact. Commit `3d180af9dc94cfc800fecf959f8faf43dd43ea3c`. |
+
+## Implementation checkpoint 49c373364 of October 9, 2026 for reconciliation-and-native-test-contracts
+
+Original records and quotations remain above. These records are complete at `49c37336491469e783b82b9e6ff545d1ed17af11`.
+
+| ID                            | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `areas/integration-tests/085` | complete | Assert the unknown check ID and Xcode missing-file rule, source file and missing path; preserve full diagnostics where they are an authored public command contract. Two-owner amendment removes 58 bytes; /tmp/gspot-test-contract-five-current/085-freeze.json. Native controls and staged checks pass. Commit `49c37336491469e783b82b9e6ff545d1ed17af11`. |

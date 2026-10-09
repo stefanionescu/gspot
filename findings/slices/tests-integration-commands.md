@@ -1,6 +1,6 @@
 # Tests: Command, Policy, Platform, and Tools Integration Tests
 
-14 unresolved review records remain.
+13 unresolved review records remain.
 
 ## Open findings
 
@@ -84,3 +84,11 @@ Original records and quotations remain above. These records are complete at `6e7
 | --------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `slices/tests-integration-commands/029` | complete | Expected key-path/message columns, direct version-process note values and exact unchanged policy comparisons replace row-dependent permissive assertions; kitz duplicate deleted. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |
 | `slices/tests-integration-commands/030` | complete | Deleted parser-only sentinel preservation assertion; exact unsafe-lifecycle diagnostic remains. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`.                                                                                   |
+
+## Implementation checkpoint 49c373364 of October 9, 2026 for reconciliation-and-native-test-contracts
+
+Original records and quotations remain above. These records are complete at `49c37336491469e783b82b9e6ff545d1ed17af11`.
+
+| ID                                      | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| --------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-commands/037` | complete | Concurrent SQL results assert null/error-containing-typo/null instead of library prose; original concurrency and native result shapes remain. Delete the redundant forwarding callback and title-repeating header. /tmp/gspot-sql037-reduction-current/freeze.json: successor removes 98 bytes; original same-record +32 bytes becomes -66. Three native tests/six assertions, Node/Bun parity and 28 negative witnesses pass, followed by Main staged checks. Commit `49c37336491469e783b82b9e6ff545d1ed17af11`. |

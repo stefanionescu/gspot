@@ -30,15 +30,16 @@ jobs:
                   mise run check:release -- "${TAG}"
               env:
                   TAG: ${{ github.ref_name }}
-            - name: Require successful main CI for the exact release commit
+            - name: Require both CI runs
               shell: bash
               run: |
                   set -euo pipefail
-                  ci_run=$(gh run list --workflow ci.yml --commit "${RELEASE_COMMIT}" --branch main --event push --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')
-                  if [ -z "$ci_run" ]; then
-                      echo 'Run main CI successfully for this exact commit before releasing.' >&2
-                      exit 1
-                  fi
+                  for workflow in ci.yml gspot.yml; do
+                      if [ "$(gh run list --workflow "$workflow" --commit "$RELEASE_COMMIT" --branch main --event push --status success --limit 1 --json databaseId --jq length)" != 1 ]; then
+                          echo "${workflow} must pass for ${RELEASE_COMMIT}." >&2
+                          exit 1
+                      fi
+                  done
               env:
                   GH_TOKEN: ${{ github.token }}
                   RELEASE_COMMIT: ${{ github.sha }}

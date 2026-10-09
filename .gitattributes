@@ -6,6 +6,7 @@
 .gitignore text eol=lf
 .gitattributes text eol=lf
 /.editorconfig text eol=lf
+/.github/workflows/gspot.yml text eol=lf
 /.markdownlint-cli2.mjs text eol=lf
 /.mise/conf.d/gspot-tools.toml text eol=lf
 /.prettierignore text eol=lf

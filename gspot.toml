@@ -25,6 +25,10 @@ removed_configurations = ["astro", "jest", "nestjs", "nextjs", "react", "react-d
 [hooks]
 enabled = true
 
+[ci]
+provider = "github"
+setup = ["mise", "run", "setup"]
+
 [naming]
 banned = ["catalog", "catalogue", "corpus", "render", "sync", "synchronize", "materialize", "coerce", "scoped", "bind", "load", "loaded", "loader", "loaders", "loading", "fetch", "resolve", "resolving", "resolution", "probe", "probes", "probed", "probing", "fixture", "fixtures", "shell"]
 

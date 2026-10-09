@@ -1,6 +1,6 @@
 # Tests: Check Integration Tests
 
-13 unresolved review records remain.
+12 unresolved review records remain.
 
 ## Open findings
 
@@ -182,3 +182,11 @@ Original records and quotations remain above. These records are complete at `872
 | ID                                    | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-checks/041` | complete | Select jest/coverage by name and name the used process spies run. All117 assertions across27 Jest cases pass; final test source removes5 bytes. Normal Main staged gate29 passed,2 skipped,zero findings; normal commit/push hooks passed. /tmp/gspot-jest041-native-fs-main-staged-final.log and /tmp/gspot-jest041-native-fs-main-push.log retain actual results. Commit `872e0b82cb4feb103b82adcd836781bed7049506`. |
+
+## Implementation checkpoint 49c373364 of October 9, 2026 for reconciliation-and-native-test-contracts
+
+Original records and quotations remain above. These records are complete at `49c37336491469e783b82b9e6ff545d1ed17af11`.
+
+| ID                                    | Status   | Evidence                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-checks/030` | complete | Use ONE_HOUR_S and SEVEN_DAYS_S literal test data and explain why the stub runner is mise. Native TOML values and all original samples remain identical. /tmp/gspot-test-contract-five-current/freeze.json; exact approved 181 test-only bytes. Native family and staged checks pass. Commit `49c37336491469e783b82b9e6ff545d1ed17af11`. |
