@@ -8,7 +8,7 @@ import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
-import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { VALE_PACKAGES, VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import { hasValePackages, installValePackages } from '#cli/lifecycle/install/contracts.ts';
 import { INSTALLED, ENCODED_ARCHIVE } from '#tests/config/tools/configurations/general/prose/packages.ts';
@@ -92,8 +92,7 @@ test.each([
         {
             using log = openOwnership(directory.path);
 
-            applyPlan(
-                log,
+            applyPlans(log, [
                 planReplacement(log, {
                     path: '.gspot/config/vale.ini',
                     next: {
@@ -104,7 +103,7 @@ test.each([
                     },
                     kind: 'tool_file',
                 }),
-            );
+            ]);
         }
         expect(await installPackages(directory.path)).toBeUndefined();
         expect(hasValePackages(directory.path, 'all')).toBe(true);

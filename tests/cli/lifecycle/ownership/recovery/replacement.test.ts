@@ -7,9 +7,10 @@ import { getCliSourcePath } from '#tests/harness/gspot.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
 import { OWNERSHIP_BYTES } from '#tests/config/samples/ownership.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
+import { INTERRUPTION_EXIT_CODE } from '#tests/config/harness/process.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/state/contracts.ts';
 import { runTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
-import { applyPlan, applyPlans, getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { applyPlans, getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
 const implementation = getCliSourcePath('lifecycle/ownership/public.ts');
 const boundary = getCliSourcePath('platform/root/public.ts');
@@ -34,8 +35,8 @@ mock.module('node:fs', () => ({ ...fs, renameSync(from, to) {
         if (exists(to) && (stat(to).mode & 0o200) === 0)
             throw Object.assign(new Error('Read-only destination'), {code: 'EPERM'});
         if (read(from).equals(Buffer.from('installed\n'))) {
-            if (point === 'interruption') process.exit(73);
-            if (point === 'edited') { write(to, 'developer edit\n'); process.exit(73); }
+            if (point === 'interruption') process.exit(${INTERRUPTION_EXIT_CODE});
+            if (point === 'edited') { write(to, 'developer edit\n'); process.exit(${INTERRUPTION_EXIT_CODE}); }
             if ((point === 'error' || point === 'restoration error') && !failed) { failed = true; throw new Error('Publication failed'); }
         }
     }
@@ -44,10 +45,10 @@ mock.module('node:fs', () => ({ ...fs, renameSync(from, to) {
 Object.defineProperty(process, 'platform', {value: 'win32'});
 const {openOwnership} = await import(${JSON.stringify(implementation)});
 const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/contracts.ts'))});
-const {applyPlan,applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/public.ts'))});
+const {applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/public.ts'))});
 const log = openOwnership(process.cwd());
 try {
-    applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed\n'), mode: 0o444}, kind: 'tool_file', canReplace: true}));
+    applyPlans(log, [planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed\n'), mode: 0o444}, kind: 'tool_file', canReplace: true})]);
     throw new Error('Expected publication failure');
 } catch (error) {
     if (point === 'restoration error') {
@@ -56,7 +57,9 @@ try {
 } finally { log[Symbol.dispose](); }
 `;
     const child = runTestCommandBlocking([process.execPath, '-e', program], { cwd: root });
-    expect(child.code, child.stdout + child.stderr).toBe(['error', 'restoration error'].includes(point) ? 0 : 73);
+    expect(child.code, child.stdout + child.stderr).toBe(
+        ['error', 'restoration error'].includes(point) ? 0 : INTERRUPTION_EXIT_CODE,
+    );
 }
 
 test('a failed read-only replacement keeps the original bytes and mode with Windows semantics', async () => {
@@ -85,14 +88,13 @@ test.each(['interruption', 'restoration error'] as const)(
             expect(log.files.read('config.txt')).toBeUndefined();
             expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
             expect(
-                applyPlan(
-                    log,
+                applyPlans(log, [
                     planReplacement(log, {
                         path: 'config.txt',
                         next: { bytes: Buffer.from('installed\n'), mode: 0o444 },
                         kind: 'tool_file',
                     }),
-                ),
+                ])[0],
             ).toBe('changed');
         }
     },
@@ -113,15 +115,14 @@ test('an inconsistent interrupted log cannot acquire ownership of current bytes'
     {
         using log = openOwnership(directory.path);
 
-        applyPlan(
-            log,
+        applyPlans(log, [
             planReplacement(log, {
                 path: 'config.txt',
                 next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
                 kind: 'tool_file',
                 canReplace: true,
             }),
-        );
+        ]);
     }
     const record = join(directory.path, '.gspot/state/ownership.json');
     const state = ownershipSchema.parse(JSON.parse(await readFile(record, 'utf8')));
@@ -164,7 +165,7 @@ mock.module(${JSON.stringify(boundary)}, () => ({
 }));
 const { openOwnership } = await import(${JSON.stringify(implementation)});
 const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/contracts.ts'))});
-const {applyPlan,applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/public.ts'))});
+const {applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/public.ts'))});
 const log = openOwnership(${JSON.stringify(directory.path)});
 try {
     applyPlans(log, ['first.bin', 'second.bin'].map(path => planReplacement(log,{path: path, next: { bytes: Buffer.from('installed'), mode: 0o444 }, kind: 'tool_file', canReplace: true})));

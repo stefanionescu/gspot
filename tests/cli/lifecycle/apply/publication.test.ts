@@ -9,8 +9,8 @@ import { pathExists } from '#tests/harness/preservation.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { EXTERNAL_INPUT_CASES } from '#tests/config/cli/lifecycle/apply.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
-import { applyPlan, applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
 test('generated outputs are writable: apply keeps their bytes, and a prune removes them', async () => {
     await using sandbox = await testdir();
@@ -112,14 +112,13 @@ test('apply validates obsolete output parents before publishing new configuratio
     {
         using log = openOwnership(root);
 
-        applyPlan(
-            log,
+        applyPlans(log, [
             planReplacement(log, {
                 path: '.gspot/obsolete/old.txt',
                 next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
                 kind: 'tool_file',
             }),
-        );
+        ]);
     }
     await rm(join(root, '.gspot/obsolete'), { recursive: true });
     await symlink('../../outside', join(root, '.gspot/obsolete'));

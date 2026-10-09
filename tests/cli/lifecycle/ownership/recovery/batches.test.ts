@@ -3,43 +3,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { runTestCommand } from '#tests/harness/command.ts';
-import { getCliSourcePath } from '#tests/harness/gspot.ts';
+import { interruptOwner } from '#tests/harness/process.ts';
+import { INTERRUPTION_EXIT_CODE } from '#tests/config/harness/process.ts';
 import { planReplacement, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 import { applyPlans, getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
-
-const implementation = getCliSourcePath('lifecycle/ownership/public.ts');
-const boundary = getCliSourcePath('platform/root/public.ts');
-
-async function interrupted(
-    cwd: string,
-    operation: 'write' | 'remove',
-    point: 'before' | 'after',
-    call: string,
-): Promise<void> {
-    const program = `
-import { mock } from 'bun:test';
-const boundary=await import(${JSON.stringify(boundary)});
-const open=boundary.openRoot;
-mock.module(${JSON.stringify(boundary)},()=>({...boundary,openRoot(root){
-const files=open(root);
-return {...files,${operation}(path,...rest){
-if(path==='middle.txt' && ${JSON.stringify(point)}==='before') process.exit(73);
-files.${operation}(path,...rest);
-if(path==='middle.txt' && ${JSON.stringify(point)}==='after') process.exit(73);
-}};
-}}));
-const {openOwnership}=await import(${JSON.stringify(implementation)});
-const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/contracts.ts'))});
-const {applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/public.ts'))});
-const {planRestoration}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/contracts.ts'))});
-const log=openOwnership(process.cwd());
-${call}
-log[Symbol.dispose]();
-`;
-    const child = await runTestCommand([process.execPath, '-e', program], { cwd });
-    expect(child.code, child.stdout + child.stderr).toBe(73);
-}
 
 test.each(['before', 'after'] as const)(
     'an interrupted batch keeps each published file, and the next batch finishes it (%s)',
@@ -47,12 +14,12 @@ test.each(['before', 'after'] as const)(
         await using directory = await testdir();
         const paths = ['first.txt', 'middle.txt', 'last.txt'];
         await createFileTree(directory.path, Object.fromEntries(paths.map((path) => [path, `authored ${path}\n`])));
-        await interrupted(
+        const child = await interruptOwner(
             directory.path,
-            'write',
-            point,
+            { operation: 'write', path: 'middle.txt', point },
             String.raw`applyPlans(log, ${JSON.stringify(paths)}.map(path=>planReplacement(log,{path: path, next: {bytes:Buffer.from('installed '+path+'\n'),mode:0o444}, kind: 'tool_file', canReplace: true})));`,
         );
+        expect(child.code, child.stdout + child.stderr).toBe(INTERRUPTION_EXIT_CODE);
         expect(getOwnership(directory.path).pending?.map(({ path }) => path)).toStrictEqual(paths);
         expect(await readFile(join(directory.path, 'first.txt'), 'utf8')).toBe('installed first.txt\n');
         expect(await readFile(join(directory.path, 'middle.txt'), 'utf8')).toBe(
@@ -103,12 +70,12 @@ test.each(['before', 'after'] as const)(
                 ),
             );
         }
-        await interrupted(
+        const child = await interruptOwner(
             directory.path,
-            'remove',
-            point,
+            { operation: 'remove', path: 'middle.txt', point },
             `applyPlans(log, ${JSON.stringify(paths)}.map(path=>planRestoration(log, path)));`,
         );
+        expect(child.code, child.stdout + child.stderr).toBe(INTERRUPTION_EXIT_CODE);
         {
             using log = openOwnership(directory.path);
 

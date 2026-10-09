@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { lstat, symlink, readFile, readlink } from 'node:fs/promises';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
-import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
 test.skipIf(!isPosix)(
     'lifecycle ownership: an exactly reproduced escaping link is refused before ownership or recovery changes',
@@ -19,8 +19,7 @@ test.skipIf(!isPosix)(
             const attributes = await lstat(join(project, 'tool'));
             const mode = attributes.mode & 0o7777;
             expect(() =>
-                applyPlan(
-                    log,
+                applyPlans(log, [
                     planReplacement(log, {
                         path: 'tool',
                         next: {
@@ -30,7 +29,7 @@ test.skipIf(!isPosix)(
                         },
                         kind: 'tool_file',
                     }),
-                ),
+                ]),
             ).toThrow('Unsafe lifecycle path: "../outside"');
             expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
             expect(await readlink(join(project, 'tool'))).toBe('../outside');

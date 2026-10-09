@@ -20,8 +20,8 @@ import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import type { PreparedPolicy } from '#cli/types/policy/settings.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
-import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { join, win32, dirname, resolve, basename, relative } from 'node:path';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import type { ExportJson, ExportOptions } from '#cli/types/commands/export.ts';
 import { commandHelp, commandRoot, openSession } from '#cli/commands/public.ts';
 import { assertVersionPin, writeGeneratedFiles } from '#cli/lifecycle/public.ts';
@@ -149,12 +149,13 @@ export async function savePolicy(root: string, options: SavePolicyOptions): Prom
     writePolicyFile({
         text: result.text,
         original: result.original,
-        publish: (next, expected) => {
-            applyPlan(log, {
-                ...planReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
-                before: expected,
-            });
-        },
+        publish: (next, expected) =>
+            applyPlans(log, [
+                {
+                    ...planReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
+                    before: expected,
+                },
+            ]),
     });
     let applied: ApplyReport;
     try {

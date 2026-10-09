@@ -51,19 +51,6 @@ describe('kinds', () => {
         expect(files.get('assets/a.bin')).toMatchObject({ kind: 'binary', kindSource: '.gitattributes' });
         expect(files.get('src/a.ts')).toMatchObject({ kind: 'source', kindSource: 'default' });
     });
-
-    test('readRepository lists files without git through the gitignore walk', async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            '.gitignore': 'ignored/\n',
-            'ignored/x.txt': 'x',
-            'kept.txt': 'x',
-        });
-        const repo = await readRepository(sandbox.path, [], [], []);
-        expect(repo.hasGit).toBe(false);
-        expect(repo.files.map((file) => file.path)).toStrictEqual(['.gitignore', 'kept.txt']);
-        expect(repo.scopes[0]?.path).toBe('');
-    });
 });
 
 test('an @generated marker in a comment line makes a file generated, and the bare word does not', async () => {

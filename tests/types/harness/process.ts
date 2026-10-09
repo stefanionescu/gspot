@@ -6,3 +6,6 @@ export type CapturedProcess = Pick<
 
 /** Captured streams whose disposal stops and drains the owned child. */
 export type CapturedChild = AsyncDisposable & { output: Promise<string>; errors: Promise<string> };
+
+/** A native root operation at which an ownership child stops. */
+export type OwnerInterruption = { operation: 'write' | 'remove'; path: string; point: 'before' | 'after' };

@@ -25,9 +25,9 @@ import { selectForScope } from '#cli/repository/selection/public.ts';
 import { XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
 import { emitPolicy, writePolicyFile } from '#cli/policy/document/public.ts';
 import type { Tooling, Repository } from '#cli/types/repository/inventory.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import type { InitOptions, InitSelection } from '#cli/types/lifecycle/selection.ts';
 import { planRetirement, planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
-import { applyPlan, applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
 import type {
     Choice,
@@ -215,18 +215,17 @@ export async function writeSetup(
         errors: [],
     });
     const generated = emitAll(session);
-    if (options.install) {
-        await prepareToolProjects(session, generated.files, log.files, { refreshLockfiles: false });
-    }
+    if (options.install) await prepareToolProjects(session, generated.files, log.files, { refreshLockfiles: false });
     writePolicyFile({
         text: prepared.policyText,
         original: prepared.read.get(POLICY_FILE),
-        publish: (next, expected) => {
-            applyPlan(log, {
-                ...planReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
-                before: expected,
-            });
-        },
+        publish: (next, expected) =>
+            applyPlans(log, [
+                {
+                    ...planReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
+                    before: expected,
+                },
+            ]),
     });
     const destinations = generatedPaths(generated);
     const applied = writeGeneratedFiles(session, generated, log, { reviewedOriginals: prepared.read });

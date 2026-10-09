@@ -27,7 +27,7 @@ test('apply refuses a plan whose policy changed after the session was read', asy
     expect(await pathExists(join(sandbox.path, '.gspot/state/ownership.json'))).toBe(false);
 });
 
-test('an npm runner preserves the authored scripts and adds no task of its own', async () => {
+test('a bun runner preserves the authored scripts and adds no task of its own', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], { tables: 'runner = "bun"\n' }),

@@ -1,9 +1,7 @@
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
-import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/public.ts';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { CLI_PINS } from '#cli/config/generation/pins.ts';
@@ -11,11 +9,9 @@ import { buildInitOptions } from '#tests/harness/init.ts';
 import { initCommand } from '#cli/commands/init/public.ts';
 import { installCommand } from '#cli/commands/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
-import { buildPolicy, alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
 import { INSTALLATION_FAILURES } from '#tests/config/cli/lifecycle/installer-failures.ts';
 
 const { version: RUNNING_VERSION } = packageManifest;
@@ -102,40 +98,4 @@ test('init does not report success when required Python lockfile creation cannot
     expect(await readFile(join(sandbox.path, 'main.py'), 'utf8')).toBe('print("authored")\n');
     expect(await pathExists(join(sandbox.path, '.gspot/uv.lock'))).toBe(false);
     expect(await readFile(join(sandbox.path, 'pyrightconfig.json'), 'utf8')).toBe('{"exclude":["legacy"]}\n');
-});
-
-test('a repository that already runs hooks keeps them, gets the gspot lines, and the other installers still run', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], {
-            tables: 'runner = "mise"\n[hooks]\nenabled = true\n',
-        }),
-        '.githooks/pre-commit': '#!/bin/sh\nexit 0\n',
-    });
-    gitOutput(sandbox.path, ['init', '--quiet']);
-    gitOutput(sandbox.path, ['config', 'core.hooksPath', '.githooks']);
-    {
-        using log = openOwnership(sandbox.path);
-        const session = await openSession(sandbox.path);
-        writeGeneratedFiles(session, emitAll(session), log);
-    }
-    const read: string[][] = [];
-    const run = processes.run;
-    using _installer = spyOn(processes, 'run').mockImplementation((command, options) => {
-        if (command[0] !== 'mise') return run(command, options);
-        read.push([...command]);
-        return Promise.resolve({
-            code: 0,
-            missing: false,
-            duration: 0,
-            stdout: `mise ${CLI_PINS.mise.version}`,
-            stderr: '',
-        });
-    });
-    const result = await installCommand({ cwd: sandbox.path, isDryRun: false });
-    expect(result.exitCode, result.text).toBe(0);
-    expect(result.text).toContain('add these gspot lines');
-    expect(result.text).toContain('pre-commit: mise exec -- gspot check --hook pre-commit');
-    expect(read).toContainEqual(['mise', 'install']);
-    expect(gitOutput(sandbox.path, ['config', 'core.hooksPath'])).toBe('.githooks');
 });

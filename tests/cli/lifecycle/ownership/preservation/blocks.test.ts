@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { applyBlock } from '#cli/platform/root/contracts.ts';
-import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { planBlock, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 
 test('managed block updates and removal preserve authored bytes and subsequent surrounding edits', async () => {
@@ -12,19 +12,19 @@ test('managed block updates and removal preserve authored bytes and subsequent s
     await createFileTree(directory.path, { 'AGENTS.md': original });
     let log = openOwnership(directory.path);
     try {
-        expect(applyPlan(log, planBlock(log, 'AGENTS.md', 'first instructions', 'markdown'))).toBe('changed');
+        expect(applyPlans(log, [planBlock(log, 'AGENTS.md', 'first instructions', 'markdown')])[0]).toBe('changed');
         const installed = log.files.read('AGENTS.md')!.bytes.toString('utf8');
         expect(installed.startsWith(original)).toBe(true);
         const prefix = 'Additional instructions.\n';
         const suffix = '\nLater authored instructions.\n';
         await writeFile(join(directory.path, 'AGENTS.md'), prefix + installed + suffix);
-        expect(applyPlan(log, planBlock(log, 'AGENTS.md', 'updated instructions', 'markdown'))).toBe('changed');
+        expect(applyPlans(log, [planBlock(log, 'AGENTS.md', 'updated instructions', 'markdown')])[0]).toBe('changed');
         expect(log.files.read('AGENTS.md')!.bytes.toString('utf8')).toBe(
             prefix + applyBlock(original, 'updated instructions', { path: 'AGENTS.md', style: 'markdown' }) + suffix,
         );
         log[Symbol.dispose]();
         log = openOwnership(directory.path);
-        expect(applyPlan(log, planRestoration(log, 'AGENTS.md'))).toBe('changed');
+        expect(applyPlans(log, [planRestoration(log, 'AGENTS.md')])[0]).toBe('changed');
         expect(log.files.read('AGENTS.md')!.bytes.toString('utf8')).toBe(prefix + original + suffix);
     } finally {
         log[Symbol.dispose]();
@@ -37,8 +37,8 @@ test('removing a block restores an originally empty file instead of deleting it'
     {
         using log = openOwnership(directory.path);
 
-        expect(applyPlan(log, planBlock(log, 'AGENTS.md', 'instructions', 'markdown'))).toBe('changed');
-        expect(applyPlan(log, planRestoration(log, 'AGENTS.md'))).toBe('changed');
+        expect(applyPlans(log, [planBlock(log, 'AGENTS.md', 'instructions', 'markdown')])[0]).toBe('changed');
+        expect(applyPlans(log, [planRestoration(log, 'AGENTS.md')])[0]).toBe('changed');
         expect(log.files.read('AGENTS.md')?.bytes).toStrictEqual(Buffer.alloc(0));
     }
 });

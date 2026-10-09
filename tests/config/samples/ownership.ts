@@ -4,3 +4,5 @@ export const OWNERSHIP_BYTES = {
     batch: [0, 255, 10, 13, 42],
     restoration: [0, 255, 1, 10],
 };
+
+export const OWNERSHIP_REFUSAL = 'was not overwritten by gspot. Move it aside, then retry the command.';

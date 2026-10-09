@@ -1,8 +1,10 @@
 // Child processes of the tests: waiting for one to leave, and the source paths a child imports beside its mocks.
+import { getCliSourcePath } from '#tests/harness/gspot.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { remainingTestTime } from '#tests/harness/command.ts';
-import { EXIT_POLL_MS, READY_POLL_MS } from '#tests/config/harness/process.ts';
-import type { CapturedChild, CapturedProcess } from '#tests/types/harness/process.ts';
+import type { SpawnResult } from '#cli/types/platform/runtime.ts';
+import { runTestCommand, remainingTestTime } from '#tests/harness/command.ts';
+import { EXIT_POLL_MS, READY_POLL_MS, INTERRUPTION_EXIT_CODE } from '#tests/config/harness/process.ts';
+import type { CapturedChild, CapturedProcess, OwnerInterruption } from '#tests/types/harness/process.ts';
 
 /**
  * Wait within the remaining test time, then kill a child that remains alive.
@@ -45,4 +47,34 @@ export function captureChild(child: CapturedProcess): CapturedChild {
             await errors;
         },
     };
+}
+
+/**
+ * Interrupt a native ownership publication at its observed root file operation.
+ * @param cwd the repository the child owns
+ * @param interruption the actual method, file, and timing to intercept
+ * @param call the ownership operation the child performs
+ * @returns the child's captured process result
+ */
+export async function interruptOwner(cwd: string, interruption: OwnerInterruption, call: string): Promise<SpawnResult> {
+    const { operation, path, point } = interruption;
+    const boundary = getCliSourcePath('platform/root/public.ts');
+    const program = `
+import { mock } from 'bun:test';
+const boundary = await import(${JSON.stringify(boundary)});
+const open = boundary.openRoot;
+mock.module(${JSON.stringify(boundary)}, () => ({ ...boundary, openRoot(root) {
+    const files = open(root);
+    return { ...files, ${operation}(path, ...rest) {
+        if (path === ${JSON.stringify(path)} && ${JSON.stringify(point)} === 'before') process.exit(${String(INTERRUPTION_EXIT_CODE)});
+        files.${operation}(path, ...rest);
+        if (path === ${JSON.stringify(path)} && ${JSON.stringify(point)} === 'after') process.exit(${String(INTERRUPTION_EXIT_CODE)});
+    }};
+}}));
+const { openOwnership, applyPlans } = await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/public.ts'))});
+const { planReplacement, planRestoration } = await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/contracts.ts'))});
+using log = openOwnership(process.cwd());
+${call}
+`;
+    return await runTestCommand([process.execPath, '-e', program], { cwd });
 }

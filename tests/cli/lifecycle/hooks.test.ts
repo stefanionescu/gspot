@@ -18,8 +18,8 @@ import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { openSession, applyCommand } from '#cli/commands/public.ts';
-import { HOOK_REPOSITORIES } from '#tests/config/cli/lifecycle/hooks.ts';
 import { hookStatus, installHooks } from '#cli/lifecycle/install/contracts.ts';
+import { HOOK_REPOSITORIES, MISE_INSTALL_RESULT } from '#tests/config/cli/lifecycle/hooks.ts';
 
 // The policy and repository of a session: what install and doctor both read.
 
@@ -28,27 +28,40 @@ async function hooksOf(root: string) {
     return { policy: session.policyFiles.policy, repository: session.repository };
 }
 
+/**
+ * Prepare an authored hook provider and capture what publication must preserve.
+ * @param root the disposable repository root.
+ * @param provider the native provider files, Git setting, and runner.
+ * @returns the original Git setting and authored file bytes.
+ */
+async function prepareHookProvider(root: string, provider: (typeof HOOK_REPOSITORIES)[number]) {
+    const { files, setting, gitHook, runner } = provider;
+    await createFileTree(root, {
+        'gspot.toml': buildPolicy([], { tables: `runner = "${runner}"\n[hooks]\nenabled = true\n` }),
+        ...files,
+    });
+    gitOutput(root, ['init', '-q']);
+    if (setting !== undefined) gitOutput(root, [...setting]);
+    if (gitHook) await Bun.write(join(root, '.git/hooks/pre-commit'), '#!/bin/sh\nexit 0\n');
+    const before = readGitSetting(root, 'core.hooksPath');
+    const authoredPaths = gitHook ? ['.git/hooks/pre-commit'] : Object.keys(files);
+    const authored = await Promise.all(
+        authoredPaths.map(async (path) => ({ path, content: await Bun.file(join(root, path)).text() })),
+    );
+    {
+        using log = openOwnership(root);
+        const session = await openSession(root);
+        writeGeneratedFiles(session, emitAll(session), log);
+    }
+    return { before, authored };
+}
+
 test.each([...HOOK_REPOSITORIES])(
     'a repository with $name keeps its hooks and gets the lines to add',
-    async ({ name: _kind, files, setting, gitHook }) => {
+    async (provider) => {
+        const { runner } = provider;
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy([], { tables: 'runner = "npm"\n[hooks]\nenabled = true\n' }),
-            ...files,
-        });
-        gitOutput(sandbox.path, ['init', '-q']);
-        if (setting !== undefined) gitOutput(sandbox.path, [...setting]);
-        if (gitHook) await Bun.write(join(sandbox.path, '.git/hooks/pre-commit'), '#!/bin/sh\nexit 0\n');
-        const before = readGitSetting(sandbox.path, 'core.hooksPath');
-        const authoredPaths = gitHook ? ['.git/hooks/pre-commit'] : Object.keys(files);
-        const authored = await Promise.all(
-            authoredPaths.map(async (path) => ({ path, content: await Bun.file(join(sandbox.path, path)).text() })),
-        );
-        {
-            using log = openOwnership(sandbox.path);
-            const session = await openSession(sandbox.path);
-            writeGeneratedFiles(session, emitAll(session), log);
-        }
+        const { before, authored } = await prepareHookProvider(sandbox.path, provider);
         const preview = await installCommand({ cwd: sandbox.path, isDryRun: true });
         expect(preview.exitCode).toBe(0);
         expect(preview.json).toMatchObject({ dryRun: true });
@@ -58,17 +71,25 @@ test.each([...HOOK_REPOSITORIES])(
         const text = installHooks(await hooksOf(sandbox.path));
         expect(plan.notes).toContain(text);
         expect(text).toContain('add these gspot lines to them');
-        expect(text).toContain('pre-commit: npm exec --no -- gspot check --hook pre-commit');
-        expect(text).toContain('pre-push: npm exec --no -- gspot check --hook pre-push -- "$@"');
+        const command = runner === 'mise' ? 'mise exec -- gspot' : 'npm exec --no -- gspot';
+        expect(text).toContain(`pre-commit: ${command} check --hook pre-commit`);
+        expect(text).toContain(`pre-push: ${command} check --hook pre-push -- "$@"`);
+        if (runner === 'mise') {
+            const native = processes.run;
+            using installer = spyOn(processes, 'run').mockImplementation((argv, options) =>
+                argv[0] === 'mise' ? Promise.resolve(MISE_INSTALL_RESULT) : native(argv, options),
+            );
+            const installed = await installCommand({ cwd: sandbox.path, isDryRun: false });
+            expect(installed.exitCode, installed.text).toBe(0);
+            expect(installed.text).toContain(text);
+            expect(installer.mock.calls.map(([argv]) => argv)).toContainEqual(['mise', 'install']);
+        }
         expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(before);
         for (const { path, content } of authored) expect(await Bun.file(join(sandbox.path, path)).text()).toBe(content);
         expect(hookStatus(await hooksOf(sandbox.path))).toStrictEqual({ ready: false, text: `not installed; ${text}` });
         const [first] = authored;
         expect(first).toBeDefined();
-        await Bun.write(
-            join(sandbox.path, first!.path),
-            `${first!.content}\nnpm exec --no -- gspot check --hook pre-commit\n`,
-        );
+        await Bun.write(join(sandbox.path, first!.path), `${first!.content}\n${command} check --hook pre-commit\n`);
         expect(hookStatus(await hooksOf(sandbox.path))).toMatchObject({ ready: true });
     },
 );

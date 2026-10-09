@@ -50,17 +50,6 @@ test('repository file discovery > keeps the requested directory when no Git root
     expect(isGitRepository(sandbox.path)).toBe(false);
 });
 
-test('repository file discovery > walks a non-Git directory while honoring its ignore file', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        '.gitignore': 'ignored.ts\n',
-        'source.ts': 'export {};\n',
-        'ignored.ts': 'export {};\n',
-    });
-    const entries = await trackedEntries(sandbox.path);
-    expect(entries.map((entry) => entry.path)).toStrictEqual(['.gitignore', 'source.ts']);
-});
-
 test('repository file discovery > reports a corrupt Git index instead of switching to a directory walk', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });

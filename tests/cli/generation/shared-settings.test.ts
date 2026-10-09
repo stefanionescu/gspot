@@ -126,11 +126,11 @@ test('Ruff selects declared runner and framework families without implicit rule 
 test('policy ignores for the same test path share the native rule list', async () => {
     const ignored = await generatedDocument<TestedRuffConfiguration>(
         buildPolicy(['python', 'pytest'], {
-            tables: '[[ignore]]\ncheck = "python/ruff"\nrule = "S101"\npaths = ["**/conftest.py"]\nreason = "The fixture assertions are deliberate checks."\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/conftest.py"]\nreason = "Fixtures document themselves through their names."\n',
+            tables: '[[ignore]]\ncheck = "python/ruff"\nrule = "S101"\npaths = ["**/test_*.py"]\nreason = "The fixture assertions are deliberate checks."\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/test_*.py"]\nreason = "Fixtures document themselves through their names."\n',
         }),
         RUFF,
     );
-    expect(ignored.lint['per-file-ignores']['../../**/conftest.py']).toStrictEqual(['S101', 'D103']);
+    expect(ignored.lint['per-file-ignores']['../../**/test_*.py']).toStrictEqual(['S101', 'D103']);
 });
 
 test.each(PATH_IGNORE_CONFIGURATIONS)(

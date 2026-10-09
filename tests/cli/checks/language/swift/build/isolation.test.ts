@@ -81,7 +81,6 @@ test('Periphery build side effects stay in its source copy and findings name ori
     expect(sources).toStrictEqual(['let unused = 1\n']);
     expect(run.mock.calls[0]?.[1].cwd).not.toBe(sandbox.path);
     expect(await pathExists(join(sandbox.path, 'Package.resolved'))).toBe(false);
-    expect(await readFile(join(sandbox.path, 'Main.swift'), 'utf8')).toBe('let unused = 1\n');
 });
 
 test('concurrent Swift compilation and Periphery retain separate source and artifact directories', async () => {

@@ -37,7 +37,7 @@ import { reconcileConfigurations } from '#cli/lifecycle/selection/contracts.ts';
 import type { ApplyOptions, ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import { selectForScope, fileDeclarations } from '#cli/repository/selection/public.ts';
 import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/public.ts';
-import { applyPlan, getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { applyPlans, getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { computeDrift, readVersionPin, writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import type { PackageInstaller, PackageInstallerIdentity } from '#cli/types/parsers/packages.ts';
 
@@ -283,12 +283,13 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
     writePolicyFile({
         text: proposal.text,
         original: proposal.original,
-        publish: (next, expected) => {
-            applyPlan(log, {
-                ...planReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
-                before: expected,
-            });
-        },
+        publish: (next, expected) =>
+            applyPlans(log, [
+                {
+                    ...planReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
+                    before: expected,
+                },
+            ]),
     });
     const report = writeGeneratedFiles(session, generated, log);
     report.notes.unshift(...reconciliation.notes);

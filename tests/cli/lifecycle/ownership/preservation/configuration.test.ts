@@ -5,8 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { applyBlock } from '#cli/platform/root/contracts.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
+import { OWNERSHIP_REFUSAL } from '#tests/config/samples/ownership.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { MALFORMED_BLOCKS } from '#tests/config/cli/platform/managed-blocks.ts';
-import { applyPlan, applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { planBlock, planMerge, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 import { TASK_RESTORATION_CASES } from '#tests/config/cli/lifecycle/ownership/preservation/configuration.ts';
 
@@ -17,23 +18,24 @@ test('shared TOML updates preserve comments and later authored settings through 
     let log = openOwnership(directory.path);
     try {
         expect(
-            applyPlan(
-                log,
+            applyPlans(log, [
                 planMerge(log, 'compiler.toml', [{ path: ['extends'], value: './.gspot/first.json' }], true),
-            ),
+            ])[0],
         ).toBe('changed');
         const installed = log.files.read('compiler.toml')!.bytes.toString('utf8');
         const edited = installed.replace('strict = false', 'strict = true');
         await writeFile(join(directory.path, 'compiler.toml'), edited);
         expect(
-            applyPlan(log, planMerge(log, 'compiler.toml', [{ path: ['extends'], value: './.gspot/second.json' }])),
+            applyPlans(log, [
+                planMerge(log, 'compiler.toml', [{ path: ['extends'], value: './.gspot/second.json' }]),
+            ])[0],
         ).toBe('changed');
         expect(log.files.read('compiler.toml')!.bytes.toString('utf8')).toBe(
             edited.replace('./.gspot/first.json', './.gspot/second.json'),
         );
         log[Symbol.dispose]();
         log = openOwnership(directory.path);
-        expect(applyPlan(log, planRestoration(log, 'compiler.toml'))).toBe('changed');
+        expect(applyPlans(log, [planRestoration(log, 'compiler.toml')])[0]).toBe('changed');
         expect(log.files.read('compiler.toml')!.bytes.toString('utf8')).toBe(
             original.replace('strict = false', 'strict = true'),
         );
@@ -49,8 +51,7 @@ test('leaving TOML keys restores their original values and preserves authored ch
     {
         using log = openOwnership(directory.path);
 
-        applyPlan(
-            log,
+        applyPlans(log, [
             planMerge(
                 log,
                 'package.toml',
@@ -61,19 +62,21 @@ test('leaving TOML keys restores their original values and preserves authored ch
                 ],
                 true,
             ),
-        );
+        ]);
         const edited = log.files
             .read('package.toml')!
             .bytes.toString('utf8')
             .replace('private = true', 'private = false');
         await writeFile(join(directory.path, 'package.toml'), edited);
         expect(
-            applyPlan(log, planMerge(log, 'package.toml', [{ path: ['scripts', 'check'], value: 'gspot check' }])),
+            applyPlans(log, [
+                planMerge(log, 'package.toml', [{ path: ['scripts', 'check'], value: 'gspot check' }]),
+            ])[0],
         ).toBe('changed');
         expect(log.files.read('package.toml')!.bytes.toString('utf8')).toBe(
             original.replace('private = true', 'private = false'),
         );
-        expect(applyPlan(log, planRestoration(log, 'package.toml'))).toBe('changed');
+        expect(applyPlans(log, [planRestoration(log, 'package.toml')])[0]).toBe('changed');
         expect(log.files.read('package.toml')!.bytes.toString('utf8')).toBe(
             original.replace('private = true', 'private = false'),
         );
@@ -88,15 +91,14 @@ test('nested TOML ownership preserves authored entries and comments through upda
         using log = openOwnership(directory.path);
 
         expect(
-            applyPlan(
-                log,
+            applyPlans(log, [
                 planMerge(
                     log,
                     'tool.toml',
                     [{ path: ['checks', 'commands', 'gspot'], value: { run: 'gspot check --staged' } }],
                     true,
                 ),
-            ),
+            ])[0],
         ).toBe('changed');
         const edited = log.files
             .read('tool.toml')!
@@ -104,12 +106,11 @@ test('nested TOML ownership preserves authored entries and comments through upda
             .replace('echo original', 'echo authored-later');
         await writeFile(join(directory.path, 'tool.toml'), edited);
         expect(
-            applyPlan(
-                log,
+            applyPlans(log, [
                 planMerge(log, 'tool.toml', [
                     { path: ['checks', 'commands', 'gspot'], value: { run: 'gspot check --staged --verbose' } },
                 ]),
-            ),
+            ])[0],
         ).toBe('changed');
         expect(parseToml(log.files.read('tool.toml')!.bytes.toString('utf8'))).toMatchObject({
             checks: {
@@ -119,7 +120,7 @@ test('nested TOML ownership preserves authored entries and comments through upda
                 },
             },
         });
-        expect(applyPlan(log, planRestoration(log, 'tool.toml'))).toBe('changed');
+        expect(applyPlans(log, [planRestoration(log, 'tool.toml')])[0]).toBe('changed');
         expect(log.files.read('tool.toml')!.bytes.toString('utf8')).toBe(
             original.replace('echo original', 'echo authored-later'),
         );
@@ -135,7 +136,7 @@ test('adopting identical authored configuration restores its bytes and permissio
         using log = openOwnership(directory.path);
 
         applyPlans(log, [planMerge(log, 'package.toml', [{ path: ['scripts', 'check'], value: 'gspot check' }], true)]);
-        expect(applyPlan(log, planRestoration(log, 'package.toml'))).toBe('changed');
+        expect(applyPlans(log, [planRestoration(log, 'package.toml')])[0]).toBe('changed');
         expect(await readFile(join(directory.path, 'package.toml'), 'utf8')).toBe(content);
         const metadata = await stat(join(directory.path, 'package.toml'));
         expect(metadata.mode & 0o777).toBe(getKeptMode(0o640));
@@ -187,27 +188,27 @@ test('shared TOML removes created empty parents and preserves authored empty par
         { path: ['kept', 'owned'], value: true },
     ];
     try {
-        applyPlan(log, planMerge(log, path, fields, true));
+        applyPlans(log, [planMerge(log, path, fields, true)]);
         const installed = log.files.read(path)!.bytes.toString('utf8');
         const edited = installed.replace('fourth = 4', 'fourth = 99');
         await writeFile(join(directory.path, path), edited);
-        expect(applyPlan(log, planMerge(log, path, []))).toBe('preserved');
+        expect(() => applyPlans(log, [planMerge(log, path, [])])).toThrow(`The file ${path} ${OWNERSHIP_REFUSAL}`);
         expect(log.files.read(path)!.bytes.toString('utf8')).toBe(edited);
         await writeFile(join(directory.path, path), installed);
-        applyPlan(log, planMerge(log, path, [fields[1]!]));
+        applyPlans(log, [planMerge(log, path, [fields[1]!])]);
         expect(parseToml(log.files.read(path)!.bytes.toString('utf8'))).toStrictEqual({
             authored: true,
             kept: {},
             created: { nested: { second: 2 } },
         });
-        applyPlan(log, planMerge(log, path, []));
+        applyPlans(log, [planMerge(log, path, [])]);
         expect(parseToml(log.files.read(path)!.bytes.toString('utf8'))).toStrictEqual({ authored: true, kept: {} });
-        applyPlan(log, planMerge(log, path, fields, true));
+        applyPlans(log, [planMerge(log, path, fields, true)]);
         await writeFile(
             join(directory.path, path),
             log.files.read(path)!.bytes.toString('utf8').replace('authored = true', 'authored = false'),
         );
-        expect(applyPlan(log, planRestoration(log, path))).toBe('changed');
+        expect(applyPlans(log, [planRestoration(log, path)])[0]).toBe('changed');
         expect(parseToml(log.files.read(path)!.bytes.toString('utf8'))).toStrictEqual({ authored: false, kept: {} });
     } finally {
         log[Symbol.dispose]();
@@ -273,16 +274,16 @@ test.each(TASK_RESTORATION_CASES)(
                 { path: ['tasks', 'lint'], value: 'gspot check' },
                 { path: ['tasks', 'format', 'run'], value: 'gspot check --fix' },
             ];
-            expect(applyPlan(log, planMerge(log, 'mise.toml', changes, true))).toBe('changed');
+            expect(applyPlans(log, [planMerge(log, 'mise.toml', changes, true)])[0]).toBe('changed');
             const installed = await readFile(join(directory.path, 'mise.toml'), 'utf8');
             expect(installed).toContain('# Authored tasks');
             expect(installed).toContain('# Keep this description');
             expect(parseToml(installed)).toMatchObject({
                 tasks: { lint: 'gspot check', format: { description: 'Format the app', run: 'gspot check --fix' } },
             });
-            expect(applyPlan(log, planMerge(log, 'mise.toml', changes))).toBe('unchanged');
+            expect(applyPlans(log, [planMerge(log, 'mise.toml', changes)])[0]).toBe('unchanged');
             await writeFile(join(directory.path, 'mise.toml'), installed + appended);
-            expect(applyPlan(log, planRestoration(log, 'mise.toml'))).toBe('changed');
+            expect(applyPlans(log, [planRestoration(log, 'mise.toml')])[0]).toBe('changed');
             const restored = await readFile(join(directory.path, 'mise.toml'), 'utf8');
             expect(parseToml(restored)['tasks']).toStrictEqual(parseToml(original)['tasks']);
             // An authored edit survives the restore; without one the file is byte for byte the original.

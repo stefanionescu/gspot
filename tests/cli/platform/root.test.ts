@@ -8,6 +8,7 @@ import { isMacos, isPosix } from '#tests/config/harness/platforms.ts';
 import { fileMode, portableSegments } from '#cli/platform/root/contracts.ts';
 
 import {
+    ROOT_REPLACEMENTS,
     UNSAFE_DESTINATIONS,
     LINK_TARGET_REFUSALS,
     NATIVE_PATH_REFUSALS,
@@ -15,43 +16,33 @@ import {
     POSIX_CANONICAL_SOURCE,
 } from '#tests/config/cli/platform/root.ts';
 
-test('native replacement and removal preserve read-only identities', async () => {
-    await using directory = await testdir();
-    using root = openRoot(directory.path);
-    const original = { bytes: Buffer.from([0, 255, 10]), mode: fileMode({ mode: 0o444 }) };
-    const replacement = { bytes: Buffer.from('replacement'), mode: fileMode({ mode: 0o644 }) };
-    root.write('config/input', original, undefined);
-    expect(root.read('config/input')).toStrictEqual(original);
-    root.write('config/input', replacement, original);
-    expect(root.read('config/input')).toStrictEqual(replacement);
-    root.write('config/input', original, replacement);
-    expect(() => {
-        root.remove('config/input', replacement);
-    }).toThrow('changed');
-    expect(root.read('config/input')).toStrictEqual(original);
-    root.remove('config/input', original);
-    expect(root.read('config/input')).toBeUndefined();
-});
-
-test.skipIf(!isPosix)(
-    'root lifecycle mutations: replacements preserve expected bytes and modes and refuse subsequent edits',
-    async () => {
+test.each(ROOT_REPLACEMENTS.filter(({ posix }) => !posix || isPosix))(
+    'native replacement and removal preserve modes $original/$replacement and refuse stale writes',
+    async ({ original: originalMode, replacement: replacementMode, content }) => {
         await using directory = await testdir();
         using root = openRoot(directory.path);
-        const original = { bytes: Buffer.from([0, 255, 10]), mode: 0o640 };
+        const original = { bytes: Buffer.from([0, 255, 10]), mode: fileMode({ mode: originalMode }) };
+        const replacement = { bytes: Buffer.from(content), mode: fileMode({ mode: replacementMode }) };
         root.write('config/input', original, undefined);
         expect(root.read('config/input')).toStrictEqual(original);
-        const next = { bytes: Buffer.from('replacement\n'), mode: 0o444 };
-        root.write('config/input', next, original);
-        expect(root.read('config/input')).toStrictEqual(next);
+        root.write('config/input', replacement, original);
+        expect(root.read('config/input')).toStrictEqual(replacement);
         expect(() => {
             root.write('config/input', original, original);
         }).toThrow('changed');
         expect(() => {
             root.remove('config/input', original);
         }).toThrow('changed');
-        expect(root.read('config/input')).toStrictEqual(next);
-        root.remove('config/input', next);
+        expect(root.read('config/input')).toStrictEqual(replacement);
+        root.write('config/input', original, replacement);
+        expect(() => {
+            root.remove('config/input', replacement);
+        }).toThrow('changed');
+        expect(root.read('config/input')).toStrictEqual(original);
+        root.remove('config/input', original);
+        expect(root.read('config/input')).toBeUndefined();
+        root.write('config/input', replacement, undefined);
+        root.remove('config/input', replacement);
         expect(root.read('config/input')).toBeUndefined();
     },
 );

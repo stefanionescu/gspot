@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { planMerge, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 import { AGE_CASES, TWO_WEEKS_SECONDS } from '#tests/config/cli/generation/bunfig.ts';
 
@@ -22,7 +22,7 @@ test('Bun safeguards preserve stricter age and unrelated fields across ownership
     const session = await openSession(repository.path);
     const generated = emitAll(session).toolFiles.find((entry) => entry.path === 'bunfig.toml')!;
     const log = openOwnership(repository.path);
-    applyPlan(log, planMerge(log, generated.path, generated.changes, true));
+    applyPlans(log, [planMerge(log, generated.path, generated.changes, true)]);
     const installed = await readFile(join(repository.path, 'bunfig.toml'), 'utf8');
     expect(Bun.TOML.parse(installed)).toStrictEqual({
         install: {
@@ -32,8 +32,8 @@ test('Bun safeguards preserve stricter age and unrelated fields across ownership
         },
     });
     expect(installed).toContain('# Authored installation choices');
-    expect(applyPlan(log, planMerge(log, generated.path, generated.changes, true))).toBe('unchanged');
-    expect(applyPlan(log, planRestoration(log, 'bunfig.toml'))).toBe('changed');
+    expect(applyPlans(log, [planMerge(log, generated.path, generated.changes, true)])[0]).toBe('unchanged');
+    expect(applyPlans(log, [planRestoration(log, 'bunfig.toml')])[0]).toBe('changed');
     log[Symbol.dispose]();
     expect(await readFile(join(repository.path, 'bunfig.toml'), 'utf8')).toBe(original);
 });

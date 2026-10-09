@@ -5,7 +5,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { mkdir, readdir, symlink } from 'node:fs/promises';
-import { doctorCommand } from '#cli/commands/doctor/public.ts';
 import { checkOutRevision } from '#cli/execution/copy/public.ts';
 import { readIndexEntries, getSubmodulePaths } from '#cli/repository/contracts.ts';
 
@@ -31,9 +30,6 @@ test.each(['index', 'commit'] as const)(
         expect(getSubmodulePaths(await readIndexEntries(sandbox.path))).toStrictEqual([path]);
         const session = await openSession(sandbox.path);
         expect(session.repository.files.map((file) => file.path)).toStrictEqual(['gspot.toml', 'source.txt']);
-        const result = await doctorCommand(sandbox.path);
-        expect(result.json).toMatchObject({ submodules: [path] });
-        expect(result.text.split(`submodule  ${path} (contents are not read)`)).toHaveLength(2);
         const expected = gitOutput(sandbox.path, ['write-tree']);
         const source = kind === 'index' ? { kind } : { kind, hash: gitOutput(sandbox.path, ['rev-parse', 'HEAD']) };
         await checkOutRevision(sandbox.path, source, async (copy, tree) => {

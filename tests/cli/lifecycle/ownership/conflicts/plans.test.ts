@@ -4,7 +4,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
-import { identify, applyPlan, applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { OWNERSHIP_REFUSAL } from '#tests/config/samples/ownership.ts';
+import { identify, applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
 import {
     planBlock,
@@ -26,7 +27,9 @@ test('a prepared configuration does not write and cannot overwrite a subsequent 
         expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
         const edited = 'extends = "./authored.json"\nstrict = false\n';
         await writeFile(join(directory.path, 'config.toml'), edited);
-        expect(() => applyPlan(log, plan)).toThrow('Lifecycle destination changed during the operation: config.toml');
+        expect(() => applyPlans(log, [plan])).toThrow(
+            'Lifecycle destination changed during the operation: config.toml',
+        );
         expect(await readFile(join(directory.path, 'config.toml'), 'utf8')).toBe(edited);
         expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
     }
@@ -78,7 +81,7 @@ test.each(['replacement', 'block'] as const)(
                 mode: getKeptMode(0o640),
             });
             await writeFile(join(directory.path, 'config.txt'), 'edited after plan\n');
-            expect(() => applyPlan(log, plan)).toThrow(
+            expect(() => applyPlans(log, [plan])).toThrow(
                 'Lifecycle destination changed during the operation: config.txt',
             );
             expect(log.state.files).toStrictEqual([]);
@@ -119,15 +122,14 @@ test('a preserved file refuses the whole batch and leaves every proposed destina
     {
         using log = openOwnership(directory.path);
 
-        applyPlan(
-            log,
+        applyPlans(log, [
             planReplacement(log, {
                 path: 'owned.txt',
                 next: { bytes: Buffer.from('installed'), mode: 0o644 },
                 kind: 'tool_file',
                 canReplace: true,
             }),
-        );
+        ]);
         const plans = ['owned.txt', 'authored.txt'].map((path) =>
             planReplacement(log, {
                 path: path,
@@ -135,9 +137,7 @@ test('a preserved file refuses the whole batch and leaves every proposed destina
                 kind: 'tool_file',
             }),
         );
-        expect(() => applyPlans(log, plans)).toThrow(
-            'The file authored.txt was not overwritten by gspot. Move it aside, then retry the command.',
-        );
+        expect(() => applyPlans(log, plans)).toThrow(`The file authored.txt ${OWNERSHIP_REFUSAL}`);
         expect(await readFile(join(directory.path, 'owned.txt'), 'utf8')).toBe('installed');
         expect(await readFile(join(directory.path, 'authored.txt'), 'utf8')).toBe('keep authored');
     }
@@ -149,24 +149,24 @@ test('restoration journals completed removals and preserves a later edit', async
     {
         using log = openOwnership(directory.path);
 
-        applyPlan(
-            log,
+        applyPlans(log, [
             planReplacement(log, {
                 path: 'authored.txt',
                 next: { bytes: Buffer.from('installed\n'), mode: 0o444 },
                 kind: 'tool_file',
                 canReplace: true,
             }),
-        );
-        applyPlan(
-            log,
+        ]);
+        applyPlans(log, [
             planReplacement(log, {
                 path: 'generated.txt',
                 next: { bytes: Buffer.from('generated\n'), mode: 0o644 },
                 kind: 'tool_file',
             }),
+        ]);
+        expect(() => applyPlans(log, [planRestoration(log, '.gspot/unowned')])).toThrow(
+            `The file .gspot/unowned ${OWNERSHIP_REFUSAL}`,
         );
-        expect(applyPlan(log, planRestoration(log, '.gspot/unowned'))).toBe('preserved');
         const plans = ['authored.txt', 'generated.txt'].map((path) => planRestoration(log, path));
         expect(await readFile(join(directory.path, 'authored.txt'), 'utf8')).toBe('installed\n');
         await writeFile(join(directory.path, 'generated.txt'), 'user edit\n');
@@ -199,19 +199,21 @@ test('reviewed matching bytes refresh ownership without rewriting the file', asy
     const next = { bytes: Buffer.from('installed\n'), mode: getKeptMode(0o644) };
     {
         using log = openOwnership(directory.path);
-        applyPlan(log, planReplacement(log, { path, next, kind: 'tool_file' }));
+        applyPlans(log, [planReplacement(log, { path, next, kind: 'tool_file' })]);
         await writeFile(join(directory.path, path), 'reviewed\n');
         const reviewed = log.files.read(path)!;
         const request = { path, next: reviewed, kind: 'tool_file' as const };
-        expect(applyPlan(log, planReplacement(log, request))).toBe('preserved');
+        expect(() => applyPlans(log, [planReplacement(log, request)])).toThrow(
+            `The file ${request.path} ${OWNERSHIP_REFUSAL}`,
+        );
         expect(log.entryFor(path)?.installed).toStrictEqual(identify(next));
         const plan = planReplacement(log, { ...request, expected: reviewed, canReplace: true });
         await writeFile(join(directory.path, path), 'intervening edit\n');
-        expect(applyPlan(log, plan)).toBe('unchanged');
+        expect(applyPlans(log, [plan])[0]).toBe('unchanged');
         expect(log.files.read(path)?.bytes.toString('utf8')).toBe('intervening edit\n');
         expect(log.entryFor(path)?.installed).toStrictEqual(identify(reviewed));
         await writeFile(join(directory.path, path), reviewed.bytes);
-        expect(applyPlan(log, plan)).toBe('unchanged');
+        expect(applyPlans(log, [plan])[0]).toBe('unchanged');
         expect(log.files.read(path)).toStrictEqual(reviewed);
         expect(log.entryFor(path)?.installed).toStrictEqual(identify(reviewed));
         expect(planReplacement(log, request).entry).toBeUndefined();
@@ -241,8 +243,7 @@ for (const { name, change } of [
                     'authored.json changed after gspot read it. Run the command again.',
                 );
                 expect(() =>
-                    applyPlan(
-                        log,
+                    applyPlans(log, [
                         planReplacement(log, {
                             path: 'authored.json',
                             next: { bytes: Buffer.from('{}\n'), mode: 0o444 },
@@ -250,7 +251,7 @@ for (const { name, change } of [
                             canReplace: true,
                             expected: read,
                         }),
-                    ),
+                    ]),
                 ).toThrow('Lifecycle destination changed during the operation: authored.json');
                 expect(log.files.read('authored.json')).toStrictEqual(edited);
                 await writeFile(path, read.bytes);
@@ -259,7 +260,7 @@ for (const { name, change } of [
             {
                 using log = openOwnership(directory.path);
                 const refreshed = log.files.read('authored.json')!;
-                expect(applyPlan(log, planRetirement(log, 'authored.json', refreshed))).toBe('changed');
+                expect(applyPlans(log, [planRetirement(log, 'authored.json', refreshed)])[0]).toBe('changed');
                 expect(log.files.read('authored.json')).toBeUndefined();
             }
         },

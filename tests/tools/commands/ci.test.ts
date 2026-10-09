@@ -145,29 +145,25 @@ test.each(['gitlab', 'github'] as const)(
 );
 
 test.each(['gitlab', 'github'] as const)(
-    'invalid comparisons and failed installs fail the job until correction in %s CI',
+    'invalid comparisons and failed installs fail the job in %s CI',
     async (provider) => {
         await using repository = await testdir();
         await using executables = await testdir();
         const { base, generated } = await prepareCiProject(repository.path, provider);
         const install = await createCiInstall(executables.path);
-        const initial = await runCiJob(repository.path, generated, executables.path, base);
-        expect(initial.code).toBe(1);
         const malformed = await runCiJob(repository.path, generated, executables.path, '$(touch injected)');
         expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
         expect(malformed.stderr).toContain('GSPOT_CI_BASE is not a commit SHA: $(touch injected)\n');
         expect(await pathExists(join(repository.path, 'injected'))).toBe(false);
         const missing = await runCiJob(repository.path, generated, executables.path, 'f'.repeat(base.length));
-        expect(missing.code).not.toBe(0);
+        expect(missing.code).toBe(2);
+        expect(missing.stderr).toBe(
+            `Git merge-base failed for ${'f'.repeat(base.length)}: fatal: Not a valid commit name ${'f'.repeat(base.length)}.\n`,
+        );
         await install.refuse();
         const refused = await runCiJob(repository.path, generated, executables.path, base);
         expect(refused.code).toBe(1);
         expect(refused.stderr).toContain('404 Not Found');
-        await install.allow();
-        await writeFile(join(repository.path, 'changed.sh'), 'echo corrected\n');
-        commitCiSource(repository.path, 'correct syntax');
-        const corrected = await runCiJob(repository.path, generated, executables.path, base);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
 );
 

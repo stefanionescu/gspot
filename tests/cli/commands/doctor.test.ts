@@ -2,6 +2,7 @@ import semver from 'semver';
 import executables from 'which';
 import { join, basename } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import * as processes from '#cli/platform/public.ts';
@@ -53,7 +54,7 @@ test('doctor identifies unowned generated-directory files that apply preserves',
     expect(await readFile(join(sandbox.path, '.gspot/authored.json'), 'utf8')).toBe(original);
 });
 
-test('doctor excludes private tool manifests from language detection and detects an authored Python project', async () => {
+test('doctor reports authored Python and submodules without treating private tool manifests as source', async () => {
     await using sandbox = await testdir();
     const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
     await createFileTree(sandbox.path, {
@@ -74,6 +75,14 @@ test('doctor excludes private tool manifests from language detection and detects
         },
     });
     expect(await readFile(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(python);
+    gitOutput(sandbox.path, ['init']);
+    gitOutput(sandbox.path, ['add', '.']);
+    gitOutput(sandbox.path, ['commit', '-qm', 'Source']);
+    const commit = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
+    const path = 'vendor/external project';
+    gitOutput(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${commit},${path}`]);
+    const result = await doctorCommand(sandbox.path);
+    expect(result.json).toMatchObject({ submodules: [path] });
 });
 
 test('doctor reports a new Python file after setup with the command that adds its configuration', async () => {

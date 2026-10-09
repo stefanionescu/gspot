@@ -22,8 +22,8 @@ import { configurationManifests } from '#cli/configurations/public.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { createInstallationRegistry } from '#tests/harness/registry.ts';
 import { sharePythonTools } from '#tests/harness/python-installation.ts';
-import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { toolPin, toolProjectPackage } from '#cli/configurations/contracts.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/state/public.ts';
 import { hasValePackages, installValePackages } from '#cli/lifecycle/install/contracts.ts';
 import type { SharedToolProject, SandboxInstallation } from '#tests/types/harness/install.ts';
@@ -84,14 +84,13 @@ async function prepareNpmProject(root: string, inputs: GeneratedFile[]): Promise
             const path = packageToolProject.lockfilePath(packageToolProject.parse(inputs[0]!.content));
             const lockfile: GeneratedFile = { path, content: files.read(path)!.bytes.toString('utf8'), kind: 'lock' };
             for (const file of [...inputs, lockfile])
-                applyPlan(
-                    log,
+                applyPlans(log, [
                     planReplacement(log, {
                         path: file.path,
                         next: { bytes: Buffer.from(file.content), mode: OWNER_WRITABLE_FILE },
                         kind: file.kind === 'lock' ? 'lock' : 'tool_file',
                     }),
-                );
+                ]);
             installTree(log, 'npm', readInstalledTree(files.realPath(NODE_MODULES_DIRECTORY), 'npm'));
             return { directory, lockfile };
         })();

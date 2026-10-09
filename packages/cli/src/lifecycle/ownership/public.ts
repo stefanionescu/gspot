@@ -218,15 +218,3 @@ export function applyPlans(log: Log, plans: Planned[]): Outcome[] {
     if (prepared.length > 0) writeBatch(log, prepared);
     return plans.map((plan) => plan.status);
 }
-
-/**
- * Applies one plan, which yields its outcome or is preserved without a write.
- * @param log the open log
- * @param plan the plan
- * @returns its outcome
- */
-export function applyPlan(log: Log, plan: Planned): Outcome {
-    if (plan.status === 'preserved') return 'preserved';
-    applyPlans(log, [plan]);
-    return plan.status;
-}

@@ -22,10 +22,10 @@ import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import type { Log, Ownership } from '#cli/types/lifecycle/ownership.ts';
 import { planClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
 import { PIN_INSTALL_COMMANDS } from '#cli/config/lifecycle/version-pin.ts';
+import { applyPlans, getOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { deleteInstallation } from '#cli/lifecycle/ownership/state/public.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import type { Drift, ApplyReport, WriteRequest } from '#cli/types/lifecycle/apply.ts';
-import { applyPlan, applyPlans, getOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { planBlock, planMerge, planReplacement, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 
 import {
@@ -276,16 +276,15 @@ export function readVersionPin(root: string): string | undefined {
  * @param log the command's locked ownership context
  */
 export function writeVersionPin(log: Log): void {
-    const status = applyPlan(
-        log,
-        planReplacement(log, {
-            path: VERSION_FILE,
-            next: { bytes: Buffer.from(`${RUNNING_VERSION}\n`), mode: OWNER_WRITABLE_FILE },
-            kind: 'pin',
-            canReplace: true,
-        }),
-    );
-    if (status === 'preserved') throw new Error(`${VERSION_FILE} was edited by hand. Delete it, then run gspot apply.`);
+    const plan = planReplacement(log, {
+        path: VERSION_FILE,
+        next: { bytes: Buffer.from(`${RUNNING_VERSION}\n`), mode: OWNER_WRITABLE_FILE },
+        kind: 'pin',
+        canReplace: true,
+    });
+    if (plan.status === 'preserved')
+        throw new Error(`${VERSION_FILE} was edited by hand. Delete it, then run gspot apply.`);
+    applyPlans(log, [plan]);
 }
 
 /**

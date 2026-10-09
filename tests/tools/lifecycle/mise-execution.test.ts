@@ -20,7 +20,7 @@ import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { sourceLauncherDirectory } from '#tests/harness/environment.ts';
 import type { MiseProject } from '#tests/types/tools/mise-execution.ts';
 import { chmod, mkdir, symlink, readFile, realpath } from 'node:fs/promises';
-import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
 const previousMiseVersion = `${String(Number(CLI_PINS.mise.version.split('.', 1)[0]) - 1)}.12.31`;
 
@@ -114,14 +114,13 @@ test.skipIf(!isPosix)(
         const { root, environment } = project;
         {
             using log = openOwnership(root);
-            applyPlan(
-                log,
+            applyPlans(log, [
                 planReplacement(log, {
                     path: '.gspot/obsolete.json',
                     next: { bytes: Buffer.from('{}\n'), mode: 0o444 },
                     kind: 'tool_file',
                 }),
-            );
+            ]);
         }
         const options = { cwd: root, env: environment };
         const invalid = await runTestCommand(['mise', 'exec', '--', 'gspot', 'apply', '--invalid'], options);

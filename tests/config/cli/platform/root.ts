@@ -1,3 +1,8 @@
+export const ROOT_REPLACEMENTS = [
+    { original: 0o444, replacement: 0o644, content: 'replacement', posix: false },
+    { original: 0o640, replacement: 0o444, content: 'replacement\n', posix: true },
+];
+
 export const UNSAFE_DESTINATIONS = [
     { path: 'escape/sentinel', refusal: 'Unsafe lifecycle parent: escape/sentinel' },
     { path: 'linked', refusal: 'Lifecycle destination is not a private regular file: linked' },

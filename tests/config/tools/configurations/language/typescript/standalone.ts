@@ -55,9 +55,7 @@ export const ANCESTOR_TYPESCRIPT_FILES = {
     'app/deep/source.ts': 'export const deepValue: number = 1;\n',
 };
 
-export const ANCESTOR_TYPESCRIPT_TABLES = `[agent_rules]
-enabled = false
-[scope."app"]
+export const ANCESTOR_TYPESCRIPT_TABLES = `[scope."app"]
 configurations = ["typescript"]
 [scope."app/deep"]
 configurations = ["typescript"]

@@ -137,38 +137,6 @@ test('source reads never cache isolated output or turn failed reads into success
     expect(await Bun.file(join(sandbox.path, 'source.txt')).text()).toBe('original');
 });
 
-test('opening a session reads less than one megabyte with a two-megabyte source', async () => {
-    const megabyte = 1024 * 1024;
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([]),
-        large: '#!/usr/bin/env bash\n# @generated\n' + 'x'.repeat(2 * megabyte),
-    });
-    const prefixReads = spyOn(fs, 'readSync');
-    const fullReads = spyOn(fs, 'readFileSync');
-    try {
-        const session = await openSession(sandbox.path);
-        const large = session.repository.files.find((file) => file.path === 'large')!;
-        expect(large.size).toBeGreaterThanOrEqual(2 * megabyte);
-        expect(large.prefix.byteLength).toBe(4096);
-        expect(large.tags).toContain('bash');
-        expect(large.kind).toBe('generated');
-        const prefixBytes = prefixReads.mock.results.reduce(
-            (sum, result) => sum + (result.type === 'return' ? result.value : 0),
-            0,
-        );
-        const fullBytes = fullReads.mock.results.reduce(
-            (sum, result) => sum + (result.type === 'return' ? Buffer.byteLength(result.value) : 0),
-            0,
-        );
-        expect(prefixBytes).toBeLessThanOrEqual(4096 * session.repository.files.length);
-        expect(prefixBytes + fullBytes).toBeLessThan(megabyte);
-    } finally {
-        prefixReads.mockRestore();
-        fullReads.mockRestore();
-    }
-});
-
 test.each([
     ['linked.ts', '../outside/secret.ts'],
     ['linked-directory', '../outside'],

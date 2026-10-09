@@ -20,7 +20,7 @@ import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { installUv, pythonToolProject } from '#cli/tools/python/public.ts';
 import { hostPlatform, environmentVariables } from '#cli/platform/public.ts';
-import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { installToolProject, prepareToolProject } from '#cli/tools/contracts.ts';
 import type { PythonRegistry, RegistryCommand } from '#tests/types/harness/registry.ts';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/state/public.ts';
@@ -71,14 +71,13 @@ export async function installSuitePythonTools(root: string, cancelSignal: AbortS
         },
     );
     for (const file of generated)
-        applyPlan(
-            log,
+        applyPlans(log, [
             planReplacement(log, {
                 path: file.path,
                 next: { bytes: Buffer.from(file.content), mode: OWNER_WRITABLE_FILE },
                 kind: file.kind === 'lock' ? 'lock' : 'tool_file',
             }),
-        );
+        ]);
     console.log(
         await installToolProject(
             pythonToolProject,

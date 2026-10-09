@@ -14,7 +14,7 @@ import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import type { PolicyPathCallback } from '#cli/types/policy/settings.ts';
 import { scopeSchema, policySchema } from '#cli/policy/schema/public.ts';
 import { valueAt, isRecord, expandPaths } from '#cli/platform/contracts.ts';
-import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { DRIFT_HELP, DRIFT_MESSAGES } from '#cli/config/checks/general/gspot.ts';
 import type { FixResult, CheckInput, CheckResult } from '#cli/types/execution/check.ts';
 import { emitPolicy, parseTomlText, readPolicyFile, writePolicyFile } from '#cli/policy/document/public.ts';
@@ -94,10 +94,9 @@ export function fixPolicyLayout(planned: PlannedCheck, root: string): FixResult 
         text,
         original,
         publish: (next, expected) => {
-            applyPlan(
-                log,
+            applyPlans(log, [
                 planReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
-            );
+            ]);
         },
     });
     const changed = previous !== text;
