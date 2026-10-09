@@ -72,7 +72,7 @@ test.each(['', 'app'])('native Commitlint discovery follows only the managed pac
     expect(await Bun.file(join(sandbox.path, packageFile)).text()).toBe(
         COMMITLINT_PACKAGE.replace(
             '{"rules":{"type-enum":[2,"always",["special"]]}}',
-            JSON.stringify({ extends: [target] }),
+            JSON.stringify({ extends: target }),
         ),
     );
     const after = await runTestCommand(command, { cwd });

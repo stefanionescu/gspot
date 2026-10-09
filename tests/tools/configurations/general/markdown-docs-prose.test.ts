@@ -20,7 +20,7 @@ afterAll(async () => {
 describe('the markdown, docs and prose configurations', () => {
     test('installation restores missing Vale dictionaries and the check accepts the restored styles', async () => {
         const { root: sandbox, environment } = testRepository;
-        await rm(join(sandbox, '.gspot', 'config', 'vale', 'styles', 'config', 'dictionaries'), {
+        await rm(join(sandbox, '.gspot', 'vale', 'config', 'dictionaries'), {
             recursive: true,
         });
         const broken = await spawnGspot(sandbox, ['check', '--only', 'prose/vale', '--json'], environment);

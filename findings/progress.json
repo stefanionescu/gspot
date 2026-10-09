@@ -1,5 +1,5 @@
 {
-    "openRecords": 536,
+    "openRecords": 533,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -279,7 +279,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 536,
+        "openRecords": 533,
         "records": 1092,
         "batches": [
             {
@@ -585,8 +585,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 154,
-                "unresolvedAssignments": 137
+                "completedAssignments": 156,
+                "unresolvedAssignments": 135
             },
             {
                 "id": "python",
@@ -739,8 +739,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 30,
-                "unresolvedAssignments": 69
+                "completedAssignments": 31,
+                "unresolvedAssignments": 68
             },
             {
                 "id": "swift-bash-sql",
@@ -1445,8 +1445,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 213,
-                "unresolvedAssignments": 256
+                "completedAssignments": 214,
+                "unresolvedAssignments": 255
             },
             {
                 "id": "scripts-repository",
@@ -1585,8 +1585,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 42,
-                "unresolvedAssignments": 90
+                "completedAssignments": 44,
+                "unresolvedAssignments": 88
             },
             {
                 "id": "installation-docs",
@@ -1730,8 +1730,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 68,
-                "unresolvedAssignments": 69
+                "completedAssignments": 69,
+                "unresolvedAssignments": 68
             },
             {
                 "id": "policy-file",
@@ -3075,10 +3075,13 @@
             ]
         },
         "areas/kits/017": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ac8df3a220b7ce78c78af2a05c4305f0d5b8c31d",
+            "verification": [
+                "Selected manifest products/tools and authored words replace the fixed list; native Vale root/child both levels: 4/16.",
+                "Frozen and native evidence: /tmp/gspot-rules-three-fb8c-cp-final-integration-evidence.json; /tmp/gspot-rules-three-fb8c-cp-native-vocabulary.log."
+            ]
         },
         "areas/kits/018": {
             "status": "complete",
@@ -3442,14 +3445,19 @@
             ]
         },
         "areas/kits/054": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 4b8bf83bd543ad8b.", "Evidence de1cb2d09c9a5ef8."],
+            "commit": "ac8df3a220b7ce78c78af2a05c4305f0d5b8c31d",
+            "verification": [
+                "Evidence 4b8bf83bd543ad8b.",
+                "Evidence de1cb2d09c9a5ef8.",
+                "Knip retains native defaults and consumes normalized test_files without sibling leakage; mise-only scripts remain conditional.",
+                "Native Knip/commands 35/275; /tmp/gspot-rules-three-fb8c-cp-three-cli-corrected.log."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-eight-final-freeze.json",
-                    "commit": null,
+                    "commit": "ac8df3a220b7ce78c78af2a05c4305f0d5b8c31d",
                     "verification": ["Evidence 4b8bf83bd543ad8b.", "Evidence de1cb2d09c9a5ef8."]
                 }
             ]
@@ -4137,10 +4145,13 @@
             "verification": []
         },
         "areas/kits/151": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ac8df3a220b7ce78c78af2a05c4305f0d5b8c31d",
+            "verification": [
+                "Delete neutral, omit optional direction, retain actual directions/reason hints, and label Loosens when.",
+                "Native manifest 12/34, types0; /tmp/gspot-rules-three-fb8c-cp-declarations-corrected.log."
+            ]
         },
         "areas/repository/039": {
             "status": "partial",
@@ -17849,6 +17860,18 @@
                 "status": "pending",
                 "verifiedPlatforms": []
             }
+        },
+        {
+            "commit": "ac8df3a220b7ce78c78af2a05c4305f0d5b8c31d",
+            "completedRecords": ["areas/kits/017", "areas/kits/054", "areas/kits/151"],
+            "unresolvedRecords": 533,
+            "validation": [
+                "Staged157/0, normal commit/push hooks passed; sole producer/check0 and normal apply.",
+                "Production218B smaller. Native receipts retain original failed probes and corrected controls."
+            ],
+            "limitations": [
+                "CI37875104595 queued when inspected; no cross-platform or release completion inferred. main/001 remains partial."
+            ]
         }
     ],
     "verificationEvidence": {

@@ -20,6 +20,7 @@ const second = testdir();
 const prepareSource = async () => {
     const { path } = await first;
     await createFileTree(path, {
+        'package.json': '{"private":true}\n',
         'scripts/a.sh': CLEAN_BASH_SCRIPT,
         'app/source.sh': CLEAN_BASH_SCRIPT,
     });

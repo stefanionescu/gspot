@@ -1,6 +1,5 @@
 // The native scanner accepts allowed license alternatives and reports a disallowed dependency.
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
@@ -9,13 +8,37 @@ import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
+import { buildSandboxPath } from '#tests/harness/install.ts';
+import { test, expect, afterAll, beforeAll } from 'bun:test';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
+import type { InstalledFile } from '#cli/types/tools/install.ts';
 import { environmentExecutable } from '#cli/platform/contracts.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { buildSandboxPath, installToolProjects } from '#tests/harness/install.ts';
+import { toolPin, toolProjectPackage } from '#cli/configurations/contracts.ts';
 import { installGeneratedPythonTools } from '#tests/harness/python-installation.ts';
+import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/state/public.ts';
 import { ROOT, LICENSE_CHECK } from '#tests/config/tools/configurations/general/licenses.ts';
+
+const resources = new AsyncDisposableStack();
+let installation: InstalledFile[];
+
+beforeAll(async () => {
+    const scanner = resources.use(await testdir());
+    const declared = toolProjectPackage(toolPin(configurationManifests().values(), 'license-checker-rseidelsohn'));
+    if (declared?.kind !== 'npm') throw new Error('The license scanner declares no npm package.');
+    const installed = await runTestCommand(['npm', 'install', `${declared.name}@${declared.version}`], {
+        cwd: scanner.path,
+    });
+    if (installed.code !== 0) throw new Error(installed.stdout + installed.stderr);
+    installation = readInstalledTree(join(scanner.path, 'node_modules'), 'npm');
+});
+
+afterAll(async () => {
+    await resources.disposeAsync();
+});
 
 test('native license scanning accepts allowed alternatives and rejects a disallowed dependency', async () => {
     await using sandbox = await testdir();
@@ -41,7 +64,10 @@ test('native license scanning accepts allowed alternatives and rejects a disallo
         const prepared = await spawnGspot(root, command, environment);
         expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
     }
-    await installToolProjects(root);
+    {
+        using log = openOwnership(root);
+        installTree(log, 'npm', installation);
+    }
     const baseline = await spawnGspot(root, LICENSE_CHECK, environment);
     expect(baseline.code, baseline.stdout + baseline.stderr).toBe(0);
     expect((JSON.parse(baseline.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
@@ -121,6 +147,10 @@ test('native installed font metadata justifies its root exception in a descendan
     });
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    {
+        using log = openOwnership(sandbox.path);
+        installTree(log, 'npm', installation);
+    }
     const session = await openSession(sandbox.path);
     expect(
         await BUILT_IN_CHECKS['licenses/packages'].input(buildCheckInput(session, 'licenses/packages')),

@@ -41,4 +41,8 @@ test('apply preview reports a scoped ESLint rule change and saves the baseline o
     const corrected = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, path) });
     const nativeAfter = (await corrected.calculateConfigForFile('entry.js')) as ComputedEslint;
     expect(nativeAfter.rules['no-console']?.[0]).toBe(2);
+    const [allowed] = await corrected.lintText('console.log("message");\n', { filePath: 'tests/line\nbreak.js' });
+    expect(allowed!.messages.filter((diagnostic) => diagnostic.ruleId === 'no-console')).toStrictEqual([]);
+    const [defect] = await corrected.lintText('console.log("message");\n', { filePath: 'src/line\nbreak.js' });
+    expect(defect!.messages.map(({ ruleId }) => ruleId)).toContain('no-console');
 });
