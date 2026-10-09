@@ -1,6 +1,6 @@
 import plugin from '#plugin/rules/public.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
-import type { TrivialFilesOptions } from '#plugin/types/file-content.ts';
+import type { TrivialFilesOptions } from '#plugin/types/no/trivial/files.ts';
 
 createRuleTester().run<
     keyof (typeof plugin.rules)['no-trivial-files']['meta']['messages'],

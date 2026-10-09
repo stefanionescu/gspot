@@ -1,6 +1,6 @@
 import plugin from '#plugin/rules/public.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
-import type { TrivialFunctionsOptions } from '#plugin/types/function-content.ts';
+import type { TrivialFunctionsOptions } from '#plugin/types/no/trivial/functions.ts';
 
 createRuleTester().run<
     keyof (typeof plugin.rules)['no-trivial-functions']['meta']['messages'],

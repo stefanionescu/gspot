@@ -4,8 +4,8 @@ import type { ImplementedFunction } from '#plugin/types/syntax.ts';
 import { createRule, optionsSchema } from '#plugin/create-rule.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { unwrap, totalStatements, hasConstructorState } from '#plugin/syntax.ts';
-import type { ContentCheck, TrivialFilesOptions } from '#plugin/types/file-content.ts';
-import { FORWARDING_NODES, STRUCTURED_EXPRESSIONS } from '#plugin/config/file-content.ts';
+import type { ContentCheck, TrivialFilesOptions } from '#plugin/types/no/trivial/files.ts';
+import { FORWARDING_NODES, STRUCTURED_EXPRESSIONS } from '#plugin/config/no/trivial/files.ts';
 
 function ownsTypeShape(annotation: TSESTree.TypeNode): boolean {
     if (annotation.type !== AST_NODE_TYPES.TSTypeReference) return true;

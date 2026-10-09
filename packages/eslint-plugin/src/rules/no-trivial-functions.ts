@@ -1,8 +1,8 @@
 import { TRIVIAL_STATEMENTS } from '#plugin/config/syntax.ts';
 import { createRule, optionsSchema } from '#plugin/create-rule.ts';
 import { totalStatements, hasConstructorState } from '#plugin/syntax.ts';
-import type { TrivialFunctionsOptions } from '#plugin/types/function-content.ts';
 import type { FunctionBinding, ImplementedFunction } from '#plugin/types/syntax.ts';
+import type { TrivialFunctionsOptions } from '#plugin/types/no/trivial/functions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -10,7 +10,7 @@ import {
     VALUE_PARENTS,
     EXPORT_REFERENCES,
     TRANSPARENT_EXPRESSIONS,
-} from '#plugin/config/function-references.ts';
+} from '#plugin/config/no/trivial/functions.ts';
 
 const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
 

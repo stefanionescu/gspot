@@ -255,6 +255,16 @@
                 "Normal approved install: /tmp/gspot-handlebars-security-approved-install.log.",
                 "Normal frozen install after restoring the age gate: /tmp/gspot-handlebars-security-restored-age-frozen.log."
             ]
+        },
+        {
+            "id": "strict-plugin-rule-mirror-grouping",
+            "date": "2026-10-09",
+            "scope": "review/source-layout/055 plugin rule config and type mirrors",
+            "decision": "Group the no-index-imports config mirror at config/no/index-imports.ts and the no-trivial-files/no-trivial-functions config/type mirrors at config/no/trivial/files.ts, config/no/trivial/functions.ts, types/no/trivial/files.ts, and types/no/trivial/functions.ts. Keep strict prefix-collision enforcement and repository-specific mirror ownership; no policy exception or compatibility export.",
+            "evidence": [
+                "Explicit user answer: Group the mirrors; keep strict enforcement.",
+                "The prescribed flat no-* mirror paths collide under the native staged prefix-collision check."
+            ]
         }
     ],
     "implementationBatches": {

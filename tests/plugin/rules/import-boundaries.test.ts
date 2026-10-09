@@ -1,7 +1,7 @@
 import plugin from '#plugin/rules/public.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
-import type { ImportBoundariesOptions } from '#plugin/types/boundaries.ts';
 import { ALIASES, FOLDERS } from '#tests/config/plugin/rules/boundaries.ts';
+import type { ImportBoundariesOptions } from '#plugin/types/import-boundaries.ts';
 
 createRuleTester().run<
     keyof (typeof plugin.rules)['import-boundaries']['meta']['messages'],
