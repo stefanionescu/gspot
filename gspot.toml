@@ -580,8 +580,8 @@ reason = "Astro maps this directory to the published /schema/gspot.schema.json e
 
 [[ignore]]
 check = "structure/lone-files"
-paths = ["tests/cli/docs", "tests/config/cli/checks/language/bash", "tests/config/cli/checks/tool/xcode", "tests/config/tools/configurations/language/bash", "tests/types/cli/checks/framework", "tests/types/cli/checks/general", "tests/types/cli/generation", "tests/types/tools/configurations/general", "tests/types/tools/generation"]
-reason = "These suite namespaces follow their behavioral source owners. The docs tests stay under cli/docs, and each matching config or types namespace owns its suite data. Their placement follows the repository ownership contract even when an owner needs one file."
+paths = ["tests/config/cli/checks/language/bash", "tests/config/cli/checks/tool/xcode", "tests/config/tools/configurations/language/bash", "tests/types/cli/checks/framework", "tests/types/cli/checks/general", "tests/types/cli/generation", "tests/types/tools/configurations/general", "tests/types/tools/generation"]
+reason = "These suite namespaces follow their behavioral source owners. Each matching config or types namespace owns its suite data. Their placement follows the repository ownership contract even when an owner needs one file."
 
 [[ignore]]
 check = "structure/prefix-collisions"
