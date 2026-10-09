@@ -5,8 +5,10 @@ import { miseFile } from '#cli/generation/mise.ts';
 import { pathKey } from '#cli/platform/contracts.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import type { Session } from '#cli/types/planning.ts';
+import { readText } from '#cli/platform/root/public.ts';
 import { bunfigChanges } from '#cli/generation/bunfig.ts';
 import type { RuleFile } from '#cli/types/agent-rules.ts';
+import { attributeRules } from '#cli/parsers/attributes.ts';
 import { managedBlock } from '#cli/agent-rules/contracts.ts';
 import { selectRuleFiles } from '#cli/agent-rules/public.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
@@ -16,13 +18,12 @@ import { etaInputs } from '#cli/generation/compilation/public.ts';
 import { toolProjectPins } from '#cli/configurations/contracts.ts';
 import { installedDependency } from '#cli/repository/contracts.ts';
 import type { NpmProjectInputs } from '#cli/types/generation/npm.ts';
-import type { Repository } from '#cli/types/repository/inventory.ts';
 import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/files.ts';
-import { assertMutationTarget } from '#cli/platform/root/contracts.ts';
 import { hookFiles, pythonProject } from '#cli/generation/contracts.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { githubFile, gitlabFile } from '#cli/generation/documents/public.ts';
 import type { Generated, GeneratedFile } from '#cli/types/generation/files.ts';
+import { blockSpan, assertMutationTarget } from '#cli/platform/root/contracts.ts';
 import { NPM_TOOL_PROJECT, NEXT_ESLINT_PLUGIN } from '#cli/config/parsers/packages.ts';
 import { everyManifest, isConfigurationSelected } from '#cli/configurations/public.ts';
 import { JSON_INDENT, YARN_TOOL_PROJECT_SETTINGS } from '#cli/config/generation/eta.ts';
@@ -78,7 +79,16 @@ function attributePattern(path: string): string {
 }
 
 // Each whole file gspot writes outside its folder keeps LF too, so a CRLF checkout does not read as an edit.
-function attributesBlock(files: Generated['files']): string {
+function attributesBlock(files: Generated['files'], authored: string): string {
+    if (
+        attributeRules(authored, '.').some(
+            ({ pattern, attributes }) =>
+                pattern === '**/*' && attributes.includes('text=auto') && attributes.includes('eol=lf'),
+        )
+    )
+        return GIT_ATTRIBUTES_BLOCK.split('\n')
+            .filter((line) => !line.endsWith(' text eol=lf'))
+            .join('\n');
     const outside = files.map(({ path }) => path).filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
     const lines = outside
         .toSorted((left, right) => left.localeCompare(right))
@@ -86,16 +96,18 @@ function attributesBlock(files: Generated['files']): string {
     return [GIT_ATTRIBUTES_BLOCK, ...lines].join('\n');
 }
 
-function emitBlocks(
-    repository: Repository,
-    policy: Policy,
-    manifests: Manifest[],
-    rules: RuleFile[],
-    generated: Generated,
-): void {
+function emitBlocks(session: Session, manifests: Manifest[], rules: RuleFile[], generated: Generated): void {
+    const {
+        repository,
+        policyFiles: { policy },
+        reads,
+    } = session;
+    const text = readText(repository.root, '.gitattributes', reads) ?? '';
+    const span = blockSpan(text, { path: '.gitattributes', style: 'hash' });
+    const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
     if (repository.hasGit)
         generated.blocks.push({ path: '.gitignore', block: gitignoreBlock(manifests), style: 'hash' });
-    generated.blocks.push({ path: '.gitattributes', block: attributesBlock(generated.files), style: 'hash' });
+    generated.blocks.push({ path: '.gitattributes', block: attributesBlock(generated.files, authored), style: 'hash' });
     if (!policy.agent_rules.enabled) return;
     if (repository.files.some((file) => file.path === 'CLAUDE.md'))
         generated.notes.push('CLAUDE.md text moves to the end of AGENTS.md');
@@ -194,7 +206,7 @@ export function emitAll(session: Session): Generated {
             kind: 'rules' as const,
         })),
     );
-    emitBlocks(repository, policy, selected, rules, generated);
+    emitBlocks(session, selected, rules, generated);
     generated.files.sort((a, b) => a.path.localeCompare(b.path));
     combineToolFiles(generated);
     assertDistinctPaths(generated);
