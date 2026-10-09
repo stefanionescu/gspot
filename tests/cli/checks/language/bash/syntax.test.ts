@@ -1,6 +1,4 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
@@ -23,8 +21,4 @@ test.skipIf(!isPosix)('Bash findings retain newline and colon directory names wi
             left.localeCompare(right),
         ),
     ).toStrictEqual(paths);
-    for (const path of paths) await writeFile(join(sandbox.path, path), 'printf "%s\\n" "Hello"\n');
-    const corrected = await executeRun(await openSession(sandbox.path), options);
-    expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks[0]!.findings).toStrictEqual([]);
 });

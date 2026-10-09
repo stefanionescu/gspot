@@ -9,15 +9,29 @@ import { pathExists } from '#tests/harness/preservation.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { EXTERNAL_INPUT_CASES } from '#tests/config/cli/lifecycle/apply.ts';
-import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
-import { rm, stat, chmod, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
+import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { applyPlan, applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
 test('generated outputs are writable: apply keeps their bytes, and a prune removes them', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = true\n' }),
     });
+    {
+        using log = openOwnership(sandbox.path);
+
+        applyPlans(log, [
+            planReplacement(log, {
+                path: '.gspot/obsolete/old.txt',
+                next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
+                kind: 'tool_file',
+            }),
+        ]);
+    }
     const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(applied.exitCode).toBe(0);
+    expect(await pathExists(join(sandbox.path, '.gspot/obsolete/old.txt'))).toBe(false);
+    expect(await pathExists(join(sandbox.path, '.gitattributes'))).toBe(true);
     const written = (applied.json as ApplyReport).written;
 
     const output = written.find((path) => path.endsWith('/agent/WORKING.md'))!;
@@ -113,10 +127,4 @@ test('apply validates obsolete output parents before publishing new configuratio
     expect(await pathExists(join(root, '.gitattributes'))).toBe(false);
     expect(await pathExists(join(root, '.gspot/version'))).toBe(false);
     expect(await readFile(join(directory.path, 'outside/old.txt'), 'utf8')).toBe('outside bytes\n');
-    await unlink(join(root, '.gspot/obsolete'));
-    await createFileTree(root, { '.gspot/obsolete/old.txt': 'installed\n' });
-    const applied = await applyCommand({ cwd: root, isDryRun: false });
-    expect(applied.exitCode).toBe(0);
-    expect(await pathExists(join(root, '.gspot/obsolete/old.txt'))).toBe(false);
-    expect(await pathExists(join(root, '.gitattributes'))).toBe(true);
 });

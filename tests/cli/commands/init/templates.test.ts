@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
@@ -44,6 +45,14 @@ test('templates > init validates a template in a dry run without changing the re
     expect(Object.hasOwn(Object.prototype, 'command')).toBe(false);
     for (const key of ['test_files', 'ci']) expect(Object.hasOwn(emitted, key)).toBe(false);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const written = await runGspot(sandbox.path, ['init', '--yes', '--from', 'team.template.toml', '--no-install']);
+    expect(written.code, written.stdout + written.stderr).toBe(0);
+    expect(parse(await Bun.file(join(sandbox.path, 'gspot.toml')).text())['configurations']).toStrictEqual(['bash']);
+    const session = await openSession(sandbox.path);
+    const selected = session.scopes.flatMap(({ selected }) => selected.map((manifest) => manifest.configuration.name));
+    for (const configuration of [...alwaysSelectedConfigurations(), 'bash', 'commits']) {
+        expect(selected).toContain(configuration);
+    }
 });
 
 test.each(['exact', 'detect'])('an empty %s template controls root detection without writing', async (selection) => {
@@ -67,13 +76,16 @@ test.each(['exact', 'detect'])('an empty %s template controls root detection wit
     const report = JSON.parse(result.stdout) as Required<Pick<InitJson, 'policy' | 'plan'>>;
     const policy = parseStrictPolicy(report.policy);
     expect(policy.configurations.includes('javascript')).toBe(selection === 'detect');
-    for (const configuration of alwaysSelectedConfigurations()) expect(policy.configurations).toContain(configuration);
-    if (selection === 'exact')
-        expect(policy.configurations.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
+    const selected = report.plan.configurations.map((entry) => entry.configuration);
+    for (const configuration of alwaysSelectedConfigurations()) expect(selected).toContain(configuration);
+    if (selection === 'exact') {
+        expect(policy.configurations).toStrictEqual([]);
+        expect(selected.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
             selectConfigurations(alwaysSelectedConfigurations(), configurationManifests())
                 .map((manifest) => manifest.configuration.name)
                 .toSorted((left, right) => left.localeCompare(right)),
         );
+    }
     expect(report.plan.template).toMatchObject({ name: 'team', selection });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -99,15 +111,43 @@ test('templates > a template with a wrong value, an unknown configuration and a 
     ]);
     expect(preview.code).toBe(2);
     expect(JSON.parse(preview.stdout)).toMatchObject({ error: 'template', message: textContaining('selection') });
-    await Bun.write(
-        join(sandbox.path, 'bad.template.toml'),
-        'template = "corrected"\nselection = "exact"\nconfigurations = ["bash"]\n',
-    );
-    commitAll(sandbox.path);
-    const corrected = await runGspot(sandbox.path, ['init', '--yes', '--from', 'bad.template.toml', '--no-install']);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const read = Bun.TOML.parse(await Bun.file(join(sandbox.path, 'gspot.toml')).text()) as Record<string, unknown>;
-    expect(read['configurations']).toStrictEqual(
-        expect.arrayContaining([...alwaysSelectedConfigurations(), 'bash', 'commits']),
-    );
 });
+
+test.each(['recommended', 'all'] as const)(
+    'an exact template preserves its full root policy despite new general detection at %s',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            source: { 'source.sh': CLEAN_BASH_SCRIPT },
+            destination: { 'source.sh': CLEAN_BASH_SCRIPT, 'index.ts': 'export const total = 3;\n' },
+        });
+        const source = join(sandbox.path, 'source');
+        const destination = join(sandbox.path, 'destination');
+        commitAll(source);
+        commitAll(destination);
+        for (const argv of [
+            ['init', '--yes', '--configurations', 'bash', ...QUIET_INIT],
+            ['set', 'level', level],
+            ['set', 'format.indent_width', '2'],
+            ['export', 'house.template.toml'],
+        ]) {
+            const result = await runGspot(source, argv);
+            expect(result.code, result.stdout + result.stderr).toBe(0);
+        }
+        const template = join(source, 'house.template.toml');
+        const copied = await runGspot(destination, ['init', '--yes', '--from', template, ...QUIET_INIT]);
+        expect(copied.code, copied.stdout + copied.stderr).toBe(0);
+        expect(parse(await Bun.file(join(destination, 'gspot.toml')).text())).toStrictEqual(
+            parse(await Bun.file(join(source, 'gspot.toml')).text()),
+        );
+        const session = await openSession(destination);
+        expect(
+            session.scopes.flatMap(({ selected }) => selected.map((manifest) => manifest.configuration.name)),
+        ).toContain('format');
+        const exported = await runGspot(destination, ['export', 'house.template.toml']);
+        expect(exported.code, exported.stdout + exported.stderr).toBe(0);
+        expect(parse(await Bun.file(join(destination, 'house.template.toml')).text())).toStrictEqual(
+            parse(await Bun.file(template).text()),
+        );
+    },
+);

@@ -3,11 +3,11 @@ import { openRoot } from '#cli/platform/root/public.ts';
 import { isInScope } from '#cli/repository/paths/public.ts';
 import { buildScope } from '#cli/repository/paths/contracts.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/inventory.ts';
+import { selectConfigurations } from '#cli/configurations/public.ts';
 import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
 import { NO_CONFIGURATIONS } from '#cli/config/lifecycle/selection.ts';
 import { unknownConfigurations } from '#cli/configurations/errors/public.ts';
 import { detectConfigurations } from '#cli/repository/selection/contracts.ts';
-import { isSourceKind, selectConfigurations } from '#cli/configurations/public.ts';
 import type { Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
 
 import type {
@@ -99,21 +99,13 @@ function assertKnown(
     if (unknown.length > 0) throw new GspotError('selection', unknown);
 }
 
-// Exact templates retain language and framework choices; general checks still follow the level.
-function listedConfigurations(
-    options: InitInputs['options'],
-    ids: string[],
-    manifests: Map<string, Manifest>,
-    detected: Set<string>,
-): string[] {
+function listedConfigurations(ids: string[], manifests: Map<string, Manifest>, detected: Set<string>): string[] {
     const suggestions = ids.flatMap((id) => manifests.get(id)?.configuration.suggests ?? []);
     return [
         ...new Set([
             ...ids,
             ...suggestions.filter((id) => {
                 const manifest = manifests.get(id);
-                if (options.template?.tables.selection === 'exact' && manifest !== undefined && isSourceKind(manifest))
-                    return false;
                 // A suggestion without detection criteria does not require a source match.
                 const hasDetection =
                     manifest !== undefined &&
@@ -164,14 +156,18 @@ export function selectForInit(inputs: InitInputs): InitSelection {
         if (scope.path !== '')
             scopeConfigurations.set(scope.path, scopeSelection(context, scope, scopeFlags.get(scope.path), heldAtRoot));
     const inScopes = new Set(scopeConfigurations.values().toArray().flat());
-    const rootIds = listedConfigurations(
-        options,
-        [...proposedRoot, ...inScopes],
-        manifests,
-        new Set(detected.map((evidence) => evidence.configuration)),
-    ).filter((id) => !inScopes.has(id));
+    const rootIds =
+        options.template?.tables.selection === 'exact'
+            ? (options.configurations ?? []).filter((id) => id !== NO_CONFIGURATIONS)
+            : listedConfigurations(
+                  [...proposedRoot, ...inScopes],
+                  manifests,
+                  new Set(detected.map((evidence) => evidence.configuration)),
+              ).filter((id) => !inScopes.has(id));
     const selectedIds = new Set(
-        selectConfigurations([...rootIds, ...inScopes], manifests).map((manifest) => manifest.configuration.name),
+        selectConfigurations([...rootIds, ...proposedRoot, ...inScopes], manifests).map(
+            (manifest) => manifest.configuration.name,
+        ),
     );
     const sets = {
         named: new Set(options.configurations ?? scopeFlags.values().toArray().flat()),
