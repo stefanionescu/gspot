@@ -258,7 +258,7 @@ export async function prepareToolProject<Parsed, Preparation, Installation>(
     const recorded = refreshLockfiles ? undefined : original?.bytes.toString('utf8');
     let content = description.current(project, recorded, manifest.content, owner, preparation);
     if (content === undefined) {
-        using work = scratchFolder(description.lockPrefix);
+        using work = scratchFolder(description.lockfilePrefix);
         writeFileSync(join(work.path, basename(description.manifestPath)), manifest.content);
         content = await description.createLockfile(work.path, preparation, recorded, project);
     }

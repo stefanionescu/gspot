@@ -3,16 +3,9 @@ prefix_collisions = { prefixes = ["jsconfig", "eslint", "vite", "playwright"] }
 products = ["JavaScript", "ESLint", "knip"]
 untracked_files = ["**/{node_modules,bower_components}/**"]
 
-eslint_presets = { eslint = { package = "@eslint/js", source = "configs.recommended" }, sonar = { package = "eslint-plugin-sonarjs", source = "configs.recommended" }, unicorn = { package = "eslint-plugin-unicorn", source = "configs.recommended" }, packageJson = { package = "eslint-plugin-package-json", source = "configs.recommended" }, prettier = { package = "eslint-config-prettier", source = "" }, gspot = { package = "@gspothq/eslint-plugin", source = "configs.recommended" } }
+eslint_presets = { eslint = { package = "@eslint/js", source = "configs.recommended" }, sonar = { package = "eslint-plugin-sonarjs", source = "configs.recommended" }, unicorn = { package = "eslint-plugin-unicorn", source = "configs.recommended" }, packageJson = { package = "eslint-plugin-package-json", source = "configs.recommended" }, prettier = { package = "eslint-config-prettier", source = "" }, gspot = { package = "@gspothq/eslint-plugin", source = "configs.recommended" }, gspotAll = { package = "@gspothq/eslint-plugin", source = "configs.all" } }
 eslint_all_rules = [
     "complexity",
-    "gspot/header-first",
-    "gspot/import-boundaries",
-    "gspot/import-direction",
-    "gspot/no-alias-exports",
-    "gspot/no-index-imports",
-    "gspot/no-trivial-files",
-    "gspot/no-trivial-functions",
     "import-x/exports-last",
     "jsdoc/no-types",
     "jsdoc/require-description",

@@ -999,5 +999,24 @@
         "version": "0.1.0",
         "source": "configs.recommended",
         "blocks": [{ "parser": false, "rules": { "gspot/no-client-env": "error" } }]
+    },
+    "gspotAll": {
+        "package": "@gspothq/eslint-plugin",
+        "version": "0.1.0",
+        "source": "configs.all",
+        "blocks": [
+            {
+                "parser": false,
+                "rules": {
+                    "gspot/header-first": "error",
+                    "gspot/no-client-env": "error",
+                    "gspot/import-boundaries": "error",
+                    "gspot/no-alias-exports": "error",
+                    "gspot/no-index-imports": "error",
+                    "gspot/no-trivial-files": "error",
+                    "gspot/no-trivial-functions": "error"
+                }
+            }
+        ]
     }
 }

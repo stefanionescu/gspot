@@ -1,7 +1,7 @@
 import type { ToolOwner } from '#cli/types/tools/install.ts';
 import type { InstallationKind } from '#cli/types/configurations.ts';
 
-/** Acquisition, resolution and environment commands, kept as actual installation phases. */
+/** Native installation phases, in execution order. */
 export type ToolProjectPlan = { installer: string[][]; lockfile: string[][]; environment: string[][] };
 
 /** Both immutable-input checks, called at the native installer's required verification boundaries. */
@@ -12,7 +12,7 @@ export type ToolProject<Parsed, Preparation, Installation> = {
     manifestPath: string;
     kind: InstallationKind;
     additionalPaths: readonly string[];
-    lockPrefix: string;
+    lockfilePrefix: string;
     installPrefix: string;
     parse(manifest: string): Parsed;
     lockfilePath(project: Parsed): string;

@@ -86,18 +86,11 @@ export function eslintIgnoreBlocks(policy: Policy): EslintRuleBlock[] {
 /**
  * The per-scope native environment restrictions and structural plugin ceilings.
  * @param input the resolved scopes, structural policy, and detected authored Node paths
- * @returns disabled structural rules at recommended, otherwise scope-bound native environment and structural rules
+ * @returns scope-bound native environment and structural rules at all, otherwise no blocks
  */
 export function structuralRuleBlocks(input: Pick<EslintContext, 'scopes' | 'policy' | 'nodeFiles'>): EslintRuleBlock[] {
     const { scopes, policy, nodeFiles } = input;
-    if (policy.level !== 'all')
-        return [
-            {
-                scope: '',
-                ...pathExpressions(['**/*']),
-                rules: { 'gspot/no-trivial-files': 'off', 'gspot/no-trivial-functions': 'off' },
-            },
-        ];
+    if (policy.level !== 'all') return [];
     const blocks: EslintRuleBlock[] = scopes.flatMap((selection) => {
         const owners = environmentOwners(selection);
         return owners.length === 0

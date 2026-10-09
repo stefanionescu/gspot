@@ -72,7 +72,7 @@ export const packageToolProject: ToolProject<PackageToolProject, PackagePreparat
     manifestPath: TOOL_PACKAGE_PROJECT,
     kind: 'npm',
     additionalPaths: [YARN_SETTINGS],
-    lockPrefix: 'gspot-lockfile-',
+    lockfilePrefix: 'gspot-lockfile-',
     installPrefix: 'gspot-install-',
     parse: parseToolProject,
     lockfilePath: (project) => project.lockfilePath,

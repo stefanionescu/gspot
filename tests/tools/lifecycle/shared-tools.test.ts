@@ -27,11 +27,11 @@ import {
 
 // Independent roots must retain selected project inputs and execute their own contained native tools.
 test.each(['recommended', 'all'] as const)(
-    'shared native tools preserve scoped checks and portable locks at %s',
+    'shared native tools preserve scoped checks and portable lockfiles at %s',
     async (level) => {
         await using first = await testdir();
         await using second = await testdir();
-        const locks: Buffer[] = [];
+        const lockfiles: Buffer[] = [];
         let requests = 0;
         const registry = Bun.serve({
             hostname: '127.0.0.1',
@@ -56,8 +56,8 @@ test.each(['recommended', 'all'] as const)(
             expect(applied.code, applied.stdout + applied.stderr).toBe(0);
             Object.assign(environment, await shareToolProjects(root));
             const project = packageToolProject.parse(await readFile(join(root, '.gspot/package.json'), 'utf8'));
-            locks.push(await readFile(join(root, packageToolProject.lockfilePath(project))));
-            expect(packageToolProject.matches(project, locks.at(-1)!.toString('utf8'))).toBe(true);
+            lockfiles.push(await readFile(join(root, packageToolProject.lockfilePath(project))));
+            expect(packageToolProject.matches(project, lockfiles.at(-1)!.toString('utf8'))).toBe(true);
             expect(relative(root, await realpath(join(root, '.gspot/node_modules/.bin/eslint'))).startsWith('..')).toBe(
                 false,
             );
@@ -79,7 +79,7 @@ test.each(['recommended', 'all'] as const)(
                 ),
             ).toEqual([PROJECT_FILES['package.json'], PROJECT_FILES['.venv/authored.txt']]);
         }
-        expect(locks[1]).toEqual(locks[0]);
+        expect(lockfiles[1]).toEqual(lockfiles[0]);
         expect(requests).toBe(0);
     },
 );

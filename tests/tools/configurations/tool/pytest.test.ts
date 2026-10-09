@@ -36,7 +36,7 @@ test('the pytest configuration > naming accepts the test_ prefix of a test funct
 
 let sandbox: TestdirResult;
 let project: string;
-let lock: string;
+let lockfile: string;
 
 beforeAll(async () => {
     sandbox = await testdir();
@@ -48,7 +48,7 @@ beforeAll(async () => {
     });
     const synced = await runTestCommand(['uv', 'sync'], { cwd: sandbox.path });
     expect(synced.code, synced.stdout + synced.stderr).toBe(0);
-    lock = await Bun.file(join(sandbox.path, 'uv.lock')).text();
+    lockfile = await Bun.file(join(sandbox.path, 'uv.lock')).text();
 });
 
 afterAll(async () => {
@@ -75,6 +75,6 @@ test.each([...PROVIDER_FLOORS])(
             else expect(outcome.note).toContain('pytest-cov');
         }
         expect(await Bun.file(join(sandbox.path, 'pyproject.toml')).text()).toBe(project);
-        expect(await Bun.file(join(sandbox.path, 'uv.lock')).text()).toBe(lock);
+        expect(await Bun.file(join(sandbox.path, 'uv.lock')).text()).toBe(lockfile);
     },
 );

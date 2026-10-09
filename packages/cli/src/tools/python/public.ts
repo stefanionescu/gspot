@@ -104,7 +104,7 @@ export const pythonToolProject: ToolProject<string, PythonPreparation, PythonExe
     manifestPath: TOOL_PYTHON_PROJECT,
     kind: 'python',
     additionalPaths: [],
-    lockPrefix: 'gspot-python-lockfile-',
+    lockfilePrefix: 'gspot-python-lockfile-',
     installPrefix: 'gspot-python-install-',
     parse: (manifest) => {
         pythonToolProjectSchema.parse(parse(manifest));

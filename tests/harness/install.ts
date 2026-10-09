@@ -71,7 +71,7 @@ function cacheDirectory(inputs: string[]): string {
     return join(dirname(archives), TOOL_CACHE_FOLDER, key);
 }
 
-// Cache the first actual public installation, whose native descriptors validate locks and tools.
+// Cache the first installation with its native validation.
 async function prepareNpmProject(root: string, inputs: GeneratedFile[]): Promise<SharedToolProject> {
     const directory = cacheDirectory(inputs.flatMap(({ path, content }) => [path, content]));
     let prepared = npmProjects.get(directory);
@@ -226,13 +226,13 @@ export async function shareToolProjects(root: string): Promise<Record<string, st
     const session = await openSession(root);
     const generated = emitAll(session);
     using log = openOwnership(root);
-    const pythonLock = log.files.read(UV_LOCKFILE);
-    if (pythonLock !== undefined)
+    const pythonLockfile = log.files.read(UV_LOCKFILE);
+    if (pythonLockfile !== undefined)
         generated.files.push({
             path: UV_LOCKFILE,
-            content: pythonLock.bytes.toString('utf8'),
+            content: pythonLockfile.bytes.toString('utf8'),
             kind: 'lock',
-            read: pythonLock,
+            read: pythonLockfile,
         });
     if (npm !== undefined)
         generated.files.push({ ...npm.lockfile, ...compact({ read: log.files.read(npm.lockfile.path) }) });

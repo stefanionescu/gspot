@@ -6,12 +6,12 @@ import packageManifest from '#plugin-package' with { type: 'json' };
 import { ENVIRONMENT_GLOBALS } from '#tests/config/plugin/environment.ts';
 import { captureEslintPreset, eslintPresetsSchema } from '#cli/parsers/schema/public.ts';
 
-test('the shipped recommended preset agrees with the plugin', () => {
+test.each(['recommended', 'all'] as const)('the shipped %s preset agrees with the plugin', (level) => {
     const presets = eslintPresetsSchema.parse(
         JSON.parse(readAsset('configurations/language/javascript/eslint-presets.json')),
     );
-    expect(presets['gspot']).toStrictEqual(
-        captureEslintPreset(packageManifest.name, packageManifest.version, 'configs.recommended', plugin),
+    expect(presets[level === 'all' ? 'gspotAll' : 'gspot']).toStrictEqual(
+        captureEslintPreset(packageManifest.name, packageManifest.version, `configs.${level}`, plugin),
     );
 });
 

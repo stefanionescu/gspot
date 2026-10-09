@@ -77,10 +77,10 @@ function manifestTableErrors(text: string): string[] {
 }
 
 /**
- * Contradictory check declarations and generated configurations with no reader or pointer.
+ * Contradictory check declarations and generated tool files with no reader or pointer.
  * @param raw the parsed manifest
  * @param text the authored native TOML declaration
- * @returns contradictory declarations and config files without a declared reader
+ * @returns contradictory declarations and tool files without a declared reader
  */
 export function manifestErrors(raw: ParsedManifest, text: string): string[] {
     const checks = raw.checks.flatMap((check) =>
@@ -139,8 +139,8 @@ export function unknownConfigurations<Declaration extends Pick<ConfigurationDecl
 
 /**
  * Name an unknown check and suggest nearby checks from the caller's native inventory.
- * @param name the requested check identifier
- * @param known the check names available to the caller
+ * @param name the requested check ID
+ * @param known the check IDs available to the caller
  * @returns the shared selection diagnostic
  */
 export function unknownCheckDiagnostic(name: string, known: string[]): string {

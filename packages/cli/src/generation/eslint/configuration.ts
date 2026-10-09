@@ -60,9 +60,6 @@ function gspotRules(context: EslintContext, aliases: Record<string, string>, lim
     if (policy.level !== 'all') return {};
     const scopePaths = context.scopes.map((entry) => entry.scope.path).filter((path) => path !== '');
     return {
-        'gspot/no-alias-exports': 'error',
-        'gspot/no-index-imports': 'error',
-        'gspot/header-first': 'error',
         'gspot/import-boundaries': ['error', { folders: [...ESLINT_BOUNDARY_FOLDERS, ...scopePaths], aliases }],
         'import-x/exports-last': 'error',
         ...(policy.structure.reexports === 'none'

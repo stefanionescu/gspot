@@ -114,7 +114,8 @@ test.each(['recommended', 'all'] as const)(
         expect((source.rules!['n/no-process-exit'] as unknown[])[0]).toBe(level === 'all' ? 2 : 0);
         expect((script.rules!['n/no-process-exit'] as unknown[])[0]).toBe(0);
         expect((test.rules!['jsdoc/require-description'] as unknown[])[0]).toBe(0);
-        expect((source.rules!['gspot/no-trivial-functions'] as unknown[])[0]).toBe(level === 'all' ? 2 : 0);
+        if (level === 'recommended') expect(source.rules!['gspot/no-trivial-functions']).toBeUndefined();
+        else expect((source.rules!['gspot/no-trivial-functions'] as unknown[])[0]).toBe(2);
         if (level === 'all')
             expect(source.rules!['gspot/no-trivial-functions']).toStrictEqual([2, { maxStatements: 4 }]);
     },

@@ -1,5 +1,5 @@
 {
-    "openRecords": 291,
+    "openRecords": 290,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -560,7 +560,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 291,
+        "openRecords": 290,
         "records": 1092,
         "batches": [
             {
@@ -1866,8 +1866,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 92,
-                "unresolvedAssignments": 40
+                "completedAssignments": 93,
+                "unresolvedAssignments": 39
             },
             {
                 "id": "installation-docs",
@@ -4869,7 +4869,9 @@
             "verification": [
                 "npm-only packaging and release workflow prepared; CLI/plugin/docs builds and packed-plugin consumers passed.",
                 "Evidence d06465bfd225119a.",
-                "External acceptance audit preserves18 failing link occurrences across12 distinct destinations: all11 generativespotting.com routes match actual built pages but currently return404; npm landing returns403 and official npm registry latest returns404. Exact authored/built owners and public response hashes are recorded at /tmp/gspot-external-link-route-inventory.json and successor05997 supplement. No incorrect authored route was found; final site/npm URLs and Lychee checks remain enforced. Publishing, domain/account setup and deployment remain outside the authorized release boundary."
+                "External acceptance audit preserves18 failing link occurrences across12 distinct destinations: all11 generativespotting.com routes match actual built pages but currently return404; npm landing returns403 and official npm registry latest returns404. Exact authored/built owners and public response hashes are recorded at /tmp/gspot-external-link-route-inventory.json and successor05997 supplement. No incorrect authored route was found; final site/npm URLs and Lychee checks remain enforced. Publishing, domain/account setup and deployment remain outside the authorized release boundary.",
+                "Current release gate requires successful ci.yml and generated gspot.yml runs for the exact main/push commit before release; 16 native Bash/JQ negative/positive vectors preserve all tag/publication gates and remove nine authored bytes. /tmp/gspot-release-two-workflow-final-freeze.json.",
+                "Normal Main installer refreshes managed npm and Python lockfiles; immutable native matcher proof now reports 41 expected and 41 locked npm dependencies with zero differences, and matching Python descriptor. /tmp/gspot-managed-lock-release-readonly/refresh-proof.json. No package publication, release tag, deployment or live-account configuration was performed."
             ],
             "remaining": [
                 "Release preparation and final verification remain. External first npm publication, trusted publisher/account setup, Cloudflare repository secrets/domain setup, release tag/publication and deployment are outside this implementation boundary."
@@ -8539,10 +8541,14 @@
             ]
         },
         "review/repository-root/032": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f1f6a532591fe4d504866d355478bb4107ef4d4f",
+            "verification": [
+                "Adopt the expressly approved optional ci.setup command; generate this repository workflow through normal apply and delete the three duplicated authored check/manual/doctor steps. Builds and tests remain in ci.yml.",
+                "The generated workflow includes all four policy-derived manual checks and both 60-minute jobs; setup precedes install/doctor/check with fail-fast behavior on GitHub and GitLab. Absent-setting outputs remain unchanged.",
+                "Exact approved eight-owner source patch adds 3,870 bytes; repository authored adoption removes 415 bytes and release gate amendment removes nine. Native 205 tests/777 assertions pass; schema check and eight runtime/published-schema vectors agree; generated SHA 2d5e54baf6cef46bd106e1f8a75a01eca2eb91e65c7ef2c739ecc3d1c3d25f7c."
+            ]
         },
         "review/repository-root/033": {
             "status": "complete",
@@ -18821,6 +18827,19 @@
             ],
             "limitations": [
                 "Linux/macOS/Windows CI for this exact integration is not yet complete. The native receipts cited for prior owner transfers retain their original runtime and platform limits."
+            ]
+        },
+        {
+            "commit": "f1f6a532591fe4d504866d355478bb4107ef4d4f",
+            "completedRecords": ["review/repository-root/032"],
+            "unresolvedRecords": 290,
+            "validation": [
+                "Normal apply writes the generated workflow and gitattributes. Focused native CI/schema/help/export suite: 205 tests, 777 assertions.",
+                "Staged check: 150 passed, zero failed, 13 skipped, zero findings. Ordinary commit hook: 111 passed, zero failed, five skipped; commitlint passed.",
+                "Native real npm consumer and both providers fail-fast controls retain their saved evidence; /tmp/gspot-rr032-ci-setup-candidate-final-freeze.json and /tmp/gspot-rr032-repository-adoption-final-freeze.json."
+            ],
+            "limitations": [
+                "Cross-platform CI is pending; local YAML and shell checks do not establish native Windows execution. Public npm first-publication prerequisites and live setup remain in partial main/001."
             ]
         }
     ],
