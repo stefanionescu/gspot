@@ -77,13 +77,13 @@ test('Yarn Berry validates metadata locks with install --immutable and preserves
         'yarn.lock': '__metadata:\n  version: 8\n',
     };
     await createFileTree(directory.path, files);
-    const commands: string[][] = [];
-    const copies: string[] = [];
     using _inspection = spyOn(tools, 'inspectTool').mockReturnValue({ name: 'yarn', state: 'ok', path: 'yarn' });
-    using _yarn = spyOn(processes, 'run').mockImplementation((command, options) => {
-        commands.push([...command]);
-        copies.push(options.cwd);
-        return Promise.resolve({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
+    using yarn = spyOn(processes, 'run').mockResolvedValue({
+        code: 0,
+        stdout: '',
+        stderr: '',
+        missing: false,
+        duration: 1,
     });
     const session = await openSession(directory.path);
     const outcome = await executeRun(
@@ -96,11 +96,11 @@ test('Yarn Berry validates metadata locks with install --immutable and preserves
     );
     expect(outcome.report.checks[0]!.status).toBe('passed');
     expect(
-        commands.map(([executable, ...commandArguments]) => [basename(executable!), ...commandArguments]),
+        yarn.mock.calls.map(([[executable, ...commandArguments]]) => [basename(executable!), ...commandArguments]),
     ).toStrictEqual([['yarn', 'install', '--immutable']]);
     for (const [path, text] of Object.entries(files))
         expect(await readFile(join(directory.path, path), 'utf8')).toBe(text);
-    expect(await Promise.all(copies.map((path) => pathExists(path)))).toStrictEqual([false]);
+    expect(await Promise.all(yarn.mock.calls.map(([, options]) => pathExists(options.cwd)))).toStrictEqual([false]);
 });
 
 test.each(['recommended', 'all'] as const)(

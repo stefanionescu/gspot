@@ -266,7 +266,7 @@ export function readPackageManifests(root: string, files: TrackedFile[]): Packag
                 if (parse === undefined) return [];
                 const text = readText(root, file.path);
                 if (text === undefined) throw new Error(`Manifest is missing: ${file.path}`);
-                return [parse(text)];
+                return [parse(file.path, text)];
             } catch (error) {
                 const detail = error instanceof Error ? error.message : String(error);
                 throw new Error(`Cannot inspect manifest ${file.path}: ${detail}`, { cause: error });

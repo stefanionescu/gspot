@@ -1,10 +1,12 @@
 // The header init prints: what it found in the repository, one row per kind.
 import type { DetectionSummary } from '#cli/types/commands/init.ts';
 import { CONFIGURATION_LABELS } from '#cli/config/configurations.ts';
-import { DETECTION_GAP, DETECTION_LABEL_WIDTH } from '#cli/config/commands/init.ts';
+import { DETECTION_GAP_WIDTH, DETECTION_LABEL_WIDTH } from '#cli/config/commands/init.ts';
 
 function row(label: string, items: string[]): string | undefined {
-    return items.length === 0 ? undefined : `${label.padEnd(DETECTION_LABEL_WIDTH)} ${items.join(DETECTION_GAP)}`;
+    return items.length === 0
+        ? undefined
+        : `${label.padEnd(DETECTION_LABEL_WIDTH)} ${items.join(' '.repeat(DETECTION_GAP_WIDTH))}`;
 }
 
 function scopesRow(summary: DetectionSummary): string | undefined {

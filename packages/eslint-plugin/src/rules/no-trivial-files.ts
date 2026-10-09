@@ -141,6 +141,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
         },
     },
     create(context, [options]) {
+        if (context.sourceCode.text.startsWith('#!')) return {};
         const file = lintedPath(context);
         if (file !== undefined && options.allowIndex && isIndexFile(file.absolute)) return {};
         const max = options.maxStatements;

@@ -1,3 +1,2 @@
 #!/usr/bin/env bun
-// eslint-disable-next-line gspot/no-trivial-files -- reason: This executable starts the source CLI through its owning module.
 import "../packages/cli/src/main.ts";

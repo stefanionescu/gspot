@@ -396,7 +396,7 @@ entry = ["packages/cli/src/checks/general/site/linkinator.ts", "packages/cli/src
 "^tree-sitter-" = "The build copies the grammar WASM files from these packages by path; nothing imports them."
 
 [tools.knip.ignore_dependencies."^.+$"]
-reason = "Every package the tests workspace lists is installed into a test repository, which knip cannot see."
+reason = "Every package the tests workspace lists is installed into a sandbox, which knip cannot see."
 workspace = "tests"
 
 [tools.knip.ignore_dependencies.satteri]

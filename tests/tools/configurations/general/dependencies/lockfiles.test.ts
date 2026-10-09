@@ -14,15 +14,15 @@ import { NATIVE_LOCKFILES } from '#tests/config/tools/configurations/general/dep
 
 test.each([...NATIVE_LOCKFILES])(
     'native $name validates $lockfileName without changing repository inputs',
-    async ({ client, lockfileName, manifestPath, manifest, changed, files, arguments: commandArguments }) => {
+    async ({ command: [client, ...commandArguments], lockfileName, manifestPath, manifest, changed, files }) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
             'gspot.toml': buildPolicy(['dependencies']),
             [manifestPath]: manifest,
             ...files,
         });
-        const command = client === 'bun' ? process.execPath : client;
-        const installed = await runTestCommand([command, ...commandArguments], { cwd: directory.path });
+        const executable = client === 'bun' ? process.execPath : client;
+        const installed = await runTestCommand([executable, ...commandArguments], { cwd: directory.path });
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         await rm(join(directory.path, 'node_modules'), { recursive: true, force: true });
         const lockfile = await readFile(join(directory.path, lockfileName));

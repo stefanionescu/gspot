@@ -37,7 +37,7 @@ export type PackageManifest = {
 };
 
 /** Pure parser selected by a supported repository manifest name. */
-export type ManifestParser = (text: string) => PackageManifest;
+export type ManifestParser = (path: string, text: string) => PackageManifest;
 
 export type PythonManifest = z.infer<typeof pythonManifestSchema>;
 

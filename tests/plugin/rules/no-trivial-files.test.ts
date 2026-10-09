@@ -7,6 +7,7 @@ createRuleTester().run<
     [Partial<TrivialFilesOptions[0]>]
 >('no-trivial-files', plugin.rules['no-trivial-files'], {
     valid: [
+        '#!/usr/bin/env bun\nimport "./owner";',
         {
             code: 'export * from "./owner";',
             filename: '/repo/src/index.ts',

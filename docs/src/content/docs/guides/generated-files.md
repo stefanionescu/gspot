@@ -11,7 +11,7 @@ run `gspot apply` to write them again.
 | Path                                 | What it holds                                                                              |
 | ------------------------------------ | ------------------------------------------------------------------------------------------ |
 | `.gspot/config/`                     | The tool files. A scope gets its own folder under it.                                      |
-| `.gspot/rules/`                      | The rules for coding agents.                                                               |
+| `.gspot/rules/`                      | The agent rules.                                                                           |
 | `.gspot/package.json` and lockfile   | The npm tools gspot installs, at pinned versions.                                          |
 | `.gspot/pyproject.toml` and lockfile | The Python tools gspot installs, at pinned versions.                                       |
 | `.gspot/version`                     | The gspot version of the repository.                                                       |

@@ -224,8 +224,7 @@ export function parsePackageManifest(text: string, path?: string): PackageJson {
  */
 export function manifestParser(path: string): ManifestParser | undefined {
     const base = posix.basename(path);
-    const reader = base.startsWith('requirements') && base.endsWith('.txt') ? parseRequirements : readers[base];
-    return reader === undefined ? undefined : (text) => reader(path, text);
+    return base.startsWith('requirements') && base.endsWith('.txt') ? parseRequirements : readers[base];
 }
 
 /**
