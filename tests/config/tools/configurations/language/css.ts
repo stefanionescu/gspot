@@ -6,8 +6,6 @@ export const FILES = {
 
 /** Active rule options inherit across scopes. Inactive native options cannot add checks. */
 export const TABLES = `runner = "mise"
-[agent_rules]
-enabled = false
 [tools.stylelint.rules]
 color-hex-length = "short"
 number-max-precision = 0
@@ -35,8 +33,6 @@ export const TAILWIND_FILES = {
 };
 
 export const TAILWIND_TABLES = `runner = "mise"
-[agent_rules]
-enabled = false
 [scope."app"]
 configurations = ["css"]
 [scope."other"]

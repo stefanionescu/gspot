@@ -11,7 +11,6 @@ test.each(
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([component.configuration], {
-            tables: '[agent_rules]\nenabled = false\n',
             level: component.level,
         }),
         'package.json': '{"name":"markup-security","private":true,"type":"module"}',

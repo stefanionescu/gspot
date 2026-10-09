@@ -12,7 +12,7 @@ test('gspot set writes a list of tables typed the TOML way as tables, and the po
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'README.md': '# test\n',
-        'gspot.toml': buildPolicy(['docs', 'javascript'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['docs', 'javascript']),
     });
     commitAll(sandbox.path);
     const written = await runGspot(sandbox.path, ['set', 'tools.eslint.restricted_imports', TABLE]);
@@ -27,7 +27,7 @@ test('gspot set writes a list of tables typed the TOML way as tables, and the po
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         buildPolicy(['docs', 'javascript'], {
-            tables: `[agent_rules]\nenabled = false\n[tools.eslint]\nrestricted_imports = ['{name = "a", message = "Use its public entrypoint."}']\n`,
+            tables: `[tools.eslint]\nrestricted_imports = ['{name = "a", message = "Use its public entrypoint."}']\n`,
         }),
     );
     const read = await runGspot(sandbox.path, CHECK);

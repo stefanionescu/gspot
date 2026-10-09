@@ -39,7 +39,7 @@ test.each(DECLARATION_CASES)(
 test('declarations retain producer metadata and reasons while removing individual paths', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash']),
         'a.sh': 'if then\n',
         'b.sh': 'if then\n',
     });

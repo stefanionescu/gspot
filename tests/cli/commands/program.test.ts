@@ -78,7 +78,7 @@ test.each(['-h', '--help'])('ignore %s describes root-wide ignores and removal o
 test('a package manager version failure retains its tool code and diagnostic in human and JSON output', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash']),
         'entry.sh': 'echo example\n',
     });
     const before = await readTree(directory.path);

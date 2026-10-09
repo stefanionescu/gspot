@@ -19,7 +19,7 @@ const { version: RUNNING_VERSION } = packageManifest;
 
 test('staged checks use index bytes and policy on an unborn branch while preserving unstaged edits', async () => {
     await using directory = await testdir();
-    const policy = buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' });
+    const policy = buildPolicy(['bash']);
     await createFileTree(directory.path, { 'gspot.toml': policy, 'script with spaces.sh': 'if then\n' });
     expect(git(directory.path, ['init', '-q']).code).toBe(0);
     expect(git(directory.path, ['add', '-A']).code).toBe(0);
@@ -54,7 +54,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
 test('staged checks read an indexed file when its working file is missing', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash']),
         'script with spaces.sh': 'echo indexed\n',
     });
     gitOutput(directory.path, ['init', '-q']);
@@ -70,7 +70,7 @@ test('staged checks read an indexed file when its working file is missing', asyn
 test('staged checks validate the index version pin instead of the working pin', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash']),
         '.gspot/version': '0.0.0\n',
         'script.sh': 'echo valid\n',
     });
@@ -191,7 +191,7 @@ test.each(['recommended', 'all'] as const)(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['python'], {
                 level,
-                tables: '[agent_rules]\nenabled = false\n[scope.child]\nconfigurations = ["python"]\n',
+                tables: '[scope.child]\nconfigurations = ["python"]\n',
             }),
             'pyproject.toml': project,
             'main.py': 'value = 1\n',

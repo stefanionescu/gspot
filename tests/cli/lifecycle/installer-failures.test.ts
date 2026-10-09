@@ -108,7 +108,7 @@ test('a repository that already runs hooks keeps them, gets the gspot lines, and
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], {
-            tables: 'runner = "mise"\n[hooks]\nenabled = true\n[agent_rules]\nenabled = false\n',
+            tables: 'runner = "mise"\n[hooks]\nenabled = true\n',
         }),
         '.githooks/pre-commit': '#!/bin/sh\nexit 0\n',
     });

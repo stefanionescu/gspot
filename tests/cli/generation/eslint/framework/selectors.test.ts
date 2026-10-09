@@ -81,9 +81,7 @@ test.each(['recommended', 'all'] as const)(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['trpc', 'typescript'], {
                 level,
-                tables: `[agent_rules]
-enabled = false
-[architecture.roles]
+                tables: `[architecture.roles]
 routers = ["custom/**"]
 [scope.child.architecture.roles]
 routers = ["handlers/**"]

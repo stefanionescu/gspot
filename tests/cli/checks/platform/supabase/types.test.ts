@@ -11,8 +11,8 @@ import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { checkInput } from '#cli/execution/contracts.ts';
 import { stat, chmod, readFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { getKeptMode } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { fakeTool, getKeptMode } from '#tests/harness/platforms.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import { GENERATED_TYPES, DATABASE_SCHEMAS } from '#tests/config/cli/checks/platform/supabase/types.ts';
 import type { SupabaseProject, SupabaseInvocation } from '#tests/types/cli/checks/platform/supabase.ts';
@@ -38,13 +38,17 @@ async function prepareSupabaseCheck(
         const outcome = await executeRun(session, buildRunOptions({ only: ['supabase/stale-types'] }));
         return outcome.report.checks.find((check) => check.scope === scope)!;
     };
+    const bin = await fakeTool(root, 'bin/supabase', '');
+    await fakeTool(root, 'bin/docker', '');
+    const supabase = executables.sync('supabase', { path: bin });
+    const docker = executables.sync('docker', { path: bin });
     const requests: SupabaseInvocation[] = [];
     const blocking = processes.runBlocking;
     const version = spyOn(processes, 'runBlocking').mockImplementation((argv, options) =>
-        ['/fixture/supabase', '/fixture/docker'].includes(argv[0] ?? '')
+        [supabase, docker].includes(argv[0] ?? '')
             ? {
                   code: 0,
-                  stdout: argv[0] === '/fixture/docker' ? 'Docker version 29.2.1\n' : '2.75.0\n',
+                  stdout: argv[0] === docker ? 'Docker version 29.2.1\n' : '2.75.0\n',
                   stderr: '',
                   missing: false,
                   duration: 1,
@@ -52,13 +56,13 @@ async function prepareSupabaseCheck(
             : blocking(argv, options),
     );
     const findExecutable = executables.sync;
-    const which = spyOn(executables, 'sync').mockImplementation(((name: string) =>
-        ['supabase', 'docker'].includes(name)
-            ? `/fixture/${name}`
-            : findExecutable(name, { nothrow: true })) as typeof executables.sync);
+    const which = spyOn(executables, 'sync').mockImplementation(((name: string) => {
+        if (name === 'supabase') return supabase;
+        return name === 'docker' ? docker : findExecutable(name, { nothrow: true });
+    }) as typeof executables.sync);
     const executeProcess = processes.run;
     const run = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
-        if (argv[0] !== '/fixture/supabase') return executeProcess(argv, options);
+        if (argv[0] !== supabase) return executeProcess(argv, options);
         requests.push({ args: argv.slice(1), cwd: options.cwd });
         return outcome;
     });

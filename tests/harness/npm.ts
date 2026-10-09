@@ -9,6 +9,7 @@ import { runTestCommand } from '#tests/harness/command.ts';
 import { applicableManifests } from '#cli/planning/public.ts';
 import { collectPins } from '#cli/configurations/contracts.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
+import { RUNNER_POLICY } from '#tests/config/harness/policy.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import { createPackageRegistry } from '#tests/harness/registry.ts';
 import { open, mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -17,7 +18,6 @@ import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { PACKAGE_REGISTRY_TOKEN } from '#tests/config/harness/registry.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
-import { RUNNER_POLICY, NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
 import { AUTHORED_FILES, EXCLUDED_PACKAGE_CHECKS } from '#tests/config/harness/npm.ts';
 import type { PackageInputs, PackageProject, PackageProjectOptions } from '#tests/types/harness/npm.ts';
 
@@ -43,7 +43,7 @@ async function writePackageProject(
         ...(projectPath === 'package.json' ? { 'pnpm-workspace.yaml': 'packages:\n  - "**"\n' } : {}),
         '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${PACKAGE_REGISTRY_TOKEN}\n`,
         'gspot.toml': buildPolicy(['format'], {
-            tables: RUNNER_POLICY[runner] + NO_AGENT_RULES + ignoredChecks,
+            tables: RUNNER_POLICY[runner] + ignoredChecks,
             level: 'recommended',
         }),
         ...AUTHORED_FILES,

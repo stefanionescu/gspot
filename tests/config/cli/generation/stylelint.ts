@@ -1,7 +1,7 @@
 import { TAKEOVER_PACKAGE } from '#tests/config/samples/css.ts';
 
 /** Scope boundaries that include CSS owners and packages with no applicable CSS check. */
-export const STYLELINT_SCOPES = '[scope."app"]\n[scope."app/child"]\n[scope."other"]\n[agent_rules]\nenabled = false\n';
+export const STYLELINT_SCOPES = '[scope."app"]\n[scope."app/child"]\n[scope."other"]\n';
 
 /** Shared authored files that must survive managed native configuration changes. */
 export const STYLELINT_PROJECT = {

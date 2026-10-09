@@ -13,9 +13,7 @@ test.each(IGNORE_FEEDBACK_CASES)(
     'ignore removal from %s keeps apply notes and reports an unchanged repeat',
     async (_, tables, summary) => {
         await using directory = await testdir();
-        const policy = buildPolicy(['bash'], {
-            tables,
-        });
+        const policy = buildPolicy(['bash'], { agentRules: true, tables });
         const authored = '# Authored instructions\n\nKeep the source file.\n';
         await createFileTree(directory.path, {
             'gspot.toml': policy,
@@ -46,7 +44,7 @@ test.each(IGNORE_FEEDBACK_CASES)(
 test('ignore removal keeps its summary and apply failure while preserving edited output', async () => {
     await using directory = await testdir();
     const policy = buildPolicy(['bash'], {
-        tables: '[agent_rules]\nenabled = false\n[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "The fixture keeps word splitting."\n',
+        tables: '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "The fixture keeps word splitting."\n',
     });
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const applied = await runGspot(directory.path, ['apply']);
@@ -69,7 +67,7 @@ test('ignore removal keeps its summary and apply failure while preserving edited
 test('ignore removal validates unchanged policy and can repair an invalid authored ignore', async () => {
     await using directory = await testdir();
     const policy = buildPolicy(['bash'], {
-        tables: '[agent_rules]\nenabled = false\n[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\n',
+        tables: '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\n',
     });
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const unmatched = await runGspot(directory.path, ['ignore', 'bash/shellcheck', '--rule', 'SC2034', '--remove']);
@@ -96,7 +94,7 @@ test('ignore removal counts changed entries and keeps partial paths and other se
     const global = { ...selected, reason: 'Keep scope-wide expansion.' };
     const other = { check: 'bash/shellcheck', rule: 'SC2034', reason: 'Read by sourcing.', paths: ['b.sh'] };
     const policy = buildPolicy(['bash'], {
-        tables: '[agent_rules]\nenabled = false\n' + stringify({ ignore: [first, second, global, other] }),
+        tables: stringify({ ignore: [first, second, global, other] }),
     });
     await createFileTree(directory.path, {
         'gspot.toml': policy,

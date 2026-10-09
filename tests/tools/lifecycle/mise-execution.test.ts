@@ -33,7 +33,7 @@ beforeAll(async () => {
     const repository = resources.use(await testdir());
     const state = resources.use(await testdir());
     const policy = buildPolicy([], {
-        tables: 'runner = "mise"\n[agent_rules]\nenabled = false\n',
+        tables: 'runner = "mise"\n',
         level: 'recommended',
     });
     await createFileTree(repository.path, { 'gspot.toml': policy, '.gspot/authored.txt': 'keep authored content' });

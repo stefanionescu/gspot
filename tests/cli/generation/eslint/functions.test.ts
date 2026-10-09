@@ -7,7 +7,7 @@ import { CALLBACK_SOURCE } from '#tests/config/cli/generation/eslint/functions.t
 test('generated lint preserves required class method contracts', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['typescript'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' }),
+        'gspot.toml': buildPolicy(['typescript'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module"}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
         'methods.ts': [
@@ -31,7 +31,7 @@ test('generated lint preserves required class method contracts', async () => {
 test('generated lint reports local wrappers and preserves exported functions and inline callbacks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['typescript'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' }),
+        'gspot.toml': buildPolicy(['typescript'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module"}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
         'callbacks.ts': CALLBACK_SOURCE,

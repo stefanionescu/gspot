@@ -1,5 +1,5 @@
 export const ENGINE_SCOPES =
-    '[agent_rules]\nenabled = false\n[scope."old"]\n[scope."new"]\n[scope."forced"]\n[scope."old/legacy"]\n[scope."browser"]\n[scope."browser".tools.eslint.runtimes]\n"**/*" = "browser"\n';
+    '[scope."old"]\n[scope."new"]\n[scope."forced"]\n[scope."old/legacy"]\n[scope."browser"]\n[scope."browser".tools.eslint.runtimes]\n"**/*" = "browser"\n';
 
 export const ENGINE_PACKAGES = {
     'package.json': '{"private":true,"type":"module","engines":{"node":">=18.0.0"}}',
@@ -28,7 +28,7 @@ export const ENGINE_FINDINGS = [
 /** Apply overrides, replace them with an inherited root override, then remove it and correct unsupported calls. */
 export const ENGINE_PHASES = [
     {
-        tables: '[agent_rules]\nenabled = false\n[scope."old"]\n[scope."new"]\n[scope."forced"]\n[scope."forced".tools.eslint]\nnode_version = ">=22.0.0"\n[scope."old/legacy"]\n[scope."old/legacy".tools.eslint]\nnode_version = ">=18.0.0"\n[scope."browser"]\n[scope."browser".tools.eslint.runtimes]\n"**/*" = "browser"\n',
+        tables: '[scope."old"]\n[scope."new"]\n[scope."forced"]\n[scope."forced".tools.eslint]\nnode_version = ">=22.0.0"\n[scope."old/legacy"]\n[scope."old/legacy".tools.eslint]\nnode_version = ">=18.0.0"\n[scope."browser"]\n[scope."browser".tools.eslint.runtimes]\n"**/*" = "browser"\n',
         reported: ['old/source.js', 'old/source.cjs', 'old/legacy/source.js'],
         corrections: [],
     },

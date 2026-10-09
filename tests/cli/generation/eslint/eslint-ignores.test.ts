@@ -12,7 +12,7 @@ test('generated ESLint applies explicit ignores after native rule options', asyn
     await using directory = await testdir();
     const policy = buildPolicy(['javascript'], {
         level: 'all',
-        tables: '[agent_rules]\nenabled = false\n[tools.eslint.rules]\n"no-console" = [{allow = ["warn"]}]\n',
+        tables: '[tools.eslint.rules]\n"no-console" = [{allow = ["warn"]}]\n',
     });
     await createFileTree(directory.path, {
         'gspot.toml': policy,

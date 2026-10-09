@@ -1,3 +1,4 @@
+import { NATIVE_MISE_POLICY } from '#tests/config/samples/npm.ts';
 import type { StylelintConsumerCase } from '#tests/types/cli/generation/configuration-files.ts';
 
 /** Sibling Python projects with different enabled tools. */
@@ -16,8 +17,7 @@ enabled = false
 
 /** SwiftFormat remains active after both other external Swift checks are ignored. */
 export const SWIFT_FORMAT_POLICY = `configurations = ["swift"]
-runner = "mise"
-[[ignore]]
+${NATIVE_MISE_POLICY}[[ignore]]
 check = "swift/swiftlint"
 reason = "SwiftFormat owns this sandbox's formatting."
 [[ignore]]
@@ -75,8 +75,6 @@ configurations = ["css", "vue"]
 configurations = ["css", "svelte"]
 [scope."mixed"]
 configurations = ["css", "vue", "svelte"]
-[agent_rules]
-enabled = false
 `;
 
 export const STYLELINT_SCOPE_FILES = {

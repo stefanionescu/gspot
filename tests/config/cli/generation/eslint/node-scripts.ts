@@ -93,9 +93,7 @@ export const NODE_SCRIPT_FILES = {
     'vendor/run': NODE_SCRIPT_SOURCE,
 };
 
-export const NODE_SCRIPT_TABLES = `[agent_rules]
-enabled = false
-[architecture.roles]
+export const NODE_SCRIPT_TABLES = `[architecture.roles]
 scripts = ["scripts/**", "child/scripts/**", "build.config.ts"]
 [[generated]]
 paths = ["emitted/**"]

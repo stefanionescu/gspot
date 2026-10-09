@@ -14,7 +14,7 @@ import { getTemplate, exportTemplate } from '#cli/policy/document/contracts.ts';
 test('template publication is idempotent, supports re-export, and survives apply', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy([]),
     });
     const exported = await exportCommand({ cwd: directory.path, file: 'shared.template.toml', isDryRun: false });
     expect(exported.exitCode).toBe(0);
@@ -38,7 +38,7 @@ test('template publication is idempotent, supports re-export, and survives apply
 
 test('template export resolves a parent destination inside the repository from a nested working directory', async () => {
     await using directory = await testdir();
-    const policy = buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' });
+    const policy = buildPolicy(['bash']);
     await createFileTree(directory.path, { 'gspot.toml': policy, 'app/entry.sh': 'echo example\n' });
     const exported = await exportCommand({
         cwd: join(directory.path, 'app'),
@@ -77,7 +77,7 @@ test.each([
 test('template export replaces an unowned destination and preserves its read-only mode', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy([]),
         'occupied.toml': 'original bytes',
     });
     const occupied = join(directory.path, 'occupied.toml');
@@ -92,7 +92,7 @@ test('template export replaces an unowned destination and preserves its read-onl
 test('export refuses the managed policy with the same policy diagnostic in human and JSON output', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy([]),
         'control.txt': 'preserve this source\n',
     });
     const edited = await runGspot(directory.path, ['set', 'level', 'all']);

@@ -15,7 +15,6 @@ test.each(['recommended', 'all'] as const)(
             ...QUERY_PROJECT,
             'gspot.toml': buildPolicy(['typescript', 'tanstack-query'], {
                 level: level,
-                tables: '[agent_rules]\nenabled = false\n',
             }),
             'src/query.ts': QUERY_SAMPLE,
         });

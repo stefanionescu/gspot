@@ -12,9 +12,11 @@ const surface = knownSettings(selected);
 
 test('new license policy requires an explicit choice', () => {
     const licenses = knownSettings(selectConfigurations(['licenses'], configurationManifests()));
-    const policy = parseStrictPolicy(buildPolicy(['licenses']));
+    const policy = parseStrictPolicy(buildPolicy(['licenses'], { agentRules: true }));
     expect(settingValue(licenses, policy, 'licenses.allowed')).toMatchObject({ value: [] });
-    const authored = parseStrictPolicy(buildPolicy(['licenses'], { tables: '[licenses]\nallowed = ["MIT"]\n' }));
+    const authored = parseStrictPolicy(
+        buildPolicy(['licenses'], { agentRules: true, tables: '[licenses]\nallowed = ["MIT"]\n' }),
+    );
     expect(settingValue(licenses, authored, 'licenses.allowed')).toMatchObject({
         value: ['MIT'],
         source: 'gspot.toml',
@@ -23,20 +25,24 @@ test('new license policy requires an explicit choice', () => {
 
 test.each(['Codex', 'The public product name.'])('spelling accepts the reason %s', (reason) => {
     expect(() =>
-        parseStrictPolicy(buildPolicy(['spelling'], { tables: `[words]\nCodex = ${JSON.stringify(reason)}\n` })),
+        parseStrictPolicy(
+            buildPolicy(['spelling'], { agentRules: true, tables: `[words]\nCodex = ${JSON.stringify(reason)}\n` }),
+        ),
     ).not.toThrow();
 });
 
 test.each(['', 'because'])('spelling refuses the invalid reason %s', (reason) => {
     expect(() =>
-        parseStrictPolicy(buildPolicy(['spelling'], { tables: `[words]\nCodex = ${JSON.stringify(reason)}\n` })),
+        parseStrictPolicy(
+            buildPolicy(['spelling'], { agentRules: true, tables: `[words]\nCodex = ${JSON.stringify(reason)}\n` }),
+        ),
     ).toThrow('reason');
 });
 
 test('spelling refuses a word without a string reason', () => {
-    expect(() => parseStrictPolicy(buildPolicy(['spelling'], { tables: '[words]\nCodex = {}\n' }))).toThrow(
-        'expected string',
-    );
+    expect(() =>
+        parseStrictPolicy(buildPolicy(['spelling'], { agentRules: true, tables: '[words]\nCodex = {}\n' })),
+    ).toThrow('expected string');
 });
 
 describe('conflicting configuration defaults', () => {
@@ -53,7 +59,7 @@ describe('conflicting configuration defaults', () => {
     ]);
 
     test('reports both configurations until an explicit root value settles their scalar', () => {
-        const source = buildPolicy(['sql']);
+        const source = buildPolicy(['sql'], { agentRules: true });
         const policy = parseStrictPolicy(source);
         expect(validateAgainstSurface(settings, policy, new Map())).toStrictEqual([
             {
@@ -71,7 +77,9 @@ describe('conflicting configuration defaults', () => {
     });
 
     test('reports an unresolved conflict at the scope that selects the configurations', () => {
-        const policy = parseStrictPolicy(buildPolicy([], { tables: '[scope."db"]\nconfigurations = ["sql"]\n' }));
+        const policy = parseStrictPolicy(
+            buildPolicy([], { agentRules: true, tables: '[scope."db"]\nconfigurations = ["sql"]\n' }),
+        );
         expect(validateAgainstSurface(knownSettings([]), policy, new Map([['db', settings]]))).toStrictEqual([
             { path: ['scope', 'db', 'configurations'], message: settings.errors[0]!.message },
         ]);
@@ -80,6 +88,7 @@ describe('conflicting configuration defaults', () => {
     test('an inherited scope value settles descendants but leaves a sibling conflict visible', () => {
         const policy = parseStrictPolicy(
             buildPolicy([], {
+                agentRules: true,
                 tables: '[scope."app"]\nconfigurations = ["sql"]\n[scope."app".tools.sqlfluff]\ndialect = "sqlite"\n[scope."app/db"]\nconfigurations = ["sql"]\n[scope."other"]\nconfigurations = ["sql"]\n',
             }),
         );
@@ -97,7 +106,7 @@ describe('conflicting configuration defaults', () => {
 describe('setting defaults and declarations', () => {
     test('a configuration transaction default is overridden by an explicit false value', () => {
         const settings = knownSettings(selectConfigurations(['supabase'], configurationManifests()));
-        const source = buildPolicy(['supabase']);
+        const source = buildPolicy(['supabase'], { agentRules: true });
         const policy = parseStrictPolicy(source);
         expect(settingValue(settings, policy, 'tools.squawk.assume_in_transaction')).toMatchObject({
             value: true,
@@ -112,7 +121,7 @@ describe('setting defaults and declarations', () => {
 
     test('an inherited dialect default names the configuration that declares it', () => {
         const settings = knownSettings(selectConfigurations(['supabase'], configurationManifests()));
-        const policy = parseStrictPolicy(buildPolicy(['supabase']));
+        const policy = parseStrictPolicy(buildPolicy(['supabase'], { agentRules: true }));
         expect(validateAgainstSurface(settings, policy, new Map())).toStrictEqual([]);
         expect(settingValue(settings, policy, 'tools.sqlfluff.dialect')).toMatchObject({
             value: 'postgres',
@@ -138,6 +147,7 @@ describe('setting defaults and declarations', () => {
         );
         const errors = policyFindings(
             buildPolicy(['sql', 'bash'], {
+                agentRules: true,
                 tables: '[limits.sql]\nfunction_lines = 60\n[limits.bash]\ncyclomatic_complexity = 8\n',
             }),
         );
@@ -152,6 +162,7 @@ describe('root and scoped settings', () => {
     test('resolves configuration default, root table, then scope table', () => {
         const policy = parseStrictPolicy(
             buildPolicy(['bash'], {
+                agentRules: true,
                 tables: '[limits]\nfile_lines = 250\n[scope."api"]\n[scope."api".limits]\nfile_lines = 200\n',
             }),
         );
@@ -163,6 +174,7 @@ describe('root and scoped settings', () => {
     test('lists append and deduplicate across layers', () => {
         const policy = parseStrictPolicy(
             buildPolicy(['bash'], {
+                agentRules: true,
                 tables: '[naming]\nbanned = ["dispatcher"]\n[scope."api"]\n[scope."api".naming]\nbanned = ["dispatcher", "orchestrator"]\n',
             }),
         );
@@ -189,6 +201,7 @@ describe('merged settings', () => {
         const defaults = knownSettings(manifests);
         const policy = parseStrictPolicy(
             buildPolicy(['naming'], {
+                agentRules: true,
                 tables: '[naming]\nbanned = ["dispatcher", "manager"]\n[scope."api"]\n[scope."api".naming]\nbanned = ["orchestrator", "handler"]\n',
             }),
         );
@@ -205,6 +218,7 @@ describe('merged settings', () => {
         const settings = knownSettings(selectConfigurations(['css'], configurationManifests()));
         const policy = parseStrictPolicy(
             buildPolicy(['css'], {
+                agentRules: true,
                 tables: '[tools.stylelint.rules]\nselector-max-id = 0\ncolor-named = ["never", { severity = "error" }]\n[scope."app"]\nconfigurations = []\n[scope."app".tools.stylelint.rules]\ncolor-named = ["always-where-possible"]\n',
             }),
         );

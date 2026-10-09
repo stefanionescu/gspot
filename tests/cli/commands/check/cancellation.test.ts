@@ -82,7 +82,7 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'] as const)(
     async (operation) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+            'gspot.toml': buildPolicy(['bash']),
             'source.sh': 'echo indexed\n',
             scratch: {},
             bin: {},
@@ -133,7 +133,7 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'] as const)(
 test.skipIf(!isPosix)('push cancellation retains completed reports and names references not checked', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash']),
         'source.sh': 'echo first\n',
     });
     for (const args of [
@@ -180,7 +180,7 @@ test.skipIf(!isPosix).each(['SIGINT', 'SIGTERM'] as const)(
         await using sandbox = await testdir();
         const root = sandbox.path;
         await createFileTree(root, {
-            'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+            'gspot.toml': buildPolicy(['bash']),
             'source.sh': 'echo indexed\n',
         });
         expect(git(root, ['init', '-q']).code).toBe(0);

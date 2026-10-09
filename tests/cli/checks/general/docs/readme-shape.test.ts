@@ -7,7 +7,6 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
-import { NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { README, LICENSE, SETEXT_README, MISSING_SECTIONS_README } from '#tests/config/samples/docs.ts';
 
@@ -103,7 +102,7 @@ test('a NOTICE file does not supply the repository license', async () => {
 });
 
 test('README shape diagnostics give a valid reasoned exception command without changing policy on preview', async () => {
-    const policy = buildPolicy([], { level: 'all', tables: NO_AGENT_RULES });
+    const policy = buildPolicy([], { level: 'all' });
     await using sandbox = await testdir({ 'gspot.toml': policy, 'README.md': '# Tool\n\n## Install\n' });
     const checked = await checkReport(sandbox.path, ['check', '--only', 'docs/readme-shape', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);

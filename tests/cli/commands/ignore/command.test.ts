@@ -14,7 +14,7 @@ test('a global ignore stops a command check and its correction command until rem
     const command = ['bash', '-c', 'printf executed > read.txt; exit 1'];
     const fix = ['bash', '-c', 'printf corrected > corrected.txt'];
     const policy = buildPolicy([], {
-        tables: `[agent_rules]\nenabled = false\n[check."project/quality"]\ncommand = ${JSON.stringify(command)}\nfix = ${JSON.stringify(fix)}\npaths = ["entry.sh"]\nstage = "commit"\n`,
+        tables: `[check."project/quality"]\ncommand = ${JSON.stringify(command)}\nfix = ${JSON.stringify(fix)}\npaths = ["entry.sh"]\nstage = "commit"\n`,
     });
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const args = ['check', '--only', 'project/quality', '--json'];
@@ -43,7 +43,7 @@ test('a global ignore stops a command check and its correction command until rem
 test('path-specific ignores prevent checker and fixer execution and report an entirely ignored selection', async () => {
     await using directory = await testdir();
     const policy = buildPolicy([], {
-        tables: `[agent_rules]\nenabled = false\n[check."project/quality"]\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix = ${JSON.stringify(QUALITY_FIX)}\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\nreason = "The skipped input preserves the sample."\n`,
+        tables: `[check."project/quality"]\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix = ${JSON.stringify(QUALITY_FIX)}\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\nreason = "The skipped input preserves the sample."\n`,
     });
     await createFileTree(directory.path, {
         'gspot.toml': policy,
@@ -118,6 +118,7 @@ test('merged ignores print saved paths and allow individual paths to be removed'
         'gspot.toml':
             '# Comment on configurations.\n' +
             buildPolicy(['bash'], {
+                agentRules: true,
                 tables: '[agent_rules]\nenabled = false\n[hooks]\n# Keep the push selection.\npush_files = "changed"\n',
             }),
         'a.sh': 'echo a\n',
@@ -143,7 +144,7 @@ test('merged ignores print saved paths and allow individual paths to be removed'
 test('ignore merges matching expiry dates and removes only the selected expiry', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash'], { agentRules: true, tables: '[agent_rules]\nenabled = false\n' }),
         'a.sh': 'echo a\n',
         'b.sh': 'echo b\n',
         'c.sh': 'echo c\n',
@@ -204,7 +205,7 @@ test('ignore merges matching expiry dates and removes only the selected expiry',
 test('ignore rejects an invalid expiry without changing authored policy', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash']),
         'example.sh': 'echo ready\n',
     });
     const before = await readFile(join(directory.path, 'gspot.toml'), 'utf8');
@@ -226,7 +227,7 @@ test('ignore rejects an invalid expiry without changing authored policy', async 
 test('ignore combines matching paths, keeps different reasons, and lets a pathless entry cover the whole scope', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash']),
         'a.sh': 'echo a\n',
         'b.sh': 'echo b\n',
         'other.sh': 'echo other\n',
@@ -263,7 +264,7 @@ test('ignore combines matching paths, keeps different reasons, and lets a pathle
 test('an ignored folder includes descendants while a negated file remains enforced', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash']),
         'legacy scripts/nested/example.sh': 'if then\n',
         'legacy scripts/required.sh': 'if then\n',
         'entry.sh': 'echo example\n',

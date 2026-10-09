@@ -11,6 +11,7 @@ import { prepareToolProjects } from '#cli/tools/public.ts';
 import { pythonProject } from '#cli/generation/contracts.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { RUNNER_POLICY } from '#tests/config/harness/policy.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { emitAll, gitignoreBlock } from '#cli/generation/public.ts';
 import { compact, environmentBin } from '#cli/platform/contracts.ts';
@@ -20,7 +21,6 @@ import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { installUv, pythonToolProject } from '#cli/tools/python/public.ts';
 import { hostPlatform, environmentVariables } from '#cli/platform/public.ts';
 import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
-import { RUNNER_POLICY, NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
 import { installToolProject, prepareToolProject } from '#cli/tools/contracts.ts';
 import type { PythonRegistry, RegistryCommand } from '#tests/types/harness/registry.ts';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/state/public.ts';
@@ -143,7 +143,7 @@ export async function preparePythonInstallation(
     await createFileTree(root, {
         '.gitignore': `${gitignoreBlock([configurationManifests().get('python')!])}\n.venv/\n`,
         'gspot.toml': buildPolicy(['python'], {
-            tables: `${RUNNER_POLICY[runner]}${NO_AGENT_RULES}${ignores}`,
+            tables: `${RUNNER_POLICY[runner]}${ignores}`,
             level: 'recommended',
         }),
         ...AUTHORED_FILES,

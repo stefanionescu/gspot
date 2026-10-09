@@ -23,7 +23,7 @@ test.skipIf(!isPosix).each(['recommended', 'all'] as const)(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['javascript'], { level, tables: '[agent_rules]\nenabled = false\n' }),
+            'gspot.toml': buildPolicy(['javascript'], { level }),
             'package.json': '{"private":true,"type":"module"}\n',
             'source.js': COMPILER_SOURCE,
         });

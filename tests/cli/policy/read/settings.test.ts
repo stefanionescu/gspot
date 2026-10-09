@@ -21,10 +21,11 @@ test('validates environment declarations in root and scope tables', () => {
     for (const scope of ['', '[scope."app"]\n']) {
         const prefix = scope === '' ? '' : 'scope.app.';
         for (const { table, value, diagnostic } of INVALID_ENVIRONMENT_SETTINGS) {
-            const source = buildPolicy([], { tables: `${scope}[${prefix}${table}]\n${value}\n` });
+            const source = buildPolicy([], { agentRules: true, tables: `${scope}[${prefix}${table}]\n${value}\n` });
             expect(() => parseStrictPolicy(source)).toThrow(diagnostic);
         }
         const source = buildPolicy([], {
+            agentRules: true,
             tables: `${scope}[${prefix}secrets]\nreader_functions = ["config.$env", "read_env"]\nenv_examples = ["example.env"]\n`,
         });
         expect(policyFindings(source)).toStrictEqual([]);
@@ -48,7 +49,7 @@ test.each(
 describe('policy value normalization', () => {
     test('normalizes plain limits and their separate explanations', () => {
         const policy = parseStrictPolicy(
-            `${buildPolicy(['bash'])}[limits]\nfile_lines = 300\nfunction_lines = 80\n[reasons]\n"limits.function_lines" = "Route tables are one ordered list each."\n"limits.python.file_lines" = "Python modules retain their project-specific size allowance."\n[limits.python]\nfile_lines = 400\n`,
+            `${buildPolicy(['bash'], { agentRules: true })}[limits]\nfile_lines = 300\nfunction_lines = 80\n[reasons]\n"limits.function_lines" = "Route tables are one ordered list each."\n"limits.python.file_lines" = "Python modules retain their project-specific size allowance."\n[limits.python]\nfile_lines = 400\n`,
         );
         expect(policy.limits.root['file_lines']).toBe(300);
         expect(policy.limits.root['function_lines']).toBe(80);
@@ -57,7 +58,7 @@ describe('policy value normalization', () => {
 
     test('normalizes per-language naming tables and categories', () => {
         const policy = parseStrictPolicy(
-            `${buildPolicy(['bash'])}[naming]\nbanned = ["dispatcher"]\n[naming.python]\nmax_words = 4\n[naming.python.parameters]\nmax_words = 3\n[reasons]\n"naming.python.parameters.max_words" = "Handler signatures read as one line."\n`,
+            `${buildPolicy(['bash'], { agentRules: true })}[naming]\nbanned = ["dispatcher"]\n[naming.python]\nmax_words = 4\n[naming.python.parameters]\nmax_words = 3\n[reasons]\n"naming.python.parameters.max_words" = "Handler signatures read as one line."\n`,
         );
         expect(policy.naming.banned).toStrictEqual(['dispatcher']);
         expect(policy.naming.languages['python']?.max_words).toBe(4);
@@ -76,6 +77,7 @@ describe('policy setting refusals', () => {
     test('a scoped disabled ESLint rule names the accepted-finding command and rule', () => {
         const found = policyFindings(
             buildPolicy(['javascript'], {
+                agentRules: true,
                 tables: '[scope."api"]\n[scope."api".tools.eslint.rules]\n"unicorn/no-null" = "off"\n',
             }),
         );
@@ -87,7 +89,9 @@ describe('policy setting refusals', () => {
 
     test('a verbatim table needs a reason', () => {
         expect(
-            policyFindings(`${buildPolicy(['bash'])}[tools.prettier.verbatim]\nuseTabs = false\nreason = ""\n`)[0],
+            policyFindings(
+                `${buildPolicy(['bash'], { agentRules: true })}[tools.prettier.verbatim]\nuseTabs = false\nreason = ""\n`,
+            )[0],
         ).toContain('[tools.prettier.verbatim] needs an entry in [reasons]');
     });
 });
@@ -96,7 +100,7 @@ describe('authored scope and inventory policy', () => {
     test('nested and absent scopes retain authored policy', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'api/a.txt': '', 'api/inner/b.txt': '' });
-        const text = `${buildPolicy(['bash'])}[scope."api"]\n[scope."api/inner"]\n[scope."missing"]\n`;
+        const text = `${buildPolicy(['bash'], { agentRules: true })}[scope."api"]\n[scope."api/inner"]\n[scope."missing"]\n`;
         expect(policyFindings(text, sandbox.path)).toStrictEqual([]);
         expect(Object.keys(parseStrictPolicy(text, sandbox.path).scope)).toStrictEqual(['api', 'api/inner', 'missing']);
         await mkdir(join(sandbox.path, 'missing'));
@@ -104,9 +108,9 @@ describe('authored scope and inventory policy', () => {
     });
 
     test('a vendored declaration needs a reason when required', () => {
-        expect(policyFindings(`${buildPolicy(['bash'])}[[vendored]]\npaths = ["vendor/**"]\n`)[0]).toContain(
-            'needs a reason',
-        );
+        expect(
+            policyFindings(`${buildPolicy(['bash'], { agentRules: true })}[[vendored]]\npaths = ["vendor/**"]\n`)[0],
+        ).toContain('needs a reason');
     });
 });
 
@@ -116,7 +120,7 @@ test('a missing gspot.toml points at init', async () => {
 });
 
 test('refuses an empty correction command', () => {
-    const check = `${buildPolicy(['bash'])}[check."sandbox/fixer"]
+    const check = `${buildPolicy(['bash'], { agentRules: true })}[check."sandbox/fixer"]
     command = ["tool", "check"]
     paths = ["source.txt"]
     stage = "commit"
@@ -179,7 +183,7 @@ test('native zero-valued Stylelint options and false Taplo formatting remain act
 test.each(REMOVED_STRUCTURE_SETTINGS)('removed structure setting %s is refused in root and scope tables', (name) => {
     for (const scope of ['', '[scope."app"]\n']) {
         const table = scope === '' ? 'structure' : 'scope.app.structure';
-        const source = buildPolicy(['typescript'], { tables: `${scope}[${table}]\n${name} = []\n` });
+        const source = buildPolicy(['typescript'], { agentRules: true, tables: `${scope}[${table}]\n${name} = []\n` });
         expect(() => parseStrictPolicy(source)).toThrow(name);
     }
 });
@@ -202,6 +206,7 @@ test.each(
         'unsafe\u0000path',
     ]) {
         const source = buildPolicy([entry.configuration], {
+            agentRules: true,
             level,
             tables: `${table}${entry.setting} = ${settingValue(path)}\n`,
         });
@@ -213,6 +218,7 @@ test.each(
     const paths = ['project/native-file', 'équipe 50%.txt', ...(entry.empty ? [''] : [])];
     for (const path of paths) {
         const source = buildPolicy([entry.configuration], {
+            agentRules: true,
             level,
             tables: `${table}${entry.setting} = ${settingValue(path)}\n`,
         });

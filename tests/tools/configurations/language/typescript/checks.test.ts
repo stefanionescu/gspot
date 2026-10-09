@@ -103,7 +103,7 @@ test('a TypeScript solution checks both projects without writing build output', 
         '{// The solution has no sources.\n"files":[],"references":[{"path":"./orders"},{"path":"./users"}],}';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['typescript'], { level: 'all', tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['typescript'], { level: 'all' }),
         '.gitignore': 'node_modules/\n.gspot/\n',
         'tsconfig.json': solution,
         'orders/tsconfig.json': TSCONFIG_PROJECT,
@@ -138,7 +138,7 @@ test('a TypeScript solution checks both projects without writing build output', 
 test('a TypeScript scope keeps authored compiler settings while both levels enforce type safety', async () => {
     await using sandbox = await testdir();
     const scope = 'apps/web';
-    const scopeTable = `[agent_rules]\nenabled = false\n[scope."${scope}"]\nconfigurations = ["typescript"]\n`;
+    const scopeTable = `[scope."${scope}"]\nconfigurations = ["typescript"]\n`;
     const authored = AUTHORED_TSCONFIG.replace(
         '%BUILD_INFO%',
         JSON.stringify(join(sandbox.path, scope, 'build/cache.tsbuildinfo')),
@@ -188,7 +188,7 @@ test.each(OUTDIR_CASES)('$name', async ({ kind, code }) => {
     await symlink(join(installedModules, 'typescript'), join(outside.path, 'typescript'), 'dir');
     await symlink('../typescript/bin/tsc', join(outside.path, '.bin/tsc'));
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['typescript'], { level: 'all', tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['typescript'], { level: 'all' }),
         '.gitignore': 'node_modules\n.gspot\n',
         'tsconfig.json': '{"files":[],"references":[{"path":"./app"}]}',
         'app/tsconfig.json': JSON.stringify({

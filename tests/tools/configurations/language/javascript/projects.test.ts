@@ -26,7 +26,7 @@ test('JavaScript checking includes authored build directories at level all', asy
     const paths = ['source/build/value.js', 'source/dist/value.js', 'coverage/value.js'];
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['javascript'], {
-            tables: '[agent_rules]\nenabled = false\n[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns these outputs."\n',
+            tables: '[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns these outputs."\n',
             level: 'all',
         }),
         ...Object.fromEntries([...paths, 'emitted/value.js'].map((path) => [path, 'export const value = missing;\n'])),
@@ -54,7 +54,7 @@ test.each(JAVASCRIPT_CONFIG_CASES)(
         const authoredFiles: Record<string, string> = authored ? JAVASCRIPT_AUTHORED_FILES : {};
         const source = `import { format } from '${authored ? '@shape/value' : './value.js'}';\nexport const text = format(42);\nexport const total = accepted;\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['javascript'], { tables: '[agent_rules]\nenabled = false\n' }),
+            'gspot.toml': buildPolicy(['javascript']),
             'source/main.js': source,
             'source/value.js':
                 '/** @param {string} value */\nexport function format(value) { return value.toUpperCase(); }\n',
@@ -94,7 +94,7 @@ test.each(JAVASCRIPT_CONFIG_CASES)(
 test('JavaScript projects retain nested compiler options and isolate the deepest scope', async () => {
     await using sandbox = await testdir();
     const policy = buildPolicy(['javascript'], {
-        tables: '[agent_rules]\nenabled = false\n[scope."app"]\n[scope."app/child"]\n[scope."sibling"]\n',
+        tables: '[scope."app"]\n[scope."app/child"]\n[scope."sibling"]\n',
     });
     const bad = '/** @type {string} */\nexport const name = 42;\n';
     const corrected = bad.replace('42', '"name"');
@@ -159,7 +159,7 @@ test.each(['recommended', 'all'] as const)(
             ...IMPORTED_AMBIENT_FILES,
             'gspot.toml': buildPolicy(['javascript'], {
                 level,
-                tables: '[agent_rules]\nenabled=false\n[scope."apps/web"]\n',
+                tables: '[scope."apps/web"]\n',
             }),
         });
         const session = await openSession(sandbox.path);

@@ -151,9 +151,7 @@ for (const { name, scope } of XCTEST_SCOPES) {
             await createFileTree(root, {
                 'gspot.toml': buildPolicy(scope === '' ? ['swift-tests'] : [], {
                     level: 'all',
-                    tables:
-                        '[agent_rules]\nenabled = false\n' +
-                        (scope === '' ? '' : `[scope.${JSON.stringify(scope)}]\nconfigurations = ["swift-tests"]\n`),
+                    tables: scope === '' ? '' : `[scope.${JSON.stringify(scope)}]\nconfigurations = ["swift-tests"]\n`,
                 }),
                 [`${prefix}Sources/Value.swift`]: CORRECT,
                 [`${prefix}AppTests/Value.swift`]: SAMPLE,

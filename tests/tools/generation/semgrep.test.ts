@@ -74,7 +74,6 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the level', async ()
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['bash', 'swift', 'security'], {
-            tables: '[agent_rules]\nenabled = false\n',
             level: 'recommended',
         }),
         'script.sh': BASH_DOWNLOAD_SAMPLE,
@@ -88,10 +87,7 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the level', async ()
             .flatMap((check) => check.findings)
             .flatMap(({ rule }) => (rule?.startsWith('gspot.swift.') === true ? [rule] : [])),
     ).toStrictEqual(['gspot.swift.keychain-accessible-always', 'gspot.swift.weak-hash-algorithm']);
-    await Bun.write(
-        join(sandbox.path, 'gspot.toml'),
-        buildPolicy(['bash', 'swift', 'security'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' }),
-    );
+    await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['bash', 'swift', 'security'], { level: 'all' }));
     await sharePythonTools(sandbox.path);
     const all = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
     expect(all.code, all.stdout + all.stderr).toBe(1);

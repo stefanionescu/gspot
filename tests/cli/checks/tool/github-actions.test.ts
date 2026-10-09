@@ -17,7 +17,7 @@ import { fakeTool, getKeptMode } from '#tests/harness/platforms.ts';
 import { PATH, PINACT_STUB } from '#tests/config/cli/checks/tool/github-actions.ts';
 
 const TOOL_FAILURES_POLICY = buildPolicy(['files', 'github-actions'], {
-    tables: 'runner = "mise"\n[agent_rules]\nenabled = false\n',
+    tables: 'runner = "mise"\n',
     level: 'all',
 });
 

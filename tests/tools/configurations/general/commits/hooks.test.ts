@@ -201,7 +201,6 @@ test('a shallow push checks source content but refuses incomplete required histo
     const source = join(sandbox.path, 'source');
     await createFileTree(source, {
         'gspot.toml': buildPolicy(['bash', 'commits'], {
-            tables: '[agent_rules]\nenabled = false\n',
             level: 'all',
         }),
         'source.sh': 'echo base\n',

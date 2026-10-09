@@ -3,7 +3,7 @@ export const DECLARATION_CASES = [
     {
         kind: 'generated',
         directory: 'output types',
-        tables: '[agent_rules]\nenabled = false\n',
+        tables: '',
         files: [['output types/broken.sh', 'if then\n'] as const, ['upstream/broken.sh', 'if then\n'] as const],
         setup: [
             ['set', 'generated', '{"paths":["output types"]}', '--reason', 'External files retained for consumers'],
@@ -13,7 +13,7 @@ export const DECLARATION_CASES = [
     {
         kind: 'exclude',
         directory: 'legacy scripts',
-        tables: 'exclude = ["legacy scripts"]\n[agent_rules]\nenabled = false\n',
+        tables: 'exclude = ["legacy scripts"]\n',
         files: [['legacy scripts/broken.sh', 'if then\n'] as const],
         setup: [],
     },

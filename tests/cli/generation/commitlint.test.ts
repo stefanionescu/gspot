@@ -45,10 +45,7 @@ test('repository commit fields preserve unrelated package content and restore it
     expect(getSuggestions(session).unowned.filter((row) => row.path.endsWith('package.json'))).toStrictEqual([]);
     const installed = await readFile(join(sandbox.path, 'app/package.json'), 'utf8');
     await writeFile(join(sandbox.path, 'app/package.json'), installed.replace('native-project', 'edited-project'));
-    await writeFile(
-        join(sandbox.path, 'gspot.toml'),
-        buildPolicy([], { level: 'recommended', tables: '[agent_rules]\nenabled = false\n' }),
-    );
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildPolicy([], { level: 'recommended' }));
     session = await openSession(sandbox.path);
     expect(emitAll(session).toolFiles).toStrictEqual([]);
     {
@@ -76,7 +73,7 @@ test('a folder without Git keeps authored commit policy and reports its actual p
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'package.json': COMMITLINT_PACKAGE,
-        'gspot.toml': buildPolicy([], { level: 'all', tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy([], { level: 'all' }),
     });
     const session = await openSession(sandbox.path);
     expect(emitAll(session).toolFiles).toStrictEqual([]);

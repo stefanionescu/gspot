@@ -20,7 +20,7 @@ import {
 
 async function prepareSecrets(root: string, environment: Record<string, string>): Promise<void> {
     await createFileTree(root, {
-        'gspot.toml': buildPolicy(['secrets'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['secrets']),
     });
     const applied = await spawnGspot(root, ['apply'], environment);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -124,7 +124,7 @@ test('native history accepts only the exact reviewed fingerprints without disclo
     const environment = { PATH: buildToolsPath(['gitleaks']) };
     const { base, leaked } = await prepareHistory(sandbox.path, environment);
     const command = ['check', '--hook', 'pre-push', '--only', 'secrets/gitleaks-pushed', '--json'];
-    const policy = buildPolicy(['secrets'], { tables: '[agent_rules]\nenabled = false\n' });
+    const policy = buildPolicy(['secrets']);
     const identityIgnore = `\n[[ignore]]\ncheck = "secrets/gitleaks-pushed"\nrule = "${leaked}:identity.py:aws-access-token:1"\nreason = "The exact historical token is an inert example."\n`;
     await Bun.write(join(sandbox.path, 'gspot.toml'), policy + identityIgnore);
     gitOutput(sandbox.path, ['add', 'gspot.toml']);
@@ -160,8 +160,7 @@ test.each(FILE_SCOPES)(
     async (_name, folder) => {
         await using sandbox = await testdir();
         const environment = { PATH: buildToolsPath(['gitleaks']) };
-        const tables =
-            '[agent_rules]\nenabled = false\n' + (folder === '' ? '' : '[scope.app]\nconfigurations = ["secrets"]\n');
+        const tables = folder === '' ? '' : '[scope.app]\nconfigurations = ["secrets"]\n';
         const policy = buildPolicy(['secrets'], { tables });
         await createFileTree(sandbox.path, { 'gspot.toml': policy });
         const applied = await spawnGspot(sandbox.path, ['apply'], environment);
@@ -218,7 +217,7 @@ test.each(FILE_EXPIRIES)('native file findings respect an %s fingerprint expiry'
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         buildPolicy(['secrets'], {
-            tables: `[agent_rules]\nenabled = false\n[[ignore]]\ncheck = "secrets/gitleaks-files"\nrule = "identity.py:aws-access-token:1"\nuntil = ${until}\nreason = "The exact inert token has a reviewed expiry."\n`,
+            tables: `[[ignore]]\ncheck = "secrets/gitleaks-files"\nrule = "identity.py:aws-access-token:1"\nuntil = ${until}\nreason = "The exact inert token has a reviewed expiry."\n`,
         }),
     );
     const checked = await spawnGspot(

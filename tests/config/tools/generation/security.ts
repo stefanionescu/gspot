@@ -25,9 +25,7 @@ export const SECURITY_FILES = {
     'sibling/source.js': SECURITY_SOURCE,
 };
 
-export const SECURITY_SCOPE_POLICY = `[agent_rules]
-enabled = false
-[scope."app"]
+export const SECURITY_SCOPE_POLICY = `[scope."app"]
 configurations = ["express"]
 [scope."app/child"]
 [scope."sibling"]
@@ -45,5 +43,5 @@ export const SECURITY_FINDINGS = [
 
 export const SUPABASE_SOURCE = 'console.log(Deno.env.get("API_SECRET"));\n';
 export const SUPABASE_CORRECTION = 'console.log("Unable to load the record");\n';
-export const SUPABASE_SCOPE_POLICY = '[agent_rules]\nenabled = false\n[scope."child"]\n';
+export const SUPABASE_SCOPE_POLICY = '[scope."child"]\n';
 export const SUPABASE_SOURCE_PATHS = ['supabase/functions/source.js', 'child/source.js'];

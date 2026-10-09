@@ -8,7 +8,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
 
 const TOOL_FAILURES_POLICY = buildPolicy(['files'], {
-    tables: 'runner = "mise"\n[agent_rules]\nenabled = false\n',
+    tables: 'runner = "mise"\n',
     level: 'all',
 });
 

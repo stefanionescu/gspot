@@ -7,9 +7,7 @@ export const PROJECT = {
         'import { create } from "zustand";\nimport { readFile } from "node:fs";\nexport const store = create(() => ({ readFile }));\n',
 };
 
-export const POLICY = `[agent_rules]
-enabled = false
-[tools.eslint]
+export const POLICY = `[tools.eslint]
 restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
 [architecture.roles]
 stores = ["**/store.js"]

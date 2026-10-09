@@ -17,7 +17,7 @@ export const DOC_TASK_FILES = {
 
 /** Scope membership follows authored project boundaries. */
 export const DOC_TASK_SCOPES =
-    '[agent_rules]\nenabled = false\n[scope."app"]\nconfigurations = []\n[scope."app/nested"]\nconfigurations = []\n[scope."app/empty"]\nconfigurations = []\n[scope."sibling"]\nconfigurations = []\n';
+    '[scope."app"]\nconfigurations = []\n[scope."app/nested"]\nconfigurations = []\n[scope."app/empty"]\nconfigurations = []\n[scope."sibling"]\nconfigurations = []\n';
 
 /** Each rejected command identifies its own source document and line. */
 export const DOC_TASK_FINDINGS = [

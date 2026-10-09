@@ -44,10 +44,7 @@ test.each(['recommended', 'all'] as const)(
         ).toStrictEqual(STYLELINT_SUGGESTIONS);
         const installed = await readFile(join(sandbox.path, 'app/package.json'), 'utf8');
         await writeFile(join(sandbox.path, 'app/package.json'), installed.replace('native-project', 'edited-project'));
-        await writeFile(
-            join(sandbox.path, 'gspot.toml'),
-            buildPolicy([], { level, tables: '[agent_rules]\nenabled = false\n' }),
-        );
+        await writeFile(join(sandbox.path, 'gspot.toml'), buildPolicy([], { level }));
         session = await openSession(sandbox.path);
         expect(emitAll(session).toolFiles).toStrictEqual([]);
         {
@@ -70,9 +67,7 @@ test.each(['recommended', 'all'] as const)(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['css'], {
                 level,
-                tables: `[agent_rules]
-enabled = false
-[tools.stylelint.rules]
+                tables: `[tools.stylelint.rules]
 color-hex-length = "long"
 number-max-precision = 0
 unknown-rule = true

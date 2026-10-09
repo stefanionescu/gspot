@@ -27,9 +27,7 @@ export const HTML_ACCESSIBILITY_CORRECTED = `<!doctype html>
 </html>
 `;
 /** Each selected site builds its authored page without changing the root source owner. */
-export const HTML_ACCESSIBILITY_SCOPES = `[agent_rules]
-enabled = false
-[scope."app"]
+export const HTML_ACCESSIBILITY_SCOPES = `[scope."app"]
 configurations = ["site"]
 [scope.app.site]
 build_command = ["node", "build.mjs"]

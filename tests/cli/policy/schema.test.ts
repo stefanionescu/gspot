@@ -142,6 +142,7 @@ test.each(LOCALE_SCHEMA_CASES)(
 
 test('manifest settings preserve typed values and reject unknown siblings', () => {
     const source = buildPolicy(['translations'], {
+        agentRules: true,
         tables: '[translations]\nmessages_folder = "messages"\nbase_locale = "fr"\n',
     });
     expect(parseStrictPolicy(source).configurationSettings?.['translations']).toMatchObject({

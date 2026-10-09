@@ -14,7 +14,7 @@ import { RULE_PREVIEW_CASES } from '#tests/config/cli/lifecycle/rule-preview.ts'
 
 test.each(RULE_PREVIEW_CASES)('apply compares rules with its last successful write: $name', async (entry) => {
     await using sandbox = await testdir();
-    const tables = 'runner = "mise"\n[agent_rules]\nenabled = false\n';
+    const tables = 'runner = "mise"\n';
     const base = buildPolicy(entry.configurations, { level: entry.initialLevel, tables: tables + entry.initialTables });
     await createFileTree(sandbox.path, { 'gspot.toml': base, ...entry.source });
     commitAll(sandbox.path);
@@ -42,7 +42,7 @@ test.each(RULE_PREVIEW_CASES)('apply compares rules with its last successful wri
 
 test('Vale previews its added style packages and native rule options at all', async () => {
     await using sandbox = await testdir();
-    const tables = 'runner = "mise"\n[agent_rules]\nenabled = false\n';
+    const tables = 'runner = "mise"\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['prose'], { level: 'recommended', tables }),
         'sample.md': '# Sample\n',
@@ -79,7 +79,7 @@ test('manual JavaScript edits produce a byte diff without running the edited con
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['javascript'], {
             level: 'all',
-            tables: 'runner = "mise"\n[agent_rules]\nenabled = false\n',
+            tables: 'runner = "mise"\n',
         }),
         'entry.js': 'export const value = 1;\n',
     });
@@ -110,7 +110,7 @@ test('manual JavaScript edits produce a byte diff without running the edited con
 
 test('a scoped rule preview changes only the matching project configuration', async () => {
     await using sandbox = await testdir();
-    const tables = '[agent_rules]\nenabled = false\n[scope."api"]\nconfigurations = ["bash"]\n';
+    const tables = '[scope."api"]\nconfigurations = ["bash"]\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['bash'], { tables }),
         'entry.sh': 'echo root\n',
@@ -139,7 +139,7 @@ test('a scoped rule preview changes only the matching project configuration', as
 
 test('a failed managed write retains the last successful rule baseline until the next apply succeeds', async () => {
     await using sandbox = await testdir();
-    const tables = '[agent_rules]\nenabled = false\n';
+    const tables = '';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['bash'], { level: 'recommended', tables }),
         'entry.sh': 'echo example\n',

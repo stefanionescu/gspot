@@ -15,7 +15,7 @@ import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import type { RunReport, RunOptions } from '#cli/types/execution/check.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 
-const SECRETS_FILES_POLICY = buildPolicy(['secrets'], { tables: '[agent_rules]\nenabled = false\n' });
+const SECRETS_FILES_POLICY = buildPolicy(['secrets']);
 
 async function secretChecks(root: string): Promise<RunReport['checks']> {
     const options: RunOptions = buildRunOptions();

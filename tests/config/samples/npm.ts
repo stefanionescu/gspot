@@ -14,3 +14,13 @@ export const YARN_MANAGERS: YarnOperations[] = [
         settings: true,
     },
 ];
+
+/** Native-only sandboxes leave npm check consumers out of the selected installation. */
+export const NATIVE_MISE_POLICY = `runner = "mise"
+[[ignore]]
+check = "files/v8r"
+reason = "This sandbox exercises native tools without JSON schema checks."
+[[ignore]]
+check = "format/editorconfig-checker"
+reason = "This sandbox exercises native tools without the npm editor checker."
+`;

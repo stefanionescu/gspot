@@ -18,7 +18,7 @@ test.each(RUNNER_CASES)(
         gitOutput(sandbox.path, ['init', '-q']);
         const tables =
             runner === undefined ? '[hooks]\nenabled = true\n' : `runner = "${runner}"\n[hooks]\nenabled = true\n`;
-        const policy = parseStrictPolicy(buildPolicy([], { tables: tables }));
+        const policy = parseStrictPolicy(buildPolicy([], { agentRules: true, tables: tables }));
         const files = hookFiles(join(sandbox.path, "app's dir"), policy, '1.2.3');
         expect(files.map((file) => file.path)).toStrictEqual([
             '.gspot/hooks/pre-commit',
@@ -53,7 +53,7 @@ test.each(RUNNER_CASES)(
 test('a repository at the Git top level enters no folder', async () => {
     await using sandbox = await testdir();
     gitOutput(sandbox.path, ['init', '-q']);
-    const policy = parseStrictPolicy(buildPolicy([], { tables: '[hooks]\nenabled = true\n' }));
+    const policy = parseStrictPolicy(buildPolicy([], { agentRules: true, tables: '[hooks]\nenabled = true\n' }));
     const files = hookFiles(sandbox.path, policy, '1.2.3');
     expect(files).toHaveLength(3);
     for (const file of files) expect(file.content).not.toContain('\ncd ');
@@ -61,7 +61,9 @@ test('a repository at the Git top level enters no folder', async () => {
 
 test.skipIf(!isPosix)('a hook explains how to acquire a missing Mise runner', async () => {
     await using sandbox = await testdir();
-    const policy = parseStrictPolicy(buildPolicy([], { tables: 'runner = "mise"\n[hooks]\nenabled = true\n' }));
+    const policy = parseStrictPolicy(
+        buildPolicy([], { agentRules: true, tables: 'runner = "mise"\n[hooks]\nenabled = true\n' }),
+    );
     const hook = hookFiles(sandbox.path, policy, '1.2.3').find((file) => file.path.endsWith('pre-push'))!;
     const path = join(sandbox.path, 'pre-push');
     await Bun.write(path, hook.content);

@@ -21,7 +21,7 @@ test('one command acquires its pinned uv once and creates lockfiles through that
     const pin = `${uv.name}@${uv.version}`;
     await using repository = await testdir();
     await createFileTree(repository.path, {
-        'gspot.toml': buildPolicy(['python'], { tables: 'runner = "mise"\n[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['python'], { tables: 'runner = "mise"\n' }),
         'main.py': 'print("authored")\n',
     });
     const session = await openSession(repository.path);
@@ -67,7 +67,7 @@ test('failed mise installation names the pinned uv repair and preserves reposito
     const pin = `${uv.name}@${uv.version}`;
     await using repository = await testdir();
     await createFileTree(repository.path, {
-        'gspot.toml': buildPolicy(['python'], { tables: 'runner = "mise"\n[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['python'], { tables: 'runner = "mise"\n' }),
         'main.py': 'print("authored")\n',
     });
     const before = await readTree(repository.path);

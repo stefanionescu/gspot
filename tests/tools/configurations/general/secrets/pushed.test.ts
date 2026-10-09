@@ -10,7 +10,6 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
-import { NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
 import type { SecretHistory, SecretVerifier } from '#tests/types/tools/configurations/general/secrets.ts';
 
 import {
@@ -21,7 +20,7 @@ import {
 /** Creates independent clean and leaked histories whose final trees contain no test files. */
 async function prepareSecretHistory(root: string, files: Record<string, string>): Promise<SecretHistory> {
     await createFileTree(root, {
-        'gspot.toml': buildPolicy(['secrets'], { tables: NO_AGENT_RULES }),
+        'gspot.toml': buildPolicy(['secrets']),
     });
     gitOutput(root, ['init', '-q']);
     const applied = await spawnGspot(root, ['apply']);

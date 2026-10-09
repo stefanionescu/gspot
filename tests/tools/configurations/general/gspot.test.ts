@@ -26,7 +26,7 @@ test('an edited generated file and one holding merge markers are drift findings,
     const runOptions = { ...GENERATED_DRIFT_OPTIONS, checks: BUILT_IN_CHECKS };
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash']),
         'run.sh': '#!/usr/bin/env bash\necho ok\n',
         '.gitignore': '.gspot/state/\n',
     });
@@ -79,7 +79,7 @@ test('an edited generated file and one holding merge markers are drift findings,
 test('the drift runner rejects a manifest that does not run once', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy([]),
     });
     const session = await openSession(sandbox.path);
     const planned = planRun(session, GENERATED_DRIFT_OPTIONS)[0]!;

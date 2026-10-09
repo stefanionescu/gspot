@@ -35,7 +35,7 @@ test.each(NEXT_INSTALLATIONS)('$name', async (row) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['nextjs'], {
-            tables: `[agent_rules]\nenabled = false\n[scope.app]\nconfigurations = ["nextjs"]\n`,
+            tables: `[scope.app]\nconfigurations = ["nextjs"]\n`,
         }),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2","dependencies":{"next":"*"}}',
         'app/package.json': '{"private":true,"dependencies":{"next":"*"}}',

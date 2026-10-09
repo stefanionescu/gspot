@@ -67,7 +67,7 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
 
     await createFileTree(main, {
         'gspot.toml': buildPolicy([], {
-            tables: `[hooks]\nenabled = true\n[agent_rules]\nenabled = false\n[check."sandbox/defect"]\ncommand = ${JSON.stringify([process.execPath, '-e', SAMPLE_COMMAND, '{files}'])}\npaths = ["src/**"]\nstage = "commit"\n[check."sandbox/defect".output]\nformat = "lines"\n`,
+            tables: `[hooks]\nenabled = true\n[check."sandbox/defect"]\ncommand = ${JSON.stringify([process.execPath, '-e', SAMPLE_COMMAND, '{files}'])}\npaths = ["src/**"]\nstage = "commit"\n[check."sandbox/defect".output]\nformat = "lines"\n`,
         }),
         'src/kept.txt': 'clean\n',
     });

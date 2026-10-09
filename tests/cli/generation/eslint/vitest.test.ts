@@ -30,7 +30,7 @@ test.each(['jest', 'vitest'])('%s closes test support to runtime code in its sco
             configuration === 'jest'
                 ? APP_JEST
                 : buildPolicy(['vitest'], {
-                      tables: '[agent_rules]\nenabled = false\n[architecture.roles]\nruntime = ["src/**"]\ntest_harness = "tests/fixtures"\n',
+                      tables: '[architecture.roles]\nruntime = ["src/**"]\ntest_harness = "tests/fixtures"\n',
                       level: 'all',
                   }),
     });
@@ -44,7 +44,7 @@ test('Vitest rules apply without a harness role', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...VITEST_FILES,
-        'gspot.toml': buildPolicy(['vitest'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' }),
+        'gspot.toml': buildPolicy(['vitest'], { level: 'all' }),
     });
     const eslint = await createEslint(sandbox.path);
     const config = (await eslint.calculateConfigForFile('tests/unit/example.test.js')) as Linter.Config;
@@ -57,7 +57,7 @@ test.each(['recommended', 'all'] as const)(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             ...VITEST_FILES,
-            'gspot.toml': buildPolicy(['vitest'], { level, tables: '[agent_rules]\nenabled = false\n' }),
+            'gspot.toml': buildPolicy(['vitest'], { level }),
         });
         const eslint = await createEslint(sandbox.path);
         const config = (await eslint.calculateConfigForFile('tests/unit/example.test.js')) as ComputedEslint;

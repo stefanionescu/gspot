@@ -1,29 +1,43 @@
+import { NATIVE_MISE_POLICY } from '#tests/config/samples/npm.ts';
+
+const PYTHON_PROJECT = {
+    'app.py': 'value = 1\n',
+    'pyproject.toml': '[project]\nname = "app"\nversion = "1.0.0"\n',
+};
+
 /** The tool runtime follows applicable npm checks, independently of the repository's language runtime. */
 export const NODE_REQUIREMENTS = [
     {
-        name: 'Python with native mise tools',
-        runner: 'mise',
+        name: 'Python with npm schema peers under mise',
+        tables: 'runner = "mise"\n',
         configurations: ['python'],
-        files: { 'app.py': 'value = 1\n', 'pyproject.toml': '[project]\nname = "app"\nversion = "1.0.0"\n' },
+        files: PYTHON_PROJECT,
+        node: true,
+    },
+    {
+        name: 'Python with native mise tools',
+        tables: NATIVE_MISE_POLICY,
+        configurations: ['python'],
+        files: PYTHON_PROJECT,
         node: false,
     },
     {
         name: 'Python with the npm EditorConfig wrapper',
-        runner: 'npm',
+        tables: 'runner = "npm"\n',
         configurations: ['python'],
-        files: { 'app.py': 'value = 1\n', 'pyproject.toml': '[project]\nname = "app"\nversion = "1.0.0"\n' },
+        files: PYTHON_PROJECT,
         node: true,
     },
     {
         name: 'Python with Markdown',
-        runner: 'mise',
+        tables: 'runner = "mise"\n',
         configurations: ['python', 'markdown'],
         files: { 'app.py': 'value = 1\n', 'guide.md': '# Guide\n' },
         node: true,
     },
     {
         name: 'Bun with TypeScript',
-        runner: 'mise',
+        tables: 'runner = "mise"\n',
         configurations: ['typescript'],
         files: {
             'app.ts': 'export const value = 1;\n',

@@ -25,7 +25,7 @@ test('an interface is reported once by consistent-type-definitions and not by ty
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...PROJECT,
-        'gspot.toml': buildPolicy(['typescript'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' }),
+        'gspot.toml': buildPolicy(['typescript'], { level: 'all' }),
         'src/order.ts': 'export interface Order { total: number }\n',
     });
     const reported = await messagesOf(sandbox.path);
@@ -40,7 +40,7 @@ test('index-only reexports keep a nonduplicate barrel and reject forwarding from
     await createFileTree(sandbox.path, {
         ...PROJECT,
         'gspot.toml': buildPolicy(['typescript'], {
-            tables: '[agent_rules]\nenabled = false\n[structure]\nreexports = "index-only"\n',
+            tables: '[structure]\nreexports = "index-only"\n',
             level: 'all',
         }),
         'src/first.ts': 'export const shared = 1;\n',

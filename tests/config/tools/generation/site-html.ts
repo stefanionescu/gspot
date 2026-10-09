@@ -27,9 +27,7 @@ mkdirSync('dist', { recursive: true });
 copyFileSync('page.html', 'dist/index.html');
 `;
 /** The root owns HTML; two sites own their builds and one whole-scope accessibility exception. */
-export const SITE_HTML_SCOPES = `[agent_rules]
-enabled = false
-[[ignore]]
+export const SITE_HTML_SCOPES = `[[ignore]]
 check = "site/html-validate"
 rule = "wcag/h37"
 paths = ["app/**"]

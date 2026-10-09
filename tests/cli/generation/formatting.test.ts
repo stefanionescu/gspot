@@ -184,7 +184,10 @@ test.each(IGNORE_CASES)('generated Prettier ignore patterns give $file ignored=$
 });
 
 const policy = parseStrictPolicy(
-    buildPolicy(['format'], { tables: '[[format.overrides]]\npaths = ["docs/**"]\nprint_width = 80\n' }),
+    buildPolicy(['format'], {
+        agentRules: true,
+        tables: '[[format.overrides]]\npaths = ["docs/**"]\nprint_width = 80\n',
+    }),
 );
 const selected = selectConfigurations(policy.configurations, configurationManifests());
 const { format } = scopeView(knownSettings(selected, policy.level), policy, selected, '');

@@ -10,6 +10,7 @@ test('keeps commitlint severity and coverage with the level in root and scoped s
             expect(() =>
                 parseStrictPolicy(
                     buildPolicy(['commits'], {
+                        agentRules: true,
                         tables: `${scope}[${table}.commitlint.rules]\nheader-max-length = ${selection}\n`,
                     }),
                 ),
@@ -17,6 +18,7 @@ test('keeps commitlint severity and coverage with the level in root and scoped s
         expect(() =>
             parseStrictPolicy(
                 buildPolicy(['commits'], {
+                    agentRules: true,
                     tables: `${scope}[${table}.commitlint.verbatim]\nrules = {}\nreason = "Project preference"\n`,
                 }),
             ),
@@ -24,6 +26,7 @@ test('keeps commitlint severity and coverage with the level in root and scoped s
         expect(() =>
             parseStrictPolicy(
                 buildPolicy(['commits'], {
+                    agentRules: true,
                     tables: `${scope}[${table}.commitlint]\nscopes = ["Core"]\ntypes = ["fix"]\n[${table}.commitlint.rules]\nheader-max-length = ["always", 40]\n`,
                 }),
             ),

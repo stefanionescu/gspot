@@ -11,7 +11,7 @@ import type { ComputedEslint } from '#tests/types/cli/generation/configuration-f
 
 test('apply preview reports a scoped ESLint rule change and saves the baseline only after applying it', async () => {
     await using directory = await testdir();
-    const policy = buildPolicy(['javascript'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' });
+    const policy = buildPolicy(['javascript'], { level: 'all' });
     const ignored =
         '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "no-console"\nreason = "The sandbox checks a changed rule in the emitted configuration."\n';
     await createFileTree(directory.path, {

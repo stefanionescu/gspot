@@ -255,10 +255,7 @@ test('full-tree pre-push policy checks unchanged files in the pushed object', as
     commitAll(sandbox.path);
     const base = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     await Bun.write(join(sandbox.path, 'changed.sh'), 'echo changed\n');
-    await writeFile(
-        join(sandbox.path, 'gspot.toml'),
-        buildPolicy(['bash'], { tables: '[hooks]\n[agent_rules]\nenabled = false\n' }),
-    );
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildPolicy(['bash'], { tables: '[hooks]\n' }));
     const configured = await runGspot(sandbox.path, ['set', 'hooks.push_files', 'all']);
     expect(configured.code, configured.stdout + configured.stderr).toBe(0);
     expect(git(sandbox.path, ['add', 'gspot.toml', 'changed.sh']).code).toBe(0);

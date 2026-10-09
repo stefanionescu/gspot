@@ -97,7 +97,7 @@ export async function markExecutable(cwd: string, path: string): Promise<void> {
  */
 export async function preparePushRepository(root: string): Promise<PushRepository> {
     await createFileTree(root, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash']),
         'changed.sh': PUSH_CONTENT.base,
         'legacy.sh': PUSH_CONTENT.broken,
     });

@@ -15,7 +15,7 @@ test.each(['index', 'commit'] as const)(
         await using sandbox = await testdir();
         await using outside = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
+            'gspot.toml': buildPolicy([]),
             'source.txt': 'selected source',
         });
         await createFileTree(outside.path, { 'package.json': '{', 'source.txt': 'outside source' });

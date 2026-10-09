@@ -45,7 +45,7 @@ test.each([
         },
     ].map(({ source, correction, where }) => ({
         name: where.join(', '),
-        text: buildPolicy(['javascript'], { tables: `[[tools.eslint.overrides]]\n${source}\n` }),
+        text: buildPolicy(['javascript'], { agentRules: true, tables: `[[tools.eslint.overrides]]\n${source}\n` }),
         where,
         correction,
         messages: [],
@@ -81,7 +81,7 @@ test.each(['linked', 'linked/nested'])(
         await createFileTree(sandbox.path, { 'project/.keep': '', 'outside/nested/sentinel': 'unchanged' });
         const root = join(sandbox.path, 'project');
         await symlink('../outside', join(root, 'linked'));
-        const found = policyFindings(`${buildPolicy(['bash'])}[scope."${path}"]\n`, root);
+        const found = policyFindings(`${buildPolicy(['bash'], { agentRules: true })}[scope."${path}"]\n`, root);
         expect(found).toHaveLength(1);
         expect(found[0]).toContain('Unsafe lifecycle');
     },
@@ -92,6 +92,7 @@ test.each([false, true])(
     (nested) => {
         const prefix = nested ? '[scope."app"]\n[[scope."app".tools.eslint.overrides]]' : '[[tools.eslint.overrides]]';
         const source = buildPolicy(['javascript'], {
+            agentRules: true,
             tables: `${prefix}\npaths = ["src/**"]\nrules = {eqeqeq = 0, "no-var" = []}\n`,
         });
         expect(() => parseStrictPolicy(source)).toThrow('gspot ignore');

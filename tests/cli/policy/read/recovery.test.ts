@@ -21,7 +21,7 @@ test('forbidden ShellCheck settings in a scope are reported and removed at the s
     expect(result.policy.configurations).toStrictEqual(['bash']);
 });
 test.each(MISSING_REASON_CASES)('$name', ({ validIgnore, index, checks, reason }) => {
-    const text = `${buildPolicy(['bash'])}${validIgnore}[[ignore]]\ncheck = "bash/bash-syntax"\n`;
+    const text = `${buildPolicy(['bash'], { agentRules: true })}${validIgnore}[[ignore]]\ncheck = "bash/bash-syntax"\n`;
     const authored = parseTomlText(text, 'gspot.toml', 'policy');
     const original = policyValues(authored);
     const { policy, errors } = readPolicyTable(authored);
@@ -35,7 +35,7 @@ test.each(MISSING_REASON_CASES)('$name', ({ validIgnore, index, checks, reason }
 });
 
 test('a limit with a placeholder reason is dropped with its value, and the tightened limit stays', () => {
-    const text = `${buildPolicy(['bash'])}[limits]\nfile_lines = 900\ncyclomatic_complexity = 6\n[reasons]\n"limits.file_lines" = "TBD"\n`;
+    const text = `${buildPolicy(['bash'], { agentRules: true })}[limits]\nfile_lines = 900\ncyclomatic_complexity = 6\n[reasons]\n"limits.file_lines" = "TBD"\n`;
     const { policy, errors } = readPolicyTable(parseTomlText(text, 'gspot.toml', 'policy'));
     expect(errors).toMatchObject([
         { path: ['reasons', 'limits.file_lines'], message: textContaining('"TBD" is refused') },
@@ -47,7 +47,7 @@ test('a limit with a placeholder reason is dropped with its value, and the tight
 test('a loosening without a reason and an unknown nested setting are findings, and the defaults stand', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'api/main.sh': '' });
-    const text = `${buildPolicy(['bash'])}[limits]\nfile_lines = 1000\n[scope."api"]\n[scope."api".limits]\nfile_linse = 200\n`;
+    const text = `${buildPolicy(['bash'], { agentRules: true })}[limits]\nfile_lines = 1000\n[scope."api"]\n[scope."api".limits]\nfile_linse = 200\n`;
     const { policy, errors } = readPolicyTable(parseTomlText(text, 'gspot.toml', 'policy'), sandbox.path);
     expect(errors).toMatchObject([
         { path: ['limits', 'file_lines'], message: textContaining('`limits.file_lines = 1000` is looser') },
@@ -58,12 +58,12 @@ test('a loosening without a reason and an unknown nested setting are findings, a
     ]);
     expect(policy.limits.root['file_lines']).toBeUndefined();
     expect(policy.scopeTables['api']?.limits?.root).toStrictEqual({});
-    const defaults = parseStrictPolicy(buildPolicy(['duplication']));
+    const defaults = parseStrictPolicy(buildPolicy(['duplication'], { agentRules: true }));
     const selected = selectForScope(defaults, '', configurationManifests());
     const key = 'limits.duplication.min_lines';
     const shipped = scopeView(
         knownSettings(selected),
-        parseStrictPolicy(buildPolicy(['duplication'])),
+        parseStrictPolicy(buildPolicy(['duplication'], { agentRules: true })),
         selected,
         '',
     ).limit('min_lines', 'duplication')!;
@@ -77,32 +77,39 @@ test('a loosening without a reason and an unknown nested setting are findings, a
 
 test('an unknown configuration stops reading and names a matching configuration', () => {
     expect(() =>
-        readPolicyTable(parseTomlText(buildPolicy(['bash']).replace('bash', 'bas'), 'gspot.toml', 'policy')),
+        readPolicyTable(
+            parseTomlText(buildPolicy(['bash'], { agentRules: true }).replace('bash', 'bas'), 'gspot.toml', 'policy'),
+        ),
     ).toThrow('bash');
 });
 
 test('an unknown native tool option is refused at its table', () => {
-    const source = `${buildPolicy(['bash'])}[tools.shellcheck]\nrules = { SC2086 = "error" }\n`;
+    const source = `${buildPolicy(['bash'], { agentRules: true })}[tools.shellcheck]\nrules = { SC2086 = "error" }\n`;
     expect(() => readPolicyTable(parseTomlText(source, 'gspot.toml', 'policy'))).toThrow(
         '`rules` is not a setting gspot knows under [tools.shellcheck]',
     );
 });
 
 test('a syntax error stops reading with a TOML diagnostic', () => {
-    expect(() => readPolicyTable(parseTomlText(`${buildPolicy(['bash'])}level = \n`, 'gspot.toml', 'policy'))).toThrow(
-        'is not valid TOML',
-    );
+    expect(() =>
+        readPolicyTable(
+            parseTomlText(`${buildPolicy(['bash'], { agentRules: true })}level = \n`, 'gspot.toml', 'policy'),
+        ),
+    ).toThrow('is not valid TOML');
 });
 
 test('an unknown top-level key stops reading and names that key', () => {
     expect(() =>
-        readPolicyTable(parseTomlText(`${buildPolicy(['bash'])}hue = "red"\n`, 'gspot.toml', 'policy')),
+        readPolicyTable(
+            parseTomlText(`${buildPolicy(['bash'], { agentRules: true })}hue = "red"\n`, 'gspot.toml', 'policy'),
+        ),
     ).toThrow('`hue`');
 });
 
 test('unknown configurations retain duplicate root entries and scoped declaration order', () => {
     const errors = policyFindings(
         buildPolicy(['bas', 'bash', 'bas'], {
+            agentRules: true,
             tables: '[scope."api"]\nconfigurations = ["pythonn", "bas"]\n',
         }),
     );

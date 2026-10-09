@@ -9,14 +9,13 @@ test('keeps YAML coverage and exclusions in level and ignore policy for every sc
         for (const option of REJECTED_YAML_OPTIONS)
             expect(() =>
                 parseStrictPolicy(
-                    buildPolicy([], {
-                        tables: `${scope}[${prefix}.yamllint.rules]\n${option}\n`,
-                    }),
+                    buildPolicy([], { agentRules: true, tables: `${scope}[${prefix}.yamllint.rules]\n${option}\n` }),
                 ),
             ).toThrow('Yamllint rule selection');
         expect(() =>
             parseStrictPolicy(
                 buildPolicy([], {
+                    agentRules: true,
                     tables: `${scope}[${prefix}.yamllint.verbatim]\nextends = "default"\nreason = "Project preference"\n`,
                 }),
             ),
@@ -24,6 +23,7 @@ test('keeps YAML coverage and exclusions in level and ignore policy for every sc
         expect(() =>
             parseStrictPolicy(
                 buildPolicy([], {
+                    agentRules: true,
                     tables: `${scope}[${prefix}.yamllint.rules]\ntruthy = { allowed-values = ["yes"] }\nindentation = { spaces = "consistent" }\n`,
                 }),
             ),

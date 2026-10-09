@@ -12,6 +12,7 @@ async function generatedGuides(level: Level, files: Record<string, string>): Pro
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['typescript', 'css', 'vitest', 'swift', 'bash', 'drizzle', 'openapi'], {
+            agentRules: true,
             level: level,
         }),
         ...files,
@@ -111,6 +112,7 @@ test.each(
     const prefix = entry.scope === '' ? '' : `${entry.scope}/`;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(entry.scope === '' ? [...entry.configurations] : [], {
+            agentRules: true,
             level: entry.level,
             tables: entry.scope === '' ? '' : `[scope.app]\nconfigurations = ${JSON.stringify(entry.configurations)}\n`,
         }),

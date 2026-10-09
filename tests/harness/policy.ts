@@ -7,13 +7,13 @@ import { configurationManifests } from '#cli/configurations/public.ts';
 /**
  * Build policy with explicit configuration choices and authored TOML tables.
  * @param configurations the built-in setups selected by the sandbox
- * @param options the level and tables, when the sandbox changes the public defaults
+ * @param options the level, authored tables, and opt-in to public agent-rule defaults
  * @returns the sandbox's gspot.toml bytes
  */
 export function buildPolicy(configurations: string[], options: PolicyOptions = {}): string {
     const selected = configurations.map((configuration) => JSON.stringify(configuration)).join(', ');
     const chosen = options.level === undefined ? '' : `level = "${options.level}"\n`;
-    return `${chosen}configurations = [${selected}]\n${options.tables ?? ''}`;
+    return `${chosen}configurations = [${selected}]\n${options.tables ?? ''}${options.agentRules === true ? '' : '\n[agent_rules]\nenabled = false\n'}`;
 }
 
 /**

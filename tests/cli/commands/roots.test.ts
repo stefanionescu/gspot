@@ -43,9 +43,9 @@ test.each(LINKED_STORAGE_CASES)('$name', async ({ command, path, source, sentine
 
 test('a configuration below the Git root owns only its own project writes and changed paths', async () => {
     await using directory = await testdir();
-    const outerPolicy = buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' });
+    const outerPolicy = buildPolicy(['bash']);
     const innerPolicy = buildPolicy(['sql'], {
-        tables: '[agent_rules]\nenabled = false\n[tools.sqlfluff]\ndialect = "postgres"\n',
+        tables: '[tools.sqlfluff]\ndialect = "postgres"\n',
     });
     await createFileTree(directory.path, {
         'gspot.toml': outerPolicy,

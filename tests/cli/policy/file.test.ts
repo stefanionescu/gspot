@@ -164,7 +164,7 @@ test('an unchanged policy does not publish or change its native identity', async
 
 test('policy inspection accepts linked authored text inside the root while edits preserve its target', async () => {
     await using sandbox = await testdir();
-    const policy = buildPolicy(['markdown']);
+    const policy = buildPolicy(['markdown'], { agentRules: true });
     await createFileTree(sandbox.path, { 'settings/policy.toml': policy });
     await symlink('settings/policy.toml', join(sandbox.path, 'gspot.toml'));
     expect(hasPolicy(sandbox.path)).toBe(true);
@@ -179,7 +179,7 @@ test('policy inspection accepts linked authored text inside the root while edits
 
 test('policy inspection accepts hardlinked authored text while edits preserve both names', async () => {
     await using sandbox = await testdir();
-    const policy = buildPolicy(['markdown']);
+    const policy = buildPolicy(['markdown'], { agentRules: true });
     await createFileTree(sandbox.path, { 'settings/policy.toml': policy });
     const original = join(sandbox.path, 'settings/policy.toml');
     const path = join(sandbox.path, 'gspot.toml');

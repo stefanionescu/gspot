@@ -151,6 +151,7 @@ test.each(['recommended', 'all'] as const)(
         await createFileTree(sandbox.path, {
             ...SESSION_PACKAGE_FILES,
             'gspot.toml': buildPolicy(['javascript'], {
+                agentRules: true,
                 level,
                 tables: '[scope.app]\nconfigurations = ["javascript"]\n',
             }),

@@ -16,7 +16,7 @@ test('agent instructions reach AGENTS.md and configured files, and other agent f
     await using sandbox = await testdir();
     const original = '# Gemini instructions\n\nKeep this authored note.\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([]),
+        'gspot.toml': buildPolicy([], { agentRules: true }),
         'GEMINI.md': original,
         '.github/copilot-instructions.md': '# Copilot instructions\n',
         '.cursor/.keep': '',
@@ -107,7 +107,10 @@ test('disabled agent rules preserve authored instructions during init, preview, 
 
 test('apply moves an installed CLAUDE.md once and drops the copy of the block', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([]), 'CLAUDE.md': '# Claude notes\n' });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy([], { agentRules: true }),
+        'CLAUDE.md': '# Claude notes\n',
+    });
     const first = await runGspot(sandbox.path, ['apply']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
     expect(await pathExists(join(sandbox.path, 'CLAUDE.md'))).toBe(false);
@@ -135,7 +138,7 @@ test.skipIf(!isPosix)('init deletes a CLAUDE.md link and moves nothing', async (
 test('generated attributes preserve LF through autocrlf checkout', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([]),
+        'gspot.toml': buildPolicy([], { agentRules: true }),
         '.gitattributes': '*.txt text\n',
     });
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);

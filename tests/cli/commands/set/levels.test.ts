@@ -7,7 +7,7 @@ import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 test('switching levels preserves finding checks and selects stricter naming checks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['bash', 'naming'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash', 'naming']),
         'entry.sh': 'helper_command=example\n',
     });
     const command = ['check', '--only', 'bash/bash-syntax', 'naming/identifiers', '--json'];

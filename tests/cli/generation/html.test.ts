@@ -76,6 +76,7 @@ test.each(DISABLED_TOOL_RULES)(
         for (const level of ['recommended', 'all'] as const)
             for (const scope of ['', 'scope.app.']) {
                 const policy = buildPolicy([configuration], {
+                    agentRules: true,
                     level,
                     tables: `[${scope}tools.${tool}.rules]\n"${rule}" = ${value}\n`,
                 });

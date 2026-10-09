@@ -1,5 +1,5 @@
 /** Derived scope names retain the case of project folders; messages may omit a scope. */
-export const DERIVED_SCOPE_POLICY = '[agent_rules]\nenabled = false\n[scope."Packages/Core"]\nconfigurations = []\n';
+export const DERIVED_SCOPE_POLICY = '[scope."Packages/Core"]\nconfigurations = []\n';
 
 /** Native commit messages that expose scope and conventional type ownership. */
 export const COMMIT_MESSAGES = [

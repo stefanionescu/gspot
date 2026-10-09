@@ -58,6 +58,7 @@ test.each(
         const prefix = scope === '' ? '' : scope + '/';
         await using sandbox = await testdir({
             'gspot.toml': buildPolicy(scope === '' ? ['javascript'] : [], {
+                agentRules: true,
                 level,
                 tables: scope === '' ? '' : '[scope.app]\nconfigurations = ["javascript"]\n',
             }),
@@ -89,7 +90,7 @@ test.each(
     ),
 )('$dependency dependency selects component guidance at $level', async ({ level, dependency }) => {
     await using sandbox = await testdir({
-        'gspot.toml': buildPolicy(['javascript'], { level }),
+        'gspot.toml': buildPolicy(['javascript'], { agentRules: true, level }),
         'package.json': JSON.stringify({ dependencies: { [dependency]: '1.0.0' } }),
     });
     const session = await openSession(sandbox.path);
@@ -111,7 +112,7 @@ test.each(
 
 test('renamed library guidance retains its native contents and removes the former filenames', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildPolicy(['react-hook-form', 'tanstack-query', 'translations']),
+        'gspot.toml': buildPolicy(['react-hook-form', 'tanstack-query', 'translations'], { agentRules: true }),
         'package.json': '{"dependencies":{"next-intl":"*"}}',
     });
     const session = await openSession(sandbox.path);
@@ -140,6 +141,7 @@ describe.each(
         const sandbox = resources.use(
             await testdir({
                 'gspot.toml': buildPolicy(scope === '' ? RULE_CONFIGURATIONS : [], {
+                    agentRules: true,
                     level,
                     tables:
                         scope === '' ? '' : `[scope.app]\nconfigurations = ${JSON.stringify(RULE_CONFIGURATIONS)}\n`,
@@ -182,7 +184,7 @@ describe.each(
 test.each(['recommended', 'all'] as const)(
     'always-selected instructions use manifest metadata at %s',
     async (level) => {
-        await using sandbox = await testdir({ 'gspot.toml': buildPolicy([], { level }) });
+        await using sandbox = await testdir({ 'gspot.toml': buildPolicy([], { agentRules: true, level }) });
         const session = await openSession(sandbox.path);
         const manifests = configurationManifests();
         const original = manifests.get('zod')!;

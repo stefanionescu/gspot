@@ -18,4 +18,4 @@ export const INACTIVE_CONFIGURATIONS = {
 };
 
 /** Scoped projects share the repository-wide commit policy. */
-export const COMMITLINT_SCOPES = '[scope."app"]\n[scope."app/child"]\n[agent_rules]\nenabled = false\n';
+export const COMMITLINT_SCOPES = '[scope."app"]\n[scope."app/child"]\n';

@@ -13,7 +13,6 @@ test.each(FIXER_FEEDBACK_CASES)(
         await using sandbox = await testdir();
         const policy = buildPolicy([], {
             tables: stringify({
-                agent_rules: { enabled: false },
                 check: {
                     'sandbox/feedback': {
                         command: [process.execPath, '-e', 'process.exitCode = 0'],

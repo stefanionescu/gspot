@@ -25,7 +25,9 @@ import {
 // A test scope with a generator script that stands in for drizzle-kit: `schema.txt` decides what it does.
 async function applyChanges(root: string, scope: string, schema: 'changed' | 'failure'): Promise<MigrationProject> {
     await createFileTree(root, {
-        'gspot.toml': buildPolicy(['drizzle']) + (scope === '' ? '' : `[scope."${scope}"]\nconfigurations = []\n`),
+        'gspot.toml':
+            buildPolicy(['drizzle'], { agentRules: true }) +
+            (scope === '' ? '' : `[scope."${scope}"]\nconfigurations = []\n`),
         [join(scope, 'package.json')]: '{"private":true}\n',
         [join(scope, 'drizzle.config.ts')]: 'export default {};\n',
         [join(scope, 'schema.txt')]: schema,
@@ -173,7 +175,7 @@ test.each(['', 'packages/db'])('staged Drizzle tables retain unstaged scope rela
     const declarations = join(scope, 'relations.ts');
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            buildPolicy(['drizzle'], { level: 'all' }) +
+            buildPolicy(['drizzle'], { agentRules: true, level: 'all' }) +
             (scope === '' ? '' : `[scope."${scope}"]\nconfigurations = []\n`),
         [source]: 'export const members = pgTable("members", { teamId: integer().references(() => teams.id) });\n',
         [declarations]: 'export const declared = relations(members, () => ({}));\n',
@@ -206,7 +208,8 @@ test.each(['{ teams, members }', '{ teams, people: members }'])(
     async (tables) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['drizzle'], { level: 'all' }) + '[scope.child]\nconfigurations = []\n',
+            'gspot.toml':
+                buildPolicy(['drizzle'], { agentRules: true, level: 'all' }) + '[scope.child]\nconfigurations = []\n',
             'schema.ts':
                 'export const members = pgTable("members", { teamId: integer().references(() => teams.id) });\n',
             'relations.ts': `export const declared = defineRelations(${tables});\n`,

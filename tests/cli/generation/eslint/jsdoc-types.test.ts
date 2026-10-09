@@ -21,7 +21,7 @@ test.each(['recommended', 'all'])(
             '/**\n * Measure the input.\n * @param {string} value The input text.\n * @returns {number} The input length.\n */\n';
         const typescript = 'export function measure(value: string): number { return value.length; }\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['typescript'], { tables: '[agent_rules]\nenabled = false\n', level: level }),
+            'gspot.toml': buildPolicy(['typescript'], { level: level }),
             'package.json': '{"private":true,"type":"module"}\n',
             'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["client.ts"]}\n',
             'client.ts': description + typescript,

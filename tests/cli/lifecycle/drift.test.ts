@@ -92,7 +92,7 @@ test('rule collection separates native rule groups and supports absent paths wit
 
 test('disabled agent rules have the same stray paths in preview and apply pruning', async () => {
     await using sandbox = await testdir();
-    const policy = buildPolicy([], { tables: '[agent_rules]\nenabled = true\n' });
+    const policy = buildPolicy([], { agentRules: true, tables: '[agent_rules]\nenabled = true\n' });
     await createFileTree(sandbox.path, { 'gspot.toml': policy });
     expect(await applyCommand({ cwd: sandbox.path, isDryRun: false })).toHaveProperty('exitCode', 0);
     const owned = getOwnership(sandbox.path).files.filter((entry) => entry.path.startsWith('.gspot/rules/'));

@@ -9,8 +9,6 @@ export const FILES = {
 
 /** Options for inactive rules must not enable them; scope options replace their own rule's values only. */
 export const TABLES = `runner = "mise"
-[agent_rules]
-enabled = false
 [format]
 indent_width = 6
 [tools.markdownlint.rules]

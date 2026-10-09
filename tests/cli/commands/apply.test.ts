@@ -12,6 +12,7 @@ import { buildInitArguments } from '#tests/harness/init.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
+import { NATIVE_MISE_POLICY } from '#tests/config/samples/npm.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { open, chmod, unlink, readdir, readFile, writeFile } from 'node:fs/promises';
@@ -20,7 +21,7 @@ const INIT = buildInitArguments(['bash']);
 
 test('apply preserves a policy replaced after session opening and publishes no generated outputs', async () => {
     await using directory = await testdir();
-    const original = buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' });
+    const original = buildPolicy(['bash']);
     const replacement = `${original}[scope.worker]\nconfigurations = ["python"]\n`;
     await createFileTree(directory.path, { 'gspot.toml': original, 'entry.sh': 'echo example\n' });
     const policyPath = join(directory.path, 'gspot.toml');
@@ -81,7 +82,10 @@ test('init deletes a replaced file, and apply exits 2 while preserving later edi
 test('a generated plan cannot write into the lifecycle state folder', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nfolder = ".gspot/state/notes"\n' }),
+        'gspot.toml': buildPolicy(['bash'], {
+            agentRules: true,
+            tables: '[agent_rules]\nfolder = ".gspot/state/notes"\n',
+        }),
         '.gspot/state/notes/authored.txt': 'preserve notes\n',
     });
     const refused = await runGspot(directory.path, ['apply']);
@@ -93,7 +97,7 @@ test('a generated plan cannot write into the lifecycle state folder', async () =
 
 test('apply previews missing outputs without writing', async () => {
     await using directory = await testdir();
-    const policy = buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' });
+    const policy = buildPolicy(['bash']);
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const before = await readTree(directory.path);
     const human = await runGspot(directory.path, ['apply', '--dry-run']);
@@ -118,7 +122,7 @@ test.each([false, true])(
     async (isChanged) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': buildPolicy([], { tables: 'runner = "mise"\n[agent_rules]\nenabled = false\n' }),
+            'gspot.toml': buildPolicy([], { tables: NATIVE_MISE_POLICY }),
             'control.txt': 'preserve this source\n',
         });
         const applied = await runGspot(directory.path, ['apply']);
@@ -147,7 +151,7 @@ test('malformed authored blocks refuse apply before generated files change', asy
     await using directory = await testdir();
     const authored = '# Preserve this file\n<!-- >>> gspot managed >>> -->\nUnclosed instructions.\n';
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['bash']),
+        'gspot.toml': buildPolicy(['bash'], { agentRules: true }),
         'AGENTS.md': authored,
         'entry.sh': 'echo example\n',
     });
@@ -177,7 +181,7 @@ test.each([
             : undefined;
     const claim = holder ?? `${String(sleeper!.pid)}:held`;
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy([]),
         '.gspot/state/writer.lock': claim,
     });
     const refused = await runGspot(directory.path, ['apply']);
@@ -189,7 +193,7 @@ test.each([
 test('apply --json prints one error object when it refuses an edited generated file', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash']),
         'entry.sh': 'echo example\n',
     });
     const applied = await runGspot(directory.path, ['apply']);
@@ -199,7 +203,7 @@ test('apply --json prints one error object when it refuses an edited generated f
     await writeFile(generated, `${await readFile(generated, 'utf8')}# Edited.\n`);
     await writeFile(
         join(directory.path, 'gspot.toml'),
-        buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n[limits]\nfile_lines = 100\n' }),
+        buildPolicy(['bash'], { tables: '[limits]\nfile_lines = 100\n' }),
     );
     const refused = await runGspot(directory.path, ['apply', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
@@ -211,7 +215,7 @@ test('apply --json prints one error object when it refuses an edited generated f
 test('apply refuses to move a generated file to a spelling that differs only by letter case', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nfolder = "docs/rules"\n' }),
+        'gspot.toml': buildPolicy([], { agentRules: true, tables: '[agent_rules]\nfolder = "docs/rules"\n' }),
     });
     const first = await runGspot(sandbox.path, ['apply']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
@@ -219,7 +223,7 @@ test('apply refuses to move a generated file to a spelling that differs only by 
     const written = await readFile(guide, 'utf8');
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
-        buildPolicy([], { tables: '[agent_rules]\nfolder = "docs/Rules"\n' }),
+        buildPolicy([], { agentRules: true, tables: '[agent_rules]\nfolder = "docs/Rules"\n' }),
     );
     const renamed = await runGspot(sandbox.path, ['apply']);
     expect(renamed.code, renamed.stdout + renamed.stderr).toBe(2);
@@ -231,7 +235,7 @@ test('apply refuses to move a generated file to a spelling that differs only by 
 test('apply --dry-run reports a changed file, a stray, a conflict, and an edited block, and writes nothing', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['bash', 'markdown']),
+        'gspot.toml': buildPolicy(['bash', 'markdown'], { agentRules: true }),
         'entry.sh': 'echo example\n',
         'README.md': '# Example\n',
     });
@@ -249,7 +253,7 @@ test('apply --dry-run reports a changed file, a stray, a conflict, and an edited
     );
     await unlink(join(directory.path, 'README.md'));
     await writeFile(join(directory.path, 'settings.json'), '{}\n');
-    await writeFile(join(directory.path, 'gspot.toml'), buildPolicy(['bash']));
+    await writeFile(join(directory.path, 'gspot.toml'), buildPolicy(['bash'], { agentRules: true }));
     const before = await readTree(directory.path);
     const preview = await runGspot(directory.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);

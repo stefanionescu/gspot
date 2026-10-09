@@ -131,7 +131,7 @@ test.each([...CURRENCY_CASES])(
 test('generated recommended Vale configuration reports unhelpful link text and accepts the destination name', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['prose'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['prose']),
         'guide.md': '# Guide\n\nRead [here](guide.md).\n\n```markdown\n[here](guide.md)\n```\n',
         'source.ts': 'const example = "[here](guide.md)";\n// Read [here](guide.md).\n',
     });

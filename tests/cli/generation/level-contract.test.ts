@@ -36,7 +36,7 @@ test('switching levels restores generated defaults and agent instructions', asyn
     await Bun.write(join(sandbox.path, 'source.js'), 'export const value = 1;\n');
     const outputs: string[] = [];
     for (const level of ['recommended', 'all', 'recommended'] as const) {
-        const policy = buildPolicy(['javascript'], { level: level });
+        const policy = buildPolicy(['javascript'], { agentRules: true, level: level });
         await Bun.write(join(sandbox.path, 'gspot.toml'), policy);
         const session = await openSession(sandbox.path);
         const output = emitAll(session);

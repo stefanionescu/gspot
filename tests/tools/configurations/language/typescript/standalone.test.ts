@@ -137,7 +137,7 @@ test.each(['recommended', 'all'] as const)(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['typescript'], {
                 level,
-                tables: '[agent_rules]\nenabled = false\n[scope."app"]\nconfigurations = ["typescript"]',
+                tables: '[scope."app"]\nconfigurations = ["typescript"]',
             }),
             '.gitignore': '.gspot/\nnode_modules/\n',
             'tsconfig.json': VALID.replace('}}', '},"include":["root.ts","app/**/*.ts"]}'),

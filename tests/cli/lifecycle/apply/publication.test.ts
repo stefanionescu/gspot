@@ -15,7 +15,7 @@ import { applyPlan, applyPlans, openOwnership } from '#cli/lifecycle/ownership/p
 test('generated outputs are writable: apply keeps their bytes, and a prune removes them', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = true\n' }),
+        'gspot.toml': buildPolicy([], { agentRules: true, tables: '[agent_rules]\nenabled = true\n' }),
     });
     {
         using log = openOwnership(sandbox.path);
@@ -45,7 +45,7 @@ test('generated outputs are writable: apply keeps their bytes, and a prune remov
     const refreshed = await stat(join(sandbox.path, output));
     expect(refreshed.mode & 0o200).toBe(0o200);
     expect(await readFile(join(sandbox.path, output), 'utf8')).toBe(bytes);
-    await writeFile(join(sandbox.path, 'gspot.toml'), buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }));
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildPolicy([]));
     const pruned = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(pruned.exitCode).toBe(0);
     expect(await pathExists(join(sandbox.path, output))).toBe(false);
@@ -105,7 +105,7 @@ test.each(EXTERNAL_INPUT_CASES)(
 test('apply validates obsolete output parents before publishing new configuration', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'project/gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
+        'project/gspot.toml': buildPolicy([]),
         'outside/old.txt': 'outside bytes\n',
     });
     const root = join(directory.path, 'project');

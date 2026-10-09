@@ -30,7 +30,7 @@ test.each([
 
 test('a nested unknown setting is a finding at its key path', async () => {
     const policy = buildPolicy(['bash'], {
-        tables: '[agent_rules]\nenabled = false\n[scope."api"]\n[scope."api".limits]\nfile_linse = 200\n',
+        tables: '[scope."api"]\n[scope."api".limits]\nfile_linse = 200\n',
     });
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/source.sh': 'echo example\n' });
@@ -44,7 +44,7 @@ test('a nested unknown setting is a finding at its key path', async () => {
 
 test('a loosening without a reason is a finding of gspot/policy, and the rest of the policy runs', async () => {
     const policy = buildPolicy(['bash'], {
-        tables: '[agent_rules]\nenabled = false\n[limits]\nfile_lines = 1000\n',
+        tables: '[limits]\nfile_lines = 1000\n',
     });
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.sh': 'echo example\n' });
@@ -102,7 +102,7 @@ test.each(['recommended', 'all'] as const)(
     '%s declares gspot/policy once and retains ordinary and message-stage error behavior',
     async (level) => {
         await using sandbox = await testdir();
-        const policy = buildPolicy(['bash'], { level, tables: '[agent_rules]\nenabled = false\n' });
+        const policy = buildPolicy(['bash'], { level });
         await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.sh': 'echo example\n' });
         const explained = await runGspot(sandbox.path, ['explain', 'gspot/policy', '--json']);
         expect(explained.code, explained.stdout + explained.stderr).toBe(0);

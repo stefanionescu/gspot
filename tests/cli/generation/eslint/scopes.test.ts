@@ -12,7 +12,7 @@ test('the shared ESLint configuration reads TypeScript selected only in an API s
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], {
             level: 'all',
-            tables: '[agent_rules]\nenabled = false\n[scope."api"]\nconfigurations = ["typescript"]\n',
+            tables: '[scope."api"]\nconfigurations = ["typescript"]\n',
         }),
         'package.json': '{"name":"example","private":true,"type":"module","workspaces":["api"]}\n',
         'api/package.json': '{"name":"api","private":true,"type":"module"}\n',

@@ -38,14 +38,14 @@ function namingCeiling(settings: KnownSettings, key: string): number {
 function defaultNamingContext() {
     const selected = selectConfigurations(['naming'], configurationManifests());
     const settings = knownSettings(selected);
-    const policy = parseStrictPolicy(buildPolicy(['naming']));
+    const policy = parseStrictPolicy(buildPolicy(['naming'], { agentRules: true }));
     return { settings, effective: effectivePolicy(settings, policy, '', selected) };
 }
 
 test.each(['recommended', 'all'] as const)('each language owns its effective ceilings at %s', (level) => {
     const selected = selectConfigurations(['naming'], configurationManifests());
     const settings = knownSettings(selected, level);
-    const policy = parseStrictPolicy(buildPolicy(['naming'], { level }));
+    const policy = parseStrictPolicy(buildPolicy(['naming'], { agentRules: true, level }));
     const effective = effectivePolicy(settings, policy, '', selected);
     for (const language of NAMING_LANGUAGES) {
         const characters = namingCeiling(settings, `naming.${language}.max_chars`);
@@ -63,6 +63,7 @@ test('category ceilings inherit root and scope language settings while explicit 
     const settings = knownSettings(selected);
     const policy = parseStrictPolicy(
         buildPolicy(['naming'], {
+            agentRules: true,
             tables:
                 '[naming.swift]\nmax_chars = 38\nmax_words = 4\n[naming.swift.functions]\nmax_chars = 37\n' +
                 '[scope."app"]\n[scope."app".naming.swift]\nmax_chars = 36\nmax_words = 3\n' +
@@ -213,6 +214,7 @@ test.each(NATIVE_NAME_CATEGORIES)(
         const settings = knownSettings(selected);
         const policy = parseStrictPolicy(
             buildPolicy(['naming'], {
+                agentRules: true,
                 level: 'all',
                 tables: '[[naming.overrides]]\npaths = ["source"]\ncase = ["upper-snake"]\nreason = "The authored interface selects this case."\n',
             }),

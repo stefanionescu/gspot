@@ -35,7 +35,6 @@ async function configured(
     const web = configuration === 'react';
     await createFileTree(root, {
         'gspot.toml': buildPolicy(['typescript', configuration, ...(web ? ['react-dom'] : ['expo'])], {
-            tables: '[agent_rules]\nenabled = false\n',
             level: level,
         }),
         'package.json': JSON.stringify({

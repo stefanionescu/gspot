@@ -9,7 +9,7 @@ import { setKey, preparePolicy } from '#cli/policy/document/contracts.ts';
 test('a policy command evaluates its mutation once before applying the prepared result', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
-    await writeFile(path, buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }));
+    await writeFile(path, buildPolicy([]));
     let evaluations = 0;
     const input = preparePolicy(sandbox.path);
     const result = await savePolicy(sandbox.path, {
@@ -29,7 +29,7 @@ test('a policy command evaluates its mutation once before applying the prepared 
 test('a policy command refuses changes after capture without rereading them as its input', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
-    await writeFile(path, buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }));
+    await writeFile(path, buildPolicy([]));
     const input = preparePolicy(sandbox.path);
     const concurrent = `${input.text}# Another writer owns this change.\n`;
     await writeFile(path, concurrent);

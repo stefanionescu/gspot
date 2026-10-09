@@ -26,7 +26,7 @@ async function documentationFindings(root: string, code: 0 | 1) {
 test.skipIf(!isPosix)('recommended leaves Swift block comments unchecked', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['swift'], { tables: '[agent_rules]\nenabled = false\n', level: 'recommended' }),
+        'gspot.toml': buildPolicy(['swift'], { level: 'recommended' }),
         'Value.swift': SWIFT_DOCS_SOURCE,
     });
     const configured = await spawnGspot(sandbox.path, ['apply']);
@@ -38,7 +38,7 @@ test.skipIf(!isPosix)('recommended leaves Swift block comments unchecked', async
 test.skipIf(!isPosix)('all reports and fixes Swift block comments and respects the policy ignore', async () => {
     await using sandbox = await testdir();
     const root = sandbox.path;
-    const policy = buildPolicy(['swift'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' });
+    const policy = buildPolicy(['swift'], { level: 'all' });
     await createFileTree(root, { 'gspot.toml': policy, 'Value.swift': SWIFT_DOCS_SOURCE });
     const configured = await spawnGspot(root, ['apply']);
     expect(configured.code, configured.stdout + configured.stderr).toBe(0);
@@ -70,7 +70,7 @@ test.skipIf(!isPosix)('Swift inline comments retain native exceptions, modes, an
     await using sandbox = await testdir();
     const root = sandbox.path;
     await createFileTree(root, {
-        'gspot.toml': buildPolicy(['swift'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' }),
+        'gspot.toml': buildPolicy(['swift'], { level: 'all' }),
         'Value.swift': SWIFT_INLINE_DOCS,
     });
     const configured = await spawnGspot(root, ['apply']);
@@ -100,7 +100,7 @@ test.skipIf(!isPosix)('nested Swift scopes retain their own native formatting ex
     await using sandbox = await testdir();
     const root = sandbox.path;
     const policy = buildPolicy(['swift'], {
-        tables: '[agent_rules]\nenabled = false\n[scope."nested"]\n',
+        tables: '[scope."nested"]\n',
         level: 'all',
     });
     await createFileTree(root, { 'gspot.toml': policy, 'nested/Value.swift': SWIFT_DOCS_SOURCE });

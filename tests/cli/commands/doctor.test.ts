@@ -37,7 +37,7 @@ test('doctor identifies unowned generated-directory files that apply preserves',
     await using sandbox = await testdir();
     const original = '{"authored": true}\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy([]),
         '.gspot/authored.json': original,
     });
     {
@@ -57,7 +57,7 @@ test('doctor excludes private tool manifests from language detection and detects
     await using sandbox = await testdir();
     const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy([]),
         '.gspot/pyproject.toml': python,
         'nested/.gspot/package.json': '{"dependencies":{"react":"19.1.1"}}',
     });
@@ -79,7 +79,7 @@ test('doctor excludes private tool manifests from language detection and detects
 test('doctor reports a new Python file after setup with the command that adds its configuration', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['bash']),
         'entry.sh': 'echo\n',
     });
     {
@@ -96,7 +96,7 @@ test('doctor reports a new Python file after setup with the command that adds it
 test('doctor reports the private Python project for an applicable duplicate without claiming a mise output', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['python'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['python']),
         'source.py': 'print("hello")\n',
         'mise.toml': '[tools]\nruff = "0.9.0"\nvale = "3.0.0"\n',
     });
@@ -126,7 +126,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
         const versions = { ok: pin.version!, newer: semver.inc(pin.version!, 'minor')!, outdated: older };
         const version = versions[state];
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['zod'], { tables: '[agent_rules]\nenabled = false\n' }),
+            'gspot.toml': buildPolicy(['zod']),
             'source.js': 'export const value = 1;\n',
         });
         const tools = collectPins(applicableManifests(await openSession(sandbox.path)));

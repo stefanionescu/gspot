@@ -137,7 +137,7 @@ test.each(NATIVE_OPTION_SCOPES)(
     async ({ scope, source }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['files'], { tables: '[agent_rules]\nenabled = false\n[scope."app"]\n' }),
+            'gspot.toml': buildPolicy(['files'], { tables: '[scope."app"]\n' }),
             'app/settings.toml': 'enabled = true\n',
         });
         const key = 'tools.taplo.verbatim';
@@ -179,7 +179,7 @@ test.each(NATIVE_OPTION_SCOPES)(
 test('set retains native ESLint override records and their outer reason', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['javascript'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(['javascript']),
         'src/example.js': 'export const value = 1;\n',
     });
     const before = await readTree(sandbox.path);

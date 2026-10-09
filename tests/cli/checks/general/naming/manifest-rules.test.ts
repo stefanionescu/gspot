@@ -12,6 +12,7 @@ const javascript = manifests.get('javascript')!;
 const express = manifests.get('express')!;
 test('a selected framework adds its rules after the shipped ones and before the repository rules', () => {
     const text = buildPolicy(['typescript', 'express'], {
+        agentRules: true,
         tables: '[[naming.overrides]]\npaths = ["src/hooks/**"]\ncategories = ["functions"]\nignored_prefix = "^use(?=[A-Z])"\nreason = "A hook starts with use."\n',
     });
     const policy = parseStrictPolicy(text);

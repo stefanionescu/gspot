@@ -52,7 +52,7 @@ async function checkHeadings({ scope, level }: HeadingCase): Promise<void> {
     const sandbox = await directory;
     const policy = buildPolicy(['prose', 'docs'], {
         level,
-        tables: '[agent_rules]\nenabled = false\n[docs]\nbanned_headings = ["Root [map]"]\n[scope.child.docs]\nbanned_headings = ["Child [map]"]\n[scope."child/deep"]\nconfigurations = ["prose", "docs"]\n[scope.sibling]\nconfigurations = ["prose", "docs"]\n',
+        tables: '[docs]\nbanned_headings = ["Root [map]"]\n[scope.child.docs]\nbanned_headings = ["Child [map]"]\n[scope."child/deep"]\nconfigurations = ["prose", "docs"]\n[scope.sibling]\nconfigurations = ["prose", "docs"]\n',
     });
     const path = scope === '' ? 'sample.md' : `${scope}/sample.md`;
     const lines = scope.startsWith('child') ? [1, 3] : [1];

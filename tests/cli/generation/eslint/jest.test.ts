@@ -33,7 +33,6 @@ test('generated ESLint reports a focused Jest test', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['jest'], {
-            tables: '[agent_rules]\nenabled = false\n',
             level: 'all',
         }),
         'package.json': '{"private":true,"type":"module"}\n',

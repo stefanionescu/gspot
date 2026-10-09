@@ -17,7 +17,7 @@ test.each(PRIMITIVE_EXCEPTIONS)(
     async ({ key, value, second, defaults }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['typescript', 'site'], { level: 'all', tables: ROOT_PROJECT }),
+            'gspot.toml': buildPolicy(['typescript', 'site'], { agentRules: true, level: 'all', tables: ROOT_PROJECT }),
             'entry.ts': 'export const entry = 1;\n',
             'app/entry.ts': 'export const entry = 1;\n',
             'sibling/entry.ts': 'export const entry = 1;\n',
@@ -80,6 +80,7 @@ test.each(PRIMITIVE_EXCEPTIONS.filter((entry) => entry.key !== 'words'))(
         await using sandbox = await testdir();
         const authored = `${key} = ${JSON.stringify([second])}\n[reasons]\n${JSON.stringify(key)} = ${JSON.stringify(EXCEPTION_REASON)}\n`;
         const policy = buildPolicy(['typescript', 'site'], {
+            agentRules: true,
             level: 'all',
             tables: ROOT_PROJECT.replace('[agent_rules]', authored + '[agent_rules]'),
         });
@@ -137,7 +138,7 @@ test.each(PRIMITIVE_EXCEPTIONS.filter((entry) => entry.key !== 'words'))(
 
 test('license presence needs a reason only when its declared requirement is weakened', async () => {
     await using sandbox = await testdir();
-    const policy = buildPolicy([], { level: 'all', tables: ROOT_PROJECT });
+    const policy = buildPolicy([], { agentRules: true, level: 'all', tables: ROOT_PROJECT });
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
         'README.md': '# Example\n',
@@ -181,7 +182,7 @@ test('Git download hosts require a reviewed allowance while HTTPS remains mandat
     const lockfile = structuredClone(HOST_LOCKFILE);
     lockfile.packages['node_modules/third'].resolved = insecureDownload.href;
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy([]),
         'package-lock.json': JSON.stringify(lockfile, null, 2),
     });
     const command = ['check', '--only', 'dependencies/lockfile-hosts', '--json'];
@@ -216,7 +217,7 @@ test('registry allowances stay inside their project scope and reset to inherited
     await using sandbox = await testdir();
     const lockfile = JSON.stringify(HOST_LOCKFILE, null, 2);
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], { tables: ROOT_PROJECT }),
+        'gspot.toml': buildPolicy([], { agentRules: true, tables: ROOT_PROJECT }),
         'package-lock.json': lockfile,
         'app/package-lock.json': lockfile,
         'sibling/package-lock.json': lockfile,

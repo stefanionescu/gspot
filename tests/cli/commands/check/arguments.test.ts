@@ -218,7 +218,7 @@ configurations = ["javascript", "naming"]
 
 test('a staged change to only gspot.toml rechecks every file a configuration check owns', async () => {
     const loose = buildPolicy(['sql'], {
-        tables: '[agent_rules]\nenabled = false\n[limits.sql]\nfile_lines = 100\n',
+        tables: '[limits.sql]\nfile_lines = 100\n',
         level: 'all',
     });
     const body = Array.from({ length: 12 }, (_, index) => `SELECT ${String(index)};`).join('\n');

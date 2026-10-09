@@ -88,7 +88,7 @@ test.skipIf(!isPosix).each(['missing', 'not executable'])(
     async (condition) => {
         await using repository = await testdir();
         await createFileTree(repository.path, {
-            'gspot.toml': buildPolicy([], { tables: '[hooks]\nenabled = true\n[agent_rules]\nenabled = false\n' }),
+            'gspot.toml': buildPolicy([], { tables: '[hooks]\nenabled = true\n' }),
             'bin/gspot': '#!/bin/sh\nexit 0\n',
         });
         gitOutput(repository.path, ['init', '-q']);
@@ -113,7 +113,7 @@ test.skipIf(!isPosix).each(['missing', 'not executable'])(
 test.each(['', 'app/'])('disabling hooks prunes %s.gspot/hooks and leaves unsetting Git to install', async (prefix) => {
     await using sandbox = await testdir();
     const root = join(sandbox.path, prefix);
-    const policy = buildPolicy([], { tables: '[hooks]\nenabled = true\n[agent_rules]\nenabled = false\n' });
+    const policy = buildPolicy([], { tables: '[hooks]\nenabled = true\n' });
     await createFileTree(root, { 'gspot.toml': policy });
     gitOutput(sandbox.path, ['init', '-q']);
     expect(await applyCommand({ cwd: root, isDryRun: false })).toHaveProperty('exitCode', 0);

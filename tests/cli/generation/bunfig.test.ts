@@ -14,7 +14,7 @@ test('Bun safeguards preserve stricter age and unrelated fields across ownership
     const original = '# Authored installation choices\n[install]\nexact = true\nminimumReleaseAge = 1209600\n';
     await createFileTree(repository.path, {
         'gspot.toml': buildPolicy(['dependencies'], {
-            tables: '[dependencies]\nscanner = "@socketsecurity/bun-security-scanner"\n[agent_rules]\nenabled = false\n',
+            tables: '[dependencies]\nscanner = "@socketsecurity/bun-security-scanner"\n',
         }),
         'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
         'bunfig.toml': original,
@@ -42,7 +42,7 @@ test.each([...AGE_CASES])('Bun generation sets the required age with $name autho
     await using repository = await testdir();
     await createFileTree(repository.path, {
         'gspot.toml': buildPolicy(['dependencies'], {
-            tables: '[dependencies]\nscanner = "@socketsecurity/bun-security-scanner"\n[agent_rules]\nenabled = false\n',
+            tables: '[dependencies]\nscanner = "@socketsecurity/bun-security-scanner"\n',
         }),
         'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
         ...(entry.source === undefined ? {} : { 'bunfig.toml': entry.source }),
@@ -63,7 +63,7 @@ test.each(['', 'apps/api/'])(
         const path = `${prefix}bunfig.toml`;
         await createFileTree(repository.path, {
             'gspot.toml': buildPolicy(['dependencies'], {
-                tables: '[agent_rules]\nenabled = false\n[scope."apps/api"]\nconfigurations = ["dependencies"]\n',
+                tables: '[scope."apps/api"]\nconfigurations = ["dependencies"]\n',
             }),
             [`${prefix}bun.lock`]: '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
             [path]: source,

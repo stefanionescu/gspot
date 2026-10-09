@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { commitAll } from '#tests/harness/git.ts';
 import { test, expect, describe } from 'bun:test';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { chmod, appendFile } from 'node:fs/promises';
@@ -20,7 +19,6 @@ import svelteManifest from 'svelte/package.json' with { type: 'json' };
 import vitestManifest from 'vitest/package.json' with { type: 'json' };
 import { HEAD, CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import coreManifest from '@nestjs/core/package.json' with { type: 'json' };
-import * as postgres from '#tests/config/tools/configurations/database.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 import commonManifest from '@nestjs/common/package.json' with { type: 'json' };
@@ -150,7 +148,6 @@ const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
             },
         },
     ],
-    [postgres.REPOSITORY, { prepare: commitAll }],
     [
         toolOpenapi.REPOSITORY,
         {

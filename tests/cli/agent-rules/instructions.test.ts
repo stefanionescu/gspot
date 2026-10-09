@@ -11,7 +11,7 @@ import { everyManifest } from '#cli/configurations/public.ts';
 describe('the managed block', () => {
     test('an empty manual language list retains general check instructions', async () => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([]) });
+        await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([], { agentRules: true }) });
         const session = await openSession(sandbox.path);
         const { agent_rules: rules, level } = session.policyFiles.policy;
         const selected = everyManifest(session.scopes);
@@ -30,6 +30,7 @@ describe('the managed block', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['spelling'], {
+                agentRules: true,
                 tables: '\n[agent_rules]\nexclude = ["general/engineering/code/ACCESSIBILITY.md"]\n',
             }),
         });

@@ -15,7 +15,7 @@ for (const level of ['recommended', 'all'] as const)
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['javascript'], {
                 level,
-                tables: `[agent_rules]\nenabled = false\n[scope.first]\nconfigurations = ["${row.configuration}"]\ntest_files = ["unit/**"]\n[scope.first.architecture.roles]\ntest_harness = "support"\n[scope.second]\nconfigurations = ["${row.configuration}"]\ntest_files = ["specs/**"]\n[scope.second.architecture.roles]\ntest_harness = "fixtures"\n`,
+                tables: `[scope.first]\nconfigurations = ["${row.configuration}"]\ntest_files = ["unit/**"]\n[scope.first.architecture.roles]\ntest_harness = "support"\n[scope.second]\nconfigurations = ["${row.configuration}"]\ntest_files = ["specs/**"]\n[scope.second.architecture.roles]\ntest_harness = "fixtures"\n`,
             }),
             'package.json': '{"private":true,"type":"module"}',
             'first/package.json': '{"private":true,"type":"module"}',

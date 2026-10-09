@@ -53,10 +53,10 @@ test.each(['recommended', 'all'] as const)(
 
 test.each(NODE_REQUIREMENTS)(
     'applicable tools declare Node only when npm consumers require it: $name',
-    async ({ configurations, runner, files, node }) => {
+    async ({ configurations, tables, files, node }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(configurations, { tables: `runner = "${runner}"\n` }),
+            'gspot.toml': buildPolicy(configurations, { tables }),
             ...files,
         });
         const session = await openSession(sandbox.path);
@@ -83,7 +83,7 @@ test.each(['bun', 'mise'])('private schema tools include their runtime peer unde
     const session = await openSession(sandbox.path);
     const names = applicableManifests(session).flatMap((manifest) => manifest.tools.map((tool) => tool.name));
     expect(names).toContain('v8r');
-    expect(names.includes('ajv')).toBe(runner === 'bun');
+    expect(names).toContain('ajv');
 });
 
 test.each(ROLE_REQUIREMENTS)(

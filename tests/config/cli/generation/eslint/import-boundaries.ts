@@ -1,7 +1,5 @@
 // Authored test globs extend defaults and scope exclusions while production imports stay checked.
 export const TEST_BOUNDARY_POLICY = `test_files = ["app/qa/**"]
-[agent_rules]
-enabled = false
 [[architecture.modules]]
 name = "app"
 paths = ["app/**"]

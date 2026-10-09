@@ -106,7 +106,7 @@ test('apply retains saved stack choices, settings and command checks when source
     const path = join(sandbox.path, 'gspot.toml');
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], {
-            tables: '[agent_rules]\nenabled = false\n[bash]\nsafety_owners = ["source.sh"]\n[reasons]\n"bash.safety_owners" = "The launcher owns process management."\n[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "The launcher intentionally expands its argument list."\n[check."project/source"]\npaths = ["*.sh"]\nstage = "commit"\ncommand = ["bash", "-n", "{files}"]\n',
+            tables: '[bash]\nsafety_owners = ["source.sh"]\n[reasons]\n"bash.safety_owners" = "The launcher owns process management."\n[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "The launcher intentionally expands its argument list."\n[check."project/source"]\npaths = ["*.sh"]\nstage = "commit"\ncommand = ["bash", "-n", "{files}"]\n',
         }),
         'source.sh': 'echo source\n',
     });
@@ -142,7 +142,7 @@ test('absent scopes retain authored settings without planning their checks or to
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], {
-            tables: '[agent_rules]\nenabled = false\n[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\npaths = ["scripts/**"]\nreason = "The launcher intentionally expands its arguments."\n[scope."scripts"]\nconfigurations = ["bash"]\n[scope."scripts".bash]\nsafety_owners = ["source.sh"]\n[scope."scripts".reasons]\n"bash.safety_owners" = "The launcher owns process management."\n',
+            tables: '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\npaths = ["scripts/**"]\nreason = "The launcher intentionally expands its arguments."\n[scope."scripts"]\nconfigurations = ["bash"]\n[scope."scripts".bash]\nsafety_owners = ["source.sh"]\n[scope."scripts".reasons]\n"bash.safety_owners" = "The launcher owns process management."\n',
         }),
         'scripts/source.sh': 'echo source\n',
     });

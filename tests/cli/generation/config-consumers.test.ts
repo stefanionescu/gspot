@@ -78,7 +78,7 @@ test('EditorConfig can remain active without generating a Prettier config or ign
 test.each(STYLELINT_CONSUMERS)('$name installs the HTML parser only for consumed framework styles', async (entry) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(entry.configurations, { tables: '[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy(entry.configurations),
         ...entry.files,
     });
     const session = await openSession(sandbox.path);
@@ -151,7 +151,7 @@ test.each(['recommended', 'all'] as const)(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy([], { level, tables: '[agent_rules]\nenabled = false\n' }),
+            'gspot.toml': buildPolicy([], { level }),
             'main.go': 'package main\nfunc main() {}\n',
             'main.rs': 'fn main() {}\n',
         });

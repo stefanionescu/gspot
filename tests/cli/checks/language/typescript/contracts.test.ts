@@ -154,7 +154,7 @@ test('a scope whose project lists no JavaScript file passes with nothing to comp
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['javascript'], {
-            tables: '[agent_rules]\nenabled = false\n[scope."site"]\nconfigurations = ["javascript"]\n',
+            tables: '[scope."site"]\nconfigurations = ["javascript"]\n',
         }),
         'source/main.js': 'export const value = 1;\n',
         'site/README.md': '# No script here\n',
