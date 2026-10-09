@@ -1,5 +1,5 @@
-import * as libraries from '#tests/config/tools/configurations/library.ts';
 import * as postgres from '#tests/config/tools/configurations/database.ts';
+import * as libraries from '#tests/config/tools/configurations/library.ts';
 import * as toolXcode from '#tests/config/tools/configurations/tool/xcode.ts';
 import * as react from '#tests/config/tools/configurations/framework/react.ts';
 import * as toolDocker from '#tests/config/tools/configurations/tool/docker.ts';
@@ -14,7 +14,6 @@ import * as generalFiles from '#tests/config/tools/configurations/general/files.
 import type { BashBoundary, ConfigurationScenario } from '#tests/types/tools/cases.ts';
 import * as toolActions from '#tests/config/tools/configurations/tool/github-actions.ts';
 import * as frameworkNestjs from '#tests/config/tools/configurations/framework/nestjs.ts';
-import * as frameworkNextjs from '#tests/config/tools/configurations/framework/nextjs.ts';
 import * as frameworkSvelte from '#tests/config/tools/configurations/framework/svelte.ts';
 import * as supabase from '#tests/config/tools/configurations/platform/supabase/checks.ts';
 import * as languagePython from '#tests/config/tools/configurations/language/python/checks.ts';
@@ -64,7 +63,6 @@ export const SCENARIOS: ConfigurationScenario[] = [
         cases: generalSecretsEnvironment.CASES,
     },
     { name: 'the nestjs configuration', repository: frameworkNestjs.REPOSITORY, cases: frameworkNestjs.CASES },
-    { name: 'the nextjs configuration', repository: frameworkNextjs.REPOSITORY, cases: frameworkNextjs.CASES },
     { name: 'the react configuration', repository: react.REPOSITORY, cases: react.CASES },
     { name: 'the svelte configuration', repository: frameworkSvelte.REPOSITORY, cases: frameworkSvelte.CASES },
     { name: 'the vue configuration', repository: frameworkVue.REPOSITORY, cases: frameworkVue.CASES },

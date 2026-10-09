@@ -4,13 +4,14 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { rm, writeFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { containing } from '#tests/harness/expectations.ts';
+import { runFindingCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { installedModules } from '#tests/harness/environment.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { NEXT_PAGE, NEXT_LAYOUT } from '#tests/config/samples/nextjs.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
-import { COUNT, REPOSITORY, BUILD_FAILURE } from '#tests/config/tools/configurations/framework/nextjs.ts';
+import { COUNT, CASES, REPOSITORY, BUILD_FAILURE } from '#tests/config/tools/configurations/framework/nextjs.ts';
 import type { TestRepository, InstalledScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
 
 // Runs the named checks alone, expects the exit code, and returns the report.
@@ -126,4 +127,37 @@ describe('the nextjs configuration', () => {
     test('all builds the app without an enabling flag and recommended omits the build', () =>
         buildLevels(testRepository));
     test('the i18n rules reject literal markup', () => literalMarkup(testRepository));
+});
+
+describe('the nextjs configuration', () => {
+    const resources = new AsyncDisposableStack();
+    let testRepository: OwnedTestRepository;
+    beforeAll(async () => {
+        testRepository = resources.use(
+            await createTestRepository(
+                { ...repository, dirname: join(installedModules, '../..', `gspot-test-${randomUUID()}`) },
+                spawnGspot,
+                prepareTestRepository,
+            ),
+        );
+    });
+    afterAll(() => resources.disposeAsync());
+    for (const entry of structuredClone(CASES)) {
+        const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
+        test(`${entry.check} reports ${where} and passes after the fix`, async () => {
+            const { failed, passed } = await runFindingCase(testRepository, entry, REPOSITORY);
+            const { message, ...position } = entry.expected;
+            expect(failed.code, `${entry.check}: ${failed.stdout}${failed.stderr}`).toBe(1);
+            expect(failed.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
+            expect(failed.report.checks[0]?.findings).toContainEqual(
+                containing({
+                    check: entry.check,
+                    ...position,
+                    ...(message === undefined ? {} : { message: textContaining(message) }),
+                }),
+            );
+            expect(passed.code, `${entry.check} corrected: ${passed.stdout}${passed.stderr}`).toBe(0);
+            expect(passed.report.checks).toMatchObject([{ check: entry.check, status: 'passed', findings: [] }]);
+        });
+    }
 });
