@@ -99,7 +99,7 @@ async function prepareNpmProject(root: string, inputs: GeneratedFile[]): Promise
     return prepared;
 }
 
-// Only upstream packages are cached; each fixture keeps its own generated styles and vocabulary.
+// Only upstream packages are cached; each sandbox keeps its own generated styles and vocabulary.
 async function prepareValeProject(session: ToolSession): Promise<string> {
     using files = openRoot(session.root);
     const tool = toolPin(applicableManifests(session), 'vale');
@@ -203,7 +203,7 @@ export async function installToolProjects(cwd: string): Promise<void> {
 
 /**
  * Prepare selected native tool projects from this suite's managed installations.
- * @param root the initialized native-check fixture
+ * @param root the initialized native-check sandbox
  * @returns the managed native command environment for the sandbox
  */
 export async function shareToolProjects(root: string): Promise<Record<string, string>> {

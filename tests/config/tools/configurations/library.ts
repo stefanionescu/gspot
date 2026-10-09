@@ -1,15 +1,13 @@
-import { ZOD_PACKAGE } from '#tests/config/samples/typescript.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
 import type { InstalledScenario } from '#tests/types/harness/repository.ts';
+import { ZOD_PACKAGE, STRICT_COMPILER_OPTIONS } from '#tests/config/samples/typescript.ts';
 
 export const REPOSITORY: InstalledScenario = {
     configurations: ['typescript', 'zod', 'trpc', 'zustand', 'drizzle'],
+    tsconfig: { compilerOptions: STRICT_COMPILER_OPTIONS, include: ['src'] },
     files: {
         'package.json': ZOD_PACKAGE,
-        'tsconfig.json':
-            '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "noImplicitReturns": true,\n        "noPropertyAccessFromIndexSignature": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": [\n        "src"\n    ]\n}' +
-            '\n',
         'src/answer.ts': COMPONENT_SOURCE,
     },
 };

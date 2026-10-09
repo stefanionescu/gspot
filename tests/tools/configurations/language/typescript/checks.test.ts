@@ -14,8 +14,8 @@ import { installToolProjects } from '#tests/harness/install.ts';
 import { installedModules } from '#tests/harness/environment.ts';
 import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 import type { TypecheckOutcome } from '#tests/types/tools/configurations/typescript.ts';
-import { REPOSITORY } from '#tests/config/tools/configurations/language/typescript/checks.ts';
 import { stat, chmod, mkdir, readdir, symlink, writeFile, appendFile } from 'node:fs/promises';
+import { REPOSITORY, JAVASCRIPT_CONFIG } from '#tests/config/tools/configurations/language/typescript/checks.ts';
 
 import {
     ARCHITECTURE,
@@ -26,6 +26,7 @@ import {
 
 const repository: InstalledScenario = {
     ...REPOSITORY,
+    files: { ...REPOSITORY.files, 'jsconfig.json': JSON.stringify(JAVASCRIPT_CONFIG, null, 4) + '\n' },
     prepare: async (root, environment) => {
         await appendFile(join(root, 'gspot.toml'), `\n${ARCHITECTURE}`);
         const applied = await spawnGspot(root, ['apply'], environment);

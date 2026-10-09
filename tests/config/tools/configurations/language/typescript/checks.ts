@@ -14,6 +14,11 @@ import {
     MISSPELLED_FILE,
 } from '#tests/config/tools/configurations/language/typescript/source.ts';
 
+export const JAVASCRIPT_CONFIG = {
+    compilerOptions: { ...STRICT_COMPILER_OPTIONS, checkJs: true, noEmit: true },
+    include: ['src/**/*.js'],
+};
+
 export const REPOSITORY: InstalledScenario = {
     configurations: ['typescript'],
 
@@ -23,9 +28,6 @@ export const REPOSITORY: InstalledScenario = {
     },
     files: {
         'package.json': TYPESCRIPT_PACKAGE,
-        'jsconfig.json':
-            '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "noImplicitReturns": true,\n        "noPropertyAccessFromIndexSignature": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true,\n        "checkJs": true,\n        "noEmit": true\n    },\n    "include": [\n        "src/**/*.js"\n    ]\n}' +
-            '\n',
         '.gitignore': 'node_modules/\n',
         'types/orders.ts': ORDERS_TYPES,
         'types/totals.ts': TOTALS_TYPES,

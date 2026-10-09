@@ -185,6 +185,10 @@ const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
     [
         languageTypescriptChecks.REPOSITORY,
         {
+            files: {
+                ...languageTypescriptChecks.REPOSITORY.files,
+                'jsconfig.json': JSON.stringify(languageTypescriptChecks.JAVASCRIPT_CONFIG, null, 4) + '\n',
+            },
             prepare: async (root, environment) => {
                 await appendFile(join(root, 'gspot.toml'), `\n${ARCHITECTURE}`);
                 const applied = await spawnGspot(root, ['apply'], environment);

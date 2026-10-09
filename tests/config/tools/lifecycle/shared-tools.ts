@@ -1,4 +1,4 @@
-/** Native cache fixtures keep their source and scopes independent. */
+/** Cached sandboxes keep their source and scopes independent. */
 export const PROJECT_FILES = {
     'package.json':
         '{"name":"shared-native-tools","private":true,"description":"The native cache sample.","type":"module"}\n',
