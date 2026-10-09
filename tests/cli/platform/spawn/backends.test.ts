@@ -3,7 +3,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { chmod } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
+import { fakeTool } from '#tests/harness/platforms.ts';
 import { run, runBlocking } from '#cli/platform/public.ts';
+import { executableNames } from '#cli/platform/contracts.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
 import type { AsyncSpawnOptions } from '#cli/types/platform/runtime.ts';
@@ -24,18 +26,14 @@ const backends = [
 for (const backend of backends) {
     test(`${backend.name}: a selected executable resolves its sibling commands before unrelated PATH tools`, async () => {
         await using sandbox = await testdir();
-        const extension = process.platform === 'win32' ? '.cmd' : '';
-        await createFileTree(sandbox.path, {
-            [`selected/parent${extension}`]:
-                process.platform === 'win32' ? `@echo off\r\nsibling\r\n` : `#!/bin/sh\nsibling\n`,
-            [`selected/sibling${extension}`]:
-                process.platform === 'win32' ? `@echo off\r\necho selected\r\n` : `#!/bin/sh\necho selected\n`,
-            [`unrelated/sibling${extension}`]:
-                process.platform === 'win32' ? `@echo off\r\necho unrelated\r\n` : `#!/bin/sh\necho unrelated\n`,
-        });
-        for (const path of ['selected/parent', 'selected/sibling', 'unrelated/sibling'])
-            await chmod(join(sandbox.path, path + extension), 0o755);
-        const result = await backend.execute([join(sandbox.path, `selected/parent${extension}`)], {
+        await fakeTool(
+            sandbox.path,
+            'selected/parent',
+            "const child = Bun.spawnSync(['sibling'], { stdout: 'inherit', stderr: 'inherit' }); process.exitCode = child.exitCode;",
+        );
+        await fakeTool(sandbox.path, 'selected/sibling', "console.log('selected');");
+        await fakeTool(sandbox.path, 'unrelated/sibling', "console.log('unrelated');");
+        const result = await backend.execute([join(sandbox.path, 'selected', executableNames('parent')[0]!)], {
             cwd: sandbox.path,
             env: { PATH: join(sandbox.path, 'unrelated') },
         });

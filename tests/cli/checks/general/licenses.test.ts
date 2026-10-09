@@ -1,21 +1,21 @@
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
+import { symlink, readFile } from 'node:fs/promises';
 import { openSession } from '#cli/commands/public.ts';
+import { fakeTool } from '#tests/harness/platforms.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
+import { environmentBin } from '#cli/platform/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { chmod, symlink, readFile } from 'node:fs/promises';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { rejection, containing, textContaining } from '#tests/harness/expectations.ts';
 
 import {
-    SCANNERS,
-    NPM_SCANNERS,
     LICENSE_SETTINGS,
     PROJECT_FINDINGS,
     SCANNER_FAILURES,
@@ -25,15 +25,17 @@ import {
 
 /** Prepare real generated policy and a Python scanner version command before mocking scan output. */
 async function preparePythonProject(root: string, settings: string = LICENSE_SETTINGS): Promise<void> {
-    const scanner = process.platform === 'win32' ? SCANNERS.windows : SCANNERS.posix;
     const version = toolPin(configurationManifests().values(), 'pip-licenses').version!;
     await createFileTree(root, {
         'gspot.toml': buildPolicy(['licenses'], { tables: settings }),
         'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
         '.venv/installed': 'fixture',
-        [scanner.path]: scanner.body.replace('VERSION', version),
     });
-    await chmod(join(root, scanner.path), 0o755);
+    await fakeTool(
+        root,
+        relative(root, join(environmentBin(join(root, '.gspot/.venv')), 'pip-licenses')),
+        `console.log(${JSON.stringify('pip-licenses ' + version)});`,
+    );
     const applied = await runGspot(root, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
 }
@@ -153,18 +155,20 @@ test('combined license scans preserve manifest order, license alternatives, unkn
         sandbox.path,
         `${LICENSE_SETTINGS}[licenses.exceptions."choice@1.0.0"]\nlicense = "MIT OR GPL-3.0-only"\nreason = "Reviewed both installed license alternatives."\n[licenses.exceptions."Python_Package@2.0.0"]\nlicense = "GPL-3.0-only"\nreason = "Reviewed the installed Python package."\n`,
     );
-    const scanner = process.platform === 'win32' ? NPM_SCANNERS.windows : NPM_SCANNERS.posix;
     const pin = toolPin(configurationManifests().values(), 'license-checker-rseidelsohn');
     await createFileTree(sandbox.path, {
         'package.json': '{"name":"example","private":true}',
         'node_modules/installed': 'fixture',
-        [scanner.path]: scanner.body.replace('VERSION', pin.version!),
         '.gspot/node_modules/license-checker-rseidelsohn/package.json': JSON.stringify({
             name: pin.installers['npm']!.name,
             version: pin.version,
         }),
     });
-    await chmod(join(sandbox.path, scanner.path), 0o755);
+    await fakeTool(
+        sandbox.path,
+        '.gspot/node_modules/.bin/license-checker-rseidelsohn',
+        `console.log(${JSON.stringify(pin.version!)}); process.exitCode = 1;`,
+    );
     const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/allowed');
     const directories: string[] = [];
     using output = spyOn(processes, 'run').mockImplementation((command, options) => {

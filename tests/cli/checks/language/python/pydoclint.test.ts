@@ -7,12 +7,13 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { PYPROJECT } from '#tests/config/samples/python.ts';
+import { environmentExecutable } from '#cli/platform/contracts.ts';
 import { pydoclint, docstringConfiguration } from '#cli/checks/language/public.ts';
 import { DOCSTRING_STYLES, DOCSTRING_PROJECTS } from '#tests/config/cli/checks/language/python/pydoclint.ts';
 
 test.each(DOCSTRING_PROJECTS)('pydoclint runs with $name', async ({ files, style }) => {
     await using sandbox = await testdir();
-    const executable = `.gspot/.venv/${process.platform === 'win32' ? 'Scripts/pydoclint.exe' : 'bin/pydoclint'}`;
+    const executable = environmentExecutable('.gspot/.venv', 'pydoclint');
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['python']),
         ...files,
@@ -85,7 +86,7 @@ test('pydoclint disables repeated signature types only when the project has not 
 
 test('pydoclint keeps earlier style findings when a later native style batch fails', async () => {
     await using sandbox = await testdir();
-    const executable = `.gspot/.venv/${process.platform === 'win32' ? 'Scripts/pydoclint.exe' : 'bin/pydoclint'}`;
+    const executable = environmentExecutable('.gspot/.venv', 'pydoclint');
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['python']),
         'pyproject.toml': PYPROJECT,

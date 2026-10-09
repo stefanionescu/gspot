@@ -1,24 +1,6 @@
 /** The license choice is authored explicitly in every scanning sandbox. */
 export const LICENSE_SETTINGS = '[licenses]\nallowed = ["MIT"]\n';
 
-/** Version commands run through the real executable boundary using the declared pin. */
-export const SCANNERS = {
-    windows: { path: '.gspot/.venv/Scripts/pip-licenses.cmd', body: '@echo pip-licenses VERSION\r\n' },
-    posix: { path: '.gspot/.venv/bin/pip-licenses', body: '#!/bin/sh\nprintf "pip-licenses VERSION\\n"\n' },
-};
-
-/** The npm scanner declares exit one for its version command. */
-export const NPM_SCANNERS = {
-    windows: {
-        path: '.gspot/node_modules/.bin/license-checker-rseidelsohn.cmd',
-        body: '@echo VERSION\r\n@exit /b 1\r\n',
-    },
-    posix: {
-        path: '.gspot/node_modules/.bin/license-checker-rseidelsohn',
-        body: '#!/bin/sh\nprintf "VERSION\\n"\nexit 1\n',
-    },
-};
-
 export const SCANNER_FAILURES = [
     { name: 'malformed JSON', stdout: '{', code: 0, diagnostic: 'JSON' },
     { name: 'empty installed report', stdout: '[]', code: 0, diagnostic: 'The license scan found no packages' },

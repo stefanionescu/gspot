@@ -1,19 +1,19 @@
-import { join } from 'node:path';
-import { chmod } from 'node:fs/promises';
+import { join, relative } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { fakeTool } from '#tests/harness/platforms.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { environmentExecutable } from '#cli/platform/contracts.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { SCANNERS, LICENSE_SETTINGS } from '#tests/config/cli/checks/general/licenses.ts';
+import { LICENSE_SETTINGS } from '#tests/config/cli/checks/general/licenses.ts';
+import { environmentBin, environmentExecutable } from '#cli/platform/contracts.ts';
 import type { ExceptionMembership } from '#tests/types/cli/checks/general/license-origins.ts';
 import { EXCEPTION_ENTRY, EXCEPTION_MEMBERSHIP } from '#tests/config/cli/checks/general/license-origins.ts';
 
@@ -22,7 +22,6 @@ async function prepareInventories(
     root: string,
     { origin, scopes, reports, ignore }: ExceptionMembership,
 ): Promise<void> {
-    const scanner = process.platform === 'win32' ? SCANNERS.windows : SCANNERS.posix;
     const version = toolPin(configurationManifests().values(), 'pip-licenses').version!;
     const tables = scopes
         .map((scope) => {
@@ -50,9 +49,12 @@ async function prepareInventories(
         'uv.lock': '[[package]]\nname = "Absent_Package"\nversion = "2.0.0"\n',
         '.gspot/probe/pyproject.toml': '[project]\nname = "tooling"\nversion = "0.0.0"\n',
         '.gspot/probe/.venv/installed': 'Absent_Package@2.0.0',
-        [scanner.path]: scanner.body.replace('VERSION', version),
     });
-    await chmod(join(root, scanner.path), 0o755);
+    await fakeTool(
+        root,
+        relative(root, join(environmentBin(join(root, '.gspot/.venv')), 'pip-licenses')),
+        `console.log(${JSON.stringify('pip-licenses ' + version)});`,
+    );
     const applied = await runGspot(root, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
 }

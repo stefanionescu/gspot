@@ -1,14 +1,14 @@
 import { join } from 'node:path';
-import { chmod } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { fakeTool } from '#tests/harness/platforms.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { svelteFindings } from '#cli/checks/framework/contracts.ts';
-import { LINES, PROJECTS, SCANNERS } from '#tests/config/cli/checks/framework/svelte.ts';
+import { LINES, PROJECTS } from '#tests/config/cli/checks/framework/svelte.ts';
 
 test.each(PROJECTS)('svelte-check selects the $name TypeScript target', async ({ scope, policy, target }) => {
     await using sandbox = await testdir();
@@ -19,15 +19,17 @@ test.each(PROJECTS)('svelte-check selects the $name TypeScript target', async ({
     });
     const session = await openSession(sandbox.path);
     const pin = toolPin(session.manifests.values(), 'svelte-check');
-    const scanner = process.platform === 'win32' ? SCANNERS.windows : SCANNERS.posix;
     await createFileTree(sandbox.path, {
         '.gspot/node_modules/svelte-check/package.json': JSON.stringify({
             name: pin.installers['npm']!.name,
             version: pin.version,
         }),
-        [scanner.path]: scanner.body.replace('VERSION', pin.version!),
     });
-    await chmod(join(sandbox.path, scanner.path), 0o755);
+    await fakeTool(
+        sandbox.path,
+        '.gspot/node_modules/.bin/svelte-check',
+        `console.log(${JSON.stringify(pin.version!)});`,
+    );
     const input = buildCheckInput(session, 'svelte/svelte-check', { scope });
     using run = spyOn(processes, 'run').mockResolvedValue({
         code: 0,

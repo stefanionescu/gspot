@@ -1,11 +1,5 @@
 export const VALID_REPORT = { statistics: { total: { percentage: 0 } }, duplicates: [] };
 
-/** The private npm executable prints the version declared by its package metadata. */
-export const SCANNERS = {
-    windows: { path: '.gspot/node_modules/.bin/jscpd.cmd', body: '@echo jscpd VERSION\r\n' },
-    posix: { path: '.gspot/node_modules/.bin/jscpd', body: '#!/bin/sh\nprintf "jscpd VERSION\\n"\n' },
-};
-
 export const EXECUTION_FAILURES = [
     {
         name: 'a report without statistics',

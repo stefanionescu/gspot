@@ -8,12 +8,12 @@ import { openSession } from '#cli/commands/public.ts';
 import { checkRun } from '#cli/execution/contracts.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
-import { getKeptMode } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { actionlintSource } from '#cli/checks/tool/public.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { WORKFLOW_HEAD } from '#tests/config/samples/actions.ts';
+import { fakeTool, getKeptMode } from '#tests/harness/platforms.ts';
 import { PATH, PINACT_STUB } from '#tests/config/cli/checks/tool/github-actions.ts';
 
 const TOOL_FAILURES_POLICY = buildPolicy(['files', 'github-actions'], {
@@ -26,13 +26,11 @@ test('the pin verification adapter reports a rejected commit and preserves the w
     await createFileTree(sandbox.path, {
         'gspot.toml': TOOL_FAILURES_POLICY,
         'README.md': '# Action pins\n',
-        'bin/pinact': PINACT_STUB,
-        'bin/pinact.cmd': '@echo off\r\nbun "%~dp0pinact" %*\r\n',
     });
-    await chmod(join(sandbox.path, 'bin/pinact'), 0o755);
+    const bin = await fakeTool(sandbox.path, 'bin/pinact', PINACT_STUB);
     commitAll(sandbox.path);
     const environment = {
-        PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
+        PATH: `${bin}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
     };
     const path = join(sandbox.path, '.github/workflows/broken.yml');
     const workflow = `${WORKFLOW_HEAD}            - uses: actions/checkout@0000000000000000000000000000000000000000\n`;

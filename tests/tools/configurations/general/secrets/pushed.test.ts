@@ -1,10 +1,11 @@
 // Gitleaks and pinned TruffleHog scan pushed history for secrets removed by later commits.
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
+import { writeFile } from 'node:fs/promises';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { chmod, writeFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { fakeTool } from '#tests/harness/platforms.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
@@ -71,15 +72,11 @@ async function createSecretVerifier(directory: string): Promise<SecretVerifier> 
                 ],
             }),
         );
-        await createFileTree(directory, {
-            trufflehog: `#!/usr/bin/env bun\nimport { readFileSync } from 'node:fs';\nconst args = process.argv.slice(2);\nconst mode = readFileSync(${JSON.stringify(modeFile)}, 'utf8');\nif (!args.includes('--version') && mode !== 'native') { console.log(${JSON.stringify(firstToken)}); console.error(${JSON.stringify(secondToken)}); process.exit(mode === 'malformed' ? 0 : 2); }\nconst child = Bun.spawn([${JSON.stringify(native)}, ...args, ...(args.includes('--version') ? [] : ['--config', ${JSON.stringify(config)}, '--include-detectors=CustomRegex'])], {stdin: 'inherit', stdout: 'inherit', stderr: 'inherit'});\nprocess.exit(await child.exited);\n`,
-        });
-        // Windows finds an executable by its extension, so a command file runs the script there.
-        await writeFile(
-            join(directory, 'trufflehog.cmd'),
-            `@echo off\r\n"${process.execPath}" "%~dp0trufflehog" %*\r\n`,
+        await fakeTool(
+            directory,
+            'trufflehog',
+            `#!/usr/bin/env bun\nimport { readFileSync } from 'node:fs';\nconst args = process.argv.slice(2);\nconst mode = readFileSync(${JSON.stringify(modeFile)}, 'utf8');\nif (!args.includes('--version') && mode !== 'native') { console.log(${JSON.stringify(firstToken)}); console.error(${JSON.stringify(secondToken)}); process.exit(mode === 'malformed' ? 0 : 2); }\nconst child = Bun.spawn([${JSON.stringify(native)}, ...args, ...(args.includes('--version') ? [] : ['--config', ${JSON.stringify(config)}, '--include-detectors=CustomRegex'])], {stdin: 'inherit', stdout: 'inherit', stderr: 'inherit'});\nprocess.exit(await child.exited);\n`,
         );
-        await chmod(join(directory, 'trufflehog'), 0o755);
         return {
             firstToken,
             secondToken,

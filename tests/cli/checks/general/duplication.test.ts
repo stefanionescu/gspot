@@ -1,9 +1,10 @@
+import { writeFile } from 'node:fs/promises';
 import { join, toNamespacedPath } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { chmod, writeFile } from 'node:fs/promises';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
+import { fakeTool } from '#tests/harness/platforms.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { toolPin } from '#cli/configurations/contracts.ts';
@@ -12,22 +13,20 @@ import { cloneFindings } from '#cli/checks/general/public.ts';
 import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import type { CloneReport } from '#cli/types/checks/general/duplication.ts';
-import { SCANNERS, VALID_REPORT, EXECUTION_FAILURES } from '#tests/config/cli/checks/general/duplication.ts';
+import { VALID_REPORT, EXECUTION_FAILURES } from '#tests/config/cli/checks/general/duplication.ts';
 
 /** Prepare actual generated configuration and the private scanner's version boundary. */
 async function prepareDuplicationProject(root: string): Promise<void> {
     const pin = toolPin(configurationManifests().values(), 'jscpd');
-    const scanner = process.platform === 'win32' ? SCANNERS.windows : SCANNERS.posix;
     await createFileTree(root, {
         'gspot.toml': buildPolicy(['bash', 'duplication'], { level: 'all', tables: 'tool_timeout_seconds = 1\n' }),
         'sample.sh': 'echo example\n',
-        [scanner.path]: scanner.body.replace('VERSION', pin.version!),
         '.gspot/node_modules/jscpd/package.json': JSON.stringify({
             name: pin.installers['npm']!.name,
             version: pin.version,
         }),
     });
-    await chmod(join(root, scanner.path), 0o755);
+    await fakeTool(root, '.gspot/node_modules/.bin/jscpd', `console.log(${JSON.stringify('jscpd ' + pin.version!)});`);
     const applied = await runGspot(root, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
 }

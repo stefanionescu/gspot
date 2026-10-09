@@ -4,12 +4,13 @@ import * as spawn from '#cli/platform/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
+import { fakeTool } from '#tests/harness/platforms.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
 import { buildFolder } from '#cli/checks/language/swift/public.ts';
 import { isolateCompilerCache } from '#tests/harness/environment.ts';
-import { rm, chmod, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
+import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 
 import {
     SHEBANG,
@@ -26,10 +27,13 @@ test.skipIf(!isMacos)('XCTest reports a timed-out native command as an error and
         'gspot.toml': XCTEST_EXECUTION_POLICY,
         'ExampleTests.swift': 'import XCTest\n',
         'Example.xcodeproj/project.pbxproj': '',
-        'node_modules/.bin/xcodebuild': `${SHEBANG}\n`,
-        'node_modules/.bin/xcrun': `${SHEBANG}console.log(JSON.stringify({ targets: [{ name: 'Example', lineCoverage: 1 }] }));\n`,
     });
-    for (const tool of ['xcodebuild', 'xcrun']) await chmod(join(sandbox.path, 'node_modules/.bin', tool), 0o755);
+    await fakeTool(sandbox.path, 'node_modules/.bin/xcodebuild', `${SHEBANG}\n`);
+    await fakeTool(
+        sandbox.path,
+        'node_modules/.bin/xcrun',
+        `${SHEBANG}console.log(JSON.stringify({ targets: [{ name: 'Example', lineCoverage: 1 }] }));\n`,
+    );
     const session = await openSession(sandbox.path);
     const run = spyOn(spawn, 'run').mockResolvedValue({
         code: 1,
@@ -61,10 +65,13 @@ test.skipIf(!isMacos).each([...XCTEST_FAILURES])(
             'gspot.toml': policy,
             'ExampleTests.swift': 'import XCTest\n',
             'Example.xcodeproj/project.pbxproj': '',
-            'node_modules/.bin/xcodebuild': `${SHEBANG}${build}\n`,
-            'node_modules/.bin/xcrun': `${SHEBANG}await Bun.write('viewed.txt', 'viewed'); console.log(${JSON.stringify(coverage === undefined ? '{}' : JSON.stringify({ targets: [{ name: 'Example', lineCoverage: coverage }] }))});\n`,
         });
-        for (const tool of ['xcodebuild', 'xcrun']) await chmod(join(sandbox.path, 'node_modules/.bin', tool), 0o755);
+        await fakeTool(sandbox.path, 'node_modules/.bin/xcodebuild', `${SHEBANG}${build}\n`);
+        await fakeTool(
+            sandbox.path,
+            'node_modules/.bin/xcrun',
+            `${SHEBANG}await Bun.write('viewed.txt', 'viewed'); console.log(${JSON.stringify(coverage === undefined ? '{}' : JSON.stringify({ targets: [{ name: 'Example', lineCoverage: coverage }] }))});\n`,
+        );
         const outcome = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
         expect(outcome.report.exitCode).toBe(code);
         expect(outcome.report.checks[0]!.status).toBe(status);
@@ -76,9 +83,9 @@ test.skipIf(!isMacos).each([...XCTEST_FAILURES])(
             produced ? 'viewed' : undefined,
         );
         await writeFile(join(sandbox.path, 'gspot.toml'), XCTEST_EXECUTION_POLICY);
-        await writeFile(join(sandbox.path, 'node_modules/.bin/xcodebuild'), `${SHEBANG}\n`);
+        await writeFile(join(sandbox.path, 'node_modules/.bin/xcodebuild.js'), `${SHEBANG}\n`);
         await writeFile(
-            join(sandbox.path, 'node_modules/.bin/xcrun'),
+            join(sandbox.path, 'node_modules/.bin/xcrun.js'),
             `${SHEBANG}console.log(${JSON.stringify(JSON.stringify({ targets: [{ name: 'Example', lineCoverage: 1 }] }))});\n`,
         );
         const corrected = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
@@ -100,14 +107,21 @@ test.skipIf(!isMacos)(
             'gspot.toml': XCTEST_EXECUTION_POLICY,
             'ExampleTests.swift': 'import XCTest\n',
             'Example.xcodeproj/project.pbxproj': '',
-            'node_modules/.bin/xcodebuild': `${SHEBANG}const bundle = process.argv[process.argv.indexOf('-resultBundlePath') + 1]; if (await Bun.file(bundle + '/data/previous').exists()) throw new Error('Previous bundle survived'); await Bun.write('tested.txt', 'tested');\n`,
-            'node_modules/.bin/xcrun': `${SHEBANG}console.log(JSON.stringify({targets:[{name:'Example',lineCoverage:1}]}));\n`,
         });
-        for (const tool of ['xcodebuild', 'xcrun']) await chmod(join(sandbox.path, 'node_modules/.bin', tool), 0o755);
+        await fakeTool(
+            sandbox.path,
+            'node_modules/.bin/xcodebuild',
+            `${SHEBANG}const bundle = process.argv[process.argv.indexOf('-resultBundlePath') + 1]; if (await Bun.file(bundle + '/data/previous').exists()) throw new Error('Previous bundle survived'); await Bun.write('tested.txt', 'tested');\n`,
+        );
+        await fakeTool(
+            sandbox.path,
+            'node_modules/.bin/xcrun',
+            `${SHEBANG}console.log(JSON.stringify({targets:[{name:'Example',lineCoverage:1}]}));\n`,
+        );
         await writeFile(join(outside.path, 'authored.txt'), 'preserved');
         await mkdir(cache, { recursive: true });
         const bundle = join(cache, 'coverage.xcresult');
-        await symlink(outside.path, bundle, process.platform === 'win32' ? 'junction' : 'dir');
+        await symlink(outside.path, bundle, 'dir');
         const refused = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
         expect(refused.report.exitCode).toBe(2);
         expect(refused.report.checks[0]?.note).toContain('symbolic link');

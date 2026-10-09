@@ -1,13 +1,13 @@
 // What this machine can and cannot do: which pinned tools ship for it, the modes it keeps, and the modules it links.
-import { join, dirname, relative } from 'node:path';
 import { hostPlatform } from '#cli/platform/public.ts';
 import { missingBuild } from '#cli/planning/contracts.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { executableNames } from '#cli/platform/contracts.ts';
+import { join, dirname, relative, basename } from 'node:path';
 import { configurationManifests } from '#cli/configurations/public.ts';
+import { quoteArgument, executableNames } from '#cli/platform/contracts.ts';
 import { testModules, installedModules } from '#tests/harness/environment.ts';
-import { cp, mkdir, lstat, readdir, symlink, realpath, copyFile } from 'node:fs/promises';
+import { cp, mkdir, lstat, chmod, readdir, symlink, realpath, copyFile, writeFile } from 'node:fs/promises';
 
 /**
  * Whether the pinned tool has a build for this machine.
@@ -107,4 +107,23 @@ export async function copyInstalledModule(target: string, name: string): Promise
             await symlink(relative(binaries, program), path, 'file');
         } else await copyFile(original, path);
     }
+}
+
+/**
+ * Write a child script and its native wrappers.
+ * @param root the sandbox root.
+ * @param name the executable path without a Windows suffix.
+ * @param script the Bun program, retained verbatim.
+ * @returns the directory to add to PATH.
+ */
+export async function fakeTool(root: string, name: string, script: string): Promise<string> {
+    const target = join(root, name);
+    const folder = dirname(target);
+    const filename = basename(target);
+    await mkdir(folder, { recursive: true });
+    await writeFile(`${target}.js`, script);
+    await writeFile(target, `#!/bin/sh\nexec ${quoteArgument(process.execPath)} "\${0%/*}/${filename}.js" "$@"\n`);
+    await writeFile(`${target}.cmd`, `@echo off\r\n"${process.execPath}" "%~dp0${filename}.js" %*\r\n`);
+    await chmod(target, 0o755);
+    return folder;
 }

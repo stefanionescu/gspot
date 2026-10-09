@@ -3,12 +3,12 @@ import { mkdir, symlink } from 'node:fs/promises';
 import { readPolicy } from '#cli/policy/public.ts';
 import { inspectTool } from '#cli/tools/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { join, dirname, delimiter } from 'node:path';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { usePlatform } from '#tests/harness/platforms.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { join, dirname, extname, delimiter } from 'node:path';
 import { useEnvironment } from '#tests/harness/environment.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
@@ -61,8 +61,7 @@ test('doctor and a missing XML check report the host installation prerequisite',
         const executable = Bun.which(name);
         expect(executable, `${name} is required for CLI metadata inspection.`).not.toBeNull();
         if (name === 'git' && process.platform === 'win32') continue;
-        const windowsName = `${name}.exe`;
-        const filename = process.platform === 'win32' ? windowsName : name;
+        const filename = name + extname(executable!);
         await symlink(executable!, join(binaries, filename));
     }
     await createFileTree(root, {

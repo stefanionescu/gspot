@@ -7,6 +7,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { getKeptMode } from '#tests/harness/platforms.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
@@ -62,7 +63,7 @@ describe('site build reproducibility', () => {
         expect(await readFile(join(sandbox.path, 'dist/index.html'), 'utf8')).toBe('edited output');
         // Windows keeps no POSIX mode bits, so the file stays at its default there.
         const output = await stat(join(sandbox.path, 'dist/index.html'));
-        expect(output.mode & 0o777).toBe(process.platform === 'win32' ? 0o666 : 0o640);
+        expect(output.mode & 0o777).toBe(getKeptMode(0o640));
         resources.dispose();
         expect(await pathExists(first.cwd)).toBe(false);
     });

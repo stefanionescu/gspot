@@ -1,8 +1,3 @@
-export const SCANNERS = {
-    windows: { path: '.gspot/node_modules/.bin/svelte-check.cmd', body: '@echo VERSION\r\n' },
-    posix: { path: '.gspot/node_modules/.bin/svelte-check', body: '#!/bin/sh\nprintf "VERSION\\n"\n' },
-};
-
 export const PROJECTS = [
     {
         name: 'root JavaScript',

@@ -8,21 +8,24 @@ import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
+import { fakeTool } from '#tests/harness/platforms.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { executableNames } from '#cli/platform/contracts.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { fileBatches } from '#cli/execution/command/arguments/contracts.ts';
 import { prepareCommand, runCheckCommand, commandEnvironment } from '#cli/execution/command/public.ts';
 
 test('Batched tool invocations preserve spaced Unicode file arguments', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'echo.cjs': 'process.stdout.write(JSON.stringify(process.argv.slice(2)));',
-        'node_modules/.bin/echo.cmd': `@echo off\r\n"${process.execPath}" "%~dp0..\\..\\echo.cjs" %*\r\n`,
-    });
+    await fakeTool(
+        sandbox.path,
+        'node_modules/.bin/echo',
+        'process.stdout.write(JSON.stringify(process.argv.slice(2)));',
+    );
     const fixed =
         process.platform === 'win32'
-            ? [join(sandbox.path, 'node_modules/.bin/echo.cmd')]
-            : [process.execPath, join(sandbox.path, 'echo.cjs')];
+            ? [join(sandbox.path, 'node_modules/.bin', executableNames('echo')[0]!)]
+            : [process.execPath, join(sandbox.path, 'node_modules/.bin/echo.js')];
     const files = Array.from({ length: 300 }, (_, index) => `docs/café (draft & review)/page-${String(index)}.md`);
     const batches = fileBatches(files, fixed, 'win32');
     expect(batches.length).toBeGreaterThan(1);
