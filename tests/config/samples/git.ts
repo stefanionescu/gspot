@@ -6,3 +6,9 @@ export const PUSH_CONTENT = {
     working: 'echo repaired only in the working tree\n',
     policy: 'invalid working policy',
 };
+
+/** Repository context and a nested policy's committed source for entry and push selection. */
+export const NESTED_POLICY_FILES = {
+    'outside.txt': 'repository context',
+    'nested policy/source.txt': 'committed',
+};

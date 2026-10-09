@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
-import { PUSH_CONTENT } from '#tests/config/samples/git.ts';
+import { testdir, createFileTree } from 'testdirs';
 import { selectPush } from '#cli/repository/revisions/contracts.ts';
 import { gitOutput, preparePushRepository } from '#tests/harness/git.ts';
+import { PUSH_CONTENT, NESTED_POLICY_FILES } from '#tests/config/samples/git.ts';
 
 test.each(['origin', undefined, 'file:///unused', '/unused'] as const)(
     'the hook remote %s selects its native tracking range',
@@ -51,4 +51,31 @@ test('native shallow ranges distinguish unobserved history from already advertis
     const complete = await selectPush(checkout, protocol, 'unseen');
     expect(complete.revisions[0]).toMatchObject({ commits: [reviewed, base], historyComplete: true });
     expect(gitOutput(source, ['branch', '--show-current'])).toBe(branch);
+});
+
+test('nested policy push selection keeps policy-relative paths for updated and new refs', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, NESTED_POLICY_FILES);
+    const project = join(sandbox.path, 'nested policy');
+    gitOutput(sandbox.path, ['init']);
+    gitOutput(sandbox.path, ['add', '.']);
+    gitOutput(sandbox.path, ['commit', '-m', 'Fixture']);
+    const base = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
+    await Bun.write(join(project, 'source.txt'), 'pushed');
+    await Bun.write(join(sandbox.path, 'outside.txt'), 'changed context');
+    gitOutput(sandbox.path, ['add', '.']);
+    gitOutput(sandbox.path, ['commit', '-m', 'Change']);
+    const commitId = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
+    await Bun.write(join(project, 'source.txt'), 'indexed');
+    gitOutput(sandbox.path, ['add', '.']);
+    await Bun.write(join(project, 'source.txt'), 'working');
+    const protocol = `refs/heads/main ${commitId} refs/heads/main ${base}\n`;
+    const updated = await selectPush(project, protocol);
+    expect(updated.revisions[0]?.paths).toStrictEqual(['source.txt']);
+    gitOutput(sandbox.path, ['config', 'remote.example.fetch', '+refs/heads/*:refs/remotes/example/*']);
+    gitOutput(sandbox.path, ['update-ref', 'refs/remotes/example/main', base]);
+    const createdRef = `refs/heads/new ${commitId} refs/heads/new ${'0'.repeat(commitId.length)}\n`;
+    const created = await selectPush(project, createdRef, 'example');
+    expect(created.revisions[0]?.paths).toStrictEqual(['source.txt']);
+    expect(await Bun.file(join(project, 'source.txt')).text()).toBe('working');
 });

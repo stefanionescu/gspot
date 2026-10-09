@@ -6,20 +6,16 @@ import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { checkOutRevision } from '#cli/execution/copy/public.ts';
-import { selectPush } from '#cli/repository/revisions/contracts.ts';
+import { NESTED_POLICY_FILES } from '#tests/config/samples/git.ts';
 import { getBlobs, getEntries, getHeadEntries } from '#cli/repository/revisions/public.ts';
 
 test('nested policies retain repository context with policy-relative index and committed paths', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'outside.txt': 'repository context',
-        'nested policy/source.txt': 'committed',
-    });
+    await createFileTree(sandbox.path, NESTED_POLICY_FILES);
     const project = join(sandbox.path, 'nested policy');
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', '.']);
     gitOutput(sandbox.path, ['commit', '-m', 'Fixture']);
-    const base = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     await Bun.write(join(project, 'source.txt'), 'pushed');
     await Bun.write(join(sandbox.path, 'outside.txt'), 'changed context');
     gitOutput(sandbox.path, ['add', '.']);
@@ -41,14 +37,6 @@ test('nested policies retain repository context with policy-relative index and c
             expect(gitOutput(copy, ['write-tree'])).toBe(tree);
         });
     }
-    const protocol = `refs/heads/main ${commitId} refs/heads/main ${base}\n`;
-    const updated = await selectPush(project, protocol);
-    expect(updated.revisions[0]?.paths).toStrictEqual(['source.txt']);
-    gitOutput(sandbox.path, ['config', 'remote.example.fetch', '+refs/heads/*:refs/remotes/example/*']);
-    gitOutput(sandbox.path, ['update-ref', 'refs/remotes/example/main', base]);
-    const createdRef = `refs/heads/new ${commitId} refs/heads/new ${'0'.repeat(commitId.length)}\n`;
-    const created = await selectPush(project, createdRef, 'example');
-    expect(created.revisions[0]?.paths).toStrictEqual(['source.txt']);
     expect(await Bun.file(join(project, 'source.txt')).text()).toBe('working');
 });
 
