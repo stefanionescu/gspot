@@ -1,5 +1,5 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { join, posix } from 'node:path';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
@@ -7,6 +7,7 @@ import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { NESTJS_KIND_CASES, PREFIX_OWNER_CASES } from '#tests/config/cli/checks/general/structure/prefix-collisions.ts';
 
 test('prefix checks group files and directories once and honor ignores and the threshold', async () => {
     const policy = buildPolicy(['typescript'], { level: 'all' });
@@ -142,3 +143,71 @@ test.each(['.githooks', '.husky', '.git-hooks', '.mise/tasks/hook'])(
         );
     },
 );
+
+test.each(PREFIX_OWNER_CASES)(
+    '$prefix exemption follows selected $configuration scopes',
+    async ({ prefix, configuration, siblingPaths }) => {
+        await using sandbox = await testdir();
+        const sourceFiles = Object.fromEntries(
+            ['', 'app', 'app/deep', 'sibling'].flatMap((scope) =>
+                ['one', 'two', 'three'].map((name) => [posix.join(scope, `${prefix}-${name}.py`), '']),
+            ),
+        );
+        const policy = buildPolicy(['python', configuration], {
+            level: 'all',
+            tables: `[scope.app]\n[scope."app/deep"]\n[scope.sibling]\nremoved_configurations = [${JSON.stringify(configuration)}]\n`,
+        });
+        await createFileTree(sandbox.path, { ...sourceFiles, 'gspot.toml': policy });
+        const result = await executeRun(
+            await openSession(sandbox.path),
+            buildRunOptions({ only: ['structure/prefix-collisions'] }),
+        );
+        expect(
+            result.report.checks.map(({ scope, findings }) => ({ scope, paths: findings.map(({ file }) => file) })),
+        ).toStrictEqual([
+            { scope: '', paths: [] },
+            { scope: 'app', paths: [] },
+            { scope: 'app/deep', paths: [] },
+            { scope: 'sibling', paths: siblingPaths },
+        ]);
+        await Bun.write(join(sandbox.path, 'gspot.toml'), policy.replace('level = "all"', 'level = "recommended"'));
+        const recommended = await executeRun(
+            await openSession(sandbox.path),
+            buildRunOptions({ only: ['structure/prefix-collisions'] }),
+        );
+        expect(recommended.report.checks).toStrictEqual([]);
+    },
+);
+
+test('all NestJS declaration kinds and spec suffixes follow scope ownership while JSX and unknown kinds still collide', async () => {
+    await using sandbox = await testdir();
+    const sourceFiles: Record<string, string> = {};
+    for (const scope of ['', 'app', 'app/deep', 'sibling'])
+        for (const kind of NESTJS_KIND_CASES)
+            for (const suffix of ['ts', 'spec.ts']) sourceFiles[posix.join(scope, `feature.${kind}.${suffix}`)] = '';
+    await createFileTree(sandbox.path, {
+        ...sourceFiles,
+        'gspot.toml': buildPolicy(['typescript'], {
+            level: 'all',
+            tables: '[scope.app]\nconfigurations = ["nestjs"]\n[scope."app/deep"]\n[scope.sibling]\n',
+        }),
+        'app/jsx.view.tsx': '',
+        'app/jsx.service.tsx': '',
+        'app/jsx.controller.tsx': '',
+        'app/custom.one.ts': '',
+        'app/custom.two.ts': '',
+        'app/custom.three.ts': '',
+    });
+    const result = await executeRun(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['structure/prefix-collisions'] }),
+    );
+    expect(
+        result.report.checks.map(({ scope, findings }) => ({ scope, paths: findings.map(({ file }) => file) })),
+    ).toStrictEqual([
+        { scope: '', paths: ['feature.controller.spec.ts'] },
+        { scope: 'app', paths: ['app/custom.one.ts', 'app/jsx.controller.tsx'] },
+        { scope: 'app/deep', paths: [] },
+        { scope: 'sibling', paths: ['sibling/feature.controller.spec.ts'] },
+    ]);
+});

@@ -58,41 +58,7 @@ export const CONFIG_LOGIC_NODES = new Set([
 
 export const CONFIG_CALL_ALLOWED = new Set(['Set', 'Map', 'RegExp']);
 
-/** Folder names that say nothing about what the folder holds. */
-
-export const NESTJS_KINDS = new Set([
-    'controller',
-    'service',
-    'module',
-    'guard',
-    'pipe',
-    'filter',
-    'interceptor',
-    'middleware',
-    'decorator',
-    'gateway',
-    'resolver',
-    'repository',
-    'entity',
-    'dto',
-    'strategy',
-    'provider',
-]);
-
 export const INDEX_STEMS = new Set(['index', 'mod', '__init__']);
-
-// A tool names these files and finds them by that name, so a folder holds several of them by design.
-export const TOOL_PREFIXES = new Set([
-    'tsconfig',
-    'jsconfig',
-    'vitest',
-    'vite',
-    'docker',
-    'eslint',
-    'playwright',
-    'package',
-    'pnpm',
-]);
 
 /** Comment styles for the languages whose code lines gspot counts. */
 export const COMMENT_STYLE_BY_EXTENSION: Record<string, CommentStyle> = {

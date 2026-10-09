@@ -1,3 +1,5 @@
+prefix_collisions = { prefixes = ["jsconfig", "eslint", "vite", "playwright"] }
+
 products = ["JavaScript", "ESLint", "knip"]
 untracked_files = ["**/{node_modules,bower_components}/**"]
 

@@ -1,6 +1,6 @@
 # Kits, Settings, and Names
 
-32 unresolved review records remain.
+30 unresolved review records remain.
 
 ## Findings
 
@@ -282,3 +282,12 @@ Original records and quotations remain above. These records are complete at `ac8
 | `areas/kits/017` | complete | Selected manifest products/tools and authored words replace the fixed list; native Vale root/child both levels: 4/16. Frozen and native evidence: /tmp/gspot-rules-three-fb8c-cp-final-integration-evidence.json; /tmp/gspot-rules-three-fb8c-cp-native-vocabulary.log. Commit `ac8df3a220b7ce78c78af2a05c4305f0d5b8c31d`. |
 | `areas/kits/054` | complete | Knip retains native defaults and consumes normalized test_files without sibling leakage; mise-only scripts remain conditional. Native Knip/commands 35/275; /tmp/gspot-rules-three-fb8c-cp-three-cli-corrected.log. Commit `ac8df3a220b7ce78c78af2a05c4305f0d5b8c31d`.                                                     |
 | `areas/kits/151` | complete | Delete neutral, omit optional direction, retain actual directions/reason hints, and label Loosens when. Native manifest 12/34, types0; /tmp/gspot-rules-three-fb8c-cp-declarations-corrected.log. Commit `ac8df3a220b7ce78c78af2a05c4305f0d5b8c31d`.                                                                       |
+
+## Implementation checkpoint 4ea1e5c00 of October 9, 2026 for repository and four CLI test fixes
+
+Original records and quotations remain above. These records are complete at `4ea1e5c0038d3390e14327ab6555cacba7ff71a9`.
+
+| ID               | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/kits/146` | complete | Repository owns large-files and tracked-files. gspot owns suppressions and unmatched-paths. Prose limit move was separately verified under areas/kits/022. Production and manifest declarations shrink1,946 bytes; native checkpoint123/472, types, producer freshness, normal apply and staged checks pass. Commit `4ea1e5c0038d3390e14327ab6555cacba7ff71a9`. |
+| `areas/kits/142` | complete | Kept always-selected gspot with drift, policy, policy-layout, suppressions and unmatched-paths; removed redundant structure requires. Current manifest and native checkpoint agree. Commit `4ea1e5c0038d3390e14327ab6555cacba7ff71a9`.                                                                                                                          |

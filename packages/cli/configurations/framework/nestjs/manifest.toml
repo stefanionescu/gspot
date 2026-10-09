@@ -1,3 +1,5 @@
+prefix_collisions = { kinds = ["controller", "service", "module", "guard", "pipe", "filter", "interceptor", "middleware", "decorator", "gateway", "resolver", "repository", "entity", "dto", "strategy", "provider"] }
+
 eslint_presets = { recommended = { package = "@darraghor/eslint-plugin-nestjs-typed", source = "configs.flatRecommended" }, noSwagger = { package = "@darraghor/eslint-plugin-nestjs-typed", source = "configs.flatNoSwagger" } }
 eslint_all_rules = [
     "@darraghor/nestjs-typed/api-operation-summary-description-capitalized",

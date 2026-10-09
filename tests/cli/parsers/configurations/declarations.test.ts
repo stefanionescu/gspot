@@ -217,3 +217,18 @@ test('a manifest can ignore its installation folder inside .gspot', () => {
         parseManifest('ignored = [".gspot/downloads/"]\n' + CONFIGURATION_TABLE, 'configurations/general/local'),
     ).not.toThrow();
 });
+
+test('native prefix collision facts validate once and have no policy allowance or disable field', () => {
+    const directory = 'configurations/framework/example';
+    expect(parseManifest(CONFIGURATION_TABLE, directory).prefix_collisions).toStrictEqual({ prefixes: [], kinds: [] });
+    expect(
+        parseManifest(
+            `prefix_collisions = { prefixes = ["tool"], kinds = ["controller"] }\n${CONFIGURATION_TABLE}`,
+            directory,
+        ).prefix_collisions,
+    ).toStrictEqual({ prefixes: ['tool'], kinds: ['controller'] });
+    for (const invalid of ['prefixes = [1]', 'kinds = [false]', 'allow = true'])
+        expect(() => parseManifest(`prefix_collisions = { ${invalid} }\n${CONFIGURATION_TABLE}`, directory)).toThrow(
+            'prefix_collisions',
+        );
+});

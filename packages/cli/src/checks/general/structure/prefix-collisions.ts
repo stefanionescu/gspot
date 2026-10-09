@@ -3,21 +3,22 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { isInScope } from '#cli/repository/paths/public.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { HOOK_DIRECTORIES } from '#cli/config/repository/hooks.ts';
+import { INDEX_STEMS } from '#cli/config/checks/general/structure.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
 import { extensionsTagged } from '#cli/repository/discovery/contracts.ts';
-import { INDEX_STEMS, NESTJS_KINDS, TOOL_PREFIXES } from '#cli/config/checks/general/structure.ts';
 import { structureSources, isDependencyFolder } from '#cli/checks/general/structure/source-files.ts';
 import { stemOf, prefixOf, directoryOf, extensionOf, directoryTree } from '#cli/platform/contracts.ts';
 
 // NestJS files share the feature name the folder already carries, so they do not form a set to regroup.
-function isNestjsName(name: string): boolean {
+function isNestjsName(name: string, kinds: Set<string>): boolean {
     const extension = extensionOf(name);
     // NestJS declaration names apply to script files without JSX.
     if (extension.endsWith('x') || !extensionsTagged('javascript', 'typescript').includes(extension)) return false;
-    const parts = name.slice(0, -extension.length).split('.');
-    const named = parts.at(-1) === 'spec' ? parts.slice(0, -1) : parts;
-    const kind = named.at(-1);
-    return named.length > 1 && kind !== undefined && NESTJS_KINDS.has(kind);
+    const parts = stemOf(name)
+        .replace(/\.spec$/u, '')
+        .split('.');
+    const kind = parts.at(-1);
+    return parts.length > 1 && kind !== undefined && kinds.has(kind);
 }
 
 function isSkipped(directory: string, scope: string): boolean {
@@ -31,19 +32,19 @@ function isSkipped(directory: string, scope: string): boolean {
  * @returns the findings
  */
 export const prefixCollisions: BuiltInCheck = (input) => {
-    const files = structureSources(input);
     const threshold = input.view.options('limits').prefix_collisions;
-    const isNest = input.selection.selected.some((manifest) => manifest.configuration.name === 'nestjs');
+    const prefixes = new Set(input.selection.selected.flatMap((manifest) => manifest.prefix_collisions.prefixes));
+    const kinds = new Set(input.selection.selected.flatMap((manifest) => manifest.prefix_collisions.kinds));
     const tree = directoryTree(input.files);
     const seen = new Set<string>();
-    return files.flatMap((file) => {
+    return structureSources(input).flatMap((file) => {
         const directory = directoryOf(file.path);
         const stem = stemOf(file.path);
         const prefix = prefixOf(stem);
         const key = JSON.stringify([directory, prefix]);
         if (
             prefix === '' ||
-            TOOL_PREFIXES.has(prefix) ||
+            prefixes.has(prefix) ||
             INDEX_STEMS.has(stem) ||
             seen.has(key) ||
             isSkipped(directory, input.scope)
@@ -56,7 +57,7 @@ export const prefixCollisions: BuiltInCheck = (input) => {
                     !DEPENDENCY_FOLDERS.includes(entry.name) &&
                     prefixOf(entry.name) === prefix
                 );
-            if (isNest && isNestjsName(entry.name)) return false;
+            if (isNestjsName(entry.name, kinds)) return false;
             const peerStem = stemOf(entry.name);
             return !INDEX_STEMS.has(peerStem) && prefixOf(peerStem) === prefix;
         });

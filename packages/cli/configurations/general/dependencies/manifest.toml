@@ -1,3 +1,5 @@
+prefix_collisions = { prefixes = ["package", "pnpm"] }
+
 products = ["osv-scanner"]
 [configuration]
 title = "Dependencies"

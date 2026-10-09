@@ -1,3 +1,5 @@
+prefix_collisions = { prefixes = ["docker"] }
+
 products = ["Docker", "Trivy", "hadolint"]
 [configuration]
 title = "Docker"

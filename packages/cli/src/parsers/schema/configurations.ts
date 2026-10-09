@@ -255,6 +255,7 @@ export const manifestSchema = z
             .default({}),
         eslint_all_rules: eslintAllRulesSchema.prefault([]),
         compiler_options: z.record(z.string().min(1), z.boolean()).default({}),
+        prefix_collisions: z.strictObject({ prefixes: stringList, kinds: stringList }).prefault({}),
         untracked_files: z.array(z.string().min(1)).default([]),
         ignored_folders: z.array(z.string().min(1)).default([]),
         dockerignore: z.array(z.string().min(1)).default([]),

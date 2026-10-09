@@ -1,6 +1,6 @@
 # Built-in Checks
 
-20 unresolved review records remain.
+19 unresolved review records remain.
 
 ## Findings
 
@@ -244,3 +244,11 @@ Original records and quotations remain above. These records are complete at `74f
 | ------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `areas/checks/009` | complete | Drift remains in its own general/gspot check. Three native history manifest checks declare runs=history; planner reads that value for root selection, activity and shallow-history refusal. Hard-coded HISTORY_CHECKS and callers deleted. Native selection tests and actual shallow push refusal/fetch correction pass. Commit `74fcf06452f0a0b0293130e5cff69d42e5ddd620`.                                          |
 | `areas/checks/027` | complete | One substantive pushedCommits in repository/revisions/public consumes native root, explicit commits and cancellation. All three native history runners use it and shared historyResult for empty result/no-Git refusal. Optimized gitleaks range body retained. Node and Bun revision-selection controls pass; actual commitlint and gitleaks history tests pass. Commit `74fcf06452f0a0b0293130e5cff69d42e5ddd620`. |
+
+## Implementation checkpoint 4ea1e5c00 of October 9, 2026 for repository and four CLI test fixes
+
+Original records and quotations remain above. These records are complete at `4ea1e5c0038d3390e14327ab6555cacba7ff71a9`.
+
+| ID                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                |
+| ------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/checks/052` | complete | Merged env-file and dependency-folder checks as repository/tracked-files, using one selected-manifest untracked_files list and one index read. Native checkpoint:123 tests,472 assertions; scopes, ignores, templates, language folders and env exceptions retained. Commit `4ea1e5c0038d3390e14327ab6555cacba7ff71a9`. |

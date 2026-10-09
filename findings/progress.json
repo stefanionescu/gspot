@@ -1,5 +1,5 @@
 {
-    "openRecords": 460,
+    "openRecords": 446,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -319,7 +319,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 460,
+        "openRecords": 446,
         "records": 1092,
         "batches": [
             {
@@ -625,8 +625,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 160,
-                "unresolvedAssignments": 131
+                "completedAssignments": 163,
+                "unresolvedAssignments": 128
             },
             {
                 "id": "python",
@@ -1485,8 +1485,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 282,
-                "unresolvedAssignments": 187
+                "completedAssignments": 293,
+                "unresolvedAssignments": 176
             },
             {
                 "id": "scripts-repository",
@@ -1625,8 +1625,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 46,
-                "unresolvedAssignments": 86
+                "completedAssignments": 47,
+                "unresolvedAssignments": 85
             },
             {
                 "id": "installation-docs",
@@ -2396,7 +2396,14 @@
                 }
             ]
         },
-        "areas/checks/052": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/checks/052": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "4ea1e5c0038d3390e14327ab6555cacba7ff71a9",
+            "verification": [
+                "Merged env-file and dependency-folder checks as repository/tracked-files, using one selected-manifest untracked_files list and one index read. Native checkpoint:123 tests,472 assertions; scopes, ignores, templates, language folders and env exceptions retained."
+            ]
+        },
         "areas/checks/054": {
             "status": "complete",
             "owner": "main",
@@ -3917,7 +3924,14 @@
             ]
         },
         "areas/kits/141": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/kits/142": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/kits/142": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "4ea1e5c0038d3390e14327ab6555cacba7ff71a9",
+            "verification": [
+                "Kept always-selected gspot with drift, policy, policy-layout, suppressions and unmatched-paths; removed redundant structure requires. Current manifest and native checkpoint agree."
+            ]
+        },
         "areas/kits/143": {
             "status": "complete",
             "owner": "main",
@@ -3945,7 +3959,14 @@
                 "Native201tests/736assertions/8files, types, producer and CLI build pass; pinned Node24/Bun list bytes match. Staged/push157pass/0findings. Exact67-owner preservation: /tmp/gspot-category144-cp-review/review-freeze.json."
             ]
         },
-        "areas/kits/146": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/kits/146": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "4ea1e5c0038d3390e14327ab6555cacba7ff71a9",
+            "verification": [
+                "Repository owns large-files and tracked-files. gspot owns suppressions and unmatched-paths. Prose limit move was separately verified under areas/kits/022. Production and manifest declarations shrink1,946 bytes; native checkpoint123/472, types, producer freshness, normal apply and staged checks pass."
+            ]
+        },
         "areas/kits/151": {
             "status": "complete",
             "owner": "main",
@@ -4253,7 +4274,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-diagnostic-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -4271,7 +4292,7 @@
             "additionalChanges": [
                 {
                     "commit": "d25d2e2720dcbf1f2c82758f5a9434e36497fb22",
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-diagnostic-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -8705,14 +8726,15 @@
             ]
         },
         "review/tests-cli/018": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "5e989e01976e7b4bf18d65ca0185ef82b898cfee",
+            "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
             "verification": [
                 "One checkReport helper captures code, streams and parsed RunReport. Migrated 188 captures; malformed command failures and raw-child tests retain their separate contracts.",
-                "Evidence e656d88028e1b7d5."
-            ],
-            "remaining": ["Related native platform CI evidence remains pending; no whole-platform success is inferred."]
+                "Evidence e656d88028e1b7d5.",
+                "One assertion-free checkReport owns valid report parsing. Only three intentional raw-child casts remain; the duplicate dependency-copy child was deleted in 02fd3b662.",
+                "Evidence 18ba4ccea1aba39e."
+            ]
         },
         "review/tests-cli/019": {
             "status": "complete",
@@ -8762,7 +8784,7 @@
             "additionalChanges": [
                 {
                     "commit": "3a3448c32fc0cee4badd20eeca54a22e32c31e6d",
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -9464,57 +9486,71 @@
             ]
         },
         "review/tests-cli/088": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 6fc0366f71b84a3b.", "Evidence c5fe4197977e442d."],
+            "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
+            "verification": [
+                "Evidence 6fc0366f71b84a3b.",
+                "Evidence c5fe4197977e442d.",
+                "One runtimeEvidenceCases calculation derives the 19 declared runtime/evidence rows and serves both detection and guide-selection tests.",
+                "Evidence 18ba4ccea1aba39e."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-repository-test-final-freeze.json",
-                    "commit": null,
+                    "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
                     "verification": ["Evidence 6fc0366f71b84a3b.", "Evidence c5fe4197977e442d."]
                 }
             ]
         },
         "review/tests-cli/089": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 6fc0366f71b84a3b.", "Evidence c5fe4197977e442d."],
+            "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
+            "verification": [
+                "Evidence 6fc0366f71b84a3b.",
+                "Evidence c5fe4197977e442d.",
+                "All six scope calculations use the local proposeProjectScopes with actual manifest-declared project files; current scope controls pass.",
+                "Evidence 18ba4ccea1aba39e."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-repository-test-final-freeze.json",
-                    "commit": null,
+                    "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
                     "verification": ["Evidence 6fc0366f71b84a3b.", "Evidence c5fe4197977e442d."]
                 }
             ]
         },
         "review/tests-cli/090": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
             "verification": [
                 "Evidence 5a818f24075a0cfa.",
                 "Evidence 258713162b37b4b7.",
                 "Evidence 6a7c595a871ccb1e.",
                 "Evidence 9198cfdc472a2230.",
-                "Evidence 17e92573e7fc59c1."
+                "Evidence 17e92573e7fc59c1.",
+                "One local stageRevision and revisionFailure replace repeated Git/rejection steps. Original callback bodies and outside assertions remain unchanged.",
+                "Evidence 18ba4ccea1aba39e."
             ]
         },
         "review/tests-cli/092": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
             "verification": [
                 "Evidence 87a24612d4d7ae4b.",
                 "Evidence b0bc9e5ebe9d9f79.",
                 "Evidence 89faa450416afe5e.",
-                "Evidence 6d7ecd90095141d4."
+                "Evidence 6d7ecd90095141d4.",
+                "Xcode project checks and direct parser positive/refusal cases now live in their check/parser owners; old repository owner is removed.",
+                "Evidence 18ba4ccea1aba39e."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-six-tool-test-owner-freeze.json",
-                    "commit": null,
+                    "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
                     "verification": [
                         "Evidence 87a24612d4d7ae4b.",
                         "Evidence b0bc9e5ebe9d9f79.",
@@ -9525,14 +9561,16 @@
             ]
         },
         "review/tests-cli/093": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
             "verification": [
                 "Evidence 77acd1051ffb7afa.",
                 "Evidence b1a64aa1d6df4033.",
                 "Evidence fd5350b8889a185c.",
-                "Evidence c865257f0179eace."
+                "Evidence c865257f0179eace.",
+                "The native Bash syntax case lives in checks/language/bash/syntax, preserving POSIX filename and repaired-finding controls.",
+                "Evidence 18ba4ccea1aba39e."
             ]
         },
         "review/tests-cli/096": {
@@ -9687,31 +9725,33 @@
             ]
         },
         "review/tests-cli/103": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "5e989e01976e7b4bf18d65ca0185ef82b898cfee",
+            "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
             "verification": [
                 "One swiftBuildInput helper owns common preparation and disposable resources; all prior assertions remain. Shared compiler-cache isolation has real callers.",
-                "Evidence e656d88028e1b7d5."
-            ],
-            "remaining": ["Related native platform CI evidence remains pending; no whole-platform success is inferred."]
+                "Evidence e656d88028e1b7d5.",
+                "One disposable swiftBuildInput owns repeated pinned compiler/cache/project setup. Fourteen helper sites and two distinct cache definitions preserve the original sixteen setups.",
+                "Evidence 18ba4ccea1aba39e."
+            ]
         },
         "review/tests-cli/106": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4ea1e5c0038d3390e14327ab6555cacba7ff71a9",
             "verification": [
                 "Evidence 5bb7824758aeff45.",
                 "Evidence a53e5b7df69c1017.",
                 "Evidence f86b3889dccaae54.",
                 "Evidence bde78241aaf10e80.",
-                "Evidence 1289292efe621fa2."
+                "Evidence 1289292efe621fa2.",
+                "All prescribed identity lookups and direct input construction removed. Final callers use public buildCheckInput by check ID; repository cases use checkReport, retired JS rules-off/import owners absent and trpc retains its controls. Exact pushed-owner and artifact hashes verified in /tmp/gspot-cli-four-main-provenance-proof.json; original native34/151 and CodeQL30/65 receipts retained."
             ]
         },
         "review/tests-cli/107": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4ea1e5c0038d3390e14327ab6555cacba7ff71a9",
             "verification": [
                 "Evidence a0cb041279508dcd.",
                 "Evidence 98bda92f1fb395a1.",
@@ -9719,7 +9759,8 @@
                 "Evidence 4274c37f1991ecbf.",
                 "Evidence 31cc8fb0f45d1c4c.",
                 "Evidence 00285fb212d8638d.",
-                "Evidence 1289292efe621fa2."
+                "Evidence 1289292efe621fa2.",
+                "Removed every prescribed redundant array-length assertion, retaining exact array, location and rule checks. Native original99 tests293 assertions; current final owner hashes and original freeze verified, including now-pushed Repository28 prerequisites."
             ]
         },
         "review/tests-cli/108": {
@@ -9937,7 +9978,7 @@
             "additionalChanges": [
                 {
                     "commit": "9384fcdf0524f4ba4693c835dad809f7088c589b",
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -9962,7 +10003,7 @@
             "additionalChanges": [
                 {
                     "commit": "9384fcdf0524f4ba4693c835dad809f7088c589b",
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -9971,14 +10012,15 @@
             ]
         },
         "review/tests-cli/129": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4ea1e5c0038d3390e14327ab6555cacba7ff71a9",
             "verification": [
                 "Evidence 2f80cdfc805aed3f.",
                 "Evidence cee9481f14cf8c75.",
                 "Evidence d283016767a09c8f.",
-                "Evidence f897b0b6ab7080f7."
+                "Evidence f897b0b6ab7080f7.",
+                "Provider-specific assertions replace always-true OR; manual --only command assertions live in generation/ci; one-element loop removed. Native generation8/26 and provider-plan3/21 evidence retained. Executable CI consumers stay in tools; no full tool-suite pass claimed."
             ]
         },
         "review/tests-cli/130": {
@@ -10160,16 +10202,17 @@
             ]
         },
         "review/tests-cli/143": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4ea1e5c0038d3390e14327ab6555cacba7ff71a9",
             "verification": [
                 "Evidence 4c422e170bac4ef8.",
                 "Evidence df6dfb5c3a007d44.",
                 "Evidence 1d56dfc2dfecf524.",
                 "Evidence 81f2b68541a631b5.",
                 "Evidence 5d49b3ca162fc267.",
-                "Final rootTypeScript actualexit0 execsession91426; independent read-only /tmp/gspot-independent-test-cases-independent-review.md passes exact frozen owner hashes, original case/matcher/order contracts and honest metrics. No closed record modified."
+                "Final rootTypeScript actualexit0 execsession91426; independent read-only /tmp/gspot-independent-test-cases-independent-review.md passes exact frozen owner hashes, original case/matcher/order contracts and honest metrics. No closed record modified.",
+                "All11 prescribed loop families register independent test.each cases. Adopted words map retains valid/refused reason controls instead of retired spelling-list schema. Original native168/754 plus titled89/423 and independent body/input review retained;705 bytes deleted, AST grows84. Pushed hashes verified; no Windows filesystem result inferred."
             ]
         },
         "review/tests-cli/145": {
@@ -10790,7 +10833,7 @@
             "additionalChanges": [
                 {
                     "commit": "b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1",
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-diagnostic-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -11760,7 +11803,7 @@
             "additionalChanges": [
                 {
                     "commit": "b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1",
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-diagnostic-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -11778,7 +11821,7 @@
             "additionalChanges": [
                 {
                     "commit": "b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1",
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -11842,7 +11885,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -11858,7 +11901,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -11876,7 +11919,7 @@
             "additionalChanges": [
                 {
                     "commit": "b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1",
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -11926,7 +11969,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -12323,7 +12366,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -12345,7 +12388,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -12367,7 +12410,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -12395,7 +12438,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -12417,7 +12460,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -12486,7 +12529,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13145,7 +13188,7 @@
             "additionalChanges": [
                 {
                     "commit": "c4baf441608b170c04c0b8bae53d13765e185340",
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-diagnostic-leaves-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13171,7 +13214,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-parser-fixer-next8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13294,7 +13337,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13310,7 +13353,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13326,7 +13369,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-parser-fixer-next8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13342,7 +13385,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-parser-fixer-next8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13358,7 +13401,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-parser-fixer-next8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13392,7 +13435,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-parser-fixer-next8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13408,7 +13451,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-parser-fixer-next8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13424,7 +13467,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13440,7 +13483,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13456,7 +13499,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13473,7 +13516,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13489,7 +13532,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13505,7 +13548,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13631,7 +13674,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13647,7 +13690,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13663,7 +13706,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -13712,7 +13755,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+                    "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
                     "limitations": [
                         "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
@@ -17075,6 +17118,45 @@
                 "Native framework replay on macOS. Final Linux/macOS/Windows CI acceptance remains pending; no skipped platform is claimed as verified. No publication, deployment or release tag."
             ],
             "ci": { "run": "https://github.com/stefanionescu/gspot/actions/runs/37897942132", "status": "pending" }
+        },
+        {
+            "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
+            "completedRecords": [
+                "review/tests-cli/018",
+                "review/tests-cli/088",
+                "review/tests-cli/089",
+                "review/tests-cli/090",
+                "review/tests-cli/092",
+                "review/tests-cli/093",
+                "review/tests-cli/103"
+            ],
+            "unresolvedRecords": 453,
+            "validation": [
+                "Original/current fixes and all exact pushed target hashes checked. Current Xcode/Bash10/21 and detector/selection294/656 pass; exact helper bodies retain original supported422/2254 and compiler21/87 evidence. Accepted d4 harness location/type changes are separate from unchanged target helpers."
+            ],
+            "limitations": [
+                "macOS native validation. POSIX/Windows filename controls are host conditional; no skipped platform or mocked executable is counted as native tool acceptance. Final suites remain pending."
+            ]
+        },
+        {
+            "commit": "4ea1e5c0038d3390e14327ab6555cacba7ff71a9",
+            "completedRecords": [
+                "areas/checks/052",
+                "areas/kits/146",
+                "areas/kits/142",
+                "review/tests-cli/106",
+                "review/tests-cli/107",
+                "review/tests-cli/129",
+                "review/tests-cli/143"
+            ],
+            "unresolvedRecords": 446,
+            "validation": [
+                "/tmp/gspot-cli-last-seven-whole-readiness.json and /tmp/gspot-cli-four-main-provenance-proof.json preserve exact binding rows, artifacts and pushed-owner proof.",
+                "Repository checkpoint123 tests472 assertions; original README example1 test9 assertions; final staged110pass0fail14skip0findings; normal push same110/0."
+            ],
+            "limitations": [
+                "Linux/macOS/Windows release acceptance remains separate. Current CI37900484161 pending; no platform skip is credited."
+            ]
         }
     ],
     "verificationEvidence": {
@@ -17435,6 +17517,8 @@
         "72441fb438977a48": "54 plugin rule tests pass across two files (Bun 1.4.2).",
         "a7da00fe96c955d2": "Root TypeScript passes. Seven selected native repository checks pass with zero findings.",
         "3075763d7b32a444": "Main commit/push blocked by protected Git metadata.",
-        "9adaf07e8a45ab42": "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Shared plugin packet -3616 bytes."
+        "9adaf07e8a45ab42": "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Shared plugin packet -3616 bytes.",
+        "18ba4ccea1aba39e": "Whole-fix, current pushed hash and native body proof: /tmp/gspot-cli-next-seven-whole-closure.json and /tmp/gspot-cli-next-seven-895-provenance-supplement.json.",
+        "82310834fde2dbeb": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint."
     }
 }

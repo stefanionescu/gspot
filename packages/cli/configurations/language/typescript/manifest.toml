@@ -1,3 +1,5 @@
+prefix_collisions = { prefixes = ["tsconfig"] }
+
 products = ["TypeScript"]
 eslint_presets = { strict = { package = "typescript-eslint", source = "configs.strictTypeChecked" }, untyped = { package = "typescript-eslint", source = "configs.disableTypeChecked" } }
 eslint_all_rules = [
