@@ -71,7 +71,7 @@ export function readGitSetting(root: string, key: string): string | undefined {
  */
 export function hooksDirectory(root: string): string {
     const result = runGitBlocking(root, ['rev-parse', '--git-path', 'hooks']);
-    if (result.code !== 0) throw new Error(`Cannot resolve the Git hooks folder: ${result.stderr.trim()}`);
+    if (result.code !== 0) throw new Error(`Cannot read the Git hooks folder: ${result.stderr.trim()}`);
     return resolve(root, result.stdout.replace(/\n$/u, ''));
 }
 

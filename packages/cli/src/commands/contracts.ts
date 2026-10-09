@@ -36,7 +36,7 @@ function errorText(error: unknown): string {
 }
 
 /**
- * Render the canonical policy diff from the transaction's already captured proposal.
+ * Emit the canonical policy diff from the transaction's already captured proposal.
  * @param result the prepared policy with its original bytes
  * @param summary the command's description of the requested edit
  * @returns the preview without writing policy or generated files
@@ -62,11 +62,11 @@ export function registerInstall(program: Program): void {
         .command('install')
         .summary('Install the locked tools')
         .description(
-            'Install the tools gspot.toml selects, at the versions in the committed lockfiles, and the selected Git hooks. install prepares missing or outdated tool lockfiles before installing. Run it after you clone a configured repository. If a package install fails, the previous lockfiles and installation stay. --refresh-lockfiles resolves the declared pins again before installation. --dry-run prints the commands and writes nothing.',
+            'Install the tools gspot.toml selects, at the versions in the committed lockfiles, and the selected Git hooks. install prepares missing or outdated tool lockfiles before installing. Run it after you clone a configured repository. If a package install fails, the previous lockfiles and installation stay. --refresh-lockfiles prepares fresh lockfiles from the declared pins before installation. --dry-run prints the commands and writes nothing.',
         )
         .addHelpText('after', commandHelp('install'))
         .option('--dry-run', 'Print the install commands and write nothing')
-        .option('--refresh-lockfiles', 'Resolve the declared tool pins again and install the prepared lockfiles')
+        .option('--refresh-lockfiles', 'Prepare fresh lockfiles from the declared tool pins and install them')
         .action(async (flags, command) => {
             printResult(
                 await installCommand({
@@ -141,7 +141,7 @@ export async function savePolicy(root: string, options: SavePolicyOptions): Prom
     } catch (error) {
         const reason = errorText(error);
         return {
-            text: `The policy change was not written: ${reason}\nResolve that, then retry the command.\n`,
+            text: `The policy change was not written: ${reason}\nFix that, then retry the command.\n`,
             json: { error: 'preparation', changed: false, applied: false, message: reason },
             exitCode: EXIT_ERROR,
         };
@@ -164,7 +164,7 @@ export async function savePolicy(root: string, options: SavePolicyOptions): Prom
         // The policy is written by now, so the result says it keeps the change and how to finish.
         const reason = errorText(error);
         return {
-            text: `${summary}\ngspot.toml keeps this change, and applying it stopped: ${reason}\nResolve that, then run gspot apply.\n`,
+            text: `${summary}\ngspot.toml keeps this change, and applying it stopped: ${reason}\nFix that, then run gspot apply.\n`,
             json: { error: 'apply', changed: result.changed, applied: false, message: reason },
             exitCode: EXIT_ERROR,
         };

@@ -58,7 +58,7 @@ test('ignore removal keeps its summary and apply failure while preserving edited
     expect(removed.stdout).toStartWith('removed 1 ignore entry for bash/shellcheck\n');
     expect(removed.stdout).toContain('gspot.toml keeps this change, and applying it stopped:');
     expect(removed.stdout).toContain('These edited files were not overwritten by gspot: .gspot/config/shellcheckrc.');
-    expect(removed.stdout).toContain('Resolve that, then run gspot apply.\n');
+    expect(removed.stdout).toContain('Fix that, then run gspot apply.\n');
     expect(parse(await readFile(join(directory.path, 'gspot.toml'), 'utf8'))['ignore']).toBeUndefined();
     expect(await readFile(config, 'utf8')).toBe(edited);
     expect(await readFile(join(directory.path, 'entry.sh'), 'utf8')).toBe('echo example\n');
