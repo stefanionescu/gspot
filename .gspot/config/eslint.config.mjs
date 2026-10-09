@@ -308,119 +308,85 @@ export default [
         {
             "category": "module:commands",
             "pattern": [
-                "packages/cli/src/public.ts",
-                "packages/cli/src/commands/**",
-                "packages/cli/src/config/commands/**",
-                "packages/cli/src/types/commands/**"
+                "packages/cli/src/{public.ts,commands/**,config/commands/**,types/commands/**}"
             ]
         },
         {
             "category": "module:checks",
             "pattern": [
-                "packages/cli/src/checks/**",
-                "packages/cli/src/config/checks/**",
-                "packages/cli/src/types/checks/**"
+                "packages/cli/src/{,config/,types/}checks/**"
             ]
         },
         {
             "category": "module:terminal",
             "pattern": [
-                "packages/cli/src/terminal/**",
-                "packages/cli/src/config/terminal.ts",
-                "packages/cli/src/types/terminal.ts"
+                "packages/cli/src/{terminal/**,config/terminal.ts,types/terminal.ts}"
             ]
         },
         {
             "category": "module:execution",
             "pattern": [
-                "packages/cli/src/execution/**",
-                "packages/cli/src/config/execution/**",
-                "packages/cli/src/types/execution/**"
+                "packages/cli/src/{,config/,types/}execution/**"
             ]
         },
         {
             "category": "module:lifecycle",
             "pattern": [
-                "packages/cli/src/lifecycle/**",
-                "packages/cli/src/config/lifecycle/**",
-                "packages/cli/src/types/lifecycle/**"
+                "packages/cli/src/{,config/,types/}lifecycle/**"
             ]
         },
         {
             "category": "module:generation",
             "pattern": [
-                "packages/cli/src/generation/**",
-                "packages/cli/src/config/generation/**",
-                "packages/cli/src/types/generation/**"
+                "packages/cli/src/{,config/,types/}generation/**"
             ]
         },
         {
             "category": "module:planning",
             "pattern": [
-                "packages/cli/src/planning/**",
-                "packages/cli/src/config/planning.ts",
-                "packages/cli/src/types/planning.ts"
+                "packages/cli/src/{planning/**,config/planning.ts,types/planning.ts}"
             ]
         },
         {
             "category": "module:tools",
             "pattern": [
-                "packages/cli/src/tools/**",
-                "packages/cli/src/config/tools/!(vale).ts",
-                "packages/cli/src/types/tools/**"
+                "packages/cli/src/{tools/**,config/tools/!(vale).ts,types/tools/**}"
             ]
         },
         {
             "category": "module:policy",
             "pattern": [
-                "packages/cli/src/policy/**",
-                "packages/cli/src/config/policy/**",
-                "packages/cli/src/types/policy/**"
+                "packages/cli/src/{,config/,types/}policy/**"
             ]
         },
         {
             "category": "module:agent-rules",
             "pattern": [
-                "packages/cli/src/agent-rules/**",
-                "packages/cli/src/config/agent-rules.ts",
-                "packages/cli/src/types/agent-rules.ts"
+                "packages/cli/src/{agent-rules/**,config/agent-rules.ts,types/agent-rules.ts}"
             ]
         },
         {
             "category": "module:configurations",
             "pattern": [
-                "packages/cli/src/configurations/**",
-                "packages/cli/src/parsers/schema/configurations.ts",
-                "packages/cli/src/config/configurations.ts",
-                "packages/cli/src/config/tools/vale.ts",
-                "packages/cli/src/types/configurations.ts"
+                "packages/cli/src/{configurations/**,parsers/schema/configurations.ts,config/configurations.ts,config/tools/vale.ts,types/configurations.ts}"
             ]
         },
         {
             "category": "module:repository",
             "pattern": [
-                "packages/cli/src/repository/**",
-                "packages/cli/src/config/repository/**",
-                "packages/cli/src/types/repository/**"
+                "packages/cli/src/{,config/,types/}repository/**"
             ]
         },
         {
             "category": "module:parsers",
             "pattern": [
-                "packages/cli/src/parsers/*.ts",
-                "packages/cli/src/parsers/!(schema)/**",
-                "packages/cli/src/parsers/schema/!(configurations).ts",
-                "packages/cli/src/parsers/schema/python/**",
-                "packages/cli/src/config/parsers/**",
-                "packages/cli/src/types/parsers/**"
+                "packages/cli/src/{parsers/*.ts,parsers/!(schema)/**,parsers/schema/!(configurations).ts,parsers/schema/python/**,config/parsers/**,types/parsers/**}"
             ]
         },
         {
             "category": "module:platform",
             "pattern": [
-                "packages/cli/src/platform/**",
-                "packages/cli/src/config/platform/**",
-                "packages/cli/src/types/platform/**"
+                "packages/cli/src/{,config/,types/}platform/**"
             ]
         },
         {
@@ -543,119 +509,85 @@ export default [
         {
             "category": "module:commands",
             "pattern": [
-                "packages/cli/src/public.ts",
-                "packages/cli/src/commands/**",
-                "packages/cli/src/config/commands/**",
-                "packages/cli/src/types/commands/**"
+                "packages/cli/src/{public.ts,commands/**,config/commands/**,types/commands/**}"
             ]
         },
         {
             "category": "module:checks",
             "pattern": [
-                "packages/cli/src/checks/**",
-                "packages/cli/src/config/checks/**",
-                "packages/cli/src/types/checks/**"
+                "packages/cli/src/{,config/,types/}checks/**"
             ]
         },
         {
             "category": "module:terminal",
             "pattern": [
-                "packages/cli/src/terminal/**",
-                "packages/cli/src/config/terminal.ts",
-                "packages/cli/src/types/terminal.ts"
+                "packages/cli/src/{terminal/**,config/terminal.ts,types/terminal.ts}"
             ]
         },
         {
             "category": "module:execution",
             "pattern": [
-                "packages/cli/src/execution/**",
-                "packages/cli/src/config/execution/**",
-                "packages/cli/src/types/execution/**"
+                "packages/cli/src/{,config/,types/}execution/**"
             ]
         },
         {
             "category": "module:lifecycle",
             "pattern": [
-                "packages/cli/src/lifecycle/**",
-                "packages/cli/src/config/lifecycle/**",
-                "packages/cli/src/types/lifecycle/**"
+                "packages/cli/src/{,config/,types/}lifecycle/**"
             ]
         },
         {
             "category": "module:generation",
             "pattern": [
-                "packages/cli/src/generation/**",
-                "packages/cli/src/config/generation/**",
-                "packages/cli/src/types/generation/**"
+                "packages/cli/src/{,config/,types/}generation/**"
             ]
         },
         {
             "category": "module:planning",
             "pattern": [
-                "packages/cli/src/planning/**",
-                "packages/cli/src/config/planning.ts",
-                "packages/cli/src/types/planning.ts"
+                "packages/cli/src/{planning/**,config/planning.ts,types/planning.ts}"
             ]
         },
         {
             "category": "module:tools",
             "pattern": [
-                "packages/cli/src/tools/**",
-                "packages/cli/src/config/tools/!(vale).ts",
-                "packages/cli/src/types/tools/**"
+                "packages/cli/src/{tools/**,config/tools/!(vale).ts,types/tools/**}"
             ]
         },
         {
             "category": "module:policy",
             "pattern": [
-                "packages/cli/src/policy/**",
-                "packages/cli/src/config/policy/**",
-                "packages/cli/src/types/policy/**"
+                "packages/cli/src/{,config/,types/}policy/**"
             ]
         },
         {
             "category": "module:agent-rules",
             "pattern": [
-                "packages/cli/src/agent-rules/**",
-                "packages/cli/src/config/agent-rules.ts",
-                "packages/cli/src/types/agent-rules.ts"
+                "packages/cli/src/{agent-rules/**,config/agent-rules.ts,types/agent-rules.ts}"
             ]
         },
         {
             "category": "module:configurations",
             "pattern": [
-                "packages/cli/src/configurations/**",
-                "packages/cli/src/parsers/schema/configurations.ts",
-                "packages/cli/src/config/configurations.ts",
-                "packages/cli/src/config/tools/vale.ts",
-                "packages/cli/src/types/configurations.ts"
+                "packages/cli/src/{configurations/**,parsers/schema/configurations.ts,config/configurations.ts,config/tools/vale.ts,types/configurations.ts}"
             ]
         },
         {
             "category": "module:repository",
             "pattern": [
-                "packages/cli/src/repository/**",
-                "packages/cli/src/config/repository/**",
-                "packages/cli/src/types/repository/**"
+                "packages/cli/src/{,config/,types/}repository/**"
             ]
         },
         {
             "category": "module:parsers",
             "pattern": [
-                "packages/cli/src/parsers/*.ts",
-                "packages/cli/src/parsers/!(schema)/**",
-                "packages/cli/src/parsers/schema/!(configurations).ts",
-                "packages/cli/src/parsers/schema/python/**",
-                "packages/cli/src/config/parsers/**",
-                "packages/cli/src/types/parsers/**"
+                "packages/cli/src/{parsers/*.ts,parsers/!(schema)/**,parsers/schema/!(configurations).ts,parsers/schema/python/**,config/parsers/**,types/parsers/**}"
             ]
         },
         {
             "category": "module:platform",
             "pattern": [
-                "packages/cli/src/platform/**",
-                "packages/cli/src/config/platform/**",
-                "packages/cli/src/types/platform/**"
+                "packages/cli/src/{,config/,types/}platform/**"
             ]
         },
         {
@@ -778,119 +710,85 @@ export default [
         {
             "category": "module:commands",
             "pattern": [
-                "packages/cli/src/public.ts",
-                "packages/cli/src/commands/**",
-                "packages/cli/src/config/commands/**",
-                "packages/cli/src/types/commands/**"
+                "packages/cli/src/{public.ts,commands/**,config/commands/**,types/commands/**}"
             ]
         },
         {
             "category": "module:checks",
             "pattern": [
-                "packages/cli/src/checks/**",
-                "packages/cli/src/config/checks/**",
-                "packages/cli/src/types/checks/**"
+                "packages/cli/src/{,config/,types/}checks/**"
             ]
         },
         {
             "category": "module:terminal",
             "pattern": [
-                "packages/cli/src/terminal/**",
-                "packages/cli/src/config/terminal.ts",
-                "packages/cli/src/types/terminal.ts"
+                "packages/cli/src/{terminal/**,config/terminal.ts,types/terminal.ts}"
             ]
         },
         {
             "category": "module:execution",
             "pattern": [
-                "packages/cli/src/execution/**",
-                "packages/cli/src/config/execution/**",
-                "packages/cli/src/types/execution/**"
+                "packages/cli/src/{,config/,types/}execution/**"
             ]
         },
         {
             "category": "module:lifecycle",
             "pattern": [
-                "packages/cli/src/lifecycle/**",
-                "packages/cli/src/config/lifecycle/**",
-                "packages/cli/src/types/lifecycle/**"
+                "packages/cli/src/{,config/,types/}lifecycle/**"
             ]
         },
         {
             "category": "module:generation",
             "pattern": [
-                "packages/cli/src/generation/**",
-                "packages/cli/src/config/generation/**",
-                "packages/cli/src/types/generation/**"
+                "packages/cli/src/{,config/,types/}generation/**"
             ]
         },
         {
             "category": "module:planning",
             "pattern": [
-                "packages/cli/src/planning/**",
-                "packages/cli/src/config/planning.ts",
-                "packages/cli/src/types/planning.ts"
+                "packages/cli/src/{planning/**,config/planning.ts,types/planning.ts}"
             ]
         },
         {
             "category": "module:tools",
             "pattern": [
-                "packages/cli/src/tools/**",
-                "packages/cli/src/config/tools/!(vale).ts",
-                "packages/cli/src/types/tools/**"
+                "packages/cli/src/{tools/**,config/tools/!(vale).ts,types/tools/**}"
             ]
         },
         {
             "category": "module:policy",
             "pattern": [
-                "packages/cli/src/policy/**",
-                "packages/cli/src/config/policy/**",
-                "packages/cli/src/types/policy/**"
+                "packages/cli/src/{,config/,types/}policy/**"
             ]
         },
         {
             "category": "module:agent-rules",
             "pattern": [
-                "packages/cli/src/agent-rules/**",
-                "packages/cli/src/config/agent-rules.ts",
-                "packages/cli/src/types/agent-rules.ts"
+                "packages/cli/src/{agent-rules/**,config/agent-rules.ts,types/agent-rules.ts}"
             ]
         },
         {
             "category": "module:configurations",
             "pattern": [
-                "packages/cli/src/configurations/**",
-                "packages/cli/src/parsers/schema/configurations.ts",
-                "packages/cli/src/config/configurations.ts",
-                "packages/cli/src/config/tools/vale.ts",
-                "packages/cli/src/types/configurations.ts"
+                "packages/cli/src/{configurations/**,parsers/schema/configurations.ts,config/configurations.ts,config/tools/vale.ts,types/configurations.ts}"
             ]
         },
         {
             "category": "module:repository",
             "pattern": [
-                "packages/cli/src/repository/**",
-                "packages/cli/src/config/repository/**",
-                "packages/cli/src/types/repository/**"
+                "packages/cli/src/{,config/,types/}repository/**"
             ]
         },
         {
             "category": "module:parsers",
             "pattern": [
-                "packages/cli/src/parsers/*.ts",
-                "packages/cli/src/parsers/!(schema)/**",
-                "packages/cli/src/parsers/schema/!(configurations).ts",
-                "packages/cli/src/parsers/schema/python/**",
-                "packages/cli/src/config/parsers/**",
-                "packages/cli/src/types/parsers/**"
+                "packages/cli/src/{parsers/*.ts,parsers/!(schema)/**,parsers/schema/!(configurations).ts,parsers/schema/python/**,config/parsers/**,types/parsers/**}"
             ]
         },
         {
             "category": "module:platform",
             "pattern": [
-                "packages/cli/src/platform/**",
-                "packages/cli/src/config/platform/**",
-                "packages/cli/src/types/platform/**"
+                "packages/cli/src/{,config/,types/}platform/**"
             ]
         },
         {
@@ -1013,119 +911,85 @@ export default [
         {
             "category": "module:commands",
             "pattern": [
-                "packages/cli/src/public.ts",
-                "packages/cli/src/commands/**",
-                "packages/cli/src/config/commands/**",
-                "packages/cli/src/types/commands/**"
+                "packages/cli/src/{public.ts,commands/**,config/commands/**,types/commands/**}"
             ]
         },
         {
             "category": "module:checks",
             "pattern": [
-                "packages/cli/src/checks/**",
-                "packages/cli/src/config/checks/**",
-                "packages/cli/src/types/checks/**"
+                "packages/cli/src/{,config/,types/}checks/**"
             ]
         },
         {
             "category": "module:terminal",
             "pattern": [
-                "packages/cli/src/terminal/**",
-                "packages/cli/src/config/terminal.ts",
-                "packages/cli/src/types/terminal.ts"
+                "packages/cli/src/{terminal/**,config/terminal.ts,types/terminal.ts}"
             ]
         },
         {
             "category": "module:execution",
             "pattern": [
-                "packages/cli/src/execution/**",
-                "packages/cli/src/config/execution/**",
-                "packages/cli/src/types/execution/**"
+                "packages/cli/src/{,config/,types/}execution/**"
             ]
         },
         {
             "category": "module:lifecycle",
             "pattern": [
-                "packages/cli/src/lifecycle/**",
-                "packages/cli/src/config/lifecycle/**",
-                "packages/cli/src/types/lifecycle/**"
+                "packages/cli/src/{,config/,types/}lifecycle/**"
             ]
         },
         {
             "category": "module:generation",
             "pattern": [
-                "packages/cli/src/generation/**",
-                "packages/cli/src/config/generation/**",
-                "packages/cli/src/types/generation/**"
+                "packages/cli/src/{,config/,types/}generation/**"
             ]
         },
         {
             "category": "module:planning",
             "pattern": [
-                "packages/cli/src/planning/**",
-                "packages/cli/src/config/planning.ts",
-                "packages/cli/src/types/planning.ts"
+                "packages/cli/src/{planning/**,config/planning.ts,types/planning.ts}"
             ]
         },
         {
             "category": "module:tools",
             "pattern": [
-                "packages/cli/src/tools/**",
-                "packages/cli/src/config/tools/!(vale).ts",
-                "packages/cli/src/types/tools/**"
+                "packages/cli/src/{tools/**,config/tools/!(vale).ts,types/tools/**}"
             ]
         },
         {
             "category": "module:policy",
             "pattern": [
-                "packages/cli/src/policy/**",
-                "packages/cli/src/config/policy/**",
-                "packages/cli/src/types/policy/**"
+                "packages/cli/src/{,config/,types/}policy/**"
             ]
         },
         {
             "category": "module:agent-rules",
             "pattern": [
-                "packages/cli/src/agent-rules/**",
-                "packages/cli/src/config/agent-rules.ts",
-                "packages/cli/src/types/agent-rules.ts"
+                "packages/cli/src/{agent-rules/**,config/agent-rules.ts,types/agent-rules.ts}"
             ]
         },
         {
             "category": "module:configurations",
             "pattern": [
-                "packages/cli/src/configurations/**",
-                "packages/cli/src/parsers/schema/configurations.ts",
-                "packages/cli/src/config/configurations.ts",
-                "packages/cli/src/config/tools/vale.ts",
-                "packages/cli/src/types/configurations.ts"
+                "packages/cli/src/{configurations/**,parsers/schema/configurations.ts,config/configurations.ts,config/tools/vale.ts,types/configurations.ts}"
             ]
         },
         {
             "category": "module:repository",
             "pattern": [
-                "packages/cli/src/repository/**",
-                "packages/cli/src/config/repository/**",
-                "packages/cli/src/types/repository/**"
+                "packages/cli/src/{,config/,types/}repository/**"
             ]
         },
         {
             "category": "module:parsers",
             "pattern": [
-                "packages/cli/src/parsers/*.ts",
-                "packages/cli/src/parsers/!(schema)/**",
-                "packages/cli/src/parsers/schema/!(configurations).ts",
-                "packages/cli/src/parsers/schema/python/**",
-                "packages/cli/src/config/parsers/**",
-                "packages/cli/src/types/parsers/**"
+                "packages/cli/src/{parsers/*.ts,parsers/!(schema)/**,parsers/schema/!(configurations).ts,parsers/schema/python/**,config/parsers/**,types/parsers/**}"
             ]
         },
         {
             "category": "module:platform",
             "pattern": [
-                "packages/cli/src/platform/**",
-                "packages/cli/src/config/platform/**",
-                "packages/cli/src/types/platform/**"
+                "packages/cli/src/{,config/,types/}platform/**"
             ]
         },
         {
@@ -1248,119 +1112,85 @@ export default [
         {
             "category": "module:commands",
             "pattern": [
-                "packages/cli/src/public.ts",
-                "packages/cli/src/commands/**",
-                "packages/cli/src/config/commands/**",
-                "packages/cli/src/types/commands/**"
+                "packages/cli/src/{public.ts,commands/**,config/commands/**,types/commands/**}"
             ]
         },
         {
             "category": "module:checks",
             "pattern": [
-                "packages/cli/src/checks/**",
-                "packages/cli/src/config/checks/**",
-                "packages/cli/src/types/checks/**"
+                "packages/cli/src/{,config/,types/}checks/**"
             ]
         },
         {
             "category": "module:terminal",
             "pattern": [
-                "packages/cli/src/terminal/**",
-                "packages/cli/src/config/terminal.ts",
-                "packages/cli/src/types/terminal.ts"
+                "packages/cli/src/{terminal/**,config/terminal.ts,types/terminal.ts}"
             ]
         },
         {
             "category": "module:execution",
             "pattern": [
-                "packages/cli/src/execution/**",
-                "packages/cli/src/config/execution/**",
-                "packages/cli/src/types/execution/**"
+                "packages/cli/src/{,config/,types/}execution/**"
             ]
         },
         {
             "category": "module:lifecycle",
             "pattern": [
-                "packages/cli/src/lifecycle/**",
-                "packages/cli/src/config/lifecycle/**",
-                "packages/cli/src/types/lifecycle/**"
+                "packages/cli/src/{,config/,types/}lifecycle/**"
             ]
         },
         {
             "category": "module:generation",
             "pattern": [
-                "packages/cli/src/generation/**",
-                "packages/cli/src/config/generation/**",
-                "packages/cli/src/types/generation/**"
+                "packages/cli/src/{,config/,types/}generation/**"
             ]
         },
         {
             "category": "module:planning",
             "pattern": [
-                "packages/cli/src/planning/**",
-                "packages/cli/src/config/planning.ts",
-                "packages/cli/src/types/planning.ts"
+                "packages/cli/src/{planning/**,config/planning.ts,types/planning.ts}"
             ]
         },
         {
             "category": "module:tools",
             "pattern": [
-                "packages/cli/src/tools/**",
-                "packages/cli/src/config/tools/!(vale).ts",
-                "packages/cli/src/types/tools/**"
+                "packages/cli/src/{tools/**,config/tools/!(vale).ts,types/tools/**}"
             ]
         },
         {
             "category": "module:policy",
             "pattern": [
-                "packages/cli/src/policy/**",
-                "packages/cli/src/config/policy/**",
-                "packages/cli/src/types/policy/**"
+                "packages/cli/src/{,config/,types/}policy/**"
             ]
         },
         {
             "category": "module:agent-rules",
             "pattern": [
-                "packages/cli/src/agent-rules/**",
-                "packages/cli/src/config/agent-rules.ts",
-                "packages/cli/src/types/agent-rules.ts"
+                "packages/cli/src/{agent-rules/**,config/agent-rules.ts,types/agent-rules.ts}"
             ]
         },
         {
             "category": "module:configurations",
             "pattern": [
-                "packages/cli/src/configurations/**",
-                "packages/cli/src/parsers/schema/configurations.ts",
-                "packages/cli/src/config/configurations.ts",
-                "packages/cli/src/config/tools/vale.ts",
-                "packages/cli/src/types/configurations.ts"
+                "packages/cli/src/{configurations/**,parsers/schema/configurations.ts,config/configurations.ts,config/tools/vale.ts,types/configurations.ts}"
             ]
         },
         {
             "category": "module:repository",
             "pattern": [
-                "packages/cli/src/repository/**",
-                "packages/cli/src/config/repository/**",
-                "packages/cli/src/types/repository/**"
+                "packages/cli/src/{,config/,types/}repository/**"
             ]
         },
         {
             "category": "module:parsers",
             "pattern": [
-                "packages/cli/src/parsers/*.ts",
-                "packages/cli/src/parsers/!(schema)/**",
-                "packages/cli/src/parsers/schema/!(configurations).ts",
-                "packages/cli/src/parsers/schema/python/**",
-                "packages/cli/src/config/parsers/**",
-                "packages/cli/src/types/parsers/**"
+                "packages/cli/src/{parsers/*.ts,parsers/!(schema)/**,parsers/schema/!(configurations).ts,parsers/schema/python/**,config/parsers/**,types/parsers/**}"
             ]
         },
         {
             "category": "module:platform",
             "pattern": [
-                "packages/cli/src/platform/**",
-                "packages/cli/src/config/platform/**",
-                "packages/cli/src/types/platform/**"
+                "packages/cli/src/{,config/,types/}platform/**"
             ]
         },
         {
