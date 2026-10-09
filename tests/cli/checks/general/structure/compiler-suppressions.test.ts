@@ -43,7 +43,7 @@ test.each(['javascript', 'typescript'])(
                 .toSorted((left, right) => left.localeCompare(right))
                 .map((file) => ({ file, line: 1, form: 'tsc', reason: undefined, forbidden: false })),
         );
-        const missing = await checkReport(sandbox.path, ['check', '--only', 'structure/suppressions', '--json']);
+        const missing = await checkReport(sandbox.path, ['check', '--only', 'gspot/suppressions', '--json']);
         expect(missing.code, missing.stdout + missing.stderr).toBe(1);
         expect(
             missing.report.checks.flatMap(({ findings }) =>
@@ -59,7 +59,7 @@ test.each(['javascript', 'typescript'])(
                 join(sandbox.path, paths[index]!),
                 `// @ts-${directive}: ${COMPILER_REASON}\n${COMPILER_SOURCE}`,
             );
-        const reasoned = await runGspot(sandbox.path, ['check', '--only', 'structure/suppressions', '--json']);
+        const reasoned = await runGspot(sandbox.path, ['check', '--only', 'gspot/suppressions', '--json']);
         expect(reasoned.code, reasoned.stdout + reasoned.stderr).toBe(0);
         for (const [index, directive] of COMPILER_DIRECTIVES.entries())
             expect(await Bun.file(join(sandbox.path, paths[index]!)).text()).toBe(

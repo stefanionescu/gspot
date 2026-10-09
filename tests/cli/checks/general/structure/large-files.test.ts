@@ -21,8 +21,8 @@ test('a file over the limit that is neither declared nor under LFS is reported',
         join(sandbox.path, 'gspot.toml'),
         stringify({ level: 'all', ...REPOSITORY_SHAPE_POLICY, limits: { file_kb: 1 } }),
     );
-    const found = BUILT_IN_CHECKS['structure/large-files'].input(
-        buildCheckInput(await openSession(sandbox.path), 'structure/large-files', { paths: paths }),
+    const found = BUILT_IN_CHECKS['repository/large-files'].input(
+        buildCheckInput(await openSession(sandbox.path), 'repository/large-files', { paths: paths }),
     );
     expect(found.map((finding) => finding.file)).toStrictEqual(['big.bin']);
 });

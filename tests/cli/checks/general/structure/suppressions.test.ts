@@ -78,10 +78,7 @@ test.each([
             [path]: source,
         });
         const session = await openSession(sandbox.path);
-        const result = await executeRun(
-            session,
-            buildRunOptions({ stage: 'commit', only: ['structure/suppressions'] }),
-        );
+        const result = await executeRun(session, buildRunOptions({ stage: 'commit', only: ['gspot/suppressions'] }));
         expect(result.report.checks.map(({ status }) => status)).toStrictEqual([
             lines.length === 0 ? 'passed' : 'failed',
         ]);
@@ -111,13 +108,13 @@ test.each(['recommended', 'all'] as const)('Vale directives fail at %s', async (
         'query.sql': '/* Explains the query. */\nSELECT 1;\n',
         'source.ts': 'const example = "<!-- vale off -->";\n',
     });
-    const command = ['check', '--only', 'structure/suppressions', '--json'];
+    const command = ['check', '--only', 'gspot/suppressions', '--json'];
     await Bun.write(join(sandbox.path, 'guide.mdx'), Bun.file(join(sandbox.path, 'guide.md')));
     const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.report.checks).toMatchObject([
         {
-            check: 'structure/suppressions',
+            check: 'gspot/suppressions',
             status: 'failed',
             findings: [
                 { file: 'guide.md', rule: 'vale', line: 3 },
@@ -132,9 +129,7 @@ test.each(['recommended', 'all'] as const)('Vale directives fail at %s', async (
     await Bun.write(join(sandbox.path, 'guide.mdx'), Bun.file(join(sandbox.path, 'guide.md')));
     const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks).toMatchObject([
-        { check: 'structure/suppressions', status: 'passed', findings: [] },
-    ]);
+    expect(corrected.report.checks).toMatchObject([{ check: 'gspot/suppressions', status: 'passed', findings: [] }]);
     expect(await Bun.file(join(sandbox.path, 'query.sql')).text()).toBe('/* Explains the query. */\nSELECT 1;\n');
 });
 
@@ -166,10 +161,7 @@ test.each(['-->', '--!>'])(
             },
             { file: 'page.html', line: 2, form: 'html-validate', reasonForm, forbidden: false },
         ]);
-        const result = await executeRun(
-            session,
-            buildRunOptions({ stage: 'commit', only: ['structure/suppressions'] }),
-        );
+        const result = await executeRun(session, buildRunOptions({ stage: 'commit', only: ['gspot/suppressions'] }));
         expect(result.report.exitCode).toBe(1);
         expect(
             result.report.checks.flatMap((check) => check.findings).map(({ file, line }) => ({ file, line })),
@@ -189,7 +181,7 @@ test.each(['recommended', 'all'] as const)(
         });
         const failed = await executeRun(
             await openSession(sandbox.path),
-            buildRunOptions({ only: ['structure/suppressions'] }),
+            buildRunOptions({ only: ['gspot/suppressions'] }),
         );
         expect(failed.report.exitCode).toBe(1);
         expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
@@ -200,7 +192,7 @@ test.each(['recommended', 'all'] as const)(
         await Bun.write(join(sandbox.path, path), corrected);
         const passed = await executeRun(
             await openSession(sandbox.path),
-            buildRunOptions({ only: ['structure/suppressions'] }),
+            buildRunOptions({ only: ['gspot/suppressions'] }),
         );
         expect(passed.report.exitCode).toBe(0);
         expect(passed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
@@ -216,7 +208,7 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
         'query.sql': 'SELECT 1; -- noqa: LT01\n',
         'entry.py': 'answer = 1  # noqa: F841\n',
     });
-    const result = await checkReport(directory.path, ['check', '--only', 'structure/suppressions', '--json']);
+    const result = await checkReport(directory.path, ['check', '--only', 'gspot/suppressions', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const report = result.report;
     expect(report.checks[0]!.findings).toStrictEqual(

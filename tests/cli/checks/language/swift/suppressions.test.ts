@@ -13,7 +13,7 @@ test.each(['swiftformat:disable blockComments', 'periphery:ignore'])(
             'gspot.toml': buildPolicy(['swift'], { level: 'all' }),
             'Value.swift': source,
         });
-        const command = ['check', '--only', 'structure/suppressions', '--json'];
+        const command = ['check', '--only', 'gspot/suppressions', '--json'];
         const failed = await checkReport(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(failed.report.checks).toMatchObject([

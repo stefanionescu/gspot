@@ -3,7 +3,7 @@
 # Run gspot apply after changing policy. Use gspot explain <name> to inspect a setting.
 
 level = "all"
-configurations = ["spelling", "typescript", "prose", "commits", "github-actions", "naming", "docs", "secrets", "dependencies", "licenses", "duplication", "security", "engineering", "files", "markdown", "format", "gspot", "structure", "javascript"]
+configurations = ["spelling", "typescript", "prose", "commits", "github-actions", "naming", "docs", "secrets", "dependencies", "licenses", "duplication", "security", "engineering", "files", "markdown", "format", "gspot", "structure", "javascript", "repository"]
 runner = "mise"
 
 [scope.docs]

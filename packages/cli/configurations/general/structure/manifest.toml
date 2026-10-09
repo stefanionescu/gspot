@@ -70,27 +70,6 @@ summary = "Checks that every module under the config role holds literals only: n
 why = "A configuration module with logic in it is code nobody tests, hidden where reviewers expect a table."
 help = "Move the logic into a module under src and keep the literal in the config module, or take the folder out of the config role."
 
-[[check]]
-name = "suppressions"
-title = "Explain each suppression"
-example = "An `eslint-disable-next-line` comment without a reason reports an unexplained suppression. Fix the underlying finding and remove the suppression, or append a specific `-- reason: ...` explanation of the required exception."
-level = "recommended"
-stage = "commit"
-runs = "once"
-summary = "Checks suppression reasons; Semgrep and Vale directives are refused outright."
-why = "A suppression with no reason hides a finding nobody reviewed."
-help = "Use the tool's suppression syntax to write a meaningful reason, or fix the finding and remove the suppression."
-
-[[check]]
-name = "large-files"
-title = "Keep large files out of git"
-example = "A tracked `notes/big.txt` containing 1,100 KiB exceeds the default 1,024 KiB ceiling and reports `size`. Remove accidental content or store a required large file through Git LFS. Generated and vendored classifications must describe the actual file ownership."
-level = "recommended"
-stage = "commit"
-runs = "once"
-summary = "Checks that every tracked file over the size limit is stored through LFS or declared with a reason."
-why = "A large file in plain git history stays in every clone for good."
-help = "Track the file with git lfs, classify it with gspot set generated `<path>` or gspot set vendored `<path>`, or raise limits.file_kb with a reason."
 
 [[check]]
 name = "tracked-dependencies"
@@ -278,13 +257,6 @@ languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
 summary = "Functions with this many statements or fewer are reported. Any whole number of 1 or more works, and a higher number reports more functions. Set it for one language under limits.`<language>`."
 validation = { integer = true, minimum = 1, message = "Use a whole number of statements, 1 or more." }
 
-[[setting]]
-name = "limits.file_kb"
-type = "number"
-direction = "ceiling"
-default_all = 1024
-default = 1024
-summary = "The largest file Git may track, in kilobytes. Larger files need Git LFS or a generated or vendored entry."
 
 [[setting]]
 name = "limits.bash.file_lines"

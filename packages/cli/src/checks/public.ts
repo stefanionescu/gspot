@@ -7,6 +7,7 @@ import { embeds } from '#cli/checks/language/bash/embeds.ts';
 import { safety } from '#cli/checks/language/bash/safety.ts';
 import { sshBlocks } from '#cli/checks/language/bash/ssh.ts';
 import { locales } from '#cli/checks/library/translations.ts';
+import { largeFiles } from '#cli/checks/general/repository.ts';
 import { svelteCheck } from '#cli/checks/framework/contracts.ts';
 import { contract } from '#cli/checks/language/bash/contract.ts';
 import { wrappers } from '#cli/checks/language/bash/wrappers.ts';
@@ -28,7 +29,6 @@ import { docComments } from '#cli/checks/language/bash/doc-comments.ts';
 import { privatePrefix } from '#cli/checks/language/bash/visibility.ts';
 import { manifests } from '#cli/checks/general/dependencies/manifests.ts';
 import { versionPairs } from '#cli/checks/general/dependencies/public.ts';
-import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
 import { folderNames } from '#cli/checks/general/structure/folder-names.ts';
 import { relations as drizzleRelations } from '#cli/checks/library/drizzle.ts';
 import { testPlacement } from '#cli/checks/general/structure/test-placement.ts';
@@ -110,9 +110,9 @@ export const BUILT_IN_CHECKS = {
     'structure/env-owner': { input: envOwner },
     'structure/file-lines': { input: fileLines },
     'structure/config-logic': { input: configurationLogic },
-    'structure/suppressions': { input: suppressions },
+    'gspot/suppressions': { input: suppressions },
     'gspot/unmatched-paths': { input: unmatchedPaths },
-    'structure/large-files': { input: largeFiles },
+    'repository/large-files': { input: largeFiles },
     'structure/tracked-dependencies': { input: trackedDependencies },
     'typescript/tsconfig': { input: tsconfig },
     'docs/headings': { input: headings },

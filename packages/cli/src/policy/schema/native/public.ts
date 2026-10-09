@@ -35,6 +35,7 @@ export const activeSettingNamespaceSchemas = {
     licenses: settingNamespaceSchemas['licenses'].required({ allowed: true, exceptions: true }),
     limits: settingNamespaceSchemas['limits']
         .required({
+            file_kb: true,
             file_lines: true,
             function_lines: true,
             function_parameters: true,
@@ -46,7 +47,6 @@ export const activeSettingNamespaceSchemas = {
             index_exports: true,
             prefix_collisions: true,
             min_function_statements: true,
-            file_kb: true,
         })
         .extend({
             docs: settingNamespaceSchemas['limits'].shape['docs'].unwrap().required({

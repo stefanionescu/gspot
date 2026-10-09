@@ -75,7 +75,7 @@ export const CASES: FindingCase[] = [
         },
     },
     {
-        check: 'structure/suppressions',
+        check: 'gspot/suppressions',
         files: {
             'scripts/quiet.sh':
                 '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# main: runs the script.\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    # shellcheck disable=SC2086\n    echo "${greeting}"\n}\n\nmain "$@"\n',
