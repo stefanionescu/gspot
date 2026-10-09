@@ -9,8 +9,9 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { checkjs } from '#cli/checks/language/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { VALID } from '#tests/config/samples/typescript.ts';
 import { openSession, applyCommand } from '#cli/commands/public.ts';
+import { getTsconfigProject } from '#cli/parsers/packages/public.ts';
+import { VALID, ROOT_PORT_SOURCE, CHILD_PORT_SOURCE } from '#tests/config/samples/typescript.ts';
 
 const TSCONFIG_OPTIONS_POLICY = buildPolicy(['typescript']);
 
@@ -185,9 +186,9 @@ test.each(['recommended', 'all'] as const)(
                 tables: '[scope."service"]\nconfigurations = ["nestjs"]',
             }),
             'tsconfig.json': VALID,
-            'source.ts': 'export const port = 8080;\n',
+            'source.ts': ROOT_PORT_SOURCE,
             'service/tsconfig.json': '{"extends":"../tsconfig.json"}',
-            'service/source.ts': 'export const port = 3000;\n',
+            'service/source.ts': CHILD_PORT_SOURCE,
         });
         const session = await openSession(sandbox.path);
         const input = buildCheckInput(session, 'typescript/tsconfig', {
@@ -215,5 +216,36 @@ test.each(['recommended', 'all'] as const)(
                 }),
             ),
         ).toStrictEqual([]);
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s uses a nearest covering ancestor without accepting an excluded child',
+    async (level) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildPolicy(['typescript'], {
+                level,
+                tables: '[scope."app"]\n[scope."app/deep"]\n[scope."sibling"]\n',
+            }),
+            'tsconfig.json':
+                '{"compilerOptions":{"strict":true},"include":["app/**/*.ts"],"exclude":["app/excluded.ts"]}',
+            'app/source.ts': 'export const amount = 1;\n',
+            'app/deep/source.ts': 'export const amount = 2;\n',
+            'app/excluded.ts': 'export const amount = 3;\n',
+            'sibling/source.ts': 'export const amount = 4;\n',
+        });
+        const session = await openSession(sandbox.path);
+        const covering = getTsconfigProject(session.root, 'app/deep', ['app/deep/source.ts'], session.reads);
+        expect(covering?.path).toBe(join(session.root, 'tsconfig.json'));
+        expect(
+            getTsconfigProject(session.root, 'app', ['app/source.ts', 'app/excluded.ts'], session.reads),
+        ).toBeUndefined();
+        expect(getTsconfigProject(session.root, 'sibling', ['sibling/source.ts'], session.reads)).toBeUndefined();
+        await writeFile(join(sandbox.path, 'app/tsconfig.json'), '{"files":["source.ts"]}');
+        const nearest = await openSession(sandbox.path);
+        expect(getTsconfigProject(nearest.root, 'app', ['app/source.ts'], nearest.reads)?.path).toBe(
+            join(nearest.root, 'app/tsconfig.json'),
+        );
+        expect(getTsconfigProject(nearest.root, 'app/deep', ['app/deep/source.ts'], nearest.reads)).toBeUndefined();
     },
 );

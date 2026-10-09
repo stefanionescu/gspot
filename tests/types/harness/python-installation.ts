@@ -1,8 +1,9 @@
+import type { NonSharedBuffer } from 'node:buffer';
 /** A Python project prepared for installation: the authored files before install. */
 export type PythonInstallation = {
     root: string;
-    rootProject: Buffer;
-    rootConfiguration: Buffer;
+    rootProject: NonSharedBuffer;
+    rootConfiguration: NonSharedBuffer;
     [Symbol.asyncDispose](): Promise<void>;
 };
 

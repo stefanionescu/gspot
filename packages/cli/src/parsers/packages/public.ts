@@ -1,15 +1,9 @@
 import ts from 'typescript';
-import { readFileSync } from 'node:fs';
 import { memo } from '#cli/platform/memo.ts';
 import { parse as parseToml } from 'smol-toml';
 import { toPosix } from '#cli/platform/contracts.ts';
-import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
+import { join, posix, dirname, resolve } from 'node:path';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
-import { posix, dirname, resolve, relative } from 'node:path';
-import { openRoot, readText } from '#cli/platform/root/public.ts';
-import { portableSegments } from '#cli/platform/root/contracts.ts';
-import { typeScriptConfigSchema } from '#cli/parsers/schema/public.ts';
-import { TS_NO_INPUTS_CODE, TS_EMPTY_FILES_CODE } from '#cli/config/parsers/tsconfig.ts';
 
 import {
     RUNTIME_COMMAND,
@@ -18,8 +12,10 @@ import {
     REQUIREMENT_NAME_END,
 } from '#cli/config/parsers/packages.ts';
 import {
+    parseTsconfig,
     pipfileSchema,
     bunInstallSchema,
+    configurationText,
     pythonManifestSchema,
     packageManifestSchema,
 } from '#cli/parsers/packages/contracts.ts';
@@ -30,6 +26,8 @@ import type {
     PoetrySettings,
     PythonManifest,
     PackageManifest,
+    TypeScriptProject,
+    TypeScriptConfiguration,
 } from '#cli/types/parsers/packages.ts';
 
 // A requirement names a distribution: letters or digits at both ends, dots, dashes, and underscores between.
@@ -172,53 +170,7 @@ function parseSwiftPackage(path: string, text: string): PackageManifest {
     };
 }
 
-const TSCONFIG_MEMO = { create: () => new Map<string, ts.ParsedCommandLine | undefined>() };
-
-/**
- * Parses compiler options and inherited configuration with the TypeScript compiler.
- * @param path the absolute configuration path
- * @param text the configuration source
- * @param host the caller's file discovery and configuration reader
- * @returns the parsed compiler configuration
- */
-function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): ts.ParsedCommandLine {
-    const source = ts.parseConfigFileTextToJson(path, text);
-    if (source.error !== undefined) throw new Error(ts.flattenDiagnosticMessageText(source.error.messageText, '\n'));
-    const raw: unknown = source.config;
-    const parsed = ts.parseJsonConfigFileContent(
-        typeScriptConfigSchema.parse(raw),
-        host,
-        dirname(path),
-        undefined,
-        path,
-    );
-    // Option and alias consumers also read configurations with no input files.
-    const errors = parsed.errors.filter(
-        (error) => error.code !== TS_EMPTY_FILES_CODE && error.code !== TS_NO_INPUTS_CODE,
-    );
-    if (errors.length > 0)
-        throw new Error(errors.map((error) => ts.flattenDiagnosticMessageText(error.messageText, '\n')).join('\n'));
-    return parsed;
-}
-
-function configurationText(root: string, path: string, reads: ReadCache): string | undefined {
-    const local = toPosix(relative(root, path));
-    using files = openRoot(root, 'native');
-    try {
-        const segments = local.split('/');
-        const dependency = segments.indexOf('node_modules');
-        if (dependency !== -1 && segments[0] !== DOT_GSPOT) {
-            // Package managers link dependency folders; follow those links, but refuse links above node_modules.
-            portableSegments(local);
-            if (dependency > 0) files.stat(segments.slice(0, dependency).join('/'));
-            return readFileSync(path, 'utf8');
-        }
-        return readText(root, local, reads);
-    } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
-        throw error;
-    }
-}
+const TSCONFIG_MEMO = { create: () => new Map<string, TypeScriptConfiguration | undefined>() };
 
 /**
  * Normalize a Python distribution name for package identity comparisons.
@@ -283,7 +235,7 @@ export function manifestParser(path: string): ManifestParser | undefined {
  * @param reads the configuration cache owned by this run
  * @returns the parsed configuration, or undefined when the file is absent
  */
-export function getTsconfig(root: string, path: string, reads: ReadCache): ts.ParsedCommandLine | undefined {
+export function getTsconfig(root: string, path: string, reads: ReadCache): TypeScriptConfiguration | undefined {
     const configurations = memo(reads, TSCONFIG_MEMO);
     const key = JSON.stringify([root, resolve(path)]);
     if (configurations.has(key)) return configurations.get(key);
@@ -299,4 +251,58 @@ export function getTsconfig(root: string, path: string, reads: ReadCache): ts.Pa
         const detail = error instanceof Error ? error.message : String(error);
         throw new Error(`Cannot read TypeScript configuration ${path}: ${detail}`, { cause: error });
     }
+}
+
+/**
+ * Resolve a native project and every project it references with the run-owned configuration cache.
+ * @param root the authored repository boundary
+ * @param path the absolute native project path
+ * @param reads the run-owned reads
+ * @returns actual parsed projects indexed by their native absolute paths
+ */
+export function tsconfigProjects(root: string, path: string, reads: ReadCache): Map<string, TypeScriptConfiguration> {
+    const projects = new Map<string, TypeScriptConfiguration>();
+    const pending = [resolve(path)];
+    for (const candidate of pending) {
+        if (projects.has(candidate)) continue;
+        const parsed = getTsconfig(root, candidate, reads);
+        if (parsed === undefined) throw new Error(`Missing TypeScript project: ${candidate}`);
+        projects.set(candidate, parsed);
+        pending.push(
+            ...(parsed.projectReferences ?? []).map((reference) => resolve(ts.resolveProjectReferencePath(reference))),
+        );
+    }
+    return projects;
+}
+
+/**
+ * Find the nearest authored TypeScript project that includes every source owned by a scope.
+ * @param root the repository boundary.
+ * @param scope the repository-relative scope.
+ * @param files the scope-owned source paths.
+ * @param reads the run-owned configuration cache
+ * @returns the covering project, or no authored project for a standalone scope
+ */
+export function getTsconfigProject(
+    root: string,
+    scope: string,
+    files: string[],
+    reads: ReadCache,
+): TypeScriptProject | undefined {
+    const own = join(root, scope);
+    let folder = own;
+    let path = join(folder, 'tsconfig.json');
+    let config = getTsconfig(root, path, reads);
+    while (config === undefined && folder !== root) {
+        folder = dirname(folder);
+        path = join(folder, 'tsconfig.json');
+        config = getTsconfig(root, path, reads);
+    }
+    if (config === undefined) return undefined;
+    const projects = tsconfigProjects(root, path, reads);
+    const members = new Set(
+        [...projects.values()].flatMap((project) => project.fileNames.map((file) => toPosix(file))),
+    );
+    if (folder !== own && files.some((file) => !members.has(toPosix(join(root, file))))) return undefined;
+    return { path, config, projects };
 }

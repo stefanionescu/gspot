@@ -1,11 +1,14 @@
 // One installed Next.js project: its type check, the framework rules the configuration requires, the delegation of
 // type checking to the Next.js check, and the i18n rules.
+import { z } from 'zod';
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { randomUUID } from 'node:crypto';
 import { rm, writeFile } from 'node:fs/promises';
+import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { getTsconfig } from '#cli/parsers/packages/public.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
+import { createReadCache } from '#cli/platform/root/public.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { installedModules } from '#tests/harness/environment.ts';
 import nextManifest from 'next/package.json' with { type: 'json' };
@@ -23,6 +26,7 @@ import {
     PACKAGE,
     REPOSITORY,
     BUILD_FAILURE,
+    REFERENCE_PROJECT_FILES,
 } from '#tests/config/tools/configurations/framework/nextjs.ts';
 
 // Runs the named checks alone, expects the exit code, and returns the report.
@@ -176,5 +180,42 @@ describe('the nextjs configuration', () => {
             expect(passed.code, `${entry.check} corrected: ${passed.stdout}${passed.stderr}`).toBe(0);
             expect(passed.report.checks).toMatchObject([{ check: entry.check, status: 'passed', findings: [] }]);
         });
+    }
+});
+
+test('Next.js generates types and compiles references without a second copy or source output', async () => {
+    const { root } = testRepository;
+    const compiler = await Bun.file(join(root, 'tsconfig.json')).text();
+    const parsed = getTsconfig(root, join(root, 'tsconfig.json'), createReadCache(root))!.raw;
+    const authored = JSON.stringify({
+        ...parsed,
+        references: [{ path: './compiler-ref' }],
+        exclude: [...z.array(z.string()).parse(parsed['exclude'] ?? []), 'compiler-ref/**'],
+    });
+    await createFileTree(root, REFERENCE_PROJECT_FILES);
+    await Bun.write(join(root, 'tsconfig.json'), authored);
+    try {
+        const failed = await checked(testRepository, ['nextjs/tsc'], 1);
+        expect(failed.checks).toMatchObject([{ check: 'nextjs/tsc', status: 'failed' }]);
+        expect(failed.checks[0]!.findings).toContainEqual(
+            containing({
+                file: 'compiler-ref/source.ts',
+                rule: 'TS2322',
+                line: 1,
+                column: 14,
+            }),
+        );
+        await Bun.write(join(root, 'compiler-ref/source.ts'), 'export const value: number = 1;\n');
+        const passed = await checked(testRepository, ['nextjs/tsc'], 0);
+        expect(passed.checks).toMatchObject([{ check: 'nextjs/tsc', status: 'passed', findings: [] }]);
+        expect(await Bun.file(join(root, 'tsconfig.json')).text()).toBe(authored);
+        expect(await Bun.file(join(root, 'compiler-ref/tsconfig.json')).text()).toBe(
+            REFERENCE_PROJECT_FILES['compiler-ref/tsconfig.json'],
+        );
+        expect(await Bun.file(join(root, 'compiler-ref/dist/source.js')).exists()).toBe(false);
+        expect(await Bun.file(join(root, 'compiler-ref/tsconfig.tsbuildinfo')).exists()).toBe(false);
+    } finally {
+        await Bun.write(join(root, 'tsconfig.json'), compiler);
+        await rm(join(root, 'compiler-ref'), { recursive: true });
     }
 });

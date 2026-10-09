@@ -1,24 +1,35 @@
 import ts from 'typescript';
 import { memo } from '#cli/platform/memo.ts';
+import { chmodSync, writeFileSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { ownedInputs } from '#cli/planning/public.ts';
-import { parseJsonRecord } from '#cli/parsers/public.ts';
-import { readSource } from '#cli/platform/root/public.ts';
+import { emptyResult } from '#cli/execution/report.ts';
+import type { Root } from '#cli/types/platform/root.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { parseBashScript } from '#cli/parsers/bash/public.ts';
-import { getTsconfig } from '#cli/parsers/packages/public.ts';
+import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { toPosix, extensionOf } from '#cli/platform/contracts.ts';
+import type { ScratchSource } from '#cli/types/execution/copy.ts';
+import { runCheckCommand } from '#cli/execution/command/public.ts';
 import { isToolProjectPath } from '#cli/repository/paths/public.ts';
+import { requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { configurationText } from '#cli/parsers/packages/contracts.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
+import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
+import type { TypeScriptConfiguration } from '#cli/types/parsers/packages.ts';
 import type { ScriptFile, ScriptIndex } from '#cli/types/checks/language/bash.ts';
+import { openRoot, readSource, createReadCache } from '#cli/platform/root/public.ts';
+import { projectCopyInputs, workspaceSourceFiles } from '#cli/execution/copy/public.ts';
+import { toPosix, isInside, expandPaths, extensionOf } from '#cli/platform/contracts.ts';
+import { getTsconfig, tsconfigProjects, getTsconfigProject } from '#cli/parsers/packages/public.ts';
+
+const TYPESCRIPT_CHECKS = { create: () => new Map<string, string>() };
 
 const SCRIPT_MEMO = { create: () => new Map<string, Promise<ScriptIndex>>() };
 
@@ -53,6 +64,58 @@ async function readScriptIndex(input: CheckInput, files: TrackedFile[]): Promise
     return { files: read, owners };
 }
 
+// Both source reads and emitted paths must stay inside the disposable project tree.
+function assertOutputsInside(root: string, config: ts.ParsedCommandLine, files: Root): void {
+    for (const file of config.fileNames) {
+        files.assertInside(toPosix(relative(root, file)));
+        if (config.options.noEmit === true) continue;
+        for (const output of ts.getOutputFileNames(config, file, !ts.sys.useCaseSensitiveFileNames))
+            files.stat(toPosix(relative(root, output)));
+    }
+    const metadata = ts.getTsBuildInfoEmitOutputFilePath(config.options);
+    if (metadata !== undefined) files.stat(toPosix(relative(root, metadata)));
+}
+
+function assertBuildInside(root: string, path: string, reads: ReadCache): void {
+    using files = openRoot(root, 'native');
+    for (const config of tsconfigProjects(root, path, reads).values()) assertOutputsInside(root, config, files);
+}
+
+// The compiler may follow installed package links; every later native library read stays beneath an observed owner.
+function compilerHost(session: ToolSession, scope: string, options: ts.CompilerOptions): ts.CompilerHost {
+    const host = ts.createCompilerHost(options);
+    const libraries = new Set([dirname(dirname(ts.getDefaultLibFilePath(options)))]);
+    const nativeRealpath = host.realpath?.bind(host);
+    const nativeSourceFile = host.getSourceFile.bind(host);
+    host.getSourceFile = (path, languageVersion, _onError, createSource) =>
+        nativeSourceFile(
+            path,
+            languageVersion,
+            (message) => {
+                throw new Error(message);
+            },
+            createSource,
+        );
+    host.getCurrentDirectory = () => join(session.root, scope);
+    host.realpath = (path) => {
+        const resolved = nativeRealpath?.(path) ?? path;
+        const local = toPosix(relative(session.root, path));
+        if (
+            (isInside(local) && local.split('/').includes('node_modules')) ||
+            [...libraries].some((library) => isInside(relative(library, path)))
+        ) {
+            const marker = toPosix(resolved).lastIndexOf('/node_modules/');
+            if (marker !== -1) libraries.add(resolved.slice(0, marker + '/node_modules'.length));
+        }
+        return resolved;
+    };
+    host.readFile = (path) =>
+        [...libraries].some((library) => isInside(relative(library, path)))
+            ? ts.sys.readFile(path)
+            : configurationText(session.root, path, session.reads);
+    return host;
+}
+
 /**
  * Read the scope's shell index once, sharing syntax data across its checks.
  * @param input the check's scope-owned files and parser resources
@@ -85,6 +148,37 @@ export function functionAt(functions: ScriptFunction[], line: number): ScriptFun
 }
 
 /**
+ * Select the scope's compiler inputs and physical ambient roots.
+ * @param root the actual source or disposable repository
+ * @param scope the owning scope
+ * @param scopes the repository's scope declarations
+ * @param config the native compiler configuration
+ * @returns the scope-owned compiler project
+ */
+export function scopeCompilerProject(
+    root: string,
+    scope: string,
+    scopes: ToolSession['repository']['scopes'],
+    config: TypeScriptConfiguration,
+): Pick<TypeScriptConfiguration, 'fileNames' | 'options'> {
+    return {
+        fileNames: config.fileNames.filter(
+            (path) =>
+                DECLARATION_EXTENSIONS.includes(extensionOf(path)) ||
+                scopeOf(toPosix(relative(root, path)), scopes).path === scope,
+        ),
+        options: {
+            ...config.options,
+            typeRoots:
+                ts.getEffectiveTypeRoots(
+                    { ...config.options, configFilePath: join(root, scope, 'jsconfig.json') },
+                    {},
+                ) ?? [],
+        },
+    };
+}
+
+/**
  * Restrict a disposable JavaScript project to its scope and ambient roots.
  * @param session the repository source inventory
  * @param scratch the disposable copy
@@ -99,42 +193,200 @@ export function writeScopeProject(
     target: string,
 ): ts.CompilerOptions | undefined {
     if (ownedInputs(session, planned).length === 0) return undefined;
-    const scope = planned.scope.scope.path;
     const generatedPath = join(scratch, target);
-    const generated = getTsconfig(scratch, generatedPath, {
-        root: scratch,
-        sources: new Map(),
-        memo: new Map(),
-    });
+    const generated = getTsconfig(scratch, generatedPath, createReadCache(scratch));
     if (generated === undefined) throw new Error(`Missing JavaScript configuration: ${target}`);
-    const scopeFiles = generated.fileNames.filter(
-        (path) =>
-            DECLARATION_EXTENSIONS.includes(extensionOf(path)) ||
-            scopeOf(toPosix(relative(scratch, path)), session.repository.scopes).path === scope,
-    );
-    if (scopeFiles.length === 0) return undefined;
-    const authored = parseJsonRecord(readFileSync(generatedPath, 'utf8'));
+    const project = scopeCompilerProject(scratch, planned.scope.scope.path, session.repository.scopes, generated);
+    if (project.fileNames.length === 0) return undefined;
     // Managed configurations are read-only; only the disposable copy is rewritten.
     chmodSync(generatedPath, PRIVATE_FILE);
     writeFileSync(
         generatedPath,
         JSON.stringify({
-            ...authored,
+            ...generated.raw,
             compilerOptions: {
-                ...(authored['compilerOptions'] as Record<string, unknown>),
-                typeRoots:
-                    ts.getEffectiveTypeRoots(
-                        {
-                            ...generated.options,
-                            configFilePath: join(scratch, scope, 'jsconfig.json'),
-                        },
-                        {},
-                    ) ?? [],
+                ...generated.raw.compilerOptions,
+                typeRoots: project.options.typeRoots,
             },
-            files: scopeFiles.map((path) => toPosix(relative(dirname(generatedPath), path))),
+            files: project.fileNames.map((path) => toPosix(relative(dirname(generatedPath), path))),
             include: [],
             exclude: [],
         }),
     );
     return generated.options;
+}
+
+/**
+ * Keep incremental metadata inside the caller's disposable folder.
+ * @param command the compiler argv
+ * @param options the effective native options
+ * @param scratch the owned metadata directory
+ * @param name the metadata basename
+ */
+export function appendBuildMetadata(
+    command: string[],
+    options: ts.CompilerOptions | undefined,
+    scratch: string,
+    name: string,
+): void {
+    if (options?.incremental !== true && options?.composite !== true) return;
+    command.push('--tsBuildInfoFile', join(scratch, DOT_GSPOT, name));
+}
+
+/**
+ * Restore source paths in a disposable compiler invocation.
+ * @param result the native result, which may have no launched command
+ * @param scratch the disposable root
+ * @param root the authored source root
+ * @returns the result with source command paths
+ */
+export function restoreCommandPaths(result: CheckResult, scratch: string, root: string): CheckResult {
+    if (result.command === undefined) return result;
+    return {
+        ...result,
+        command: result.command.map((part) => part.replaceAll(scratch, () => root)),
+    };
+}
+
+/**
+ * Select compiler-resolved authored dependencies and only their owning installed projects.
+ * @param session the repository boundary and cached native configurations
+ * @param planned the actual scoped compiler check
+ * @param projects the project graph with scope-owned JavaScript roots.
+ * @returns the native authored source and configuration closure
+ */
+export function compilerFiles(
+    session: ToolSession,
+    planned: PlannedCheck,
+    projects: Map<string, TypeScriptConfiguration>,
+): string[] {
+    const workspace = new Set(
+        workspaceSourceFiles(session.root, planned.scope.scope.path, session.repository.files, session.reads),
+    );
+    using files = openRoot(session.root, 'native');
+    const sources = [...projects].flatMap(([target, config]) => {
+        const owners = new Set(
+            config.fileNames.map(
+                (path) => scopeOf(toPosix(relative(session.root, path)), session.repository.scopes).path,
+            ),
+        );
+        const program = ts.createProgram({
+            rootNames: config.fileNames,
+            options: config.options,
+            projectReferences: config.projectReferences ?? [],
+            host: compilerHost(session, planned.scope.scope.path, config.options),
+        });
+        const inputs = program
+            .getSourceFiles()
+            .filter(
+                (source) =>
+                    !program.isSourceFileDefaultLibrary(source) && !program.isSourceFileFromExternalLibrary(source),
+            )
+            .map((source) => {
+                const local = toPosix(relative(session.root, source.fileName));
+                files.assertInside(local);
+                if (
+                    !source.isDeclarationFile &&
+                    !owners.has(scopeOf(local, session.repository.scopes).path) &&
+                    !workspace.has(local)
+                )
+                    throw new Error(`TypeScript project ${target} imports source outside its scope: ${local}`);
+                return local;
+            });
+        const configurations = config.configurationFiles
+            .map((path) => toPosix(relative(session.root, path)))
+            .filter((path) => !path.split('/').includes('node_modules'));
+        return [...configurations, ...inputs];
+    });
+    return [...new Set([...planned.files.map((file) => file.path), ...sources])];
+}
+
+/**
+ * Copy selected compiler inputs with their physical ancestor dependency installations.
+ * @param session the repository and cancellation lifetime
+ * @param planned the scoped compiler declaration
+ * @param projects the actual native project graph
+ * @param paths the resolved authored compiler inputs
+ * @returns the copy inputs with confined installed dependency ownership
+ */
+export function compilerCopyInputs(
+    session: ToolSession,
+    planned: PlannedCheck,
+    projects: Map<string, TypeScriptConfiguration>,
+    paths: string[],
+): ScratchSource {
+    const scopes = expandPaths(
+        [...projects.keys()].map((target) => {
+            const folder = toPosix(relative(session.root, dirname(target)));
+            return folder.startsWith(`${DOT_GSPOT}/`) ? planned.scope.scope.path : folder;
+        }),
+    );
+    return {
+        ...projectCopyInputs(session.root, paths, [...new Set(['', planned.scope.scope.path, ...scopes])]),
+        cancelSignal: session.cancelSignal,
+    };
+}
+
+/**
+ * Share ancestor checks without suppressing a repeat of the same scoped invocation.
+ * @param reads the native run cache
+ * @param check the compiler or option check identity
+ * @param path the native project path
+ * @param scope the invoking scope
+ * @param required the scoped compiler flags.
+ * @returns whether another scope already checks this project with these flags
+ */
+export function projectChecked(
+    reads: ReadCache,
+    check: string,
+    path: string,
+    scope: string,
+    required: Record<string, boolean>,
+): boolean {
+    const checked = memo(reads, TYPESCRIPT_CHECKS);
+    const key = JSON.stringify([
+        check,
+        path,
+        Object.entries(required).toSorted(([left], [right]) => left.localeCompare(right)),
+    ]);
+    const earlier = checked.get(key);
+    if (earlier !== undefined && earlier !== scope) return true;
+    checked.set(key, scope);
+    return false;
+}
+
+/**
+ * Run the native compiler in an already selected project, with metadata in the caller's owned folder.
+ * @param session the actual source or disposable project session
+ * @param planned the scoped native compiler declaration
+ * @param metadataRoot the caller-owned metadata lifetime
+ * @returns native compiler diagnostics and execution status
+ */
+export async function runTsc(session: ToolSession, planned: PlannedCheck, metadataRoot: string): Promise<CheckResult> {
+    const project = getTsconfigProject(
+        session.root,
+        planned.scope.scope.path,
+        ownedInputs(session, planned)
+            .filter((file) => file.tags.includes('typescript'))
+            .map((file) => file.path),
+        session.reads,
+    );
+    const required = Object.fromEntries(
+        Object.entries(requiredTsconfigOptions(session.policyFiles.policy.level, planned.scope.selected)).filter(
+            ([name]) => !planned.scope.view.rulesOff('typescript/tsconfig').includes(name),
+        ),
+    );
+    const target = project?.path ?? join(session.root, planned.scope.scope.path, 'tsconfig.json');
+    if (projectChecked(session.reads, planned.check.name, target, planned.scope.scope.path, required))
+        return { ...emptyResult(planned), status: 'skipped', note: 'An ancestor compiler check covers this project.' };
+    const command = ['tsc'];
+    if (project !== undefined && (project.config.projectReferences ?? []).length > 0) {
+        command.push('-b', project.path);
+        assertBuildInside(session.root, project.path, session.reads);
+    } else {
+        command.push('--noEmit', '-p', '{tool_file:tsconfig}');
+        appendBuildMetadata(command, project?.config.options, metadataRoot, 'tsconfig.tsbuildinfo');
+    }
+    command.push('--pretty', 'false');
+    return runCheckCommand(session, planned, { command, workspace: session.root });
 }

@@ -1,3 +1,4 @@
+import type { NonSharedBuffer } from 'node:buffer';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import type { PackageRegistry } from '#tests/types/harness/registry.ts';
@@ -26,10 +27,10 @@ export type PackageProjectOptions = {
 
 /** Managed bytes and file mode captured before package installation. */
 export type PackageInputs = {
-    manifest: Buffer;
+    manifest: NonSharedBuffer;
     lockfilePath: string;
-    lockfile: Buffer;
+    lockfile: NonSharedBuffer;
     mode: number;
     ownershipPath: string;
-    ownership: Buffer;
+    ownership: NonSharedBuffer;
 };

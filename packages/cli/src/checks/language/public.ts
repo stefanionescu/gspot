@@ -1,30 +1,28 @@
-import ts from 'typescript';
 import { parse } from 'smol-toml';
 import { join, posix, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { toPosix } from '#cli/platform/contracts.ts';
+import { GspotError } from '#cli/platform/public.ts';
+import { ownedInputs } from '#cli/planning/public.ts';
 import { emptyResult } from '#cli/execution/report.ts';
-import type { Root } from '#cli/types/platform/root.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { getTsconfig } from '#cli/parsers/packages/public.ts';
-import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { RAN_STATUSES } from '#cli/config/execution/runtime.ts';
+import { copyIntoScratch } from '#cli/execution/copy/public.ts';
 import { targetInScope } from '#cli/configurations/contracts.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
-import { writeScopeProject } from '#cli/checks/language/contracts.ts';
 import { requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { PythonDocstringStyle } from '#cli/types/parsers/python.ts';
+import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
 import { docstringStyleSchema } from '#cli/parsers/schema/python/docstrings.ts';
+import { getTsconfig, getTsconfigProject } from '#cli/parsers/packages/public.ts';
 import { docstringOf, parsePythonModule } from '#cli/parsers/source/contracts.ts';
-import { copyIntoScratch, projectCopyInputs } from '#cli/execution/copy/public.ts';
 import type { DocstringConfiguration } from '#cli/types/checks/language/python.ts';
-import { DOT_GSPOT, CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
-import { openRoot, readText, readSource, createReadCache } from '#cli/platform/root/public.ts';
+import { readText, readSource, createReadCache } from '#cli/platform/root/public.ts';
 
 import {
     NUMPY_DOCSTRING,
@@ -34,49 +32,16 @@ import {
     PYDOCLINT_TYPE_OPTIONS,
     PYDOCLINT_DEFAULT_STYLE,
 } from '#cli/config/checks/language/python.ts';
-
-// Both source reads and emitted paths must stay inside the disposable project tree.
-function assertOutputsInside(root: string, config: ts.ParsedCommandLine, files: Root): void {
-    for (const file of config.fileNames) {
-        files.assertInside(toPosix(relative(root, file)));
-        if (config.options.noEmit === true) continue;
-        for (const output of ts.getOutputFileNames(config, file, !ts.sys.useCaseSensitiveFileNames))
-            files.stat(toPosix(relative(root, output)));
-    }
-    const metadata = ts.getTsBuildInfoEmitOutputFilePath(config.options);
-    if (metadata !== undefined) files.stat(toPosix(relative(root, metadata)));
-}
-
-// Incremental checks write metadata only inside their disposable folder.
-function appendBuildMetadata(
-    command: string[],
-    options: ts.CompilerOptions | undefined,
-    scratch: string,
-    name: string,
-): void {
-    if (options?.incremental !== true && options?.composite !== true) return;
-    command.push('--tsBuildInfoFile', join(scratch, DOT_GSPOT, name));
-}
-
-function assertBuildInside(root: string, path: string, reads: ReadCache, visited = new Set<string>()): void {
-    if (visited.has(path)) return;
-    visited.add(path);
-    const config = getTsconfig(root, path, reads);
-    if (config === undefined) throw new Error(`Missing TypeScript project: ${path}`);
-    using files = openRoot(root, 'native');
-    assertOutputsInside(root, config, files);
-    for (const reference of config.projectReferences ?? [])
-        assertBuildInside(root, ts.resolveProjectReferencePath(reference), reads, visited);
-}
-
-// Restore every scratch path in the recorded invocation while retaining a result with no launched command.
-function restoreCommandPaths(result: CheckResult, scratch: string, root: string): CheckResult {
-    if (result.command === undefined) return result;
-    return {
-        ...result,
-        command: result.command.map((part) => part.replaceAll(scratch, () => root)),
-    };
-}
+import {
+    runTsc,
+    compilerFiles,
+    projectChecked,
+    writeScopeProject,
+    compilerCopyInputs,
+    appendBuildMetadata,
+    restoreCommandPaths,
+    scopeCompilerProject,
+} from '#cli/checks/language/contracts.ts';
 
 async function sourceStyle(session: ToolSession, path: string): Promise<PythonDocstringStyle | undefined> {
     const module = await parsePythonModule(
@@ -115,32 +80,29 @@ async function docstringGroups(session: ToolSession, files: TrackedFile[], decla
  * @returns compiler findings and the shared tool execution status
  */
 export async function tsc(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
-    const target = join(planned.scope.scope.path, 'tsconfig.json');
-    const config = getTsconfig(session.root, join(session.root, target), session.reads);
-    const hasReferences = (config?.projectReferences ?? []).length > 0;
-    const command = [
-        'tsc',
-        ...(hasReferences ? ['-b'] : ['--noEmit', '-p', '{tool_file:tsconfig}']),
-        '--pretty',
-        'false',
-    ];
-    using source = hasReferences
-        ? await copyIntoScratch(
-              projectCopyInputs(
-                  session.root,
-                  session.repository.files.map((file) => file.path),
-                  session.repository.scopes.map((scope) => scope.path),
-              ),
-          )
-        : scratchFolder('gspot-tsc-');
-    const scratch = source.path;
-    if (hasReferences) assertBuildInside(scratch, join(scratch, target), createReadCache(scratch));
-    else appendBuildMetadata(command, config?.options, scratch, 'tsconfig.tsbuildinfo');
-    const result = await runCheckCommand(session, planned, {
-        command,
-        workspace: hasReferences ? scratch : session.root,
-    });
-    return restoreCommandPaths(result, scratch, session.root);
+    const project = getTsconfigProject(
+        session.root,
+        planned.scope.scope.path,
+        ownedInputs(session, planned)
+            .filter((file) => file.tags.includes('typescript'))
+            .map((file) => file.path),
+        session.reads,
+    );
+    const references = (project?.config.projectReferences ?? []).length > 0;
+    using source =
+        references && project !== undefined
+            ? await copyIntoScratch(
+                  compilerCopyInputs(
+                      session,
+                      planned,
+                      project.projects,
+                      compilerFiles(session, planned, project.projects),
+                  ),
+              )
+            : scratchFolder('gspot-tsc-');
+    const isolated = references ? { ...session, root: source.path, reads: createReadCache(source.path) } : session;
+    const result = await runTsc(isolated, planned, source.path);
+    return restoreCommandPaths(result, source.path, session.root);
 }
 
 /**
@@ -151,18 +113,22 @@ export async function tsc(session: ToolSession, planned: PlannedCheck): Promise<
  */
 export async function checkjs(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.scope.scope.path;
+    if (ownedInputs(session, planned).length === 0) return { ...emptyResult(planned), fileCount: 0 };
     const jsconfig = planned.manifest?.toolFiles.find(
         (entry) => entry.target === `${CONFIGURATION_DIRECTORY}/jsconfig.json`,
     );
     if (jsconfig === undefined)
         throw new Error(`The javascript configuration declares no ${CONFIGURATION_DIRECTORY}/jsconfig.json target.`);
     const target = targetInScope(scope, jsconfig);
+    const generated = getTsconfig(session.root, join(session.root, target), session.reads);
+    if (generated === undefined) throw new Error(`Missing JavaScript configuration: ${target}`);
+    const project = {
+        ...generated,
+        ...scopeCompilerProject(session.root, scope, session.repository.scopes, generated),
+    };
+    const projects = new Map([[join(session.root, target), project]]);
     using scratchFolder = await copyIntoScratch(
-        projectCopyInputs(
-            session.root,
-            [...session.repository.files.map((file) => file.path), target],
-            session.repository.scopes.map((entry) => entry.path),
-        ),
+        compilerCopyInputs(session, planned, projects, compilerFiles(session, planned, projects)),
     );
     const scratch = scratchFolder.path;
     const options = writeScopeProject(session, scratch, planned, target);
@@ -191,7 +157,14 @@ export async function checkjs(session: ToolSession, planned: PlannedCheck): Prom
  * @returns the findings
  */
 export function tsconfig(input: CheckInput): Finding[] {
-    const scopeTsconfig = input.scope === '' ? 'tsconfig.json' : `${input.scope}/tsconfig.json`;
+    const project = getTsconfigProject(
+        input.root,
+        input.scope,
+        input.files.filter((file) => file.tags.includes('typescript')).map((file) => file.path),
+        input.reads,
+    );
+    const scopeTsconfig =
+        project === undefined ? posix.join(input.scope, 'tsconfig.json') : toPosix(relative(input.root, project.path));
     const candidates = new Set([
         scopeTsconfig,
         ...input.files
@@ -202,17 +175,23 @@ export function tsconfig(input: CheckInput): Finding[] {
             }),
     ]);
     const required = requiredTsconfigOptions(input.policyFiles.policy.level, input.selection.selected);
-    return [...candidates].flatMap((path) => {
+    const projects = [...candidates].flatMap((path) => {
         const parsed = getTsconfig(input.root, join(input.root, path), input.reads);
-        if (parsed !== undefined)
-            return Object.keys(required)
-                .filter((option) => parsed.options[option] !== true)
-                .map((option) => ({
-                    ...findingAt(input, { file: path }, option, `${option} is not on in this tsconfig.`),
-                    help: 'Enable this compiler option in the authored TypeScript configuration.',
-                }));
-        return [];
+        return parsed === undefined ? [] : [{ path, parsed }];
     });
+    const unchecked = projects.filter(
+        ({ path }) => !projectChecked(input.reads, input.check.name, join(input.root, path), input.scope, required),
+    );
+    if (projects.length > 0 && unchecked.length === 0)
+        throw new GspotError('skip', ['An ancestor compiler check covers this project.']);
+    return unchecked.flatMap(({ path, parsed }) =>
+        Object.keys(required)
+            .filter((option) => parsed.options[option] !== true)
+            .map((option) => ({
+                ...findingAt(input, { file: path }, option, `${option} is not on in this tsconfig.`),
+                help: 'Enable this compiler option in the authored TypeScript configuration.',
+            })),
+    );
 }
 
 /**

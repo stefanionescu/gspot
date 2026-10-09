@@ -130,7 +130,7 @@ test('a claim published during its snapshot read is checked again without replac
     const read = fs.readFileSync;
     using boundaries = new DisposableStack();
     boundaries.use(
-        spyOn(fs, 'readFileSync').mockImplementationOnce(((path, options) => {
+        spyOn(fs, 'readFileSync').mockImplementationOnce(((...[path, options]: Parameters<typeof read>) => {
             const bytes = read(path, options);
             // eslint-disable-next-line n/no-sync -- reason: Publish the native claim between its synchronous snapshot read and metadata check to verify the existing initialization wait.
             fs.writeFileSync(target, holder);

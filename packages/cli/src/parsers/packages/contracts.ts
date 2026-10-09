@@ -1,8 +1,17 @@
 import { z } from 'zod';
 import semver from 'semver';
+import ts from 'typescript';
+import { readFileSync } from 'node:fs';
+import { dirname, relative } from 'node:path';
+import { toPosix } from '#cli/platform/contracts.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
+import type { ReadCache } from '#cli/types/platform/reads.ts';
+import { openRoot, readText } from '#cli/platform/root/public.ts';
+import { portableSegments } from '#cli/platform/root/contracts.ts';
+import { typeScriptConfigSchema } from '#cli/parsers/schema/public.ts';
 import type { ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
+import { TS_NO_INPUTS_CODE, TS_EMPTY_FILES_CODE } from '#cli/config/parsers/tsconfig.ts';
 
 import {
     NPM_TOOL_PROJECT,
@@ -14,6 +23,7 @@ import type {
     PackageJson,
     PackageInstaller,
     PackageToolProject,
+    TypeScriptConfiguration,
     PackageInstallerDeclaration,
 } from '#cli/types/parsers/packages.ts';
 
@@ -188,4 +198,66 @@ export function parseToolProject(text: string): PackageToolProject {
 export function packageLockfile(installer: PackageInstaller['name']): ToolProjectLockfileName {
     for (const entry of LOCKFILES) if ('toolProject' in entry && entry.client === installer) return entry.file;
     throw new Error(`The lockfile registry declares no tool project lockfile for ${installer}.`);
+}
+
+/**
+ * Parses compiler options and inherited configuration with the TypeScript compiler.
+ * @param path the absolute configuration path
+ * @param text the configuration source
+ * @param host the caller's file discovery and configuration reader
+ * @returns the parsed compiler configuration
+ */
+export function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): TypeScriptConfiguration {
+    const source = ts.parseConfigFileTextToJson(path, text);
+    if (source.error !== undefined) throw new Error(ts.flattenDiagnosticMessageText(source.error.messageText, '\n'));
+    const raw: unknown = source.config;
+    const authored = typeScriptConfigSchema.parse(raw);
+    const configurationFiles = [path];
+    const parsed = ts.parseJsonConfigFileContent(
+        authored,
+        {
+            ...host,
+            readFile: (file) => {
+                const contents = host.readFile(file);
+                if (contents !== undefined) configurationFiles.push(file);
+                return contents;
+            },
+        },
+        dirname(path),
+        undefined,
+        path,
+    );
+    // Option and alias consumers also read configurations with no input files.
+    const errors = parsed.errors.filter(
+        (error) => error.code !== TS_EMPTY_FILES_CODE && error.code !== TS_NO_INPUTS_CODE,
+    );
+    if (errors.length > 0)
+        throw new Error(errors.map((error) => ts.flattenDiagnosticMessageText(error.messageText, '\n')).join('\n'));
+    return { ...parsed, raw: authored, configurationFiles };
+}
+
+/**
+ * Read native compiler inputs through the authored root or its installed dependency boundary.
+ * @param root the authored repository
+ * @param path the native absolute input path
+ * @param reads the repository read cache
+ * @returns source text, or undefined for a missing input
+ */
+export function configurationText(root: string, path: string, reads: ReadCache): string | undefined {
+    const local = toPosix(relative(root, path));
+    using files = openRoot(root, 'native');
+    try {
+        const segments = local.split('/');
+        const dependency = segments.indexOf('node_modules');
+        if (dependency !== -1 && segments[0] !== DOT_GSPOT) {
+            // Follow linked dependency folders. Refuse links preceding node_modules.
+            portableSegments(local);
+            if (dependency > 0) files.stat(segments.slice(0, dependency).join('/'));
+            return readFileSync(path, 'utf8');
+        }
+        return readText(root, local, reads);
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
+        throw error;
+    }
 }

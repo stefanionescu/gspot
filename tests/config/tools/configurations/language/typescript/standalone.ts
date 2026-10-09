@@ -1,3 +1,5 @@
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/samples/typescript.ts';
+
 const PRIVATE_GLOBAL_DIAGNOSTIC = {
     file: 'app/source.ts',
     line: 1,
@@ -43,4 +45,25 @@ export const STANDALONE_TYPESCRIPT_DIAGNOSTICS = {
             message: 'Not all code paths return a value.',
         },
     ],
+};
+
+// One authored ancestor includes each scope without giving each scope another compiler project.
+export const ANCESTOR_TYPESCRIPT_FILES = {
+    '.gitignore': 'node_modules/\n.gspot/\n',
+    'source.ts': 'export const rootValue = 1;\n',
+    'app/source.ts': 'export const appValue: number = 1;\n',
+    'app/deep/source.ts': 'export const deepValue: number = 1;\n',
+};
+
+export const ANCESTOR_TYPESCRIPT_TABLES = `[agent_rules]
+enabled = false
+[scope."app"]
+configurations = ["typescript"]
+[scope."app/deep"]
+configurations = ["typescript"]
+`;
+
+export const ANCESTOR_TYPESCRIPT_PROJECT = {
+    compilerOptions: STRICT_COMPILER_OPTIONS,
+    include: ['source.ts', 'app/**/*.ts'],
 };

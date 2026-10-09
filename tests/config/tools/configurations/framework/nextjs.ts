@@ -60,3 +60,9 @@ export const CASES: FindingCase[] = [
         },
     },
 ];
+
+export const REFERENCE_PROJECT_FILES = {
+    'compiler-ref/tsconfig.json':
+        '{"compilerOptions":{"composite":true,"strict":true,"types":[],"outDir":"./dist"},"files":["source.ts"]}\n',
+    'compiler-ref/source.ts': 'export const value: number = "wrong";\n',
+};

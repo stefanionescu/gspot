@@ -1,6 +1,5 @@
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { tsc } from '#cli/checks/language/public.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { checkInput } from '#cli/execution/contracts.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
@@ -11,9 +10,10 @@ import { copyIntoScratch } from '#cli/execution/copy/public.ts';
 import { nextSettingsFindings } from '#cli/parsers/tool/public.ts';
 import { parseNextBuildFlags } from '#cli/parsers/bash/contracts.ts';
 import { toolPin, allChecks } from '#cli/configurations/contracts.ts';
-import { parsePackageManifest } from '#cli/parsers/packages/public.ts';
 import { readSource, createReadCache } from '#cli/platform/root/public.ts';
 import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
+import { getTsconfigProject, parsePackageManifest } from '#cli/parsers/packages/public.ts';
+import { runTsc, compilerFiles, compilerCopyInputs, restoreCommandPaths } from '#cli/checks/language/contracts.ts';
 
 import {
     CAUSE_MARKS,
@@ -95,7 +95,23 @@ export function nextConfiguration(input: CheckInput): Finding[] {
  */
 export async function nextjsTsc(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
-    using scratchFolder = await copyIntoScratch(checkInput(session, planned));
+    const project = getTsconfigProject(
+        session.root,
+        planned.scope.scope.path,
+        planned.files.filter((file) => file.tags.includes('typescript')).map((file) => file.path),
+        session.reads,
+    );
+    using scratchFolder =
+        project === undefined
+            ? await copyIntoScratch(checkInput(session, planned))
+            : await copyIntoScratch(
+                  compilerCopyInputs(
+                      session,
+                      planned,
+                      project.projects,
+                      compilerFiles(session, planned, project.projects),
+                  ),
+              );
     const root = scratchFolder.path;
     const isolated = { ...session, root, reads: createReadCache(root) };
     // CI prevents package installation; generated Next.js files stay in the compiler's scratch project.
@@ -107,15 +123,17 @@ export async function nextjsTsc(session: ToolSession, planned: PlannedCheck): Pr
     if (generated.code !== 0) throw new Error(`The next typegen command failed: ${failureSummary(output)}`);
     const compiler = allChecks(session.manifests.values()).get('typescript/tsc');
     if (compiler === undefined) throw new Error('The Next.js compiler check requires typescript/tsc.');
-    const result = await tsc(isolated, {
-        ...planned,
-        check: { ...compiler.check, ...planned.check },
-        tool: toolPin(session.manifests.values(), 'tsc', compiler.configuration),
-    });
+    const result = await runTsc(
+        isolated,
+        {
+            ...planned,
+            check: { ...compiler.check, ...planned.check },
+            tool: toolPin(session.manifests.values(), 'tsc', compiler.configuration),
+        },
+        root,
+    );
     result.duration = performance.now() - started;
-    return result.command === undefined
-        ? result
-        : { ...result, command: result.command.map((part) => part.replaceAll(root, () => session.root)) };
+    return restoreCommandPaths(result, root, session.root);
 }
 
 /**

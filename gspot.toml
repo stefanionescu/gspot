@@ -623,13 +623,3 @@ reason = "A configuration template takes the name of the file it writes, and a t
 check = "structure/prefix-collisions"
 paths = ["packages/eslint-plugin/src/rules/**", "tests/plugin/rules/**", "tests/config/plugin/rules/**"]
 reason = "ESLint rule ids are the file names, and the ids share their first word by convention."
-
-[[ignore]]
-check = "typescript/tsc"
-paths = ["tests/**"]
-reason = "The root compiler includes tests/**/*.ts. Running a second compiler for the tests scope would duplicate the same target."
-
-[[ignore]]
-check = "typescript/tsconfig"
-paths = ["tests/**"]
-reason = "The root tsconfig.json owns every test source and its required compiler options. The root check verifies that configuration."

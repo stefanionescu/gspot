@@ -39,3 +39,17 @@ export const VALID =
     '{"compilerOptions":{"strict":true,"noImplicitReturns":true,"noPropertyAccessFromIndexSignature":true,"noFallthroughCasesInSwitch":true,"noUncheckedIndexedAccess":true,"noImplicitOverride":true,"exactOptionalPropertyTypes":true}}';
 
 export const COMPILER_SOURCE = 'export const value = missing;\n';
+
+/** An imported declaration is a native program dependency, without being a configuration root. */
+export const IMPORTED_AMBIENT_FILES = {
+    'base.json':
+        '{"compilerOptions":{"strict":true,"types":[],"allowJs":true,"checkJs":true,"noEmit":true,"baseUrl":".","paths":{"shared-api":["types/api.d.ts"]}}}',
+    'types/api.d.ts': 'export declare const amount: number;\n',
+    'apps/web/jsconfig.json': '{"extends":"../../base.json","files":["src/main.js"]}',
+    'apps/web/src/main.js': 'import { amount } from "shared-api"; export const total = amount.toFixed();\n',
+    'sibling/bad.js': 'unknownValue();\n',
+};
+
+export const ROOT_PORT_SOURCE = 'export const port = 8080;\n';
+
+export const CHILD_PORT_SOURCE = 'export const port = 3000;\n';

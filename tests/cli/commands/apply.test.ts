@@ -28,7 +28,7 @@ test('apply preserves a policy replaced after session opening and publishes no g
     const originalPolicyAttributes = await originalPolicy.stat();
     const read = fs.readFileSync;
     let replaced = false;
-    const observer = spyOn(fs, 'readFileSync').mockImplementation(((path, options) => {
+    const observer = spyOn(fs, 'readFileSync').mockImplementation(((...[path, options]: Parameters<typeof read>) => {
         const bytes = read(path, options);
         if (path === policyPath && !replaced) {
             replaced = true;

@@ -208,3 +208,58 @@ async function prepareNextjsBuild(root: string, scope: string): Promise<ToolSess
     await chmod(join(root, join(scope, 'tsconfig.json')), 0o640);
     return session;
 }
+
+for (const scope of ['', 'apps/web'])
+    test(`Next.js reference compilation keeps the type generation copy in ${scope || 'root'}`, async () => {
+        await using sandbox = await testdir();
+        await prepareNextjsBuild(sandbox.path, scope);
+        const authored = '{"files":[],"references":[{"path":"./src"}]}';
+        await writeFile(join(sandbox.path, scope, 'tsconfig.json'), authored);
+        await writeFile(
+            join(sandbox.path, scope, 'src/tsconfig.json'),
+            '{"compilerOptions":{"composite":true,"noEmit":true},"files":["page.ts"]}',
+        );
+        const session = await openSession(sandbox.path);
+        const planned = planRun(session, { stage: 'push', skips: [], only: ['nextjs/tsc'] }).find(
+            (entry) => entry.scope.scope.path === scope,
+        )!;
+        const directories: string[] = [];
+        const commands: string[][] = [];
+        const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
+        const nativeBlocking = processes.runBlocking;
+        const inspected = spyOn(processes, 'runBlocking').mockImplementation((command, options) =>
+            command[0] === 'git'
+                ? nativeBlocking(command, options)
+                : {
+                      code: 0,
+                      missing: false,
+                      duration: 1,
+                      stdout: basename(command[0] ?? '') === 'next' ? 'Next.js v16.3.5' : 'Version 5.9.3',
+                      stderr: '',
+                  },
+        );
+        const launched = spyOn(processes, 'run').mockImplementation(async (command, options) => {
+            directories.push(options.cwd);
+            commands.push([...command]);
+            if (command[1] === 'typegen')
+                await writeFile(join(options.cwd, 'next-env.d.ts'), '// Generated in this copy\n');
+            else expect(await readFile(join(options.cwd, 'next-env.d.ts'), 'utf8')).toBe('// Generated in this copy\n');
+            return { code: 0, missing: false, duration: 1, stdout: '', stderr: '' };
+        });
+        try {
+            const result = await nextjsTsc(session, planned);
+            expect(result).toMatchObject({ status: 'passed', findings: [] });
+            expect(directories).toHaveLength(2);
+            expect(new Set(directories).size).toBe(1);
+            expect(commands[1]).toContain('-b');
+            expect(await pathExists(directories[0]!)).toBe(false);
+            expect(await readFile(join(sandbox.path, scope, 'tsconfig.json'), 'utf8')).toBe(authored);
+            expect(await readFile(join(sandbox.path, scope, 'next-env.d.ts'), 'utf8')).toBe(
+                '// Authored type declaration\n',
+            );
+        } finally {
+            launched.mockRestore();
+            inspected.mockRestore();
+            locate.mockRestore();
+        }
+    });

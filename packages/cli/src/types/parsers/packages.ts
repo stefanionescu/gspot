@@ -1,4 +1,6 @@
 import type { z } from 'zod';
+import type ts from 'typescript';
+import type { typeScriptConfigSchema } from '#cli/parsers/schema/public.ts';
 import type { ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
 
 import type {
@@ -47,4 +49,17 @@ export type PackageToolProject = {
     dependencies: z.infer<typeof toolProjectSchema>['devDependencies'];
     lockfile: ToolProjectLockfileName;
     lockfilePath: string;
+};
+
+/** Native compiler configuration with its validated authored fields and actual configuration reads. */
+export type TypeScriptConfiguration = Omit<ts.ParsedCommandLine, 'raw'> & {
+    raw: z.infer<typeof typeScriptConfigSchema>;
+    configurationFiles: string[];
+};
+
+/** The nearest authored project and its native reference graph. */
+export type TypeScriptProject = {
+    path: string;
+    config: TypeScriptConfiguration;
+    projects: Map<string, TypeScriptConfiguration>;
 };

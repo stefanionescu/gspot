@@ -271,7 +271,9 @@ test('foreign hook readiness closes its descriptor and preserves a read failure'
         if (path === hook) descriptors.push(descriptor);
         return descriptor;
     });
-    const read = spyOn(fs, 'readFileSync').mockImplementation(((path, options) => {
+    const read = spyOn(fs, 'readFileSync').mockImplementation(((
+        ...[path, options]: Parameters<typeof originalRead>
+    ) => {
         if (typeof path === 'number' && descriptors.includes(path)) throw failure;
         return originalRead(path, options);
     }) as typeof originalRead);

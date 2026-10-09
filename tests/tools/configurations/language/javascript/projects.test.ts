@@ -13,6 +13,7 @@ import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
+import { IMPORTED_AMBIENT_FILES } from '#tests/config/samples/typescript.ts';
 
 import {
     JAVASCRIPT_CONFIG_CASES,
@@ -150,3 +151,35 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
     ]);
     expect(await Bun.file(join(sandbox.path, 'app/jsconfig.json')).text()).toBe('{');
 });
+
+test.each(['recommended', 'all'] as const)(
+    '%s copies imported ambient dependencies and keeps unrelated scopes separate',
+    async (level) => {
+        await using sandbox = await testdir({
+            ...IMPORTED_AMBIENT_FILES,
+            'gspot.toml': buildPolicy(['javascript'], {
+                level,
+                tables: '[agent_rules]\nenabled=false\n[scope."apps/web"]\n',
+            }),
+        });
+        const session = await openSession(sandbox.path);
+        const emitted = emitAll(session);
+        using ownership = openOwnership(sandbox.path);
+        writeGeneratedFiles(session, emitted, ownership);
+        const environment = { PATH: buildToolsPath(['tsc']) };
+        const command = ['check', '--only', 'javascript/tsc', '--json', '--', 'apps/web/src/main.js'];
+        const passed = await spawnGspot(sandbox.path, command, environment);
+        expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+        await Bun.write(join(sandbox.path, 'types/api.d.ts'), 'export declare const amount: string;\n');
+        const failed = await spawnGspot(sandbox.path, command, environment);
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
+            containing({ file: 'apps/web/src/main.js', rule: 'TS2339', line: 1 }),
+        ]);
+        await Bun.write(join(sandbox.path, 'types/api.d.ts'), IMPORTED_AMBIENT_FILES['types/api.d.ts']);
+        const corrected = await spawnGspot(sandbox.path, command, environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        for (const [path, original] of Object.entries(IMPORTED_AMBIENT_FILES))
+            expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
+    },
+);
