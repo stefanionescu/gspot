@@ -1,6 +1,6 @@
 # The Config Constants
 
-4 unresolved review records remain.
+3 unresolved review records remain.
 
 ## Open findings
 
@@ -41,3 +41,11 @@ Original records and quotations remain above. These records are complete at `c0d
 | ID                  | Status   | Evidence                                                                                                                                                                                                                                                                                                            |
 | ------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/config/015` | complete | Actual manifest-generated declarations own next-env.d.ts and worker-configuration.d.ts; generic reference banners deleted. Current selector/schema leaf match later native201pass474assert receipt containing all7 generated cases, not obsolete first selector. Commit `c0dab0da213458868371e8fb3a69fe88740bc3ed`. |
+
+## Implementation checkpoint 895fee582 of October 9, 2026 for declared-policy-check
+
+Original records and quotations remain above. These records are complete at `895fee5825d9d51d34a78dd6f2231db9b22f078f`.
+
+| ID                  | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/config/035` | complete | The gspot manifest declares policy with its title, summary, why and help; POLICY_CHECK remains the report name. Native configurationManifests and public explain(undefined, gspot/policy) agree on the fully qualified identity and provide the documented check explanation. Accepted native receipt /tmp/gspot-config035-native-declaration-accepted.log. Initial probes assumed a title in public output and an unqualified normalized name; both invalid probe assumptions are retained and corrected against the actual owners. Commit `895fee5825d9d51d34a78dd6f2231db9b22f078f`. |

@@ -1,5 +1,5 @@
 {
-    "openRecords": 390,
+    "openRecords": 369,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -383,10 +383,51 @@
                 "Explicit user answer: Allow the verified compiler fix.",
                 "Reviewed patch /tmp/gspot-compiler-three-native-candidate-freeze.json and /tmp/gspot-compiler-three-scope-amendment-freeze.json."
             ]
+        },
+        {
+            "id": "init-installed-drift-owner-override",
+            "date": "2026-10-09",
+            "scope": "areas/tool-tests/035",
+            "decision": "Adopt the validated split: CLI tests retain exact pointer, deletion and no-install observations; the existing native lifecycle test owns actual installed drift. This supersedes the impossible CLI-only full installed-drift requirement, retains the real installer and drift=[] control, and removes2154 bytes.",
+            "evidence": [
+                "Explicit user answer: Adopt the validated split.",
+                "Reviewed immutable candidate /tmp/gspot-tool-tests035-installed-drift-draft-final-freeze.json."
+            ]
+        },
+        {
+            "id": "wrangler-schema-validation-size-exception",
+            "date": "2026-10-09",
+            "scope": "areas/checks/043",
+            "decision": "Allow the reviewed native shipped-schema validation and its1922-byte production increase (13210 total) as a narrow exception to the less-code contract. Preserve required name/date checks and the existing native diagnostics and scope controls.",
+            "evidence": [
+                "Explicit user answer: Allow the schema-validation exception.",
+                "Reviewed immutable candidate /tmp/gspot-platform-wrangler-final-freeze.json.",
+                "Integration of the same approved schema fix adds461 productionbytes/2098 wholebytes for verified installed-scope, native package-export and editor-annotation boundaries. Final2383 production/15308 whole; original1922/13210 approval and rejected probes retained at /tmp/gspot-platform-wrangler-main-integration-amendment.json. No new policy setting or weakened value validation."
+            ]
+        },
+        {
+            "id": "supabase-host-declaration-size-exception",
+            "date": "2026-10-09",
+            "scope": "slices/kits-frameworks-tools/054",
+            "decision": "Allow the46-byte host declaration increase: system=true and version_command=[\"--version\"] retain native host ownership and the existing version floor. No inspector fallback or policy weakening.",
+            "evidence": [
+                "Explicit user answer: Allow the host-declaration exception.",
+                "Reviewed immutable candidate /tmp/gspot-platform-supabase-three-final-freeze.json."
+            ]
+        },
+        {
+            "id": "tool-diagnostic-and-runtime-guidance-size-exception",
+            "date": "2026-10-09",
+            "scope": "areas/developer-experience/023; areas/developer-experience/026",
+            "decision": "Allow the two reviewed missing-tool diagnostic and React Native/Expo guidance fixes and their389 production-byte increase (2101 total) as a narrow less-code exception. Report mise NO_VERSION as not installed; omit NODE.md for react-native or expo while preserving Deno, Bun and both levels.",
+            "evidence": [
+                "Explicit user answer: Allow these two verified fixes.",
+                "Reviewed immutable candidate /tmp/gspot-release-DX023-DX026-final-freeze.json."
+            ]
         }
     ],
     "implementationBatches": {
-        "openRecords": 390,
+        "openRecords": 369,
         "records": 1092,
         "batches": [
             {
@@ -692,8 +733,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 180,
-                "unresolvedAssignments": 111
+                "completedAssignments": 185,
+                "unresolvedAssignments": 106
             },
             {
                 "id": "python",
@@ -739,8 +780,8 @@
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
                 ],
-                "completedAssignments": 24,
-                "unresolvedAssignments": 15
+                "completedAssignments": 25,
+                "unresolvedAssignments": 14
             },
             {
                 "id": "javascript-web",
@@ -846,8 +887,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 42,
-                "unresolvedAssignments": 57
+                "completedAssignments": 50,
+                "unresolvedAssignments": 49
             },
             {
                 "id": "swift-bash-sql",
@@ -1075,8 +1116,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 53,
-                "unresolvedAssignments": 78
+                "completedAssignments": 61,
+                "unresolvedAssignments": 70
             },
             {
                 "id": "test-quality",
@@ -1552,8 +1593,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 317,
-                "unresolvedAssignments": 152
+                "completedAssignments": 321,
+                "unresolvedAssignments": 148
             },
             {
                 "id": "scripts-repository",
@@ -1692,8 +1733,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 65,
-                "unresolvedAssignments": 67
+                "completedAssignments": 73,
+                "unresolvedAssignments": 59
             },
             {
                 "id": "installation-docs",
@@ -1837,8 +1878,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 78,
-                "unresolvedAssignments": 59
+                "completedAssignments": 82,
+                "unresolvedAssignments": 55
             },
             {
                 "id": "policy-file",
@@ -1936,8 +1977,8 @@
                     "review/policy-exceptions/061",
                     "review/carve-outs/001"
                 ],
-                "completedAssignments": 30,
-                "unresolvedAssignments": 61
+                "completedAssignments": 31,
+                "unresolvedAssignments": 60
             },
             {
                 "id": "layout",
@@ -2144,7 +2185,12 @@
     },
     "implementationBaseline": "b36d7d0fc",
     "implementationRecords": {
-        "additional/next-app-router-links": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "additional/next-app-router-links": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/checks/008": {
             "status": "partial",
             "owner": "main",
@@ -2201,7 +2247,12 @@
                 }
             ]
         },
-        "areas/checks/011": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/checks/011": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/checks/012": {
             "status": "partial",
             "owner": "main",
@@ -2374,25 +2425,31 @@
                 "Native alpha33 accepts duplicate keys/trailing text; prescribed public parser adoption retained, no obsolete tokenizer fallback. CLI packages bundle only JSON parser via existing build; consumers have no SDK/Plist/XML dependency chain."
             ]
         },
-        "areas/checks/043": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/checks/044": {
-            "status": "partial",
+        "areas/checks/043": {
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "verification": [
+                "Pinned Wrangler shipped schema validates all formats at root/child and both levels, preserving required name/date diagnostics. Resolve the native package metadata through wrappers, use installed scopes for copied revisions and accept editor annotations while rejecting invalid values. Original owner-approved freeze and integration amendment preserved.",
+                "Evidence 28bd68840502ea6f."
+            ]
+        },
+        "areas/checks/044": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "6fd79235d8b7620cfdc4ef175749c61253847f48",
             "verification": [
                 "Related TypeScript007 and Nextjs044 compiler-sharing implementation is isolated and pending. Core five-record copier checkpoint excludes scoped compiler behavior. Native behavior checks pass provisionally but authored compiler pair still grows; no closure or integration claim.",
                 "Evidence 9e83fc5d87a6c87b.",
                 "Evidence 5f58eb0f034f8415.",
-                "Evidence dd1d38818d82452e."
-            ],
-            "remaining": [
-                "Shared Next compiler and scoped reference/checkjs dependency closure remain unimplemented; all growing candidates are frozen.",
-                "A safe full implementation with less code and actual native Next acceptance has not been demonstrated."
+                "Evidence dd1d38818d82452e.",
+                "Next type generation and the shared native compiler use one disposable project and restored source paths. Original typegen failures, reference roots, source edits, cancellation and cleanup controls remain. The owner approved the required compiler production-size exception.",
+                "Evidence 43086d237ef6ffa2."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-next-checks-v2-final-freeze.json",
-                    "commit": null,
+                    "commit": "6fd79235d8b7620cfdc4ef175749c61253847f48",
                     "verification": ["Evidence 1b872575b3be461d."]
                 }
             ]
@@ -2445,14 +2502,19 @@
             ]
         },
         "areas/checks/049": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence f4fb4b0dc9709bbe."],
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "verification": [
+                "Evidence f4fb4b0dc9709bbe.",
+                "LOCKFILES sole lockfile list replaces Python inline names; stale-allowlists list is removed through completed review/code-execution015.",
+                "Evidence 438da5ff78583d18.",
+                "{'historicalPacket': '/tmp/gspot-python-domain-checkpoint1-final-freeze.json', 'historicalWholeBytes': -6491, 'perRecordCost': 'Not isolated; do not attribute entire15-owner Python packet reduction to049.'}"
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-domain-checkpoint1-final-freeze.json",
-                    "commit": null,
+                    "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
                     "verification": ["Evidence c57c6983e8dc7899."]
                 }
             ]
@@ -2530,7 +2592,12 @@
                 "Evidence 1e0e7e938cc298a8."
             ]
         },
-        "areas/checks/070": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/checks/070": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/checks/071": {
             "status": "complete",
             "owner": "main",
@@ -2552,7 +2619,12 @@
                 }
             ]
         },
-        "areas/checks/073": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/checks/073": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/checks/075": {
             "status": "partial",
             "owner": "main",
@@ -2575,7 +2647,12 @@
                 "Original follow-runner-answer obligation remains unproven for manually chosen package task runner without a repository package-manager declaration; reserved session selection interface is unchanged."
             ]
         },
-        "areas/developer-experience/017": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "areas/developer-experience/017": {
+            "status": "partial",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/developer-experience/021": {
             "status": "partial",
             "owner": "main",
@@ -2594,8 +2671,24 @@
                 }
             ]
         },
-        "areas/developer-experience/023": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/developer-experience/026": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "areas/developer-experience/023": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "verification": [
+                "Pinned mise NO_VERSION diagnostics become not installed; timeout, missing executable, command failure and native versions retain their contracts.",
+                "Evidence 28bd68840502ea6f."
+            ]
+        },
+        "areas/developer-experience/026": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "verification": [
+                "React Native/Expo dependency selections omit NODE.md in root/child at both levels; Node, Deno, Bun and TALKING applicability preserved. Manifest condition runtime/schema and actual rule assembly cases pass.",
+                "Evidence 28bd68840502ea6f."
+            ]
+        },
         "areas/developer-experience/030": {
             "status": "complete",
             "owner": "main",
@@ -2604,8 +2697,18 @@
                 "Init prints active checks and counts checks turned off by the selected level. Native init selection and plan tests pass."
             ]
         },
-        "areas/developer-experience/032": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/developer-experience/033": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "areas/developer-experience/032": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "areas/developer-experience/033": {
+            "status": "partial",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/developer-experience/037": {
             "status": "complete",
             "owner": "main",
@@ -2615,9 +2718,24 @@
                 "Evidence db827208d873baeb."
             ]
         },
-        "areas/integration-tests/001": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/integration-tests/003": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/integration-tests/004": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/integration-tests/001": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "areas/integration-tests/003": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "areas/integration-tests/004": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/integration-tests/006": {
             "status": "partial",
             "owner": "main",
@@ -2741,7 +2859,12 @@
                 "Init/check unsafe managed links share one table in commands/roots; storage test deleted in separate mechanical checkpoint."
             ]
         },
-        "areas/integration-tests/022": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/integration-tests/022": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/integration-tests/024": {
             "status": "complete",
             "owner": "main",
@@ -2795,7 +2918,12 @@
                 "Evidence 3723a258f74e6d04."
             ]
         },
-        "areas/integration-tests/030": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/integration-tests/030": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/integration-tests/035": {
             "status": "complete",
             "owner": "main",
@@ -2897,7 +3025,12 @@
                 "Evidence 7f3fd9dc95852ce9."
             ]
         },
-        "areas/integration-tests/052": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/integration-tests/052": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/integration-tests/053": {
             "status": "complete",
             "owner": "main",
@@ -2942,10 +3075,30 @@
                 "Evidence db827208d873baeb."
             ]
         },
-        "areas/integration-tests/059": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/integration-tests/061": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/integration-tests/062": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/integration-tests/063": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/integration-tests/059": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "areas/integration-tests/061": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "areas/integration-tests/062": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "areas/integration-tests/063": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/integration-tests/064": {
             "status": "complete",
             "owner": "main",
@@ -2954,7 +3107,12 @@
                 "Deleted the impossible recovery absence assertion; substantive restoration observations remain."
             ]
         },
-        "areas/integration-tests/065": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/integration-tests/065": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/integration-tests/066": {
             "status": "complete",
             "owner": "main",
@@ -2972,7 +3130,12 @@
                 "Deleted duplicate regular-file interruption from links; batches retains multiple paths and verifies pending journal before recovery and clearance afterward."
             ]
         },
-        "areas/integration-tests/068": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/integration-tests/068": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/integration-tests/071": {
             "status": "complete",
             "owner": "main",
@@ -2994,10 +3157,30 @@
                 }
             ]
         },
-        "areas/integration-tests/076": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/integration-tests/077": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/integration-tests/078": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/integration-tests/080": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/integration-tests/076": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "areas/integration-tests/077": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "areas/integration-tests/078": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "areas/integration-tests/080": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/integration-tests/084": {
             "status": "complete",
             "owner": "main",
@@ -3008,7 +3191,12 @@
                 "All original and final cited correction sites are traced through actual moves/deletions in /tmp/gspot-correction084-whole-ancestry-amendment.json (SHA256 1545c28f8631caa41947365a97a9445a56abe13d0622a8d7e3a1fd1a19077de8). Supplemental /tmp/gspot-correction084-cp-refusals-audit-amendment.json (SHA256 e7c9b430e0c0dfa9dd0867efa4838854ba638ab4064eb2b50907eaf144b8746c) preserves the checkpoint stronger fetch-count assertion while proving exact unsafe-scope callback bytes. Pushed6087e614 removes12 safe-owner tails; pushed7818e8ca1 finishes template, publication and moved Bash residuals. Unique obsolete tool-file pruning and first .gitattributes publication controls move to the first positive callback; original refusal/no-write controls stay. Only genuine same Session/cache corrections remain. Native135pass367assert11files, supplemental40pass250assert4files and21pass106assert3files; types0, staged46pass8skip0findings. Safe12 deletes5717bytes, template source98 and Bash378; meaningful customization assertions remain."
             ]
         },
-        "areas/integration-tests/085": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "areas/integration-tests/085": {
+            "status": "partial",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/kits/014": {
             "status": "complete",
             "owner": "main",
@@ -3197,37 +3385,43 @@
             ]
         },
         "areas/kits/044": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 417887cb72fd237f."],
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "verification": [
+                "Evidence 417887cb72fd237f.",
+                "Both removed patterns absent; two retained patterns present. Native all-level negative lib/widget/server.js and positive data.server.js/server/data.js produce [[],[1],[1]]. No new setting.",
+                "Prescribed owner replacement-49bytes; exact current source equals the pushed implementation at ca2975ca5552d3276e78bbd6d897c44cfdf70a09. Native e612 bridge5pass/35assert; assertion/static transport proven. Shared historical +6 production/+4077 total remains explicit and unwaived; RHF024 remains partial. Receipt /tmp/gspot-frontend-five-final-evidence-bridge.json."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-final-freeze.json",
-                    "commit": null,
+                    "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
                     "verification": ["Evidence 4821c8368edb9d73."]
                 }
             ]
         },
         "areas/kits/045": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
             "verification": [
                 "Evidence 237b72c048af1fe0.",
                 "Evidence ad7c37a4f5743523.",
                 "Evidence ffe97c8974227e1b.",
-                "Evidence 3461dbd46d80df40."
+                "Evidence 3461dbd46d80df40.",
+                "suggests is exactly[css]. Current doctor observes CSS and no translations. Translations manifest independently declares next-intl/react-i18next/i18next/react-intl/@lingui/core detection; no dependency detection runtime beyond this static declaration is claimed.",
+                "Prescribed owner replacement-8bytes; exact current source equals the pushed implementation at ca2975ca5552d3276e78bbd6d897c44cfdf70a09. Native e612 bridge5pass/35assert; assertion/static transport proven. Shared historical +6 production/+4077 total remains explicit and unwaived; RHF024 remains partial. Receipt /tmp/gspot-frontend-five-final-evidence-bridge.json."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-final-freeze.json",
-                    "commit": null,
+                    "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
                     "verification": ["Evidence 4821c8368edb9d73."]
                 },
                 {
                     "evidence": "/tmp/gspot-native-path-manual-main-freeze.json",
-                    "commit": null,
+                    "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
                     "verification": ["Evidence bfd2184fb5092dae."]
                 }
             ]
@@ -3553,14 +3747,18 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "verification": [
+                "Evidence 99cedf9c066772ef.",
+                "Current e612 Snapshot ownership/source/test13-owner bridge matches actual345dd Linux passed controls. Bounded snapshot-only production reduction706bytes with recording/predicate bodies preserved; new dedicated test/static11428bytes and reclaimed exclusive old registrations3868bytes, mixed old test allocation unresolved. No SDK/compiler/platform result inferred. /tmp/gspot-language-three-e612-closure-bridge.json and /tmp/gspot-kits074-w3-bounded-cost-bridge.json."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
                 }
-            ]
+            ],
+            "remaining": "Final review of same-concern historical test growth and mixed old-test allocation; shipped behavior and ownership are verified. No unrelated W3 offsets or inferred simplification exception."
         },
         "areas/kits/075": {
             "status": "complete",
@@ -3827,7 +4025,12 @@
                 }
             ]
         },
-        "areas/kits/120": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/kits/120": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/kits/122": {
             "status": "partial",
             "owner": "main",
@@ -3980,7 +4183,12 @@
                 }
             ]
         },
-        "areas/kits/141": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/kits/141": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/kits/142": {
             "status": "complete",
             "owner": "main",
@@ -4067,8 +4275,21 @@
                 }
             ]
         },
-        "areas/repository/057": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/tool-tests/001": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/repository/057": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "verification": [
+                "Delete both NestJS data-layer selectors and obsolete controller wording while retaining forwardRef, response handling, Swagger and compiler checks. Native NestJS3cases pass.",
+                "Evidence 28bd68840502ea6f."
+            ]
+        },
+        "areas/tool-tests/001": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/tool-tests/004": {
             "status": "complete",
             "owner": "main",
@@ -4175,7 +4396,12 @@
                 "Evidence 73ab5536ccab95c9."
             ]
         },
-        "areas/tool-tests/022": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "areas/tool-tests/022": {
+            "status": "partial",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/tool-tests/023": {
             "status": "partial",
             "owner": "main",
@@ -4260,8 +4486,18 @@
                 }
             ]
         },
-        "areas/tool-tests/035": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/tool-tests/037": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/tool-tests/035": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "areas/tool-tests/037": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/tool-tests/039": {
             "status": "complete",
             "owner": "main",
@@ -4271,7 +4507,12 @@
                 "Evidence 73ab5536ccab95c9."
             ]
         },
-        "areas/tool-tests/043": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "areas/tool-tests/043": {
+            "status": "partial",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/tool-tests/044": {
             "status": "partial",
             "owner": "main",
@@ -4357,7 +4598,12 @@
             "commit": null,
             "verification": ["Evidence 68a2bf9ff8c99356."]
         },
-        "areas/unit-tests/019": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "areas/unit-tests/019": {
+            "status": "partial",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "areas/unit-tests/040": {
             "status": "complete",
             "owner": "main",
@@ -4397,7 +4643,12 @@
                 }
             ]
         },
-        "diagram/repository/015": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "diagram/repository/015": {
+            "status": "partial",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "main/001": {
             "status": "partial",
             "owner": "main",
@@ -4635,7 +4886,12 @@
                 }
             ]
         },
-        "review/code-commands/011": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/code-commands/011": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/code-commands/012": {
             "status": "partial",
             "owner": "main",
@@ -4718,7 +4974,12 @@
                 "Evidence 160ed58bd91b6f75."
             ]
         },
-        "review/code-commands/021": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/code-commands/021": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/code-commands/022": {
             "status": "complete",
             "owner": "main",
@@ -4795,8 +5056,18 @@
                 "Evidence 160ed58bd91b6f75."
             ]
         },
-        "review/code-commands/029": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/code-commands/030": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/code-commands/029": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/code-commands/030": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/code-commands/031": {
             "status": "complete",
             "owner": "main",
@@ -4842,7 +5113,12 @@
                 "Evidence ee3e9459ef6e9c38."
             ]
         },
-        "review/code-commands/037": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/code-commands/037": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/code-commands/038": {
             "status": "complete",
             "owner": "main",
@@ -4929,7 +5205,12 @@
                 }
             ]
         },
-        "review/code-commands/045": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/code-commands/045": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/code-commands/046": {
             "status": "complete",
             "owner": "main",
@@ -5030,15 +5311,15 @@
         "review/code-execution/007": {
             "status": "partial",
             "owner": "main",
-            "commit": "5b5d2591f8b1ff40ab25e5be8828958724a6c9b7",
+            "commit": "6fd79235d8b7620cfdc4ef175749c61253847f48",
             "verification": [
                 "Frozen ordinary-only patch4f4cab95125ed44de9b60bf8487aa46ae118cf06cc3d207ea33b9b868036472a integrated after5553bac3e. Only tsc.ts changes: ordinary --noEmit runs from canonical source root, temporary incremental metadata stays in owned scratch; reference/fullrepository/checkjs/Next paths and original parser remain unchanged. Actual source4fewerlines45fewerbytes1moreASTnode. Agent27focused/99assertions and original4native/32assertions55.51s pass; native defect/correction/cwd/noEmit/source+config+metadata+binary bytes/modes/preabort/liveabort/cleanup probe30assertions each Bun1.4.2/Node24.2darwin passes. Main combined gates pending; no closure.",
                 "Evidence a4bf43154222d468.",
-                "Evidence 9e83fc5d87a6c87b."
+                "Evidence 9e83fc5d87a6c87b.",
+                "Approved native compiler candidate/amendment integrated at6fd79235; shared reference/checkjs/imported-declaration closure, source noEmit and Next workspace implementation are complete. Actual staged152pass11skip0findings54.9s, native configured types0, grouped CLI22pass138assertions and preserved typing controls pass. No supported-platform CI outcome inferred."
             ],
             "remaining": [
-                "Evidence 7ce1d690623210ab.",
-                "Full platform and final suite acceptance remains pending; this partial branch does not close007 or044."
+                "Explicit full-platform and final-suite compiler acceptance is pending. CI for the combined implementation must verify Linux, macOS and Windows; actual native Node/Bun proof is macOS only."
             ]
         },
         "review/code-execution/008": {
@@ -6763,9 +7044,24 @@
                 }
             ]
         },
-        "review/glossary/002": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/glossary/003": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/glossary/004": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/glossary/002": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/glossary/003": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/glossary/004": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/glossary/005": {
             "status": "partial",
             "owner": "main",
@@ -6866,7 +7162,12 @@
                 "Coverage is used for test coverage; levels and ESLint rule applicability use their own names. Old worker coverage schemas and client are deleted."
             ]
         },
-        "review/glossary/013": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/glossary/013": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/glossary/014": {
             "status": "complete",
             "owner": "main",
@@ -6936,8 +7237,18 @@
                 }
             ]
         },
-        "review/glossary/019": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/glossary/020": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/glossary/019": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/glossary/020": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/glossary/022": {
             "status": "in-progress",
             "owner": "packaging implementation; main integration",
@@ -7010,7 +7321,12 @@
                 "Evidence 8aca4bfc778b441f."
             ]
         },
-        "review/glossary/029": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/glossary/029": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/owner-decisions/001": {
             "status": "complete",
             "owner": "packaging",
@@ -7080,9 +7396,27 @@
                 "Evidence aedf99cbeb97c5eb."
             ]
         },
-        "review/policy-exceptions/003": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/004": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/005": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/policy-exceptions/003": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "6fd79235d8b7620cfdc4ef175749c61253847f48",
+            "verification": [
+                "The nearest authored tsconfig and referenced projects determine coverage. Child checks skip only an ancestor checked with the same compiler requirements; standalone scopes remain checked. Both tests-scope authored ignores are deleted and gspot apply generated its configuration.",
+                "Evidence 43086d237ef6ffa2."
+            ]
+        },
+        "review/policy-exceptions/004": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/005": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/policy-exceptions/006": {
             "status": "partial",
             "owner": "main",
@@ -7096,35 +7430,180 @@
                 }
             ]
         },
-        "review/policy-exceptions/007": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/009": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/010": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/013": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/018": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/023": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/024": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/026": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/027": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/028": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/029": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/030": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/031": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/035": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/036": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/037": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/040": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/041": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/043": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/044": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/046": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/047": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/051": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/053": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/055": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/056": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/057": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/058": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/060": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/policy-exceptions/007": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/009": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/010": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/013": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/018": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/023": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/024": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/026": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/027": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/028": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/029": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/030": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/031": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/035": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/036": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/037": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/040": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/041": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/043": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/044": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/046": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/047": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/051": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/053": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/055": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/056": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/057": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/058": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/policy-exceptions/060": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/policy-exceptions/061": {
             "status": "complete",
             "owner": "main",
@@ -7644,6 +8123,13 @@
             "commit": "2c65d42f63e5a907e39b9bd6be634202a527c486",
             "verification": [
                 "Install:checks now installs committed Bun/UV tool locks. CI explicitly refreshes through bun scripts/plugin.ts install --refresh-lockfiles and rejects git diff in both locks. Normal default install and explicit refresh pass. Main refresh adopts native smol-toml1.9.1 metadata; repeat resolution exposes two optional WASI keys that alternate, preserved in repeat/third logs. The guard remains strict and detects actual drift; no idempotence claim or manual managed-file normalization. Main staged156pass14skip0findings and normal commit117pass3skip0findings; push156pass14skip0findings."
+            ],
+            "additionalChanges": [
+                {
+                    "commit": "345dd98114e4962ed1fcab09857492fea24922bf",
+                    "scope": "Pinned workspace plugin archive integrity and canonical frozen reinstallation",
+                    "verification": ["Evidence 0a6f96bc0804e4f7."]
+                }
             ]
         },
         "review/repository-root/005": {
@@ -7665,8 +8151,18 @@
                 "One composite setup owns the single mise2026.8.8 pin, tools default all, and authored setup input across all ten jobs. Docs/build/deploy use only @gspothq/docs; version/publisher use their exact workspace filters. Native filtered installs, docs build, pinned Wrangler version, version script, cold publisher grammar/plugin/CLI builds, Node24/Bun consumers, and database default setup/selector pass. Archive jobs remain absent. Native Actionlint and composite Zizmor pass. Approved repository-only ./ self-repository exception preserves Actionlint1.7.12 compatibility; setup input enters Bash via environment, resolving command injection without weakening other audits."
             ]
         },
-        "review/repository-root/010": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/repository-root/012": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/repository-root/010": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/repository-root/012": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/repository-root/015": {
             "status": "complete",
             "owner": "main",
@@ -7676,7 +8172,12 @@
                 "Evidence 0c3dc06ab4176ba4."
             ]
         },
-        "review/repository-root/016": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/repository-root/016": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/repository-root/019": {
             "status": "complete",
             "owner": "main",
@@ -7685,7 +8186,12 @@
                 "Remove unused check/check:fix/build tasks and rename dev to serve:docs; no redundant tool/package working-directory tasks or archive task remain. Task inventory and required command contracts pass. Pushed bb1f03b3a."
             ]
         },
-        "review/repository-root/020": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/repository-root/020": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/repository-root/024": {
             "status": "complete",
             "owner": "main",
@@ -7710,7 +8216,15 @@
                 "One workflow Bash default replaces repeated job defaults; Windows Defender retains its required PowerShell. Native workflow checks pass."
             ]
         },
-        "review/repository-root/027": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/repository-root/027": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "35ff0a744c33e8a79fd040f4f7d4e89bcaa30398",
+            "verification": [
+                "The publish job no longer repeats version validation: its required version job validates the same commit. Native YAML structure proves only the redundant step is deleted.",
+                "Evidence def71a1deacd6b4d."
+            ]
+        },
         "review/repository-root/031": {
             "status": "complete",
             "owner": "main",
@@ -7719,7 +8233,12 @@
                 "Cartesian three-OS/four-shard matrix retains all twelve tool jobs and uses the prescribed shard argument, with no platform-only field. Native workflow checks pass."
             ]
         },
-        "review/repository-root/032": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/repository-root/032": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/repository-root/033": {
             "status": "complete",
             "owner": "main",
@@ -7773,7 +8292,15 @@
                 "Prescribed sideEffects deletion remains unimplemented under the recorded owner override; leave this record partial."
             ]
         },
-        "review/repository-root/041": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/repository-root/041": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "35ff0a744c33e8a79fd040f4f7d4e89bcaa30398",
+            "verification": [
+                "The existing package cache now uses the prescribed packages-${{ runner.os }}- restore prefix; all cache paths, key inputs and existing setup behavior remain.",
+                "Evidence def71a1deacd6b4d."
+            ]
+        },
         "review/repository-root/042": {
             "status": "complete",
             "owner": "main",
@@ -7797,7 +8324,15 @@
                 "Cross-platform verification remains pending."
             ]
         },
-        "review/repository-root/046": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/repository-root/046": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "verification": [
+                "One npm project owns declared packages for every runner; remove runner-dependent project filtering, npm setting and duplicate mise pins. Native generation and installer contracts pass.",
+                "Evidence 28bd68840502ea6f."
+            ]
+        },
         "review/repository-root/047": {
             "status": "partial",
             "owner": "main",
@@ -7960,7 +8495,12 @@
                 "Evidence da8f1bff842ebda0."
             ]
         },
-        "review/source-layout/017": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/source-layout/017": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/source-layout/018": {
             "status": "complete",
             "owner": "packaging",
@@ -8221,7 +8761,12 @@
                 "Evidence 17e0e9bcccb43434."
             ]
         },
-        "review/source-layout/052": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/source-layout/052": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/source-layout/053": {
             "status": "complete",
             "owner": "main",
@@ -9807,7 +10352,12 @@
                 "Current useEnvironment/usePlatform resources restore globals in mapped environment, credentials, manager, installation and hint owners; actual final owner tests pass."
             ]
         },
-        "review/tests-layout/003": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-layout/003": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/tests-layout/004": {
             "status": "complete",
             "owner": "main",
@@ -9817,9 +10367,24 @@
                 "Evidence aedf99cbeb97c5eb."
             ]
         },
-        "review/tests-layout/005": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/tests-layout/007": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/tests-layout/008": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-layout/005": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/tests-layout/007": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/tests-layout/008": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/tests-layout/009": {
             "status": "complete",
             "owner": "main integration (packaging implementation; rules independent review)",
@@ -9880,8 +10445,18 @@
             "commit": null,
             "verification": ["Evidence 465ecfb7ffcbe2c5."]
         },
-        "review/tests-layout/019": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/tests-layout/020": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-layout/019": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/tests-layout/020": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/tests-layout/021": {
             "status": "partial",
             "owner": "main",
@@ -9895,8 +10470,18 @@
                 }
             ]
         },
-        "review/tests-layout/022": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/tests-layout/023": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-layout/022": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/tests-layout/023": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/tests-layout/024": {
             "status": "partial",
             "owner": "main",
@@ -10053,8 +10638,18 @@
                 "Evidence 20017899171406af."
             ]
         },
-        "review/tests-layout/043": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/tests-layout/044": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-layout/043": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/tests-layout/044": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/tests-layout/045": {
             "status": "partial",
             "owner": "main",
@@ -10637,11 +11232,36 @@
                 "All six Git calls use the shared harness identity and autocrlf settings. Native tool tests passed 9 tests and 147 assertions; CLI test passed 1 test and 10 assertions. Bodies, assertions and comments are retained. Implementation f008eeaf1206bfa5f3cf44a44a682f1af40058d2; /tmp/gspot-tests-tools060-final-freeze.json."
             ]
         },
-        "review/tests-tools/061": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/verification/002": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/verification/004": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/verification/006": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/verification/007": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-tools/061": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/verification/002": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/verification/004": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/verification/006": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "review/verification/007": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/verification/008": {
             "status": "complete",
             "owner": "main integration",
@@ -10652,7 +11272,12 @@
                 "Evidence 7b139defb72759ab."
             ]
         },
-        "review/verification/015": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/verification/015": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/verification/018": {
             "status": "complete",
             "owner": "main",
@@ -10661,7 +11286,12 @@
                 "Removed all eleven no-op isDryRun fields from nine remaining owners when fix is false. Genuine fixer previews remain. Main: 75 tests, 275 assertions; all affected native checks pass. No native executable XCTest run is credited."
             ]
         },
-        "review/verification/019": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/verification/019": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "review/verification/025": {
             "status": "complete",
             "owner": "main",
@@ -10678,8 +11308,18 @@
                 "Windows cmd test shim uses quoted process.execPath, preserving runtime identity without requiring node in PATH. Native argument selection tests pass. This is source/caller evidence; Windows execution is still required in final cross-platform acceptance."
             ]
         },
-        "review/verification/029": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "slices/checks-other/015": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/verification/029": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "slices/checks-other/015": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "slices/checks-other/016": {
             "status": "partial",
             "owner": "root",
@@ -10692,8 +11332,18 @@
                 }
             ]
         },
-        "slices/checks-other/030": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "slices/checks-other/031": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "slices/checks-other/030": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "slices/checks-other/031": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "slices/checks-other/036": {
             "status": "complete",
             "owner": "main",
@@ -10734,7 +11384,12 @@
                 "Evidence c2819a71828ec2a8."
             ]
         },
-        "slices/checks-other/046": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "slices/checks-other/046": {
+            "status": "partial",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "slices/checks-other/049": {
             "status": "partial",
             "owner": "main",
@@ -10760,8 +11415,20 @@
                 }
             ]
         },
-        "slices/config/033": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "slices/config/035": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "slices/config/033": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "slices/config/035": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
+            "verification": [
+                "The gspot manifest declares policy with its title, summary, why and help; POLICY_CHECK remains the report name. Native configurationManifests and public explain(undefined, gspot/policy) agree on the fully qualified identity and provide the documented check explanation. Accepted native receipt /tmp/gspot-config035-native-declaration-accepted.log. Initial probes assumed a title in public output and an unqualified normalized name; both invalid probe assumptions are retained and corrected against the actual owners."
+            ]
+        },
         "slices/config/037": {
             "status": "partial",
             "owner": "main",
@@ -10785,8 +11452,18 @@
                 "Evidence 49025d8ed841fdc4."
             ]
         },
-        "slices/config/043": { "status": "partial", "owner": null, "commit": null, "verification": [] },
-        "slices/kits-frameworks-tools/001": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "slices/config/043": {
+            "status": "partial",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "slices/kits-frameworks-tools/001": {
+            "status": "partial",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "slices/kits-frameworks-tools/004": {
             "status": "partial",
             "owner": "main",
@@ -10814,32 +11491,46 @@
             ]
         },
         "slices/kits-frameworks-tools/018": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 417887cb72fd237f."],
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "verification": [
+                "Evidence 417887cb72fd237f.",
+                "keyExtractor selector absent. Native FlatList firstline has no finding; distinct ScrollView witness remains at line2 all, no restricted-syntax findings recommended.",
+                "Prescribed owner replacement-231bytes; exact current source equals the pushed implementation at ca2975ca5552d3276e78bbd6d897c44cfdf70a09. Native e612 bridge5pass/35assert; assertion/static transport proven. Shared historical +6 production/+4077 total remains explicit and unwaived; RHF024 remains partial. Receipt /tmp/gspot-frontend-five-final-evidence-bridge.json."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-final-freeze.json",
-                    "commit": null,
+                    "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
                     "verification": ["Evidence 4821c8368edb9d73."]
                 }
             ]
         },
         "slices/kits-frameworks-tools/020": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence abbeaa78e91a2fd0."],
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "verification": [
+                "Evidence abbeaa78e91a2fd0.",
+                "drizzle.client_names default[db] delivered as drizzleObjectName to both native delete/update with-where rules.",
+                "Evidence 438da5ff78583d18.",
+                "{'historicalPacket': '/tmp/gspot-library-contracts-final-freeze.json', 'sourceAmendedInPacket': False, 'validationOnlyOwnerContract': True}"
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-options-final-freeze.json",
-                    "commit": null,
+                    "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
                     "verification": ["Evidence bc2348591f82b87a."]
                 }
             ]
         },
-        "slices/kits-frameworks-tools/021": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "slices/kits-frameworks-tools/021": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "slices/kits-frameworks-tools/022": {
             "status": "partial",
             "owner": "main",
@@ -10854,27 +11545,34 @@
             ]
         },
         "slices/kits-frameworks-tools/024": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 417887cb72fd237f."],
+            "commit": "488be8b30c2a4065bc576e63a7fde10b00e633f1",
+            "verification": [
+                "Evidence 417887cb72fd237f.",
+                "The React Hook Form selector excludes literal checkbox and radio inputs. Both-level controls passed, the native 360-case selector matrix preserves matches, and schema/Taplo checks pass. Same-concern shortening removes the earlier 80-byte asset increase."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-final-freeze.json",
-                    "commit": null,
+                    "commit": "488be8b30c2a4065bc576e63a7fde10b00e633f1",
                     "verification": ["Evidence 4821c8368edb9d73."]
                 }
             ]
         },
         "slices/kits-frameworks-tools/029": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 417887cb72fd237f."],
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "verification": [
+                "Evidence 417887cb72fd237f.",
+                "All three removed rule identities absent at bothlevels in child schema. Added existing Zod3.25.76/4.6.2 metadata callbacks retain no-any-schema/prefer-strict-object and actual no-any-schema finding. Literal package metadata does not prove installed Zod3 runtime; deletion is unconditional and detection remains ungated.",
+                "Prescribed owner replacement-82bytes; exact current source equals the pushed implementation at ca2975ca5552d3276e78bbd6d897c44cfdf70a09. Native e612 bridge5pass/35assert; assertion/static transport proven. Shared historical +6 production/+4077 total remains explicit and unwaived; RHF024 remains partial. Receipt /tmp/gspot-frontend-five-final-evidence-bridge.json."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-final-freeze.json",
-                    "commit": null,
+                    "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
                     "verification": ["Evidence 4821c8368edb9d73."]
                 }
             ]
@@ -10900,13 +11598,48 @@
                 }
             ]
         },
-        "slices/kits-frameworks-tools/041": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "slices/kits-frameworks-tools/042": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "slices/kits-frameworks-tools/043": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "slices/kits-frameworks-tools/044": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "slices/kits-frameworks-tools/045": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "slices/kits-frameworks-tools/047": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "slices/kits-frameworks-tools/048": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "slices/kits-frameworks-tools/041": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "slices/kits-frameworks-tools/042": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "slices/kits-frameworks-tools/043": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "slices/kits-frameworks-tools/044": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "slices/kits-frameworks-tools/045": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "slices/kits-frameworks-tools/047": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "slices/kits-frameworks-tools/048": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "slices/kits-frameworks-tools/049": {
             "status": "partial",
             "owner": "main",
@@ -10950,9 +11683,24 @@
                 }
             ]
         },
-        "slices/kits-frameworks-tools/054": { "status": "partial", "owner": null, "commit": null, "verification": [] },
-        "slices/kits-frameworks-tools/056": { "status": "partial", "owner": null, "commit": null, "verification": [] },
-        "slices/kits-frameworks-tools/057": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "slices/kits-frameworks-tools/054": {
+            "status": "partial",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "slices/kits-frameworks-tools/056": {
+            "status": "partial",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
+        "slices/kits-frameworks-tools/057": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "slices/kits-frameworks-tools/058": {
             "status": "complete",
             "owner": "main",
@@ -11019,7 +11767,12 @@
                 "Evidence 4734bb584bd0a989."
             ]
         },
-        "slices/kits-frameworks-tools/064": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "slices/kits-frameworks-tools/064": {
+            "status": "pending",
+            "owner": null,
+            "commit": null,
+            "verification": []
+        },
         "slices/kits-frameworks-tools/065": {
             "status": "complete",
             "owner": "main",
@@ -11836,10 +12589,13 @@
             "verification": []
         },
         "slices/tests-integration-checks/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "verification": [
+                "Separate config-logic roles and file-line limit policy literals; delete the shared misleading structure sample. Original finding and correction assertions retained; authored change reduces484bytes/50AST.",
+                "Evidence 28bd68840502ea6f."
+            ]
         },
         "slices/tests-integration-checks/030": {
             "status": "partial",
@@ -12716,7 +13472,14 @@
             "commit": null,
             "verification": []
         },
-        "slices/tests-tools-samples/004": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "slices/tests-tools-samples/004": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "488be8b30c2a4065bc576e63a7fde10b00e633f1",
+            "verification": [
+                "Removed the remaining Semgrep no-write assertion and import; original Docker and partial-output no-write assertions are absent. Preserved actual invalid-rule, finding, correction and scoped controls. Main native Semgrep case passed with 5 assertions; earlier nine native cases and exact-owner audit cover the original families."
+            ]
+        },
         "slices/tests-tools-samples/005": {
             "status": "complete",
             "owner": "main",
@@ -13015,7 +13778,14 @@
                 }
             ]
         },
-        "slices/tests-tools-samples/037": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "slices/tests-tools-samples/037": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "488be8b30c2a4065bc576e63a7fde10b00e633f1",
+            "verification": [
+                "Added the comment naming Trivy DS-0002, USER root failure and USER node correction in the committed Docker generation owner. Native both-level and deepest-scope cases passed at 05997a065."
+            ]
+        },
         "slices/tests-tools-samples/038": {
             "status": "partial",
             "owner": "root",
@@ -13058,7 +13828,14 @@
                 }
             ]
         },
-        "slices/tests-tools-samples/041": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "slices/tests-tools-samples/041": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "488be8b30c2a4065bc576e63a7fde10b00e633f1",
+            "verification": [
+                "Deleted only the repeated recovered run. Corrected success and malformed-rule execution-error assertions remain; original inherited-scope native case passed."
+            ]
+        },
         "slices/tests-tools-samples/042": {
             "status": "complete",
             "owner": "main",
@@ -13304,24 +14081,96 @@
                 "status": "cancelled",
                 "platformResults": {},
                 "jobs": [
-                    { "name": "docs", "status": "completed", "conclusion": "success" },
-                    { "name": "package", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (linux 1/4)", "status": "completed", "conclusion": "failure" },
-                    { "name": "test (ubuntu-24.04)", "status": "completed", "conclusion": "failure" },
-                    { "name": "test (windows-2025)", "status": "in_progress", "conclusion": "" },
-                    { "name": "tools (windows 2/4)", "status": "in_progress", "conclusion": "" },
-                    { "name": "test (macos-15)", "status": "completed", "conclusion": "success" },
-                    { "name": "check", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (windows 1/4)", "status": "in_progress", "conclusion": "" },
-                    { "name": "tools (macos 2/4)", "status": "completed", "conclusion": "success" },
-                    { "name": "tools (windows 4/4)", "status": "in_progress", "conclusion": "" },
-                    { "name": "tools (linux 4/4)", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (macos 4/4)", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (macos 1/4)", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (windows 3/4)", "status": "in_progress", "conclusion": "" },
-                    { "name": "tools (macos 3/4)", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (linux 2/4)", "status": "completed", "conclusion": "success" },
-                    { "name": "tools (linux 3/4)", "status": "completed", "conclusion": "failure" }
+                    {
+                        "name": "docs",
+                        "status": "completed",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "package",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (linux 1/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "test (ubuntu-24.04)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "test (windows-2025)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (windows 2/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "test (macos-15)",
+                        "status": "completed",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "check",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (windows 1/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (macos 2/4)",
+                        "status": "completed",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (windows 4/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (linux 4/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (macos 4/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (macos 1/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (windows 3/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (macos 3/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (linux 2/4)",
+                        "status": "completed",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (linux 3/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    }
                 ],
                 "notes": [
                     "Cancelled superseded run after recording completed jobs to unblock the next revision.",
@@ -13357,24 +14206,96 @@
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37569175192",
                 "status": "cancelled",
                 "jobs": [
-                    { "name": "check", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (macos 1/4)", "status": "completed", "conclusion": "failure" },
-                    { "name": "test (macos-15)", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (macos 3/4)", "status": "completed", "conclusion": "failure" },
-                    { "name": "package", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (macos 4/4)", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (linux 2/4)", "status": "completed", "conclusion": "success" },
-                    { "name": "tools (windows 4/4)", "status": "in_progress", "conclusion": "" },
-                    { "name": "tools (linux 1/4)", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (windows 1/4)", "status": "in_progress", "conclusion": "" },
-                    { "name": "test (windows-2025)", "status": "in_progress", "conclusion": "" },
-                    { "name": "tools (macos 2/4)", "status": "completed", "conclusion": "failure" },
-                    { "name": "docs", "status": "completed", "conclusion": "success" },
-                    { "name": "test (ubuntu-24.04)", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (windows 3/4)", "status": "in_progress", "conclusion": "" },
-                    { "name": "tools (linux 4/4)", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (linux 3/4)", "status": "completed", "conclusion": "failure" },
-                    { "name": "tools (windows 2/4)", "status": "in_progress", "conclusion": "" }
+                    {
+                        "name": "check",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (macos 1/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "test (macos-15)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (macos 3/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "package",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (macos 4/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (linux 2/4)",
+                        "status": "completed",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (windows 4/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (linux 1/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (windows 1/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "test (windows-2025)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (macos 2/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "docs",
+                        "status": "completed",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "test (ubuntu-24.04)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (windows 3/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (linux 4/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (linux 3/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (windows 2/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    }
                 ],
                 "notes": [
                     "Cancelled superseded CI after preserving completed-job logs so the current commit can run.",
@@ -13469,7 +14390,11 @@
                     ]
                 },
                 "conclusion": "failure",
-                "jobAccounting": { "success": 6, "failure": 8, "cancelled": 4 },
+                "jobAccounting": {
+                    "success": 6,
+                    "failure": 8,
+                    "cancelled": 4
+                },
                 "windowsTools": {
                     "conclusion": "cancelled",
                     "cause": "All four job annotations: The job has exceeded the maximum execution time of 1h0m0s",
@@ -13597,24 +14522,78 @@
                 "conclusion": "failure",
                 "head": "bce72e26bbc55fc48e976aea29c466d0ce2e91b9",
                 "observedCompletedJobs": [
-                    { "name": "package", "conclusion": "success" },
-                    { "name": "tools (linux 3/4)", "conclusion": "failure" },
-                    { "name": "check", "conclusion": "failure" },
-                    { "name": "docs", "conclusion": "success" },
-                    { "name": "tools (macos 2/4)", "conclusion": "success" },
-                    { "name": "tools (windows 2/4)", "conclusion": "cancelled" },
-                    { "name": "tools (linux 2/4)", "conclusion": "success" },
-                    { "name": "tools (windows 3/4)", "conclusion": "cancelled" },
-                    { "name": "tools (windows 1/4)", "conclusion": "cancelled" },
-                    { "name": "tools (macos 3/4)", "conclusion": "failure" },
-                    { "name": "tools (linux 1/4)", "conclusion": "success" },
-                    { "name": "tools (macos 4/4)", "conclusion": "failure" },
-                    { "name": "tools (macos 1/4)", "conclusion": "success" },
-                    { "name": "test (windows-2025)", "conclusion": "failure" },
-                    { "name": "test (ubuntu-24.04)", "conclusion": "failure" },
-                    { "name": "test (macos-15)", "conclusion": "failure" },
-                    { "name": "tools (linux 4/4)", "conclusion": "failure" },
-                    { "name": "tools (windows 4/4)", "conclusion": "cancelled" }
+                    {
+                        "name": "package",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (linux 3/4)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "check",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "docs",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (macos 2/4)",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (windows 2/4)",
+                        "conclusion": "cancelled"
+                    },
+                    {
+                        "name": "tools (linux 2/4)",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (windows 3/4)",
+                        "conclusion": "cancelled"
+                    },
+                    {
+                        "name": "tools (windows 1/4)",
+                        "conclusion": "cancelled"
+                    },
+                    {
+                        "name": "tools (macos 3/4)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (linux 1/4)",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (macos 4/4)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (macos 1/4)",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "test (windows-2025)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "test (ubuntu-24.04)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "test (macos-15)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (linux 4/4)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (windows 4/4)",
+                        "conclusion": "cancelled"
+                    }
                 ],
                 "limitations": "Final pushed CI:6successful,8failed,4cancelledWindows tool jobs. Pushed CI does not validate later uncommitted work; skips and cancelled shards prove no platform acceptance.",
                 "completedJobEvidence": {
@@ -13881,36 +14860,96 @@
                 "status": "completed",
                 "conclusion": "failure",
                 "jobs": [
-                    { "name": "docs", "status": "completed", "conclusion": "success", "id": 112798360765 },
-                    { "name": "tools (macos 4/4)", "status": "completed", "conclusion": "success", "id": 112798360937 },
-                    { "name": "test (macos-15)", "status": "completed", "conclusion": "failure", "id": 112798360945 },
-                    { "name": "tools (linux 2/4)", "status": "completed", "conclusion": "failure", "id": 112798361024 },
+                    {
+                        "name": "docs",
+                        "status": "completed",
+                        "conclusion": "success",
+                        "id": 112798360765
+                    },
+                    {
+                        "name": "tools (macos 4/4)",
+                        "status": "completed",
+                        "conclusion": "success",
+                        "id": 112798360937
+                    },
+                    {
+                        "name": "test (macos-15)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798360945
+                    },
+                    {
+                        "name": "tools (linux 2/4)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361024
+                    },
                     {
                         "name": "test (ubuntu-24.04)",
                         "status": "completed",
                         "conclusion": "failure",
                         "id": 112798361037
                     },
-                    { "name": "tools (linux 1/4)", "status": "completed", "conclusion": "failure", "id": 112798361042 },
-                    { "name": "check", "status": "completed", "conclusion": "failure", "id": 112798361056 },
+                    {
+                        "name": "tools (linux 1/4)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361042
+                    },
+                    {
+                        "name": "check",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361056
+                    },
                     {
                         "name": "tools (windows 2/4)",
                         "status": "completed",
                         "conclusion": "cancelled",
                         "id": 112798361066
                     },
-                    { "name": "tools (linux 3/4)", "status": "completed", "conclusion": "failure", "id": 112798361084 },
-                    { "name": "package", "status": "completed", "conclusion": "failure", "id": 112798361092 },
-                    { "name": "tools (macos 1/4)", "status": "completed", "conclusion": "failure", "id": 112798361116 },
-                    { "name": "tools (linux 4/4)", "status": "completed", "conclusion": "success", "id": 112798361142 },
-                    { "name": "tools (macos 2/4)", "status": "completed", "conclusion": "failure", "id": 112798361154 },
+                    {
+                        "name": "tools (linux 3/4)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361084
+                    },
+                    {
+                        "name": "package",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361092
+                    },
+                    {
+                        "name": "tools (macos 1/4)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361116
+                    },
+                    {
+                        "name": "tools (linux 4/4)",
+                        "status": "completed",
+                        "conclusion": "success",
+                        "id": 112798361142
+                    },
+                    {
+                        "name": "tools (macos 2/4)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361154
+                    },
                     {
                         "name": "tools (windows 4/4)",
                         "status": "completed",
                         "conclusion": "cancelled",
                         "id": 112798361182
                     },
-                    { "name": "tools (macos 3/4)", "status": "completed", "conclusion": "failure", "id": 112798361189 },
+                    {
+                        "name": "tools (macos 3/4)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361189
+                    },
                     {
                         "name": "tools (windows 3/4)",
                         "status": "completed",
@@ -14026,7 +15065,10 @@
                 "run": 37642640679,
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37642640679",
                 "status": "in_progress",
-                "jobsVerified": { "package": "success", "docs": "success" },
+                "jobsVerified": {
+                    "package": "success",
+                    "docs": "success"
+                },
                 "reviewedJobs": {
                     "test (ubuntu-24.04)": {
                         "status": "completed",
@@ -15984,7 +17026,10 @@
                 "CI run 37837307511 is pending; no Linux, macOS or Windows result inferred.",
                 "Provider metadata and doctor obligations for slices/kits-frameworks-tools/051 remain separate until their implementation checkpoint."
             ],
-            "ci": { "run": 37837307511, "status": "pending" }
+            "ci": {
+                "run": 37837307511,
+                "status": "pending"
+            }
         },
         {
             "commit": "4f9bd5e2939e83b6784d0c76ad37eddee2f2d448",
@@ -16428,7 +17473,11 @@
                 "Windows cache-copy execution and final cross-platform release verification remain pending.",
                 "main/001 remains partial; no publication, release tag, live setup or deployment."
             ],
-            "ci": { "run": 37891221216, "status": "pending", "platformSuccessClaim": false }
+            "ci": {
+                "run": 37891221216,
+                "status": "pending",
+                "platformSuccessClaim": false
+            }
         },
         {
             "commit": "87f259625fb984e205751e39e33e7944679129ea",
@@ -16442,7 +17491,11 @@
                 "Actual Linux and Windows release acceptance remains pending; a macOS skip is not platform proof.",
                 "No publication, release tag, live setup or deployment."
             ],
-            "ci": { "run": 37892282307, "status": "pending", "platformSuccessClaim": false }
+            "ci": {
+                "run": 37892282307,
+                "status": "pending",
+                "platformSuccessClaim": false
+            }
         },
         {
             "commit": "80156a478f3286427a507b33a7d03cd3f48f6813",
@@ -16482,7 +17535,10 @@
             "limitations": [
                 "The one Windows-only native test was skipped on this macOS run. Cross-platform CI and final release acceptance remain pending. No publication, deployment or release tag."
             ],
-            "ci": { "run": "https://github.com/stefanionescu/gspot/actions/runs/37896608130", "status": "pending" }
+            "ci": {
+                "run": "https://github.com/stefanionescu/gspot/actions/runs/37896608130",
+                "status": "pending"
+            }
         },
         {
             "commit": "3a3448c32fc0cee4badd20eeca54a22e32c31e6d",
@@ -16530,7 +17586,10 @@
             "limitations": [
                 "Native framework replay on macOS. Final Linux/macOS/Windows CI acceptance remains pending; no skipped platform is claimed as verified. No publication, deployment or release tag."
             ],
-            "ci": { "run": "https://github.com/stefanionescu/gspot/actions/runs/37897942132", "status": "pending" }
+            "ci": {
+                "run": "https://github.com/stefanionescu/gspot/actions/runs/37897942132",
+                "status": "pending"
+            }
         },
         {
             "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
@@ -16805,6 +17864,106 @@
                 "semgrep": "37927181448 cancelled by newer workflow; no test failure inferred.",
                 "mechanical": "37929991065 pending at inspection."
             }
+        },
+        {
+            "commit": "6fd79235d8b7620cfdc4ef175749c61253847f48",
+            "completedRecords": ["review/policy-exceptions/003", "areas/checks/044"],
+            "unresolvedRecords": 388,
+            "validation": ["Evidence 43086d237ef6ffa2."],
+            "limitations": [
+                "Cross-platform and full final suite acceptance remain outstanding; review/code-execution/007 stays partial for its explicit remaining acceptance obligation."
+            ]
+        },
+        {
+            "commit": "35ff0a744c33e8a79fd040f4f7d4e89bcaa30398",
+            "completedRecords": ["review/repository-root/027", "review/repository-root/041"],
+            "unresolvedRecords": 386,
+            "validation": ["Evidence def71a1deacd6b4d."],
+            "limitations": [
+                "No package publication, tag, live setup or site deployment. main/001 remains partial for external release requirements."
+            ]
+        },
+        {
+            "commit": "895fee5825d9d51d34a78dd6f2231db9b22f078f",
+            "completedRecords": ["slices/config/035"],
+            "unresolvedRecords": 385,
+            "validation": [
+                "Native Bun1.4.2 manifest validation and public explanation probe exit0 on committed source; no executable tool required."
+            ],
+            "limitations": [
+                "No new source behavior or generated-file edit; declaration already implemented in the referenced commit."
+            ]
+        },
+        {
+            "commit": "345dd98114e4962ed1fcab09857492fea24922bf",
+            "completedRecords": [],
+            "unresolvedRecords": 385,
+            "validation": ["Evidence 0a6f96bc0804e4f7."],
+            "limitations": ["Publication remains excluded. Linux/macOS/Windows CI pending."]
+        },
+        {
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "completedRecords": [
+                "review/repository-root/046",
+                "areas/checks/043",
+                "areas/developer-experience/023",
+                "areas/developer-experience/026",
+                "areas/repository/057",
+                "slices/tests-integration-checks/029"
+            ],
+            "unresolvedRecords": 379,
+            "validation": [
+                "Evidence 28bd68840502ea6f.",
+                "Receipts:/tmp/gspot-platform-contracts-main-staged-native-final.log;/tmp/gspot-platform-contracts-main-commit.log;/tmp/gspot-platform-contracts-main-push.log;/tmp/gspot-platform-contracts-main-cli.log;/tmp/gspot-platform-contracts-wrangler-metadata-cli.log;/tmp/gspot-platform-contracts-main-native-tools.log;/tmp/gspot-platform-contracts-wrangler-integrated-native-final.log;/tmp/gspot-platform-contracts-wrangler-native-live.log."
+            ],
+            "limitations": [
+                "Current Linux/macOS/Windows CI is pending; these record closures establish their implementation and focused acceptance, not global release/platform acceptance. Main/001 remains partial.",
+                "Original failed Wrangler package-export/schema-annotation and mistaken command/preload probes retained; no false proof from zero-input staged filters."
+            ]
+        },
+        {
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "completedRecords": [
+                "areas/kits/044",
+                "areas/kits/045",
+                "slices/kits-frameworks-tools/018",
+                "slices/kits-frameworks-tools/029"
+            ],
+            "unresolvedRecords": 375,
+            "validation": [
+                "Five named native CLI controls pass with35assertions; no package acquisition or platform-wide claim. Shipped owner hashes and original assertion chains checked."
+            ],
+            "limitations": [
+                "Darwin only; no installed Zod3 runtime claim. Producer workdir mistake affected57 ignored artifacts,0 tracked outputs; no Main validation was running. Exact qualification retained; no blanket Main before/after identity claim.",
+                "RHF024,React046 and shared positive historical costs remain partial/unwaived."
+            ]
+        },
+        {
+            "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
+            "completedRecords": ["areas/checks/049", "slices/kits-frameworks-tools/020"],
+            "unresolvedRecords": 373,
+            "validation": [
+                "Actual345dd Linux CLI acceptance and exact13-owner e612 hash bridge. No source or test edits needed."
+            ],
+            "limitations": [
+                "No Windows/macOS/native-SDK acceptance inferred. Swift074 source/behavior complete with706productionbytes removed; historical test-cost allocation remains pending review. Drizzle021/015 +374 production remains partial."
+            ]
+        },
+        {
+            "commit": "488be8b30c2a4065bc576e63a7fde10b00e633f1",
+            "completedRecords": [
+                "slices/tests-tools-samples/004",
+                "slices/tests-tools-samples/037",
+                "slices/tests-tools-samples/041",
+                "slices/kits-frameworks-tools/024"
+            ],
+            "unresolvedRecords": 369,
+            "validation": [
+                "39 CLI cases passed with 253 assertions; one native Semgrep case passed with 5 assertions. Staged checks: 47 passed, 3 skipped, zero findings. Existing nine native sample cases passed with 45 assertions; exact committed owner identities and retained observations audited."
+            ],
+            "limitations": [
+                "Native evidence is from macOS; skipped or filtered cases do not prove another platform. The separate whole frontend test/support growth packet is not approved by these per-record closures."
+            ]
         }
     ],
     "verificationEvidenceFile": "verification.json"

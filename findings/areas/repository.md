@@ -1,6 +1,6 @@
 # Repository Setup and Ceremony
 
-2 unresolved review records remain.
+1 unresolved review record remains.
 
 ## Findings
 
@@ -111,3 +111,11 @@ Original records and quotations remain above. These records are complete at `6e7
 | ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `areas/repository/039` | complete | Test-only libraries and planted dependencies belong to tests/package.json; real automation imports remain at root. Actual automation native4055pass17235assert; suite/tool/consumer acceptance preserved. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |
 | `areas/repository/040` | complete | Root packageManager remains sole declared Bun pin; redundant engines.bun deleted; preload derives required version from packageManager. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`.                                                                   |
+
+## Implementation checkpoint e612fce45 of October 9, 2026 for tool-and-platform-contracts
+
+Original records and quotations remain above. These records are complete at `e612fce45b842be8b452f33bfe69029a92cc7694`.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/repository/057` | complete | Delete both NestJS data-layer selectors and obsolete controller wording while retaining forwardRef, response handling, Swagger and compiler checks. Native NestJS3cases pass. Combined checkpoint:217 CLI cases pass,68 native cases pass; final Wrangler replay5/37 and live docs schema check1/0; configured types pass. Full staged152/0, normal commit113/0 plus commitlint, normal push152/0. Commit `e612fce45b842be8b452f33bfe69029a92cc7694`. |

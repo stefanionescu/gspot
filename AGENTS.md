@@ -101,3 +101,27 @@ Owner decisions are recorded in `findings/progress.json`. Read them before you c
 - Every change simplifies: it deletes, merges, or replaces with less code, and it keeps every CLI command.
 - Use one name for each concept, as `findings/review/glossary.md` fixes it. Never give one thing two names or one name two meanings.
 - This repository has no `CONTRIBUTING.md`. Repository rules that no check enforces live in this file.
+
+## Dependency overrides
+
+The root `package.json` overrides keep transitive packages on security fixes. Keep each override
+until its callers resolve a fixed version without it. Verify a forced major version with its
+native consumers before changing it.
+
+| Override                  | Version  | Advisory and reason                                                                                                                        |
+| ------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@xmldom/xmldom`          | `0.8.15` | [GHSA-8344-3jmq-59r6](https://github.com/advisories/GHSA-8344-3jmq-59r6) — Prevents quadratic XML attribute processing.                    |
+| `brace-expansion@1`       | `1.1.21` | [GHSA-q2hr-2g5m-vwhr](https://github.com/advisories/GHSA-q2hr-2g5m-vwhr) — Prevents quadratic brace expansion.                             |
+| `brace-expansion@2`       | `2.1.7`  | [GHSA-q2hr-2g5m-vwhr](https://github.com/advisories/GHSA-q2hr-2g5m-vwhr) — Prevents quadratic brace expansion.                             |
+| `brace-expansion@5`       | `5.0.12` | [GHSA-q2hr-2g5m-vwhr](https://github.com/advisories/GHSA-q2hr-2g5m-vwhr) — Prevents quadratic brace expansion.                             |
+| `fast-uri@3`              | `3.1.8`  | [GHSA-hrr3-gc8f-f4qj](https://github.com/advisories/GHSA-hrr3-gc8f-f4qj) — Fixes percent-encoded host case normalization.                  |
+| `handlebars`              | `4.7.10` | [GHSA-xw65-4hp5-5hc7](https://github.com/advisories/GHSA-xw65-4hp5-5hc7) — Prevents JavaScript injection from precompiled templates.       |
+| `ip-address`              | `10.7.1` | [GHSA-j6r3-76f7-8jcv](https://github.com/advisories/GHSA-j6r3-76f7-8jcv) — Prevents cross-family subnet allowlist bypass.                  |
+| `js-yaml@3`               | `4.3.2`  | [GHSA-2883-xcg3-v3hh](https://github.com/advisories/GHSA-2883-xcg3-v3hh) — Bounds empty merge-source processing; Jest requests major 3.    |
+| `minimatch@9`             | `9.0.9`  | [GHSA-7r86-cg39-jmmj](https://github.com/advisories/GHSA-7r86-cg39-jmmj) — Prevents repeated globstar matching from exhausting CPU.        |
+| `postcss-selector-parser` | `7.1.6`  | [GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf) — Bounds flat-selector processing; PurgeCSS requests major 6.     |
+| `qs`                      | `6.16.0` | [GHSA-4mjr-xmp4-gh2g](https://github.com/advisories/GHSA-4mjr-xmp4-gh2g) — Prevents denial of service through a supplied isBuffer value.   |
+| `sharp`                   | `0.35.5` | [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w) — Fixes the bundled librsvg vulnerability; Miniflare pins 0.35.4. |
+| `source-map-js`           | `1.2.2`  | [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) — Rejects indexed source-map offsets that stall the event loop.   |
+| `undici@7`                | `7.29.1` | [GHSA-w293-vg96-wgc3](https://github.com/advisories/GHSA-w293-vg96-wgc3) — Preserves TLS validation options in BalancedPool.               |
+| `uuid@8`                  | `11.1.1` | [GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq) — Checks supplied buffer bounds; consumers request major 8.       |

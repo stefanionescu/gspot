@@ -1,6 +1,6 @@
 # Tests: Check Integration Tests
 
-17 unresolved review records remain.
+16 unresolved review records remain.
 
 ## Open findings
 
@@ -150,3 +150,11 @@ Original records and quotations remain above. These records are complete at `b5c
 | ID                                    | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `slices/tests-integration-checks/047` | complete | The build test parses the report and requires passed status for site/build and site/build-reproducible; byte and Git-state controls remain. A skipped-check counterexample fails the matcher. Native site tests passed 10 tests and 45 assertions. Implementation 0c9bb098727dc39695f86c4d6821bf1b734f6178; /tmp/gspot-site-verdict047-final-freeze.json. Commit `b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1`. |
+
+## Implementation checkpoint e612fce45 of October 9, 2026 for tool-and-platform-contracts
+
+Original records and quotations remain above. These records are complete at `e612fce45b842be8b452f33bfe69029a92cc7694`.
+
+| ID                                    | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-checks/029` | complete | Separate config-logic roles and file-line limit policy literals; delete the shared misleading structure sample. Original finding and correction assertions retained; authored change reduces484bytes/50AST. Combined checkpoint:217 CLI cases pass,68 native cases pass; final Wrangler replay5/37 and live docs schema check1/0; configured types pass. Full staged152/0, normal commit113/0 plus commitlint, normal push152/0. Commit `e612fce45b842be8b452f33bfe69029a92cc7694`. |

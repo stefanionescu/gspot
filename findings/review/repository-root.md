@@ -1,6 +1,6 @@
 # Repository Root, Scripts, Workflows, and Package Wiring
 
-13 unresolved review records remain.
+10 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -318,3 +318,20 @@ Original records and quotations remain above. These records are complete at `2c6
 ## Partial compiler-task cleanup at 2c65d42f6
 
 `review/repository-root/005` remains partial. The duplicate task and CI step are deleted. The native strict-flag probe reports seven findings when its seven authored options are deleted, so the flags remain and strict enforcement stays. The original record and quotation are unchanged.
+
+## Implementation checkpoint 35ff0a744 of October 9, 2026 for release-workflow-prerequisites
+
+Original records and quotations remain above. These records are complete at `35ff0a744c33e8a79fd040f4f7d4e89bcaa30398`.
+
+| ID                           | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/repository-root/027` | complete | The publish job no longer repeats version validation: its required version job validates the same commit. Native YAML structure proves only the redundant step is deleted. Immutable reducing two-owner native release freeze:5pass11assert; Actionlint/yamllint/format0. Existing three approved self-repository Zizmor identities unchanged and effective0; no additional exception. Actual staged24pass2skip0findings5.3s, normalcommit19pass1skip0findings5.1s and push24pass2skip0findings6.7s. Whole authored YAML107fewerbytes,3fewerlines. Commit `35ff0a744c33e8a79fd040f4f7d4e89bcaa30398`. |
+| `review/repository-root/041` | complete | The existing package cache now uses the prescribed packages-${{ runner.os }}- restore prefix; all cache paths, key inputs and existing setup behavior remain. Immutable reducing two-owner native release freeze:5pass11assert; Actionlint/yamllint/format0. Existing three approved self-repository Zizmor identities unchanged and effective0; no additional exception. Actual staged24pass2skip0findings5.3s, normalcommit19pass1skip0findings5.1s and push24pass2skip0findings6.7s. Whole authored YAML107fewerbytes,3fewerlines. Commit `35ff0a744c33e8a79fd040f4f7d4e89bcaa30398`.              |
+
+## Implementation checkpoint e612fce45 of October 9, 2026 for tool-and-platform-contracts
+
+Original records and quotations remain above. These records are complete at `e612fce45b842be8b452f33bfe69029a92cc7694`.
+
+| ID                           | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/repository-root/046` | complete | One npm project owns declared packages for every runner; remove runner-dependent project filtering, npm setting and duplicate mise pins. Native generation and installer contracts pass. Combined checkpoint:217 CLI cases pass,68 native cases pass; final Wrangler replay5/37 and live docs schema check1/0; configured types pass. Full staged152/0, normal commit113/0 plus commitlint, normal push152/0. Commit `e612fce45b842be8b452f33bfe69029a92cc7694`. |
