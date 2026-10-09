@@ -1,9 +1,9 @@
-import type { NonSharedBuffer } from 'node:buffer';
+import type { readFile } from 'node:fs/promises';
 /** A Python project prepared for installation: the authored files before install. */
 export type PythonInstallation = {
     root: string;
-    rootProject: NonSharedBuffer;
-    rootConfiguration: NonSharedBuffer;
+    rootProject: Exclude<Awaited<ReturnType<typeof readFile>>, string>;
+    rootConfiguration: Exclude<Awaited<ReturnType<typeof readFile>>, string>;
     [Symbol.asyncDispose](): Promise<void>;
 };
 

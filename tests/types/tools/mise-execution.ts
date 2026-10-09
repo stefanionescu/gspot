@@ -1,9 +1,9 @@
-import type { NonSharedBuffer } from 'node:buffer';
+import type { readFile } from 'node:fs/promises';
 
 export type MiseProject = {
     root: string;
     state: string;
     policy: string;
-    generated: NonSharedBuffer;
+    generated: Exclude<Awaited<ReturnType<typeof readFile>>, string>;
     environment: Record<string, string> & { PATH: string };
 };

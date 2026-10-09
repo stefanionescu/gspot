@@ -1,7 +1,9 @@
-import type { NonSharedBuffer } from 'node:buffer';
+import type { readFile } from 'node:fs/promises';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import type { PackageRegistry } from '#tests/types/harness/registry.ts';
+
+type PackageBytes = Exclude<Awaited<ReturnType<typeof readFile>>, string>;
 
 /** A package project in a sandbox: the project, its local registry, and the files the install reads. */
 export type PackageProject = {
@@ -27,10 +29,10 @@ export type PackageProjectOptions = {
 
 /** Managed bytes and file mode captured before package installation. */
 export type PackageInputs = {
-    manifest: NonSharedBuffer;
+    manifest: PackageBytes;
     lockfilePath: string;
-    lockfile: NonSharedBuffer;
+    lockfile: PackageBytes;
     mode: number;
     ownershipPath: string;
-    ownership: NonSharedBuffer;
+    ownership: PackageBytes;
 };

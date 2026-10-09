@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -24,13 +23,16 @@ test.each(OUTCOMES)(
             'node_modules/.bin/jest': '#!/usr/bin/env node\n',
         });
         const session = await openSession(sandbox.path);
-        const planned = planRun(session, { stage: 'push', skips: [], only: ['jest/coverage'] })[0]!;
+        const planned = planRun(session, { stage: 'push', skips: [], only: ['jest/coverage'] }).find(
+            ({ check }) => check.name === 'jest/coverage',
+        )!;
         let isBroken = true;
-        const artifacts: string[] = [];
-        using _spawn = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
+        const copies: string[] = [];
+        using run = spyOn(processes, 'run');
+        run.mockImplementation(async (argv, { cwd }) => {
             expect(argv).not.toContain('--runInBand');
-            artifacts.push(options.cwd);
-            await Bun.write(join(options.cwd, 'sample.test.cjs'), 'temporary test output');
+            copies.push(cwd);
+            await Bun.write(join(cwd, 'sample.test.cjs'), 'temporary test output');
             return {
                 code: isBroken ? outcome.code : 0,
                 missing: false,
@@ -54,13 +56,13 @@ test.each(OUTCOMES)(
         } else {
             expect(failed.note).toContain(outcome.note);
         }
-        expect(artifacts.length).toBeGreaterThan(0);
-        expect(await Promise.all(artifacts.map((path) => pathExists(path)))).toStrictEqual(artifacts.map(() => false));
-        expect(await readFile(join(sandbox.path, 'sample.test.cjs'), 'utf8')).toBe(SAMPLE);
+        expect(copies.length).toBeGreaterThan(0);
+        expect(await Promise.all(copies.map((path) => pathExists(path)))).toStrictEqual(copies.map(() => false));
+        expect(await Bun.file(join(sandbox.path, 'sample.test.cjs')).text()).toBe(SAMPLE);
         isBroken = false;
         expect(await runCheckCommand(session, planned)).toMatchObject({ status: 'passed', findings: [] });
-        expect(await Promise.all(artifacts.map((path) => pathExists(path)))).toStrictEqual(artifacts.map(() => false));
-        expect(await readFile(join(sandbox.path, 'sample.test.cjs'), 'utf8')).toBe(SAMPLE);
+        expect(await Promise.all(copies.map((path) => pathExists(path)))).toStrictEqual(copies.map(() => false));
+        expect(await Bun.file(join(sandbox.path, 'sample.test.cjs')).text()).toBe(SAMPLE);
     },
 );
 
@@ -113,7 +115,8 @@ test('coverage gating leaves unrelated commands, authored checks, and supplied a
     });
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { stage: 'push', skips: [], only: ['project/tests'] })[0]!;
-    using _spawn = spyOn(processes, 'run').mockImplementation((argv) => {
+    using run = spyOn(processes, 'run');
+    run.mockImplementation((argv) => {
         expect(argv).toStrictEqual(command);
         return Promise.resolve({ code: 0, missing: false, stdout: '', stderr: '', duration: 1 });
     });
@@ -125,10 +128,9 @@ test('coverage gating leaves unrelated commands, authored checks, and supplied a
 });
 
 test('isolated scope commands require a root placeholder, including embedded native rootDir values', async () => {
-    const text = await readFile(
+    const text = await Bun.file(
         new URL('../../../../packages/cli/configurations/test/jest/manifest.toml', import.meta.url),
-        'utf8',
-    );
+    ).text();
     expect(parseManifest(text, 'configurations/test/jest').checks[0]!.command).toContain('--rootDir={root}/{scope}');
     expect(() =>
         parseManifest(text.replace('--rootDir={root}/{scope}', '--rootDir=.'), 'configurations/test/jest'),
