@@ -201,9 +201,7 @@ export async function openSession(rootPath: string, policyFiles = readPolicy(roo
         reads,
     };
     const installer: PackageInstallerIdentity | undefined =
-        Object.keys(toolProjectPins(applicableManifests(session), policy.runner).npm).length > 0
-            ? await selectInstaller()
-            : undefined;
+        Object.keys(toolProjectPins(applicableManifests(session)).npm).length > 0 ? await selectInstaller() : undefined;
     return session;
 }
 

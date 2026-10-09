@@ -193,10 +193,13 @@ export function detectConditions(
     packageManifests: PackageManifest[],
 ): Set<Manifest['detect']> {
     const tree = layout(files, packageManifests, '');
-    const matched = new Set<Manifest['detect']>();
-    for (const condition of conditions)
-        if (evidenceReaders.some((source) => source(condition, tree) !== undefined)) matched.add(condition);
-    return matched;
+    return new Set(
+        conditions.filter(
+            (condition) =>
+                !condition.absent_dependencies.some((name) => tree.dependencies.has(name)) &&
+                evidenceReaders.some((source) => source(condition, tree) !== undefined),
+        ),
+    );
 }
 
 /**

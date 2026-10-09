@@ -250,6 +250,7 @@ export const conditionSchema = z.strictObject({
     value: z.union([z.string(), z.number(), z.boolean()]),
     git: z.boolean(),
     dependencies: z.array(z.string().min(1)).min(1),
+    absent_dependencies: z.array(z.string().min(1)).min(1),
     filenames: z.array(z.string().min(1)).min(1),
     tags: z.array(z.string().min(1)).min(1),
     runtimes: z.array(z.enum(JAVASCRIPT_RUNTIMES)).min(1),

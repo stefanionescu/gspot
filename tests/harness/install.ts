@@ -145,7 +145,7 @@ export function buildToolsPath(names: string[]): string {
     const path = [...bins, environmentVariables()['PATH'] ?? ''].join(delimiter);
     for (const name of names) {
         const tool = toolPin(manifests, name.replace(/^[a-z]+:/u, ''));
-        if (tool.system === true || toolProjectPackage(tool, 'mise') !== undefined) continue;
+        if (tool.system === true || toolProjectPackage(tool) !== undefined) continue;
         // A pin without a build for this machine is skipped by the checks that need it, so no PATH entry is owed.
         if (!hasToolBuild(tool.name)) continue;
         if (Bun.which(tool.name, { PATH: path }) === null)

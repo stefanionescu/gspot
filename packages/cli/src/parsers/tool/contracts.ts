@@ -137,7 +137,8 @@ function versionFailure(
     version: string | undefined,
 ): ParsedToolVersion | undefined {
     if (result.isTimedOut === true) return { state: 'error', note: `${tool.name} version inspection timed out.` };
-    if (result.missing || text.includes(NO_VERSION)) return { state: 'missing', note: text };
+    if (result.missing) return { state: 'missing', note: text };
+    if (text.includes(NO_VERSION)) return { state: 'missing', note: 'not installed' };
     if (result.code !== (tool.version_exit_code ?? 0))
         return { state: 'error', note: `${tool.name} version inspection exited ${String(result.code)}: ${text}` };
     if (version === undefined && tool.kind === 'library')

@@ -592,7 +592,7 @@ reason = "A handler starts with handle and then names the event."
 
 [agent_rules]
 "PLAYWRIGHT.md" = { dependencies = ["@playwright/test", "playwright"] }
-"NODE.md" = { runtimes = ["node"] }
+"NODE.md" = { runtimes = ["node"], absent_dependencies = ["react-native", "expo"] }
 "DENO.md" = { runtimes = ["deno"] }
 "COMPONENTS.md" = { dependencies = ["astro", "svelte", "vue", "react"] }
 "BUN.md" = { filenames = ["bun.lock", "bun.lockb", "bunfig.toml"] }

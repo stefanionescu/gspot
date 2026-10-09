@@ -93,7 +93,7 @@ afterAll(async () => {
 beforeAll(async () => {
     if (!isPosix) return;
     const supported = distinct.filter(({ tool }) => hasToolBuild(tool.name));
-    const names = new Set(supported.map(({ tool }) => tool.name));
+    const names = new Set(supported.flatMap(({ tool }) => [tool.name, ...(tool.requires ?? [])]));
     const selected = manifests.map((manifest) => ({
         ...manifest,
         tools: manifest.tools.filter((tool) => names.has(tool.name)),
@@ -107,7 +107,6 @@ beforeAll(async () => {
             scopes: [],
             manifests: selected,
             installer: { name: 'bun', version: Bun.version },
-            runner: 'mise',
         }),
     ];
     {
@@ -158,7 +157,7 @@ for (const command of distinct) {
         async () => {
             const { tool } = command;
             let log = privateContext;
-            if (toolProjectPackage(tool, 'mise') === undefined)
+            if (toolProjectPackage(tool) === undefined)
                 log = tool.system === true || tool.version === undefined ? hostContext : context;
             const inspection = inspectTool(log, command.tool);
             expect(inspection.state, `${title}: ${inspection.hint ?? ''} ${inspection.note ?? ''}`).toBe(

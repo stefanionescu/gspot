@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { buildBinaryPin } from '#tests/harness/pins.ts';
 import { parseVersionOutput } from '#cli/parsers/tool/contracts.ts';
-import { VERSION_RESPONSE } from '#tests/config/cli/parsers/tool.ts';
+import { VERSION_RESPONSE, MISSING_TOOL_VERSION } from '#tests/config/cli/parsers/tool.ts';
 
 test('native wrappers report their executable version when the package has a different version', () => {
     const tool = {
@@ -20,4 +20,15 @@ test('color escapes and explicit version patterns are interpreted before version
     expect(parseVersionOutput(tool, { ...VERSION_RESPONSE, stdout: '\u001B[32mversion=4.4.2\u001B[0m' })).toStrictEqual(
         { version: '4.4.2' },
     );
+});
+
+test('a mise shim without a selected version reports one actionable line', () => {
+    expect(
+        parseVersionOutput(buildBinaryPin('teller', '4.4.2'), {
+            ...VERSION_RESPONSE,
+            code: 1,
+            stdout: '',
+            stderr: MISSING_TOOL_VERSION,
+        }),
+    ).toStrictEqual({ state: 'missing', note: 'not installed' });
 });

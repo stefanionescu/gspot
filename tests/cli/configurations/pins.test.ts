@@ -14,7 +14,7 @@ test.each([...TOOL_PROJECT_PACKAGES])(
     'the declared $name installer has the expected location and exact version',
     (entry) => {
         const tool = { ...buildBinaryPin(entry.tool, entry.version), installers: entry.installers };
-        const placement = toolProjectPackage(tool, entry.runner);
+        const placement = toolProjectPackage(tool);
         expect(
             placement === undefined ? undefined : { kind: placement.kind, version: placement.version },
         ).toStrictEqual(entry.expected);

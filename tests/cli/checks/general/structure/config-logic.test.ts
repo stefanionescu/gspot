@@ -6,7 +6,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { REPOSITORY_SHAPE_POLICY } from '#tests/config/samples/structure.ts';
 
 test('a configuration module with a function or a call is reported; literals pass', async () => {
     await using sandbox = await testdir();
@@ -17,7 +16,10 @@ test('a configuration module with a function or a call is reported; literals pas
             "import { readFileSync } from 'node:fs';\n\nexport const text = readFileSync('x', 'utf8');\nexport const pick = (value: string): string => value;\n",
     });
     const paths = ['config/pure.ts', 'config/logic.ts'];
-    await Bun.write(join(sandbox.path, 'gspot.toml'), stringify({ level: 'all', ...REPOSITORY_SHAPE_POLICY }));
+    await Bun.write(
+        join(sandbox.path, 'gspot.toml'),
+        stringify({ level: 'all', configurations: ['typescript'], architecture: { roles: { config: 'config' } } }),
+    );
     const found = await BUILT_IN_CHECKS['structure/config-logic'].input(
         buildCheckInput(await openSession(sandbox.path), 'structure/config-logic', { paths: paths }),
     );
@@ -40,7 +42,10 @@ test('configuration imports follow project aliases and reject runtime owners', a
         'feature/data.ts': 'export const COUNT = 3;\n',
     });
     const paths = ['config/data.ts', 'config/linked.ts', 'config/outside.ts', 'feature/data.ts'];
-    await Bun.write(join(sandbox.path, 'gspot.toml'), stringify({ level: 'all', ...REPOSITORY_SHAPE_POLICY }));
+    await Bun.write(
+        join(sandbox.path, 'gspot.toml'),
+        stringify({ level: 'all', configurations: ['typescript'], architecture: { roles: { config: 'config' } } }),
+    );
     const findings = await BUILT_IN_CHECKS['structure/config-logic'].input(
         buildCheckInput(await openSession(sandbox.path), 'structure/config-logic', { paths: paths }),
     );

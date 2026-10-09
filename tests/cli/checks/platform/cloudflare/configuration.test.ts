@@ -1,11 +1,16 @@
 // The built-in Cloudflare checks on a test site, run in-process: each reports its finding and passes after the fix.
-import { test, expect } from 'bun:test';
+import { join } from 'node:path';
+import { createRequire } from 'node:module';
+import * as tools from '#cli/tools/public.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { planRun, isActive } from '#cli/planning/public.ts';
 import { levelSchema } from '#cli/parsers/schema/contracts.ts';
+import { WRANGLER_SCHEMA } from '#tests/config/cli/checks/platform/cloudflare/configuration.ts';
 
 test('Cloudflare header checks report only files in their owning scope', async () => {
     await using directory = await testdir();
@@ -92,4 +97,94 @@ test.each(levelSchema.options)('headers share syntax and hosting security in bot
     expect(siteSession.scopes[0]!.selected.some((manifest) => manifest.configuration.name === 'cloudflare')).toBe(
         false,
     );
+});
+
+test.each(levelSchema.options)(
+    'Wrangler validates native schema leaves and retains its requirements at %s',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['cloudflare'], {
+                level,
+                tables: '[scope.app]\nconfigurations = ["cloudflare"]\n',
+            }),
+            'wrangler.json': '{"workers_dev":"wrong"}\n',
+            'app/wrangler.json': '{"name":"app","compatibility_date":"2026-01-15","workers_dev":"wrong"}\n',
+            'node_modules/wrangler/package.json': '{"exports":{"./package.json":"./package.json"}}\n',
+            'node_modules/wrangler/config-schema.json': JSON.stringify(WRANGLER_SCHEMA),
+        });
+        const library = createRequire(import.meta.url).resolve('ajv/package.json');
+        using _inspection = spyOn(tools, 'inspectTool').mockImplementation((_context, tool) => ({
+            name: tool.name,
+            state: 'ok',
+            path: tool.name === 'ajv' ? library : join(sandbox.path, 'node_modules/wrangler/bin/wrangler.js'),
+        }));
+        for (const scope of ['', 'app']) {
+            const session = await openSession(sandbox.path);
+            const input = buildCheckInput(session, 'cloudflare/wrangler', { scope });
+            const findings = await BUILT_IN_CHECKS['cloudflare/wrangler'].input(input);
+            expect(findings).toMatchObject(
+                scope === ''
+                    ? [
+                          { rule: 'missing-name', file: 'wrangler.json', line: 1 },
+                          { rule: 'compatibility-date', file: 'wrangler.json', line: 1 },
+                          { rule: 'schema', file: 'wrangler.json', line: 1, message: '/workers_dev must be boolean' },
+                      ]
+                    : [{ rule: 'schema', file: 'app/wrangler.json', line: 1, message: '/workers_dev must be boolean' }],
+            );
+            await Bun.write(
+                join(sandbox.path, scope, 'wrangler.json'),
+                '{"name":"fixed","compatibility_date":"2026-01-15","workers_dev":true}\n',
+            );
+            expect(
+                await BUILT_IN_CHECKS['cloudflare/wrangler'].input(
+                    buildCheckInput(await openSession(sandbox.path), 'cloudflare/wrangler', { scope }),
+                ),
+            ).toStrictEqual([]);
+        }
+    },
+);
+
+test('Wrangler reads installed schema assets for a copied child scope', async () => {
+    await using installed = await testdir({
+        'node_modules/wrangler/package.json': '{"exports":{"./package.json":"./package.json"}}\n',
+        'node_modules/wrangler/config-schema.json': JSON.stringify(WRANGLER_SCHEMA),
+        'app/wrangler.json': '{"name":"original","compatibility_date":"2026-01-15","workers_dev":true}\n',
+    });
+    await using revision = await testdir({
+        'gspot.toml': buildPolicy(['cloudflare'], { tables: '[scope.app]\nconfigurations = ["cloudflare"]\n' }),
+        'app/wrangler.json': '{"name":"copy","compatibility_date":"2026-01-15","workers_dev":"wrong"}\n',
+    });
+    const library = createRequire(import.meta.url).resolve('ajv/package.json');
+    using _inspection = spyOn(tools, 'inspectTool').mockImplementation((context, tool) => ({
+        name: tool.name,
+        state: 'ok',
+        path: tool.name === 'ajv' ? library : join(context.cwd!, 'node_modules/wrangler/bin/wrangler.js'),
+    }));
+    const session = await openSession(revision.path);
+    session.installedRoot = installed.path;
+    const findings = await BUILT_IN_CHECKS['cloudflare/wrangler'].input(
+        buildCheckInput(session, 'cloudflare/wrangler', { scope: 'app' }),
+    );
+    expect(findings).toMatchObject([
+        { file: 'app/wrangler.json', rule: 'schema', line: 1, message: '/workers_dev must be boolean' },
+    ]);
+    expect(await Bun.file(join(installed.path, 'app/wrangler.json')).text()).toBe(
+        '{"name":"original","compatibility_date":"2026-01-15","workers_dev":true}\n',
+    );
+});
+
+test('Cloudflare Pages without a Wrangler configuration skips schema validation without tools', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['cloudflare']),
+        _headers: '/*\n  X-Frame-Options: DENY\n',
+    });
+    const selected = planRun(await openSession(sandbox.path), {
+        stage: 'all',
+        skips: [],
+        only: ['cloudflare/wrangler'],
+    });
+    expect(
+        selected.map((entry) => ({ check: entry.check.name, active: isActive(entry), files: entry.files })),
+    ).toStrictEqual([{ check: 'cloudflare/wrangler', active: false, files: [] }]);
 });

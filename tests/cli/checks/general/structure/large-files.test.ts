@@ -10,7 +10,6 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { BYTES_PER_KB } from '#cli/config/platform/runtime.ts';
-import { REPOSITORY_SHAPE_POLICY } from '#tests/config/samples/structure.ts';
 
 test('a file over the limit that is neither declared nor under LFS is reported', async () => {
     await using sandbox = await testdir();
@@ -22,7 +21,11 @@ test('a file over the limit that is neither declared nor under LFS is reported',
     const paths = ['big.bin', 'data/big.bin', 'small.txt'];
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
-        stringify({ level: 'all', ...REPOSITORY_SHAPE_POLICY, limits: { file_kb: 1 } }),
+        stringify({
+            level: 'all',
+            generated: [{ paths: ['data/**'], reason: 'The sandbox owns generated output.' }],
+            limits: { file_kb: 1 },
+        }),
     );
     const found = BUILT_IN_CHECKS['repository/large-files'].input(
         buildCheckInput(await openSession(sandbox.path), 'repository/large-files', { paths: paths }),

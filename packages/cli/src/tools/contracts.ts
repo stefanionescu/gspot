@@ -112,7 +112,7 @@ function versionAbove(files: Root | undefined, root: string, start: string, name
  * @returns the hint
  */
 export function installHint(tool: ToolPin, runner?: string): string {
-    if (toolProjectPackage(tool, runner) !== undefined || (tool.system !== true && runner === 'mise'))
+    if (toolProjectPackage(tool) !== undefined || (tool.system !== true && runner === 'mise'))
         return 'Run: gspot install';
     const [command] = OPERATING_SYSTEMS.filter(({ node }) => node === process.platform).flatMap((system) =>
         system.installers.flatMap(({ installer, command }) => {

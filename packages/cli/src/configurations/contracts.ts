@@ -109,7 +109,7 @@ export function semgrepRuleFiles(selected: Manifest[], scope: string, authored: 
  * @returns the mise pin, or undefined when mise does not install the tool.
  */
 export function pinOf(tool: ToolPin): MisePin | undefined {
-    const excluded = toolProjectPackage(tool, 'mise') !== undefined;
+    const excluded = toolProjectPackage(tool) !== undefined;
     const pin = excluded ? undefined : misePin(tool);
     if (pin?.version === undefined) return undefined;
     return { name: pin.name, version: pin.version, ...compact({ os: miseOs(tool), options: pin.options }) };
@@ -118,15 +118,14 @@ export function pinOf(tool: ToolPin): MisePin | undefined {
 /**
  * The npm and Python project requirements declared by a selection, in native package order.
  * @param manifests the selected manifests
- * @param runner the runner that owns mise-installed npm tools
  * @returns npm versions, Python pins, and distinct Python constraints
  */
-export function toolProjectPins(manifests: Manifest[], runner?: string): ToolProjectPins {
+export function toolProjectPins(manifests: Manifest[]): ToolProjectPins {
     const npm: [string, string][] = [];
     const python: string[] = [];
     const constraints: string[] = [];
     for (const tool of collectPins(manifests)) {
-        const installation = toolProjectPackage(tool, runner);
+        const installation = toolProjectPackage(tool);
         if (installation === undefined) continue;
         if (installation.kind === 'npm') npm.push([installation.name, installation.version]);
         if (installation.kind !== 'python') continue;
@@ -202,15 +201,14 @@ export function toolName(check: CheckDeclaration): string | undefined {
 /**
  * Select the tool project installation used by both generated projects and tool resolution.
  * @param tool the pin
- * @param runner the task runner; under mise, tools mise can pin stay out
  * @returns the package to install, or undefined when the host or mise supplies it.
  */
-export function toolProjectPackage(tool: ToolPin, runner?: string): ToolProjectPackage | undefined {
+export function toolProjectPackage(tool: ToolPin): ToolProjectPackage | undefined {
     const python = tool.installers['pypi'];
     if (tool.system !== true && python?.version !== undefined)
         return { kind: 'python', name: python.name, version: python.version };
     const npm = tool.installers['npm'];
-    if (npm?.version === undefined || (runner === 'mise' && tool.installers['mise'] !== undefined)) return undefined;
+    if (npm?.version === undefined) return undefined;
     return {
         kind: 'npm',
         name: npm.name,

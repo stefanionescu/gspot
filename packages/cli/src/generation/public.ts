@@ -179,7 +179,7 @@ export function emitAll(session: Session): Generated {
     generated.toolFiles.push(...bunfigChanges(root, scopes), ...packageRedirects(session, generated.files));
     generated.files.push(
         ...hookFiles(root, policy, version),
-        ...npmProject({ root, scopes, manifests, installer: packageInstaller, runner: policy.runner }),
+        ...npmProject({ root, scopes, manifests, installer: packageInstaller }),
         ...pythonProject(manifests),
     );
     if (policy.runner === 'mise') generated.files.push(miseFile(manifests, version));
@@ -216,17 +216,16 @@ export function generatedPaths(generated: Generated): Set<string> {
 
 /**
  * Generate the npm tools as a tool project without adding dependencies to the repository.
- * @param inputs the selected source projects, tool manifests, package manager, and task runner.
+ * @param inputs the selected source projects, tool manifests, and package manager.
  * @param inputs.root the repository root.
  * @param inputs.scopes the selected source scopes.
  * @param inputs.manifests the selected tool declarations.
  * @param inputs.installer the repository package manager, or undefined without one.
- * @param inputs.runner the selected task runner, or undefined.
  * @returns the tool project's files, or none without a package manager.
  */
-export function npmProject({ root, scopes, manifests, installer, runner }: NpmProjectInputs): GeneratedFile[] {
+export function npmProject({ root, scopes, manifests, installer }: NpmProjectInputs): GeneratedFile[] {
     if (installer === undefined) return [];
-    const pins = toolProjectPins(manifests, runner).npm;
+    const pins = toolProjectPins(manifests).npm;
     const nextVersions = scopes
         .filter(({ selected }) => selected.some(({ configuration }) => configuration.name === 'nextjs'))
         .flatMap(({ scope }) => {

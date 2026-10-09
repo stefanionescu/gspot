@@ -11,7 +11,7 @@ compiler_options = { experimentalDecorators = true, emitDecoratorMetadata = true
 title = "NestJS"
 requires = ["typescript"]
 suggests = ["security"]
-description = "A NestJS service: the compiler options decorators need, the NestJS plugin rules for providers, routes, and DTOs, controllers that reach data through a service, and no circular modules."
+description = "A NestJS service: the compiler options decorators need, the NestJS plugin rules for providers, routes, and DTOs, and no circular modules."
 
 [detect]
 dependencies = ["@nestjs/core"]
@@ -29,8 +29,7 @@ npm = "@darraghor/eslint-plugin-nestjs-typed"
 
 [[tool_file]]
 source = "eslint.fragment.js.eta"
-# A controller turns a request into a call, and a service owns the data.
-selectors = [{ selector = "CallExpression[callee.name='forwardRef']", message = "forwardRef papers over two modules that import each other. Move what both need into a third module." }, { selector = "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))", message = "Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }." }, { selector = "TSParameterProperty TSTypeReference[typeName.name=/(Repository|DataSource|EntityManager|PrismaClient|PrismaService)$/]", message = "A controller reaches data through a service. Inject the service, and keep the repository behind it.", files = ["**/*.controller.ts"] }, { selector = "Decorator[expression.callee.name=/^(InjectRepository|InjectModel|InjectDataSource)$/]", message = "A controller reaches data through a service. Inject the service, and keep the repository behind it.", files = ["**/*.controller.ts"] }]
+selectors = [{ selector = "CallExpression[callee.name='forwardRef']", message = "forwardRef papers over two modules that import each other. Move what both need into a third module." }, { selector = "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))", message = "Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }." }]
 
 [required_eslint_rules]
 ts = ["@typescript-eslint/no-extraneous-class", "no-restricted-syntax"]

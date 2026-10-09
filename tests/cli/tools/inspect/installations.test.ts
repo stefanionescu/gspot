@@ -171,7 +171,7 @@ test.each(['mise', 'npm'])(
             'gspot.toml': buildPolicy([], { tables: `runner = "${runner}"\n` }),
             'node_modules/.bin/teller': '#!/bin/sh\necho 3.8.1\n',
             'node_modules/.bin/editorconfig-checker': '#!/bin/sh\necho 3.4.0\n',
-            '.gspot/node_modules/.bin/teller': `#!/bin/sh\necho ${runner === 'mise' ? '1.0.0' : '3.8.1'}\n`,
+            '.gspot/node_modules/.bin/teller': '#!/bin/sh\necho 3.8.1\n',
             '.gspot/node_modules/.bin/editorconfig-checker': '#!/bin/sh\nexit 99\n',
             '.gspot/node_modules/globals/package.json': '{"name":"globals","version":"17.12.0"}',
         });
@@ -191,22 +191,20 @@ test.each(['mise', 'npm'])(
         };
         const tool = buildBinaryPin('teller', '3.8.1', 'teller');
         tool.installers['mise'] = { name: 'teller', version: '3.8.1' };
-        expect(inspectTool(context, tool).state).toBe(runner === 'mise' ? 'ok' : 'error');
+        expect(inspectTool(context, tool).state).toBe('error');
         expect(inspectTool(context, buildLibraryPin('globals', '17.12.0')).state).toBe('error');
         const discovered = inspectTool(context, toolPin(configurationManifests().values(), 'editorconfig-checker'));
-        expect(discovered.note).toBe(
-            runner === 'mise' ? undefined : 'Tool installation is incomplete. Run: gspot install',
-        );
-        expect(discovered.path).toBe(
-            runner === 'mise' ? join(sandbox.path, 'node_modules/.bin/editorconfig-checker') : undefined,
-        );
-        expect(discovered.state).toBe(runner === 'mise' ? 'ok' : 'error');
+        expect(discovered.note).toBe('Tool installation is incomplete. Run: gspot install');
+        expect(discovered.path).toBeUndefined();
+        expect(discovered.state).toBe('error');
         {
             using log = openOwnership(sandbox.path);
             delete log.state.installing;
             log.save();
         }
-        expect(inspectTool(context, tool).state).toBe('ok');
+        const installed = inspectTool(context, tool);
+        expect(installed.state).toBe('ok');
+        expect(installed.path).toBe(join(sandbox.path, '.gspot/node_modules/.bin/teller'));
         expect(inspectTool(context, buildLibraryPin('globals', '17.12.0')).state).toBe('ok');
     },
 );

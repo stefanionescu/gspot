@@ -6,10 +6,6 @@ disable_tools = ["npm:@gspothq/cli"]
 [settings.task]
 run_auto_install = false
 
-# Use npm to acquire npm tools without depending on the package manager of the consuming project.
-[settings.npm]
-package_manager = "npm"
-
 # Hooks run `mise exec -- gspot`. The launcher in scripts/ runs the source CLI.
 [env]
 _.path = ["{{config_root}}/scripts"]

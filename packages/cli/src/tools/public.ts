@@ -131,7 +131,7 @@ function inspectProjectExecutable(
     runner?: string,
 ): ToolInspection | undefined {
     if (tool.system !== true) return undefined;
-    const installation = toolProjectPackage(tool, runner);
+    const installation = toolProjectPackage(tool);
     if (installation === undefined) return undefined;
     const { root } = context;
     const hint = installHint(tool, runner);
@@ -144,7 +144,7 @@ function inspectProjectExecutable(
         installedRoot: context.installedRoot,
     });
     if (project !== undefined) return executableInspection({ root, cwd, tool, path: project, hint });
-    if (isInstallationPending(context, tool, runner)) return pendingInspection(tool);
+    if (isInstallationPending(context, tool)) return pendingInspection(tool);
     const [toolProjectPath] = locateCandidates(root, tool.name, {
         searchFolders: [cwd, root],
         toolProjectKind: installation.kind,
@@ -162,9 +162,9 @@ function inspectExecutable(context: ToolSearch, cwd: string, tool: ToolPin, runn
     const project = inspectProjectExecutable(context, cwd, tool, runner);
     if (project !== undefined) return project;
     const { root } = context;
-    const isExternal = tool.system === true || (runner === 'mise' && tool.installers['mise'] !== undefined);
+    const isExternal = tool.system === true;
     const searchFolders = isExternal ? [cwd, root] : [join(root, DOT_GSPOT), cwd, root];
-    const installation = toolProjectPackage(tool, runner);
+    const installation = toolProjectPackage(tool);
     const kind = installation?.kind;
     const hint = installHint(tool, runner);
     const [path] = locateCandidates(root, tool.name, {
@@ -181,9 +181,8 @@ function inspectExecutable(context: ToolSearch, cwd: string, tool: ToolPin, runn
 function isInstallationPending(
     search: Pick<ToolSearch, 'root' | 'installedRoot' | 'getPendingInstallations'>,
     tool: ToolPin,
-    runner?: string,
 ): boolean {
-    const installation = toolProjectPackage(tool, runner);
+    const installation = toolProjectPackage(tool);
     const pending = search.getPendingInstallations?.(search.installedRoot ?? search.root);
     return installation !== undefined && pending?.includes(installation.kind) === true;
 }
@@ -229,7 +228,7 @@ function recordLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
 export function inspectTool(context: ToolSearch, tool: ToolPin): ToolInspection {
     const { root, inspections } = context;
     const runner = context.policyFiles?.policy.runner;
-    const pending = isInstallationPending(context, tool, runner);
+    const pending = isInstallationPending(context, tool);
     if (tool.system !== true && pending) return pendingInspection(tool);
     const cwd = context.cwd ?? root;
     const key = JSON.stringify([root, cwd, tool, runner, pending]);
@@ -287,7 +286,7 @@ export function duplicateMisePins(root: string, manifests: Manifest[], runner: s
         ]),
     );
     const found: DuplicateMisePin[] = tools.flatMap((tool) => {
-        const pin = toolProjectPackage(tool, runner);
+        const pin = toolProjectPackage(tool);
         return pin === undefined
             ? []
             : [{ tool: tool.name, version: pin.version, gspotFile: TOOL_PROJECT_FILES[pin.kind] }];

@@ -43,3 +43,11 @@ export const UPSTREAM_GUIDES = [
     ['general/prose/DOCS-SURFACES.md', 'https://clig.dev/'],
     ['general/prose/DOCS-MEDIA.md', 'https://www.w3.org/WAI/'],
 ] as const;
+
+/** Runtime guidance keeps Node assumptions out of React Native and Expo applications. */
+export const RUNTIME_RULE_CASES = [
+    { runtime: 'deno', dependency: undefined, hasNode: false },
+    { runtime: 'node', dependency: undefined, hasNode: true },
+    { runtime: 'node', dependency: 'react-native', hasNode: false },
+    { runtime: 'node', dependency: 'expo', hasNode: false },
+] as const;

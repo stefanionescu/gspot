@@ -229,6 +229,7 @@ const detectionSchema = z.strictObject({
     extensions: stringList,
     filenames: stringList,
     dependencies: stringList,
+    absent_dependencies: stringList,
     shebangs: stringList,
     runtimes: z.array(z.enum(JAVASCRIPT_RUNTIMES)).default([]),
     tags: stringList,
@@ -288,9 +289,15 @@ export const manifestSchema = z
             .record(
                 z.string().regex(/^[A-Z0-9-]+\.md$/u),
                 conditionSchema
-                    .pick({ dependencies: true, filenames: true, tags: true, runtimes: true })
+                    .pick({
+                        dependencies: true,
+                        absent_dependencies: true,
+                        filenames: true,
+                        tags: true,
+                        runtimes: true,
+                    })
                     .partial()
-                    .transform((condition) => detectionSchema.parse(condition)),
+                    .pipe(detectionSchema),
             )
             .default({}),
         ruff_rules: z.strictObject({ recommended: stringList, all: stringList }).prefault({}),

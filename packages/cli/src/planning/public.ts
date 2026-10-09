@@ -266,7 +266,6 @@ export function licenseProjects(
  * @returns required executable, declared peer, and native installation tools
  */
 export function requiredToolNames(check: PlannedCheck, session: Pick<Session, 'scopes' | 'policyFiles'>): string[] {
-    const runner = session.policyFiles.policy.runner;
     const names = new Set(
         [check.tool?.name, ...checkCompanions(check.scope, check.check), check.check.fix?.[0]].filter(
             (name) => name !== undefined,
@@ -282,7 +281,7 @@ export function requiredToolNames(check: PlannedCheck, session: Pick<Session, 's
         for (const [, name] of fileTools) names.add(name);
     }
     for (const name of names)
-        for (const required of new Set(toolProjectPackage(toolPin(check.scope.selected, name), runner)?.requires))
+        for (const required of new Set(toolProjectPackage(toolPin(check.scope.selected, name))?.requires))
             names.add(required);
     return [...names];
 }

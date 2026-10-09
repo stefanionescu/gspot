@@ -8,5 +8,4 @@ export type NpmProjectInputs = {
     scopes: ScopeSelection[];
     manifests: Manifest[];
     installer: PackageInstaller | undefined;
-    runner: string | undefined;
 };

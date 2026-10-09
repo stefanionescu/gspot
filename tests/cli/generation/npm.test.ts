@@ -19,7 +19,6 @@ test.each(YARN_MANAGERS)(
             scopes: [],
             manifests: [],
             installer,
-            runner: 'mise',
         });
         expect(files.map((file) => file.path)).toStrictEqual(
             settings ? ['.gspot/package.json', '.gspot/.yarnrc.yml'] : ['.gspot/package.json'],
@@ -76,11 +75,11 @@ test.each(NEXT_INSTALLATIONS)('$name', async (row) => {
     expect(await readFile(marker, 'utf8')).toBe('Keep the source file.');
 });
 
-test('only selected Next scopes constrain the shared plugin version', async () => {
+test.each(['mise', 'npm'])('only selected Next scopes constrain the shared plugin version under %s', async (runner) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['javascript'], {
-            tables: '[scope.web]\nconfigurations = ["nextjs"]\n[scope.api]\nconfigurations = ["javascript"]\n',
+            tables: `runner = "${runner}"\n[scope.web]\nconfigurations = ["nextjs"]\n[scope.api]\nconfigurations = ["javascript"]\n`,
         }),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
         'web/package.json': '{"dependencies":{"next":"*"}}',

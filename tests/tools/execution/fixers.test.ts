@@ -27,7 +27,7 @@ async function prepareFixer(root: string, checkId: string): Promise<void> {
     const tool = toolPin(manifests, toolName(check)!);
     const executable = Bun.which(tool.name, { PATH: buildToolsPath([tool.name]) });
     if (executable === null) throw new Error(`The native fixer test requires ${tool.name}.`);
-    if (toolProjectPackage(tool, session.policyFiles.policy.runner)?.kind === 'python') await sharePythonTools(root);
+    if (toolProjectPackage(tool)?.kind === 'python') await sharePythonTools(root);
 }
 
 // Root ignores the read-only permission bits that provoke the write failure.

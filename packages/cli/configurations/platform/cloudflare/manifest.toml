@@ -22,8 +22,13 @@ system = true
 min_version = "3.0.0"
 npm = "wrangler"
 
+[[tool]]
+name = "ajv"
+
 [[check]]
 name = "wrangler"
+tool = ["wrangler", "ajv"]
+files = { filenames = ["wrangler.toml", "wrangler.json", "wrangler.jsonc"] }
 title = "Validate Wrangler configuration"
 example = "A Wrangler configuration without `compatibility_date` reports the missing date. Add a reviewed date in `YYYY-MM-DD` form, such as `2025-01-31`, and test the Worker against that runtime behavior."
 level = "recommended"

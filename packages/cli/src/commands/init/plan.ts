@@ -33,7 +33,7 @@ import {
 } from '#cli/config/platform/locations.ts';
 
 function runnerRows(answers: InitAnswers, everySelected: Manifest[]): InitPlan['change'] {
-    const pins = toolProjectPins(everySelected, answers.runner);
+    const pins = toolProjectPins(everySelected);
     const count = Object.keys(pins.npm).length;
     const rows: InitPlan['change'] =
         count === 0

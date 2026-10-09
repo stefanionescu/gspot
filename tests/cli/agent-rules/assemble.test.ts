@@ -8,7 +8,13 @@ import { FIRST_READ } from '#cli/config/policy/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { textAtLevel, selectRuleFiles } from '#cli/agent-rules/public.ts';
 import { everyManifest, configurationManifests } from '#cli/configurations/public.ts';
-import { UPSTREAM_GUIDES, CHECKED_RULE_LINES, RULE_CONFIGURATIONS } from '#tests/config/cli/agent-rules.ts';
+
+import {
+    UPSTREAM_GUIDES,
+    CHECKED_RULE_LINES,
+    RUNTIME_RULE_CASES,
+    RULE_CONFIGURATIONS,
+} from '#tests/config/cli/agent-rules.ts';
 
 describe('[agent_rules] exclude', () => {
     test('a file path and a category folder are accepted', () => {
@@ -43,25 +49,39 @@ test('level filtering respects fenced examples, nested sections, and the next pe
 });
 
 test.each(
-    (['recommended', 'all'] as const).flatMap((level) => ['deno', 'node'].map((runtime) => ({ level, runtime }))),
-)('$runtime guidance preserves native rules at $level', async ({ level, runtime }) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildPolicy(['javascript'], { level }),
-        'main.js': `#!/usr/bin/env ${runtime}\nconsole.log("ready");\n`,
-    });
-    const session = await openSession(sandbox.path);
-    const files = selectRuleFiles(
-        session.policyFiles.policy.agent_rules,
-        everyManifest(session.scopes),
-        session.repository,
-        level,
-        session.packageManifests,
-    );
-    const paths = files.map((file) => file.path);
-    expect(paths.includes('language/javascript/DENO.md')).toBe(runtime === 'deno');
-    expect(paths).not.toContain('platform/supabase/DENO.md');
-    expect(paths).toContain('general/engineering/agent/TALKING.md');
-});
+    (['recommended', 'all'] as const).flatMap((level) =>
+        ['', 'app'].flatMap((scope) => RUNTIME_RULE_CASES.map((row) => ({ ...row, level, scope }))),
+    ),
+)(
+    '$runtime guidance with $dependency in $scope preserves native rules at $level',
+    async ({ level, scope, runtime, dependency, hasNode }) => {
+        const prefix = scope === '' ? '' : scope + '/';
+        await using sandbox = await testdir({
+            'gspot.toml': buildPolicy(scope === '' ? ['javascript'] : [], {
+                level,
+                tables: scope === '' ? '' : '[scope.app]\nconfigurations = ["javascript"]\n',
+            }),
+            [`${prefix}main.js`]: `#!/usr/bin/env ${runtime}\nconsole.log("ready");\n`,
+            [`${prefix}package.json`]: JSON.stringify({
+                engines: { [runtime]: '>=1' },
+                dependencies: dependency === undefined ? {} : { [dependency]: '1.0.0' },
+            }),
+        });
+        const session = await openSession(sandbox.path);
+        const files = selectRuleFiles(
+            session.policyFiles.policy.agent_rules,
+            everyManifest(session.scopes),
+            session.repository,
+            level,
+            session.packageManifests,
+        );
+        const paths = files.map((file) => file.path);
+        expect(paths.includes('language/javascript/DENO.md')).toBe(runtime === 'deno');
+        expect(paths.includes('language/javascript/NODE.md')).toBe(hasNode);
+        expect(paths).not.toContain('platform/supabase/DENO.md');
+        expect(paths).toContain('general/engineering/agent/TALKING.md');
+    },
+);
 
 test.each(
     (['recommended', 'all'] as const).flatMap((level) =>
