@@ -11,3 +11,28 @@ export const HEADER_FINDINGS = [
     { rule: 'header', line: 4, message: 'Start the fourth line with "-- Purpose:".' },
     { rule: 'section', line: 8, message: 'Put the "Tables" heading between separator lines.' },
 ];
+
+export const HEADING_CASES = [
+    { name: 'an unknown heading keeps the previous section', headings: '-- Unknown\n', findings: [] },
+    {
+        name: 'the last recognized heading owns the statement',
+        headings: '-- Indexes\n-- Tables\n',
+        findings: [
+            { rule: 'section', line: 12, message: 'Put the "Indexes" heading between separator lines.' },
+            { rule: 'section', line: 13, message: 'Put the "Tables" heading between separator lines.' },
+        ],
+    },
+    {
+        name: 'a later wrong section changes placement without losing the label',
+        headings: '-- Tables\n-- Indexes\n',
+        findings: [
+            { rule: 'section', line: 12, message: 'Put the "Tables" heading between separator lines.' },
+            { rule: 'section', line: 13, message: 'Put the "Indexes" heading between separator lines.' },
+            {
+                rule: 'placement',
+                line: 17,
+                message: 'CREATE TABLE belongs under "Tables", and it is under "Indexes".',
+            },
+        ],
+    },
+];

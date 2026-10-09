@@ -1,6 +1,6 @@
 # Built-in Checks
 
-19 unresolved review records remain.
+18 unresolved review records remain.
 
 ## Findings
 
@@ -252,3 +252,11 @@ Original records and quotations remain above. These records are complete at `4ea
 | ID                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                |
 | ------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `areas/checks/052` | complete | Merged env-file and dependency-folder checks as repository/tracked-files, using one selected-manifest untracked_files list and one index read. Native checkpoint:123 tests,472 assertions; scopes, ignores, templates, language folders and env exceptions retained. Commit `4ea1e5c0038d3390e14327ab6555cacba7ff71a9`. |
+
+## Implementation checkpoint af979b415 of October 9, 2026 for manifest prefix exceptions
+
+Original records and quotations remain above. These records are complete at `af979b415c6c13d5b1904b976234e406031d3104`.
+
+| ID                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/checks/059` | complete | Moved all sixteen NestJS kinds and nine tool prefixes to selected manifests. The check reads one typed prefix_collisions field; hook directory facts stay shared. Preserved four original callback bodies and all existing parser assertions. Native45 tests95 assertions, types, producer freshness, normal apply and staged88/0 pass. Production including manifests decreases17 bytes after inlining a one-use source list. Commit `af979b415c6c13d5b1904b976234e406031d3104`. |

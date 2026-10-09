@@ -7,6 +7,7 @@ import {
     NAME,
     SECTIONS,
     DOCUMENTED,
+    HEADING_CASES,
     HEADER_FINDINGS,
 } from '#tests/config/cli/checks/database/postgres/migration-docs.ts';
 
@@ -45,4 +46,10 @@ test('migration header and section findings name the line and corrective action'
     lines[6] = '-- wrong section separator';
     const findings = docFindings(input, await parseMigration(NAME, lines.join('\n'), '20240101000000'), SECTIONS);
     expect(findings.map(({ rule, line, message }) => ({ rule, line, message }))).toStrictEqual(HEADER_FINDINGS);
+});
+
+test.each(HEADING_CASES)('$name', async ({ headings, findings }) => {
+    const text = DOCUMENTED.replace('-- Table: teams', `${headings}-- Table: teams`);
+    const actual = docFindings(input, await parseMigration(NAME, text, '20240101000000'), SECTIONS);
+    expect(actual.map(({ rule, line, message }) => ({ rule, line, message }))).toStrictEqual(findings);
 });

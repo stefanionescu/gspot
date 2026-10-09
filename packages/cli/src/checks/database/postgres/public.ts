@@ -80,11 +80,9 @@ function sectionFindings(
     input: Pick<CheckInput, 'check'>,
     migration: Migration,
     lines: string[],
-    sections: Set<string>,
+    headings: Map<number, string>,
 ): Finding[] {
-    return lines.flatMap((line, index): Finding[] => {
-        const name = SECTION.exec(line)?.groups?.['name'];
-        if (name === undefined || !sections.has(name)) return [];
+    return [...headings].flatMap(([index, name]): Finding[] => {
         if (lines[index - 1] === DOC_SEPARATOR && lines[index + 1] === DOC_SEPARATOR) return [];
         return [
             findingAt(
@@ -95,14 +93,6 @@ function sectionFindings(
             ),
         ];
     });
-}
-
-function sectionAbove(lines: string[], line: number, sections: Set<string>): string | undefined {
-    for (let index = line - 1; index >= 0; index -= 1) {
-        const name = SECTION.exec(lines[index] ?? '')?.groups?.['name'];
-        if (name !== undefined && sections.has(name)) return name;
-    }
-    return undefined;
 }
 
 // The comment lines directly above a statement, nearest first, reaching past blank lines.
@@ -121,7 +111,7 @@ function statementFindings(
     input: Pick<CheckInput, 'check'>,
     migration: Migration,
     lines: string[],
-    sections: Set<string>,
+    headings: Map<number, string>,
 ): Finding[] {
     return migration.statements.flatMap((statement): Finding[] => {
         const layout = MIGRATION_STATEMENTS[statement.kind];
@@ -129,7 +119,7 @@ function statementFindings(
         const { section: wanted, words } = layout;
         const { line } = positionAt(migration.text, statement.start);
         const findings: Finding[] = [];
-        const section = sectionAbove(lines, line, sections);
+        const section = [...headings].findLast(([index]) => index < line)?.[1];
         if (section !== wanted)
             findings.push(
                 findingAt(
@@ -222,11 +212,15 @@ export async function migrationsOf(input: CheckInput): Promise<Migration[]> {
  */
 export function docFindings(input: Pick<CheckInput, 'check'>, migration: Migration, sections: string[]): Finding[] {
     const lines = migration.text.split('\n');
-    const known = new Set(sections);
+    const headings = new Map<number, string>();
+    for (const [index, line] of lines.entries()) {
+        const name = SECTION.exec(line)?.groups?.['name'];
+        if (name !== undefined && sections.includes(name)) headings.set(index, name);
+    }
     return [
         ...headerFindings(input, migration, lines),
-        ...sectionFindings(input, migration, lines, known),
-        ...statementFindings(input, migration, lines, known),
+        ...sectionFindings(input, migration, lines, headings),
+        ...statementFindings(input, migration, lines, headings),
     ];
 }
 

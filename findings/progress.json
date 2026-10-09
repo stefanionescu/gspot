@@ -1,5 +1,5 @@
 {
-    "openRecords": 446,
+    "openRecords": 442,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -319,7 +319,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 446,
+        "openRecords": 442,
         "records": 1092,
         "batches": [
             {
@@ -625,8 +625,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 163,
-                "unresolvedAssignments": 128
+                "completedAssignments": 164,
+                "unresolvedAssignments": 127
             },
             {
                 "id": "python",
@@ -779,8 +779,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 35,
-                "unresolvedAssignments": 64
+                "completedAssignments": 36,
+                "unresolvedAssignments": 63
             },
             {
                 "id": "swift-bash-sql",
@@ -1485,8 +1485,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 293,
-                "unresolvedAssignments": 176
+                "completedAssignments": 295,
+                "unresolvedAssignments": 174
             },
             {
                 "id": "scripts-repository",
@@ -1625,8 +1625,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 47,
-                "unresolvedAssignments": 85
+                "completedAssignments": 48,
+                "unresolvedAssignments": 84
             },
             {
                 "id": "installation-docs",
@@ -1770,8 +1770,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 71,
-                "unresolvedAssignments": 66
+                "completedAssignments": 72,
+                "unresolvedAssignments": 65
             },
             {
                 "id": "policy-file",
@@ -2087,7 +2087,8 @@
                 "Evidence f197f61756c1f848.",
                 "Evidence 15b7e23ff87ec367.",
                 "Evidence 66b9441b73390aab.",
-                "Evidence fdc839bbba7e99bb."
+                "Evidence fdc839bbba7e99bb.",
+                "Three-owner heading consolidation /tmp/gspot-checks008-heading-final-freeze.json: parse recognized headings once, delete sectionAbove/repeatedSECTIONscans, preserve all-field ordered Findings across108 native comparisons. Production\u2212187bytes/-33AST; tests+1451bytes/+163AST. Root8tests15assertions preserve held root/child level controls; isolated/CP6tests7assertions pass. Historical complete conversion remains source-positive910bytes including amendment; no whole-record less-code closure claim."
             ],
             "additionalChanges": [
                 {
@@ -2102,6 +2103,13 @@
                         "Evidence 15b7e23ff87ec367.",
                         "Evidence 66b9441b73390aab.",
                         "Evidence fdc839bbba7e99bb."
+                    ]
+                },
+                {
+                    "evidence": "/tmp/gspot-checks008-heading-final-freeze.json",
+                    "commit": null,
+                    "verification": [
+                        "Root8/15 and CP6/7 pass; original108 complete native Findings exactlymatch; source\u2212187 bytes/-33AST with testgrowth1451 disclosed."
                     ]
                 }
             ]
@@ -2410,7 +2418,14 @@
             "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
             "verification": ["Evidence 27abb11aac798efa.", "Evidence e4090236ccab56d6.", "Evidence 53b14a9224be0c46."]
         },
-        "areas/checks/059": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "areas/checks/059": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "af979b415c6c13d5b1904b976234e406031d3104",
+            "verification": [
+                "Moved all sixteen NestJS kinds and nine tool prefixes to selected manifests. The check reads one typed prefix_collisions field; hook directory facts stay shared. Preserved four original callback bodies and all existing parser assertions. Native45 tests95 assertions, types, producer freshness, normal apply and staged88/0 pass. Production including manifests decreases17 bytes after inlining a one-use source list."
+            ]
+        },
         "areas/checks/060": {
             "status": "complete",
             "owner": "main",
@@ -2562,9 +2577,7 @@
                 "Evidence 7efad1a20dddc343.",
                 "Evidence 999a19c9a211b7d7."
             ],
-            "remaining": [
-                "Mandatory staged verification, coherent behavior/mechanical commits, push and cross-platform CI evidence."
-            ]
+            "remaining": ["Evidence dc22ce9bdfea875a."]
         },
         "areas/integration-tests/007": {
             "status": "complete",
@@ -2889,7 +2902,7 @@
             ],
             "remaining": [
                 "Remaining correction-run sites enumerated in current finding; reused-session/cache exceptions need per-case review.",
-                "Mandatory staged verification, coherent behavior/mechanical commits, push and cross-platform CI evidence."
+                "Evidence dc22ce9bdfea875a."
             ]
         },
         "areas/integration-tests/085": { "status": "partial", "owner": null, "commit": null, "verification": [] },
@@ -4276,9 +4289,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-diagnostic-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -4294,9 +4305,7 @@
                     "commit": "d25d2e2720dcbf1f2c82758f5a9434e36497fb22",
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-diagnostic-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -5037,7 +5046,7 @@
                 "Evidence 9e83fc5d87a6c87b."
             ],
             "remaining": [
-                "Scoped reference/checkjs dependency closure and shared Next compiler behavior remain unimplemented. Full growing candidate and imported-only ambient declaration omission preserved separately.",
+                "Evidence 7ce1d690623210ab.",
                 "Full platform and final suite acceptance remains pending; this partial branch does not close007 or044."
             ]
         },
@@ -5170,7 +5179,16 @@
                 }
             ]
         },
-        "review/code-execution/018": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/code-execution/018": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "f4c78a76c19be82cd5dcef54d7c09961a608ac1c",
+            "verification": [
+                "Manifests own v8r peer requirements, per-file license tools and architecture-module library applicability. ESLint comments stay enabled; requiredToolNames has no tool-specific branches. Consolidated configuration pins, floor calculation, version observations and substantive native installer preserve same-major refusal, credential routing and cached lock bytes.",
+                "Main combined CLI153/603 and focused native naming30/79 pass; isolated native tools17/176 use one acquisition. Root/CLI types, normal producer/freshness, CLI build and apply pass. Production including manifest declarations shrinks192 bytes; new tests grow7251 bytes without lost original assertions. Staged85pass0fail11skip0findings; normal commit65pass0fail3skip and push85pass0fail11skip pass. Source028 query-context residual remains separate.",
+                "CI37903289520 exposed two docs callers still assuming scalar tool fields. The two-owner native map display correction adds190bytes, preserving both per-file tool names in pages/index; total Source018 production+metadata+docs reduction is2bytes. Docs types0 and nativepage control pass; full docsbuild298pages4.12s. Final checkpoint and CI result remain tracked separately."
+            ]
+        },
         "review/code-execution/019": {
             "status": "complete",
             "owner": "main integration; isolated implementation owners",
@@ -6934,9 +6952,7 @@
             "owner": "packaging implementation; main integration",
             "commit": "bce72e26bbc55fc48e976aea29c466d0ce2e91b9",
             "verification": ["Evidence 74cf084819e5bf17.", "Evidence eb28df4cf5df26d0.", "Evidence ea57c48e4f9ab2f9."],
-            "remaining": [
-                "Complete required final names, owners, typed declaration fields and public terminology; integrate and verify the mechanical checkpoint."
-            ]
+            "remaining": ["Evidence 2b3dbd533c7c8fcb."]
         },
         "review/glossary/008": {
             "status": "partial",
@@ -7135,9 +7151,7 @@
             "owner": "packaging implementation; main integration",
             "commit": "bce72e26bbc55fc48e976aea29c466d0ce2e91b9",
             "verification": ["Evidence 74cf084819e5bf17.", "Evidence eb28df4cf5df26d0.", "Evidence ea57c48e4f9ab2f9."],
-            "remaining": [
-                "Complete required final names, owners, typed declaration fields and public terminology; integrate and verify the mechanical checkpoint."
-            ]
+            "remaining": ["Evidence 2b3dbd533c7c8fcb."]
         },
         "review/glossary/023": {
             "status": "partial",
@@ -8605,13 +8619,14 @@
             ]
         },
         "review/tests-cli/006": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "commit": "a39d0fdd0fa284e013d7e103ec27b0e3d50e02cd",
             "verification": [
-                "Python manifest declares tool-file paths, not Ruff rule/value or basedpyright report-value inventories. These live inside Eta templates. Comparing the emitter against itself would be tautological; arbitrary parsing Eta expressions is not a meaningful independent manifest-owned expectation. Existing level/preview-control test remains unchanged."
-            ],
-            "remaining": "Python manifest declares tool-file paths, not Ruff rule/value or basedpyright report-value inventories. These live inside Eta templates. Comparing the emitter against itself would be tautological; arbitrary parsing Eta expressions is not a meaningful independent manifest-owned expectation. Existing level/preview-control test remains unchanged."
+                "Python manifest declares tool-file paths, not Ruff rule/value or basedpyright report-value inventories. These live inside Eta templates. Comparing the emitter against itself would be tautological; arbitrary parsing Eta expressions is not a meaningful independent manifest-owned expectation. Existing level/preview-control test remains unchanged.",
+                "The Python manifest owns actual production Ruff baseline/all additions and basedpyright per-level values. Both Eta generation and one representative Ruff code/basedpyright value assertion per level consume those declarations; restated lists are deleted. Ten complete generated outputs/native values are byte-identical across root, child and both levels.",
+                "Main focused48tests123assertions/3files5.04s and Root/CLI types pass. Isolated native Python11/95/2files123.56s uses cached suite tools with0mise installs; both negative emitter controls fail and restore exact hashes. Producer/freshness, build/apply pass. Corrected repository-native Taplo yields whole\u2212142bytes/-215executableAST; production+602 and test\u2212744 disclosed. Staged68pass0fail10skip0findings; normal commit52pass0fail3skip and push68pass0fail10skip pass."
+            ]
         },
         "review/tests-cli/007": {
             "status": "complete",
@@ -8786,9 +8801,7 @@
                     "commit": "3a3448c32fc0cee4badd20eeca54a22e32c31e6d",
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -8865,14 +8878,18 @@
             ]
         },
         "review/tests-cli/031": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 93ad5543c33e771e."],
+            "commit": "f4c78a76c19be82cd5dcef54d7c09961a608ac1c",
+            "verification": [
+                "Evidence 93ad5543c33e771e.",
+                "All nine historical ESLint owners remain moved to CLI; current whole inventory has37 real in-process CLI consumers and no tools consumers. Delete plain upstream Astro, export and React message/line smoke assertions; assert generated severity instead. Retain required gspot scope, level, uniqueness and correction contracts, including closed Jest057.",
+                "Five-owner cleanup removes974 bytes,155 AST nodes and4 callbacks. Isolated native16cases140assertions pass; Main combined153tests603assertions and subsequent focused30/79 pass. Final staged/normal commit/push checks pass with0findings. Whole inventory /tmp/gspot-cli031-whole-fragment-inventory.json and cost proof /tmp/gspot-cli031-inventory-proof.json preserve original ownership and remaining-contract classification."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-ci-suite-main-intake/freeze.json",
-                    "commit": null,
+                    "commit": "f4c78a76c19be82cd5dcef54d7c09961a608ac1c",
                     "verification": ["Evidence 93ad5543c33e771e."]
                 }
             ]
@@ -9980,9 +9997,7 @@
                     "commit": "9384fcdf0524f4ba4693c835dad809f7088c589b",
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -10005,9 +10020,7 @@
                     "commit": "9384fcdf0524f4ba4693c835dad809f7088c589b",
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -10384,7 +10397,15 @@
             ]
         },
         "review/tests-layout/033": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/tests-layout/034": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-layout/034": {
+            "status": "partial",
+            "owner": "main",
+            "commit": "cd5a81d015677a58800a13e7f827ac17913a3474",
+            "verification": [
+                "Approved mechanical ignore/command and removal two-file grouping plus flat config mirror pushedcd5a81d01; original13 callbacks preserved, native15tests121assertions pass; staged/push50pass0fail9skip0findings and normal hooks pass. Earlier seven set-command owners remain under commands/set."
+            ],
+            "remaining": "Historical duplicate-case deletion obligation needs reconciliation with the preserved distinct partial-path/count/selector assertions; grouping alone is not closure."
+        },
         "review/tests-layout/035": {
             "status": "partial",
             "owner": "main",
@@ -10433,9 +10454,7 @@
                 "Evidence 01010ec03fb34c75.",
                 "Evidence c55a66a76be8a19f."
             ],
-            "remaining": [
-                "Mandatory staged verification, coherent behavior/mechanical commits, push and cross-platform CI evidence."
-            ]
+            "remaining": ["Evidence dc22ce9bdfea875a."]
         },
         "review/tests-layout/041": {
             "status": "complete",
@@ -10835,9 +10854,7 @@
                     "commit": "b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1",
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-diagnostic-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -11805,9 +11822,7 @@
                     "commit": "b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1",
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-diagnostic-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -11823,9 +11838,7 @@
                     "commit": "b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1",
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -11887,9 +11900,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -11903,9 +11914,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -11921,9 +11930,7 @@
                     "commit": "b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1",
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -11971,9 +11978,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -12368,9 +12373,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -12390,9 +12393,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -12412,9 +12413,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -12440,9 +12439,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -12462,9 +12459,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -12531,9 +12526,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-cli-runtime-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -12810,9 +12803,7 @@
                 "Evidence 7efad1a20dddc343.",
                 "Evidence 999a19c9a211b7d7."
             ],
-            "remaining": [
-                "Mandatory staged verification, coherent behavior/mechanical commits, push and cross-platform CI evidence."
-            ]
+            "remaining": ["Evidence dc22ce9bdfea875a."]
         },
         "slices/tests-integration-lifecycle/012": {
             "status": "complete",
@@ -13075,7 +13066,7 @@
             ],
             "remaining": [
                 "Remaining quiet-default callers in installer-failures and apply/installation.",
-                "Mandatory staged verification, coherent behavior/mechanical commits, push and cross-platform CI evidence."
+                "Evidence dc22ce9bdfea875a."
             ]
         },
         "slices/tests-integration-lifecycle/042": {
@@ -13097,10 +13088,7 @@
                 "Evidence 01010ec03fb34c75.",
                 "Evidence c55a66a76be8a19f."
             ],
-            "remaining": [
-                "Remaining Git setup sites enumerated in current finding.",
-                "Mandatory staged verification, coherent behavior/mechanical commits, push and cross-platform CI evidence."
-            ]
+            "remaining": ["Remaining Git setup sites enumerated in current finding.", "Evidence dc22ce9bdfea875a."]
         },
         "slices/tests-integration-lifecycle/043": {
             "status": "partial",
@@ -13123,7 +13111,7 @@
             ],
             "remaining": [
                 "Remaining assertion-library sites enumerated in current finding.",
-                "Mandatory staged verification, coherent behavior/mechanical commits, push and cross-platform CI evidence."
+                "Evidence dc22ce9bdfea875a."
             ]
         },
         "slices/tests-integration-lifecycle/044": {
@@ -13190,9 +13178,7 @@
                     "commit": "c4baf441608b170c04c0b8bae53d13765e185340",
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-diagnostic-leaves-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13216,9 +13202,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-parser-fixer-next8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13295,9 +13279,7 @@
             "verification": [
                 "Five native table rows have manager names and exact commands; Bun executable is derived inside the test. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
             ],
-            "remaining": [
-                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
-            ]
+            "remaining": ["Evidence a4403efb371df5d5."]
         },
         "slices/tests-tools-samples/018": {
             "status": "partial",
@@ -13306,9 +13288,7 @@
             "verification": [
                 "Pinned Yarn Classic has no unreachable Berry setup/version branches; tool-free CLI stub records resolved yarn install --immutable for native metadata header. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
             ],
-            "remaining": [
-                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
-            ]
+            "remaining": ["Evidence a4403efb371df5d5."]
         },
         "slices/tests-tools-samples/019": {
             "status": "partial",
@@ -13317,9 +13297,7 @@
             "verification": [
                 "Real pnpm-lock.yaml and uv.lock generated from local dependencies both report stale after authored dependency changes and pass after restoring manifest, preserving locks/source/no published node_modules. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
             ],
-            "remaining": [
-                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
-            ]
+            "remaining": ["Evidence a4403efb371df5d5."]
         },
         "slices/tests-tools-samples/020": {
             "status": "complete",
@@ -13339,9 +13317,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13355,9 +13331,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13371,9 +13345,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-parser-fixer-next8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13387,9 +13359,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-parser-fixer-next8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13403,9 +13373,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-parser-fixer-next8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13437,9 +13405,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-parser-fixer-next8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13453,9 +13419,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-parser-fixer-next8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13469,9 +13433,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13485,9 +13447,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13501,9 +13461,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13518,9 +13476,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13534,9 +13490,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13550,9 +13504,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13581,9 +13533,7 @@
             "verification": [
                 "One typos configuration is used directly, retaining emitted path and exact native findings. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
             ],
-            "remaining": [
-                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
-            ]
+            "remaining": ["Evidence a4403efb371df5d5."]
         },
         "slices/tests-tools-samples/046": {
             "status": "partial",
@@ -13592,9 +13542,7 @@
             "verification": [
                 "Eight pattern vectors are passed as [patterns]; native titles show full vectors, exact reported-file contracts retained. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
             ],
-            "remaining": [
-                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
-            ]
+            "remaining": ["Evidence a4403efb371df5d5."]
         },
         "slices/tests-tools-samples/047": {
             "status": "partial",
@@ -13603,9 +13551,7 @@
             "verification": [
                 "Both scope configs lint actual separate root/transactional child migration.sql files; root defect and correction remain. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
             ],
-            "remaining": [
-                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
-            ]
+            "remaining": ["Evidence a4403efb371df5d5."]
         },
         "slices/tests-tools-samples/048": {
             "status": "complete",
@@ -13638,9 +13584,7 @@
             "verification": [
                 "Only unused planted Vale guide.md removed; package archive consumer vectors retained. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
             ],
-            "remaining": [
-                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
-            ]
+            "remaining": ["Evidence a4403efb371df5d5."]
         },
         "slices/tests-tools-samples/052": {
             "status": "partial",
@@ -13649,9 +13593,7 @@
             "verification": [
                 "removePackages now proves actual vale.ini bytes remain, replacing ownership-list inventory. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
             ],
-            "remaining": [
-                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
-            ]
+            "remaining": ["Evidence a4403efb371df5d5."]
         },
         "slices/tests-tools-samples/053": {
             "status": "partial",
@@ -13676,9 +13618,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13692,9 +13632,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-generation-samples8-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13708,9 +13646,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -13721,9 +13657,7 @@
             "verification": [
                 "Unnecessary manifest/mode restore removed before disposable sandbox teardown; authored changed-manifest preservation assertion retained. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
             ],
-            "remaining": [
-                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
-            ]
+            "remaining": ["Evidence a4403efb371df5d5."]
         },
         "slices/tests-tools-samples/065": {
             "status": "partial",
@@ -13732,9 +13666,7 @@
             "verification": [
                 "404 refusal owns empty TMPDIR/TEMP/TMP scratch; external Node compile cache owns separate disposable sibling via native NODE_COMPILE_CACHE, preserving native npm cache behavior. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
             ],
-            "remaining": [
-                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
-            ]
+            "remaining": ["Evidence a4403efb371df5d5."]
         },
         "slices/tests-tools-samples/066": {
             "status": "partial",
@@ -13743,9 +13675,7 @@
             "verification": [
                 "Redundant called assertion removed; native download spy names its actual boundary and using restores both native spies. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
             ],
-            "remaining": [
-                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
-            ]
+            "remaining": ["Evidence a4403efb371df5d5."]
         },
         "slices/tests-tools-samples/067": {
             "status": "partial",
@@ -13757,9 +13687,7 @@
                     "commit": null,
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-consumer-next9-evidence.json",
-                    "limitations": [
-                        "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim."
-                    ]
+                    "limitations": ["Evidence 9f7f42cd2c36be5e."]
                 }
             ]
         },
@@ -14071,7 +13999,7 @@
             "limitations": [
                 "Platform skips do not prove platform behavior. Broader baseline CLI/tool fixture failures remain tracked; this checkpoint does not claim full-suite or cross-platform acceptance.",
                 "Release publication, tagging, live account setup and deployment remain unperformed.",
-                "Queued CI37577232561 was superseded by the callback preparation push and cancelled by workflow concurrency before jobs started; no platform results."
+                "Evidence d1e1c8d6d52eb677."
             ],
             "ci": {
                 "run": 37577232561,
@@ -14090,7 +14018,7 @@
             "limitations": [
                 "No cross-platform suite acceptance inferred from local tests or platform skips. Existing broader test and CI failures remain tracked.",
                 "No release publication, tag, deployment or live account setup.",
-                "Queued CI37577232561 was superseded by the callback preparation push and cancelled by workflow concurrency before jobs started; no platform results."
+                "Evidence d1e1c8d6d52eb677."
             ],
             "ci": {
                 "run": 37577232561,
@@ -14657,7 +14585,7 @@
             "unresolvedRecords": 957,
             "validation": ["Evidence a4bf43154222d468."],
             "limitations": [
-                "Scoped reference/checkjs dependency closure and shared Next compiler behavior remain unimplemented. Full growing candidate and imported-only ambient declaration omission preserved separately.",
+                "Evidence 7ce1d690623210ab.",
                 "Full platform and final suite acceptance remains pending; this partial branch does not close007 or044."
             ],
             "ci": {
@@ -14777,7 +14705,7 @@
                 "missing": 12,
                 "findings": 0,
                 "mainOwnerEntriesVerified": 69,
-                "scope": "Actual full native staged gate in writable temporary integration of exact pending main sources, not a main commit or successful release gate."
+                "scope": "Evidence 6afb42343c2b39e2."
             }
         },
         {
@@ -14817,7 +14745,7 @@
                 "missing": 12,
                 "findings": 0,
                 "mainOwnerEntriesVerified": 69,
-                "scope": "Actual full native staged gate in writable temporary integration of exact pending main sources, not a main commit or successful release gate."
+                "scope": "Evidence 6afb42343c2b39e2."
             }
         },
         {
@@ -14877,10 +14805,7 @@
                 "Evidence 4f7fd77aef43ca03."
             ],
             "evidence": "/tmp/gspot-observation-tests-main-freeze.json",
-            "limitations": [
-                "Main Git metadata protected; mandatory main commits/push pending.",
-                "Native full staged gate and cross-platform CI pending."
-            ],
+            "limitations": ["Evidence d48254c173842b29.", "Evidence 5f7f88ecb50555f5."],
             "combinedStaged": {
                 "path": "/tmp/gspot-tests-combined-staged-observations-final.json",
                 "durationMs": 42715,
@@ -14916,10 +14841,7 @@
                 "Evidence f1cf0427dfb8608e."
             ],
             "evidence": "/tmp/gspot-parser-diagnostics-main-freeze.json",
-            "limitations": [
-                "Main Git metadata protected; mandatory main commits/push pending.",
-                "Native full staged gate and cross-platform CI pending."
-            ]
+            "limitations": ["Evidence d48254c173842b29.", "Evidence 5f7f88ecb50555f5."]
         },
         {
             "commit": null,
@@ -14940,10 +14862,7 @@
                 "Evidence 20c2f89725488b8a."
             ],
             "evidence": "/tmp/gspot-command-test-assertions-main-freeze.json",
-            "limitations": [
-                "Main Git metadata protected; mandatory main commits/push pending.",
-                "Native full staged gate and cross-platform CI pending."
-            ]
+            "limitations": ["Evidence d48254c173842b29.", "Evidence 5f7f88ecb50555f5."]
         },
         {
             "commit": null,
@@ -14958,10 +14877,7 @@
                 "Evidence 20c2f89725488b8a."
             ],
             "evidence": "/tmp/gspot-disposable-test-environment-main-freeze.json",
-            "limitations": [
-                "Main Git metadata protected; mandatory main commits/push pending.",
-                "Native full staged gate and cross-platform CI pending."
-            ]
+            "limitations": ["Evidence d48254c173842b29.", "Evidence 5f7f88ecb50555f5."]
         },
         {
             "commit": null,
@@ -15000,10 +14916,7 @@
                 "Evidence f897b0b6ab7080f7."
             ],
             "evidence": "/tmp/gspot-ci-test-assertions-main-freeze.json",
-            "limitations": [
-                "Main Git metadata protected; mandatory main commits/push pending.",
-                "Native full staged gate and cross-platform CI pending."
-            ]
+            "limitations": ["Evidence d48254c173842b29.", "Evidence 5f7f88ecb50555f5."]
         },
         {
             "commit": null,
@@ -15104,7 +15017,7 @@
             "evidence": "/tmp/gspot-test-prose-terms-main-freeze.json",
             "limitations": [
                 "Main Git metadata protected; mandatory checkpoint commits/push pending.",
-                "Fullnative acceptance/cross-platform CI remainincomplete; explicit stagedmirror environmental errors/missingtools are not passes.",
+                "Evidence bc40e9ab1be2ffdb.",
                 "045remaining reason/source-sample authoredprose requires separate review; no whole-recordclosure."
             ]
         },
@@ -15131,7 +15044,7 @@
             "evidence": "/tmp/gspot-test-diagnostic-terms-main-freeze.json",
             "limitations": [
                 "Main Git metadata protected; mandatory checkpoint commits/push pending.",
-                "Fullnative acceptance/cross-platform CI remainincomplete; explicit stagedmirror environmental errors/missingtools are not passes.",
+                "Evidence bc40e9ab1be2ffdb.",
                 "045remaining reason/source-sample authoredprose requires separate review; no whole-recordclosure."
             ]
         },
@@ -15157,7 +15070,7 @@
             "evidence": "/tmp/gspot-helper-only-test-main-freeze.json",
             "limitations": [
                 "Main Git metadata protected; mandatory checkpoint commits/push pending.",
-                "Fullnative acceptance/cross-platform CI remainincomplete; explicit stagedmirror environmental errors/missingtools are not passes."
+                "Evidence bc40e9ab1be2ffdb."
             ]
         },
         {
@@ -17157,6 +17070,42 @@
             "limitations": [
                 "Linux/macOS/Windows release acceptance remains separate. Current CI37900484161 pending; no platform skip is credited."
             ]
+        },
+        {
+            "commit": "af979b415c6c13d5b1904b976234e406031d3104",
+            "completedRecords": ["areas/checks/059"],
+            "unresolvedRecords": 445,
+            "validation": [
+                "/tmp/gspot-checks059-current-final-freeze.json and /tmp/gspot-checks059-main-behavior-normalized.json preserve before/after hashes and exact fact/callback inventory; /tmp/gspot-checks059-behavior-cp-native.log records45/95; staged/push88pass0fail12skip0findings."
+            ],
+            "limitations": ["Native macOS execution; Linux/Windows release acceptance remains pending."]
+        },
+        {
+            "commit": "f4c78a76c19be82cd5dcef54d7c09961a608ac1c",
+            "completedRecords": ["review/code-execution/018", "review/tests-cli/031"],
+            "unresolvedRecords": 443,
+            "validation": [
+                "153 CLI tests603 assertions; native tools17/176; normal producer/build/apply/types and staged gate pass. Authenticated normal push confirmed main at f4c78a76c."
+            ],
+            "limitations": [
+                "Darwin acceptance is not Linux/macOS/Windows CI completion. CI37903289520 in progress; no publication or deployment performed."
+            ],
+            "ci": {
+                "run": 37903289520,
+                "status": "in_progress",
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37903289520"
+            }
+        },
+        {
+            "commit": "a39d0fdd0fa284e013d7e103ec27b0e3d50e02cd",
+            "completedRecords": ["review/tests-cli/006"],
+            "unresolvedRecords": 442,
+            "validation": [
+                "Frozen7owner /tmp/gspot-cli006-manifest-level-final-freeze.json and parity proof3d90fd7908a3b7d7aa3ae2d855d99066f25b7a93661266f34d1b9b3eca9e1539 preserve exact140/77 Ruff transfer and50/1 basedpyright options. Main corrective native format snapshot preserves original2-space failed staged probe; final4-space staged gate passes. Normal push confirms a39d0fdd0 on main."
+            ],
+            "limitations": [
+                "No Linux/Windows native acceptance inferred from Darwin tests; current CI will validate supported platforms. No publication/deployment."
+            ]
         }
     ],
     "verificationEvidence": {
@@ -17519,6 +17468,15 @@
         "3075763d7b32a444": "Main commit/push blocked by protected Git metadata.",
         "9adaf07e8a45ab42": "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Shared plugin packet -3616 bytes.",
         "18ba4ccea1aba39e": "Whole-fix, current pushed hash and native body proof: /tmp/gspot-cli-next-seven-whole-closure.json and /tmp/gspot-cli-next-seven-895-provenance-supplement.json.",
-        "82310834fde2dbeb": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint."
+        "82310834fde2dbeb": "Current Main integration retains the hash-verified packet and prior fixes; source/test owners move to the authorized public API contract before the next staged checkpoint.",
+        "6afb42343c2b39e2": "Actual full native staged gate in writable temporary integration of exact pending main sources, not a main commit or successful release gate.",
+        "dc22ce9bdfea875a": "Mandatory staged verification, coherent behavior/mechanical commits, push and cross-platform CI evidence.",
+        "9f7f42cd2c36be5e": "Native evidence and source growth limits remain exactly as recorded in the packet; no cross-platform or whole-record closure claim.",
+        "7ce1d690623210ab": "Scoped reference/checkjs dependency closure and shared Next compiler behavior remain unimplemented. Full growing candidate and imported-only ambient declaration omission preserved separately.",
+        "2b3dbd533c7c8fcb": "Complete required final names, owners, typed declaration fields and public terminology; integrate and verify the mechanical checkpoint.",
+        "a4403efb371df5d5": "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved.",
+        "d1e1c8d6d52eb677": "Queued CI37577232561 was superseded by the callback preparation push and cancelled by workflow concurrency before jobs started; no platform results.",
+        "d48254c173842b29": "Main Git metadata protected; mandatory main commits/push pending.",
+        "5f7f88ecb50555f5": "Native full staged gate and cross-platform CI pending."
     }
 }

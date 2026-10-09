@@ -4,7 +4,8 @@ import type { ReferencePage } from '../../types/reference.ts';
 import type { Manifest, CheckDeclaration } from '@gspothq/cli/src/types/configurations.ts';
 
 function checkEnvironment(check: CheckDeclaration): string[] {
-    const tool = check.tool ?? check.command?.[0];
+    const tool =
+        typeof check.tool === 'object' ? Object.values(check.tool).join(', ') : (check.tool ?? check.command?.[0]);
     const runs = CHECK_RUN_LABELS[check.runs];
     const attributes: [string, string | undefined][] = [
         ['Runs', runs],

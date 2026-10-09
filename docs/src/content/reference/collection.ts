@@ -60,7 +60,9 @@ export async function referencePages(): Promise<Map<string, ReferencePage>> {
             `[${configuration.configuration.name}](/reference/configurations/${configuration.configuration.name}/)`,
             check.stage,
             check.level,
-            check.tool ?? check.command?.[0] ?? 'gspot',
+            (typeof check.tool === 'object'
+                ? Object.values(check.tool).join(', ')
+                : (check.tool ?? check.command?.[0])) ?? 'gspot',
             cell(check.summary),
         ]);
     const index = table(['ID', 'Configuration', 'Stage', 'Level', 'Tool', 'Summary'], checkRows);
