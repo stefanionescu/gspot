@@ -9,8 +9,6 @@ jobs:
     supabase:
         runs-on: ubuntu-24.04
         timeout-minutes: 60
-        env:
-            GSPOT_SUPABASE_TEST: '1'
         defaults:
             run:
                 shell: bash
@@ -24,4 +22,4 @@ jobs:
               with:
                   tools: bun node
             - name: Run the Supabase freshness test
-              run: mise run test:tools -- -- tools/configurations/platform/supabase.test.ts
+              run: mise run test:database

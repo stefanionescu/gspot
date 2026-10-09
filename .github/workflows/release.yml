@@ -27,7 +27,7 @@ jobs:
             - name: Validate the release tag and plugin pin
               shell: bash
               run: |
-                  bun scripts/release.ts "${TAG}"
+                  mise run check:release -- "${TAG}"
               env:
                   TAG: ${{ github.ref_name }}
             - name: Require successful main CI for the exact release commit

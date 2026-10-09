@@ -76,8 +76,7 @@ jobs:
                   name: documentation-${{ github.run_id }}
                   path: docs/dist
             - name: Deploy the static assets
-              working-directory: docs
-              run: bun run wrangler deploy
+              run: mise run deploy:docs
               env:
                   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

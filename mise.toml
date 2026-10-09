@@ -64,3 +64,16 @@ run = "bun --bun astro build"
 description = "Generate references and serve the documentation locally."
 dir = "{{config_root}}/docs"
 run = "bun --bun astro dev"
+
+[tasks."check:release"]
+description = "Validate the release tag and plugin pin."
+run = "bun scripts/release.ts"
+
+[tasks."test:database"]
+description = "Run the native Supabase database tests."
+run = "bun scripts/plugin.ts test -- tools/configurations/platform/supabase.test.ts"
+
+[tasks."deploy:docs"]
+description = "Deploy the reviewed documentation build."
+dir = "{{config_root}}/docs"
+run = "bun run wrangler deploy"

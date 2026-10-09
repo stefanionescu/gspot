@@ -1,4 +1,3 @@
-import { isCI } from 'std-env';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createServer } from 'node:net';
@@ -13,7 +12,6 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { environmentVariables } from '#cli/platform/public.ts';
 import { DATABASE_START } from '#tests/config/tools/configurations/platform/supabase/database.ts';
 import type { SupabaseDatabase, SupabaseProjectFiles } from '#tests/types/tools/configurations/supabase.ts';
 
@@ -23,9 +21,8 @@ import {
     WEB_MIGRATIONS,
 } from '#tests/config/tools/configurations/platform/supabase/types.ts';
 
-// The database test needs a Docker daemon with Linux containers. In CI it runs only in the database workflow, started by
-// hand, which sets GSPOT_SUPABASE_TEST, because pulling the Postgres image on every run hits the registry rate limit.
-const runsDatabase = hasLinuxDocker() && (!isCI || environmentVariables()['GSPOT_SUPABASE_TEST'] === '1');
+// The dedicated database task needs a Docker daemon with Linux containers.
+const runsDatabase = hasLinuxDocker();
 
 test.skipIf(!runsDatabase)(
     'native Supabase freshness rejects drift and accepts regenerated database types',

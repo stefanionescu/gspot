@@ -13,10 +13,10 @@ import pluginManifest from '#plugin-package' with { type: 'json' };
 import { run, environmentVariables } from '#cli/platform/public.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { installSuitePythonTools } from '#tests/harness/python-installation.ts';
-import { TERMINATED_EXIT, INTERRUPTED_EXIT } from '#automation/config/plugin.ts';
 import { misePins, configurationManifests } from '#cli/configurations/public.ts';
 import { SUITE_PYTHON_FOLDER } from '#tests/config/harness/python-installation.ts';
 import { packRegistryPackages, createPackageRegistry } from '#tests/harness/registry.ts';
+import { TERMINATED_EXIT, INTERRUPTED_EXIT, SUPABASE_DATABASE_TEST } from '#automation/config/plugin.ts';
 
 /**
  * Install the manifest pins once and share their executable paths with either native suite.
@@ -73,7 +73,11 @@ const isSourceSuite = suite === 'cli' || suite === 'plugin';
 const separator = options.indexOf('--');
 const flags = separator === -1 ? options : options.slice(0, separator);
 const paths = separator === -1 ? [] : options.slice(separator + 1);
-const defaults = suite === 'cli' ? ['cli', 'plugin'] : [suite].filter((target) => target !== undefined);
+let defaults = suite === 'cli' ? ['cli', 'plugin'] : [suite].filter((target) => target !== undefined);
+if (suite === 'tools')
+    defaults = [...new Bun.Glob('tools/**/*.test.ts').scanSync({ cwd: join(workspaceRoot, 'tests') })].filter(
+        (path) => path !== SUPABASE_DATABASE_TEST,
+    );
 const targets = paths.length === 0 ? defaults : paths;
 const testCommand = [
     process.execPath,
