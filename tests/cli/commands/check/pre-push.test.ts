@@ -1,14 +1,14 @@
-// The pre-push hook checks exactly the pushed objects and leaves the working tree alone.
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
-import { gspot, runGspot } from '#tests/harness/gspot.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { buildPolicy } from '#tests/harness/policy.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { PUSH_CONTENT } from '#tests/config/samples/git.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
-import { git, gitOutput, preparePushRepository } from '#tests/harness/git.ts';
+import { gspot, runGspot, spawnGspot } from '#tests/harness/gspot.ts';
+import { git, commitAll, gitOutput, preparePushRepository } from '#tests/harness/git.ts';
 import { PUSH_CHECK_ARGV, PUSH_CHECK_COMMAND } from '#tests/config/cli/commands/check/pre-push.ts';
 
 /** Require the pushed tree and uncommitted source and policy to stay unchanged. */
@@ -243,4 +243,41 @@ test('pre-push reports multiple objects once per object and handles forced rewin
     expect(forced.code, forced.stdout + forced.stderr).toBe(0);
     expect((JSON.parse(forced.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
     await expectWorkingTreeKept(sandbox.path, broken);
+});
+
+test('full-tree pre-push policy checks unchanged files in the pushed object', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['bash']),
+        'changed.sh': 'echo base\n',
+        'legacy.sh': 'if then\n',
+    });
+    commitAll(sandbox.path);
+    const base = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
+    await Bun.write(join(sandbox.path, 'changed.sh'), 'echo changed\n');
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildPolicy(['bash'], { tables: '[hooks]\n[agent_rules]\nenabled = false\n' }),
+    );
+    const configured = await runGspot(sandbox.path, ['set', 'hooks.push_files', 'all']);
+    expect(configured.code, configured.stdout + configured.stderr).toBe(0);
+    expect(git(sandbox.path, ['add', 'gspot.toml', 'changed.sh']).code).toBe(0);
+    expect(git(sandbox.path, ['commit', '-qm', 'full pushed tree']).code).toBe(0);
+    const pushedCommit = git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim();
+    const all = await spawnGspot(
+        sandbox.path,
+        ['check', '--hook', 'pre-push', '--only', 'bash/bash-syntax', '--json', '--', 'origin', 'unused'],
+        {},
+        {
+            stdin: `refs/heads/main ${pushedCommit} refs/heads/main ${base}\n`,
+        },
+    );
+    expect(all.code, all.stdout + all.stderr).toBe(1);
+    expect(
+        new Set(
+            (JSON.parse(all.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings.map(
+                (finding) => finding.file,
+            ),
+        ),
+    ).toStrictEqual(new Set(['legacy.sh']));
 });

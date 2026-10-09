@@ -10,7 +10,7 @@ import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
-import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
+import { checkReport, buildRunOptions } from '#tests/harness/gspot.ts';
 import { SITE_POLICY, SITE_BUILD_SCRIPT } from '#tests/config/samples/site.ts';
 import { filesUnder, cachedBuild } from '#cli/checks/general/site/contracts.ts';
 import { stat, chmod, mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
@@ -24,7 +24,7 @@ test('push builds preserve tracked dist bytes and Git status', async () => {
         'dist/index.html': 'committed output\n',
     });
     commitAll(sandbox.path);
-    const outcome = await runGspot(sandbox.path, [
+    const outcome = await checkReport(sandbox.path, [
         'check',
         '--only',
         'site/build',
@@ -32,6 +32,10 @@ test('push builds preserve tracked dist bytes and Git status', async () => {
         '--json',
     ]);
     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
+    expect(outcome.report.checks).toMatchObject([
+        { check: 'site/build', status: 'passed' },
+        { check: 'site/build-reproducible', status: 'passed' },
+    ]);
     expect(gitOutput(sandbox.path, ['status', '--porcelain=v1'])).toBe('');
     expect(await Bun.file(join(sandbox.path, 'dist/index.html')).text()).toBe('committed output\n');
 });

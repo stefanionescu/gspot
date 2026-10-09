@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { createEslint } from '#tests/harness/generated.ts';
 import { PROJECT } from '#tests/config/cli/generation/eslint/typescript-eslint.ts';
+import { createEslint, eslintConfigurationSchema } from '#tests/harness/generated.ts';
 import type { FileRuleFinding } from '#tests/types/cli/generation/eslint/findings.ts';
 
 // The rule, file, and place of each message ESLint reports for the source folder.
@@ -33,31 +33,6 @@ test('an interface is reported once by consistent-type-definitions and not by ty
         { rule: '@typescript-eslint/consistent-type-definitions', file: 'src/order.ts', line: 1 },
     ]);
     expect(reported.filter(({ rule }) => rule === 'gspot/types-placement')).toStrictEqual([]);
-});
-
-test.each([
-    ['project aliases', 'export * from "@app/first";\nexport * from "@app/second";\n'],
-    ['star exports', 'export * from "./first.js";\nexport * from "./second.js";\n'],
-    ['a local declaration', 'export { shared } from "./first.js";\nexport const shared = 3;\n'],
-    ['nested star exports', 'export * from "./bridge/index.js";\nexport { shared } from "./first.js";\n'],
-])('generated index-only policy reports duplicate names from %s', async (_scenario, barrel) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        ...PROJECT,
-        'gspot.toml': buildPolicy(['typescript'], {
-            tables: '[agent_rules]\nenabled = false\n[structure]\nreexports = "index-only"\n',
-            level: 'all',
-        }),
-        'src/first.ts': 'export const shared = 1;\n',
-        'src/second.ts': 'export const shared = 2;\n',
-        'src/index.ts': barrel,
-        'src/bridge/index.ts': 'export * from "../first.js";\n',
-    });
-    const reported = await messagesOf(sandbox.path);
-    expect(reported.filter(({ rule }) => rule === 'import-x/export')).toStrictEqual([
-        { rule: 'import-x/export', file: 'src/index.ts', line: 1 },
-        { rule: 'import-x/export', file: 'src/index.ts', line: 2 },
-    ]);
 });
 
 test('index-only reexports keep a nonduplicate barrel and reject forwarding from an ordinary module', async () => {
@@ -123,3 +98,18 @@ export async function disposeResources(): Promise<void> {
             .filter(({ ruleId, fatal }) => fatal === true || ruleId?.includes('unused') === true),
     ).toStrictEqual([]);
 });
+
+test.each(['recommended', 'all'] as const)(
+    'generated TypeScript enables native export validation at %s',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            ...PROJECT,
+            'gspot.toml': buildPolicy(['typescript'], { level }),
+            'src/entry.ts': 'export const total = 1;\n',
+        });
+        const eslint = await createEslint(sandbox.path);
+        const configuration = eslintConfigurationSchema.parse(await eslint.calculateConfigForFile('src/entry.ts'));
+        expect(configuration.rules['import-x/export']?.[0]).toBe(2);
+    },
+);
