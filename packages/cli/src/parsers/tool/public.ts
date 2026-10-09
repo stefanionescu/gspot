@@ -12,6 +12,8 @@ import { typescriptNodes } from '#cli/parsers/source/contracts.ts';
 import type { NextSettingsFinding } from '#cli/types/parsers/nextjs.ts';
 import { FAILED_CHECK, PASSED_CHECKS } from '#cli/config/parsers/expo.ts';
 import { SECRET_NAME, DISABLED_CHECKS } from '#cli/config/parsers/nextjs.ts';
+import type { Options, IntSupportOption, BooleanSupportOption } from 'prettier';
+import { check, resolveConfig, getSupportInfo, resolveConfigFile } from 'prettier';
 import type { HeaderBlock, HeaderBlocks, WranglerParse } from '#cli/types/parsers/cloudflare.ts';
 import { STATUS_CODES, REDIRECT_PARTS, HTTP_HEADER_LINE } from '#cli/config/parsers/cloudflare.ts';
 
@@ -331,4 +333,35 @@ export function nextSettingsFindings(path: string, text: string): NextSettingsFi
                     ];
                 });
         });
+}
+
+/**
+ * Reads native formatter settings and the defaults of a project that uses Prettier.
+ * @param file the project package path for native configuration lookup
+ * @param dependencies the declared packages of this project
+ * @returns native options, or null when no formatter configuration applies
+ */
+export async function readFormatConfiguration(
+    file: string,
+    dependencies: Record<string, string>,
+): Promise<Options | null> {
+    const configuration = await resolveConfigFile(file);
+    const usesPrettier = configuration !== null || dependencies['prettier'] !== undefined;
+    const options = await resolveConfig(file, { editorconfig: !usesPrettier, useCache: false });
+    await check('', { ...options, parser: 'json' });
+    if (!usesPrettier) return options;
+    const declarations = await getSupportInfo();
+    const defaults = Object.fromEntries(
+        declarations.options
+            .filter(
+                (option): option is IntSupportOption | BooleanSupportOption =>
+                    (option.type === 'int' || option.type === 'boolean') && option.array !== true,
+            )
+            .flatMap((option) =>
+                option.name !== undefined && ['tabWidth', 'printWidth', 'singleQuote'].includes(option.name)
+                    ? [[option.name, option.default] as const]
+                    : [],
+            ),
+    );
+    return { ...defaults, ...options };
 }

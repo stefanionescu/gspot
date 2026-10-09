@@ -1,12 +1,15 @@
+import { posix } from 'node:path';
 import { emitAll } from '#cli/generation/public.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import { readRepository } from '#cli/repository/public.ts';
 import { policySchema } from '#cli/policy/schema/public.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { planTakeover } from '#cli/commands/init/takeover.ts';
 import { applicableManifests } from '#cli/planning/public.ts';
 import type { Program } from '#cli/types/commands/program.ts';
+import type { TomlTable } from '#cli/types/policy/settings.ts';
 import type { Template } from '#cli/types/policy/templates.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
@@ -16,21 +19,24 @@ import { getTemplate } from '#cli/policy/document/contracts.ts';
 import { ALREADY_INSTALLED } from '#cli/config/commands/init.ts';
 import { getTooling } from '#cli/repository/discovery/public.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import type { Tooling } from '#cli/types/repository/inventory.ts';
 import { selectForInit } from '#cli/lifecycle/selection/public.ts';
-import { plannedScopes } from '#cli/repository/paths/contracts.ts';
 import { note, print, printResult } from '#cli/terminal/public.ts';
 import { readPackageManifests } from '#cli/repository/contracts.ts';
 import { hasPolicy, parseStrictPolicy } from '#cli/policy/public.ts';
+import { selectForScope } from '#cli/repository/selection/public.ts';
+import { readFormatConfiguration } from '#cli/parsers/tool/public.ts';
+import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import { NO_CONFIGURATIONS } from '#cli/config/lifecycle/selection.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { initPlanText, buildInitPlan } from '#cli/commands/init/plan.ts';
 import { compact, trimTrailingSlashes } from '#cli/platform/contracts.ts';
 import { Option, InvalidArgumentError } from '@commander-js/extra-typings';
+import { scopeOf, plannedScopes } from '#cli/repository/paths/contracts.ts';
+import type { Tooling, Repository } from '#cli/types/repository/inventory.ts';
 import { commandHelp, commandRoot, openSession } from '#cli/commands/public.ts';
 import type { InitInputs, InitOptions, InitSelection } from '#cli/types/lifecycle/selection.ts';
-import { writeSetup, proposeText, askQuestions, askConfirmation } from '#cli/commands/init/contracts.ts';
-import type { InitJson, Planning, InitAnswers, PolicyDraft, InitPrepared } from '#cli/types/commands/init.ts';
+import type { InitJson, Planning, PolicyDraft, InitPrepared } from '#cli/types/commands/init.ts';
+import { writeSetup, proposeText, draftPolicy, askQuestions, askConfirmation } from '#cli/commands/init/contracts.ts';
 
 // A template answers the questions a flag did not: its configurations, hooks, workflow, runner, and rules.
 function templateAnswers(template: Template): Partial<InitOptions> {
@@ -248,7 +254,9 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
         .map((id) => manifests.get(id))
         .filter((manifest) => manifest !== undefined);
     const draft = draftPolicy(selection, answers);
-    const policyText = proposeText({ ...draft, ...compact({ template: options.template }) }, repo, manifests);
+    const effective = { ...draft, ...compact({ template: options.template }) };
+    const formats = await readFormatTables(effective, repo, manifests, packageManifests);
+    const policyText = proposeText(effective, repo, manifests, formats);
     const policy = parseStrictPolicy(policyText, root);
     const session = await openSession(root, { policy, text: policyText, path: POLICY_FILE, errors: [] });
     const applicable = applicableManifests(session);
@@ -276,27 +284,47 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
 }
 
 /**
- * Drafts the repository policy from configuration choices and initialization answers.
- * @param selection the selected configurations and scopes
- * @param answers the integration choices
- * @returns the policy draft
+ * Reads the native formatting fields for the scopes init will configure.
+ * @param draft the selected configurations and authored template
+ * @param repository the source root and tracked files
+ * @param manifests the configuration declarations
+ * @param packageManifests the already parsed project dependencies
+ * @returns inferred formatting tables, with authored template values retained
  */
-export function draftPolicy(selection: InitSelection, answers: InitAnswers): PolicyDraft {
-    const scopes = selection.scopes.filter((scope) => scope.path !== '');
-    const commitScopes =
-        scopes.length > 0 && selection.selectedIds.has('commits')
-            ? [...scopes.map((scope) => scope.name), 'root', 'hooks', 'deps']
-            : undefined;
-    return {
-        configurations: selection.rootIds,
-        scopes: scopes.map((scope) => ({
-            ...scope,
-            configurations: selection.scopeConfigurations.get(scope.path) ?? [],
-        })),
-        hooks: answers.hooks,
-        ci: answers.ci,
-        agentRules: answers.agentRules,
-        runner: answers.runner,
-        ...(commitScopes === undefined ? {} : { commitScopes }),
+export async function readFormatTables(
+    draft: PolicyDraft,
+    repository: Repository,
+    manifests: Map<string, Manifest>,
+    packageManifests: PackageManifest[],
+): Promise<Map<string, TomlTable>> {
+    const selection = {
+        configurations: draft.configurations,
+        removed_configurations: [],
+        scope: Object.fromEntries(draft.scopes.map((scope) => [scope.path, { ...scope, removed_configurations: [] }])),
     };
+    return new Map(
+        await Promise.all(
+            ['', ...draft.scopes.map((scope) => scope.path)].map(async (scope) => {
+                const configurations = selectForScope(selection, scope, manifests);
+                if (!configurations.some((entry) => entry.configuration.name === 'format')) return [scope, {}] as const;
+                const options = await readFormatConfiguration(
+                    posix.join(repository.root, scope, 'package.json'),
+                    Object.fromEntries(
+                        packageManifests
+                            .filter((entry) => scopeOf(entry.path, draft.scopes).path === scope)
+                            .flatMap((entry) => Object.entries(entry.dependencies)),
+                    ),
+                );
+                if (options === null) return [scope, {}] as const;
+                let quotes;
+                if (options.singleQuote !== undefined) quotes = options.singleQuote ? 'single' : 'double';
+                const fields = compact({
+                    indent_width: options.tabWidth,
+                    print_width: options.printWidth,
+                    quotes,
+                });
+                return [scope, { format: { ...fields, ...draft.template?.tables.format } }] as const;
+            }),
+        ),
+    );
 }

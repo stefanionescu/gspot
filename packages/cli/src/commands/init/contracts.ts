@@ -22,10 +22,10 @@ import { projectBuildSettings } from '#cli/parsers/tool/public.ts';
 import { emitAll, generatedPaths } from '#cli/generation/public.ts';
 import { GspotError, isInteractive } from '#cli/platform/public.ts';
 import { selectForScope } from '#cli/repository/selection/public.ts';
-import type { InitOptions } from '#cli/types/lifecycle/selection.ts';
 import { XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
 import { emitPolicy, writePolicyFile } from '#cli/policy/document/public.ts';
 import type { Tooling, Repository } from '#cli/types/repository/inventory.ts';
+import type { InitOptions, InitSelection } from '#cli/types/lifecycle/selection.ts';
 import { planRetirement, planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { applyPlan, applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
@@ -120,7 +120,12 @@ function planCi(root: string, tooling: Tooling): InitAnswers['ci'] {
     return /^gitlab\.com[:/]/u.test(host) ? 'gitlab' : 'none';
 }
 
-function headTables(draft: PolicyDraft, repository: Repository, manifests: Map<string, Manifest>): TomlTable {
+function headTables(
+    draft: PolicyDraft,
+    repository: Repository,
+    manifests: Map<string, Manifest>,
+    formats: Map<string, TomlTable>,
+): TomlTable {
     const selection = {
         configurations: draft.configurations,
         removed_configurations: [],
@@ -146,14 +151,10 @@ function headTables(draft: PolicyDraft, repository: Repository, manifests: Map<s
                   const text = file === undefined ? undefined : readText(repository.root, file);
                   const sdk = text === undefined ? undefined : projectBuildSettings(text).sdkRoot;
                   const destination = XCODE_DESTINATIONS.get(sdk);
-                  return destination === undefined
-                      ? []
-                      : [
-                            [
-                                scope,
-                                { swift: { ...(scope === '' ? swift : {}), xcode_destination: destination } },
-                            ] as const,
-                        ];
+                  if (destination === undefined) return [];
+                  return [
+                      [scope, { swift: { ...(scope === '' ? swift : {}), xcode_destination: destination } }] as const,
+                  ];
               })
             : [],
     );
@@ -165,13 +166,14 @@ function headTables(draft: PolicyDraft, repository: Repository, manifests: Map<s
         ),
         configurations: draft.configurations,
         ...destinations.get(''),
+        ...formats.get(''),
         ...(draft.scopes.length === 0
             ? {}
             : {
                   scope: Object.fromEntries(
                       draft.scopes.map(({ path, configurations }) => [
                           path,
-                          { configurations, ...destinations.get(path) },
+                          { configurations, ...destinations.get(path), ...formats.get(path) },
                       ]),
                   ),
               }),
@@ -299,13 +301,19 @@ export async function askConfirmation(
 
 /**
  * The gspot.toml text for a policy draft.
- * @param draft the policy choices
- * @param repository the tracked files and canonical source root
- * @param manifests the available configuration declarations
- * @returns the TOML text with the schema line and the preface
+ * @param draft policy choices
+ * @param repository tracked source files
+ * @param manifests available configurations
+ * @param formats native per-scope format fields
+ * @returns TOML with its schema line and preface
  */
-export function proposeText(draft: PolicyDraft, repository: Repository, manifests: Map<string, Manifest>): string {
-    const document = headTables(draft, repository, manifests);
+export function proposeText(
+    draft: PolicyDraft,
+    repository: Repository,
+    manifests: Map<string, Manifest>,
+    formats: Map<string, TomlTable>,
+): string {
+    const document = headTables(draft, repository, manifests, formats);
     if (draft.commitScopes !== undefined && draft.commitScopes.length > 0)
         setKey(document, 'tools.commitlint.scopes', draft.commitScopes);
     applyIntegrations(document, draft);
@@ -315,4 +323,30 @@ export function proposeText(draft: PolicyDraft, repository: Repository, manifest
             : `# Copied from template ${draft.template.tables.template}, sha256 ${draft.template.digest}.\n`;
     const previous = copied === '' ? PREFACE : `${SCHEMA_LINE}\n${copied}${PREFACE.slice(SCHEMA_LINE.length + 1)}`;
     return emitPolicy(previous + (draft.template?.text ?? ''), document);
+}
+
+/**
+ * Drafts the repository policy from configuration choices and initialization answers.
+ * @param selection the selected configurations and scopes
+ * @param answers the integration choices
+ * @returns the policy draft
+ */
+export function draftPolicy(selection: InitSelection, answers: InitAnswers): PolicyDraft {
+    const scopes = selection.scopes.filter((scope) => scope.path !== '');
+    const commitScopes =
+        scopes.length > 0 && selection.selectedIds.has('commits')
+            ? [...scopes.map((scope) => scope.name), 'root', 'hooks', 'deps']
+            : undefined;
+    return {
+        configurations: selection.rootIds,
+        scopes: scopes.map((scope) => ({
+            ...scope,
+            configurations: selection.scopeConfigurations.get(scope.path) ?? [],
+        })),
+        hooks: answers.hooks,
+        ci: answers.ci,
+        agentRules: answers.agentRules,
+        runner: answers.runner,
+        ...(commitScopes === undefined ? {} : { commitScopes }),
+    };
 }
