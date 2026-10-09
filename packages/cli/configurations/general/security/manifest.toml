@@ -1,3 +1,4 @@
+products = ["Semgrep", "CodeQL"]
 [configuration]
 title = "Security"
 always_selected = true
@@ -90,7 +91,6 @@ summary = "The CodeQL languages to scan, such as javascript-typescript, python, 
 [[setting]]
 name = "tools.codeql.suite"
 type = "string"
-direction = "neutral"
 default = "security-extended"
 summary = "The CodeQL query suite: security-extended, or security-and-quality."
 validation = { enum = ["security-extended", "security-and-quality"] }

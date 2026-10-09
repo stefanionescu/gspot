@@ -128,14 +128,12 @@ test('default validation uses the composed role schema including declared config
 [[setting]]
 name = "architecture.roles"
 type = "table"
-direction = "neutral"
 default = {scripts = ["scripts/**"]}
 summary = "The authored role paths."
 [[setting]]
 name = "architecture.roles.scripts"
 type = "list"
 items = "path"
-direction = "neutral"
 default = []
 summary = "Script paths."
 `,

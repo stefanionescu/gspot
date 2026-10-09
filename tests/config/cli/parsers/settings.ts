@@ -2,7 +2,6 @@
 export const RECORD_SETTING_DECLARATION = `[[setting]]
 name = "example.targets"
 type = "list"
-direction = "neutral"
 summary = "Typed target records retain their limits and optional explanation."
 items = { name = "string", paths = { type = "list", items = "path" }, percent = { type = "number", validation = { minimum = 0, maximum = 100 } }, reason = { type = "string", optional = true } }
 `;

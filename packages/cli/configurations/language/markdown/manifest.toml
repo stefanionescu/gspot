@@ -1,3 +1,4 @@
+products = ["Markdown", "markdownlint", "lychee"]
 [configuration]
 title = "Markdown"
 requires = ["format"]

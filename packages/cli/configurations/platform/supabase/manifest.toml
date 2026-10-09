@@ -1,3 +1,4 @@
+products = ["Supabase"]
 [configuration]
 title = "Supabase"
 requires = ["postgres", "javascript"]
@@ -119,7 +120,6 @@ help = "Run supabase gen types typescript --local and write the output to the fi
 name = "supabase.schemas"
 type = "list"
 items = "string"
-direction = "neutral"
 default = ["public"]
 summary = "The database schemas to include in generated types."
 
@@ -127,13 +127,11 @@ summary = "The database schemas to include in generated types."
 name = "supabase.types_file"
 type = "path"
 path_role = "destination"
-direction = "neutral"
 default = ""
 summary = "The committed database types file, relative to the scope; empty turns the comparison off."
 
 [[setting]]
 name = "supabase.functions_folder"
 type = "path"
-direction = "neutral"
 default = "supabase/functions"
 summary = "The folder relative to the scope that holds one folder for each edge function."

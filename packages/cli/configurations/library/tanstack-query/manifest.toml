@@ -1,3 +1,4 @@
+products = ["TanStack"]
 eslint_presets = { recommended = { package = "@tanstack/eslint-plugin-query", source = "configs.flat/recommended" } }
 
 [configuration]

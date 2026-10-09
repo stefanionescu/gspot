@@ -7,9 +7,9 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import type { PathExplanation } from '#cli/types/commands/explain.ts';
-import { EXPLAIN_POLICY } from '#tests/config/cli/commands/explain.ts';
 import { TAPLO_REASON, TAPLO_OPTIONS } from '#tests/config/samples/taplo.ts';
 import { containing, containingAll, textContaining } from '#tests/harness/expectations.ts';
+import { EXPLAIN_POLICY, NEUTRAL_SETTING_VALUES } from '#tests/config/cli/commands/explain.ts';
 
 test('explain > setting explanations include nested-only settings and each inherited value', async () => {
     await using sandbox = await testdir();
@@ -207,5 +207,30 @@ test('explain reads selected native Taplo options and their inherited scope reas
         })),
     });
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
+    expect(await Bun.file(join(sandbox.path, '.gspot/installed.toml')).exists()).toBe(false);
+});
+
+test.each(
+    (['recommended', 'all'] as const).flatMap((level) => NEUTRAL_SETTING_VALUES.map((row) => ({ ...row, level }))),
+)('$level neutral $key remains settable without direction or a reason', async ({ level, key, value, root, child }) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': `level = "${level}"\nconfigurations = ["files"]\n[scope.app]\n`,
+        'app/project.toml': 'name = "Project"\n',
+    });
+    const changed = await runGspot(sandbox.path, ['set', key, value, '--scope', 'app']);
+    expect(changed.code, changed.stdout + changed.stderr).toBe(0);
+    const human = await runGspot(sandbox.path, ['explain', key]);
+    expect(human.code, human.stdout + human.stderr).toBe(0);
+    expect(human.stdout).not.toContain('Direction:');
+    const structured = await runGspot(sandbox.path, ['explain', key, '--json']);
+    expect(structured.code, structured.stdout + structured.stderr).toBe(0);
+    expect(JSON.parse(structured.stdout)).not.toHaveProperty('direction');
+    expect(JSON.parse(structured.stdout)).toMatchObject({
+        scopes: [
+            { scope: '', current: root },
+            { scope: 'app', current: child },
+        ],
+    });
     expect(await Bun.file(join(sandbox.path, '.gspot/installed.toml')).exists()).toBe(false);
 });

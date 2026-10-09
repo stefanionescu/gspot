@@ -110,7 +110,6 @@ const rootDeclarations: SettingDeclaration[] = [
             name,
             validation: {},
             ...declarationOf(schema),
-            direction: 'neutral',
             default: value,
             summary: schema.description ?? '',
         };
@@ -124,7 +123,6 @@ const nativeDeclarations = new Map(
             name: `tools.${tool}.${field}`,
             validation: {},
             ...declarationOf(schema),
-            direction: 'neutral',
             summary: schema.description ?? `Native ${tool} ${field.replaceAll('_', ' ')} options.`,
         })),
     ]),

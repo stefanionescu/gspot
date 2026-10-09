@@ -1,3 +1,5 @@
+products = ["Python", "Ruff", "basedpyright"]
+
 ignored_folders = [".venv/"]
 
 dockerignore = [".venv"]
@@ -318,7 +320,6 @@ help = "Build the object where the program starts, and pass it in. Accept a revi
 [[setting]]
 name = "tools.ruff.docstring_convention"
 type = "string"
-direction = "neutral"
 default = ""
 summary = "The Ruff pydocstyle convention carried from project configuration, also used by pydoclint when it has no explicit style."
 validation = { enum = ["", "google", "numpy", "pep257"] }

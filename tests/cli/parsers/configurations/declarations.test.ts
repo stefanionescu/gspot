@@ -1,7 +1,7 @@
 import { test, spyOn, expect } from 'bun:test';
 import * as assets from '#cli/platform/root/public.ts';
-import { configurationManifests } from '#cli/configurations/public.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
+import { parseManifest, configurationManifests } from '#cli/configurations/public.ts';
 
 import {
     SEMGREP_ASSETS,
@@ -159,4 +159,30 @@ test('every shipped setting declares a default', () => {
             manifest.settings.filter((setting) => setting.default === undefined).map((setting) => setting.name),
         ),
     ).toStrictEqual([]);
+});
+
+test('settings omit neutral direction and retain only actual enforcement directions', () => {
+    const source = '[[setting]]\nname = "example.path"\ntype = "string"\ndefault = ""\nsummary = "The project path."\n';
+    expect(parseConfigurationManifest('example', { tables: source }).settings[0]).not.toHaveProperty('direction');
+    for (const direction of ['ceiling', 'floor', 'loosening', 'tightening', 'rule-options'] as const)
+        expect(
+            parseConfigurationManifest('example', { tables: `${source}direction = "${direction}"\n` }).settings[0]
+                ?.direction,
+        ).toBe(direction);
+    for (const direction of ['neutral', 'per-rule', 'unknown'])
+        expect(() =>
+            parseConfigurationManifest('example', { tables: `${source}direction = "${direction}"\n` }),
+        ).toThrow('direction');
+});
+
+test('configuration product names validate once as native manifest words', () => {
+    const source =
+        'products = ["SwiftLint", "Swift"]\n[configuration]\ntitle = "Example"\ndescription = "A configuration for native product words."\n';
+    expect(parseManifest(source, 'configurations/language/example').products).toStrictEqual(['SwiftLint', 'Swift']);
+    expect(() =>
+        parseManifest(source.replace('["SwiftLint", "Swift"]', '[1]'), 'configurations/language/example'),
+    ).toThrow('products');
+    expect(() =>
+        parseManifest(source.replace('["SwiftLint", "Swift"]', '"Swift"'), 'configurations/language/example'),
+    ).toThrow('products');
 });

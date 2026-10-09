@@ -7,26 +7,33 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
 
-test('generated vocabulary combines shipped and project words without duplicates', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'sample.md': '# Sample\n',
-        'gspot.toml': buildPolicy(['prose'], {
-            tables: '[words]\nNebulaConfiguration = "The configuration has this product name."\nTypeScript = "TypeScript"\n',
-        }),
-    });
-    const session = await openSession(sandbox.path);
-    const output = emitAll(session);
-    const vocabulary = output.files.find(
-        (file) => file.path === '.gspot/config/vale/styles/config/vocabularies/words/accept.txt',
-    )!;
-    const words = vocabulary.content.trimEnd().split('\n');
-    expect(words).toContain('TypeScript');
-    expect(words).toContain('NebulaConfiguration');
-    expect(words.filter((word) => word === 'NebulaConfiguration')).toHaveLength(1);
-    expect(words.filter((word) => word === 'TypeScript')).toHaveLength(1);
-    expect(vocabulary.content.endsWith('\n')).toBe(true);
-});
+test.each(['recommended', 'all'] as const)(
+    '%s vocabulary combines selected product and project words without duplicates',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'sample.md': '# Sample\n',
+            'gspot.toml': buildPolicy(['prose', 'javascript'], {
+                level,
+                tables: '[words]\nNebulaConfiguration = "The configuration has this product name."\nTypeScript = "TypeScript"\n',
+            }),
+        });
+        const session = await openSession(sandbox.path);
+        const output = emitAll(session);
+        const vocabulary = output.files.find(
+            (file) => file.path === '.gspot/config/vale/styles/config/vocabularies/words/accept.txt',
+        )!;
+        const words = vocabulary.content.trimEnd().split('\n');
+        expect(words).toContain('TypeScript');
+        expect(words).toContain('JavaScript');
+        expect(words).toContain('ESLint');
+        for (const word of ['Swift', 'Ruff', 'Xcode']) expect(words).not.toContain(word);
+        expect(words).toContain('NebulaConfiguration');
+        expect(words.filter((word) => word === 'NebulaConfiguration')).toHaveLength(1);
+        expect(words.filter((word) => word === 'TypeScript')).toHaveLength(1);
+        expect(vocabulary.content.endsWith('\n')).toBe(true);
+    },
+);
 
 test.each(['recommended', 'all'] as const)(
     '%s generates the portable prose style and current link-text selection',
@@ -186,5 +193,34 @@ test.each(['recommended', 'all'] as const)(
             'no-gerunds-in-titles.tengo',
         );
         expect(output.files.some(({ path }) => path.includes('/gspot/actions/'))).toBe(false);
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s shared vocabulary includes child-selected products without changing root heading words',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['prose'], {
+                level,
+                tables: '[words]\nNebulaProduct = "The project product."\n[scope.app]\nconfigurations = ["python"]\n[scope.sibling]\nconfigurations = []\n',
+            }),
+            'sample.md': '# Guide\n',
+            'app/sample.py': 'value = 1\n',
+        });
+        const session = await openSession(sandbox.path);
+        const files = emitAll(session).files;
+        const vocabulary = files
+            .find(({ path }) => path.endsWith('/vocabularies/words/accept.txt'))!
+            .content.trimEnd()
+            .split('\n');
+        expect(vocabulary).toContain('Python');
+        expect(vocabulary).toContain('basedpyright');
+        expect(vocabulary).toContain('NebulaProduct');
+        expect(vocabulary).not.toContain('SwiftLint');
+        expect(vocabulary.filter((word) => word === 'Python')).toHaveLength(1);
+        const heading = files.find(({ path }) => path.endsWith('/gspot/heading-case.yml'))!.content;
+        expect(heading).toContain(JSON.stringify(RegExp.escape('NebulaProduct')));
+        expect(heading).not.toContain('basedpyright');
     },
 );

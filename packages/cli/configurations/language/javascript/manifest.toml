@@ -1,3 +1,5 @@
+products = ["JavaScript", "ESLint", "knip"]
+
 eslint_presets = { eslint = { package = "@eslint/js", source = "configs.recommended" }, sonar = { package = "eslint-plugin-sonarjs", source = "configs.recommended" }, unicorn = { package = "eslint-plugin-unicorn", source = "configs.recommended" }, packageJson = { package = "eslint-plugin-package-json", source = "configs.recommended" }, prettier = { package = "eslint-config-prettier", source = "" }, gspot = { package = "@gspothq/eslint-plugin", source = "configs.recommended" } }
 eslint_all_rules = [
     "complexity",
@@ -228,7 +230,7 @@ ignored_folders = ["node_modules/"]
 dockerignore = ["node_modules"]
 
 # Where a dead-code scan starts when no framework names its own entries.
-entry = ["src/main.{ts,js}", "src/index.{ts,js}", "**/*.{test,spec}.{ts,tsx,js}"]
+entry = ["src/main.{ts,js}", "src/index.{ts,js}"]
 
 [configuration]
 title = "JavaScript"
@@ -513,7 +515,6 @@ summary = "Rule options for selected paths, in order. A scope's overrides apply 
 [[setting]]
 name = "tools.eslint.import_extensions"
 type = "table"
-direction = "neutral"
 default = { "**/*" = "js" }
 summary = "The import suffix for each path pattern: js for compiled ESM, ts for Deno and Bun, extensionless for bundled code."
 
@@ -521,21 +522,18 @@ summary = "The import suffix for each path pattern: js for compiled ESM, ts for 
 name = "architecture.roles.scripts"
 type = "list"
 items = "path"
-direction = "neutral"
 default = ["scripts/**", "**/*.config.{js,mjs,cjs,ts}"]
 summary = "Globs for script files: they may print to the console and call process.exit."
 
 [[setting]]
 name = "tools.eslint.runtimes"
 type = "table"
-direction = "neutral"
 default = {}
 summary = "The runtime per scoped file selector, using names from globals; service-worker selects service-worker APIs. Framework application sources use their runtime, build scripts use Node.js, and authored selectors override those defaults."
 
 [[setting]]
 name = "tools.eslint.node_version"
 type = "string"
-direction = "neutral"
 default = ""
 summary = "Override the Node version checked by the n plugin. When unset, the plugin reads each source file's package engines."
 
@@ -551,7 +549,6 @@ summary = "Imports this repository refuses, each with a name, and a message."
 name = "tools.knip.entry"
 type = "list"
 items = "path"
-direction = "neutral"
 default = []
 summary = "Entry points knip starts from beyond the ones the framework configuration declares."
 

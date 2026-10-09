@@ -1,3 +1,4 @@
+products = ["Xcode"]
 [configuration]
 title = "Xcode"
 suggests = ["swift"]

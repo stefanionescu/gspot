@@ -128,7 +128,16 @@
                 "scripts/setting-values.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
-                "**/*.{test,spec}.{ts,tsx,js}"
+                "**/test/**",
+                "**/tests/**",
+                "**/__tests__/**",
+                "**/*.test.*",
+                "**/*.spec.*",
+                "**/test_*.py",
+                "**/*_test.py",
+                "**/conftest.py",
+                "**/Tests/**",
+                "**/*Tests.swift"
             ]
         },
         "docs": {
@@ -136,7 +145,16 @@
                 "src/content/reference/collection.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
-                "**/*.{test,spec}.{ts,tsx,js}"
+                "**/test/**",
+                "**/tests/**",
+                "**/__tests__/**",
+                "**/*.test.*",
+                "**/*.spec.*",
+                "**/test_*.py",
+                "**/*_test.py",
+                "**/conftest.py",
+                "**/Tests/**",
+                "**/*Tests.swift"
             ],
             "ignoreDependencies": ["satteri"]
         },
@@ -145,14 +163,50 @@
                 "src/checks/general/site/linkinator.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
-                "**/*.{test,spec}.{ts,tsx,js}"
+                "**/test/**",
+                "**/tests/**",
+                "**/__tests__/**",
+                "**/*.test.*",
+                "**/*.spec.*",
+                "**/test_*.py",
+                "**/*_test.py",
+                "**/conftest.py",
+                "**/Tests/**",
+                "**/*Tests.swift"
             ]
         },
         "packages/eslint-plugin": {
-            "entry": ["src/rules/public.ts", "src/main.{ts,js}", "src/index.{ts,js}", "**/*.{test,spec}.{ts,tsx,js}"]
+            "entry": [
+                "src/rules/public.ts",
+                "src/main.{ts,js}",
+                "src/index.{ts,js}",
+                "**/test/**",
+                "**/tests/**",
+                "**/__tests__/**",
+                "**/*.test.*",
+                "**/*.spec.*",
+                "**/test_*.py",
+                "**/*_test.py",
+                "**/conftest.py",
+                "**/Tests/**",
+                "**/*Tests.swift"
+            ]
         },
         "tests": {
-            "entry": ["src/main.{ts,js}", "src/index.{ts,js}", "**/*.{test,spec}.{ts,tsx,js}"],
+            "entry": [
+                "src/main.{ts,js}",
+                "src/index.{ts,js}",
+                "**/test/**",
+                "**/tests/**",
+                "**/__tests__/**",
+                "**/*.test.*",
+                "**/*.spec.*",
+                "**/test_*.py",
+                "**/*_test.py",
+                "**/conftest.py",
+                "**/Tests/**",
+                "**/*Tests.swift"
+            ],
             "ignoreDependencies": ["^.+$"]
         }
     }

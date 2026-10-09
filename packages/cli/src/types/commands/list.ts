@@ -1,8 +1,10 @@
+import type { SettingDeclaration } from '#cli/types/configurations.ts';
+
 export type SettingRow = {
     key: string;
     value: unknown;
     source: string;
-    direction: string;
+    direction: SettingDeclaration['direction'];
     scope: string;
 };
 

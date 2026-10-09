@@ -9,6 +9,7 @@ import { runTestCommand } from '#tests/harness/command.ts';
 import { parseOutput } from '#cli/parsers/output/public.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
+import type { KnipConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 import {
     KNIP_ENTRY_TABLES,
@@ -249,5 +250,34 @@ test.each(['recommended', 'all'] as const)(
                 .map(({ file }) => file)
                 .toSorted((left, right) => left.localeCompare(right)),
         ).toStrictEqual(['child/eslint.config.js', 'eslint.config.js']);
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s Knip consumes normalized inherited test paths without leaking sibling entries',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['javascript'], {
+                level,
+                tables: 'test_files = ["specifications/**"]\n[scope.app]\ntest_files = ["verification/**"]\n[scope."app/deep"]\ntest_files = []\n[scope.sibling]\ntest_files = ["sibling-tests/**"]\n',
+            }),
+            'package.json': '{"private":true,"workspaces":["app","app/deep","sibling"]}',
+            'source.js': 'export {};\n',
+            'app/package.json': '{"private":true}',
+            'app/deep/package.json': '{"private":true}',
+            'sibling/package.json': '{"private":true}',
+        });
+        const session = await openSession(sandbox.path);
+        const content = emitAll(session).files.find(({ path }) => path === '.gspot/config/knip.json')!.content;
+        const { workspaces } = JSON.parse(content) as KnipConfiguration;
+        expect(workspaces['.']!.entry).toContain('specifications/**');
+        expect(workspaces['app']!.entry).toContain('verification/**');
+        expect(workspaces['app']!.entry).not.toContain('app/verification/**');
+        expect(workspaces['app']!.entry).not.toContain('sibling-tests/**');
+        expect(workspaces['sibling']!.entry).toContain('sibling-tests/**');
+        expect(workspaces['app/deep']!.entry).not.toContain('verification/**');
+        expect(workspaces['app/deep']!.entry).toContain('**/*.test.*');
+        for (const { view } of session.scopes) expect(view.test_files).toContain('specifications/**');
     },
 );

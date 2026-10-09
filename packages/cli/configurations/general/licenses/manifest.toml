@@ -40,7 +40,6 @@ help = "Replace the package, or add an entry to licenses.exceptions with gspot s
 name = "licenses.allowed"
 type = "list"
 items = "string"
-direction = "neutral"
 default = []
 summary = "The SPDX license ids a dependency may report."
 

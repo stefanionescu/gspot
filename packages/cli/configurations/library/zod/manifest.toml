@@ -1,3 +1,4 @@
+products = ["Zod"]
 eslint_all_rules = [
     "zod/no-any-schema",
     "zod/no-native-enum",

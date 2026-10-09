@@ -31,13 +31,11 @@ help = "Correct the message, or add the missing key to the locale."
 [[setting]]
 name = "translations.messages_folder"
 type = "path"
-direction = "neutral"
 default = ""
 summary = "The folder of `<locale>`.json message files, relative to its scope."
 
 [[setting]]
 name = "translations.base_locale"
 type = "string"
-direction = "neutral"
 default = "en"
 summary = "The locale whose message keys every other locale must contain."

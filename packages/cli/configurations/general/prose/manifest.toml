@@ -1,3 +1,4 @@
+products = ["Vale"]
 ignored = [
     ".gspot/config/vale/styles/Google/",
     ".gspot/config/vale/styles/Microsoft/",
@@ -452,7 +453,6 @@ summary = "The most sentences one paragraph may have."
 [[setting]]
 name = "prose.locale"
 type = "string"
-direction = "neutral"
 default = "en-us"
 summary = "The English locale typos checks against: en, en-us, en-gb, en-ca, or en-au."
 validation = { enum = ["en", "en-us", "en-gb", "en-ca", "en-au"] }

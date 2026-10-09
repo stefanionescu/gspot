@@ -3,6 +3,7 @@ export const KNIP_COMPONENT_FILES = {
     'package.json':
         '{"name":"native-project","private":true,"type":"module","workspaces":["child"],"dependencies":{"vue":"3.5.0","svelte":"5.57.0","astro":"7.3.2","@astrojs/mdx":"4.0.0"}}',
     'main.js': 'export const used = 1;\n',
+    'native-tests/widget.js': 'export const fixture = 1;\n',
     'space name.jsx': 'export const unused = <div />;\n',
     'unused.vue': '<template><div>Unused</div></template>\n',
     'unused.svelte': '<div>Unused</div>\n',
@@ -10,6 +11,7 @@ export const KNIP_COMPONENT_FILES = {
     'unused.mdx': '# Unused\n',
     'child/package.json': '{"name":"child-project","private":true,"type":"module"}',
     'child/main.js': 'export const child = 1;\n',
+    'child/verification/widget.js': 'export const fixture = 1;\n',
     'child/unused.jsx': 'export const unused = <div />;\n',
 };
 
@@ -25,10 +27,12 @@ export const KNIP_UNUSED_FILES = [
 
 /** Root and child entry points are declared through their existing project settings. */
 export const KNIP_ENTRY_TABLES = `
+test_files = ["native-tests/**"]
 [tools.knip]
 entry = ["main.js"]
 [scope."child"]
 configurations = ["javascript"]
+test_files = ["verification/**"]
 [scope."child".tools.knip]
 entry = ["main.js"]
 `;

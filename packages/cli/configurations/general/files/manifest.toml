@@ -1,3 +1,4 @@
+products = ["taplo", "yamllint", "JSON", "TOML", "YAML"]
 [configuration]
 title = "JSON, YAML, TOML, and XML files"
 always_selected = true
@@ -139,6 +140,5 @@ summary = "Native option tables for active YAML rules. The level decides which r
 [[setting]]
 name = "tools.v8r.schemas"
 type = "table"
-direction = "neutral"
 default = {}
 summary = "File patterns mapped to schema URLs, for files the SchemaStore catalog does not know; each entry has a pattern and a schema."

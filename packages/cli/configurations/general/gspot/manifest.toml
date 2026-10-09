@@ -1,3 +1,4 @@
+products = ["gspot"]
 [configuration]
 title = "gspot"
 always_selected = true

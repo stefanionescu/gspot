@@ -1,3 +1,4 @@
+products = ["Bash", "ShellCheck", "shfmt", "ast-grep", "tree-sitter"]
 [configuration]
 title = "Bash, zsh, and Bats scripts"
 suggests = ["naming", "format"]

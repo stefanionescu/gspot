@@ -1,3 +1,4 @@
+products = ["SQL", "sqlfluff"]
 [configuration]
 title = "SQL"
 requires = ["format"]
@@ -66,7 +67,6 @@ help = "Inline unnecessary functions. If a required API needs one, run `gspot ig
 [[setting]]
 name = "tools.sqlfluff.dialect"
 type = "string"
-direction = "neutral"
 default = "ansi"
 summary = "The sqlfluff dialect; a database configuration sets it."
 validation = { pattern = "^[a-z][a-z0-9_]*$", message = "Use a SQLFluff dialect label, such as postgres or sqlite." }

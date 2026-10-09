@@ -1,3 +1,4 @@
+products = ["Cloudflare"]
 generated = ["worker-configuration.d.ts"]
 
 [configuration]
@@ -83,13 +84,11 @@ help = "Add the header to the block for every path."
 [[setting]]
 name = "cloudflare.types_file"
 type = "string"
-direction = "neutral"
 default = "worker-configuration.d.ts"
 summary = "Tracked Worker environment types file, relative to the project scope."
 
 [[setting]]
 name = "cloudflare.types_interface"
 type = "string"
-direction = "neutral"
 default = "Env"
 summary = "Environment interface name passed to wrangler types; OpenNext uses CloudflareEnv."

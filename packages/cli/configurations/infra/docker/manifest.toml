@@ -1,3 +1,4 @@
+products = ["Docker", "Trivy", "hadolint"]
 [configuration]
 title = "Docker"
 description = "Dockerfiles and Compose files: hadolint, a Compose file that parses, an ignore file beside every Dockerfile, and Trivy over the configuration."
@@ -131,6 +132,5 @@ summary = "The registries a base image may come from; empty allows any."
 name = "tools.trivy.severity"
 type = "list"
 items = "string"
-direction = "neutral"
 default = ["HIGH", "CRITICAL"]
 summary = "The severities Trivy reports."

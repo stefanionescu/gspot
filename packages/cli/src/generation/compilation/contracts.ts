@@ -77,7 +77,7 @@ export function proseInputs(session: Session, manifests: Manifest[]): EtaInputs[
         products: [
             ...new Set([
                 ...session.scopes.flatMap(({ selected }) =>
-                    selected.flatMap((manifest) => manifest.tools.map((tool) => tool.name)),
+                    selected.flatMap((manifest) => [...manifest.tools.map((tool) => tool.name), ...manifest.products]),
                 ),
                 ...words,
             ]),
@@ -108,11 +108,14 @@ export function entryFiles(policy: Policy, scopes: ScopeSelection[], scope: stri
         const entries = (policyValue(table, 'tools.knip.entry')?.value ?? []) as string[];
         return entries.map((pattern) => prefixed(path, pattern));
     });
-    const owner = scopes
+    const declared = scopes
         .filter((entry) => isInScope(scope, entry.scope.path))
-        .toSorted((left, right) => byScopeDepth(right.scope.path, left.scope.path))[0];
-    const selected = owner?.selected ?? [];
-    const declared = selected.flatMap((manifest) => manifest.entry).map((pattern) => prefixed(scope, pattern));
+        .toSorted((left, right) => byScopeDepth(right.scope.path, left.scope.path))
+        .slice(0, 1)
+        .flatMap(({ selected, view }) => [
+            ...selected.flatMap((manifest) => manifest.entry).map((pattern) => prefixed(scope, pattern)),
+            ...view.test_files,
+        ]);
     return [...new Set([...authored, ...declared])];
 }
 

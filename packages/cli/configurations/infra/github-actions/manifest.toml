@@ -1,3 +1,4 @@
+products = ["GitHub", "actionlint", "zizmor"]
 [configuration]
 title = "GitHub Actions"
 description = "GitHub Actions workflows: actionlint for syntax and expressions, pinact for the commits actions are pinned to, and zizmor for security audits."

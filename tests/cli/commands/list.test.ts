@@ -124,6 +124,8 @@ test('human setting listings show authored scope overrides while JSON retains in
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const { settings } = JSON.parse(structured.stdout) as SettingsListJson;
+    expect(settings.find((row) => row.key === 'test_files')).not.toHaveProperty('direction');
+    expect(settings.find((row) => row.key === 'limits.file_lines')?.direction).toBe('ceiling');
     expect(settings.find((row) => row.scope === 'api/worker' && row.key === 'limits.file_lines')).toMatchObject({
         value: 200,
         source: '[scope."api"]',

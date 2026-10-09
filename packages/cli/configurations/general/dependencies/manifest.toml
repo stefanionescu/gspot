@@ -1,3 +1,4 @@
+products = ["osv-scanner"]
 [configuration]
 title = "Dependencies"
 always_selected = true
@@ -122,7 +123,6 @@ summary = "The minimum age in days for releases installed through Bun."
 [[setting]]
 name = "dependencies.scanner"
 type = "string"
-direction = "neutral"
 default = ""
 summary = "The security scanner Bun names in [install.security]. An empty string requires none."
 

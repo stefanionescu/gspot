@@ -26,7 +26,7 @@ function buildSettingsResult(session: Session): CommandResult {
     const lines = displayed.map((row) => {
         const value = row.value === undefined ? 'unset' : JSON.stringify(row.value);
         const shortened = value.length > VALUE_WIDTH ? `${value.slice(0, VALUE_WIDTH - 1)}…` : value;
-        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${row.direction}  ${row.source}${scopeTag(row.scope)}`;
+        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${row.direction ?? ''}  ${row.source}${scopeTag(row.scope)}`;
     });
     if (extras.length > 0) {
         lines.push('', 'extra tables gspot does not check');

@@ -54,7 +54,6 @@ help = "Run the command and commit the document it writes."
 [[setting]]
 name = "openapi.document"
 type = "path"
-direction = "neutral"
 default = ""
 summary = "The committed OpenAPI document, detected in the project scope by default; an explicit empty path turns both OpenAPI checks off."
 
@@ -62,6 +61,5 @@ summary = "The committed OpenAPI document, detected in the project scope by defa
 name = "openapi.generate_command"
 type = "list"
 items = "string"
-direction = "neutral"
 default = []
 summary = "The command that writes the OpenAPI document from the code, run in the project scope folder."

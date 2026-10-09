@@ -109,7 +109,7 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
             return [
                 `\`${setting.name}\``,
                 setting.type,
-                setting.direction,
+                setting.direction ?? '',
                 isDeepStrictEqual(recommended, all)
                     ? `\`${defaultRecommended}\``
                     : `recommended: \`${defaultRecommended}\`; all: \`${defaultAll}\``,
@@ -120,7 +120,7 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
     return referencePage(
         'Settings',
         'Settings exposed by gspot set, with their types, directions, defaults, and owners.',
-        `${SETTINGS_INTRO}${table(['Key', 'Type', 'Direction', 'Default', 'Meaning', 'Configuration'], rows)}\n`,
+        `${SETTINGS_INTRO}${table(['Key', 'Type', 'Loosens when', 'Default', 'Meaning', 'Configuration'], rows)}\n`,
         'docs/src/content/reference/policy.ts',
     );
 }

@@ -1,3 +1,4 @@
+products = ["Next.js"]
 eslint_presets = { recommended = { package = "@next/eslint-plugin-next", source = "configs.core-web-vitals" }, refresh = { package = "eslint-plugin-react-refresh", source = "configs.next" } }
 eslint_all_rules = [
     "@next/next/next-script-for-ga",

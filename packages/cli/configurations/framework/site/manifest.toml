@@ -193,7 +193,6 @@ validation = { minimum = 0, maximum = 100 }
 name = "site.build_command"
 type = "list"
 items = "string"
-direction = "neutral"
 default = ["npm", "run", "build"]
 summary = "The build script run by the repository package manager, unless an authored command replaces it."
 
@@ -201,7 +200,6 @@ summary = "The build script run by the repository package manager, unless an aut
 name = "site.build_folder"
 type = "path"
 path_role = "destination"
-direction = "neutral"
 default = "dist"
 summary = "The folder the build writes."
 

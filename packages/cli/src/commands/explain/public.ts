@@ -10,7 +10,6 @@ import { pathMatcher } from '#cli/repository/paths/public.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { knownSettings } from '#cli/policy/settings/public.ts';
 import { ownersOf } from '#cli/repository/selection/public.ts';
-import { DIRECTION_TEXTS } from '#cli/config/commands/explain.ts';
 import { checkStageSchema } from '#cli/parsers/schema/command.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -21,6 +20,7 @@ import { unknownSettingDiagnostic } from '#cli/policy/errors/public.ts';
 import { commandHelp, commandRoot, openSession } from '#cli/commands/public.ts';
 import { settingValue, declarationFor } from '#cli/policy/settings/contracts.ts';
 import { explainCheck, explainToolRule } from '#cli/commands/explain/contracts.ts';
+import { DIRECTION_TEXTS, REASON_DIRECTIONS } from '#cli/config/commands/explain.ts';
 import { knownChecks, configurationFiles, configurationManifests } from '#cli/configurations/public.ts';
 import { unknownCheckDiagnostic, unknownConfigurationDiagnostic } from '#cli/configurations/errors/public.ts';
 
@@ -84,7 +84,7 @@ function scopeLines(key: string, declaration: SettingDeclaration, entry: Setting
     const { scope, shipped, effective } = entry;
     const { value, source = 'unset', reason } = effective === undefined ? {} : effective;
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
-    const requiresReason = ['ceiling', 'floor', 'loosening'].includes(declaration.direction);
+    const requiresReason = REASON_DIRECTIONS.includes(declaration.direction);
     return [
         '',
         `Scope: ${scope === '' ? 'root' : scope}`,
@@ -117,7 +117,9 @@ function explainSetting(session: ToolSession | undefined, key: string): Explanat
         '',
         first.declaration.summary,
         '',
-        `Direction: ${DIRECTION_TEXTS[first.declaration.direction]}`,
+        ...(first.declaration.direction === undefined
+            ? []
+            : [`Direction: ${DIRECTION_TEXTS[first.declaration.direction]}`]),
         ...scopes.flatMap((entry) => scopeLines(key, first.declaration, entry)),
     ];
     return {

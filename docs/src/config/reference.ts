@@ -1,9 +1,8 @@
 /** Introduce setting inheritance and the reason requirements of each direction. */
 export const SETTINGS_INTRO = `Settings exposed by \`gspot set\` and \`gspot list settings\`, with defaults from their owners. Any limit can be set for one language as \`limits.<language>.<name>\`. A scope inherits the root and every scope that contains it: scalar values replace inherited values, and lists add to them. Command argument lists replace inherited arguments intact. See [monorepos](/guides/monorepos/).
 
-Direction describes which changes weaken enforcement and need an entry in \`[reasons]\`:
+The "Loosens when" column describes which changes weaken enforcement and need an entry in \`[reasons]\`. A blank cell means neither direction weakens enforcement:
 
-- \`neutral\`: neither direction weakens enforcement.
 - \`tightening\`: increasing or enabling the value strengthens enforcement.
 - \`loosening\`: increasing or enabling the value weakens enforcement.
 - \`floor\`: lowering the minimum weakens enforcement.

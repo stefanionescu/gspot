@@ -1,3 +1,4 @@
+products = ["Bun", "Node", "npm", "pnpm", "mise", "Homebrew", "SARIF", "CI", "macOS", "Linux", "Windows"]
 [configuration]
 title = "Engineering guidance"
 always_selected = true

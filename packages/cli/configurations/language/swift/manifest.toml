@@ -1,3 +1,5 @@
+products = ["Swift", "SwiftLint", "SwiftFormat", "Periphery"]
+
 ignored_folders = [".build/", "DerivedData/", "Pods/"]
 
 [configuration]
@@ -153,28 +155,24 @@ help = "Delete the declaration, or mark it with a periphery:ignore comment that 
 name = "tools.swiftlint.keep_imports"
 type = "list"
 items = "string"
-direction = "neutral"
 default = []
 summary = "Imports the analyzer keeps although it sees no use of them."
 
 [[setting]]
 name = "swift.xcode_project"
 type = "path"
-direction = "neutral"
 default = ""
 summary = "The Xcode project or workspace, relative to the scope; defaults to the detected project, otherwise the Swift package."
 
 [[setting]]
 name = "swift.xcode_scheme"
 type = "string"
-direction = "neutral"
 default = ""
 summary = "The shared scheme the build, the analyzer, and Periphery use."
 
 [[setting]]
 name = "swift.xcode_destination"
 type = "string"
-direction = "neutral"
 default = "generic/platform=iOS Simulator"
 summary = "The xcodebuild destination."
 

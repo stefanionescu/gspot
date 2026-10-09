@@ -207,7 +207,7 @@ const manifestNamingOverride = namingOverrideSchema.extend({ reason: z.string().
 const settingSchema = settingValueDeclarationSchema
     .extend({
         name: z.string(),
-        direction: z.enum(['ceiling', 'floor', 'loosening', 'tightening', 'neutral', 'rule-options']),
+        direction: z.enum(['ceiling', 'floor', 'loosening', 'tightening', 'rule-options']).optional(),
         // Native disabled-rule values representable in TOML; absent for settings that do not enable rules.
         off_values: z
             .array(z.union([z.string(), z.number(), z.boolean()]))
@@ -258,6 +258,7 @@ export const manifestSchema = z
         ignored_folders: z.array(z.string().min(1)).default([]),
         dockerignore: z.array(z.string().min(1)).default([]),
         generated: z.array(z.string().min(1)).default([]),
+        products: stringList,
         ignored: z.array(z.string().refine(isIgnoredPath, 'Ignored paths must stay inside .gspot.')).default([]),
         configuration: z.strictObject({
             name: z.string().regex(/^[a-z0-9-]+$/),

@@ -1,3 +1,4 @@
+products = ["Drizzle"]
 [configuration]
 title = "Drizzle"
 requires = ["javascript"]
@@ -53,7 +54,6 @@ help = "Run drizzle-kit generate and commit the migration."
 name = "drizzle.client_names"
 type = "list"
 items = "string"
-direction = "neutral"
 default = ["db"]
 summary = "The Drizzle client identifiers checked for update and delete operations without a where clause."
 

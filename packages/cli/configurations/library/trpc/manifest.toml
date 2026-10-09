@@ -1,3 +1,4 @@
+products = ["tRPC"]
 [configuration]
 title = "tRPC"
 requires = ["javascript"]
@@ -16,6 +17,5 @@ selectors = [{ selector = "CallExpression[callee.property.name=/^(query|mutation
 name = "architecture.roles.routers"
 type = "list"
 items = "path"
-direction = "neutral"
 default = ["**/routers/**", "**/*router*.ts", "**/trpc/**"]
 summary = "The files that declare tRPC procedures."

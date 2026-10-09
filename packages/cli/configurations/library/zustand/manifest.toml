@@ -1,3 +1,4 @@
+products = ["Zustand"]
 [configuration]
 title = "Zustand"
 requires = ["javascript"]
@@ -14,6 +15,5 @@ selectors = [{ selector = "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arg
 name = "architecture.roles.stores"
 type = "list"
 items = "path"
-direction = "neutral"
 default = ["**/store.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/stores/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/store/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/*.store.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"]
 summary = "The files that may create a store."

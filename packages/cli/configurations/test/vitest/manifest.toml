@@ -1,3 +1,4 @@
+products = ["Vitest"]
 eslint_presets = { recommended = { package = "@vitest/eslint-plugin", source = "configs.recommended" } }
 eslint_all_rules = [
     "vitest/no-import-node-test",
