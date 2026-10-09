@@ -4,14 +4,12 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { createConsumer } from '#tests/harness/consumer.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { runPackageCheck } from '#tests/harness/check-case.ts';
 import type { Consumer } from '#tests/types/harness/consumer.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { ConfigurationsListJson } from '#cli/types/commands/list.ts';
 import { PROSE_CHECK, SWIFT_CHECK } from '#tests/config/packages/languages.ts';
-import { initializeConsumer, getPublishedRelease } from '#tests/harness/release.ts';
+import { createConsumer, runPackageCheck, initializeConsumer, getPublishedRelease } from '#tests/harness/consumer.ts';
 
 const release = getPublishedRelease();
 

@@ -1,5 +1,5 @@
 // Samples and fixes exercised by the installed language-tool consumer.
-import type { PackageCheckCase } from '#tests/types/packages/check-case.ts';
+import type { PackageCheckCase } from '#tests/types/harness/consumer.ts';
 
 export const PROSE_CHECK: PackageCheckCase = {
     only: 'prose/vale',

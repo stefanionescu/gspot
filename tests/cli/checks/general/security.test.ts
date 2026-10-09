@@ -13,7 +13,7 @@ import { rejection } from '#tests/harness/expectations.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { sarifFindings } from '#cli/parsers/output/structured/public.ts';
-import type { CapturedInvocation } from '#tests/types/harness/command.ts';
+import type { CapturedInvocation } from '#tests/types/cli/checks/security.ts';
 
 import {
     CODEQL_REPORT,

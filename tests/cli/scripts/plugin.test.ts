@@ -7,7 +7,7 @@ import { isPosix } from '#tests/config/harness/platforms.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
-import type { PackageArchiveMarker } from '#tests/types/harness/process.ts';
+import type { PackageArchiveMarker } from '#tests/types/cli/scripts.ts';
 import { STALLED_PACKAGE_PACKING } from '#tests/config/cli/scripts/plugin.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
 

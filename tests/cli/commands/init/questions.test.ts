@@ -8,7 +8,7 @@ import { test, spyOn, expect, describe } from 'bun:test';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { EMPTY_TOOLING } from '#tests/config/harness/tooling.ts';
+import { EMPTY_TOOLING } from '#tests/config/cli/commands/init/tooling.ts';
 import { askQuestions, askConfirmation } from '#cli/commands/init/contracts.ts';
 import { RUNNER_ANSWERS, RUNNER_OPTIONS, RUNNER_FAILURES } from '#tests/config/cli/commands/init/questions.ts';
 

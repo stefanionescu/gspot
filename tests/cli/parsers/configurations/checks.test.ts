@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
 import { toolName } from '#cli/configurations/contracts.ts';
-import { CHECK_FIELDS } from '#tests/config/harness/tooling.ts';
+import { CHECK_FIELDS } from '#tests/config/samples/checks.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
 import { assertManifests } from '#cli/configurations/errors/contracts.ts';

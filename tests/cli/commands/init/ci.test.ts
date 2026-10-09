@@ -8,7 +8,7 @@ import { initCommand } from '#cli/commands/init/public.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { askQuestions } from '#cli/commands/init/contracts.ts';
-import { EMPTY_TOOLING } from '#tests/config/harness/tooling.ts';
+import { EMPTY_TOOLING } from '#tests/config/cli/commands/init/tooling.ts';
 import { buildInitOptions, buildInitArguments } from '#tests/harness/init.ts';
 import { INIT_CI_CASES, CI_PREFERENCE_CASES } from '#tests/config/cli/commands/init/ci.ts';
 

@@ -1,7 +1,7 @@
 // Refuse an invalid release tag before CI or publication starts.
 import semver from 'semver';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { ARGUMENT_START } from '#automation/config/paths.ts';
+import { ARGUMENT_START } from '#automation/config/arguments.ts';
 import pluginPackage from '#plugin-package' with { type: 'json' };
 import { configurationManifests } from '#cli/configurations/public.ts';
 

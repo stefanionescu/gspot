@@ -5,7 +5,6 @@ import { createFileTree } from 'testdirs';
 import { join, basename } from 'node:path';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { createConsumer } from '#tests/harness/consumer.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -13,7 +12,7 @@ import { containingAll } from '#tests/harness/expectations.ts';
 import { mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runTestCommand, prepareTestCommand } from '#tests/harness/command.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
-import { initializeConsumer, getPublishedRelease } from '#tests/harness/release.ts';
+import { createConsumer, initializeConsumer, getPublishedRelease } from '#tests/harness/consumer.ts';
 
 import {
     RECORD_POLICY,

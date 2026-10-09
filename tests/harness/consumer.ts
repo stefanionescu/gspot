@@ -1,11 +1,21 @@
+// The built packages published into an isolated registry, and a fresh consumer that installed them from it.
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { runTestCommand } from '#tests/harness/command.ts';
-import type { Consumer } from '#tests/types/harness/consumer.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { consumerEnvironment } from '#tests/harness/environment.ts';
+import type { SpawnOutcome } from '#tests/types/harness/command.ts';
 import type { PublishedRelease } from '#automation/types/package.ts';
 import { OFFLINE_ENVIRONMENT } from '#tests/config/harness/consumer.ts';
+
+import type {
+    Consumer,
+    ConsumerOptions,
+    PackageCheckCase,
+    PackageCheckOutcome,
+} from '#tests/types/harness/consumer.ts';
 
 /**
  * Install the candidate CLI into a fresh repository containing only its package manifest.
@@ -58,4 +68,76 @@ export async function createConsumer(
         await workspace[Symbol.asyncDispose]();
         throw error;
     }
+}
+
+/**
+ * Initialize the consumer with Bash, Python, Swift, and automatic general checks, then install its tool projects.
+ * @param release the published release
+ * @param installation the installed consumer
+ * @returns the initialization report, after successful tool installation
+ */
+export async function initializeConsumer(release: PublishedRelease, installation: Consumer): Promise<SpawnOutcome> {
+    const { registry } = release;
+    const { command, onlineOptions: setupOptions } = installation;
+    const initialized = await runTestCommand(
+        [
+            ...command,
+            'init',
+            '--json',
+            '--yes',
+            '--configurations',
+            'bash',
+            'python',
+            'swift',
+            '--no-runner',
+            '--no-ci',
+            '--no-hooks',
+            '--no-install',
+        ],
+        setupOptions,
+    );
+    if (initialized.code !== 0)
+        throw new Error(`Consumer initialization failed: ${initialized.stdout}${initialized.stderr}`);
+    const installedTools = await runTestCommand([...command, 'install', '--json'], {
+        ...setupOptions,
+        env: {
+            ...setupOptions.env,
+            NPM_CONFIG_USERCONFIG: registry.npmrc,
+            BUN_INSTALL_CACHE_DIR: join(registry.work, 'tool-cache'),
+        },
+    });
+    if (installedTools.code !== 0)
+        throw new Error(`Consumer tool installation failed: ${installedTools.stdout}${installedTools.stderr}`);
+    return initialized;
+}
+
+/** Read the immutable connection details supplied by the release-suite owner. */
+export function getPublishedRelease(): PublishedRelease {
+    const connection = environmentVariables()['GSPOT_PACKAGE_RELEASE'];
+    if (connection === undefined) throw new Error('Run installed acceptance through mise run test:package.');
+    return JSON.parse(connection) as PublishedRelease;
+}
+
+/**
+ * Run one delivered check against a sample, apply its fix, and rerun it within the test budget.
+ * @param installation the installed CLI command
+ * @param options the isolated repository and command environment
+ * @param check the sample and its fix
+ * @returns process evidence and parsed reports for assertions in the owning test
+ */
+export async function runPackageCheck(
+    installation: Pick<Consumer, 'command'>,
+    options: ConsumerOptions,
+    check: PackageCheckCase,
+): Promise<PackageCheckOutcome> {
+    const args = [...installation.command, 'check', check.path, '--only', check.only, '--json'];
+    if (check.sample !== undefined) await writeFile(join(options.cwd, check.path), check.sample);
+    const failed = await runTestCommand(args, options);
+    const report = JSON.parse(failed.stdout) as RunReport;
+    let fixed: SpawnOutcome | undefined;
+    if ('fix' in check) fixed = await runTestCommand([...args, '--fix'], options);
+    else await writeFile(join(options.cwd, check.path), check.corrected);
+    const passed = await runTestCommand(args, options);
+    const accepted = JSON.parse(passed.stdout) as RunReport;
+    return { failed: { ...failed, report }, fixed, passed: { ...passed, report: accepted } };
 }

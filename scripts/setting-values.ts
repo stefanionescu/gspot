@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { format, resolveConfig } from 'prettier';
-import { ARGUMENT_START } from '#automation/config/paths.ts';
+import { ARGUMENT_START } from '#automation/config/arguments.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { assertManifests } from '#cli/configurations/errors/contracts.ts';

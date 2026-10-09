@@ -4,15 +4,14 @@ import { toPosix } from '#cli/platform/contracts.ts';
 import { join, relative, delimiter } from 'node:path';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { createConsumer } from '#tests/harness/consumer.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { getPublishedRelease } from '#tests/harness/release.ts';
 import type { Consumer } from '#tests/types/harness/consumer.ts';
 import { consumerEnvironment } from '#tests/harness/environment.ts';
 import type { PublishedRelease } from '#automation/types/package.ts';
 import { mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
 import { FORMATTER_INIT, SUPPORTED_MISE } from '#tests/config/packages/tools.ts';
-import type { NativeConsumer, FormatterConsumer } from '#tests/types/packages/tools.ts';
+import { createConsumer, getPublishedRelease } from '#tests/harness/consumer.ts';
+import type { NativeConsumer, FormatterConsumer } from '#tests/types/packages.ts';
 
 /** Prepares authored package data and private formatter inputs with the declared mise version first on PATH. */
 async function prepareFormatterConsumer(installation: Consumer, release: PublishedRelease): Promise<FormatterConsumer> {

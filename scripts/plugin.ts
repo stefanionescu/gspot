@@ -7,7 +7,7 @@ import { workspaceRoot } from '#automation/workspace.ts';
 import { CLI_PINS } from '#cli/config/generation/pins.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { ARGUMENT_START } from '#automation/config/paths.ts';
+import { ARGUMENT_START } from '#automation/config/arguments.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import pluginManifest from '#plugin-package' with { type: 'json' };
 import { run, environmentVariables } from '#cli/platform/public.ts';

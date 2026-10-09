@@ -5,3 +5,6 @@ export type FakeGitOptions = {
     pauseOnCall: number;
     executable: string;
 };
+
+/** A stalled Git boundary and the copy path it started. */
+export type CopyMarker = { pid: number; checkout?: string };

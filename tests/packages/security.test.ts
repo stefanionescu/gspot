@@ -5,9 +5,8 @@ import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { createConsumer } from '#tests/harness/consumer.ts';
-import { getPublishedRelease } from '#tests/harness/release.ts';
 import { SECURITY_FILES } from '#tests/config/packages/security.ts';
+import { createConsumer, getPublishedRelease } from '#tests/harness/consumer.ts';
 
 const release = getPublishedRelease();
 

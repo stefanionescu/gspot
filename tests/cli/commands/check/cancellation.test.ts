@@ -10,12 +10,11 @@ import { environmentVariables } from '#cli/platform/public.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { READY_POLL_MS } from '#tests/config/harness/process.ts';
-import type { CopyMarker } from '#tests/types/harness/process.ts';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
-import type { FakeGitOptions } from '#tests/types/cli/commands/cancellation.ts';
 import { remainingTestTime, prepareTestCommand } from '#tests/harness/command.ts';
 import { gspot, runGspot, startGspot, checkReport } from '#tests/harness/gspot.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
+import type { CopyMarker, FakeGitOptions } from '#tests/types/cli/commands/cancellation.ts';
 import { SLOW_CHECK, CHILD_OPTIONS, SLOW_TOOL_PROGRAM } from '#tests/config/cli/commands/check/cancellation.ts';
 
 // A readiness file can become visible before the child has finished writing its JSON.
