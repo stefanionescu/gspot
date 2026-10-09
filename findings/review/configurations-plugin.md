@@ -1,6 +1,6 @@
 # Configurations and the ESLint Plugin
 
-3 unresolved review records remain.
+1 unresolved review record remains.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -298,3 +298,12 @@ Original records and quotations remain above. These records are complete at `0ab
 | ID                                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/configurations-plugin/046` | complete | Microsoft and Red Hat packages are removed. Native source-rule probes retain 32 unique concerns, omit five complete Google duplicates, and preserve native Tengo behavior and MIT notices. Actual root/child/deep/sibling checks at both levels pass. Current authored ignores use the replacement native rule IDs. Installed styles decrease by 61 files and 170,482 bytes; tracked authored assets grow as required by the replacement. Commit `0abcd119f0603a522953586168f68c45cfc767e6`. |
+
+## Implementation checkpoint 9384fcdf0 of October 9, 2026
+
+Original records and quotations remain above. These records are complete at `9384fcdf0524f4ba4693c835dad809f7088c589b`.
+
+| ID                                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/configurations-plugin/003` | complete | Pinned Perfectionist supplies all four line-length sorting rules at all; retired custom sorting owners/tests are removed and header-first helpers remain. Commit ee3651968: 125 tests and 750 assertions; Node 24.20 and Bun 1.4.2 consumers; plugin build, types and 156 staged checks pass. Commit `9384fcdf0524f4ba4693c835dad809f7088c589b`. |
+| `review/configurations-plugin/005` | complete | Generates n and core environment restrictions from effective env roles; retired env-owner rule is removed and no-client-env remains. Commit ee3651968: 125 tests and 750 assertions; real Node 24.20 and Bun 1.4.2 consumers; apply, staged and push checks pass. Commit `9384fcdf0524f4ba4693c835dad809f7088c589b`.                             |
