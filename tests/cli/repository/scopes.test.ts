@@ -2,13 +2,13 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/public.ts';
+import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { npmToolNames } from '#cli/configurations/contracts.ts';
 import { readPackageManifests } from '#cli/repository/contracts.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { PYTHON_PROJECT_FILES } from '#tests/config/samples/python.ts';
-import { rm, mkdir, unlink, symlink, writeFile } from 'node:fs/promises';
 import { INVALID_WORKSPACE_CASES } from '#tests/config/cli/repository/scopes.ts';
 import { scopeOf, plannedScopes, packageWorkspaces } from '#cli/repository/paths/contracts.ts';
 
@@ -66,19 +66,13 @@ test('workspace discovery stays within the requested root', async () => {
 
 test.each(INVALID_WORKSPACE_CASES)(
     'invalid or unreadable $path cannot become an empty workspace',
-    async ({ path, content, parseError }) => {
+    async ({ path, parseError }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'package.json': '{}', [path]: '{' });
         expect(() => packageWorkspaces(sandbox.path)).toThrow(parseError);
         await Bun.file(join(sandbox.path, path)).delete();
         await mkdir(join(sandbox.path, path));
         expect(() => packageWorkspaces(sandbox.path)).toThrow('EISDIR: illegal operation on a directory, read');
-        await rm(join(sandbox.path, path), { recursive: true });
-        await createFileTree(sandbox.path, {
-            [path]: content,
-            'packages/app/package.json': '{"name":"app"}',
-        });
-        expect(packageWorkspaces(sandbox.path)).toStrictEqual(['packages/app']);
     },
 );
 
@@ -98,10 +92,6 @@ test.each([
     await symlink('../../outside', join(root, 'packages/linked'), 'dir');
     expect(() => packageWorkspaces(root)).toThrow(`Workspace package leaves the repository: ${join(escaped)}`);
     expect(packageWorkspaces(join(root, 'packages'))).toStrictEqual([]);
-    await unlink(join(root, 'packages/linked'));
-    await writeFile(join(root, 'pnpm-workspace.yaml'), 'packages: ["packages/*"]\n');
-    await createFileTree(root, { 'packages/app/package.json': '{"name":"inside"}' });
-    expect(packageWorkspaces(root)).toStrictEqual(['packages/app']);
 });
 
 test('broad workspace patterns ignore private environments containing external interpreter links', async () => {

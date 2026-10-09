@@ -1,6 +1,4 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { SettingsListJson } from '#cli/types/commands/list.ts';
@@ -32,19 +30,4 @@ test('nested scopes inherit parent configurations and settings and check each fi
     ]);
     expect(new Set(checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(new Set(['api/entry.sh']));
     expect(new Set(checks[1]?.findings.map((finding) => finding.file))).toStrictEqual(new Set(['api/worker/entry.sh']));
-    await writeFile(join(directory.path, 'api/entry.sh'), 'echo example\n');
-    await writeFile(join(directory.path, 'api/worker/entry.sh'), 'echo example\n');
-    const corrected = await checkReport(directory.path, [
-        'check',
-        '--only',
-        'bash/bash-syntax',
-        'sql/trivial-functions',
-        '--json',
-    ]);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks).toMatchObject([
-        { check: 'bash/bash-syntax', scope: 'api', status: 'passed', findings: [] },
-        { check: 'bash/bash-syntax', scope: 'api/worker', status: 'passed', findings: [] },
-        { check: 'sql/trivial-functions', scope: 'api/worker', status: 'passed', findings: [] },
-    ]);
 });

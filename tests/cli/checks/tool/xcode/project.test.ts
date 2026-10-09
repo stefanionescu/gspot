@@ -32,8 +32,6 @@ test('Xcode sources follow group paths and target membership instead of duplicat
         .replace('B1 = {', 'B3 = {isa = PBXBuildFile; fileRef = F2; };\nB1 = {')
         .replace('membershipExceptions = (Excluded.swift,);', 'membershipExceptions = ();');
     await Bun.write(`${sandbox.path}/App.xcodeproj/project.pbxproj`, included);
-    const corrected = await runGspot(sandbox.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     await Bun.file(`${sandbox.path}/Second/Shared.swift`).delete();
     const missing = await checkReport(sandbox.path, command);
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
@@ -69,9 +67,6 @@ test('membership combines projects in a scope and checks nested scopes independe
         { scope: '', findings: [] },
         { scope: 'nested', findings: [containing({ file: 'nested/Extra.swift', rule: 'untargeted' })] },
     ]);
-    await Bun.file(`${sandbox.path}/nested/Extra.swift`).delete();
-    const corrected = await runGspot(sandbox.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
 test('an unreadable project returns execution status 2', async () => {

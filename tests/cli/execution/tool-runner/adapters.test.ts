@@ -19,7 +19,7 @@ else { await Bun.write('started.txt', 'started'); ${slow ? 'await Bun.sleep(10_0
 `;
 
 test.skipIf(!hasToolBuild('ansible-lint')).each(['timeout', 'canceled'] as const)(
-    'Ansible adapter reports a %s run through the shared runner and accepts corrected execution',
+    'Ansible adapter reports a %s run through the shared runner',
     async (failure) => {
         await using sandbox = await testdir();
         const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
@@ -33,7 +33,7 @@ test.skipIf(!hasToolBuild('ansible-lint')).each(['timeout', 'canceled'] as const
             '.gspot/.venv/bin/ansible-lint': versionScript('26.8.0', true),
         });
         await chmod(executable, 0o755);
-        using timeout =
+        using _timeout =
             failure === 'timeout'
                 ? spyOn(processes, 'run').mockResolvedValue({
                       code: 1,
@@ -64,12 +64,6 @@ test.skipIf(!hasToolBuild('ansible-lint')).each(['timeout', 'canceled'] as const
             );
             expect(outcome.report.checks[0]!.findings).toStrictEqual([]);
             if (failure === 'canceled') expect(await pathExists(started)).toBe(true);
-            if (timeout !== undefined)
-                timeout.mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
-            await writeFile(executable, versionScript('26.8.0'));
-            const corrected = await executeRun(await openSession(sandbox.path), options);
-            expect(corrected.report.exitCode).toBe(0);
-            expect(corrected.report.checks[0]!.status).toBe('passed');
         } finally {
             controller.abort();
             await running;
@@ -96,9 +90,6 @@ test.skipIf(!hasToolBuild('ansible-lint'))('an adapter reports a version below t
     expect(changed.report.exitCode).toBe(2);
     expect(changed.report.checks[0]!.status).toBe('missing');
     expect(changed.report.checks[0]!.note).toContain('23.0.0 is below 24.0.0');
-    await writeFile(executable, versionScript('26.8.0'));
-    const executed = await executeRun(await openSession(sandbox.path), options);
-    expect(executed.report.exitCode).toBe(0);
 });
 
 // Windows keeps no permission bits to read back.

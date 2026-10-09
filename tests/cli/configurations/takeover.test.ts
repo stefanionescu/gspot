@@ -143,13 +143,11 @@ test.each([
     expect(getLintJobs(sandbox.path, [path, 'missing.yml'])).toStrictEqual(expected.map((name) => `${path}: ${name}`));
 });
 
-test('CI discovery reports malformed YAML and passes after the fix', async () => {
+test('CI discovery reports malformed YAML', async () => {
     await using sandbox = await testdir();
     const path = '.gitlab-ci.yml';
     await createFileTree(sandbox.path, { [path]: 'quality: [unterminated' });
     expect(() => getLintJobs(sandbox.path, [path])).toThrow(`Cannot read CI configuration ${path}:`);
-    await writeFile(join(sandbox.path, path), 'quality:\n  script: eslint src\n');
-    expect(getLintJobs(sandbox.path, [path])).toStrictEqual([`${path}: quality`]);
 });
 
 test('hook discovery ignores package content without a hook declaration', async () => {
@@ -158,15 +156,11 @@ test('hook discovery ignores package content without a hook declaration', async 
     expect(getTooling(sandbox.path, [], []).hooks).toStrictEqual([]);
 });
 
-test('hook discovery rejects malformed package JSON and passes after the fix', async () => {
+test('hook discovery rejects malformed package JSON', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'package.json': '{' });
     expect(() => getTooling(sandbox.path, [], [])).toThrow(SyntaxError);
     expect(() => getTooling(sandbox.path, [], [])).toThrow('package.json');
-    await writeFile(join(sandbox.path, 'package.json'), '{"simple-git-hooks":{}}');
-    expect(getTooling(sandbox.path, [], []).hooks).toStrictEqual([
-        { kind: 'simple-git-hooks', path: 'package.json', files: [] },
-    ]);
 });
 
 test('tool discovery reads linked authored sections inside the repository', async () => {

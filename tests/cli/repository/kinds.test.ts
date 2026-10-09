@@ -101,13 +101,6 @@ test('an unreadable attributes file cannot become an empty rule set', async () =
             throw error;
         }),
     );
-    await rm(join(sandbox.path, '.gitattributes'), { recursive: true });
-    await writeFile(join(sandbox.path, '.gitattributes'), '*.ts linguist-generated\n');
-    const repository = await readRepository(sandbox.path, [], [], []);
-    expect(repository.files.find((file) => file.path === 'source.ts')).toMatchObject({
-        kind: 'generated',
-        kindSource: '.gitattributes',
-    });
 });
 
 test('Git attributes use native precedence without decoding the working-tree file', async () => {

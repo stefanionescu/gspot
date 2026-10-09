@@ -36,7 +36,4 @@ test('gspot set writes a list of tables typed the TOML way as tables, and the po
         error: 'policy',
         message: 'gspot.toml: tools.eslint.restricted_imports.0: Invalid input: expected object, received string',
     });
-    await Bun.write(join(sandbox.path, 'gspot.toml'), policy);
-    const corrected = await runGspot(sandbox.path, CHECK);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });

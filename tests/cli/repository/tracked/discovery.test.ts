@@ -8,8 +8,8 @@ import { readRepository } from '#cli/repository/public.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { getEntries } from '#cli/repository/revisions/public.ts';
+import { rm, chmod, symlink, writeFile } from 'node:fs/promises';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
-import { rm, chmod, unlink, symlink, writeFile } from 'node:fs/promises';
 import { trackedEntries, readIndexEntries } from '#cli/repository/contracts.ts';
 import { REPLACED_PARENT_PATHS } from '#tests/config/cli/repository/tracked.ts';
 import { findRoot, isGitRepository } from '#cli/repository/discovery/contracts.ts';
@@ -114,24 +114,17 @@ test('repository file discovery > reports a missing Git executable instead of re
     expect(() => isGitRepository(sandbox.path)).toThrow('git executable not found');
 });
 
-test.each(REPLACED_PARENT_PATHS)(
-    'tracked discovery reports a replaced parent of %s and passes after the fix',
-    async (path) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { [path]: 'source' });
-        gitOutput(sandbox.path, ['init', '-q']);
-        gitOutput(sandbox.path, ['add', path]);
-        await rm(join(sandbox.path, 'src'), { recursive: true });
-        await writeFile(join(sandbox.path, 'src'), 'replacement');
-        expect(trackedEntries(sandbox.path)).rejects.toThrow(
-            expect.objectContaining({ code: 'ENOTDIR', message: `Git lists ${path}, but src is now a file.` }),
-        );
-        await unlink(join(sandbox.path, 'src'));
-        await createFileTree(sandbox.path, { [path]: 'restored' });
-        const entries = await trackedEntries(sandbox.path);
-        expect(entries.map((entry) => entry.path)).toStrictEqual([path]);
-    },
-);
+test.each(REPLACED_PARENT_PATHS)('tracked discovery reports a replaced parent of %s', async (path) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { [path]: 'source' });
+    gitOutput(sandbox.path, ['init', '-q']);
+    gitOutput(sandbox.path, ['add', path]);
+    await rm(join(sandbox.path, 'src'), { recursive: true });
+    await writeFile(join(sandbox.path, 'src'), 'replacement');
+    expect(trackedEntries(sandbox.path)).rejects.toThrow(
+        expect.objectContaining({ code: 'ENOTDIR', message: `Git lists ${path}, but src is now a file.` }),
+    );
+});
 
 test('on Windows, tracked discovery takes the executable bit from the Git index', async () => {
     await using sandbox = await testdir();

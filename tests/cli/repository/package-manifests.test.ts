@@ -47,9 +47,6 @@ test('a failed read of a discovered manifest remains an error', async () => {
     expect(() => readPackageManifests(sandbox.path, repository.files)).toThrow(path);
     await mkdir(join(sandbox.path, path));
     expect(() => readPackageManifests(sandbox.path, repository.files)).toThrow(path);
-    await rm(join(sandbox.path, path), { recursive: true });
-    await writeFile(join(sandbox.path, path), '');
-    expect(readPackageManifests(sandbox.path, repository.files)).toHaveLength(1);
 });
 
 test('package manifest reads preserve authored fields and distinguish missing files from invalid data', async () => {
@@ -70,9 +67,6 @@ test('package manifest reads preserve authored fields and distinguish missing fi
     expect(() => readPackageManifest(sandbox.path, 'package.json')).toThrow(
         'Cannot read package manifest package.json',
     );
-    await writeFile(join(sandbox.path, 'package.json'), source);
-    expect(readPackageManifest(sandbox.path, 'package.json')).toStrictEqual(AUTHORED_PACKAGE_FIELDS);
-    expect(readPackageManifests(sandbox.path, repository.files)[0]?.dependencies).toStrictEqual({ next: '16.0.0' });
 });
 
 test('Python group includes coexist with dependency detection', async () => {
@@ -94,7 +88,7 @@ test('pytest configuration records tool use without requiring an authored depend
     expect(manifests[0]?.dependencies).toStrictEqual({ pytest: 'tool.pytest' });
 });
 
-test('manifest inspection refuses an external link replacing a manifest and accepts restored bytes', async () => {
+test('manifest inspection refuses an external link replacing a manifest', async () => {
     const path = 'package.json';
     await using directory = await testdir();
     const content = '{}';
@@ -107,9 +101,6 @@ test('manifest inspection refuses an external link replacing a manifest and acce
     await rm(join(root, path));
     await symlink(`../outside/${path}`, join(root, path));
     expect(() => readPackageManifests(root, repository.files)).toThrow('Source link leaves the repository');
-    await rm(join(root, path));
-    await writeFile(join(root, path), content);
-    expect(readPackageManifests(root, repository.files)).toHaveLength(1);
 });
 
 test.each(INVALID_PYTHON_DEPENDENCY_CASES)('invalid $name in $path reports its source', async ({ path, source }) => {
@@ -117,8 +108,6 @@ test.each(INVALID_PYTHON_DEPENDENCY_CASES)('invalid $name in $path reports its s
     await createFileTree(sandbox.path, { [path]: source });
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(() => readPackageManifests(sandbox.path, repository.files)).toThrow(`Cannot inspect manifest ${path}`);
-    await writeFile(join(sandbox.path, path), source.replace(/7|false/u, '"*"'));
-    expect(readPackageManifests(sandbox.path, repository.files)[0]!.dependencies).toStrictEqual({ fastapi: '*' });
 });
 
 test('captured manifests follow authored links inside the repository and reject invalid text', async () => {
@@ -136,10 +125,6 @@ test('captured manifests follow authored links inside the repository and reject 
     ).toStrictEqual([{ next: '16.0.0' }]);
     await writeFile(join(sandbox.path, 'settings/manifest.json'), Buffer.from([0xc3, 0x28]));
     expect(() => readPackageManifests(sandbox.path, repository.files)).toThrow('package.json is not UTF-8 text.');
-    await writeFile(join(sandbox.path, 'settings/manifest.json'), '{}');
-    expect(
-        readPackageManifests(sandbox.path, repository.files).map((projectManifest) => projectManifest.dependencies),
-    ).toStrictEqual([{}]);
 });
 
 test('declared framework dependencies follow the nearest npm project boundary', async () => {

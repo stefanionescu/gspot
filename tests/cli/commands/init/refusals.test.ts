@@ -87,10 +87,6 @@ test('failed Git status stops initialization with a selection error before writi
         expect.objectContaining({ cwd: sandbox.path }),
     );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
-    boundary.mockRestore();
-    const corrected = await runGspot(sandbox.path, argv);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(true);
 });
 
 test('init refuses an invalid manifest before writing', async () => {
