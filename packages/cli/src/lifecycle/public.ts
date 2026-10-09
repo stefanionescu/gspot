@@ -94,7 +94,7 @@ function writeGenerated(log: Log, request: WriteRequest): void {
     const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
     if (reviewedOriginals !== undefined && conflicts.length > 0)
         throw new Error(
-            `These files were not overwritten by gspot: ${conflicts.join(', ')}. Move them aside, then run gspot apply. Existing tool configuration is unchanged.`,
+            `These files were not overwritten by gspot: ${conflicts.join(', ')}. Move them aside, then run gspot apply. Existing tool files are unchanged.`,
         );
     applyPlans(
         log,

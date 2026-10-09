@@ -20,7 +20,7 @@ export function structureSources(input: CheckInput): TrackedFile[] {
 }
 
 /**
- * Identify dependency directories that native tools own.
+ * Identify dependency directories that tools own.
  * @param directory the repository-relative directory
  * @returns whether a dependency folder contains the directory
  */

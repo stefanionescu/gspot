@@ -14,7 +14,7 @@ import {
 
 const manifests = configurationManifests();
 
-test('Configuration Files claims only formats its declared readers consume', () => {
+test('File readers claim only their declared formats', () => {
     const files = manifests.get('files')!;
     for (const path of UNSUPPORTED_CONFIGURATION_FILES) {
         expect(isOwned(files.files, buildTrackedFile(path))).toBe(false);

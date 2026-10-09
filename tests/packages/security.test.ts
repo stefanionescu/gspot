@@ -1,4 +1,4 @@
-// The installed npm package supplies the security assets selected by each language owner.
+// The installed CLI emits each language's security rules.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
@@ -20,7 +20,7 @@ test('installed language security packs use their configuration names', async ()
     const applied = await runTestCommand([...command, 'apply', '--json'], offlineOptions);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const directory = join(root, '.gspot/config/semgrep');
-    expect(await readFile(join(directory, 'javascript.yml'), 'utf8')).toContain('gspot.javascript.no-eval');
+    expect(await readFile(join(directory, 'javascript.yml'), 'utf8')).toContain('gspot.javascript.no-dom-html-sinks');
     expect(await readFile(join(directory, 'swift.yml'), 'utf8')).toContain('gspot.swift.keychain-accessible-always');
     expect(await readFile(join(root, 'source.js'), 'utf8')).toBe(SECURITY_FILES['source.js']);
     expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(SECURITY_FILES['Value.swift']);

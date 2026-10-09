@@ -91,7 +91,7 @@ function parseToolFile(text: string, extension: string, path: string): unknown {
                 return JSON.parse(text) as unknown;
             } catch (error) {
                 if (!(error instanceof SyntaxError)) throw error;
-                throw new SyntaxError(`Cannot read tool configuration ${path}: ${error.message}`, { cause: error });
+                throw new SyntaxError(`Cannot read tool file ${path}: ${error.message}`, { cause: error });
             }
         }
         case 'yaml': {

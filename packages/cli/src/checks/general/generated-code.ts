@@ -8,19 +8,11 @@ import { pathMatcher } from '#cli/repository/paths/public.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
 import { copyIntoScratch } from '#cli/execution/copy/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import type { CommandPart } from '#cli/types/execution/command.ts';
 import { SCRATCH_DIRECTORIES } from '#cli/config/execution/copy.ts';
 import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
 import type { GeneratedPath } from '#cli/types/checks/general/generated-code.ts';
-import type { CommandPart, CommandCheck, Substitutions } from '#cli/types/execution/command.ts';
 import { substitute, perFileCommands, substituteValue } from '#cli/execution/command/arguments/public.ts';
-
-function outputPaths(input: CheckInput, planned: CommandCheck, values: Substitutions): GeneratedPath[] {
-    return (input.check.generated_paths ?? []).flatMap((entry): GeneratedPath[] => {
-        const { kind, path: original } = entry;
-        const path = substituteValue(input, planned, original, values);
-        return path === '' ? [] : [{ kind, path, original }];
-    });
-}
 
 function missingOutputs(input: CheckInput, targets: GeneratedPath[], command: CommandPart[]): Finding[] {
     const entry = targets.find((target) => {
@@ -78,7 +70,11 @@ function generatedInputs(input: CheckInput) {
     const declaration = input.check.command ?? [];
     const command = substitute(input, planned, declaration, values);
 
-    const declared = outputPaths(input, planned, values);
+    const declared = (input.check.generated_paths ?? []).flatMap((entry): GeneratedPath[] => {
+        const { kind, path: original } = entry;
+        const path = substituteValue(input, planned, original, values);
+        return path === '' ? [] : [{ kind, path, original }];
+    });
 
     const patterns = declared.filter((entry) => entry.kind === 'pattern').map((entry) => entry.path);
     const isMatched = pathMatcher(patterns);

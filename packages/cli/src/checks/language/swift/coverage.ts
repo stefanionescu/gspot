@@ -51,7 +51,7 @@ async function xcodeCoverage(input: CheckInput, plan: SwiftBuildPlan, cwd: strin
 
 /**
  * Measure native source target coverage in the selected Swift package or Xcode project.
- * @param input the selected scope and its native tools
+ * @param input the selected scope and tools
  * @returns native coverage for source targets
  */
 export async function measureCoverage(input: CheckInput): Promise<CoverageReport> {

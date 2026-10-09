@@ -25,9 +25,9 @@ import {
     PROJECT_FILES,
 } from '#tests/config/tools/lifecycle/shared-tools.ts';
 
-// Independent roots must retain selected project inputs and execute their own contained native tools.
+// Independent roots must retain selected project inputs and execute their own contained tools.
 test.each(['recommended', 'all'] as const)(
-    'shared native tools preserve scoped checks and portable lockfiles at %s',
+    'shared tools preserve scoped checks and portable lockfiles at %s',
     async (level) => {
         await using first = await testdir();
         await using second = await testdir();

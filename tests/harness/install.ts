@@ -155,7 +155,7 @@ export function buildToolsPath(names: string[]): string {
 
 /**
  * Build the complete sandbox PATH with the source launcher and test package bins first.
- * @param names the pinned native tools required by the scenario.
+ * @param names the pinned executable tools required by the scenario.
  * @returns the sandbox PATH.
  */
 export function buildSandboxPath(names: string[]): string {

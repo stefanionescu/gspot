@@ -1,4 +1,4 @@
-/** Source formats claimed by no Configuration Files reader. */
+/** Formats claimed by no file reader. */
 export const UNSUPPORTED_CONFIGURATION_FILES = [
     'settings.ini',
     'settings.cfg',

@@ -13,7 +13,7 @@ import type { RunReport } from '#cli/types/execution/check.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { SYNTAX_CASES } from '#tests/config/tools/configurations/language/bash/syntax.ts';
 
-// Windows has no Zsh or Bats native tools; Linux and macOS run all three.
+// Windows has no Zsh or Bats; Linux and macOS run all three.
 test.each(isPosix ? SYNTAX_CASES : SYNTAX_CASES.slice(0, 1))(
     '$check accepts clean files and reports syntax in $path',
     async (entry) => {
