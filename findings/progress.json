@@ -265,6 +265,17 @@
                 "Explicit user answer: Group the mirrors; keep strict enforcement.",
                 "The prescribed flat no-* mirror paths collide under the native staged prefix-collision check."
             ]
+        },
+        {
+            "id": "restore-ai-generated-code-description",
+            "date": "2026-10-09",
+            "scope": "Product description in README, CLI package metadata, command help, and overview",
+            "decision": "Restore the previous description: gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents. The CLI package description is: Lint AI-generated code and install rules for AI coding agents. This overrides subsequent linters-setup wording without reopening completed findings. Generate the CLI README from the restored root README.",
+            "evidence": [
+                "Explicit user instruction in this conversation to bring back the previous description",
+                "git show 4ce293ae8^:README.md",
+                "git show b36d7d0fc:packages/cli/package.json"
+            ]
         }
     ],
     "implementationBatches": {

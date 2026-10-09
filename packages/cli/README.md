@@ -2,7 +2,7 @@
 
 # gspot
 
-gspot sets up linters and checks for the languages in your repository. Git hooks and CI run those checks. It also installs instructions for coding agents.
+gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.
 
 ## Requirements
 

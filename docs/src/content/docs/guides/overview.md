@@ -3,7 +3,7 @@ title: What gspot does
 description: Understand configurations, checks, settings, and the files gspot manages.
 ---
 
-gspot sets up linters and checks for the languages in your repository. Git hooks run checks before commits and pushes. A finding stops the Git operation. CI runs checks again and fails its job when findings remain.
+gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents. Git hooks run checks before commits and pushes. A finding stops the Git operation. CI runs checks again and fails its job when findings remain.
 
 `gspot init` detects languages, frameworks, dependencies, and shared file types. It shows the configurations, tool requirements, and files it proposes before writing them. Your choices live in `gspot.toml`.
 
