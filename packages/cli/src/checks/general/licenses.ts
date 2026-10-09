@@ -1,10 +1,8 @@
 import { statSync } from 'node:fs';
 import satisfies from 'spdx-satisfies';
-import { isDeepStrictEqual } from 'node:util';
 import { findingAt } from '#cli/checks/finding.ts';
 import { join, dirname, basename } from 'node:path';
 import parseExpression from 'spdx-expression-parse';
-import { openRoot } from '#cli/platform/root/public.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { licenseProjects } from '#cli/planning/public.ts';
 import { isInScope } from '#cli/repository/paths/public.ts';
@@ -12,24 +10,17 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { targetInScope } from '#cli/configurations/contracts.ts';
 import { environmentExecutable } from '#cli/platform/contracts.ts';
 import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
 import { normalizedPythonIdentity } from '#cli/parsers/packages/public.ts';
 import { everyTable, policyValue } from '#cli/policy/settings/contracts.ts';
+import { reportSchema, allowlistSchema, pythonReportSchema } from '#cli/parsers/schema/licenses.ts';
 
-import {
-    reportSchema,
-    allowlistSchema,
-    pythonReportSchema,
-    generatedAllowlistSchema,
-} from '#cli/parsers/schema/licenses.ts';
 import type {
     LicenseScanner,
     LicensedPackage,
     ProjectLicenses,
-    LicenseAllowlist,
     LicenseException,
 } from '#cli/types/checks/general/licenses.ts';
 
@@ -47,29 +38,6 @@ function licenseMessage(name: string, license: string, exception: LicenseExcepti
     if (exception === undefined) return `${name} reports ${license}, which is not an allowed license.`;
     if (exception.license === license) return undefined;
     return `${name} reports ${license}, and its exception names ${exception.license}; the exception no longer holds.`;
-}
-
-// Read through the repository filesystem and verify the generated configuration against the selected policy.
-function readAllowlist(input: CheckInput): LicenseAllowlist {
-    const target = input.manifests.get('licenses')?.toolFiles.find((config) => !config.fragment);
-    if (target === undefined) throw new Error('The license configuration has no configuration target.');
-    using files = openRoot(input.root);
-    const content = files.read(targetInScope(input.scope, target));
-    if (content === undefined)
-        throw new Error('License configuration is missing. Run gspot apply before checking licenses.');
-    const { allowed, exceptions } = generatedAllowlistSchema.parse(JSON.parse(content.bytes.toString('utf8')));
-    const configuration: LicenseAllowlist = { allowed, exceptions };
-    const tool = input.view.options('licenses');
-    if (
-        !isDeepStrictEqual(configuration, {
-            allowed: tool['allowed'],
-            exceptions: tool['exceptions'],
-        })
-    )
-        throw new Error(
-            'License configuration differs from the selected policy. Run gspot apply before checking licenses.',
-        );
-    return configuration;
 }
 
 function assertInstalled(input: CheckInput, name: string): void {
@@ -142,7 +110,7 @@ async function scanLicenses(input: CheckInput) {
             scopeRoot: join(input.root, dirname(manifest)),
             view: selection.view,
         };
-        const configuration = readAllowlist(selected);
+        const configuration = allowlistSchema.parse(selected.view.options('licenses'));
         const packages = await scanner.scan(selected, selected.scopeRoot);
         if (packages.length === 0)
             throw new Error(

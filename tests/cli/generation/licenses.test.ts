@@ -3,7 +3,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { LicenseAllowlist } from '#cli/types/checks/general/licenses.ts';
 
 test('license configuration retains scoped exceptions and inherited license allowances', async () => {
     await using sandbox = await testdir();
@@ -19,22 +18,16 @@ test('license configuration retains scoped exceptions and inherited license allo
         }),
     });
     const session = await openSession(sandbox.path);
-    const configs = emitAll(session).files.filter(({ path }) => path.endsWith('/licenses.json'));
-    const parsed = new Map(configs.map(({ path, content }) => [path, JSON.parse(content) as LicenseAllowlist]));
+    const generated = emitAll(session);
+    const parsed = new Map(session.scopes.map(({ scope, view }) => [scope.path, view.options('licenses')]));
+    expect(generated.files.some(({ path }) => path.endsWith('/licenses.json'))).toBe(false);
     expect(parsed.size).toBe(4);
-    for (const path of [
-        '.gspot/config/licenses.json',
-        '.gspot/config/app/licenses.json',
-        '.gspot/config/app/child/licenses.json',
-        '.gspot/config/sibling/licenses.json',
-    ])
-        expect(parsed.get(path)!.allowed).toContain('MPL-2.0');
-    for (const path of ['.gspot/config/app/licenses.json', '.gspot/config/app/child/licenses.json'])
+    for (const path of ['', 'app', 'app/child', 'sibling']) expect(parsed.get(path)!.allowed).toContain('MPL-2.0');
+    for (const path of ['app', 'app/child'])
         expect(parsed.get(path)!.exceptions).toStrictEqual({
             'example@1.2.3': { license: 'BSD', reason: 'Reviewed installed metadata.' },
         });
-    for (const path of ['.gspot/config/licenses.json', '.gspot/config/sibling/licenses.json'])
-        expect(parsed.get(path)!.exceptions).toStrictEqual({});
+    for (const path of ['', 'sibling']) expect(parsed.get(path)!.exceptions).toStrictEqual({});
 });
 
 test.each([{ configurations: ['licenses'] }, { configurations: [] }])(
@@ -46,11 +39,12 @@ test.each([{ configurations: ['licenses'] }, { configurations: [] }])(
             }),
             'docs/package.json': '{"name":"docs","private":true}',
         });
-        const generated = emitAll(await openSession(sandbox.path));
-        expect(generated.files.some(({ path }) => path === '.gspot/config/licenses.json')).toBe(true);
-        expect(generated.files.find(({ path }) => path === '.gspot/config/docs/licenses.json')?.content).toContain(
-            'example@1.0.0',
-        );
+        const session = await openSession(sandbox.path);
+        const generated = emitAll(session);
+        expect(generated.files.some(({ path }) => path.endsWith('/licenses.json'))).toBe(false);
+        expect(
+            session.scopes.find(({ scope }) => scope.path === 'docs')!.view.options('licenses').exceptions,
+        ).toStrictEqual({ 'example@1.0.0': { license: 'MIT', reason: 'Reviewed installed metadata.' } });
         expect(generated.files.find(({ path }) => path === '.gspot/package.json')?.content).toContain(
             'license-checker-rseidelsohn',
         );

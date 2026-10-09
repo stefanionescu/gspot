@@ -1,1 +1,0 @@
-<%= json({ allowed: settings['licenses.allowed'], exceptions: settings['licenses.exceptions'] }) %>

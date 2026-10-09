@@ -9,7 +9,7 @@ import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { chmod, unlink, symlink, readFile } from 'node:fs/promises';
+import { chmod, symlink, readFile } from 'node:fs/promises';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { rejection, containing, textContaining } from '#tests/harness/expectations.ts';
 
@@ -20,7 +20,7 @@ import {
     PROJECT_FINDINGS,
     SCANNER_FAILURES,
     LICENSE_EXCEPTIONS,
-    CONFIGURATION_FAILURES,
+    UNUSED_LICENSE_FILES,
 } from '#tests/config/cli/checks/general/licenses.ts';
 
 /** Prepare real generated policy and a Python scanner version command before mocking scan output. */
@@ -103,41 +103,48 @@ test.each(SCANNER_FAILURES)(
     },
 );
 
-test.each(CONFIGURATION_FAILURES)(
-    'license configuration $name is refused before scanning',
-    async ({ content, diagnostic }) => {
+test.each(UNUSED_LICENSE_FILES)(
+    'a $name unused license file does not change the selected scanning policy',
+    async ({ content }) => {
         await using sandbox = await testdir();
         await preparePythonProject(sandbox.path);
         const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/allowed');
         const path = join(sandbox.path, '.gspot/config/licenses.json');
-        if (content === undefined) await unlink(path);
-        else {
-            await chmod(path, 0o644);
-            await Bun.write(path, content);
-        }
-        using spawn = spyOn(processes, 'run');
-        expect(await rejection(BUILT_IN_CHECKS['licenses/allowed'].input(selected))).toContain(diagnostic);
-        expect(spawn).not.toHaveBeenCalled();
+        if (content !== undefined) await Bun.write(path, content);
+        using spawn = spyOn(processes, 'run').mockResolvedValue({
+            code: 0,
+            missing: false,
+            duration: 1,
+            stderr: '',
+            stdout: '[{"Name":"present","Version":"1.0.0","License":"MIT"}]',
+        });
+        expect(await BUILT_IN_CHECKS['licenses/allowed'].input(selected)).toStrictEqual([]);
+        expect(spawn).toHaveBeenCalledTimes(1);
         expect(await Bun.file(path).exists()).toBe(content !== undefined);
         if (content !== undefined) expect(await Bun.file(path).text()).toBe(content);
     },
 );
 
-test('a license configuration linked outside the repository is refused without changing its destination', async () => {
+test('an unused license file linked outside the repository does not change scanning or its destination', async () => {
     await using sandbox = await testdir();
     await using outside = await testdir();
     await preparePythonProject(sandbox.path);
     const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/allowed');
     const path = join(sandbox.path, '.gspot/config/licenses.json');
-    const original = await readFile(path);
+    const original = '{"allowed":[],"exceptions":{}}';
     const destination = join(outside.path, 'configuration.json');
     await Bun.write(destination, original);
-    await unlink(path);
     await symlink(destination, path);
-    using spawn = spyOn(processes, 'run');
-    expect(await rejection(BUILT_IN_CHECKS['licenses/allowed'].input(selected))).toContain('licenses.json');
-    expect(spawn).not.toHaveBeenCalled();
-    expect(await readFile(destination)).toEqual(original);
+    using spawn = spyOn(processes, 'run').mockResolvedValue({
+        code: 0,
+        missing: false,
+        duration: 1,
+        stderr: '',
+        stdout: '[{"Name":"present","Version":"1.0.0","License":"MIT"}]',
+    });
+    expect(await BUILT_IN_CHECKS['licenses/allowed'].input(selected)).toStrictEqual([]);
+    expect(spawn).toHaveBeenCalledTimes(1);
+    expect(await readFile(destination, 'utf8')).toBe(original);
 });
 
 test('combined license scans preserve manifest order, license alternatives, unknown licenses, and isolated Python settings', async () => {

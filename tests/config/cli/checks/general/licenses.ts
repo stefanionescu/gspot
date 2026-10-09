@@ -25,10 +25,10 @@ export const SCANNER_FAILURES = [
     { name: 'scanner failure', stdout: '[]', code: 1, diagnostic: 'sample diagnostic' },
 ];
 
-export const CONFIGURATION_FAILURES = [
-    { name: 'missing', content: undefined, diagnostic: 'License configuration is missing' },
-    { name: 'malformed', content: '{', diagnostic: 'JSON' },
-    { name: 'stale', content: '{"allowed":[],"exceptions":{}}', diagnostic: 'differs from the selected policy' },
+export const UNUSED_LICENSE_FILES = [
+    { name: 'missing', content: undefined },
+    { name: 'malformed', content: '{' },
+    { name: 'stale', content: '{"allowed":[],"exceptions":{}}' },
 ];
 
 /** Exact exceptions must match both the package version and its reported license. */

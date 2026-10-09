@@ -19,11 +19,6 @@ version = "5.5.5"
 pypi = "pip-licenses"
 mise = "pipx:pip-licenses"
 
-[[tool_file]]
-target = ".gspot/config/licenses.json"
-tool = ["license-checker-rseidelsohn", "pip-licenses"]
-per_scope = true
-
 [[check]]
 name = "allowed"
 tool = { "package.json" = "license-checker-rseidelsohn", "pyproject.toml" = "pip-licenses" }
