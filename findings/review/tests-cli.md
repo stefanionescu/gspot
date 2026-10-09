@@ -1,6 +1,6 @@
 # Tests in `tests/cli`
 
-33 unresolved review records remain.
+29 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -407,3 +407,21 @@ Commit `5e989e01976e7b4bf18d65ca0185ef82b898cfee` implements the following contr
 | `review/tests-cli/054` | partial | The Vale word fixture selects TypeScript, so its expected product name follows the current selected-product contract. All original assertions remain.                      |
 | `review/tests-cli/065` | partial | After deleting ownership state, dry-run comparison reports the authored JavaScript drift without execution, writes or a new ownership log.                                 |
 | `review/tests-cli/066` | partial | After the mocked Git refusal, the same sandbox and arguments recover successfully. Original fetched-once and nested-typos controls remain.                                 |
+
+## Implementation checkpoint 4c6a75d91 of October 9, 2026
+
+Original records and quotations remain above. These records are complete at `4c6a75d9117c19bf4f55716209897f2e87eb8bf0`.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                                                                               |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/tests-cli/064` | complete | Retains the drift controls and both restored newline-path observations; the owner is byte-identical at 0aba and current pushed HEAD. Named Linux/macOS/Windows cases pass. Windows audit /tmp/gspot-tests-cli064-ci0aba-windows-completed-audit.json proves the new observations ran without skips. Commit `4c6a75d9117c19bf4f55716209897f2e87eb8bf0`. |
+
+## Implementation checkpoint a60ad120f of October 9, 2026
+
+Original records and quotations remain above. These records are complete at `a60ad120fe604d418f9c27439e9eacb7eeb5597e`.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                                                                                             |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/tests-cli/054` | complete | The selected TypeScript fixture exports authored words to the generated Vale vocabulary. The restored callback passes on Linux, macOS and Windows; later mechanical move/import changes preserve that callback. Commit `a60ad120fe604d418f9c27439e9eacb7eeb5597e`.                   |
+| `review/tests-cli/065` | complete | Deletes the fresh-clone duplicate while the surviving manual-edit case removes ownership state, shows actual drift, runs no edited configuration and writes no new state. Restored observations pass on Linux, macOS and Windows. Commit `a60ad120fe604d418f9c27439e9eacb7eeb5597e`. |
+| `review/tests-cli/066` | complete | Deletes the duplicate failed-Git case while the surviving refusal restores Git and successfully initializes the same directory with the same argv. The restored recovery passes on Linux, macOS and Windows. Commit `a60ad120fe604d418f9c27439e9eacb7eeb5597e`.                      |

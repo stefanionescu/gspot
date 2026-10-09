@@ -1,6 +1,6 @@
 # Tests: Command, Policy, Platform, and Tools Integration Tests
 
-18 unresolved review records remain.
+17 unresolved review records remain.
 
 ## Open findings
 
@@ -59,3 +59,11 @@ Original records and quotations remain above. These records are complete at `53e
 | ID                                      | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | --------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-commands/042` | complete | Binding implemented: Inline `expectRecommendedLevel` (`tests/cli/commands/levels.test.ts:9-26`) into its caller, so the restore of `entry.sh` (`:25`) is visible in the test. Main affected CLI corpus: 227 distinct cases. Types, actual policy ESLint, staged check and normal hooks pass. Duplicate correction replays removed; distinct command, exit, diagnostic, source and policy preservation controls retained. Commit `53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c`. |
+
+## Implementation checkpoint 4c6a75d91 of October 9, 2026
+
+Original records and quotations remain above. These records are complete at `4c6a75d9117c19bf4f55716209897f2e87eb8bf0`.
+
+| ID                                      | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                 |
+| --------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-commands/040` | complete | Two unused .gspot/version planted entries and their import removed; lockfile/constraint/refusal cases retained. Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Related Python packet -6491 bytes / -13 lines; not a whole Python obligation closure. Commit `4c6a75d9117c19bf4f55716209897f2e87eb8bf0`. |

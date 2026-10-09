@@ -1,5 +1,5 @@
 {
-    "openRecords": 510,
+    "openRecords": 493,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -279,7 +279,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 510,
+        "openRecords": 493,
         "records": 1092,
         "batches": [
             {
@@ -632,8 +632,8 @@
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
                 ],
-                "completedAssignments": 21,
-                "unresolvedAssignments": 18
+                "completedAssignments": 22,
+                "unresolvedAssignments": 17
             },
             {
                 "id": "javascript-web",
@@ -1445,8 +1445,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 234,
-                "unresolvedAssignments": 235
+                "completedAssignments": 251,
+                "unresolvedAssignments": 218
             },
             {
                 "id": "scripts-repository",
@@ -4356,7 +4356,7 @@
                 "Evidence f706f04fbb49307e.",
                 "Hook outputs now prune; disabled installation unsets only exact own hooksPath; apply prints install note for removed hooks.",
                 "Root and app disable\u2192dry-run\u2192prune\u2192install controls, foreign path preservation; actual own root/app native install cases pass.",
-                "Implementation 5586a3c910149fdf156765db99779e372a2b8b09; canonical hook fixture and actual native acceptance 74fcf06452f0a0b0293130e5cff69d42e5ddd620. Four actual hook tests pass within 18 native tool cases and 192 assertions. Combined command tests519/3744, types, normal staged/commit/push gates pass. Native platform macOS; no other-platform claim."
+                "Evidence 53a752e070462538."
             ],
             "additionalChanges": [
                 {
@@ -4380,7 +4380,7 @@
                 "Evidence f706f04fbb49307e.",
                 "Single public isStray uses recorded installed identity, expected generated/move paths and retained paths; write pruning and drift call it; deleted isStrayCandidate/kind filter/dead Policy argument.",
                 "Native disabled agent-rule case asserts each recorded path appears in drift and is actually removed; generic CAS/pruning/source-preservation controls pass.",
-                "Implementation 5586a3c910149fdf156765db99779e372a2b8b09; canonical hook fixture and actual native acceptance 74fcf06452f0a0b0293130e5cff69d42e5ddd620. Four actual hook tests pass within 18 native tool cases and 192 assertions. Combined command tests519/3744, types, normal staged/commit/push gates pass. Native platform macOS; no other-platform claim."
+                "Evidence 53a752e070462538."
             ],
             "additionalChanges": [
                 {
@@ -4609,7 +4609,7 @@
             "verification": [
                 "generated mandatory second argument; log follows, reviewedOriginals named options; no emitter fallback. All direct callers migrated.",
                 "Original29-case mechanical corpus passes; final62 CLI and existing root/app native hooks installation cases pass; root+CLI types0; whole caller grep captured.",
-                "Implementation 5586a3c910149fdf156765db99779e372a2b8b09; canonical hook fixture and actual native acceptance 74fcf06452f0a0b0293130e5cff69d42e5ddd620. Four actual hook tests pass within 18 native tool cases and 192 assertions. Combined command tests519/3744, types, normal staged/commit/push gates pass. Native platform macOS; no other-platform claim."
+                "Evidence 53a752e070462538."
             ]
         },
         "review/code-commands/023": {
@@ -4639,7 +4639,7 @@
                 "Evidence f706f04fbb49307e.",
                 "getHookPlan returns native path; existing hook preview and installation aggregate carry hooks metadata, install consumes it directly; deleted argv search.",
                 "Native root/app dry-run JSON paths unchanged in installed tool cases; disabling preview contains exact git unset command without modifying setting.",
-                "Implementation 5586a3c910149fdf156765db99779e372a2b8b09; canonical hook fixture and actual native acceptance 74fcf06452f0a0b0293130e5cff69d42e5ddd620. Four actual hook tests pass within 18 native tool cases and 192 assertions. Combined command tests519/3744, types, normal staged/commit/push gates pass. Native platform macOS; no other-platform claim."
+                "Evidence 53a752e070462538."
             ],
             "additionalChanges": [
                 {
@@ -4883,7 +4883,7 @@
                 "Evidence f706f04fbb49307e.",
                 "Native foreign hook descriptors preserve files and provider paths; readiness reads their regular-file bytes and requires gspot check --hook; absent registration reports not installed plus native instructions. Native Git hooksDirectory preserves below-Git-root coordinates.",
                 "All4 existing foreign provider vectors now verify absent\u2192actual line\u2192ready and original bytes before mutation; extra nested-core.hooksPath positive/negative case passes.",
-                "Implementation 5586a3c910149fdf156765db99779e372a2b8b09; canonical hook fixture and actual native acceptance 74fcf06452f0a0b0293130e5cff69d42e5ddd620. Four actual hook tests pass within 18 native tool cases and 192 assertions. Combined command tests519/3744, types, normal staged/commit/push gates pass. Native platform macOS; no other-platform claim."
+                "Evidence 53a752e070462538."
             ],
             "additionalChanges": [
                 {
@@ -8654,7 +8654,7 @@
             "commit": "5e989e01976e7b4bf18d65ca0185ef82b898cfee",
             "verification": [
                 "One checkReport helper captures code, streams and parsed RunReport. Migrated 188 captures; malformed command failures and raw-child tests retain their separate contracts.",
-                "Commit 5e989e019: 422 CLI tests with 2254 assertions, 79 coupled cases, native Markdown 6/64, types and 51 staged checks pass; normal hooks and push pass."
+                "Evidence e656d88028e1b7d5."
             ],
             "remaining": ["Related native platform CI evidence remains pending; no whole-platform success is inferred."]
         },
@@ -8992,7 +8992,7 @@
                 "Evidence d078a7c577f57e77.",
                 "Evidence 999a19c9a211b7d7.",
                 "Removed duplicate nested-scope limit assertion; list retains the inherited value and authored source.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/053": {
@@ -9002,7 +9002,7 @@
             "verification": [
                 "Evidence d173e021e9592986.",
                 "Merged reconciliation cases, preserving manual choices, overrides and absent-scope controls.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ],
             "additionalChanges": [
                 {
@@ -9013,22 +9013,22 @@
             ]
         },
         "review/tests-cli/054": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "5e989e01976e7b4bf18d65ca0185ef82b898cfee",
+            "commit": "a60ad120fe604d418f9c27439e9eacb7eeb5597e",
             "verification": [
                 "Evidence fe2933e3b0ee6679.",
                 "The Vale word fixture selects TypeScript, so its expected product name follows the current selected-product contract. All original assertions remain.",
-                "Commit 5e989e019: 422 CLI tests with 2254 assertions, 79 coupled cases, native Markdown 6/64, types and 51 staged checks pass; normal hooks and push pass."
+                "Evidence e656d88028e1b7d5.",
+                "The selected TypeScript fixture exports authored words to the generated Vale vocabulary. The restored callback passes on Linux, macOS and Windows; later mechanical move/import changes preserve that callback."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-cli-reason-consolidation-final-freeze.json",
-                    "commit": null,
+                    "commit": "a60ad120fe604d418f9c27439e9eacb7eeb5597e",
                     "verification": ["Evidence fe2933e3b0ee6679."]
                 }
-            ],
-            "remaining": ["Related native platform CI evidence remains pending; no whole-platform success is inferred."]
+            ]
         },
         "review/tests-cli/055": {
             "status": "complete",
@@ -9042,7 +9042,7 @@
                 "Evidence 872d36bbc394edf8.",
                 "Evidence 999a19c9a211b7d7.",
                 "Deleted duplicate cases; retained command tests cover their distinct behavior.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/056": {
@@ -9116,7 +9116,7 @@
                 "Evidence d078a7c577f57e77.",
                 "Evidence 999a19c9a211b7d7.",
                 "Moved unused-local coverage to typescript-eslint and renamed its result variable.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/063": {
@@ -9131,29 +9131,28 @@
                 "Evidence d078a7c577f57e77.",
                 "Evidence 999a19c9a211b7d7.",
                 "Removed the duplicate case; retained coverage verifies the original contract.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/064": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
             "verification": [
                 "Kept one edited ESLint configuration byte-preview case in rule-preview with explicit no installed modules, preserved authored bytes and unchanged ownership baseline. Deleted duplicate offline preview and repeated manual JavaScript setup; native scoped rule preview remains in final ESLint dry-run owner.",
                 "Evidence a2b94c9da4051e5f.",
                 "Evidence 0ee814fd08e510fb.",
                 "Evidence 4d3c9be91dfeb09c.",
                 "Evidence d078a7c577f57e77.",
-                "Evidence 999a19c9a211b7d7."
-            ],
-            "remaining": [
-                "Mandatory staged verification, coherent mechanical/behavior commits, push and cross-platform CI evidence."
+                "Evidence 999a19c9a211b7d7.",
+                "Retains the drift controls and both restored newline-path observations; the owner is byte-identical at 0aba and current pushed HEAD.",
+                "Named Linux/macOS/Windows cases pass. Windows audit /tmp/gspot-tests-cli064-ci0aba-windows-completed-audit.json proves the new observations ran without skips."
             ]
         },
         "review/tests-cli/065": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "5e989e01976e7b4bf18d65ca0185ef82b898cfee",
+            "commit": "a60ad120fe604d418f9c27439e9eacb7eeb5597e",
             "verification": [
                 "Deleted repeated fresh-clone case and sole-use CLONE_RULE_FILES data. Actual Git clone byte/mode preservation and repeated clean apply assertions remain in cloned-output.test.ts and pass.",
                 "Evidence a2b94c9da4051e5f.",
@@ -9162,14 +9161,14 @@
                 "Evidence d078a7c577f57e77.",
                 "Evidence 999a19c9a211b7d7.",
                 "After deleting ownership state, dry-run comparison reports the authored JavaScript drift without execution, writes or a new ownership log.",
-                "Commit 5e989e019: 422 CLI tests with 2254 assertions, 79 coupled cases, native Markdown 6/64, types and 51 staged checks pass; normal hooks and push pass."
-            ],
-            "remaining": ["Related native platform CI evidence remains pending; no whole-platform success is inferred."]
+                "Evidence e656d88028e1b7d5.",
+                "Deletes the fresh-clone duplicate while the surviving manual-edit case removes ownership state, shows actual drift, runs no edited configuration and writes no new state. Restored observations pass on Linux, macOS and Windows."
+            ]
         },
         "review/tests-cli/066": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "5e989e01976e7b4bf18d65ca0185ef82b898cfee",
+            "commit": "a60ad120fe604d418f9c27439e9eacb7eeb5597e",
             "verification": [
                 "Deleted only duplicate failed-Git-status init case. Retained distinct nested typos preview/deletion, no external-Git .gitignore and no en-gb policy assertions in final replacement owner; existing CLI human/JSON Git-refusal tests pass.",
                 "Evidence 2c9442dcf25177ff.",
@@ -9178,9 +9177,9 @@
                 "Evidence 7efad1a20dddc343.",
                 "Evidence 999a19c9a211b7d7.",
                 "After the mocked Git refusal, the same sandbox and arguments recover successfully. Original fetched-once and nested-typos controls remain.",
-                "Commit 5e989e019: 422 CLI tests with 2254 assertions, 79 coupled cases, native Markdown 6/64, types and 51 staged checks pass; normal hooks and push pass."
-            ],
-            "remaining": ["Related native platform CI evidence remains pending; no whole-platform success is inferred."]
+                "Evidence e656d88028e1b7d5.",
+                "Deletes the duplicate failed-Git case while the surviving refusal restores Git and successfully initializes the same directory with the same argv. The restored recovery passes on Linux, macOS and Windows."
+            ]
         },
         "review/tests-cli/068": {
             "status": "complete",
@@ -9194,7 +9193,7 @@
                 "Evidence d078a7c577f57e77.",
                 "Evidence 999a19c9a211b7d7.",
                 "Merged reporter coverage into its single behavior owner.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/069": {
@@ -9206,7 +9205,7 @@
                 "Evidence 74123bdcdee621fe.",
                 "Evidence 999a19c9a211b7d7.",
                 "Removed repeated declared-check parser cases; output parser retains native message coverage.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/070": {
@@ -9218,7 +9217,7 @@
                 "Evidence 74123bdcdee621fe.",
                 "Evidence 999a19c9a211b7d7.",
                 "One message table constructs reports from shared constants.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/071": {
@@ -9343,7 +9342,7 @@
             "verification": [
                 "Evidence a0bbd9fb959a65e1.",
                 "Termination owns byte limits; command tests retain seconds conversion.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ],
             "additionalChanges": [
                 {
@@ -9602,7 +9601,7 @@
             "commit": "5e989e01976e7b4bf18d65ca0185ef82b898cfee",
             "verification": [
                 "One swiftBuildInput helper owns common preparation and disposable resources; all prior assertions remain. Shared compiler-cache isolation has real callers.",
-                "Commit 5e989e019: 422 CLI tests with 2254 assertions, 79 coupled cases, native Markdown 6/64, types and 51 staged checks pass; normal hooks and push pass."
+                "Evidence e656d88028e1b7d5."
             ],
             "remaining": ["Related native platform CI evidence remains pending; no whole-platform success is inferred."]
         },
@@ -9657,7 +9656,7 @@
                 "Main Git metadata protected; mandatory commits/push pending.",
                 "Fullnative/crossplatform CI remains incomplete; native unavailabletool/environment errors notcounted aspasses.",
                 "Builds the configuration-name expectations from the owned lists.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/111": {
@@ -9827,7 +9826,7 @@
                 "Evidence e21341d2b84cbd16.",
                 "Evidence 0a4a426cd56e8208.",
                 "Native error matchers verify the relevant messages; discovery uses toThrow.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/127": {
@@ -9842,7 +9841,7 @@
                 "Evidence e21341d2b84cbd16.",
                 "Evidence 0a4a426cd56e8208.",
                 "Unowned README and settings files are explicitly absent from drift.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ],
             "additionalChanges": [
                 {
@@ -9867,7 +9866,7 @@
                 "Evidence e21341d2b84cbd16.",
                 "Evidence 0a4a426cd56e8208.",
                 "Starts the PID child only for cases that require it.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ],
             "additionalChanges": [
                 {
@@ -9905,7 +9904,7 @@
                 "Evidence e21341d2b84cbd16.",
                 "Evidence 0a4a426cd56e8208.",
                 "Uses the authored string directly.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/132": {
@@ -9918,7 +9917,7 @@
                 "Evidence be543f29d0974793.",
                 "Main commit/push and cross-platform acceptance remain pending.",
                 "Spreads BASE_CHECK rather than recreating its fields.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/133": {
@@ -9952,7 +9951,7 @@
                 "Evidence e21341d2b84cbd16.",
                 "Evidence 0a4a426cd56e8208.",
                 "Builds the test input from its string.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/136": {
@@ -9984,7 +9983,7 @@
                 "Evidence e21341d2b84cbd16.",
                 "Evidence 0a4a426cd56e8208.",
                 "Imports the shared constant.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/138": {
@@ -9999,7 +9998,7 @@
                 "Evidence e21341d2b84cbd16.",
                 "Evidence 0a4a426cd56e8208.",
                 "Deletes the redundant assertion.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/139": {
@@ -10015,7 +10014,7 @@
                 "Evidence 0a4a426cd56e8208.",
                 "Evidence fe2933e3b0ee6679.",
                 "Uses valueAt for the shared value lookup.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ],
             "additionalChanges": [
                 {
@@ -10049,7 +10048,7 @@
                 "Evidence e21341d2b84cbd16.",
                 "Evidence 0a4a426cd56e8208.",
                 "Uses toThrow for native failure assertions.",
-                "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json."
+                "Evidence 15a0500738b7438c."
             ]
         },
         "review/tests-cli/142": {
@@ -10575,9 +10574,9 @@
             ]
         },
         "review/tests-tools/030": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
             "verification": [
                 "Evidence 611d19b6ed412668.",
                 "/tmp/gspot-helper-only-test-independent-review.md",
@@ -10589,20 +10588,24 @@
                 "Temporary native index whitespace/reverse checksexit0",
                 "Main Git metadata protected; mandatory checkpoint commits/push pending.",
                 "Evidence bc40e9ab1be2ffdb.",
-                "Evidence 163423ce2c7d418f."
+                "Evidence 163423ce2c7d418f.",
+                "Removed the helper-only registration; current public Taplo/schema cases survive. The helper retains real public callers.",
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. -1638 bytes / -36 lines / -243 AST nodes in exact deletion freeze."
             ]
         },
         "review/tests-tools/031": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
             "verification": [
                 "Evidence 862df05a9a8937e9.",
                 "Evidence 2efd3db6270d0cc1.",
                 "Evidence 2466c72339b82fbe.",
                 "Evidence 73f7e6039a3aaa74.",
                 "Evidence e1d520d091d03793.",
-                "Evidence 71143f238291f73c."
+                "Evidence 71143f238291f73c.",
+                "Shared TYPO.the/testApiToken own the same planted bytes; MISSPELLED_FILE replaces the conflicting local name.",
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Binding-symbol move; whole rename packet +11 bytes, no runtime/body change claim."
             ]
         },
         "review/tests-tools/032": {
@@ -10614,7 +10617,15 @@
                 "Evidence 6948add951949df5."
             ]
         },
-        "review/tests-tools/033": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-tools/033": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
+            "verification": [
+                "removeConfigurations is private; initRepository removes all selected entries before its single native install. Public remove edits install nothing.",
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Deleted export and repeated installation; no fabricated standalone per-record byte count."
+            ]
+        },
         "review/tests-tools/035": {
             "status": "partial",
             "owner": "main",
@@ -10636,14 +10647,16 @@
             ]
         },
         "review/tests-tools/036": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
             "verification": [
                 "Evidence 99093e9d3cc0720e.",
                 "Evidence e149548ee95da099.",
                 "Evidence 2d51df25432e7311.",
-                "Evidence 15fa5e38631008ab."
+                "Evidence 15fa5e38631008ab.",
+                "Config contains counts; test owns Array.from calculations. Frozen Node/Bun comparison preserves original JSON/Bash bytes.",
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. -4518 bytes / +3 lines / +38 AST nodes; no all-dimensions reduction claim."
             ]
         },
         "review/tests-tools/037": { "status": "pending", "owner": null, "commit": null, "verification": [] },
@@ -10676,31 +10689,43 @@
                 }
             ]
         },
-        "review/tests-tools/042": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/tests-tools/043": {
-            "status": "partial",
+        "review/tests-tools/042": {
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
+            "verification": [
+                "VERSION_TIMEOUT_MS declaration/import/timeoutMs arguments are absent; common native child deadline enforcement remains distinct from production tool time limits.",
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Exact removed duplicate concern; whole timeout project/final ceiling not closed by this leaf."
+            ]
+        },
+        "review/tests-tools/043": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
             "verification": [
                 "Evidence 795e048b8dc4443b.",
                 "Evidence 2efd3db6270d0cc1.",
                 "Evidence 2466c72339b82fbe.",
                 "Evidence 73f7e6039a3aaa74.",
                 "Evidence e1d520d091d03793.",
-                "Evidence 71143f238291f73c."
+                "Evidence 71143f238291f73c.",
+                "Prescribed binding-symbol names and Vale installation title replace the old local names. External API names and planted literals were not renamed.",
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Exact rename packet +11 bytes; original symbol/body equality receipt retained."
             ]
         },
         "review/tests-tools/044": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
             "verification": [
                 "Evidence d308481682a06b57.",
                 "Evidence 2efd3db6270d0cc1.",
                 "Evidence e238734babf58510.",
                 "Evidence 73f7e6039a3aaa74.",
                 "Evidence e1d520d091d03793.",
-                "Evidence 71143f238291f73c."
+                "Evidence 71143f238291f73c.",
+                "initRepository is the sole name of the multi-command setup; no exported install alias survives. Current real caller inventory is included.",
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Mechanical naming change; do not claim byte shrink."
             ]
         },
         "review/tests-tools/046": {
@@ -10747,9 +10772,9 @@
             ]
         },
         "review/tests-tools/051": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
             "verification": [
                 "/tmp/gspot-plugin-test-checkpoint.patch SHA256 b79712fc52af5f81e82ef154031555c0db7d3d56da2692145397e289dad03c84",
                 "54 plugin rule tests pass across two files (Bun 1.4.2).",
@@ -10757,13 +10782,15 @@
                 "Evidence 4176761fffdbe440.",
                 "JSON-to-TypeScript sample values retained; duplicate import-boundary case removed while stronger case remains.",
                 "Database test is not executed on this host; native designated database workflow acceptance remains pending.",
-                "Main commit/push blocked by protected Git metadata."
+                "Main commit/push blocked by protected Git metadata.",
+                "Consumer gets @typescript-eslint/utils version from its own dependency entry.",
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Shared plugin packet -3616 bytes; no separate fictitious per-record metric."
             ]
         },
         "review/tests-tools/052": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
             "verification": [
                 "/tmp/gspot-plugin-test-checkpoint.patch SHA256 b79712fc52af5f81e82ef154031555c0db7d3d56da2692145397e289dad03c84",
                 "54 plugin rule tests pass across two files (Bun 1.4.2).",
@@ -10771,13 +10798,15 @@
                 "Evidence 4176761fffdbe440.",
                 "JSON-to-TypeScript sample values retained; duplicate import-boundary case removed while stronger case remains.",
                 "Database test is not executed on this host; native designated database workflow acceptance remains pending.",
-                "Main commit/push blocked by protected Git metadata."
+                "Main commit/push blocked by protected Git metadata.",
+                "Consumer retains ESM/CommonJS, both levels/configs, one contractual finding per level; duplicate rule-option/alias tests removed.",
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Shared plugin packet -3616 bytes."
             ]
         },
         "review/tests-tools/054": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
             "verification": [
                 "/tmp/gspot-plugin-test-checkpoint.patch SHA256 b79712fc52af5f81e82ef154031555c0db7d3d56da2692145397e289dad03c84",
                 "54 plugin rule tests pass across two files (Bun 1.4.2).",
@@ -10785,13 +10814,15 @@
                 "Evidence 4176761fffdbe440.",
                 "JSON-to-TypeScript sample values retained; duplicate import-boundary case removed while stronger case remains.",
                 "Database test is not executed on this host; native designated database workflow acceptance remains pending.",
-                "Main commit/push blocked by protected Git metadata."
+                "Main commit/push blocked by protected Git metadata.",
+                "Second identical invalid code/filename vector is deleted; distinct later path/control cases remain.",
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Shared plugin packet -3616 bytes."
             ]
         },
         "review/tests-tools/055": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
             "verification": [
                 "/tmp/gspot-plugin-test-checkpoint.patch SHA256 b79712fc52af5f81e82ef154031555c0db7d3d56da2692145397e289dad03c84",
                 "54 plugin rule tests pass across two files (Bun 1.4.2).",
@@ -10799,7 +10830,9 @@
                 "Evidence 4176761fffdbe440.",
                 "JSON-to-TypeScript sample values retained; duplicate import-boundary case removed while stronger case remains.",
                 "Database test is not executed on this host; native designated database workflow acceptance remains pending.",
-                "Main commit/push blocked by protected Git metadata."
+                "Main commit/push blocked by protected Git metadata.",
+                "JSON owner removed; TypeScript EXAMPLE owns identical literal values.",
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Shared plugin packet -3616 bytes; data-value preservation proof retained."
             ]
         },
         "review/tests-tools/056": {
@@ -10812,9 +10845,9 @@
             ]
         },
         "review/tests-tools/058": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
             "verification": [
                 "/tmp/gspot-redundant-test-steps-main.patch SHA256 d07939b6dd647f3cb0d8a37fbeae83077ba4547ba1e57198f352c815f613ddbc",
                 "99 CLI tests pass, 293 assertions across eight files; /tmp/gspot-redundant-test-steps-cli-tests.log.",
@@ -10822,7 +10855,9 @@
                 "Evidence 4274c37f1991ecbf.",
                 "Evidence 31cc8fb0f45d1c4c.",
                 "Evidence 00285fb212d8638d.",
-                "Main commit/push and cross-platform acceptance remain pending."
+                "Main commit/push and cross-platform acceptance remain pending.",
+                "Passes broken/failed directly. Altered-code/stdout copies in real crash/refusal tests remain intentional distinct controls.",
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Related redundant-step packet -2374 bytes; no invented per-record delta."
             ]
         },
         "review/tests-tools/059": {
@@ -12287,14 +12322,19 @@
             "verification": []
         },
         "slices/tests-integration-commands/040": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."],
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
+            "verification": [
+                "Evidence 9048c67a3d621f62.",
+                "Evidence 42194dcb89d937cf.",
+                "Two unused .gspot/version planted entries and their import removed; lockfile/constraint/refusal cases retained.",
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Related Python packet -6491 bytes / -13 lines; not a whole Python obligation closure."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-domain-checkpoint1-final-freeze.json",
-                    "commit": null,
+                    "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
                     "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."]
                 }
             ]
@@ -16742,6 +16782,59 @@
                 "Report capture and Swift preparation preserve the original controls; focused native checks, types, staged checks and normal hooks pass."
             ],
             "limitations": ["CI run37881269281 is pending; no cross-platform closure."]
+        },
+        {
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
+            "completedRecords": ["review/tests-cli/064"],
+            "unresolvedRecords": 509,
+            "validation": [
+                "Actual Windows job113650616349 passes the restored callback; matching Linux/macOS evidence and owner hashes are preserved.",
+                "Original stable IDs, memberships and quotations remain."
+            ],
+            "limitations": [
+                "The whole Windows job has 26 failures and 94 skips; only the matched callback is credited.",
+                "Later 065 recovery assertions are outside this closure."
+            ]
+        },
+        {
+            "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
+            "completedRecords": [
+                "review/tests-tools/030",
+                "review/tests-tools/031",
+                "review/tests-tools/033",
+                "review/tests-tools/036",
+                "review/tests-tools/042",
+                "review/tests-tools/043",
+                "review/tests-tools/044",
+                "review/tests-tools/051",
+                "review/tests-tools/052",
+                "review/tests-tools/054",
+                "review/tests-tools/055",
+                "review/tests-tools/058",
+                "slices/tests-integration-commands/040"
+            ],
+            "unresolvedRecords": 496,
+            "validation": [
+                "Main verified every named pushed owner hash against 4c6a75d9 and inspected the immutable native receipts.",
+                "Original IDs, quotations, decisions and overlapping memberships are preserved."
+            ],
+            "limitations": [
+                "This record audit establishes the prescribed leaf fixes only. Whole-suite and cross-platform acceptance remain separate obligations.",
+                "The shared timeout still requires final CI measurements; this closes only the duplicate version limit deletion.",
+                "Mechanical identifier renames preserve bodies and add 11 bytes in their packet; no runtime growth or byte-reduction claim is made."
+            ]
+        },
+        {
+            "commit": "a60ad120fe604d418f9c27439e9eacb7eeb5597e",
+            "completedRecords": ["review/tests-cli/054", "review/tests-cli/065", "review/tests-cli/066"],
+            "unresolvedRecords": 493,
+            "validation": [
+                "Native cross-platform source and callback evidence: /tmp/gspot-ci054065066-windows-exact-callback-proof.json SHA21e96a7b763c1151a2d512a8c618a3bc1cd326cc43a9d4edb6b68d9ed1e73315; companion Linux/macOS audit records the same restored source."
+            ],
+            "limitations": [
+                "Windows whole CLI job113665195699 failed with3869 passes,94 skips,19 failures; these three credited callbacks passed without skips.",
+                "No aggregate018/103 closure or blanket CI pass is inferred."
+            ]
         }
     ],
     "verificationEvidence": {
@@ -17046,6 +17139,9 @@
         "27ae11b810641048": "Native discovery followup: 15 passed, 33 assertions. Directory symlink calls explicitly use dir; POSIX newline eligibility and a Windows registration control are distinguished from Windows filesystem execution.",
         "61fbfe47b92cc3d6": "Pushed a7f522912..1285f9d5e to main without force. Required pre-push checks: 147 pass, 13 skip, zero findings, 83.6s; remote main verified at 1285f9d5eead1c60f4f7b892c92d744bab52792f.",
         "cd9a6f9a1da7c4a3": "Frozen mechanical f3b0306b8750e74fe64193f6b7840c3aa5785988ab81204707da5d11b6e35f6b integrated773ad6e; behavior d5138557d856c8683aeac0a712fc2f062134730b8d07fa9c2eb0f35d409b9de2 integrated here. Native CLI21/104, tools10/66 and exact Node/Bun retained values pass; Main68case332assert mechanical replay passes. No Windows Zsh/Bats proof is claimed.",
-        "4d2ac8d51b2e53aa": "Frozen A9 7680a798f21a2de0107551e57aac99aa677b510698cac8febd9af879c4108abd: native100cases297assertions9files, Bun/Node34YAMLjobs11JSONvectors and5YAML/TOML values/errors equal. Main affected160/472 plus8parser cases21assertions pass."
+        "4d2ac8d51b2e53aa": "Frozen A9 7680a798f21a2de0107551e57aac99aa677b510698cac8febd9af879c4108abd: native100cases297assertions9files, Bun/Node34YAMLjobs11JSONvectors and5YAML/TOML values/errors equal. Main affected160/472 plus8parser cases21assertions pass.",
+        "15a0500738b7438c": "Native focused suites and named Linux/macOS/Windows cases pass; exact owner hashes and retained skip limitations are recorded in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json.",
+        "e656d88028e1b7d5": "Commit 5e989e019: 422 CLI tests with 2254 assertions, 79 coupled cases, native Markdown 6/64, types and 51 staged checks pass; normal hooks and push pass.",
+        "53a752e070462538": "Implementation 5586a3c910149fdf156765db99779e372a2b8b09; canonical hook fixture and actual native acceptance 74fcf06452f0a0b0293130e5cff69d42e5ddd620. Four actual hook tests pass within 18 native tool cases and 192 assertions. Combined command tests519/3744, types, normal staged/commit/push gates pass. Native platform macOS; no other-platform claim."
     }
 }
