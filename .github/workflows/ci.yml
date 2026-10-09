@@ -6,19 +6,18 @@ on:
         branches: [main]
     pull_request:
     workflow_dispatch:
-    workflow_call:
 permissions:
     contents: read
 concurrency:
     group: ci-${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+defaults:
+    run:
+        shell: bash
 jobs:
     check:
         runs-on: ubuntu-24.04
         timeout-minutes: 60
-        defaults:
-            run:
-                shell: bash
         steps:
             - name: Check out the repository
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -37,24 +36,7 @@ jobs:
               run: mise run install:checks
             - name: Check the types
               run: mise run check:types
-            - name: Detect changed pin inputs
-              id: pin-inputs
-              shell: bash
-              run: |
-                  if ! git cat-file -e "${PIN_BASE}^{commit}" 2>/dev/null ||
-                     git diff --name-only "${PIN_BASE}" HEAD -- \
-                         packages/cli/configurations bun.lock packages/cli/package.json packages/eslint-plugin/package.json \
-                         scripts/pins.ts scripts/config/pins.ts scripts/types/pins.ts scripts/parsers/releases.ts \
-                         scripts/plugin.ts scripts/config/plugin.ts scripts/eslint-presets.ts \
-                         scripts/config/eslint-presets.ts scripts/parsers/npm.ts scripts/types/npm.ts \
-                         packages/cli/src/config/generation/eslint.ts packages/cli/src/generation/eslint/presets.ts \
-                         packages/cli/src/parsers/schema/eslint.ts | rg .; then
-                      echo 'changed=true' >> "$GITHUB_OUTPUT"
-                  fi
-              env:
-                  PIN_BASE: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD^' }}
-            - name: Validate changed registry pins
-              if: steps.pin-inputs.outputs.changed == 'true'
+            - name: Validate registry pins
               run: mise run check:pins
             - name: Build the CLI
               run: mise run build:cli
@@ -88,9 +70,6 @@ jobs:
     package:
         runs-on: ubuntu-24.04
         timeout-minutes: 60
-        defaults:
-            run:
-                shell: bash
         steps:
             - name: Check out the repository
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -107,9 +86,6 @@ jobs:
                 os: [ubuntu-24.04, macos-15, windows-2025]
         runs-on: ${{ matrix.os }}
         timeout-minutes: 60
-        defaults:
-            run:
-                shell: bash
         steps:
             - name: Check out the repository
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -121,30 +97,14 @@ jobs:
             - name: Run the CLI and plugin tests
               run: mise run test
     tools:
-        name: tools (${{ matrix.platform }} ${{ matrix.shard }}/${{ matrix.shards }})
+        name: tools (${{ matrix.os }} ${{ matrix.shard }}/4)
         strategy:
             fail-fast: false
             matrix:
-                include:
-                    - { os: ubuntu-24.04, platform: linux, shard: 1, shards: 4 }
-                    - { os: ubuntu-24.04, platform: linux, shard: 2, shards: 4 }
-                    - { os: ubuntu-24.04, platform: linux, shard: 3, shards: 4 }
-                    - { os: ubuntu-24.04, platform: linux, shard: 4, shards: 4 }
-                    - { os: macos-15, platform: macos, shard: 1, shards: 4 }
-                    - { os: macos-15, platform: macos, shard: 2, shards: 4 }
-                    - { os: macos-15, platform: macos, shard: 3, shards: 4 }
-                    - { os: macos-15, platform: macos, shard: 4, shards: 4 }
-                    - { os: windows-2025, platform: windows, shard: 1, shards: 4 }
-                    - { os: windows-2025, platform: windows, shard: 2, shards: 4 }
-                    - { os: windows-2025, platform: windows, shard: 3, shards: 4 }
-                    - { os: windows-2025, platform: windows, shard: 4, shards: 4 }
+                os: [ubuntu-24.04, macos-15, windows-2025]
+                shard: [1, 2, 3, 4]
         runs-on: ${{ matrix.os }}
         timeout-minutes: 60
-        env:
-            SHARD: ${{ matrix.shard }}/${{ matrix.shards }}
-        defaults:
-            run:
-                shell: bash
         steps:
             - name: Check out the repository
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -161,4 +121,4 @@ jobs:
               shell: pwsh
               run: Set-MpPreference -DisableRealtimeMonitoring $true
             - name: Run this shard of the tool tests
-              run: mise run test:tools -- "--shard=${SHARD}"
+              run: mise run test:tools -- "--shard=${{ matrix.shard }}/4"
