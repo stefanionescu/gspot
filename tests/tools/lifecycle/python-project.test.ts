@@ -7,6 +7,7 @@ import { openSession } from '#cli/commands/public.ts';
 import { prepareToolProjects } from '#cli/tools/public.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { installToolProject } from '#cli/tools/contracts.ts';
@@ -18,6 +19,7 @@ import { pythonToolProject } from '#cli/tools/python/public.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { environmentExecutable } from '#cli/platform/contracts.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { cp, chmod, readFile, realpath, writeFile } from 'node:fs/promises';
 import { PYTHON_PROJECTS, PYTHON_INSTALL_STEPS } from '#tests/config/tools/lifecycle/python-project.ts';
 import { createPythonRegistry, preparePythonInstallation } from '#tests/harness/python-installation.ts';
@@ -68,7 +70,13 @@ test.skipIf(!isPosix).each(PYTHON_PROJECTS)(
         expect(command.code, command.stdout + command.stderr).toBe(0);
         expect(JSON.parse(command.stdout) as InstallJson).toMatchObject({
             installed: true,
-            steps: PYTHON_INSTALL_STEPS[runner],
+            steps:
+                runner === 'mise'
+                    ? [
+                          ['mise', 'install', `uv@${toolPin(configurationManifests().values(), 'uv').version!}`],
+                          ...PYTHON_INSTALL_STEPS[runner],
+                      ]
+                    : PYTHON_INSTALL_STEPS[runner],
         });
         expect(await readFile(join(repository.path, 'pyproject.toml'))).toStrictEqual(rootProject);
         expect(await readFile(join(repository.path, '.venv/authored.txt'), 'utf8')).toBe(

@@ -39,8 +39,8 @@ test.skipIf(!isPosix).each(['recommended', 'all'] as const)(
         const compiler = toolPin(session.scopes[0]!.selected, 'tsc');
         expect(inspectTool(session, compiler)).toMatchObject({
             state: 'ok',
-            found: '5.9.3',
-            want: '5.9.3',
+            found: compiler.version,
+            want: compiler.version,
             path: join(sandbox.path, '.gspot/node_modules/.bin/tsc'),
         });
         const broken = await spawnGspot(sandbox.path, ['check', '--only', 'javascript/tsc', '--json']);
@@ -130,7 +130,7 @@ test.skipIf(!isPosix)(
         const compiler = toolPin(configurationManifests().values(), 'tsc');
         let pending: string[] = [];
         const search = { root: sandbox.path, inspections: new Map(), getPendingInstallations: () => pending };
-        expect(inspectTool(search, compiler)).toMatchObject({ state: 'ok', found: '5.9.3' });
+        expect(inspectTool(search, compiler)).toMatchObject({ state: 'ok', found: compiler.version });
         pending = ['npm'];
         expect(inspectTool(search, compiler)).toStrictEqual({
             name: 'tsc',
@@ -139,9 +139,9 @@ test.skipIf(!isPosix)(
             note: 'Tool installation is incomplete. Run: gspot install',
         });
         pending = [];
-        expect(inspectTool(search, compiler)).toMatchObject({ state: 'ok', found: '5.9.3' });
+        expect(inspectTool(search, compiler)).toMatchObject({ state: 'ok', found: compiler.version });
         pending = ['python'];
-        expect(inspectTool(search, compiler)).toMatchObject({ state: 'ok', found: '5.9.3' });
+        expect(inspectTool(search, compiler)).toMatchObject({ state: 'ok', found: compiler.version });
         await createFileTree(sandbox.path, { 'snapshot/.gspot/package.json': '{}' });
         expect(
             inspectTool(
@@ -153,6 +153,10 @@ test.skipIf(!isPosix)(
                 },
                 compiler,
             ),
-        ).toMatchObject({ state: 'ok', found: '5.9.3', path: join(sandbox.path, '.gspot/node_modules/.bin/tsc') });
+        ).toMatchObject({
+            state: 'ok',
+            found: compiler.version,
+            path: join(sandbox.path, '.gspot/node_modules/.bin/tsc'),
+        });
     },
 );

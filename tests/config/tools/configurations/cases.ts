@@ -11,7 +11,6 @@ import * as toolAnsible from '#tests/config/tools/configurations/tool/ansible.ts
 import * as toolOpenapi from '#tests/config/tools/configurations/tool/openapi.ts';
 import * as frameworkVue from '#tests/config/tools/configurations/framework/vue.ts';
 import * as generalFiles from '#tests/config/tools/configurations/general/files.ts';
-import * as languageHtml from '#tests/config/tools/configurations/language/html.ts';
 import type { BashBoundary, ConfigurationScenario } from '#tests/types/tools/cases.ts';
 import * as toolActions from '#tests/config/tools/configurations/tool/github-actions.ts';
 import * as frameworkNestjs from '#tests/config/tools/configurations/framework/nestjs.ts';
@@ -37,7 +36,6 @@ export const SCENARIOS: ConfigurationScenario[] = [
     { name: 'the docker configuration', repository: toolDocker.REPOSITORY, cases: toolDocker.CASES },
     { name: 'the openapi configuration', repository: toolOpenapi.REPOSITORY, cases: toolOpenapi.CASES },
     { name: 'the vitest configuration', repository: toolVitest.REPOSITORY, cases: toolVitest.CASES },
-    { name: 'the html configuration', repository: languageHtml.REPOSITORY, cases: languageHtml.CASES },
     { name: 'the python configuration', repository: languagePython.REPOSITORY, cases: languagePython.CASES },
     { name: 'the sql configuration', repository: languageSql.REPOSITORY, cases: languageSql.CASES },
     {

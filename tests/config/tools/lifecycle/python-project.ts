@@ -10,7 +10,6 @@ export const PYTHON_INSTALL_STEPS = {
         ['uv', 'sync', '--locked', '--no-install-project', '--project', '.gspot'],
     ],
     mise: [
-        ['mise', 'install', 'uv@0.12.13'],
         ['mise', 'trust', '.mise/conf.d/gspot-tools.toml'],
         ['mise', 'install'],
         ['uv', 'venv', '--relocatable', '.venv', '--project', '.gspot'],

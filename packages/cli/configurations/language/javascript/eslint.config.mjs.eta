@@ -147,6 +147,7 @@ const nodeRules = (version) => {
     return {
     'n/no-deprecated-api': 'error',
     'n/no-process-exit': 'error',
+    'unicorn/no-process-exit': 'off',
     'n/no-unsupported-features/node-builtins': ['error', { ...options, allowExperimental: true }],
     'n/no-unsupported-features/es-builtins': ['error', options],
     // TypeScript owns syntax support.

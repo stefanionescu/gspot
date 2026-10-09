@@ -5,6 +5,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { toolProjectSchema } from '#cli/parsers/packages/contracts.ts';
 import eslintComments from '@eslint-community/eslint-plugin-eslint-comments';
 import { createEslint, eslintConfigurationSchema } from '#tests/harness/generated.ts';
@@ -76,7 +78,9 @@ test.each(['recommended', 'all'] as const)(
         );
         expect(computed.plugins['@eslint-community/eslint-comments']).toBe(eslintComments);
         const packages = toolProjectSchema.parse(await Bun.file(join(sandbox.path, '.gspot/package.json')).json());
-        expect(packages.devDependencies['@eslint-community/eslint-plugin-eslint-comments']).toBe('4.8.0');
+        expect(packages.devDependencies['@eslint-community/eslint-plugin-eslint-comments']).toBe(
+            toolPin(configurationManifests().values(), '@eslint-community/eslint-plugin-eslint-comments').version,
+        );
         async function lintReport() {
             const config = eslintConfigurationSchema.parse(await eslint.calculateConfigForFile('unused.js'));
             const prefix = '@eslint-community/eslint-comments/';

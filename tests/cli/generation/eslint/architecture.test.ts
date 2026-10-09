@@ -4,6 +4,8 @@ import { test, expect } from 'bun:test';
 import { unlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import type { toolProjectSchema } from '#cli/parsers/packages/contracts.ts';
 import { createEslint, eslintConfigurationSchema } from '#tests/harness/generated.ts';
 
@@ -18,6 +20,9 @@ import {
     ARCHITECTURE_CORRECTION,
 } from '#tests/config/cli/generation/eslint/architecture.ts';
 
+const boundaryVersion = toolPin(configurationManifests().values(), 'eslint-plugin-boundaries').version;
+const importVersion = toolPin(configurationManifests().values(), 'eslint-import-resolver-typescript').version;
+
 test.each(ARCHITECTURE_CASES)(
     '$level loads native architecture and role tools: $declarations',
     async ({ level, declarations }) => {
@@ -29,8 +34,8 @@ test.each(ARCHITECTURE_CASES)(
             typeof toolProjectSchema
         >;
         const enabled = level === 'all' || declarations !== 'none';
-        expect(packages.devDependencies['eslint-plugin-boundaries']).toBe(enabled ? '7.2.0' : undefined);
-        expect(packages.devDependencies['eslint-import-resolver-typescript']).toBe('4.4.5');
+        expect(packages.devDependencies['eslint-plugin-boundaries']).toBe(enabled ? boundaryVersion : undefined);
+        expect(packages.devDependencies['eslint-import-resolver-typescript']).toBe(importVersion);
         if (!enabled) await unlink(join(sandbox.path, 'node_modules/eslint-plugin-boundaries'));
         async function lintReport() {
             const files = ['app/source.ts', 'apps/api/app/source.ts'];

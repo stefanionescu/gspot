@@ -60,7 +60,6 @@ export const NODE_SCRIPT_CASES = [
         strict: [
             { ruleId: 'n/no-process-exit', line: 3, severity: 2 },
             { ruleId: 'no-console', line: 2, severity: 2 },
-            { ruleId: 'unicorn/no-process-exit', line: 3, severity: 2 },
         ],
     },
 ];
