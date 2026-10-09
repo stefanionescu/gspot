@@ -7,12 +7,12 @@ An npm `package.json` or Python `pyproject.toml` selects the general `licenses` 
 stage. Install your project dependencies first. Python projects use the `.venv` of their scope,
 and `gspot install` installs the license scanner.
 
-New repositories choose their license policy explicitly. Until `licenses.allowed` or an exception is set, `licenses/packages` is skipped. For example, after reviewing the licenses your project accepts:
+New repositories choose their license policy explicitly. Until `licenses.allowed` or an exception is set, `licenses/allowed` is skipped. For example, after reviewing the licenses your project accepts:
 
 ```shell
 gspot set licenses.allowed MIT Apache-2.0 BSD-3-Clause
 gspot install
-gspot check --only licenses/packages
+gspot check --only licenses/allowed
 ```
 
 ## Allow a license or one package

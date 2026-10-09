@@ -43,7 +43,7 @@ async function prepareInventories(
     const ignored =
         ignore === undefined
             ? ''
-            : `[[ignore]]\ncheck = "licenses/packages"\npaths = ["${ignore}/**"]\nreason = "Scope is intentionally outside this license run."\n`;
+            : `[[ignore]]\ncheck = "licenses/allowed"\npaths = ["${ignore}/**"]\nreason = "Scope is intentionally outside this license run."\n`;
     await createFileTree(root, {
         ...files,
         'gspot.toml': buildPolicy(['licenses'], { tables: LICENSE_SETTINGS + rootException + tables + ignored }),
@@ -61,7 +61,7 @@ test.each(EXCEPTION_MEMBERSHIP)('license inventory preserves $name', async (scen
     const { origin, scopes, reports, stale, ignore, licenses, disallowed } = scenario;
     await using sandbox = await testdir();
     await prepareInventories(sandbox.path, scenario);
-    const input = buildCheckInput(await openSession(sandbox.path), 'licenses/packages');
+    const input = buildCheckInput(await openSession(sandbox.path), 'licenses/allowed');
     const scanned: string[] = [];
     using output = spyOn(processes, 'run').mockImplementation((command) => {
         const interpreter = command.at(-1)!;
@@ -110,7 +110,7 @@ test.each(EXCEPTION_MEMBERSHIP)('license inventory preserves $name', async (scen
                 }),
             ),
         );
-    expect(await BUILT_IN_CHECKS['licenses/packages'].input(input)).toStrictEqual(expectedFindings);
+    expect(await BUILT_IN_CHECKS['licenses/allowed'].input(input)).toStrictEqual(expectedFindings);
     const expected = scopes.filter((scope) => scope !== ignore).toSorted((a, b) => a.localeCompare(b));
     expect(scanned.toSorted((a, b) => a.localeCompare(b))).toStrictEqual(expected);
     expect(output).toHaveBeenCalledTimes(expected.length);

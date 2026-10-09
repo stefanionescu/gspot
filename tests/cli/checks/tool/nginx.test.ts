@@ -78,7 +78,7 @@ test.each(['stdout', 'stderr'])(
             'nginx.conf': NGINX_CONFIGURATION,
         });
         const session = await openSession(sandbox.path);
-        const input = buildCheckInput(session, 'nginx/test');
+        const input = buildCheckInput(session, 'nginx/config-test');
         using resources = new DisposableStack();
         resources.use(
             mockPinnedExecutables([
@@ -99,7 +99,7 @@ test.each(['stdout', 'stderr'])(
             });
         });
 
-        expect(await rejection(BUILT_IN_CHECKS['nginx/test'].input(input))).toBe(
+        expect(await rejection(BUILT_IN_CHECKS['nginx/config-test'].input(input))).toBe(
             `The openssl command could not write the temporary certificate: ${diagnostic}`,
         );
         expect(spawn).toHaveBeenCalledTimes(1);

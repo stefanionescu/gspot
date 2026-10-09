@@ -43,7 +43,7 @@ mise exec -- gspot check --fix
 mise exec -- gspot check
 ```
 
-`pyproject.toml` selects the general `licenses` configuration automatically. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly. The `licenses/packages` check makes no license comparison until you set an allowed license or exception.
+`pyproject.toml` selects the general `licenses` configuration automatically. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly. The `licenses/allowed` check makes no license comparison until you set an allowed license or exception.
 
 ```shell
 git add -A

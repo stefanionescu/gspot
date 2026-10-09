@@ -46,7 +46,7 @@ test.skipIf(!hasToolBuild('ansible-lint')).each(['timeout', 'canceled'] as const
                 : undefined;
         const controller = new AbortController();
         const session = await openSession(sandbox.path);
-        const options = buildRunOptions({ only: ['ansible/lint'] });
+        const options = buildRunOptions({ only: ['ansible/ansible-lint'] });
         const running = executeRun(session, { ...options, cancelSignal: controller.signal });
         try {
             const started = join(sandbox.path, 'deploy/started.txt');
@@ -88,7 +88,7 @@ test.skipIf(!hasToolBuild('ansible-lint'))('an adapter reports a version below t
     });
     const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
     await chmod(executable, 0o755);
-    const options = buildRunOptions({ stage: 'commit', only: ['ansible/lint'] });
+    const options = buildRunOptions({ stage: 'commit', only: ['ansible/ansible-lint'] });
     const initial = await executeRun(await openSession(sandbox.path), options);
     expect(initial.report.checks[0]!.status).toBe('passed');
     await writeFile(executable, versionScript('23.0.0'));

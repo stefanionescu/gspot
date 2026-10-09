@@ -31,7 +31,7 @@ export const AUTOMATIC_CHECKS = [
     'security/semgrep-registry',
     'security/codeql',
     'duplication/jscpd',
-    'licenses/packages',
+    'licenses/allowed',
 ];
 
 /** Empty and named manual language lists both retain common checks. */
@@ -54,7 +54,7 @@ export const HOOK_STAGE_CHECKS = [
     'swift/swiftlint-analyze',
     'swift/periphery',
     'nginx/gixy',
-    'nginx/test',
+    'nginx/config-test',
     'docs/lychee',
     'docs/lychee-external',
     'typescript/tsc',

@@ -17,14 +17,14 @@ describe('manifest policy reads', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': DEPENDENCIES_POLICY, 'README.md': '# Example\n' });
         expect(
-            BUILT_IN_CHECKS['dependencies/manifests'].input(
-                buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'),
+            BUILT_IN_CHECKS['dependencies/package-json'].input(
+                buildCheckInput(await openSession(sandbox.path), 'dependencies/package-json'),
             ),
         ).toStrictEqual([]);
         await writeFile(join(sandbox.path, 'package.json'), MANIFEST);
         expect(
-            BUILT_IN_CHECKS['dependencies/manifests'].input(
-                buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'),
+            BUILT_IN_CHECKS['dependencies/package-json'].input(
+                buildCheckInput(await openSession(sandbox.path), 'dependencies/package-json'),
             ),
         ).toStrictEqual([]);
     });
@@ -73,8 +73,8 @@ test.each(['recommended', 'all'] as const)(
             ),
         ).toStrictEqual([0, 0, 1]);
         expect(
-            BUILT_IN_CHECKS['dependencies/manifests'].input(
-                buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'),
+            BUILT_IN_CHECKS['dependencies/package-json'].input(
+                buildCheckInput(await openSession(sandbox.path), 'dependencies/package-json'),
             ),
         ).toStrictEqual([]);
     },

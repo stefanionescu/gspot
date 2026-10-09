@@ -69,7 +69,7 @@ why = "Two versions of one dependency in a workspace mean two behaviors, and a b
 help = "Run syncpack fix --config .gspot/config/syncpack.json, or align the versions by hand."
 
 [[check]]
-name = "manifests"
+name = "package-json"
 title = "Check package manifests"
 example = "A dependency declared with a range such as `^1.2.3` reports an unpinned version under the exact-version policy. Pin the actual reviewed lockfile version, then update the lockfile through the package manager."
 level = "all"

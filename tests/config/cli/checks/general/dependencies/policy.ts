@@ -4,17 +4,17 @@ import type { InProcessScenario } from '#tests/types/harness/repository.ts';
 
 export const INVALID: (CaseChanges & Record<'expected', string>)[] = [
     {
-        check: 'dependencies/manifests',
+        check: 'dependencies/package-json',
         files: { 'package.json': '{' },
         expected: 'Cannot inspect manifest package.json',
     },
     {
-        check: 'dependencies/manifests',
+        check: 'dependencies/package-json',
         files: { 'package.json': '{"dependencies":{"example":false}}' },
         expected: 'Cannot inspect manifest package.json',
     },
     {
-        check: 'dependencies/manifests',
+        check: 'dependencies/package-json',
         files: { 'package.json': '{"dependencies":{"example":5}}' },
         expected: 'Cannot inspect manifest package.json',
     },

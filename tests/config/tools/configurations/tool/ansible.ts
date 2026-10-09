@@ -13,7 +13,7 @@ export const REPOSITORY: InstalledScenario = {
 
 export const CASES: FindingCase[] = [
     {
-        check: 'ansible/lint',
+        check: 'ansible/ansible-lint',
         files: { 'deploy/site.yml': SHELLED },
         expected: { file: 'deploy/site.yml', rule: 'command-instead-of-module', line: 5 },
         corrected: { files: { 'deploy/site.yml': CLEAN } },

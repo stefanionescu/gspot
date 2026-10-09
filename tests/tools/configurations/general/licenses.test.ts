@@ -114,7 +114,7 @@ test('native Python license scanning ignores project scanner exclusions and matc
     const metadata = join(location.stdout.trim(), 'licensed_example-1.0.0.dist-info/METADATA');
     await Bun.write(metadata, `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: GPL-3.0-only\n`);
     expect(
-        await BUILT_IN_CHECKS['licenses/packages'].input(buildCheckInput(await openSession(root), 'licenses/packages')),
+        await BUILT_IN_CHECKS['licenses/allowed'].input(buildCheckInput(await openSession(root), 'licenses/allowed')),
     ).toStrictEqual([
         containing({
             file: 'pyproject.toml',
@@ -132,7 +132,7 @@ test('native Python license scanning ignores project scanner exclusions and matc
     const corrected = await runGspot(root, ['apply', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(
-        await BUILT_IN_CHECKS['licenses/packages'].input(buildCheckInput(await openSession(root), 'licenses/packages')),
+        await BUILT_IN_CHECKS['licenses/allowed'].input(buildCheckInput(await openSession(root), 'licenses/allowed')),
     ).toStrictEqual([]);
 });
 
@@ -152,7 +152,7 @@ test('native installed font metadata justifies its root exception in a descendan
         installTree(log, 'npm', installation);
     }
     const session = await openSession(sandbox.path);
-    expect(
-        await BUILT_IN_CHECKS['licenses/packages'].input(buildCheckInput(session, 'licenses/packages')),
-    ).toStrictEqual([]);
+    expect(await BUILT_IN_CHECKS['licenses/allowed'].input(buildCheckInput(session, 'licenses/allowed'))).toStrictEqual(
+        [],
+    );
 });

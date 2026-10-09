@@ -129,7 +129,7 @@ commit hook rejects the forwarding helper. Read [Requirements](/guides/requireme
     under `.gspot/`, installs the tools, and installs the Git hooks. The level `all` adds the
     level `all` conventions, including the checks for trivial functions and files.
 
-3. Run `npx gspot check` and resolve any findings before committing the setup. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly. `licenses/packages` remains skipped until an allowed license or exception is set:
+3. Run `npx gspot check` and resolve any findings before committing the setup. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly. `licenses/allowed` remains skipped until an allowed license or exception is set:
 
     ```bash
     git add -A

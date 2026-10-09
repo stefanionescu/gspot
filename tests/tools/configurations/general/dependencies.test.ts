@@ -75,11 +75,11 @@ test('the dependencies configuration > an outdated Bun lockfile fails, regenerat
     ]);
     expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
     const staged = ['check', '--hook', 'pre-commit', '--only'];
-    const checks = ['dependencies/manifests', 'dependencies/osv', 'dependencies/syncpack'];
+    const checks = ['dependencies/package-json', 'dependencies/osv', 'dependencies/syncpack'];
     const checked = await spawnGspot(sandbox.path, [...staged, ...checks, '--json'], environment);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const ids = (JSON.parse(checked.stdout) as RunReport).checks.map(({ check }) => check);
-    expect(ids).toContain('dependencies/manifests');
+    expect(ids).toContain('dependencies/package-json');
     expect(ids).not.toContain('dependencies/osv');
     expect(ids).not.toContain('dependencies/syncpack');
 });

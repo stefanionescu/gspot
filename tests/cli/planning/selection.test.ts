@@ -80,7 +80,7 @@ test.each(MANUAL_SELECTIONS)(
         expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
         const configured = await openSession(sandbox.path);
         expect(
-            planRun(configured, { stage: 'all', skips: [], only: ['licenses/packages'] }).map((check) => check.skip),
+            planRun(configured, { stage: 'all', skips: [], only: ['licenses/allowed'] }).map((check) => check.skip),
         ).toStrictEqual([undefined]);
         expect(
             applicableManifests(configured).flatMap((manifest) => manifest.tools.map((tool) => tool.name)),

@@ -56,9 +56,9 @@ test.each(
         });
         const applied = await runGspot(sandbox.path, ['apply', '--json']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const input = buildCheckInput(await openSession(sandbox.path), 'licenses/packages', { scope });
+        const input = buildCheckInput(await openSession(sandbox.path), 'licenses/allowed', { scope });
         using spawn = spyOn(processes, 'run');
-        expect(await rejection(BUILT_IN_CHECKS['licenses/packages'].input(input))).toBe(
+        expect(await rejection(BUILT_IN_CHECKS['licenses/allowed'].input(input))).toBe(
             `Install the project dependencies first: ${installed} is missing in ${scope === '' ? 'the root' : scope}.`,
         );
         expect(spawn).not.toHaveBeenCalled();
@@ -75,7 +75,7 @@ test.each(SCANNER_FAILURES)(
             'app/pyproject.toml': '[project]\nname = "app"\nversion = "0.0.0"\n',
             'app/.venv/installed': 'installed',
         });
-        const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/packages');
+        const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/allowed');
         const directories: string[] = [];
         using resources = new DisposableStack();
         resources.use(
@@ -94,7 +94,7 @@ test.each(SCANNER_FAILURES)(
                 );
             }),
         );
-        expect(await rejection(BUILT_IN_CHECKS['licenses/packages'].input(selected))).toContain(diagnostic);
+        expect(await rejection(BUILT_IN_CHECKS['licenses/allowed'].input(selected))).toContain(diagnostic);
         expect(directories.length).toBeGreaterThan(0);
         for (const directory of directories) {
             expect(directory).not.toBe(sandbox.path);
@@ -108,7 +108,7 @@ test.each(CONFIGURATION_FAILURES)(
     async ({ content, diagnostic }) => {
         await using sandbox = await testdir();
         await preparePythonProject(sandbox.path);
-        const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/packages');
+        const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/allowed');
         const path = join(sandbox.path, '.gspot/config/licenses.json');
         if (content === undefined) await unlink(path);
         else {
@@ -116,7 +116,7 @@ test.each(CONFIGURATION_FAILURES)(
             await Bun.write(path, content);
         }
         using spawn = spyOn(processes, 'run');
-        expect(await rejection(BUILT_IN_CHECKS['licenses/packages'].input(selected))).toContain(diagnostic);
+        expect(await rejection(BUILT_IN_CHECKS['licenses/allowed'].input(selected))).toContain(diagnostic);
         expect(spawn).not.toHaveBeenCalled();
         expect(await Bun.file(path).exists()).toBe(content !== undefined);
         if (content !== undefined) expect(await Bun.file(path).text()).toBe(content);
@@ -127,7 +127,7 @@ test('a license configuration linked outside the repository is refused without c
     await using sandbox = await testdir();
     await using outside = await testdir();
     await preparePythonProject(sandbox.path);
-    const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/packages');
+    const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/allowed');
     const path = join(sandbox.path, '.gspot/config/licenses.json');
     const original = await readFile(path);
     const destination = join(outside.path, 'configuration.json');
@@ -135,7 +135,7 @@ test('a license configuration linked outside the repository is refused without c
     await unlink(path);
     await symlink(destination, path);
     using spawn = spyOn(processes, 'run');
-    expect(await rejection(BUILT_IN_CHECKS['licenses/packages'].input(selected))).toContain('licenses.json');
+    expect(await rejection(BUILT_IN_CHECKS['licenses/allowed'].input(selected))).toContain('licenses.json');
     expect(spawn).not.toHaveBeenCalled();
     expect(await readFile(destination)).toEqual(original);
 });
@@ -158,7 +158,7 @@ test('combined license scans preserve manifest order, license alternatives, unkn
         }),
     });
     await chmod(join(sandbox.path, scanner.path), 0o755);
-    const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/packages');
+    const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/allowed');
     const directories: string[] = [];
     using output = spyOn(processes, 'run').mockImplementation((command, options) => {
         directories.push(options.cwd);
@@ -181,7 +181,7 @@ test('combined license scans preserve manifest order, license alternatives, unkn
             ),
         });
     });
-    const findings = await BUILT_IN_CHECKS['licenses/packages'].input(selected);
+    const findings = await BUILT_IN_CHECKS['licenses/allowed'].input(selected);
     expect(findings).toMatchObject(
         PROJECT_FINDINGS.map(({ file, message }) => ({
             file,
@@ -206,7 +206,7 @@ test.each(LICENSE_EXCEPTIONS)(
             sandbox.path,
             `${LICENSE_SETTINGS}[licenses.exceptions."${name}"]\nlicense = "${exception}"\nreason = "Used at build time only, never shipped."\n`,
         );
-        const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/packages');
+        const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/allowed');
         using resources = new DisposableStack();
         resources.use(
             spyOn(processes, 'run').mockResolvedValue({
@@ -217,7 +217,7 @@ test.each(LICENSE_EXCEPTIONS)(
                 stdout: JSON.stringify([{ Name: installed, Version: '1.0.0', License: license }]),
             }),
         );
-        expect(await BUILT_IN_CHECKS['licenses/packages'].input(selected)).toStrictEqual(
+        expect(await BUILT_IN_CHECKS['licenses/allowed'].input(selected)).toStrictEqual(
             findings.map(({ rule, diagnostic }) =>
                 containing({
                     file: rule === 'stale-exception' ? 'gspot.toml' : 'pyproject.toml',

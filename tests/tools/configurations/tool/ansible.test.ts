@@ -32,7 +32,7 @@ test.skipIf(!hasToolBuild('ansible-lint')).each(levelSchema.options)(
                 ),
             ).toContain('ansible');
         }
-        const failed = await executeRun(session, buildRunOptions({ stage: 'commit', only: ['ansible/lint'] }));
+        const failed = await executeRun(session, buildRunOptions({ stage: 'commit', only: ['ansible/ansible-lint'] }));
         expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
         expect(
             failed.report.checks.map(({ scope, status, findings }) => ({
@@ -48,7 +48,7 @@ test.skipIf(!hasToolBuild('ansible-lint')).each(levelSchema.options)(
         await Bun.write(join(sandbox.path, 'app/site.yml'), CLEAN);
         const corrected = await executeRun(
             await openSession(sandbox.path),
-            buildRunOptions({ stage: 'commit', only: ['ansible/lint'] }),
+            buildRunOptions({ stage: 'commit', only: ['ansible/ansible-lint'] }),
         );
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
     },

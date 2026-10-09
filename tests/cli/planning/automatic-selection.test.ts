@@ -29,7 +29,7 @@ test.each(['recommended', 'all'] as const)(
         const checks = planRun(session, {
             stage: 'all',
             skips: [],
-            only: ['security/semgrep', 'prose/vale', 'duplication/jscpd', 'licenses/packages'],
+            only: ['security/semgrep', 'prose/vale', 'duplication/jscpd', 'licenses/allowed'],
         });
         const security = checks.find((check) => check.check.name === 'security/semgrep');
         expect(security).toBeDefined();
@@ -42,7 +42,7 @@ test.each(['recommended', 'all'] as const)(
             'guide.md',
         );
         expect(checks.some((check) => check.check.name === 'duplication/jscpd')).toBe(level === 'all');
-        expect(checks.find((check) => check.check.name === 'licenses/packages')?.skip).toBeUndefined();
+        expect(checks.find((check) => check.check.name === 'licenses/allowed')?.skip).toBeUndefined();
         expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
     },
 );
