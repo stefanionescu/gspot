@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { writeFile } from 'node:fs/promises';
-import prettier, { type Options } from 'prettier';
 import { planRun } from '#cli/planning/public.ts';
 import { test, expect, describe } from 'bun:test';
+import prettier, { type Options } from 'prettier';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
@@ -18,8 +18,11 @@ import { prettierConfiguration } from '#cli/generation/documents/public.ts';
 import { prepareCommand, commandEnvironment } from '#cli/execution/command/public.ts';
 import { FORMAT_CASES, FORMAT_OVERRIDES_POLICY } from '#tests/config/samples/formatting.ts';
 import { selectConfigurations, configurationManifests } from '#cli/configurations/public.ts';
-import type { YamllintConfiguration, MarkdownlintConfiguration } from '#tests/types/generation/configuration-files.ts';
 
+import type {
+    YamllintConfiguration,
+    MarkdownlintConfiguration,
+} from '#tests/types/cli/generation/configuration-files.ts';
 import {
     IGNORE_CASES,
     IGNORE_POLICY,

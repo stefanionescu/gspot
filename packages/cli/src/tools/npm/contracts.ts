@@ -8,8 +8,8 @@ import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { parseVersionOutput } from '#cli/parsers/tool/contracts.ts';
 import npmDefinitions from '@npmcli/config/lib/definitions/index.js';
-import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import { isRecord, executableNames } from '#cli/platform/contracts.ts';
+import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import { sourcePath, canonicalPath } from '#cli/platform/root/reads.ts';
 import { GspotError, environmentVariables } from '#cli/platform/public.ts';
 import type { PackageRun, PackageExecution } from '#cli/types/tools/npm.ts';
@@ -282,7 +282,7 @@ export function githubRefusalNote(output: string): string | undefined {
 }
 
 /**
- * Read npm-compatible connection settings through npm's configuration owner, keeping credentials in memory.
+ * Read npm-compatible connection settings through the npm configuration owner, keeping credentials in memory.
  * @param root the repository root
  * @returns the environment variables that carry the registry settings
  */

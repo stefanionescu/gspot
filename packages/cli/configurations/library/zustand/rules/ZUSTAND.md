@@ -69,7 +69,7 @@ Fetched server data stays in the query cache.
 - Actions carry domain meaning, such as adding a record, switching a resource, or applying a
   confirmed save. They live beside their state and keep its validation and related field changes.
 - Changes that form one invariant go in one `set` call. Two actions in sequence make two store
-  transitions, and React's render batching does not merge them.
+  transitions, and React render batching does not merge them.
 - Slices organize one cohesive store, with one owner for each field and action, so spreading slices
   cannot silently overwrite names. Middleware wraps the completed store, not each slice, and slice
   creator types stay compatible with it.

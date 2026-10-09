@@ -1,7 +1,7 @@
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
-import { join, dirname, delimiter } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { join, dirname, delimiter } from 'node:path';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { misePins } from '#cli/configurations/public.ts';
@@ -10,17 +10,17 @@ import { runTestCommand } from '#tests/harness/command.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
-import { environmentVariables } from '#cli/platform/public.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
 import { GSPOT_MISE_TOOL } from '#cli/config/configurations.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { sourceLauncherDirectory } from '#tests/harness/environment.ts';
+import type { MiseProject } from '#tests/types/tools/mise-execution.ts';
 import { chmod, mkdir, symlink, readFile, realpath } from 'node:fs/promises';
 import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
-import type { MiseProject } from '#tests/types/tools/lifecycle/mise-execution.ts';
 
 const previousMiseVersion = `${String(Number(CLI_PINS.mise.version.split('.', 1)[0]) - 1)}.12.31`;
 

@@ -1,9 +1,9 @@
 import { join, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
 import { isInScope } from '#cli/repository/paths/public.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
 import { LINT_LINE, ANSIBLE_PROJECT_FILE } from '#cli/config/checks/tool/ansible.ts';
 

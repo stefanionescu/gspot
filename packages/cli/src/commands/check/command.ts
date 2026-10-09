@@ -2,12 +2,12 @@
 import { readFileSync } from 'node:fs';
 import { addAbortSignal } from 'node:stream';
 import { resolve, relative } from 'node:path';
-import { GspotError } from '#cli/platform/public.ts';
 import { compact } from '#cli/platform/contracts.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import { progress } from '#cli/terminal/contracts.ts';
 import { checkTree } from '#cli/commands/check/tree.ts';
-import type { CommandResult } from '#cli/types/terminal.ts';
 import { HOOK_ARGS } from '#cli/config/generation/hooks.ts';
+import type { CommandResult } from '#cli/types/terminal.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import { Option, Command } from '@commander-js/extra-typings';
 import type { HookName } from '#cli/types/generation/hooks.ts';

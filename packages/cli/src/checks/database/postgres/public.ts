@@ -5,8 +5,8 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { ownedBy } from '#cli/repository/selection/public.ts';
-import type { Migration } from '#cli/types/checks/postgres.ts';
 import { MIGRATION_VERSION } from '#cli/config/parsers/sql.ts';
+import type { Migration } from '#cli/types/checks/postgres.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { positionAt, parseSqlFile } from '#cli/parsers/sql/public.ts';
 

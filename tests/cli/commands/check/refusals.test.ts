@@ -15,7 +15,7 @@ import {
     SELECTION_REFUSALS,
     PUSH_INPUT_REFUSALS,
     PUSH_ARGUMENT_REFUSALS,
-} from '#tests/config/cli/commands/check-refusals.ts';
+} from '#tests/config/cli/commands/check/refusals.ts';
 
 // A committed repository with a check whose fixer rewrites the source when it runs.
 async function fixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {

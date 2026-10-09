@@ -1,10 +1,10 @@
 // Python constraints reach the private project; previews plan lockfile repair without changing recorded inputs.
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { parse, TomlError, stringify } from 'smol-toml';
 import { toolProjectDrift } from '#cli/tools/public.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
+import { parse, TomlError, stringify } from 'smol-toml';
 import { pythonProject } from '#cli/generation/contracts.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { toolInstallationPlan } from '#cli/tools/contracts.ts';
 import { UV_LOCKFILE } from '#cli/config/platform/locations.ts';
 import { pythonToolProject } from '#cli/tools/python/public.ts';
@@ -17,7 +17,7 @@ import {
     CONSTRAINT_ARGUMENT,
     PYTHON_LOCKFILE_PLANS,
     PYTHON_ENVIRONMENT_STEPS,
-} from '#tests/config/cli/tools/python/project.ts';
+} from '#tests/config/cli/tools/python.ts';
 
 // The security configuration with a floor on the pyjwt Semgrep pulls in.
 function constrainedManifest(): Manifest {

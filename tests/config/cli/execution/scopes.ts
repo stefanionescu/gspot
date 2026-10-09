@@ -1,4 +1,4 @@
-import type { ScopeReaderFindings } from '#tests/types/cli/execution/scopes.ts';
+import type { ScopeReaderFindings } from '#tests/types/cli/execution.ts';
 
 export const READERS_HEADERS =
     '/*\n    X-Content-Type-Options: nosniff\n    Referrer-Policy: same-origin\n    X-Frame-Options: DENY\n';

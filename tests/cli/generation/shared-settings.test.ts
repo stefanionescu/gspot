@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { valueAt } from '#cli/platform/contracts.ts';
 import { openSession } from '#cli/commands/public.ts';
-import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { readAsset } from '#cli/platform/root/public.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
@@ -18,7 +18,7 @@ import type {
     RuffConfiguration,
     StylelintConfiguration,
     TestedRuffConfiguration,
-} from '#tests/types/generation/configuration-files.ts';
+} from '#tests/types/cli/generation/configuration-files.ts';
 import {
     KNIP,
     RUFF,

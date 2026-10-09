@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
 import { visitParsed } from '#cli/parsers/source/public.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { PLACEHOLDERS } from '#cli/config/checks/language/python.ts';
 import { readPython, docstringOf, disposePython } from '#cli/parsers/source/contracts.ts';

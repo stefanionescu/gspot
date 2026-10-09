@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import queryPlugin from '@tanstack/eslint-plugin-query';
 import { createEslint } from '#tests/harness/generated.ts';
-import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
+import type { ComputedEslint } from '#tests/types/cli/generation/configuration-files.ts';
 import { QUERY_SAMPLE, QUERY_PROJECT, QUERY_CORRECTION } from '#tests/config/cli/generation/eslint/tanstack-query.ts';
 
 test.each(['recommended', 'all'] as const)(

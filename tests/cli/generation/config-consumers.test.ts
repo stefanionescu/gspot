@@ -9,7 +9,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { npmPins, toolPin } from '#cli/configurations/contracts.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { configuredChecks, applicableManifests } from '#cli/planning/public.ts';
-import type { StylelintConfiguration } from '#tests/types/generation/configuration-files.ts';
+import type { StylelintConfiguration } from '#tests/types/cli/generation/configuration-files.ts';
 
 import {
     EDITORCONFIG_POLICY,

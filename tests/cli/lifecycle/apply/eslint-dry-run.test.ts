@@ -7,7 +7,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
-import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
+import type { ComputedEslint } from '#tests/types/cli/generation/configuration-files.ts';
 
 test('apply preview reports a scoped ESLint rule change and saves the baseline only after applying it', async () => {
     await using directory = await testdir();

@@ -21,7 +21,7 @@ title: GitHub Actions
 
 ## Scripts
 
-- Declare the shell required by the script. GitHub's explicit Bash shell enables `-e` and
+- Declare the shell required by the script. The explicit Bash shell in GitHub Actions enables `-e` and
   `pipefail`, but does not enable `-u`. Enable required options and validate inputs explicitly.
 - Caches are keyed on the lockfile hash and the runtime version. Restore keys never match a
   different lockfile.
@@ -32,7 +32,7 @@ title: GitHub Actions
 - A workflow that deploys is the only workflow with deploy credentials and runs on a protected
   environment with a reviewer.
 
-See [GitHub's shell configuration](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsshell)
+See [the GitHub shell configuration](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsshell)
 for the command each runner uses.
 
 ## Workflow organization

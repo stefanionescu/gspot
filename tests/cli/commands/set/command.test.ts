@@ -9,8 +9,8 @@ import { valueAt } from '#cli/platform/contracts.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { knownSettings } from '#cli/policy/settings/public.ts';
-import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { settingValue } from '#cli/policy/settings/contracts.ts';
+import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { selectForScope } from '#cli/repository/selection/public.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
@@ -23,7 +23,7 @@ import {
     SET_CONFLICT_POLICIES,
     ESLINT_OVERRIDE_REASON,
     SET_ARGUMENT_CONFLICTS,
-} from '#tests/config/cli/commands/set.ts';
+} from '#tests/config/cli/commands/set/command.ts';
 
 test.each(
     SET_ARGUMENT_CONFLICTS.flatMap((entry) =>

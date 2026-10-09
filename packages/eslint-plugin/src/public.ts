@@ -1,5 +1,5 @@
-import picomatch from 'picomatch';
 import { posix } from 'node:path';
+import picomatch from 'picomatch';
 import { fileURLToPath } from 'node:url';
 import type { LintedPath, RuleContext } from '#plugin/types/files.ts';
 import { FILE_SCHEME, STDIN_NAMES, INDEX_BASENAMES } from '#plugin/config/files.ts';

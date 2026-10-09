@@ -6,7 +6,7 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { typescriptImports } from '#cli/parsers/source/contracts.ts';
-import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
+import type { ComputedEslint } from '#tests/types/cli/generation/configuration-files.ts';
 import { FRAGMENT_SCOPE_CASES, IMPORT_FRAGMENT_SOURCE } from '#tests/config/cli/generation/eslint/fragments.ts';
 
 for (const level of ['recommended', 'all'] as const)

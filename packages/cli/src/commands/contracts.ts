@@ -6,29 +6,29 @@ import { readPolicy } from '#cli/policy/public.ts';
 import { emitAll } from '#cli/generation/public.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import { openRoot } from '#cli/platform/root/public.ts';
-import type { CommandResult } from '#cli/types/terminal.ts';
 import { canonicalPath } from '#cli/platform/root/reads.ts';
+import type { CommandResult } from '#cli/types/terminal.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
-import type { Program } from '#cli/types/commands/program.ts';
 import { compact, toPosix } from '#cli/platform/contracts.ts';
+import type { Program } from '#cli/types/commands/program.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { readIndexEntries } from '#cli/repository/contracts.ts';
-import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
-import { noteLines, printResult } from '#cli/terminal/public.ts';
 import { writePolicyFile } from '#cli/policy/document/public.ts';
+import { noteLines, printResult } from '#cli/terminal/public.ts';
+import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import type { PreparedPolicy } from '#cli/types/policy/settings.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
+import type { PreparedPolicy } from '#cli/types/policy/settings.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { join, win32, dirname, resolve, basename, relative } from 'node:path';
 import type { ExportJson, ExportOptions } from '#cli/types/commands/export.ts';
 import { commandHelp, commandRoot, openSession } from '#cli/commands/public.ts';
 import { assertVersionPin, writeGeneratedFiles } from '#cli/lifecycle/public.ts';
-import type { InstallJson, InstallOptions } from '#cli/types/commands/install.ts';
 import { installTools, installationPlan } from '#cli/lifecycle/install/public.ts';
-import type { PolicySaveResult, SavePolicyOptions } from '#cli/types/commands/save-policy.ts';
+import type { InstallJson, InstallOptions } from '#cli/types/commands/install.ts';
 import { editPolicy, parseTemplate, exportTemplate } from '#cli/policy/document/contracts.ts';
+import type { PolicySaveResult, SavePolicyOptions } from '#cli/types/commands/save-policy.ts';
 
 // Both failure phases report native errors and non-Error throws with the same text.
 function errorText(error: unknown): string {

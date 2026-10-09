@@ -14,7 +14,7 @@ Rules that hold because the code runs on Node, whatever language it is written i
 - Do not rely on CommonJS and ES module interop working by accident. A file declares which it is,
   through the package type field or its extension.
 
-## Globals and APIs
+## Global variables
 
 - `process`, `Buffer`, and Node built-ins are available. Node also provides version-specific
   [web-compatible globals](https://nodejs.org/api/globals.html), including `fetch`.

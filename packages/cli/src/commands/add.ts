@@ -1,14 +1,14 @@
 // Add authored configuration choices through the policy transaction.
-import { GspotError } from '#cli/platform/public.ts';
 import { compact } from '#cli/platform/contracts.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import { printResult } from '#cli/terminal/public.ts';
 import { savePolicy } from '#cli/commands/contracts.ts';
-import type { CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/lifecycle/public.ts';
 import { policySchema } from '#cli/policy/schema/public.ts';
+import type { CommandResult } from '#cli/types/terminal.ts';
 import type { AddOptions } from '#cli/types/commands/add.ts';
-import type { Mutation } from '#cli/types/policy/settings.ts';
 import type { Program } from '#cli/types/commands/program.ts';
+import type { Mutation } from '#cli/types/policy/settings.ts';
 import { defaultValue } from '#cli/policy/schema/contracts.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import { commandHelp, commandRoot } from '#cli/commands/public.ts';

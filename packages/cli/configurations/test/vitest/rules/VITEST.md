@@ -4,7 +4,7 @@ title: Vitest
 
 # Vitest
 
-The general testing rules apply. Use Vitest's APIs for its runtime boundaries.
+The general testing rules apply. Use the Vitest APIs for its runtime boundaries.
 
 - Use `vi.stubGlobal('fetch', ...)` or the project's interceptor to control external HTTP. Restore
   stubbed globals through `vi.unstubAllGlobals()`.

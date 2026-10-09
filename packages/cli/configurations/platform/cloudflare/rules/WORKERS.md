@@ -6,7 +6,7 @@ title: Workers
 
 Rules that hold because the code runs on a V8 isolate runtime such as Cloudflare Workers.
 
-## Globals and APIs
+## Global variables
 
 - Web APIs such as `Request`, `Response`, `fetch`, `URL`, `crypto`, and `caches` are available.
 - Node API availability depends on the compatibility date and flags. Check the configured
@@ -23,5 +23,5 @@ Rules that hold because the code runs on a V8 isolate runtime such as Cloudflare
   state through the application's storage contract.
 - Use `ctx.waitUntil()` for work after the response. Use a Queue or Workflow for work that must finish.
 
-See Cloudflare's [Node process support](https://developers.cloudflare.com/workers/runtime-apis/nodejs/process/)
+See the Cloudflare [Node process support](https://developers.cloudflare.com/workers/runtime-apis/nodejs/process/)
 and [binding access](https://developers.cloudflare.com/workers/runtime-apis/bindings/).

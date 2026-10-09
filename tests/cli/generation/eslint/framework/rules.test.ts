@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import type { ESLint, Linter } from 'eslint';
 import { testdir, createFileTree } from 'testdirs';
 import { createEslint } from '#tests/harness/generated.ts';
-import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
+import type { ComputedEslint } from '#tests/types/cli/generation/configuration-files.ts';
 
 async function configuredRules(policy: string, files: string[]): Promise<Record<string, Record<string, unknown[]>>> {
     await using sandbox = await testdir();

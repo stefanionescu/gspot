@@ -8,14 +8,9 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { SettingsListJson } from '#cli/types/commands/list.ts';
+import { EXCEPTION_REASON } from '#tests/config/samples/commands.ts';
 import type { PolicyPlanJson } from '#cli/types/commands/save-policy.ts';
-
-import {
-    ROOT_PROJECT,
-    HOST_LOCKFILE,
-    EXCEPTION_REASON,
-    PRIMITIVE_EXCEPTIONS,
-} from '#tests/config/cli/commands/setting-reasons.ts';
+import { ROOT_PROJECT, HOST_LOCKFILE, PRIMITIVE_EXCEPTIONS } from '#tests/config/cli/commands/set/exceptions.ts';
 
 test.each(PRIMITIVE_EXCEPTIONS)(
     '$key saves reasons through previews and list mutations',

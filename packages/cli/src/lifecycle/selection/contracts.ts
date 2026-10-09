@@ -1,10 +1,10 @@
 // Reuses initialization selection to reconcile the saved setup with current repository evidence.
 import { isDeepStrictEqual } from 'node:util';
-import type { Session } from '#cli/types/planning.ts';
 import { isRecord } from '#cli/platform/contracts.ts';
+import type { Session } from '#cli/types/planning.ts';
 import { npmToolNames } from '#cli/configurations/contracts.ts';
-import { plannedScopes } from '#cli/repository/paths/contracts.ts';
 import { selectForInit } from '#cli/lifecycle/selection/public.ts';
+import { plannedScopes } from '#cli/repository/paths/contracts.ts';
 import type { Policy, Mutation } from '#cli/types/policy/settings.ts';
 import type { InitSelection, ConfigurationMerge, ConfigurationReconciliation } from '#cli/types/lifecycle/selection.ts';
 

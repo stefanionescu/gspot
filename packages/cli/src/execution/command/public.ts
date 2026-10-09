@@ -1,15 +1,15 @@
 import { runTool } from '#cli/tools/contracts.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { emptyResult } from '#cli/execution/report.ts';
-import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { checkCompanions } from '#cli/planning/public.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import type { ToolSession } from '#cli/types/tools/session.ts';
 import { coverageArguments } from '#cli/planning/contracts.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { copyIntoScratch } from '#cli/execution/copy/public.ts';
-import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
+import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import type { ExecutionFailure } from '#cli/types/tools/install.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/public.ts';
 import { toolPin, checkToolPin } from '#cli/configurations/contracts.ts';

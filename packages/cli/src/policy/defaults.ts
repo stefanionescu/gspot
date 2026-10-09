@@ -1,10 +1,10 @@
 import { isDeepStrictEqual } from 'node:util';
 import { settingPaths } from '#cli/policy/paths.ts';
 import { policySchema } from '#cli/policy/schema/public.ts';
-import type { TomlTable } from '#cli/types/policy/settings.ts';
+import { valueAt, isRecord } from '#cli/platform/contracts.ts';
 import { defaultValue } from '#cli/policy/schema/contracts.ts';
 import { knownSettings } from '#cli/policy/settings/public.ts';
-import { valueAt, isRecord } from '#cli/platform/contracts.ts';
+import type { TomlTable } from '#cli/types/policy/settings.ts';
 import { selectForScope } from '#cli/repository/selection/public.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import type { DefaultPolicyTable } from '#cli/types/policy/defaults.ts';

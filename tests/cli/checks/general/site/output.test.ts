@@ -7,7 +7,7 @@ import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import * as toolRunner from '#cli/execution/command/public.ts';
 import { linkinator } from '#cli/checks/general/site/public.ts';
-import type { SiteReportCase } from '#tests/types/cli/checks/general/site.ts';
+import type { SiteReportCase } from '#tests/types/cli/checks/site.ts';
 import { SITE_POLICY, SITE_BUILD_SCRIPT } from '#tests/config/samples/site.ts';
 
 const SITE_REPORTS: SiteReportCase[] = [

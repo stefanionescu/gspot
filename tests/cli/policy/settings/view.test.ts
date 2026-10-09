@@ -9,7 +9,7 @@ import { selectForScope } from '#cli/repository/selection/public.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { emitPolicy, parseExpiryDate } from '#cli/policy/document/public.ts';
 import { rootView, scopeView, knownSettings } from '#cli/policy/settings/public.ts';
-import { POLICY, OPENAPI_DOCUMENTS, OPENAPI_PATH_CASES } from '#tests/config/cli/policy/scope-views.ts';
+import { POLICY, OPENAPI_DOCUMENTS, OPENAPI_PATH_CASES } from '#tests/config/cli/policy/settings.ts';
 
 // The validated selections of a repository with inherited and overridden scope policy.
 async function readScopeViews(): Promise<ScopeSelection[]> {

@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { parseBashSyntaxResult, findFenceSyntaxFindings } from '#cli/parsers/public.ts';
 
 /**

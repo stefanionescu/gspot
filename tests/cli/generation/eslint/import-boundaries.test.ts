@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
+import type { ComputedEslint } from '#tests/types/cli/generation/configuration-files.ts';
 import type { BoundaryResult } from '#tests/types/cli/generation/eslint/import-boundaries.ts';
 import { BOUNDARY_CASES, TEST_BOUNDARY_POLICY } from '#tests/config/cli/generation/eslint/import-boundaries.ts';
 

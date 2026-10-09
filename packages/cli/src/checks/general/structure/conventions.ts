@@ -3,8 +3,8 @@ import { readSource } from '#cli/platform/root/public.ts';
 import { parseSource } from '#cli/parsers/source/public.ts';
 import { isToolProjectPath } from '#cli/repository/paths/public.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import type { CountedLanguage } from '#cli/types/parsers/statements.ts';
 import { HOUSE_QUERIES } from '#cli/config/checks/general/structure.ts';
+import type { CountedLanguage } from '#cli/types/parsers/statements.ts';
 import type { HouseSource, HouseSourceInput } from '#cli/types/checks/general/structure.ts';
 
 // Preserve native inventory selection, including extensionless shell sources.

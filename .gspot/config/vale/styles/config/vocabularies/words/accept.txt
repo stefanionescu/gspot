@@ -24,6 +24,7 @@ ATS
 AWQ
 axe
 basedpyright
+Bash
 BASH
 BCP
 BEM

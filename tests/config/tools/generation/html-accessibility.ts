@@ -1,4 +1,4 @@
-import type { HtmlAccessibilityCheck } from '#tests/types/generation/configuration-files.ts';
+import type { HtmlAccessibilityCheck } from '#tests/types/tools/generation/html.ts';
 
 /** Source markup and built output share the same two independently located media findings. */
 export const HTML_ACCESSIBILITY_PAGE = `<!doctype html>

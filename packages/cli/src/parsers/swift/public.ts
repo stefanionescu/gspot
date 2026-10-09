@@ -4,8 +4,8 @@ import { parseSource } from '#cli/parsers/source/public.ts';
 import type { SourceInput } from '#cli/types/parsers/source.ts';
 import { projectBuildSettings } from '#cli/parsers/tool/public.ts';
 import { readText, readSource } from '#cli/platform/root/public.ts';
-import type { ParsedSwift, SwiftSource, SwiftFunction, SwiftVersionInput } from '#cli/types/parsers/swift/source.ts';
 import { ACCESSOR_NODES, FUNCTION_NAMES, SWIFT_BODY_NODES, SWIFT_TOOLS_VERSION } from '#cli/config/parsers/swift.ts';
+import type { ParsedSwift, SwiftSource, SwiftFunction, SwiftVersionInput } from '#cli/types/parsers/swift/source.ts';
 
 function accessorName(node: Node, label: string): string {
     let owner = node.parent;

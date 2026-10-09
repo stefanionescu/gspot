@@ -1,8 +1,8 @@
 // Compares generated files with the files on disk.
 import { createTwoFilesPatch } from 'diff';
 import { isDeepStrictEqual } from 'node:util';
-import { GspotError } from '#cli/platform/public.ts';
 import { toPosix } from '#cli/platform/contracts.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { assertNoErrors } from '#cli/policy/public.ts';
 import { openRoot } from '#cli/platform/root/public.ts';
@@ -12,12 +12,12 @@ import type { FileCopy } from '#cli/types/platform/root.ts';
 import { CONFLICT_MARKERS } from '#cli/config/parsers/git.ts';
 import { hasFields } from '#cli/lifecycle/merge/contracts.ts';
 import { currentBlock } from '#cli/platform/root/contracts.ts';
-import type { Generated } from '#cli/types/generation/files.ts';
 import { readPolicyFile } from '#cli/policy/document/public.ts';
+import type { Generated } from '#cli/types/generation/files.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
-import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import { DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/drift.ts';
 import { RETAINED_PATHS } from '#cli/config/lifecycle/ownership.ts';
+import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import type { Log, Ownership } from '#cli/types/lifecycle/ownership.ts';
 import { planClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
 import { deleteInstallation } from '#cli/lifecycle/ownership/state/public.ts';

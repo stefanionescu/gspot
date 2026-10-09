@@ -1,13 +1,13 @@
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { stripVTControlCharacters } from 'node:util';
 import { tsc } from '#cli/checks/language/public.ts';
+import { stripVTControlCharacters } from 'node:util';
 import { checkInput } from '#cli/execution/contracts.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import { copyIntoScratch } from '#cli/execution/copy/public.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
+import { copyIntoScratch } from '#cli/execution/copy/public.ts';
 import { nextSettingsFindings } from '#cli/parsers/tool/public.ts';
 import { parseNextBuildFlags } from '#cli/parsers/bash/contracts.ts';
 import { toolPin, allChecks } from '#cli/configurations/contracts.ts';

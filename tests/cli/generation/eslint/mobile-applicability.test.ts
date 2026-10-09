@@ -7,7 +7,7 @@ import { openSession } from '#cli/commands/public.ts';
 import { configuredChecks } from '#cli/planning/public.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { EXPO_DEPENDENCIES, NATIVE_DEPENDENCIES } from '#tests/config/samples/react.ts';
-import type { RuntimeConfiguration } from '#tests/types/generation/configuration-files.ts';
+import type { RuntimeConfiguration } from '#tests/types/cli/generation/configuration-files.ts';
 import { MOBILE_POLICY, TEXT_COMPONENTS } from '#tests/config/cli/generation/eslint/mobile-applicability.ts';
 
 test('Expo rules and Doctor apply to the Expo scope and leave its bare native sibling alone', async () => {

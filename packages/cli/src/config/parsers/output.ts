@@ -14,7 +14,7 @@ export const TRAILING_PAREN_RULE = /\((?<rule>[a-z0-9_:/@.-]+)\)$/u;
 
 export const DEFAULT_OUTPUT_FORMAT: OutputSpec = { format: 'regex', pattern: DEFAULT_PATTERN };
 
-/** Semgrep's native source parsing diagnostic exit code. */
+/** The native Semgrep source parsing diagnostic exit code. */
 export const SEMGREP_PARSE_EXIT = 3;
 
 /** Knip JSON categories and the meaning retained in every finding. */

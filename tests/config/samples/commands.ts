@@ -11,3 +11,5 @@ configurations = []
 [scope."web"]
 configurations = []
 `;
+
+export const EXCEPTION_REASON = 'The project contract requires this reviewed exception.';

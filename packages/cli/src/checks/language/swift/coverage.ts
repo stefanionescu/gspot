@@ -1,9 +1,9 @@
 import { join, relative } from 'node:path';
-import type { Root } from '#cli/types/platform/root.ts';
 import { decodeUtf8 } from '#cli/platform/contracts.ts';
+import type { Root } from '#cli/types/platform/root.ts';
 import { xccovSchema } from '#cli/parsers/schema/xctest.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { parseSwiftCoverage } from '#cli/parsers/swift/contracts.ts';
 import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
 import type { SwiftBuildPlan } from '#cli/types/checks/language/swift.ts';

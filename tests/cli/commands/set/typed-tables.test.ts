@@ -6,7 +6,7 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
-import { CHECK, TABLE } from '#tests/config/cli/commands/typed-tables.ts';
+import { CHECK, TABLE } from '#tests/config/cli/commands/set/typed-tables.ts';
 
 test('gspot set writes a list of tables typed the TOML way as tables, and the policy refuses quoted ones', async () => {
     await using sandbox = await testdir();

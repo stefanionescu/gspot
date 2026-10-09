@@ -9,7 +9,7 @@ import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { eslintGlobalsSchema } from '#cli/parsers/schema/public.ts';
-import type { RuntimeConfiguration } from '#tests/types/generation/configuration-files.ts';
+import type { RuntimeConfiguration } from '#tests/types/cli/generation/configuration-files.ts';
 
 import {
     RUNTIME_CASES,

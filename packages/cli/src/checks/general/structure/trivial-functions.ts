@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
 import { visitParsed } from '#cli/parsers/source/public.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { swiftFunctionName } from '#cli/parsers/swift/public.ts';
 import type { CountedLanguage } from '#cli/types/parsers/statements.ts';

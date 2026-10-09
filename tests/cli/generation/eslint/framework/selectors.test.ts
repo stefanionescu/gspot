@@ -4,7 +4,7 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { getSuggestions } from '#cli/commands/doctor/contracts.ts';
-import type { RuntimeConfiguration } from '#tests/types/generation/configuration-files.ts';
+import type { RuntimeConfiguration } from '#tests/types/cli/generation/configuration-files.ts';
 
 import {
     I18N_SOURCE,

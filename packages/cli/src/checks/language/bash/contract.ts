@@ -2,8 +2,8 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { CodeLine } from '#cli/types/parsers/bash.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { pathMatcher } from '#cli/repository/paths/public.ts';
 import { rolePaths } from '#cli/policy/settings/contracts.ts';
+import { pathMatcher } from '#cli/repository/paths/public.ts';
 import { codeLines, withoutDeclaration } from '#cli/parsers/bash/public.ts';
 import type { CheckInput, BuiltInCheck } from '#cli/types/execution/check.ts';
 import { functionAt, getScriptIndex } from '#cli/checks/language/contracts.ts';

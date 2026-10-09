@@ -1,8 +1,8 @@
 // Validated file declarations and native tool pin calculations.
 import semver from 'semver';
 import { posix } from 'node:path';
-import { GspotError } from '#cli/platform/public.ts';
 import { compact } from '#cli/platform/contracts.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import type { ToolPin, InstallerPin } from '#cli/types/parsers/tool.ts';
 import { CONFIG_PREFIX, MISE_BACKENDS } from '#cli/config/configurations.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';

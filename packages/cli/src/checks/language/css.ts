@@ -1,5 +1,5 @@
-import { camelCase } from 'scule';
 import { posix } from 'node:path';
+import { camelCase } from 'scule';
 import { findingAt } from '#cli/checks/finding.ts';
 import { extensionOf } from '#cli/platform/contracts.ts';
 import { readSource } from '#cli/platform/root/public.ts';

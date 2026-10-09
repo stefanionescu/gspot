@@ -1,4 +1,4 @@
-import type { SvgSavingCase } from '#tests/types/cli/checks/general/site.ts';
+import type { SvgSavingCase } from '#tests/types/cli/checks/site.ts';
 /** Malformed manifest shapes that must become parse findings instead of built-in check failures. */
 export const INVALID_WEB_MANIFESTS = ['null', '{"icons": "icon.png"}', '{"icons": [{"src": 42}]}'];
 

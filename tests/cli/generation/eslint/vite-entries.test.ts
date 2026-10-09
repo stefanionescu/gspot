@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { createEslint } from '#tests/harness/generated.ts';
-import type { FileRuleFinding } from '#tests/types/generation/findings.ts';
+import type { FileRuleFinding } from '#tests/types/cli/generation/eslint/findings.ts';
 import { START, STARTER, VITE_POLICY, TRIVIAL_FILES } from '#tests/config/cli/generation/eslint/vite-entries.ts';
 
 // The files and rules the generated configuration reports among the two rules about trivial code.

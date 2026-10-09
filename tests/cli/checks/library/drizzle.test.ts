@@ -13,7 +13,7 @@ import { buildCheckInput } from '#tests/harness/input.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { getStaged } from '#cli/repository/revisions/public.ts';
 import { rejection, containing } from '#tests/harness/expectations.ts';
-import type { MigrationProject } from '#tests/types/cli/checks/library/drizzle.ts';
+import type { MigrationProject } from '#tests/types/cli/checks/drizzle.ts';
 import { stat, chmod, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 
 import {

@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
-import { DECLARATION_CASES } from '#tests/config/cli/commands/declarations.ts';
+import { DECLARATION_CASES } from '#tests/config/cli/commands/set/declarations.ts';
 
 test.each(DECLARATION_CASES)(
     '$kind directories return to source checks when their declaration is removed',

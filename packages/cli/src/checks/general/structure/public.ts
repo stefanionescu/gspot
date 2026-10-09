@@ -1,13 +1,13 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/root/public.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
 import { toolName } from '#cli/configurations/contracts.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
-import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { ownedBy } from '#cli/repository/selection/public.ts';
+import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { isReasonAccepted } from '#cli/policy/errors/contracts.ts';
-import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { SourceComment } from '#cli/types/parsers/comments.ts';
+import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { commentText, parseComments } from '#cli/parsers/source/public.ts';
 import type { SuppressionForm } from '#cli/types/checks/general/structure.ts';

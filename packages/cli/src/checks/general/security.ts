@@ -7,11 +7,11 @@ import type { ToolSession } from '#cli/types/tools/session.ts';
 import { CODEQL } from '#cli/config/checks/general/security.ts';
 import { copyIntoScratch } from '#cli/execution/copy/public.ts';
 import { codeqlLanguagesSchema } from '#cli/parsers/schema/codeql.ts';
-import { assertMutationTarget } from '#cli/platform/root/contracts.ts';
 import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
+import { assertMutationTarget } from '#cli/platform/root/contracts.ts';
 import { sarifFindings } from '#cli/parsers/output/structured/public.ts';
-import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
 import { toolPin, semgrepRuleFiles } from '#cli/configurations/contracts.ts';
+import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckTool, runCheckCommand } from '#cli/execution/command/public.ts';
 import type { CodeqlAnalysis, CodeqlLanguage } from '#cli/types/checks/general/security.ts';
 

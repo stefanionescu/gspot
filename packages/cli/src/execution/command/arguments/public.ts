@@ -1,7 +1,7 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { readText } from '#cli/platform/root/public.ts';
 import { toPlatform } from '#cli/platform/contracts.ts';
+import { readText } from '#cli/platform/root/public.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { toolFileName, targetInScope } from '#cli/configurations/contracts.ts';
 

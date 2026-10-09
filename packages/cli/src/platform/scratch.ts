@@ -1,5 +1,5 @@
-import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { Dirent } from 'node:fs';
 import type { ScratchFolder } from '#cli/types/platform/scratch.ts';
 import { rmSync, mkdtempSync, readdirSync, realpathSync } from 'node:fs';

@@ -1,7 +1,7 @@
 // Markdown prose, rule sections and tagged code examples share one syntax-parsing owner.
 import type { z } from 'zod';
-import { parseAllDocuments } from 'yaml';
 import { visit } from 'unist-util-visit';
+import { parseAllDocuments } from 'yaml';
 import { isDeepStrictEqual } from 'node:util';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { TomlError, parse as parseToml } from 'smol-toml';

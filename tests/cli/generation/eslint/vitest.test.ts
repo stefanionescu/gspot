@@ -6,7 +6,7 @@ import { createEslint } from '#tests/harness/generated.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { APP_JEST } from '#tests/config/cli/generation/eslint/jest.ts';
 import { VITEST_FILES } from '#tests/config/cli/generation/eslint/vitest.ts';
-import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
+import type { ComputedEslint } from '#tests/types/cli/generation/configuration-files.ts';
 
 async function ruleReports(eslint: ESLint, file: string, rule: string): Promise<Pick<Linter.LintMessage, 'message'>[]> {
     const results = await eslint.lintFiles([file]);

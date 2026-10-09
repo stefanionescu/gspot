@@ -9,7 +9,7 @@ import { PUSH_CONTENT } from '#tests/config/samples/git.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { git, gitOutput, preparePushRepository } from '#tests/harness/git.ts';
-import { PUSH_CHECK_ARGV, PUSH_CHECK_COMMAND } from '#tests/config/cli/commands/push.ts';
+import { PUSH_CHECK_ARGV, PUSH_CHECK_COMMAND } from '#tests/config/cli/commands/check/pre-push.ts';
 
 /** Require the pushed tree and uncommitted source and policy to stay unchanged. */
 async function expectWorkingTreeKept(root: string, head: string): Promise<void> {

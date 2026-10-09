@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { SSH_HEREDOC } from '#cli/config/checks/language/bash.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { getScriptIndex } from '#cli/checks/language/contracts.ts';
 
 /**

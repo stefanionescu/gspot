@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { toPosix } from '#cli/platform/contracts.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { toolFileName, targetInScope } from '#cli/configurations/contracts.ts';
 import { diagnosticSchema, svelteFailureSchema } from '#cli/parsers/schema/svelte.ts';
 import { FAILURE_LINE, DIAGNOSTIC_LINE } from '#cli/config/checks/framework/svelte.ts';

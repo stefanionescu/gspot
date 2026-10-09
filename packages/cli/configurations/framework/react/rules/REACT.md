@@ -85,7 +85,7 @@ UI updates after hydration. Fix the mismatch instead of hiding warnings globally
 
 - Use deterministic initial props for server-rendered content. Read browser-only state after
   hydration or through a supported external-store pattern.
-- Use stable entity identifiers for data identity and React's supported ID mechanism for
+- Use stable entity identifiers for data identity and the supported React ID mechanism for
   relationships between controls and labels.
 - Give date/time formatting the same initial locale, time zone, and reference time where relative output otherwise differs.
 - Do not branch rendered markup on `typeof window` as a routine hydration fix. Server and first

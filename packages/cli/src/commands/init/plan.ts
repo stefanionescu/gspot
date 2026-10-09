@@ -1,15 +1,15 @@
 // The plan initialization shows before writing files, including dry runs.
 import { colors } from '#cli/terminal/public.ts';
 import { compact } from '#cli/platform/contracts.ts';
-import { duplicateMisePins } from '#cli/tools/public.ts';
 import { misePins } from '#cli/configurations/public.ts';
+import { duplicateMisePins } from '#cli/tools/public.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { CI_FILE_NOTES } from '#cli/config/generation/ci.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
 import { getSubmodulePaths } from '#cli/repository/contracts.ts';
-import type { Tooling } from '#cli/types/repository/inventory.ts';
 import { getLintJobs } from '#cli/repository/discovery/public.ts';
+import type { Tooling } from '#cli/types/repository/inventory.ts';
 import { ciNpmInstall } from '#cli/generation/documents/public.ts';
 import type { DuplicateMisePin } from '#cli/types/tools/install.ts';
 import { npmPins, pythonPins } from '#cli/configurations/contracts.ts';

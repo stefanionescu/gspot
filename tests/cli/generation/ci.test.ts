@@ -9,7 +9,7 @@ import { CLI_PINS } from '#cli/config/generation/pins.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
 import { githubFile, gitlabFile } from '#cli/generation/documents/public.ts';
-import type { GithubWorkflow, GitlabPipeline } from '#tests/types/generation/workflow.ts';
+import type { GithubWorkflow, GitlabPipeline } from '#tests/types/cli/generation/ci.ts';
 import { PIPELINE, MISE_PROGRAM, GSPOT_PROGRAM, DOCTOR_EXIT_CODES } from '#tests/config/cli/generation/workflow.ts';
 
 test('the GitHub workflow has a check and a manual job per platform and only reads the repository', () => {

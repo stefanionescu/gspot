@@ -1,25 +1,25 @@
 import { join, posix } from 'node:path';
 import type { RootContent } from 'mdast';
 import { visit } from 'unist-util-visit';
-import { statSync, readdirSync } from 'node:fs';
 import { toString } from 'mdast-util-to-string';
+import { statSync, readdirSync } from 'node:fs';
 import { findingAt } from '#cli/checks/finding.ts';
 import { parseMiseTasks } from '#cli/parsers/mise.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { expandPaths } from '#cli/platform/contracts.ts';
 import { isGlob } from '#cli/repository/paths/public.ts';
 import { readSource } from '#cli/platform/root/public.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
 import { globPaths } from '#cli/platform/root/contracts.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ProseLine } from '#cli/types/parsers/source.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
 import { runnerSchema } from '#cli/parsers/schema/contracts.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { BANNED_HEADINGS } from '#cli/config/generation/prose.ts';
 import { parsePackageManifest } from '#cli/parsers/packages/public.ts';
 import { scopeOf, scopeAncestors } from '#cli/repository/paths/contracts.ts';
 import { MISE_FILES, LICENSE_FILE } from '#cli/config/repository/inventory.ts';
-import type { PathIndex, TaskSources } from '#cli/types/checks/general/docs.ts';
 import { pathTokens, proseLines, cleanPathToken } from '#cli/parsers/public.ts';
+import type { PathIndex, TaskSources } from '#cli/types/checks/general/docs.ts';
 import { START_WORDS, SECTION_DEPTH, CONTENTS_TITLE, FILE_EXTENSION } from '#cli/config/checks/general/docs.ts';
 
 function knownPaths(input: CheckInput): Set<string> {

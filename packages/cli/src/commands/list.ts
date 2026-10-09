@@ -1,11 +1,11 @@
 import { compact } from '#cli/platform/contracts.ts';
-import type { Session } from '#cli/types/planning.ts';
 import { printResult } from '#cli/terminal/public.ts';
+import type { Session } from '#cli/types/planning.ts';
 import { Argument } from '@commander-js/extra-typings';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { selectionStatus } from '#cli/planning/contracts.ts';
-import type { Program } from '#cli/types/commands/program.ts';
 import { everyManifest } from '#cli/configurations/public.ts';
+import type { Program } from '#cli/types/commands/program.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/list.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';

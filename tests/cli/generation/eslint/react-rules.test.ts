@@ -8,7 +8,7 @@ import { containing } from '#tests/harness/expectations.ts';
 import { emitFile, createEslint } from '#tests/harness/generated.ts';
 import { parseToolProject } from '#cli/parsers/packages/contracts.ts';
 import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
-import type { FileRuleFinding } from '#tests/types/generation/findings.ts';
+import type { FileRuleFinding } from '#tests/types/cli/generation/eslint/findings.ts';
 
 import {
     WEB_TSCONFIG,

@@ -3,13 +3,13 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
-import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { parseOutput } from '#cli/parsers/output/public.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import type { KnipConfiguration } from '#tests/types/generation/configuration-files.ts';
+import type { KnipConfiguration } from '#tests/types/cli/generation/configuration-files.ts';
 
 import {
     KNIP_ENTRY_TABLES,

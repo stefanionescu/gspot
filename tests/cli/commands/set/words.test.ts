@@ -4,7 +4,7 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { PROSE_WORDS } from '#tests/config/samples/prose.ts';
-import { EXCEPTION_REASON } from '#tests/config/cli/commands/setting-reasons.ts';
+import { EXCEPTION_REASON } from '#tests/config/samples/commands.ts';
 
 test('accepted words reach the generated Vale word file', async () => {
     await using sandbox = await testdir();

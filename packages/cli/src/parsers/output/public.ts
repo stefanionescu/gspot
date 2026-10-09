@@ -1,5 +1,5 @@
-import { isAbsolute } from 'node:path';
 import { realpathSync } from 'node:fs';
+import { isAbsolute } from 'node:path';
 import { GspotError } from '#cli/platform/public.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { toPosix, toolPath } from '#cli/platform/contracts.ts';

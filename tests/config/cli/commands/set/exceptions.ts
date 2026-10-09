@@ -17,8 +17,6 @@ export const PRIMITIVE_EXCEPTIONS = [
     { key: 'words', value: PROSE_WORDS[0], second: PROSE_WORDS[1], defaults: {} } as const,
 ];
 
-export const EXCEPTION_REASON = 'The project contract requires this reviewed exception.';
-
 export const ROOT_PROJECT = '[agent_rules]\nenabled = false\n[scope."app"]\n[scope."sibling"]\n';
 
 export const HOST_LOCKFILE = {

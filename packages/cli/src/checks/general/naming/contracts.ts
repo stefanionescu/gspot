@@ -1,14 +1,14 @@
 import { posix } from 'node:path';
 import { namingTerms } from '#cli/configurations/public.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { stemOf, compact } from '#cli/platform/contracts.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { bashIdentifiers } from '#cli/parsers/naming/bash.ts';
 import { pathMatcher } from '#cli/repository/paths/public.ts';
 import { sqlIdentifiers } from '#cli/parsers/naming/public.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
 import { swiftIdentifiers } from '#cli/parsers/naming/swift.ts';
-import { pythonIdentifiers } from '#cli/parsers/naming/python.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { splitParts } from '#cli/checks/general/naming/public.ts';
+import { pythonIdentifiers } from '#cli/parsers/naming/python.ts';
 import { createIdentifier } from '#cli/parsers/naming/contracts.ts';
 import { CATEGORY_PARENTS } from '#cli/config/checks/general/naming.ts';
 import { grammarFor, parseSource } from '#cli/parsers/source/public.ts';

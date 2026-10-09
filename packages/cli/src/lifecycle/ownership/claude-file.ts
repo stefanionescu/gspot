@@ -1,8 +1,8 @@
 // Moving `CLAUDE.md` into `AGENTS.md`: its own text goes to the end of `AGENTS.md`, and the file goes.
-import type { FileCopy } from '#cli/types/platform/root.ts';
 import { blockSpan } from '#cli/platform/root/contracts.ts';
-import type { Log } from '#cli/types/lifecycle/ownership.ts';
+import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Planned } from '#cli/types/lifecycle/apply.ts';
+import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { identify } from '#cli/lifecycle/ownership/public.ts';
 import { MOVED_HEADING } from '#cli/config/lifecycle/ownership.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';

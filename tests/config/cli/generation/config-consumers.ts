@@ -1,4 +1,4 @@
-import type { StylelintConsumerCase } from '#tests/types/generation/configuration-files.ts';
+import type { StylelintConsumerCase } from '#tests/types/cli/generation/configuration-files.ts';
 
 /** Sibling Python projects with different enabled tools. */
 export const NESTED_PYTHON_POLICY = `configurations = []

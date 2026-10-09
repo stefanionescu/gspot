@@ -1,17 +1,17 @@
 // Remove authored configuration choices through the policy transaction.
-import { GspotError } from '#cli/platform/public.ts';
 import { compact } from '#cli/platform/contracts.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import { printResult } from '#cli/terminal/public.ts';
 import { savePolicy } from '#cli/commands/contracts.ts';
-import type { CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/lifecycle/public.ts';
 import { policySchema } from '#cli/policy/schema/public.ts';
-import type { Mutation } from '#cli/types/policy/settings.ts';
+import type { CommandResult } from '#cli/types/terminal.ts';
 import type { Program } from '#cli/types/commands/program.ts';
+import type { Mutation } from '#cli/types/policy/settings.ts';
 import { defaultValue } from '#cli/policy/schema/contracts.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import type { RemoveOptions } from '#cli/types/commands/remove.ts';
 import { commandHelp, commandRoot } from '#cli/commands/public.ts';
+import type { RemoveOptions } from '#cli/types/commands/remove.ts';
 import { getScopeTable, preparePolicy } from '#cli/policy/document/contracts.ts';
 import { requireChain, configurationManifests } from '#cli/configurations/public.ts';
 

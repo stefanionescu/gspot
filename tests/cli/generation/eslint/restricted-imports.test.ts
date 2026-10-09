@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { toPosix } from '#cli/platform/contracts.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
+import type { ComputedEslint } from '#tests/types/cli/generation/configuration-files.ts';
 import { POLICY, PROJECT, STORE_FILES } from '#tests/config/cli/generation/eslint/restricted-imports.ts';
 
 test.each(['recommended', 'all'] as const)(

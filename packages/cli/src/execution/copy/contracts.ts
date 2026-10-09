@@ -1,12 +1,12 @@
 import { cp } from 'node:fs/promises';
-import { GspotError } from '#cli/platform/public.ts';
 import { runGit } from '#cli/platform/git/public.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import { isInside } from '#cli/platform/contracts.ts';
-import type { Root } from '#cli/types/platform/root.ts';
 import { openRoot } from '#cli/platform/root/public.ts';
-import type { GitEntry } from '#cli/types/parsers/git.ts';
+import type { Root } from '#cli/types/platform/root.ts';
 import { MODE_BITS } from '#cli/config/platform/modes.ts';
 import { lockfileEntry } from '#cli/parsers/contracts.ts';
+import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { nativeSegments } from '#cli/platform/root/contracts.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/public.ts';

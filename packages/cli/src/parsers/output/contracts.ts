@@ -1,8 +1,8 @@
 // Findings from validated structured reports produced by named tools.
 
 import { resolve, relative } from 'node:path';
-import { GspotError } from '#cli/platform/public.ts';
 import { toPosix } from '#cli/platform/contracts.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import { LINE_FEED } from '#cli/config/parsers/source.ts';
 import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding, TypoEntry, ValeAlert, MarkdownlintEntry } from '#cli/types/parsers/output.ts';
@@ -104,7 +104,7 @@ function typoFinding(
 }
 
 /**
- * Findings from markdownlint's JSON report, each checked against the source it points at.
+ * Findings from the markdownlint JSON report, each checked against the source it points at.
  * @param check the check ID
  * @param stdout the report
  * @param help the check's help text

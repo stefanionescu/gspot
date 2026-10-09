@@ -1,25 +1,25 @@
 // Preview or publish setting changes with the same validation and mutation.
-import { GspotError } from '#cli/platform/public.ts';
 import { Option } from '@commander-js/extra-typings';
+import { GspotError } from '#cli/platform/public.ts';
 import { printResult } from '#cli/terminal/public.ts';
-import { readPolicyTable } from '#cli/policy/public.ts';
 import { savePolicy } from '#cli/commands/contracts.ts';
-import type { CommandResult } from '#cli/types/terminal.ts';
+import { readPolicyTable } from '#cli/policy/public.ts';
 import { assertVersionPin } from '#cli/lifecycle/public.ts';
+import type { CommandResult } from '#cli/types/terminal.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import type { Program } from '#cli/types/commands/program.ts';
-import { knownSettings } from '#cli/policy/settings/public.ts';
 import { parseTomlText } from '#cli/policy/document/public.ts';
+import { knownSettings } from '#cli/policy/settings/public.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import { commandHelp, commandRoot } from '#cli/commands/public.ts';
 import { selectForScope } from '#cli/repository/selection/public.ts';
-import type { SettingDeclaration } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
+import type { SettingDeclaration } from '#cli/types/configurations.ts';
 import { unknownSettingDiagnostic } from '#cli/policy/errors/public.ts';
 import { DECIMAL, INTEGER, STRUCTURED } from '#cli/config/commands/set.ts';
 import { compact, isRecord, quoteArgument } from '#cli/platform/contracts.ts';
-import type { SetOptions, ParsedSettingValue } from '#cli/types/commands/set.ts';
 import { settingValue, declarationFor } from '#cli/policy/settings/contracts.ts';
+import type { SetOptions, ParsedSettingValue } from '#cli/types/commands/set.ts';
 import type { Policy, Mutation, KnownSettings, CapturedPolicyEdit } from '#cli/types/policy/settings.ts';
 
 import {

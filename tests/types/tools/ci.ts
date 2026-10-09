@@ -1,4 +1,4 @@
-import type { CiDocument } from '#tests/types/generation/workflow.ts';
+import type { CiDocument } from '#tests/types/cli/generation/ci.ts';
 
 /** Authored and generated CI files with a deliberate changed-object sample. */
 export type CiProject = {

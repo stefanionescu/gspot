@@ -2,15 +2,15 @@
 import semver from 'semver';
 import { join } from 'node:path';
 import { miseFile } from '#cli/generation/mise.ts';
-import { GspotError } from '#cli/platform/public.ts';
 import { pathKey } from '#cli/platform/contracts.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import type { Session } from '#cli/types/planning.ts';
-import type { RuleFile } from '#cli/types/agent-rules.ts';
 import { bunfigChanges } from '#cli/generation/bunfig.ts';
+import type { RuleFile } from '#cli/types/agent-rules.ts';
 import { npmPins } from '#cli/configurations/contracts.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { managedBlock } from '#cli/agent-rules/contracts.ts';
 import { selectRuleFiles } from '#cli/agent-rules/public.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { emitToolFiles } from '#cli/generation/tool-files.ts';
 import { packageRedirects } from '#cli/generation/redirects.ts';
 import { etaInputs } from '#cli/generation/compilation/public.ts';

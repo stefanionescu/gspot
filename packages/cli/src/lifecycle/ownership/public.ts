@@ -1,13 +1,13 @@
 import { posix } from 'node:path';
 import { openRoot } from '#cli/platform/root/public.ts';
-import type { Planned } from '#cli/types/lifecycle/apply.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
+import type { Planned } from '#cli/types/lifecycle/apply.ts';
 import { STATE_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { pathKey, contentDigest } from '#cli/platform/contracts.ts';
 import { OWNERSHIP_JSON_INDENT } from '#cli/config/lifecycle/ownership.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/state/contracts.ts';
-import type { Root, FileCopy, PlannedFiles } from '#cli/types/platform/root.ts';
 import { recoverInstallations } from '#cli/lifecycle/ownership/state/public.ts';
+import type { Root, FileCopy, PlannedFiles } from '#cli/types/platform/root.ts';
 import { sameEntry, assertMutationTarget } from '#cli/platform/root/contracts.ts';
 
 import type {

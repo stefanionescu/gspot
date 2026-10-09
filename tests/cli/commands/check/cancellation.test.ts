@@ -16,7 +16,7 @@ import { remainingTestTime, prepareTestCommand } from '#tests/harness/command.ts
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
 import type { CopyMarker, DirectoryCopyMarker } from '#tests/types/harness/process.ts';
 import { gspot, runGspot, spawnGspot, startGspot, checkReport } from '#tests/harness/gspot.ts';
-import { SLOW_CHECK, CHILD_OPTIONS, SLOW_TOOL_PROGRAM } from '#tests/config/cli/commands/cancellation.ts';
+import { SLOW_CHECK, CHILD_OPTIONS, SLOW_TOOL_PROGRAM } from '#tests/config/cli/commands/check/cancellation.ts';
 
 // A readiness file can become visible before the child has finished writing its JSON.
 async function waitForJson(path: string): Promise<unknown> {
