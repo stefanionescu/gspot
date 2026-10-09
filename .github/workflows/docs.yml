@@ -7,6 +7,11 @@ on:
                 description: Published stable release tag
                 required: true
                 type: string
+        secrets:
+            CLOUDFLARE_API_TOKEN:
+                required: true
+            CLOUDFLARE_ACCOUNT_ID:
+                required: true
     workflow_dispatch:
         inputs:
             release_tag:

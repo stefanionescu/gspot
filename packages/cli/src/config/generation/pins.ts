@@ -5,7 +5,7 @@ import { SWIFT_GRAMMAR_FILE } from '#cli/config/platform/assets.ts';
 /** Release pins shared by generation, installation, downloads, and maintenance validation. */
 export const CLI_PINS = {
     mise: { name: 'jdx/mise', version: '2026.8.8' },
-    node: '22',
+    node: '24',
     actions: {
         checkout: {
             name: 'actions/checkout',
