@@ -210,20 +210,26 @@ export function readPolicyFile(root: string): string {
         if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') throw error;
         throw new GspotError('policy', ['There is no gspot.toml here. Run `gspot init` to create one.']);
     }
+    return decodePolicyText(bytes);
+}
+
+/**
+ * Decode policy bytes captured at the file boundary.
+ * @param bytes the captured policy bytes
+ * @returns the UTF-8 policy text
+ */
+export function decodePolicyText(bytes: Buffer): string {
     const text = decodeUtf8(bytes);
-    if (text === undefined)
-        throw new GspotError('policy', ['The policy file gspot.toml must contain valid UTF-8 text.']);
+    if (text === undefined) throw new GspotError('policy', ['gspot.toml must contain valid UTF-8 text.']);
     return text;
 }
 
 /**
  * Publish native policy bytes only while the captured file identity is unchanged.
- * @param request the confined file reader, captured input, text, and ownership publication
+ * @param request the captured input, text, and ownership publication
  */
 export function writePolicyFile(request: PolicyWriteRequest): void {
-    const { files, text, original, publish } = request;
-    if (!isDeepStrictEqual(files.read(POLICY_FILE), original))
-        throw new GspotError('policy', ['The gspot.toml file changed while gspot was running. Run the command again.']);
+    const { text, original, publish } = request;
     const next = { bytes: Buffer.from(text), mode: original?.mode ?? OWNER_WRITABLE_FILE };
     if (!isDeepStrictEqual(next, original)) publish(next, original);
 }

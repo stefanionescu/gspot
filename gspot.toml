@@ -450,8 +450,6 @@ check = "docs/lychee"
 paths = ["docs/src/content/docs/**"]
 reason = "The site links are root-relative and resolve once Starlight builds it; its build validates them."
 
-# The shipped agent rules are this repository's product.
-
 [[ignore]]
 check = "docs/stale-paths"
 paths = ["FINDINGS.md", "findings/**"]

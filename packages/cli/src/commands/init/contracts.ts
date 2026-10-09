@@ -214,7 +214,6 @@ export async function writeSetup(
         await prepareToolProjects(session, generated.files, log.files, { refreshLockfiles: false });
     }
     writePolicyFile({
-        files: log.files,
         text: prepared.policyText,
         original: prepared.read.get(POLICY_FILE),
         publish: (next, expected) => {
@@ -249,7 +248,7 @@ export async function writeSetup(
  * Asks the init questions that flags left open: hooks, CI, rules, and the task runner.
  * @param root the repository root
  * @param options the init flags
- * @param tooling the configuration files, hooks and runner found
+ * @param tooling the tool files, hooks and runner found
  * @returns the answers
  */
 export async function askQuestions(root: string, options: InitOptions, tooling: Tooling): Promise<InitAnswers> {

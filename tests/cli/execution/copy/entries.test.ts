@@ -53,27 +53,28 @@ test('nested policies retain repository context with policy-relative index and c
 });
 
 // Windows file names cannot hold a newline or a quote.
-if (isPosix)
-    test('unborn history is empty and committed blobs retain unusual filenames and bytes', async () => {
-        await using sandbox = await testdir();
-        gitOutput(sandbox.path, ['init']);
-        expect(await getHeadEntries(sandbox.path)).toStrictEqual([]);
-        const path = 'a\n"é.sql';
-        await createFileTree(sandbox.path, { [path]: 'select 1;\n' });
-        gitOutput(sandbox.path, ['add', '.']);
-        gitOutput(sandbox.path, ['commit', '-m', 'Fixture']);
-        const entries = await getHeadEntries(sandbox.path);
-        expect(entries.map((entry) => entry.path)).toStrictEqual([path]);
-        const blobs = await getBlobs(
-            sandbox.path,
-            entries.map((entry) => entry.hash),
-        );
-        expect(blobs.get(entries[0]!.hash)?.toString()).toBe('select 1;\n');
-        await checkOutRevision(sandbox.path, { kind: 'index' }, async (copy) => {
-            expect(await Bun.file(join(copy, path)).text()).toBe('select 1;\n');
-        });
-        await writeFile(join(sandbox.path, '.git', 'index'), 'broken');
-        expect(await rejection(getEntries(sandbox.path, { kind: 'index' }))).toContain('Git ls-files failed');
-        await writeFile(join(sandbox.path, '.git', 'HEAD'), 'broken');
-        await rejection(getHeadEntries(sandbox.path));
+test.skipIf(!isPosix)('unborn history is empty and committed blobs retain unusual filenames and bytes', async () => {
+    await using sandbox = await testdir();
+    gitOutput(sandbox.path, ['init']);
+    expect(await getHeadEntries(sandbox.path)).toStrictEqual([]);
+    const path = 'a\n"é.sql';
+    await createFileTree(sandbox.path, { [path]: 'select 1;\n' });
+    gitOutput(sandbox.path, ['add', '.']);
+    gitOutput(sandbox.path, ['commit', '-m', 'Fixture']);
+    const entries = await getHeadEntries(sandbox.path);
+    expect(entries.map((entry) => entry.path)).toStrictEqual([path]);
+    const blobs = await getBlobs(
+        sandbox.path,
+        entries.map((entry) => entry.hash),
+    );
+    expect(blobs.get(entries[0]!.hash)?.toString()).toBe('select 1;\n');
+    await checkOutRevision(sandbox.path, { kind: 'index' }, async (copy) => {
+        expect(await Bun.file(join(copy, path)).text()).toBe('select 1;\n');
     });
+    await writeFile(join(sandbox.path, '.git', 'index'), 'broken');
+    expect(await rejection(getEntries(sandbox.path, { kind: 'index' }))).toContain('Git ls-files failed');
+    await writeFile(join(sandbox.path, '.git', 'HEAD'), 'broken');
+    expect(await rejection(getHeadEntries(sandbox.path))).toContain(
+        'Cannot read committed Git history. Restore HEAD and check again.',
+    );
+});

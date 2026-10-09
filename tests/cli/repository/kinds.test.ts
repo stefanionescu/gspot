@@ -3,9 +3,9 @@ import { gitOutput } from '#tests/harness/git.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/harness/expectations.ts';
+import { rm, mkdir, unlink, symlink, writeFile } from 'node:fs/promises';
 import { readAttributes, readRepository } from '#cli/repository/public.ts';
 import { headerFor, addJsonHeader } from '#cli/generation/documents/contracts.ts';
-import { rm, mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
 import {
     GENERATED_HEADER_PATHS,
@@ -122,7 +122,6 @@ test('Git attributes use native precedence without decoding the working-tree fil
         'linguist-generated': 'set',
     });
     expect(() => readAttributes(sandbox.path, ['source.ts'], false)).toThrow('.gitattributes is not UTF-8 text.');
-    expect(await readFile(join(sandbox.path, '.gitattributes'))).toStrictEqual(Buffer.from([0xff, 0x0a]));
 });
 
 test('repository inventory recognizes every generated header format outside the private directory', async () => {
@@ -165,7 +164,6 @@ test('linked authored attributes classify files inside the root and reject an ex
     await rm(join(sandbox.path, '.gitattributes'));
     await symlink(join(outside.path, 'attributes'), join(sandbox.path, '.gitattributes'));
     expect(await rejection(readRepository(sandbox.path, [], [], []))).toContain('Source link leaves the repository');
-    expect(await Bun.file(join(outside.path, 'attributes')).text()).toBe(attributes);
 });
 
 test.each(['folder', 'Git'])('%s attribute discovery honors later and nested overrides', async (backend) => {

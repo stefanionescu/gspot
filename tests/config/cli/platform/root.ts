@@ -4,6 +4,8 @@ export const UNSAFE_DESTINATIONS = [
     { path: 'hardlinked', refusal: 'Lifecycle destination is not a private regular file: hardlinked' },
 ];
 
+export const NATIVE_PATH_REFUSALS = ['../outside', '/outside', 'folder/../outside', 'nul\0suffix'];
+
 export const LINK_TARGET_REFUSALS = [
     { target: '../outside/sentinel', refusal: 'Unsafe lifecycle path: "../outside/sentinel"' },
     { target: '/etc/passwd', refusal: 'Unsafe lifecycle link target: tool' },

@@ -76,22 +76,22 @@ test('Vale receives its configured deadline and returns located native alerts', 
     const session = await openSession(directory.path);
     using resources = new DisposableStack();
     resources.use(mockPinnedExecutables([toolPin(session.manifests.values(), 'vale')]));
-    resources.use(
-        spyOn(processes, 'run').mockImplementation((command, options) => {
-            expect(options.timeoutMs).toBe(1000);
-            expect(options.cwd).toBe(directory.path);
-            expect(command).toContain(path);
-            expect(options.stdin).toBeUndefined();
-            return Promise.resolve({
-                code: 0,
-                stdout: JSON.stringify({ [join(directory.path, path)]: [DIAGNOSTIC] }),
-                stderr: '',
-                missing: false,
-                duration: 1,
-            });
+    const run = resources.use(
+        spyOn(processes, 'run').mockResolvedValue({
+            code: 0,
+            stdout: JSON.stringify({ [join(directory.path, path)]: [DIAGNOSTIC] }),
+            stderr: '',
+            missing: false,
+            duration: 1,
         }),
     );
     const result = await executeRun(session, buildRunOptions({ only: ['prose/vale'] }));
+    expect(run.mock.calls).toHaveLength(1);
+    const [command, options] = run.mock.calls[0]!;
+    expect(options.timeoutMs).toBe(1000);
+    expect(options.cwd).toBe(directory.path);
+    expect(command).toContain(path);
+    expect(options.stdin).toBeUndefined();
     expect(result.report.exitCode).toBe(1);
     expect(result.report.checks).toMatchObject([{ check: 'prose/vale', status: 'failed' }]);
     expect(result.report.checks[0]!.findings).toStrictEqual([
@@ -116,9 +116,8 @@ test('each stdin route scans the bytes held by the run and maps its own alerts',
     resources.use(mockPinnedExecutables([toolPin(session.manifests.values(), 'vale')]));
     const scanned: string[] = [];
     const nativePaths: string[] = [];
-    resources.use(
+    const run = resources.use(
         spyOn(processes, 'run').mockImplementation((command, options) => {
-            expect(command).toContain('--ext=.ts');
             nativePaths.push(...command.filter((argument) => argument.startsWith('--path=')));
             scanned.push(options.stdin!);
             return Promise.resolve({
@@ -131,6 +130,7 @@ test('each stdin route scans the bytes held by the run and maps its own alerts',
         }),
     );
     const findings = await BUILT_IN_CHECKS['prose/vale'].input(input);
+    expect(run.mock.calls.map(([command]) => command.includes('--ext=.ts'))).toStrictEqual(paths.map(() => true));
     expect(scanned).toStrictEqual(original);
     expect(nativePaths).toStrictEqual(paths.map((path) => `--path=${path}.ts`));
     expect(findings.map(({ file, line, column, rule }) => ({ file, line, column, rule }))).toStrictEqual(

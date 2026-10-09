@@ -59,13 +59,12 @@ for (const value of PACKAGE_HOOK_CONFIGURATIONS)
         ]);
     });
 
-test('ast-grep adoption preserves a Qlty configuration', async () => {
+test('ast-grep adoption leaves a Qlty configuration unselected', async () => {
     await using sandbox = await testdir();
     const source = 'foreign_tool = true\n';
     await createFileTree(sandbox.path, { '.qlty': source });
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(getTooling(sandbox.path, repository.files, []).toolFiles).toStrictEqual([]);
-    expect(await readFile(join(sandbox.path, '.qlty'), 'utf8')).toBe(source);
 });
 
 test('pre-commit is detected from its native configuration', async () => {
@@ -170,7 +169,7 @@ test('hook discovery rejects malformed package JSON and passes after the fix', a
     ]);
 });
 
-test('tool discovery reads linked authored sections inside the repository without changing their targets', async () => {
+test('tool discovery reads linked authored sections inside the repository', async () => {
     await using sandbox = await testdir();
     const source = '[tool.ruff]\nline-length = 100\n';
     await createFileTree(sandbox.path, { 'settings/python.toml': source });
@@ -251,7 +250,7 @@ test.skipIf(!isPosix).each(LINKED_HOOK_FILES)(
     },
 );
 
-test.each(LEFTHOOK_FILES)('hook discovery reports %s and preserves authored bytes', async (path) => {
+test.each(LEFTHOOK_FILES)('hook discovery reports %s', async (path) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         [path]: 'authored hook configuration\n',

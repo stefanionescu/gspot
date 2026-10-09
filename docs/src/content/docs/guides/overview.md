@@ -19,13 +19,13 @@ Use `gspot set level all` to select the additional conventions. The [level refer
 
 - A **configuration** is a built-in setup for a language, framework, library, platform, or concern. [Configuration reference](/reference/configurations/).
 - A **template** exports reusable configuration choices and policy for another repository. [Reuse templates](/guides/templates/).
-- **Settings** are values customized in `gspot.toml`. A **config file** is a tool's own configuration file. [Policy guide](/guides/policy/).
+- **Settings** are values customized in `gspot.toml`. A **tool file** holds a tool's settings. [Policy guide](/guides/policy/).
 - A **check** runs a tool or analyzes source and reports findings. [Check reference](/reference/checks/).
 - A **rule** is an individual lint instruction or an instruction for a coding agent. [ESLint plugin](/reference/plugin/) and [coding agents](/guides/agents/).
 - A **stage** determines when a check runs: commit, push, message, or manual. [Hooks](/guides/hooks/).
 - A **scope** identifies a project inside a repository. It has its own configurations and settings. [Monorepos](/guides/monorepos/).
 - A **runner** launches gspot through mise or a package manager. [Runners](/guides/runners/).
-- A **managed block** is a marked section gspot can update while keeping the rest of the file. A **pointer** is an editor-facing config file that refers to generated configuration. [Generated files](/guides/generated-files/).
+- A **managed block** is a marked section gspot can update while keeping the rest of the file. A **pointer** is an editor-facing tool file that refers to generated files. [Generated files](/guides/generated-files/).
 
 ## Next steps
 

@@ -161,7 +161,7 @@ export function buildInitPlan(
         configurations: configurationRows(planning, policy),
         write: [
             { path: POLICY_FILE, note: `your policy, ${String(policyText.split('\n').length)} lines` },
-            { path: `${DOT_GSPOT}/`, note: 'generated configuration and version pin' },
+            { path: `${DOT_GSPOT}/`, note: 'generated files and version pin' },
             ...[...generated.files, ...generated.blocks]
                 .filter(({ path }) => !path.startsWith(`${DOT_GSPOT}/`) && !change.some((row) => row.path === path))
                 .map(({ path }) => ({ path, note: CI_FILE_NOTES[path] ?? 'generated file' })),

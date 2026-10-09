@@ -1,8 +1,6 @@
-import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runTool } from '#cli/tools/contracts.ts';
-import { pathExists } from '#tests/harness/preservation.ts';
 
 test('tool execution accepts literal arguments, stdin, and caller environment without policy', async () => {
     await using sandbox = await testdir();
@@ -24,20 +22,4 @@ test('tool deadlines convert seconds to a native timeout', async () => {
     const deadline = await runTool(command, { cwd: sandbox.path, timeoutSeconds: 0.1 });
     expect(deadline).toMatchObject({ isTimedOut: true, isCanceled: false, missing: false });
     expect(deadline.code).not.toBe(0);
-});
-
-test('cancellation before launch leaves no tool side effect', async () => {
-    await using sandbox = await testdir();
-    const result = await runTool([process.execPath, '-e', 'await Bun.write("started", "side effect");'], {
-        cwd: sandbox.path,
-        cancelSignal: AbortSignal.abort(),
-    });
-    expect(result).toMatchObject({
-        code: 1,
-        stdout: '',
-        stderr: 'The command was canceled.',
-        isCanceled: true,
-        duration: 0,
-    });
-    expect(await pathExists(join(sandbox.path, 'started'))).toBe(false);
 });

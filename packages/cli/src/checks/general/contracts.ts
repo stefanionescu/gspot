@@ -91,7 +91,6 @@ export function fixPolicyLayout(planned: PlannedCheck, root: string): FixResult 
     if (original?.bytes.equals(Buffer.from(previous)) !== true)
         throw new Error('The gspot.toml file changed while its fix was running; the fix was not applied.');
     writePolicyFile({
-        files: log.files,
         text,
         original,
         publish: (next, expected) => {

@@ -98,7 +98,7 @@ function getUnownedOutputs(session: Session): SuggestionRow[] {
 /**
  * Setup suggestions for a repository session.
  * @param session the session
- * @returns detected and suggested configurations, unowned config files, authored lint jobs, and duplicate pins
+ * @returns detected and suggested configurations, unowned tool files, authored lint jobs, and duplicate pins
  */
 export function getSuggestions(session: Session): Suggestions {
     const { packageManifests } = session;

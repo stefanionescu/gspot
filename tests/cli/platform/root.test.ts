@@ -10,6 +10,7 @@ import { fileMode, portableSegments } from '#cli/platform/root/contracts.ts';
 import {
     UNSAFE_DESTINATIONS,
     LINK_TARGET_REFUSALS,
+    NATIVE_PATH_REFUSALS,
     POSIX_CANONICAL_ROOT,
     POSIX_CANONICAL_SOURCE,
 } from '#tests/config/cli/platform/root.ts';
@@ -55,9 +56,15 @@ test.skipIf(!isPosix)(
     },
 );
 
-test.skipIf(!isPosix).each(['portable', 'native'] as const)(
-    'root lifecycle mutations: %s paths cannot use symlinks or hardlinks to change an external file',
-    async (format) => {
+test
+    .skipIf(!isPosix)
+    .each(
+        (['portable', 'native'] as const).flatMap((format) =>
+            UNSAFE_DESTINATIONS.map((entry) => ({ format, ...entry })),
+        ),
+    )(
+    'root lifecycle mutations: $format path $path cannot change an external file',
+    async ({ format, path, refusal }) => {
         await using directory = await testdir();
         await createFileTree(directory.path, { 'project/.keep': '', 'outside/sentinel': 'authored\n' });
         const outside = join(directory.path, 'outside');
@@ -66,15 +73,13 @@ test.skipIf(!isPosix).each(['portable', 'native'] as const)(
         await symlink(join(outside, 'sentinel'), join(project, 'linked'));
         await link(join(outside, 'sentinel'), join(project, 'hardlinked'));
         using root = openRoot(project, format);
-        for (const { path, refusal } of UNSAFE_DESTINATIONS) {
-            expect(() => {
-                root.write(path, { bytes: Buffer.from('lost'), mode: 0o600 }, undefined);
-            }).toThrow(refusal);
-            expect(() => {
-                root.remove(path, { bytes: Buffer.from('authored\n'), mode: 0o644 });
-            }).toThrow(refusal);
-            expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
-        }
+        expect(() => {
+            root.write(path, { bytes: Buffer.from('lost'), mode: 0o600 }, undefined);
+        }).toThrow(refusal);
+        expect(() => {
+            root.remove(path, { bytes: Buffer.from('authored\n'), mode: 0o644 });
+        }).toThrow(refusal);
+        expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
         root.mkdir('.gspot/state/private', 0o700);
         const attributes = await stat(join(project, '.gspot/state/private'));
         expect(attributes.mode & 0o777).toBe(0o700);
@@ -94,33 +99,34 @@ test.skipIf(!isPosix)(
         const link = { bytes: Buffer.from(path), mode: 0o777, isLink: true as const };
         root.write('linked', link, undefined);
         expect(root.readKeepingLinks('linked')).toStrictEqual(link);
-        for (const unsafe of ['../outside', '/outside', 'folder/../outside', 'nul\0suffix']) {
-            expect(() => {
-                root.write(unsafe, original, undefined);
-            }).toThrow('Unsafe lifecycle path');
-        }
         expect(() => {
             root.write('private-link', { ...link, bytes: Buffer.from('.gspot/state/ownership.json') }, undefined);
         }).toThrow('Lifecycle metadata');
     },
 );
 
-test.skipIf(!isPosix)(
-    'root lifecycle mutations: link publication refuses escaped, private, missing, and symlinked targets',
-    async () => {
+test.skipIf(!isPosix).each(NATIVE_PATH_REFUSALS)('native paths refuse the escape %j', async (path) => {
+    await using directory = await testdir();
+    using root = openRoot(directory.path, 'native');
+    expect(() => {
+        root.write(path, { bytes: Buffer.from('inside'), mode: 0o640 }, undefined);
+    }).toThrow('Unsafe lifecycle path');
+});
+
+test.skipIf(!isPosix).each(LINK_TARGET_REFUSALS)(
+    'root lifecycle mutations: link publication refuses target $target',
+    async ({ target, refusal }) => {
         await using directory = await testdir();
         await createFileTree(directory.path, { 'project/target': 'inside', 'outside/sentinel': 'outside' });
         const project = join(directory.path, 'project');
         await symlink('../outside', join(project, 'escape'));
         await symlink('../outside/sentinel', join(project, 'escaped-file'));
         using root = openRoot(project);
-        for (const { target, refusal } of LINK_TARGET_REFUSALS) {
-            expect(() => {
-                root.write('tool', { bytes: Buffer.from(target), mode: 0o777, isLink: true }, undefined);
-            }).toThrow(refusal);
-            expect(root.read('tool')).toBeUndefined();
-            expect(await readFile(join(directory.path, 'outside/sentinel'), 'utf8')).toBe('outside');
-        }
+        expect(() => {
+            root.write('tool', { bytes: Buffer.from(target), mode: 0o777, isLink: true }, undefined);
+        }).toThrow(refusal);
+        expect(root.read('tool')).toBeUndefined();
+        expect(await readFile(join(directory.path, 'outside/sentinel'), 'utf8')).toBe('outside');
         const next = { bytes: Buffer.from('target'), mode: 0o777, isLink: true as const };
         root.write('tool', next, undefined);
         expect(root.readKeepingLinks('tool')).toStrictEqual(next);

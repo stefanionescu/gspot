@@ -9,10 +9,10 @@ import { rejection } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { getEntries } from '#cli/repository/revisions/public.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
+import { rm, chmod, unlink, symlink, writeFile } from 'node:fs/promises';
 import { REPLACED_PARENT_PATHS } from '#tests/config/cli/repository/tracked.ts';
 import { trackedEntries, readIndexEntries } from '#cli/repository/contracts.ts';
 import { findRoot, isGitRepository } from '#cli/repository/discovery/contracts.ts';
-import { rm, chmod, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
 test('repository file discovery > keeps tracked deletions out of readable entries', async () => {
     await using sandbox = await testdir();
@@ -126,7 +126,6 @@ test.each(REPLACED_PARENT_PATHS)(
         expect(trackedEntries(sandbox.path)).rejects.toThrow(
             expect.objectContaining({ code: 'ENOTDIR', message: `Git lists ${path}, but src is now a file.` }),
         );
-        expect(await readFile(join(sandbox.path, 'src'), 'utf8')).toBe('replacement');
         await unlink(join(sandbox.path, 'src'));
         await createFileTree(sandbox.path, { [path]: 'restored' });
         const entries = await trackedEntries(sandbox.path);

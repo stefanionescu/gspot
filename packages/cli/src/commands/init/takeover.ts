@@ -1,4 +1,4 @@
-// What init replaces: the configuration files of the selected tools, read before anything is written.
+// What init replaces: the tool files of the selected tools, read before anything is written.
 import { openRoot } from '#cli/platform/root/public.ts';
 import type { Replaced } from '#cli/types/commands/init.ts';
 import type { EmittedToolFile } from '#cli/types/generation/files.ts';
@@ -27,9 +27,9 @@ function recordOutcome(entry: ToolFile, replaced: Replaced): void {
 }
 
 /**
- * The configuration files of the selected tools, read and sorted into what init deletes and what it leaves.
+ * The tool files of the selected tools, read and sorted into what init deletes and what it leaves.
  * @param root the repository root.
- * @param tooling the configuration files init found.
+ * @param tooling the tool files init found.
  * @param tools the tools consumed by applicable checks at the selected level.
  * @param configurations the applicable shared fields generated for the selection.
  * @returns the reads, the deletions, the unreadable files, and the shared files that stay.

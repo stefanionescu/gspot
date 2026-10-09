@@ -146,7 +146,6 @@ export async function savePolicy(root: string, options: SavePolicyOptions): Prom
         };
     }
     writePolicyFile({
-        files: log.files,
         text: result.text,
         original: result.original,
         publish: (next, expected) => {

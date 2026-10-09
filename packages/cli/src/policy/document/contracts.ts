@@ -15,8 +15,8 @@ import {
     emitPolicy,
     policyValues,
     parseTomlText,
-    readPolicyFile,
     parsePolicyEdit,
+    decodePolicyText,
 } from '#cli/policy/document/public.ts';
 import {
     RAW_HOST,
@@ -262,8 +262,8 @@ export function getScopeTable(raw: TomlTable, scope: string | undefined): TomlTa
 export function preparePolicy(root: string): CapturedPolicyEdit {
     using files = openRoot(root);
     const original = files.read(POLICY_FILE);
-    const text = readPolicyFile(root);
-    if (original?.bytes.equals(Buffer.from(text)) !== true)
-        throw new GspotError('policy', ['The gspot.toml file changed while gspot was running. Run the command again.']);
+    if (original === undefined)
+        throw new GspotError('policy', ['There is no gspot.toml here. Run `gspot init` to create one.']);
+    const text = decodePolicyText(original.bytes);
     return { ...parsePolicyEdit(text), original };
 }

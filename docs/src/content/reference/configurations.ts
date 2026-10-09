@@ -46,7 +46,7 @@ function ruleExclusions(manifest: Manifest): string {
 
 function configurationChecks(manifest: Manifest): string {
     if (manifest.checks.length === 0)
-        return 'This configuration adds tool configuration or agent rules and has no checks of its own.';
+        return 'This configuration adds tool files or agent rules and has no checks of its own.';
     const rows = manifest.checks.map((check) => {
         return [`[\`${check.name}\`](/reference/checks/${check.name}/)`, check.stage, check.level, cell(check.summary)];
     });

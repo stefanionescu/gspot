@@ -20,7 +20,7 @@ accept it.
 
 ## What init replaces
 
-Each configuration knows the configuration files of its tools, such as `.eslintrc.json`, `.prettierrc`,
+Each configuration knows its tool files, such as `.eslintrc.json`, `.prettierrc`,
 `ruff.toml`, `.stylelintrc.json`, `typos.toml`, and `.shellcheckrc`. Init replaces these files: it deletes them and writes its own configuration instead. It does not read settings out of them. Move the
 settings you still need into `gspot.toml` with `gspot set` and `gspot ignore`.
 

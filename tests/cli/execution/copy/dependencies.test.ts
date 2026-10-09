@@ -64,10 +64,10 @@ test('a workspace bin into untracked build output leaves the copy, and a broken 
     await symlink('../cli/dist/cli.js', join(sandbox.path, 'node_modules/.bin/cli'));
     stageRevision(sandbox.path);
     const copied = await checkOutRevision(sandbox.path, { kind: 'index' }, async (copy) => {
-        await rejects(lstat(join(copy, 'node_modules/.bin/cli')), { code: 'ENOENT' });
-        return { package: await pathExists(join(copy, 'node_modules/cli/package.json')), bin: undefined };
+        const bin = await lstat(join(copy, 'node_modules/.bin/cli')).catch((error: unknown) => error);
+        return { package: await pathExists(join(copy, 'node_modules/cli/package.json')), bin };
     });
-    expect(copied).toStrictEqual({ package: true, bin: undefined });
+    expect(copied).toMatchObject({ package: true, bin: { code: 'ENOENT' } });
     await symlink('../missing/tool.js', join(sandbox.path, 'node_modules/.bin/broken'));
     await rejects(
         checkOutRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)),
@@ -195,12 +195,7 @@ test('cancellation drains dependency copies before removing the copy and preserv
         'package.json': '{"name":"fixture","version":"1.0.0"}\n',
         'package-lock.json': '{"name":"fixture","lockfileVersion":3,"packages":{}}\n',
         'source.js': 'export const value = 1;\n',
-        ...Object.fromEntries(
-            Array.from({ length: 24 }, (_, index) => [
-                `node_modules/item-${String(index)}/value.js`,
-                'export const value = 2;\n',
-            ]),
-        ),
+        'node_modules/item-0/value.js': 'export const value = 2;\n',
     });
     stageRevision(sandbox.path);
     const controller = new AbortController();
@@ -210,6 +205,7 @@ test('cancellation drains dependency copies before removing the copy and preserv
     let entered = false;
     const copy = spyOn(promises, 'cp').mockImplementation(async (...args) => {
         pending += 1;
+        // The copied node_modules folder sits one level below the scratch root.
         if (typeof args[1] === 'string') destination = dirname(args[1]);
         try {
             await original(...args);

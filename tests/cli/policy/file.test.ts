@@ -10,7 +10,6 @@ import type { PreparedPolicy } from '#cli/types/policy/settings.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { setKey, editPolicy, preparePolicy } from '#cli/policy/document/contracts.ts';
 import { link, open, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
-import { emitPolicy, parseTomlText, parsePolicyEdit, writePolicyFile } from '#cli/policy/document/public.ts';
 
 import {
     AUTHORED_POLICY,
@@ -18,6 +17,13 @@ import {
     NATIVE_EDIT_POLICY,
     EMPTY_PROJECT_POLICY,
 } from '#tests/config/cli/policy/file.ts';
+import {
+    emitPolicy,
+    parseTomlText,
+    readPolicyFile,
+    parsePolicyEdit,
+    writePolicyFile,
+} from '#cli/policy/document/public.ts';
 
 test.each(POLICY_FILE_CASES)(
     '$name keeps canonical values and comments through repeated writes',
@@ -50,7 +56,6 @@ const refusesBytes = async () => {
         const plan = proposeEdit(sandbox.path);
         using log = openOwnership(sandbox.path);
         writePolicyFile({
-            files: log.files,
             text: plan.text,
             original: plan.original,
             publish: (next, expected) => {
@@ -58,6 +63,7 @@ const refusesBytes = async () => {
             },
         });
     }).toThrow('valid UTF-8');
+    expect(() => readPolicyFile(sandbox.path)).toThrow('gspot.toml must contain valid UTF-8 text.');
     expect(await readFile(path)).toStrictEqual(invalid);
 };
 
@@ -72,14 +78,13 @@ const refusesMode = async () => {
     const before = await readTree(sandbox.path);
     expect(() => {
         writePolicyFile({
-            files: log.files,
             text: plan.text,
             original: plan.original,
             publish: (next, expected) => {
                 log.files.write('gspot.toml', next, expected);
             },
         });
-    }).toThrow('The gspot.toml file changed while gspot was running. Run the command again.');
+    }).toThrow('Lifecycle destination changed during the operation: gspot.toml');
     expect(await readFile(path, 'utf8')).toBe(AUTHORED_POLICY);
     const attributes = await stat(path);
     expect(attributes.mode & 0o222).toBe(0);
@@ -103,14 +108,13 @@ test('a prepared policy edit refuses stale bytes and accepts a fresh plan', asyn
         const before = await readTree(sandbox.path);
         expect(() => {
             writePolicyFile({
-                files: log.files,
                 text: plan.text,
                 original: plan.original,
                 publish: (next, expected) => {
                     log.files.write('gspot.toml', next, expected);
                 },
             });
-        }).toThrow('The gspot.toml file changed while gspot was running. Run the command again.');
+        }).toThrow('Lifecycle destination changed during the operation: gspot.toml');
         expect(await readTree(sandbox.path)).toStrictEqual(before);
     }
     expect(await readFile(path, 'utf8')).toBe(`${AUTHORED_POLICY}\n# Concurrent edit.\n`);
@@ -118,7 +122,6 @@ test('a prepared policy edit refuses stale bytes and accepts a fresh plan', asyn
     {
         using log = openOwnership(sandbox.path);
         writePolicyFile({
-            files: log.files,
             text: corrected.text,
             original: corrected.original,
             publish: (next, expected) => {
@@ -128,6 +131,34 @@ test('a prepared policy edit refuses stale bytes and accepts a fresh plan', asyn
         expect(corrected.policy.level).toBe('all');
     }
     expect(await readFile(path, 'utf8')).toBe(corrected.text);
+});
+
+test('policy reads and edits reject a missing file without creating one', async () => {
+    await using sandbox = await testdir();
+    expect(() => readPolicyFile(sandbox.path)).toThrow('There is no gspot.toml here. Run `gspot init` to create one.');
+    expect(() => preparePolicy(sandbox.path)).toThrow('There is no gspot.toml here. Run `gspot init` to create one.');
+    expect(await readTree(sandbox.path)).toStrictEqual({});
+});
+
+test('an unchanged policy does not publish or change its native identity', async () => {
+    await using sandbox = await testdir();
+    const path = join(sandbox.path, 'gspot.toml');
+    await writeFile(path, AUTHORED_POLICY);
+    const input = preparePolicy(sandbox.path);
+    const before = await stat(path);
+    using log = openOwnership(sandbox.path);
+    writePolicyFile({
+        text: input.text,
+        original: input.original,
+        publish: (next, expected) => {
+            log.files.write('gspot.toml', next, expected);
+        },
+    });
+    const after = await stat(path);
+    expect(await readFile(path, 'utf8')).toBe(AUTHORED_POLICY);
+    expect(after.ino).toBe(before.ino);
+    expect(after.mtimeMs).toBe(before.mtimeMs);
+    expect(after.mode).toBe(before.mode);
 });
 
 test('policy inspection accepts linked authored text inside the root while edits preserve its target', async () => {

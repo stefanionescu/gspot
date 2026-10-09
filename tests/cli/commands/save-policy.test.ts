@@ -43,7 +43,7 @@ test('a policy command refuses changes after capture without rereading them as i
     }).catch((error: unknown) => error);
     expect(failure).toBeInstanceOf(Error);
     expect(failure).toMatchObject({
-        message: 'The gspot.toml file changed while gspot was running. Run the command again.',
+        message: 'Lifecycle destination changed during the operation: gspot.toml',
     });
     expect(await readFile(path, 'utf8')).toBe(concurrent);
 });

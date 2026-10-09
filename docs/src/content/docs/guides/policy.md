@@ -1,5 +1,5 @@
 ---
-title: The policy file
+title: gspot.toml
 description: Choose configurations and a level, change settings, and record exceptions in gspot.toml.
 ---
 
@@ -28,7 +28,7 @@ configurations = ["bash"]
 level = "recommended"
 ```
 
-A configuration groups checks, tool configuration, and agent rules for a language, framework,
+A configuration groups checks, tool files, and agent rules for a language, framework,
 or concern. General checks are selected automatically, including with a manually authored
 configuration list. To make a manual language or framework choice, run `gspot add <configuration>` or
 `gspot remove <configuration>`. Change which general checks run with the level or an ignore.

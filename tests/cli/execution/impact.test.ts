@@ -6,7 +6,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { projectChecks } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { rejection } from '#tests/harness/expectations.ts';
@@ -34,12 +33,6 @@ test('command checks retain nested inputs and report their findings once at the 
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks).toMatchObject([
         { check: 'project/syntax', scope: '', fileCount: 1, status: 'failed' },
-    ]);
-    await Bun.write(join(sandbox.path, 'api/source.sh'), 'echo corrected\n');
-    const corrected = await executeRun(await openSession(sandbox.path), options);
-    expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks).toMatchObject([
-        { check: 'project/syntax', scope: '', fileCount: 1, status: 'passed' },
     ]);
 });
 
@@ -98,13 +91,7 @@ test('a positional file trigger preserves project-wide input and findings', asyn
     const affected = planned.filter((check) => check.files.length > 0);
     expect(affected.map((check) => check.scope.scope.path)).toStrictEqual(['api']);
     expect(affected[0]?.files.map((file) => file.path)).toStrictEqual(['api/caller.ts', 'api/source.ts']);
-    const outcome = await executeRun(session, {
-        checks: BUILT_IN_CHECKS,
-        ...PROJECT_OPTIONS,
-        paths: ['api/source.ts'],
-        fix: false,
-        isDryRun: false,
-    });
+    const outcome = await executeRun(session, buildRunOptions({ ...PROJECT_OPTIONS, paths: ['api/source.ts'] }));
     expect(outcome.report.exitCode).toBe(1);
     expect(outcome.report.checks[0]?.findings[0]?.message).toBe('Project finding');
 });

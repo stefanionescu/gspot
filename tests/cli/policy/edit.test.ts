@@ -105,7 +105,6 @@ describe('writePolicyFile', () => {
         {
             using log = openOwnership(sandbox.path);
             writePolicyFile({
-                files: log.files,
                 text: result.text,
                 original: result.original,
                 publish: (next, expected) => {

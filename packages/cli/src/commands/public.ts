@@ -283,7 +283,6 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
     }
     const generated = emitAll(session);
     writePolicyFile({
-        files: log.files,
         text: proposal.text,
         original: proposal.original,
         publish: (next, expected) => {

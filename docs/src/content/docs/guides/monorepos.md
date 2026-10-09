@@ -1,6 +1,6 @@
 ---
 title: Monorepos
-description: Give each project in a repository its own configurations and settings, in one policy file.
+description: Give each scope its own configurations and settings in gspot.toml.
 ---
 
 A scope is one project inside your repository. It has its own configurations and settings. `gspot init`
@@ -30,7 +30,7 @@ configurations = ["swift", "xcode"]
 Use the project path as the key under `[scope]`. Nested tables belong to that project.
 `[scope.api.limits]` changes the API limit only. Quote a key that contains slashes.
 
-After you change the scopes, apply the policy, install the tools, and check one project:
+After you change the scopes, apply the policy, install the tools, and check one scope:
 
 ```bash
 gspot apply

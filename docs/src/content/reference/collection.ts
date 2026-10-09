@@ -27,7 +27,7 @@ function configurationSections(manifests: Manifest[]): string {
 }
 
 /**
- * Every generated reference page, keyed by its Markdown path: commands, configurations, checks, plugin rules, settings, and the policy file.
+ * Every generated reference page, keyed by its Markdown path: commands, configurations, checks, plugin rules, settings, and gspot.toml.
  * @returns the pages by identity
  */
 export async function referencePages(): Promise<Map<string, ReferencePage>> {

@@ -31,7 +31,7 @@ language and framework choices. It still includes general checks.
 Template configurations stay selected even when no files match them. Use `gspot remove`
 to drop a language or framework choice.
 
-Export can write outside the repository atomically. It refuses the policy file and managed output destinations. Use `gspot export team.template.toml --dry-run` to print the template without writing it.
+Export can write outside the repository atomically. It refuses `gspot.toml` and managed output destinations. Use `gspot export team.template.toml --dry-run` to print the template without writing it.
 
 ## Initialize another repository
 

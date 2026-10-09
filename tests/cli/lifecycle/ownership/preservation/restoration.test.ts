@@ -14,8 +14,9 @@ import { BLOCK_CASES, ADOPTED_FILE_CASES } from '#tests/config/cli/lifecycle/own
 
 const implementation = getCliSourcePath('lifecycle/ownership/public.ts');
 
-if (isPosix) {
-    test('lifecycle ownership: giving back a twice replaced file deletes it, keeps unowned files, and keeps the log private', async () => {
+test.skipIf(!isPosix)(
+    'lifecycle ownership: giving back a twice replaced file deletes it, keeps unowned files, and keeps the log private',
+    async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, { '.gspot/authored.txt': 'keep\n' });
         const original = Buffer.from(OWNERSHIP_BYTES.restoration);
@@ -54,9 +55,12 @@ if (isPosix) {
         } finally {
             log[Symbol.dispose]();
         }
-    });
+    },
+);
 
-    test('lifecycle ownership: installed executable links run, giving them back deletes them, and later edits stay', async () => {
+test.skipIf(!isPosix)(
+    'lifecycle ownership: installed executable links run, giving them back deletes them, and later edits stay',
+    async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
             'vendor/tools/tool/bin.sh': '#!/bin/sh\nprintf installed',
@@ -105,9 +109,12 @@ if (isPosix) {
         } finally {
             log[Symbol.dispose]();
         }
-    });
+    },
+);
 
-    test('lifecycle ownership: a regular file containing a link target is preserved after replacing an installed link', async () => {
+test.skipIf(!isPosix)(
+    'lifecycle ownership: a regular file containing a link target is preserved after replacing an installed link',
+    async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, { target: 'authored target' });
         const log = openOwnership(directory.path);
@@ -128,8 +135,8 @@ if (isPosix) {
         } finally {
             log[Symbol.dispose]();
         }
-    });
-}
+    },
+);
 
 test.each(BLOCK_CASES)(
     'removing a managed block restores the original state when $name',

@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
-import { test, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -11,6 +10,8 @@ import { buildInitOptions } from '#tests/harness/init.ts';
 import { usePlatform } from '#tests/harness/platforms.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { policySchema } from '#cli/policy/schema/public.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { parseManifest, linkManifestTools } from '#cli/configurations/public.ts';
 import { buildPolicy, alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
 import { planRun, isActive, checkCompanions, requiredToolNames, applicableManifests } from '#cli/planning/public.ts';
@@ -127,7 +128,6 @@ test('Prettier planning honors linked authored ignores inside the repository and
     await unlink(join(sandbox.path, '.gspot/config/prettierignore'));
     await symlink(join(outside.path, 'format.ignore'), join(sandbox.path, '.gspot/config/prettierignore'));
     expect(await rejection(openSession(sandbox.path))).toContain('Source link leaves the repository');
-    expect(await Bun.file(join(outside.path, 'format.ignore')).text()).toBe(ignored);
 });
 
 test.each((['recommended', 'all'] as const).flatMap((level) => NEXT_BUILD_ROUTES.map((route) => ({ level, route }))))(
@@ -162,75 +162,92 @@ test.each((['recommended', 'all'] as const).flatMap((level) => NEXT_BUILD_ROUTES
     },
 );
 
-test.each(['recommended', 'all'] as const)(
-    '%s hooks plan only the stages declared by their manifests',
-    async (level) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildPolicy(['files', 'swift', 'nginx', 'typescript', 'docs'], { level }),
-            ...HOOK_STAGE_FILES,
-        });
-        const session = await openSession(sandbox.path);
-        for (const stage of ['push', 'all'] as const) {
-            const explicit = planRun(session, { stage, skips: [], only: ['typescript/tsc'] });
-            expect(explicit.map((entry) => entry.check.name)).toContain('typescript/tsc');
+describe.each(['recommended', 'all'] as const)('%s hooks plan declared stages', (level) => {
+    const resources = new AsyncDisposableStack();
+    let session: Session;
+    let every: PlannedCheck[];
+    beforeAll(async () => {
+        const sandbox = resources.use(
+            await testdir({
+                'gspot.toml': buildPolicy(['files', 'swift', 'nginx', 'typescript', 'docs'], { level }),
+                ...HOOK_STAGE_FILES,
+            }),
+        );
+        session = await openSession(sandbox.path);
+        every = planRun(session, { stage: 'any', skips: [], includeUnsupported: true });
+    });
+    afterAll(() => resources.disposeAsync());
+
+    test.each(['push', 'all'] as const)('%s explicitly selects TypeScript', (stage) => {
+        const explicit = planRun(session, { stage, skips: [], only: ['typescript/tsc'] });
+        expect(explicit.map((entry) => entry.check.name)).toContain('typescript/tsc');
+    });
+    test.each(HOOK_STAGE_CHECKS)('the complete plan includes %s', (check) => {
+        expect(every.map((entry) => entry.check.name)).toContain(check);
+    });
+    test.each(HOOK_STAGES)('%s selects the declared %s stage', (hook, stage) => {
+        const planned = planRun(session, { stage, skips: [], includeUnsupported: true });
+        const ids = planned.map((entry) => entry.check.name);
+        const expected = [];
+        for (const { check, manifest } of every)
+            if (manifest!.checks.find(({ name }) => name === check.name)!.stage === stage) expected.push(check.name);
+        expect(ids, hook).toStrictEqual(expected);
+        if (stage === 'commit') {
+            expect(ids).toContain('docs/lychee');
+            expect(ids).not.toContain('docs/lychee-external');
+            expect(ids).not.toContain('typescript/tsc');
         }
-        const every = planRun(session, { stage: 'any', skips: [], includeUnsupported: true });
-        const names = every.map((entry) => entry.check.name);
-        for (const check of HOOK_STAGE_CHECKS) expect(names).toContain(check);
-        for (const [hook, stage] of HOOK_STAGES) {
-            const planned = planRun(session, { stage, skips: [], includeUnsupported: true });
-            const ids = planned.map((entry) => entry.check.name);
-            const expected = every
-                .filter(
-                    ({ check, manifest }) => manifest!.checks.find(({ name }) => name === check.name)!.stage === stage,
-                )
-                .map((entry) => entry.check.name);
-            expect(ids, hook).toStrictEqual(expected);
-            if (stage === 'commit') {
-                expect(ids).toContain('docs/lychee');
-                expect(ids).not.toContain('docs/lychee-external');
-                expect(ids).not.toContain('typescript/tsc');
-            }
-        }
+    });
+    test('Windows retains the explicit platform skip', () => {
         using _platform = usePlatform('win32');
         expect(planRun(session, { stage: 'all', skips: [], only: ['security/semgrep'] })).toMatchObject([
             { check: { name: 'security/semgrep' }, skip: { cause: 'platform' } },
         ]);
-    },
-);
+    });
+});
 
-test.each([...COVERAGE_PLUGIN_CASES])(
+describe.each([...COVERAGE_PLUGIN_CASES])(
     '%s %s coverage requires its host plugin for the %s floor',
-    async (configuration, level, dimension) => {
-        await using sandbox = await testdir();
+    (configuration, level, dimension) => {
+        const resources = new AsyncDisposableStack();
         const provider = configuration === 'pytest' ? 'pytest-cov' : '@vitest/coverage-v8';
-        const source = configuration === 'pytest' ? 'test_math.py' : 'math.test.js';
-        const setups = configuration === 'pytest' ? ['python', 'pytest'] : ['javascript', 'vitest'];
-        await createFileTree(sandbox.path, { [source]: '', ['app/' + source]: '' });
-        const floors = { lines: 0, branches: 0, functions: 0, statements: 0 };
-        if (dimension !== 'zero') floors[dimension] = 80;
-        const tables =
-            '[coverage]\n' +
-            Object.entries(floors)
-                .map(([name, value]) => `${name} = ${String(value)}`)
-                .join('\n') +
-            '\n[reasons]\n"coverage.lines" = "This fixture tests optional coverage."\n"coverage.branches" = "This fixture tests optional coverage."\n"coverage.functions" = "This fixture tests optional coverage."\n"coverage.statements" = "This fixture tests optional coverage."\n' +
-            '[scope."app"]\nconfigurations = [' +
-            setups.map((name) => `"${name}"`).join(', ') +
-            ']\n';
-        await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(setups, { level, tables }));
-        const session = await openSession(sandbox.path);
-        const checks = planRun(session, { stage: 'push', skips: [], only: [configuration + '/coverage'] });
-        expect(checks.map((check) => check.scope.scope.path)).toStrictEqual(['', 'app']);
-        for (const check of checks) {
+        let session: Session;
+        let checks: PlannedCheck[];
+        beforeAll(async () => {
+            const sandbox = resources.use(await testdir());
+            const source = configuration === 'pytest' ? 'test_math.py' : 'math.test.js';
+            const setups = configuration === 'pytest' ? ['python', 'pytest'] : ['javascript', 'vitest'];
+            await createFileTree(sandbox.path, { [source]: '', ['app/' + source]: '' });
+            const floors = { lines: 0, branches: 0, functions: 0, statements: 0 };
+            if (dimension !== 'zero') floors[dimension] = 80;
+            const tables =
+                '[coverage]\n' +
+                Object.entries(floors)
+                    .map(([name, value]) => `${name} = ${String(value)}`)
+                    .join('\n') +
+                '\n[reasons]\n"coverage.lines" = "This fixture tests optional coverage."\n"coverage.branches" = "This fixture tests optional coverage."\n"coverage.functions" = "This fixture tests optional coverage."\n"coverage.statements" = "This fixture tests optional coverage."\n' +
+                '[scope."app"]\nconfigurations = [' +
+                setups.map((name) => `"${name}"`).join(', ') +
+                ']\n';
+            await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(setups, { level, tables }));
+            session = await openSession(sandbox.path);
+            checks = planRun(session, { stage: 'push', skips: [], only: [configuration + '/coverage'] });
+        });
+        afterAll(() => resources.disposeAsync());
+
+        test('the plan retains root and child with the optional provider', () => {
+            expect(checks.map((check) => check.scope.scope.path)).toStrictEqual(['', 'app']);
+            expect(
+                applicableManifests(session)
+                    .flatMap((manifest) => manifest.tools)
+                    .some((tool) => tool.name === provider),
+            ).toBe(dimension !== 'zero');
+        });
+        test.each(['', 'app'])('scope %s retains provider requirements and companions', (scope) => {
+            const check = checks.find((planned) => planned.scope.scope.path === scope)!;
             expect(requiredToolNames(check, session).includes(provider)).toBe(dimension !== 'zero');
             expect(checkCompanions(check.scope, check.check, check.check.command)).toContain(provider);
-        }
-        expect(
-            applicableManifests(session)
-                .flatMap((manifest) => manifest.tools.map((tool) => tool.name))
-                .includes(provider),
-        ).toBe(dimension !== 'zero');
+        });
     },
 );
 

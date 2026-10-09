@@ -68,7 +68,9 @@ test('a native policy-layout correction preserves an external replacement before
     using files = openRoot(sandbox.path);
     const { mode } = files.read('gspot.toml')!;
     const options = buildRunOptions({ only: ['gspot/policy-layout'], fix: true });
-    expect(await rejection(executeRun(session, options))).toContain('changed while gspot was running');
+    expect(await rejection(executeRun(session, options))).toBe(
+        'Lifecycle destination changed during the operation: gspot.toml',
+    );
     expect(emission).toHaveBeenCalledTimes(1);
     const replacement = files.read('gspot.toml')!;
     expect(replacement.bytes.toString('utf8')).toBe(POLICY_LAYOUT_EXTERNAL_EDIT);

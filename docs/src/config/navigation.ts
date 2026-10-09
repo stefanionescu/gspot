@@ -30,7 +30,7 @@ export const SIDEBAR: Sidebar = [
         label: 'Configure',
         collapsed: false,
         items: [
-            { label: 'The policy file', slug: 'guides/policy' },
+            { label: 'gspot.toml', slug: 'guides/policy' },
             { label: 'Exclude files', slug: 'guides/exclude' },
             { label: 'Monorepos', slug: 'guides/monorepos' },
             { label: 'Runners', slug: 'guides/runners' },

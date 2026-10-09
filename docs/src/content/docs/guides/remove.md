@@ -18,7 +18,7 @@ Removal writes the name into `removed_configurations` in `gspot.toml`, so it sur
 
 gspot provides no uninstall command. Review Git history to identify the setup files and managed blocks:
 
-1. Restore the tool configuration you want from the commit before initialization.
+1. Restore the tool files you want from the commit before initialization.
 2. Remove the managed gspot blocks from authored instruction files, `.gitignore`, and `.gitattributes`. Preserve authored content outside those blocks.
 3. Remove generated pointers, gspot-only CI files, and `.mise/conf.d/gspot-tools.toml` if present.
 4. If Git uses `.gspot/hooks`, run `git config --unset core.hooksPath`. If a hook manager owns the hooks, remove only its gspot integration lines.

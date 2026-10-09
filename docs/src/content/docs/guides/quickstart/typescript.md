@@ -231,5 +231,5 @@ commit hook rejects the forwarding helper. Read [Requirements](/guides/requireme
 ## Next steps
 
 - [Fix findings](/guides/findings/): read a finding and run one check alone.
-- [The policy file](/guides/policy/): change the level, limits, and exceptions.
+- [`gspot.toml`](/guides/policy/): change the level, limits, and exceptions.
 - [Coding agents](/guides/agents/): the rules that `init` linked from `AGENTS.md`.
