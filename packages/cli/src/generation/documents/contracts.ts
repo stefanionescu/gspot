@@ -1,22 +1,21 @@
 import picomatch from 'picomatch';
-import { posix, dirname, relative } from 'node:path';
+import { dirname, relative } from 'node:path';
 import { parseJsonRecord } from '#cli/parsers/public.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { ownedBy } from '#cli/repository/selection/public.ts';
-import { toPosix, extensionOf } from '#cli/platform/contracts.ts';
 import { TARGET_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { ruleSettingsSchema } from '#cli/parsers/schema/contracts.ts';
 import type { JsonFormat } from '#cli/types/generation/formatting.ts';
-import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isConfigurationSelected } from '#cli/configurations/public.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { GENERATED_JSON_KEY } from '#cli/config/parsers/generated-header.ts';
 import type { GeneratedFile, ToolFileInputs } from '#cli/types/generation/files.ts';
 import { isInScope, pathMatcher, nestedScopes } from '#cli/repository/paths/public.ts';
+import { toPosix, expandPaths, directoryOf, extensionOf } from '#cli/platform/contracts.ts';
 
 import {
     HTML_EXTENSIONS,
@@ -145,17 +144,6 @@ function getRules(parsed: unknown, path: string): Map<string, unknown> {
     if (Array.isArray(value)) return mapRules(value, path);
     if (typeof value === 'object') return new Map(Object.entries(value));
     throw new Error(`Rule path ${path} must contain a rule list or table.`);
-}
-
-// A pointer's directory patterns name ancestor directories, each clamped to the scope.
-function pointerDirectories(scope: string, file: TrackedFile, matches: (path: string) => boolean): string[] {
-    const directories: string[] = [];
-    for (let directory = posix.dirname(file.path); directory !== '.'; directory = posix.dirname(directory)) {
-        if (!matches(directory)) continue;
-        const isOutside = !isInScope(directory, scope);
-        directories.push(isOutside ? scope : directory);
-    }
-    return directories;
 }
 
 /**
@@ -347,7 +335,14 @@ export function pointerPaths(
         const owned = ownedBy(manifest.files, selection.selected, files, '', selection.view.test_files).filter(
             (file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)),
         );
-        const directories = new Set(owned.flatMap((file) => pointerDirectories(scope, file, matches)));
+        const directories = new Set(
+            owned.flatMap(({ path }) =>
+                [...expandPaths([directoryOf(path)])]
+                    .filter((directory) => directory !== '' && matches(directory))
+                    .toSorted((left, right) => right.length - left.length)
+                    .map((directory) => (isInScope(directory, scope) ? directory : scope)),
+            ),
+        );
         paths = [...directories].map((directory) => `${directory}/${pointer.path}`);
     }
     return paths;

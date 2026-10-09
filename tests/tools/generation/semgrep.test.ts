@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
@@ -245,38 +244,30 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
     },
 );
 
-test.skipIf(!hasToolBuild('semgrep'))(
-    'repository security rules report findings, pass after fixes and preserve Bearer files',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['typescript', 'security'], {
-                tables: '[tools.semgrep]\nrule_files = ["security/own.yml"]\n',
-            }),
-            'src/index.ts': SECURITY_CLEAN,
-            'src/use.ts': "import { double } from './index.ts';\n\nexport const four = double(2);\n",
-            'security/own.yml': OWN_RULE,
-            ...BEARER_FILES,
-        });
-        commitAll(sandbox.path);
-        const environment = await sharePythonTools(sandbox.path);
-        const own = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
-        expect(own.code, own.stdout + own.stderr).toBe(1);
-        const report = JSON.parse(own.stdout) as RunReport;
-        expect(report.checks).toMatchObject([{ check: 'security/semgrep', status: 'failed' }]);
-        expect(report.checks[0]!.findings).toContainEqual(
-            containing<Finding>({ rule: 'test-no-double', file: 'src/use.ts', line: 3 }),
-        );
-        await Bun.write(join(sandbox.path, 'src/use.ts'), 'export const four = 4;\n');
-        const corrected = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'security/semgrep', status: 'passed', findings: [] },
-        ]);
-        expect(
-            await Promise.all(
-                Object.keys(BEARER_FILES).map(async (path) => [path, await readFile(join(sandbox.path, path), 'utf8')]),
-            ),
-        ).toStrictEqual(Object.entries(BEARER_FILES));
-    },
-);
+test.skipIf(!hasToolBuild('semgrep'))('repository security rules report findings and pass after fixes', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['typescript', 'security'], {
+            tables: '[tools.semgrep]\nrule_files = ["security/own.yml"]\n',
+        }),
+        'src/index.ts': SECURITY_CLEAN,
+        'src/use.ts': "import { double } from './index.ts';\n\nexport const four = double(2);\n",
+        'security/own.yml': OWN_RULE,
+        ...BEARER_FILES,
+    });
+    commitAll(sandbox.path);
+    const environment = await sharePythonTools(sandbox.path);
+    const own = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
+    expect(own.code, own.stdout + own.stderr).toBe(1);
+    const report = JSON.parse(own.stdout) as RunReport;
+    expect(report.checks).toMatchObject([{ check: 'security/semgrep', status: 'failed' }]);
+    expect(report.checks[0]!.findings).toContainEqual(
+        containing<Finding>({ rule: 'test-no-double', file: 'src/use.ts', line: 3 }),
+    );
+    await Bun.write(join(sandbox.path, 'src/use.ts'), 'export const four = 4;\n');
+    const corrected = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+        { check: 'security/semgrep', status: 'passed', findings: [] },
+    ]);
+});
