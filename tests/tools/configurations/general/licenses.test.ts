@@ -1,5 +1,5 @@
 // The native scanner accepts allowed license alternatives and reports a disallowed dependency.
-import { join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
@@ -8,9 +8,9 @@ import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
-import { buildSandboxPath } from '#tests/harness/install.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { useEnvironment } from '#tests/harness/environment.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
 import type { InstalledFile } from '#cli/types/tools/install.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
@@ -18,7 +18,7 @@ import { environmentExecutable } from '#cli/platform/contracts.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { toolPin, toolProjectPackage } from '#cli/configurations/contracts.ts';
-import { installGeneratedPythonTools } from '#tests/harness/python-installation.ts';
+import { buildSandboxPath, installToolProjects } from '#tests/harness/install.ts';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/state/public.ts';
 import { ROOT, LICENSE_CHECK } from '#tests/config/tools/configurations/general/licenses.ts';
 
@@ -100,7 +100,7 @@ test('native Python license scanning ignores project scanner exclusions and matc
     expect(environment.code, environment.stdout + environment.stderr).toBe(0);
     const applied = await runGspot(root, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    await installGeneratedPythonTools(root);
+    await installToolProjects(root);
     const location = await runTestCommand(
         [
             environmentExecutable(join(root, '.venv'), 'python'),
@@ -151,6 +151,12 @@ test('native installed font metadata justifies its root exception in a descendan
         using log = openOwnership(sandbox.path);
         installTree(log, 'npm', installation);
     }
+    using state = new DisposableStack();
+    state.use(
+        useEnvironment({
+            PATH: [join(sandbox.path, '.gspot/node_modules/.bin'), buildSandboxPath([])].join(delimiter),
+        }),
+    );
     const session = await openSession(sandbox.path);
     expect(await BUILT_IN_CHECKS['licenses/allowed'].input(buildCheckInput(session, 'licenses/allowed'))).toStrictEqual(
         [],

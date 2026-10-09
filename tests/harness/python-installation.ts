@@ -11,7 +11,6 @@ import { prepareToolProjects } from '#cli/tools/public.ts';
 import { pythonProject } from '#cli/generation/contracts.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
-import { installToolProjects } from '#tests/harness/install.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { emitAll, gitignoreBlock } from '#cli/generation/public.ts';
 import { compact, environmentBin } from '#cli/platform/contracts.ts';
@@ -181,16 +180,6 @@ export async function preparePythonInstallation(
         await resources.disposeAsync();
         throw error;
     }
-}
-
-/**
- * Install the generated pinned Python project and select its companion executables for native checks.
- * @param root the sandbox containing an applied Python tool project
- * @returns the private environment ahead of host executable shims
- */
-export async function installGeneratedPythonTools(root: string): Promise<Record<string, string>> {
-    await installToolProjects(root);
-    return pythonEnvironment(root);
 }
 
 /**
