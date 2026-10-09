@@ -1,5 +1,5 @@
 {
-    "openRecords": 561,
+    "openRecords": 548,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -279,7 +279,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 561,
+        "openRecords": 548,
         "records": 1092,
         "batches": [
             {
@@ -585,8 +585,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 153,
-                "unresolvedAssignments": 138
+                "completedAssignments": 154,
+                "unresolvedAssignments": 137
             },
             {
                 "id": "python",
@@ -1829,8 +1829,8 @@
                     "review/policy-exceptions/061",
                     "review/carve-outs/001"
                 ],
-                "completedAssignments": 16,
-                "unresolvedAssignments": 75
+                "completedAssignments": 28,
+                "unresolvedAssignments": 63
             },
             {
                 "id": "layout",
@@ -4767,14 +4767,21 @@
             ]
         },
         "review/code-commands/009": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Every current binding obligation verified in pushed 9a: Native createTwoFilesPatch(before,after) in text and JSON for set/ignore/add/remove dry-run. Preserve no-write/refusal behavior.",
+                "Named native passing controls: a scalar setting previews without writing and then publishes the same policy; a scoped setting previews without writing and then publishes the same policy; a merged ignore path previews without writing and then publishes the same policy; a selected configuration previews and repeats without applying edited output; a policy preview leaves an active writer claim and existing files untouched.",
+                "Committed owner hashes and immutable body provenance verified in /tmp/gspot-wave8-pushed9a-closure-readiness.json and /tmp/gspot-wave8-pushed9a-body-provenance.json; original quotation and batch memberships preserved."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -5809,14 +5816,21 @@
             ]
         },
         "review/commands-templates/008": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Every current binding obligation verified in pushed 9a: Optional template defaults to filename; selection defaults exact. Any native gspot.toml without scopes can be a template. Delete Template.source.",
+                "Named native passing controls: an empty exact template controls root detection without writing; template export retains authored empty tables without writing schema defaults into them; an absolute template loads from a different working directory; template validation retains authored prototype keys and absent defaults through export; initialization carries authored prototype check keys without adding omitted table defaults.",
+                "Committed owner hashes and immutable body provenance verified in /tmp/gspot-wave8-pushed9a-closure-readiness.json and /tmp/gspot-wave8-pushed9a-body-provenance.json; original quotation and batch memberships preserved."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -5843,14 +5857,21 @@
             ]
         },
         "review/commands-templates/011": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Every current binding obligation verified in pushed 9a: Rewrite guide and remove installed dependencies/reconcile-export section. Carries every authored entry except scopes, including command checks; unmatched-paths reports stale carried selectors. Copy once/provenance, choices survive no files, remove drops choice. github sources use GITHUB_TOKEN; worked A-ignore/export B-init example.",
+                "Named native passing controls: a manual removal survives loss and return of detection evidence; template export preserves advisory reasons and expiry and path-specific rows; private GitHub templates receive environment credentials without sending them to other hosts; an exact template preserves its full root policy despite new general detection at recommended; an exact template preserves its full root policy despite new general detection at all; a manual removal survives loss and return of detection evidence; exported templates > init installs the source root policy with provenance and no source scopes; exported templates > re-export retains the customizations and native Taplo reports no formatting findings; exported templates > a pathless ignore covers unused variables while a path ignore excludes its neighbor.",
+                "Committed owner hashes and immutable body provenance verified in /tmp/gspot-wave8-pushed9a-closure-readiness.json and /tmp/gspot-wave8-pushed9a-body-provenance.json; original quotation and batch memberships preserved."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -8079,14 +8100,21 @@
             ]
         },
         "review/policy-format/019": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Every current binding obligation verified in pushed 9a: Scope and check keyed maps replace arrays in schema, emitter, init and export. Delete historical [[scope]] editing branch. Rewrite monorepos and command-check examples and delete subtable warnings.",
+                "Named native passing controls: the authored policy refuses superseded scope input; scope and command maps retain literal identities through parsing, editing, and canonical writing; scope validation reports the literal map key and its authored value position; first-command-check-map keeps canonical values and comments through repeated writes; writePolicyFile > a scope setting written into a sub-table loads with the ones already there.",
+                "Committed owner hashes and immutable body provenance verified in /tmp/gspot-wave8-pushed9a-closure-readiness.json and /tmp/gspot-wave8-pushed9a-body-provenance.json; original quotation and batch memberships preserved."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -8096,19 +8124,22 @@
             ]
         },
         "review/policy-format/020": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
                 "Evidence ab56c1858ce26473.",
                 "Evidence 249c0b15a5538cd5.",
                 "Evidence f706f04fbb49307e.",
-                "Evidence 237559206f4880d0."
+                "Evidence 237559206f4880d0.",
+                "Every current binding obligation verified in pushed 9a: Delete reasoned wrapper and retain plain authored values. Root and scoped reasons tables key the setting authored in their own table. Require reason for loosening; refuse orphan reasons; set --reason writes table. Published schema lists leaf once.",
+                "Named native passing controls: root and scoped reasons must name a setting authored in their own table; native options named reason retain their values separately from the policy explanation; runtime and published schemas agree on a namespace value with a substantive reason; runtime and published schemas agree on a namespace value with no required reason; a missing loosening reason has the same preview and publication refusal without writes; a placeholder reason has the same preview and publication refusal without writes.",
+                "Committed owner hashes and immutable body provenance verified in /tmp/gspot-wave8-pushed9a-closure-readiness.json and /tmp/gspot-wave8-pushed9a-body-provenance.json; original quotation and batch memberships preserved."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -8117,26 +8148,29 @@
                 },
                 {
                     "evidence": "/tmp/gspot-spelling-fixture-format-final-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": ["Evidence 237559206f4880d0."]
                 }
             ]
         },
         "review/policy-format/021": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
                 "Evidence ab56c1858ce26473.",
                 "Evidence 249c0b15a5538cd5.",
                 "Evidence f706f04fbb49307e.",
                 "Evidence fe2933e3b0ee6679.",
-                "Evidence 237559206f4880d0."
+                "Evidence 237559206f4880d0.",
+                "Every current binding obligation verified in pushed 9a: Delete require_reasons public setting and suppression toggle. Always require reason on every ignore and every loosened setting.",
+                "Named native passing controls: ignores and loosened settings always require reasons and refusals preserve the policy; placeholder reasons and omitted tool-option reasons are refused without a policy write; a missing loosening reason has the same preview and publication refusal without writes; a missing ignore reason has the same preview and publication refusal without writes.",
+                "Committed owner hashes and immutable body provenance verified in /tmp/gspot-wave8-pushed9a-closure-readiness.json and /tmp/gspot-wave8-pushed9a-body-provenance.json; original quotation and batch memberships preserved."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -8145,25 +8179,32 @@
                 },
                 {
                     "evidence": "/tmp/gspot-cli-reason-consolidation-final-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": ["Evidence fe2933e3b0ee6679."]
                 },
                 {
                     "evidence": "/tmp/gspot-spelling-fixture-format-final-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": ["Evidence 237559206f4880d0."]
                 }
             ]
         },
         "review/policy-format/022": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Every current binding obligation verified in pushed 9a: Native strict six-role object: tests/types/config/test_harness/runtime/env. Add scripts/stores only when selected configuration declares them; reject unknown keys.",
+                "Named native passing controls: architecture roles refuse misspellings and retain the declared harness name; configuration-declared roles use the owning defaults and preserve raw authored absence; a configuration role follows selected ancestor configurations and refuses an unrelated sibling owner.",
+                "Committed owner hashes and immutable body provenance verified in /tmp/gspot-wave8-pushed9a-closure-readiness.json and /tmp/gspot-wave8-pushed9a-body-provenance.json; original quotation and batch memberships preserved."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -8173,21 +8214,24 @@
             ]
         },
         "review/policy-format/023": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
                 "Evidence ab56c1858ce26473.",
                 "Evidence 249c0b15a5538cd5.",
                 "Evidence f706f04fbb49307e.",
                 "Evidence ffe97c8974227e1b.",
                 "Evidence 3461dbd46d80df40.",
-                "Evidence ae6c796d4abd7101."
+                "Evidence ae6c796d4abd7101.",
+                "Every current binding obligation verified in pushed 9a: Every authored scoped path is relative to its scope; readers get repository coordinates once. Remove ESLint runtimes/modules/test_harness per-reader prefix behavior. Rewrite repository scope paths and explain one rule in monorepos/policy guides.",
+                "Named native passing controls: scope path leaves normalize once while inherited roots and module identities retain their origin; scope  retains inherited path origins and native empty disabling values; scope app retains inherited path origins and native empty disabling values; scope worker retains inherited path origins and native empty disabling values; scope disabled retains inherited path origins and native empty disabling values; omitting defaults preserves path origins in every selected descendant; effective architecture delivery inherits modules by field and preserves their authored path origin.",
+                "Committed owner hashes and immutable body provenance verified in /tmp/gspot-wave8-pushed9a-closure-readiness.json and /tmp/gspot-wave8-pushed9a-body-provenance.json; original quotation and batch memberships preserved."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -8196,12 +8240,12 @@
                 },
                 {
                     "evidence": "/tmp/gspot-native-path-manual-main-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": ["Evidence ffe97c8974227e1b.", "Evidence 3461dbd46d80df40."]
                 },
                 {
                     "evidence": "/tmp/gspot-checks-fixture-main-intake/freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": ["Evidence ae6c796d4abd7101."]
                 }
             ]
@@ -8224,14 +8268,21 @@
             ]
         },
         "review/policy-format/026": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Every current binding obligation verified in pushed 9a: Key licenses.exceptions by exact package@version with license and reason. Strict license object only allowed and exceptions.",
+                "Named native passing controls: runtime and published schemas agree on a pinned license exception; runtime and published schemas agree on a license exception with a version range; templates round-trip license allowances and exact-version exceptions.",
+                "Committed owner hashes and immutable body provenance verified in /tmp/gspot-wave8-pushed9a-closure-readiness.json and /tmp/gspot-wave8-pushed9a-body-provenance.json; original quotation and batch memberships preserved."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -8258,14 +8309,21 @@
             ]
         },
         "review/policy-format/028": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Every current binding obligation verified in pushed 9a: Accept native TOML local dates and emit unquoted. Retain native dates through edits, comments and canonical re-emission.",
+                "Named native passing controls: merged-ignores-date-array-comments keeps canonical values and comments through repeated writes; same-date-rows keeps canonical values and comments through repeated writes; an in-place native expiry mutation changes the captured policy and retains its comment; the policy-layout command corrects native expiry and compact paths without installation.",
+                "Committed owner hashes and immutable body provenance verified in /tmp/gspot-wave8-pushed9a-closure-readiness.json and /tmp/gspot-wave8-pushed9a-body-provenance.json; original quotation and batch memberships preserved."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -8275,20 +8333,23 @@
             ]
         },
         "review/policy-format/029": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
                 "Evidence ab56c1858ce26473.",
                 "Evidence 249c0b15a5538cd5.",
                 "Evidence f706f04fbb49307e.",
                 "Evidence ffe97c8974227e1b.",
-                "Evidence 3461dbd46d80df40."
+                "Evidence 3461dbd46d80df40.",
+                "Every current binding obligation verified in pushed 9a: Rename root tests to test_files. Default roles.tests to effective test_files unless explicitly authored.",
+                "Named native passing controls: test roles follow effective test files unless an authored role replaces them; the authored policy refuses superseded scope input.",
+                "Committed owner hashes and immutable body provenance verified in /tmp/gspot-wave8-pushed9a-closure-readiness.json and /tmp/gspot-wave8-pushed9a-body-provenance.json; original quotation and batch memberships preserved."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -8297,7 +8358,7 @@
                 },
                 {
                     "evidence": "/tmp/gspot-native-path-manual-main-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": ["Evidence ffe97c8974227e1b.", "Evidence 3461dbd46d80df40."]
                 }
             ]
@@ -8320,14 +8381,21 @@
             ]
         },
         "review/policy-format/031": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Every current binding obligation verified in pushed 9a: naming.paths -> naming.overrides and names/skip -> allowed; no category skipped. run_with -> runner; docs.license -> docs.require_license; agent_rules.project_folder -> own_rules_folder. Delete groups_off; full shipped banned groups all-only.",
+                "Named native passing controls: runtime and published schemas agree on allowed exact names with reasons; runtime and published schemas agree on a path-selected allowed name; published and runtime schemas reject an escaping agent-rule project folder \"../outside\"; published and runtime schemas reject an escaping agent-rule project folder \"/outside\"; published and runtime schemas reject an escaping agent-rule project folder \"C:outside\"; published and runtime schemas reject an escaping agent-rule project folder \"..\\\\outside\"; published and runtime schemas reject an escaping agent-rule project folder \"\\\\\\\\host\\\\share\"; published and runtime schemas reject an escaping agent-rule project folder \"bad\\u0000path\"; published and runtime schemas reject an escaping agent-rule project folder \"api\\n/../../outside\"; published and runtime schemas reject an escaping agent-rule project folder \"\"; the authored policy refuses superseded scope input.",
+                "Committed owner hashes and immutable body provenance verified in /tmp/gspot-wave8-pushed9a-closure-readiness.json and /tmp/gspot-wave8-pushed9a-body-provenance.json; original quotation and batch memberships preserved."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -8354,14 +8422,21 @@
             ]
         },
         "review/policy-format/033": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Every current binding obligation verified in pushed 9a: Delete exact unrelated product comment. Emitter exactly one blank line before each subsequent header.",
+                "Named native passing controls: first-command-check-map keeps canonical values and comments through repeated writes; noncontiguous-tool-descendants keeps canonical values and comments through repeated writes; maps-dotted-and-blank-lines keeps canonical values and comments through repeated writes.",
+                "Committed owner hashes and immutable body provenance verified in /tmp/gspot-wave8-pushed9a-closure-readiness.json and /tmp/gspot-wave8-pushed9a-body-provenance.json; original quotation and batch memberships preserved."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -17672,6 +17747,46 @@
                 "Working namespace/category projections excluded from pushed implementation credit.",
                 "Plugin066 remains partial pending owner-specific simplification accounting."
             ]
+        },
+        {
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
+            "completedRecords": [
+                "review/policy-format/019",
+                "review/policy-format/020",
+                "review/policy-format/021",
+                "review/policy-format/022",
+                "review/policy-format/023",
+                "review/policy-format/026",
+                "review/policy-format/028",
+                "review/policy-format/029",
+                "review/policy-format/031",
+                "review/commands-templates/008",
+                "review/commands-templates/011",
+                "review/policy-format/033",
+                "review/code-commands/009"
+            ],
+            "unresolvedRecords": 548,
+            "validation": [
+                "Pushed policy/captured-input checkpoint: 352 passing tests, 1077 assertions, 18 files.",
+                "Immutable native body provenance attributes the prior 105/586 captured-policy, 22/100 path/default, and canonical-schema parity named controls to committed implementations; bounded vectors only.",
+                "Required 9a staged check, commit and push hooks passed without bypass; live publication not invoked."
+            ],
+            "limitations": [
+                "Recorded macOS/Bun runs and explicitly recorded Node probes are not native Windows proof.",
+                "Runtime/published schema parity vectors are bounded; no universal arbitrary-schema or all-platform claim.",
+                "Native package/custom-template successes apply to their recorded source snapshots; no live release/publish evidence.",
+                "213/686 canonical, 22/100 path/default, 105/586 CAS/preview and 352/1077 checkpoint are independent named recorded runs, not per-record blanket closure.",
+                "Rules/category/namespace/reference and canonical metadata may be held physically; exact owner hash matrix is authoritative provenance.",
+                "Root owns full generated producer/integration/commit and ledger closure decisions.",
+                "No new tests ran in this readiness audit. Quoted existing native receipts are attributed by immutable declaration-token/body and owner hashes, not silently claimed as a new full9a run.",
+                "Canonical3 and Rules60 are held; optional metadata interface changes do not imply every historical policy behavior is unpushed. Exact obligation assessment follows native field/body ownership.",
+                "A pending ledger status is neither implementation absence nor proof of completion; only the exact binding/committed owner evidence determines this shortlist."
+            ],
+            "ci": {
+                "run": "https://github.com/stefanionescu/gspot/actions/runs/37868403328",
+                "status": "pending",
+                "verifiedPlatforms": []
+            }
         }
     ],
     "verificationEvidence": {

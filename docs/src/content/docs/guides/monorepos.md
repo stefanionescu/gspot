@@ -84,7 +84,7 @@ gspot install
 gspot check services/api
 ```
 
-If a project disappears, `apply` preserves authored scope policy and deactivates its absent stack. When the project returns, its saved settings apply again.
+If a project disappears, `apply` preserves authored scope policy and deactivates its absent configuration. When the project returns, its saved settings apply again.
 
 ## A policy below the Git root
 

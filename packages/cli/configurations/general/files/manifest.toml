@@ -111,7 +111,7 @@ command = ["v8r", "--ignore-errors", "--output-format", "text", "{files}"]
 env = { V8R_CONFIG_FILE = "{tool_file:v8r}" }
 files = { extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"] }
 output = { format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$" }
-summary = "Validates every configuration file that has a known schema against it: package.json, tsconfig.json, mise, workflows and the rest of the SchemaStore catalog."
+summary = "Validates every tool file that has a known schema against it: package.json, tsconfig.json, mise, workflows and the rest of the SchemaStore catalog."
 why = "A key the schema refuses is a setting that never applies, and nobody finds out until the behavior it was meant to change does not change."
 help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schemas."
 

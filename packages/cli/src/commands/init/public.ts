@@ -56,12 +56,12 @@ function presentPlan(root: string, options: InitOptions, prepared: InitPrepared)
     }
     if (plan.unread.length === 0) return undefined;
     return {
-        text: 'A configuration file is unreadable. Fix the listed files and run gspot init again.\n',
+        text: 'A tool file is unreadable. Fix the listed files and run gspot init again.\n',
         json: {
             root,
             plan,
             error: 'unreadable-config',
-            message: 'A configuration file could not be read. Nothing written.',
+            message: 'A tool file could not be read. Nothing written.',
             written: false,
         },
         exitCode: EXIT_ERROR,
