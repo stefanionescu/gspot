@@ -73,12 +73,12 @@ import { gspotDrift, unmatchedPaths, fixPolicyLayout, gspotPolicyLayout } from '
 import { svgo, siteBuild, deadAssets, webManifest, buildReproducible } from '#cli/checks/general/site/contracts.ts';
 
 import {
-    adminKey,
     denoLint,
     denoCheck,
+    projectFile,
+    serviceRoleKey,
     migrationNames,
     storagePolicies,
-    supabaseConfiguration,
 } from '#cli/checks/platform/public.ts';
 import {
     securityHeaders,
@@ -182,12 +182,12 @@ export const BUILT_IN_CHECKS = {
     'swift/swiftlint-analyze': { input: swiftlintAnalyze },
     'swift/periphery': { input: swiftPeriphery },
     'openapi/stale-document': { input: generatedCode },
-    'supabase/project-file': { input: supabaseConfiguration },
+    'supabase/project-file': { input: projectFile },
     'supabase/storage-policies': { input: storagePolicies },
     'supabase/migration-names': { input: migrationNames },
     'supabase/deno-lint': { input: denoLint },
     'supabase/deno-check': { input: denoCheck },
-    'supabase/service-role-key': { input: adminKey },
+    'supabase/service-role-key': { input: serviceRoleKey },
     'supabase/stale-types': { input: generatedCode },
     'postgres/rls': { input: rls },
     'postgres/grants': { input: grants },

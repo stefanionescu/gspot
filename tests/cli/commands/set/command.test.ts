@@ -18,12 +18,22 @@ import { TAPLO_REASON, TAPLO_OPTIONS } from '#tests/config/samples/taplo.ts';
 
 import {
     POLICY,
+    PROSE_REFUSALS,
     ESLINT_OVERRIDES,
     NATIVE_OPTION_SCOPES,
     SET_CONFLICT_POLICIES,
     ESLINT_OVERRIDE_REASON,
     SET_ARGUMENT_CONFLICTS,
 } from '#tests/config/cli/commands/set/command.ts';
+
+test.each(PROSE_REFUSALS)('set refuses %s without changing repository files', async (key, value) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': POLICY });
+    const before = await readTree(sandbox.path);
+    const refused = await runGspot(sandbox.path, ['set', key, value]);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
 
 test.each(
     SET_ARGUMENT_CONFLICTS.flatMap((entry) =>

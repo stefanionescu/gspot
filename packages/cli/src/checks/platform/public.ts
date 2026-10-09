@@ -122,7 +122,7 @@ export function functionFolders(input: CheckInput): string[] {
  * @param input the check input
  * @returns the findings
  */
-export function supabaseConfiguration(input: CheckInput): Finding[] {
+export function projectFile(input: CheckInput): Finding[] {
     const read = readConfiguration(input);
     const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
     if (read === undefined) return [];
@@ -227,7 +227,7 @@ export async function denoCheck(input: CheckInput): Promise<Finding[]> {
  * @param input the check input
  * @returns the findings
  */
-export function adminKey(input: CheckInput): Finding[] {
+export function serviceRoleKey(input: CheckInput): Finding[] {
     const folder = input.view.options('supabase').functions_folder;
     const tests = input.view.test_files;
     const isAllowed = pathMatcher([`${folder}/**`, ...tests]);

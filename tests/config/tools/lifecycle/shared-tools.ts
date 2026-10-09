@@ -18,3 +18,5 @@ export const CORRECTED = '// Store the app result.\n\n/** The app result. */\nex
 /** The independent selected Stylelint variant rejects the invalid color. */
 export const INVALID_CSS = '/* The sample card. */\n.card {\n    color: #ggg;\n}\n';
 export const CLEAN_CSS = '/* The sample card. */\n.card {\n    color: #abc;\n}\n';
+
+export const PLAN_INIT = ['init', '--yes', '--no-runner', '--no-ci', '--no-agent-rules', '--no-install'];

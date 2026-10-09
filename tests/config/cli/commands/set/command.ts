@@ -62,3 +62,8 @@ export const NATIVE_OPTION_SCOPES = [
 
 export const ESLINT_OVERRIDES = [{ paths: ['src/**'], rules: { 'no-console': [] } }];
 export const ESLINT_OVERRIDE_REASON = 'The project reports console calls in its source files.';
+
+export const PROSE_REFUSALS = [
+    ['prose.disabled', '{"rule":"gspot.dates","reason":"Archived example"}'],
+    ['tools.vale.enabled', 'false'],
+];
