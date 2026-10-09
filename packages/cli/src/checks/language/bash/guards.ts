@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { codeLines } from '#cli/parsers/bash/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { pathMatcher } from '#cli/repository/paths/public.ts';
 import { rolePaths } from '#cli/policy/settings/contracts.ts';
+import { pathMatcher } from '#cli/repository/paths/public.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { getScriptIndex } from '#cli/checks/language/contracts.ts';
 import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/language/bash.ts';
@@ -12,7 +12,7 @@ import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/language/bas
  * @param input the check context
  * @returns the findings
  */
-export const guardDefaults: BuiltInCheck = async (input) => {
+export const bashVariableDefaults: BuiltInCheck = async (input) => {
     const isOwner = pathMatcher(rolePaths(input.policyFiles.policy.architecture.roles, 'env'));
     const index = await getScriptIndex(input);
     return index.files.flatMap((file) => {

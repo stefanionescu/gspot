@@ -1,36 +1,35 @@
-import { ansibleLint } from '#cli/checks/tool/ansible.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
+import { ansibleLint } from '#cli/checks/tool/ansible.ts';
 import { expoDoctor } from '#cli/checks/framework/expo.ts';
-import { moduleClasses } from '#cli/checks/language/css.ts';
 import { vale, jscpd } from '#cli/checks/general/public.ts';
+import { moduleClasses } from '#cli/checks/language/css.ts';
 import { embeds } from '#cli/checks/language/bash/embeds.ts';
 import { safety } from '#cli/checks/language/bash/safety.ts';
 import { sshBlocks } from '#cli/checks/language/bash/ssh.ts';
 import { locales } from '#cli/checks/library/translations.ts';
-import { contract } from '#cli/checks/language/bash/contract.ts';
 import { svelteCheck } from '#cli/checks/framework/contracts.ts';
+import { contract } from '#cli/checks/language/bash/contract.ts';
 import { wrappers } from '#cli/checks/language/bash/wrappers.ts';
-import { codeql, semgrep } from '#cli/checks/general/security.ts';
 import { commitlintPushed } from '#cli/checks/general/commits.ts';
-import type { BuiltInChecks } from '#cli/types/execution/check.ts';
+import { codeql, semgrep } from '#cli/checks/general/security.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
-import { nginxTest, actionlint } from '#cli/checks/tool/public.ts';
 import { sourceOrder } from '#cli/checks/language/bash/sources.ts';
+import { nginxTest, actionlint } from '#cli/checks/tool/public.ts';
+import type { BuiltInChecks } from '#cli/types/execution/check.ts';
 import { shellcheck } from '#cli/checks/language/bash/shellcheck.ts';
-import { envOwner } from '#cli/checks/general/structure/env-owner.ts';
 import { generatedCode } from '#cli/checks/general/generated-code.ts';
+import { envOwner } from '#cli/checks/general/structure/env-owner.ts';
 import { trivyImage, dockerignore } from '#cli/checks/tool/docker.ts';
 import { suppressions } from '#cli/checks/general/structure/public.ts';
-import { docComments } from '#cli/checks/language/bash/doc-comments.ts';
+import { migrationDocs } from '#cli/checks/database/postgres/public.ts';
 import { fileLines } from '#cli/checks/general/structure/file-lines.ts';
 import { loneFiles } from '#cli/checks/general/structure/lone-files.ts';
-import { migrationDocs } from '#cli/checks/database/postgres/public.ts';
+import { docComments } from '#cli/checks/language/bash/doc-comments.ts';
 import { privatePrefix } from '#cli/checks/language/bash/visibility.ts';
-import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
 import { manifests } from '#cli/checks/general/dependencies/manifests.ts';
 import { versionPairs } from '#cli/checks/general/dependencies/public.ts';
+import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
 import { folderNames } from '#cli/checks/general/structure/folder-names.ts';
-import { guards, guardDefaults } from '#cli/checks/language/bash/guards.ts';
 import { relations as drizzleRelations } from '#cli/checks/library/drizzle.ts';
 import { testPlacement } from '#cli/checks/general/structure/test-placement.ts';
 import { unreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
@@ -39,21 +38,22 @@ import { ats, xcconfig, entitlements } from '#cli/checks/tool/xcode/settings.ts'
 import { foreignKeyIndexes } from '#cli/checks/database/postgres/foreign-keys.ts';
 import { importComments } from '#cli/checks/general/structure/import-comments.ts';
 import { stemCollisions } from '#cli/checks/general/structure/stem-collisions.ts';
-import { configurationLogic } from '#cli/checks/general/structure/config-logic.ts';
 import { lockfileFresh } from '#cli/checks/general/dependencies/lockfile/fresh.ts';
 import { lockfileHosts } from '#cli/checks/general/dependencies/lockfile/hosts.ts';
+import { configurationLogic } from '#cli/checks/general/structure/config-logic.ts';
+import { guards, bashVariableDefaults } from '#cli/checks/language/bash/guards.ts';
 import { tsc, checkjs, tsconfig, pydoclint } from '#cli/checks/language/public.ts';
 import { bunReleaseAge } from '#cli/checks/general/dependencies/bun-release-age.ts';
 import { prefixCollisions } from '#cli/checks/general/structure/prefix-collisions.ts';
-import { recording, references } from '#cli/checks/library/swift-snapshot-testing.ts';
-import { trivialFunctions as sqlTrivialFunctions } from '#cli/checks/language/sql.ts';
 import { trivialFunctions } from '#cli/checks/general/structure/trivial-functions.ts';
+import { trivialFunctions as sqlTrivialFunctions } from '#cli/checks/language/sql.ts';
+import { recording, references } from '#cli/checks/library/swift-snapshot-testing.ts';
 import { symlinks, testPlans, orphanSources } from '#cli/checks/tool/xcode/project.ts';
 import { rls, grants, definerSearchPath } from '#cli/checks/database/postgres/access.ts';
 import { singletons as pythonSingletons } from '#cli/checks/language/python/singletons.ts';
-import { importLinter as pythonImportLinter } from '#cli/checks/language/python/imports.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/database/postgres/history.ts';
 import { trackedDependencies } from '#cli/checks/general/structure/tracked-dependencies.ts';
+import { importLinter as pythonImportLinter } from '#cli/checks/language/python/imports.ts';
 import { privateBeforePublic } from '#cli/checks/general/structure/private-before-public.ts';
 import { functionSize as bashFunctionSize } from '#cli/checks/language/bash/function-size.ts';
 import { headings, stalePaths, readmeShape, requiredFiles } from '#cli/checks/general/docs.ts';
@@ -65,14 +65,22 @@ import { functionSize as pythonFunctionSize } from '#cli/checks/language/python/
 import { envFiles, trufflehog, envTemplate, gitleaksPushed } from '#cli/checks/general/secrets.ts';
 import { NEXT_VERSION_PAIRS, REACT_VERSION_PAIRS } from '#cli/config/checks/general/dependencies.ts';
 import { swiftBuild, swiftPeriphery, swiftlintAnalyze } from '#cli/checks/language/swift/contracts.ts';
-import { namingPaths, namingPolicy, namingIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 import { nextBuild, nextjsTsc, routeSegments, nextConfiguration } from '#cli/checks/framework/public.ts';
+import { namingPaths, namingPolicy, namingIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 import { sitemap, purgecss, siteSize, linkinator, htmlValidate } from '#cli/checks/general/site/public.ts';
 import { swiftTestsSleep, swiftTestsCoverage, swiftTestsSkipReasons } from '#cli/checks/tool/contracts.ts';
 import { placeholderDocstrings as pythonPlaceholderDocstrings } from '#cli/checks/language/python/functions.ts';
 import { gspotDrift, unmatchedPaths, fixPolicyLayout, gspotPolicyLayout } from '#cli/checks/general/contracts.ts';
 import { svgo, siteBuild, deadAssets, webManifest, buildReproducible } from '#cli/checks/general/site/contracts.ts';
 
+import {
+    adminKey,
+    denoLint,
+    denoCheck,
+    migrationNames,
+    storagePolicies,
+    supabaseConfiguration,
+} from '#cli/checks/platform/public.ts';
 import {
     securityHeaders,
     headers as cloudflareHeaders,
@@ -85,14 +93,6 @@ import {
     packageExports as pythonPackageExports,
     exportsAtBottom as pythonExportsAtBottom,
 } from '#cli/checks/language/python/exports.ts';
-import {
-    adminKey,
-    denoLint,
-    denoCheck,
-    migrationNames,
-    storagePolicies,
-    supabaseConfiguration,
-} from '#cli/checks/platform/public.ts';
 
 /** Every built-in implementation, keyed by its check ID. */
 export const BUILT_IN_CHECKS = {
@@ -215,7 +215,7 @@ export const BUILT_IN_CHECKS = {
     'bash/wrappers': { input: wrappers },
     'bash/embeds': { input: embeds },
     'bash/ssh-blocks': { input: sshBlocks },
-    'bash/variable-defaults': { input: guardDefaults },
+    'bash/variable-defaults': { input: bashVariableDefaults },
     'bash/guards': { input: guards },
     'bash/safety': { input: safety },
     'bash/source-order': { input: sourceOrder },
