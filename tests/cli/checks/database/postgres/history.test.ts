@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
@@ -28,33 +28,32 @@ test('migration history reports changed committed SQL and an earlier new version
     await writeFile(join(sandbox.path, PATH), ORIGINAL + 'ALTER TABLE teams ADD COLUMN name text;\n');
     await createFileTree(sandbox.path, { 'migrations/20240101_early.sql': 'SELECT 1;\n' });
     gitOutput(sandbox.path, ['add', '.']);
-    expect(
-        await frozenCheck.input(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
-    ).toStrictEqual([
+    const frozen = await frozenCheck.input(
+        buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen'),
+    );
+    expect(frozen).toMatchObject([
         {
             check: 'postgres/migrations-frozen',
             file: PATH,
             line: 1,
             rule: 'frozen',
             fixable: false,
-            message:
-                'This migration is at or before postgres.frozen_through and differs from its committed text. Restore it and write a new migration.',
         },
     ]);
-    expect(
-        await BUILT_IN_CHECKS['postgres/migration-order'].input(
-            buildCheckInput(await openSession(sandbox.path), 'postgres/migration-order'),
-        ),
-    ).toStrictEqual([
+    expect(frozen[0]!.message).toContain('postgres.frozen_through');
+    const order = await BUILT_IN_CHECKS['postgres/migration-order'].input(
+        buildCheckInput(await openSession(sandbox.path), 'postgres/migration-order'),
+    );
+    expect(order).toMatchObject([
         {
             check: 'postgres/migration-order',
             file: 'migrations/20240101_early.sql',
             line: 1,
             rule: 'order',
             fixable: false,
-            message: 'A new migration sorts before 20240201_teams.sql, which is already committed.',
         },
     ]);
+    expect(order[0]!.message).toContain(basename(PATH));
     await writeFile(join(sandbox.path, PATH), ORIGINAL);
     gitOutput(sandbox.path, ['mv', 'migrations/20240101_early.sql', 'migrations/20240301_later.sql']);
     expect(

@@ -189,11 +189,11 @@ test.each(['', 'packages/db'])('staged Drizzle tables retain unstaged scope rela
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { stage: 'commit', skips: [], staged, only: ['drizzle/relations'] });
     const selected = planned.find((entry) => entry.scope.scope.path === scope)!;
-    expect(selected.files.map((file) => file.path)).toContain(declarations);
+    expect(selected.files.map((file) => file.path)).toContain(toPosix(declarations));
     expect(BUILT_IN_CHECKS['drizzle/relations'].input(checkInput(session, selected))).toStrictEqual([]);
     await writeFile(join(sandbox.path, declarations), '// relations(members, () => ({}))\n');
     const missing = await openSession(sandbox.path);
-    const active = planRun(missing, { stage: 'commit', skips: [], staged: [source], only: ['drizzle/relations'] }).find(
+    const active = planRun(missing, { stage: 'commit', skips: [], staged, only: ['drizzle/relations'] }).find(
         (entry) => entry.scope.scope.path === scope,
     )!;
     expect(BUILT_IN_CHECKS['drizzle/relations'].input(checkInput(missing, active))).toMatchObject([

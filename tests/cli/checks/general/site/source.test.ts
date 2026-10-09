@@ -50,12 +50,11 @@ test('asset references read staged bytes without borrowing an unstaged README or
         'README.md': '![Unused](docs/assets/unused.svg)\n',
         'untracked.md': '![Unused](docs/assets/unused.svg)\n',
     });
-    await checkOutRevision(sandbox.path, { kind: 'index' }, async (root) => {
+    const findings = await checkOutRevision(sandbox.path, { kind: 'index' }, async (root) => {
         const input = buildCheckInput(await openSession(root), 'site/dead-assets', { scope: 'docs' });
-        expect(BUILT_IN_CHECKS['site/dead-assets'].input(input)).toMatchObject([
-            { file: 'docs/assets/unused.svg', rule: 'dead-asset' },
-        ]);
+        return BUILT_IN_CHECKS['site/dead-assets'].input(input);
     });
+    expect(findings).toMatchObject([{ file: 'docs/assets/unused.svg', rule: 'dead-asset' }]);
     expect(await readFile(join(sandbox.path, 'README.md'), 'utf8')).toBe('![Unused](docs/assets/unused.svg)\n');
 });
 

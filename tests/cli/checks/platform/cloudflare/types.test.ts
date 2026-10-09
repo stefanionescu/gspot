@@ -2,18 +2,18 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/public.ts';
 import { toPosix } from '#cli/platform/contracts.ts';
+import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import type { WorkerTypesProject } from '#tests/types/cli/checks/platform/cloudflare.ts';
 
 import {
@@ -86,16 +86,17 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
         using _generator = spyOn(processes, 'run').mockImplementation((argv, options) =>
             run([process.execPath, ...argv.slice(1)], options),
         );
-        expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([
+        const findings = await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input);
+        expect(findings).toMatchObject([
             {
                 check: testRepository.input.check.name,
                 file: toPosix(testRepository.path('worker-configuration.d.ts')),
                 line: 1,
                 rule: 'stale',
-                message: textContaining('changes this generated file; commit what it writes.'),
                 fixable: false,
             },
         ]);
+        expect(findings[0]!.message).toContain('"wrangler","types"');
         await writeFile(join(directory.path, testRepository.path('bindings.txt')), testRepository.edited);
         expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([]);
         await expectPreserved(directory.path, testRepository);

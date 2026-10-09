@@ -1,12 +1,11 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/commands/public.ts';
+import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
-import { spawnGspot, checkReport } from '#tests/harness/gspot.ts';
 import { PYTHON_MODULE_HEADER } from '#tests/config/samples/python.ts';
 
 test('a module-level instance is a singleton until its composition file has a policy ignore', async () => {
@@ -73,10 +72,10 @@ test('singleton file ignores preserve unaccepted files in root and nested scopes
         'app/allowed.py': 'store = Store()\n',
         'app/restricted.py': 'store = Store()\n',
     });
-    const result = await spawnGspot(sandbox.path, ['check', '--only', 'python/singletons', '--json']);
+    const result = await checkReport(sandbox.path, ['check', '--only', 'python/singletons', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(
-        (JSON.parse(result.stdout) as RunReport).checks
+        result.report.checks
             .flatMap(({ findings }) => findings)
             .map(({ file, line }) => ({ file, line }))
             .toSorted((left, right) => left.file.localeCompare(right.file)),

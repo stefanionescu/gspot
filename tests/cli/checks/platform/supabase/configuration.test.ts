@@ -6,8 +6,9 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { rejection } from '#tests/harness/expectations.ts';
+import { getKeptMode } from '#tests/harness/platforms.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { levelSchema } from '#cli/parsers/schema/contracts.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { functionFolders } from '#cli/checks/platform/public.ts';
@@ -149,7 +150,7 @@ test.each(STORAGE_POLICIES.flatMap((entry) => levelSchema.options.map((level) =>
             );
             expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(sql);
             const metadata = await stat(join(sandbox.path, path));
-            expect(metadata.mode & 0o777).toBe(0o600);
+            expect(metadata.mode & 0o777).toBe(getKeptMode(0o600));
             await writeFile(
                 join(sandbox.path, path),
                 "CREATE POLICY p ON storage.objects USING (bucket_id = 'avatars');",
