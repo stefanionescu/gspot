@@ -6,6 +6,7 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildSandboxPath } from '#tests/harness/install.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import jestManifest from 'jest/package.json' with { type: 'json' };
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 
 import {
@@ -15,6 +16,13 @@ import {
     CORRECTED_TEST_SOURCE,
 } from '#tests/config/tools/configurations/tool/jest.ts';
 
+const files = {
+    ...JEST_PROJECT_FILES,
+    'package.json':
+        JSON.stringify({ name: 'jest-acceptance', private: true, devDependencies: { jest: jestManifest.version } }) +
+        '\n',
+};
+
 // Coverage findings and load failures share the native root project inputs.
 function prepareJest(root: string, testSource: string) {
     return createFileTree(root, {
@@ -22,7 +30,7 @@ function prepareJest(root: string, testSource: string) {
             tables: '[coverage]\nlines = 80\nbranches = 80\nfunctions = 80\nstatements = 80\n',
             level: 'all',
         }),
-        ...JEST_PROJECT_FILES,
+        ...files,
         'math.test.cjs': testSource,
     });
 }
@@ -36,7 +44,9 @@ test('native Jest at all applies nested coverage settings without executing sibl
         }),
         'package.json': '{"name":"jest-scoped-acceptance","private":true}\n',
         'sibling.test.cjs': 'throw new Error("Tests outside the selected project must not execute");\n',
-        'app/package.json': '{"name":"jest-nested","private":true,"devDependencies":{"jest":"30.2.0"}}\n',
+        'app/package.json':
+            JSON.stringify({ name: 'jest-nested', private: true, devDependencies: { jest: jestManifest.version } }) +
+            '\n',
         'app/math.cjs': SOURCE,
         'app/math.test.cjs': TEST_SOURCE,
         'app/authored.txt': 'preserved nested source\n',
@@ -119,9 +129,9 @@ test.each(['recommended', 'all'] as const)(
             '[coverage]\nlines = 0\nbranches = 0\nfunctions = 0\nstatements = 0\n[reasons]\n"coverage.lines" = "The test measures the zero-floor native command."\n"coverage.branches" = "The test measures the zero-floor native command."\n"coverage.functions" = "The test measures the zero-floor native command."\n"coverage.statements" = "The test measures the zero-floor native command."\n';
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['jest'], { level, tables: zero + '[scope.app]\nconfigurations = ["jest"]\n' }),
-            ...JEST_PROJECT_FILES,
+            ...files,
             'math.test.cjs': TEST_SOURCE,
-            'app/package.json': JEST_PROJECT_FILES['package.json'],
+            'app/package.json': files['package.json'],
             'app/math.cjs': SOURCE,
             'app/math.test.cjs': TEST_SOURCE,
             'app/authored.txt': 'preserved nested source\n',

@@ -87,7 +87,7 @@ export async function createTestRepository<Scenario extends RepositoryScenario>(
     run: CheckCommand,
     prepareRepository: (root: string, scenario: Scenario) => Promise<Record<string, string>>,
 ): Promise<OwnedTestRepository> {
-    const sandbox = await testdir({}, repository.dirname === undefined ? {} : { dirname: repository.dirname });
+    const sandbox = await testdir();
     try {
         const environment = await prepareRepository(sandbox.path, repository);
         await repository.prepare?.(sandbox.path, environment);

@@ -1,6 +1,6 @@
 # Integration Tests Outside the Checks Folder
 
-37 unresolved review records remain.
+36 unresolved review records remain.
 
 ## Findings
 
@@ -189,3 +189,11 @@ Original records and quotations remain above. These records are complete at `801
 | ----------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `areas/integration-tests/055` | complete | All four manifest path refusals are in the parser declarations owner and assert their specific reasons. The valid .gspot installation path is checked once. A native negative control confirms unrelated TypeError cannot satisfy those assertions. Pushed implementation 80156a478: main CLI 79 tests and 231 assertions in six files; secrets tools 3 tests and 22 assertions. Types pass; normal staged, commit and push checks report zero findings. Exact implementation blobs verified in /tmp/gspot-five-behavior-closure-owner-proof.json. Commit `80156a478f3286427a507b33a7d03cd3f48f6813`. |
 | `areas/integration-tests/053` | complete | The internal scope-settings test is deleted. The two genuine level tests remain, and CLI nested-scope and explain tests retain public inheritance coverage. Pushed implementation 80156a478: main CLI 79 tests and 231 assertions in six files; secrets tools 3 tests and 22 assertions. Types pass; normal staged, commit and push checks report zero findings. Exact implementation blobs verified in /tmp/gspot-five-behavior-closure-owner-proof.json. Commit `80156a478f3286427a507b33a7d03cd3f48f6813`.                                                                                         |
+
+## Implementation checkpoint 02fd3b662 of October 9, 2026
+
+Original records and quotations remain above. These records are complete at `02fd3b662284c6cf57540f67001875fb1b459783`.
+
+| ID                            | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/integration-tests/025` | complete | Deleted the duplicate staged dependency-copy cancellation case and its dead imports/type. Genuine copy cancellation, partial-output cleanup, CLI cancellation exit codes and JSON diagnostics remain. Native cancellation and dependency-copy tests: 17 passed, 95 assertions. Normal staged gate: 66 passed, zero failed, 10 skipped, zero findings; normal commit and push hooks passed. Commit `02fd3b662284c6cf57540f67001875fb1b459783`. |

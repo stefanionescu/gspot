@@ -16,7 +16,6 @@ export const CARD =
 export const REPOSITORY: InstalledScenario = {
     configurations: ['typescript', 'svelte', 'css', 'format'],
     tsconfig: COMPONENT_TSCONFIG,
-    dependencies: { svelte: '5.57.0' },
     files: {
         'src/answer.ts': COMPONENT_SOURCE,
         'src/Greeting.svelte': SVELTE_CLEAN,

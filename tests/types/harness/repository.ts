@@ -13,14 +13,13 @@ type RepositorySetup = {
     tsconfig?: Record<string, unknown>;
     /** The level set after init; all unless a test says otherwise. */
     level?: Level;
-    dirname?: string;
     before?: (root: string) => void | Promise<void>;
     prepare?: (root: string, environment: Record<string, string>) => void | Promise<void>;
     corrected?: (entry: FindingCase) => Correction;
 };
 
 /** A prepared sandbox and its command environment. */
-export type TestRepository = { root: string; environment: Record<string, string> };
+export type TestRepository = { root: string; environment: Record<string, string>; run: CheckCommand };
 
 /** CLI scenarios have no installation or module-linking inputs. */
 export type InProcessScenario = RepositorySetup & {
@@ -41,7 +40,7 @@ export type InstalledScenario = RepositorySetup & {
 export type RepositoryScenario = InProcessScenario | InstalledScenario;
 
 /** One installed repository shared by the cases of a table. */
-export type OwnedTestRepository = TestRepository & AsyncDisposable & { run: CheckCommand };
+export type OwnedTestRepository = TestRepository & AsyncDisposable;
 
 /** Each declared runtime has six independent forms of project evidence. */
 export type RuntimeEvidenceCase = {

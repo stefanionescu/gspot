@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { testdir } from 'testdirs';
 import { commitAll } from '#tests/harness/git.ts';
 import { HEAD } from '#tests/config/samples/bash.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
@@ -8,27 +8,35 @@ import { GUIDE } from '#tests/config/samples/docs.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
+import { testModules } from '#tests/harness/environment.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
+import { installedPackage } from '#cli/repository/contracts.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
-import { installedModules } from '#tests/harness/environment.ts';
+import vueManifest from 'vue/package.json' with { type: 'json' };
+import rxjsManifest from 'rxjs/package.json' with { type: 'json' };
 import { CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
+import { prepareTestRepository } from '#tests/harness/repository.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import svelteManifest from 'svelte/package.json' with { type: 'json' };
+import vitestManifest from 'vitest/package.json' with { type: 'json' };
+import coreManifest from '@nestjs/core/package.json' with { type: 'json' };
 import * as postgres from '#tests/config/tools/configurations/database.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
+import commonManifest from '@nestjs/common/package.json' with { type: 'json' };
 import * as toolPytest from '#tests/config/tools/configurations/tool/pytest.ts';
 import * as toolVitest from '#tests/config/tools/configurations/tool/vitest.ts';
 import * as languageSql from '#tests/config/tools/configurations/language/sql.ts';
 import * as toolAnsible from '#tests/config/tools/configurations/tool/ansible.ts';
 import * as toolOpenapi from '#tests/config/tools/configurations/tool/openapi.ts';
+import * as frameworkVue from '#tests/config/tools/configurations/framework/vue.ts';
 import type { BashBoundary, ConfigurationCallbacks } from '#tests/types/tools/cases.ts';
 import * as frameworkNestjs from '#tests/config/tools/configurations/framework/nestjs.ts';
-import * as frameworkNextjs from '#tests/config/tools/configurations/framework/nextjs.ts';
-import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
+import * as frameworkSvelte from '#tests/config/tools/configurations/framework/svelte.ts';
+import type { TestRepository, InstalledScenario } from '#tests/types/harness/repository.ts';
 import { MODULE_PATH, CLEAN_MODULE, ARITHMETIC_TESTS } from '#tests/config/samples/python.ts';
 import * as languagePython from '#tests/config/tools/configurations/language/python/checks.ts';
 import * as languageBashChecks from '#tests/config/tools/configurations/language/bash/checks.ts';
-import type { InstalledScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import * as languageSwiftChecks from '#tests/config/tools/configurations/language/swift/checks.ts';
 import { SCENARIOS, SQL_EXCLUSION, BASH_LOCATIONS } from '#tests/config/tools/configurations/cases.ts';
 import * as markdownDocsProse from '#tests/config/tools/configurations/general/markdown-docs-prose.ts';
@@ -119,7 +127,22 @@ const BOUNDARIES: BashBoundary[] = [
         },
     },
 ];
+const vitestPackage =
+    JSON.stringify({ ...toolVitest.VITEST_PACKAGE, devDependencies: { vitest: vitestManifest.version } }, null, 4) +
+    '\n';
+const nestDependencies = Object.fromEntries(
+    [
+        commonManifest,
+        coreManifest,
+        installedPackage(undefined, testModules, join(testModules, 'reflect-metadata/package.json'))!,
+        rxjsManifest,
+    ].map(({ name, version }) => [name!, version!]),
+);
 const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
+    [toolVitest.REPOSITORY, { files: { ...toolVitest.REPOSITORY.files, 'package.json': vitestPackage } }],
+    [frameworkVue.REPOSITORY, { dependencies: { vue: vueManifest.version } }],
+    [frameworkSvelte.REPOSITORY, { dependencies: { svelte: svelteManifest.version } }],
+    [frameworkNestjs.REPOSITORY, { dependencies: nestDependencies }],
     [
         toolPytest.REPOSITORY,
         {
@@ -222,12 +245,6 @@ const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
             }),
         },
     ],
-    [
-        frameworkNextjs.REPOSITORY,
-        {
-            dirname: join(installedModules, '../..', `gspot-test-${randomUUID()}`),
-        },
-    ],
 ]);
 
 for (const declared of SCENARIOS) {
@@ -237,8 +254,8 @@ for (const declared of SCENARIOS) {
         const { cases = declared.cases, ...configuration } = callbacks;
         scenario = { ...declared, cases, repository: { ...declared.repository, ...configuration } };
     }
-    const cases = structuredClone(scenario.cases);
-    for (const entry of cases) {
+    const entries = structuredClone(scenario.cases);
+    for (const entry of entries) {
         if (declared.repository === toolPytest.REPOSITORY)
             entry.files['tests/test_math.py'] = ARITHMETIC_TESTS.replace('    assert triple(2) == 6\n', '').replace(
                 ', triple',
@@ -262,14 +279,15 @@ for (const declared of SCENARIOS) {
             (declared.platforms !== undefined && !declared.platforms.includes(process.platform)),
     )(declared.name, () => {
         const resources = new AsyncDisposableStack();
-        let repository: OwnedTestRepository;
+        let repository: TestRepository;
         beforeAll(async () => {
-            repository = resources.use(
-                await createTestRepository(scenario.repository, spawnGspot, prepareTestRepository),
-            );
+            const sandbox = resources.use(await testdir());
+            const environment = await prepareTestRepository(sandbox.path, scenario.repository);
+            await scenario.repository.prepare?.(sandbox.path, environment);
+            repository = { root: sandbox.path, environment, run: spawnGspot };
         });
         afterAll(() => resources.disposeAsync());
-        for (const entry of cases) {
+        for (const entry of entries) {
             const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
             const isElsewhere = entry.platforms !== undefined && !entry.platforms.includes(process.platform);
             test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(

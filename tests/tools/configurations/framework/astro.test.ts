@@ -3,10 +3,11 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { containing } from '#tests/harness/expectations.ts';
 import { runCheckCase } from '#tests/harness/check-case.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { prepareTestRepository } from '#tests/harness/repository.ts';
+import astroManifest from 'astro/package.json' with { type: 'json' };
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG } from '#tests/config/samples/components.ts';
 import { PAGE, CLEAN, BUNDLED } from '#tests/config/tools/configurations/framework/astro.ts';
 
@@ -15,7 +16,7 @@ test('one Astro project reaches ESLint, astro check, and Prettier, and passes af
     const root = sandbox.path;
     const environment = await prepareTestRepository(root, {
         configurations: ['typescript', 'astro', 'format'],
-        dependencies: { astro: '7.3.2' },
+        dependencies: { astro: astroManifest.version },
         tsconfig: COMPONENT_TSCONFIG,
         files: { 'src/answer.ts': COMPONENT_SOURCE, [PAGE]: CLEAN },
     });

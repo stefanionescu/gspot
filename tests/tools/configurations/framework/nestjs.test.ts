@@ -2,11 +2,16 @@
 import { join } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import type { Level } from '#cli/types/configurations.ts';
+import { testModules } from '#tests/harness/environment.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { installedPackage } from '#cli/repository/contracts.ts';
 import type { PackageJson } from '#cli/types/parsers/packages.ts';
+import rxjsManifest from 'rxjs/package.json' with { type: 'json' };
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import coreManifest from '@nestjs/core/package.json' with { type: 'json' };
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import commonManifest from '@nestjs/common/package.json' with { type: 'json' };
 import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 import { REPOSITORY, SWAGGER_DEPENDENCY } from '#tests/config/tools/configurations/framework/nestjs.ts';
 
@@ -59,7 +64,25 @@ describe('the nestjs configuration', () => {
     const resources = new AsyncDisposableStack();
     let testRepository: OwnedTestRepository;
     beforeAll(async () => {
-        testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot, prepareTestRepository));
+        testRepository = resources.use(
+            await createTestRepository(
+                {
+                    ...REPOSITORY,
+                    dependencies: {
+                        '@nestjs/common': commonManifest.version,
+                        '@nestjs/core': coreManifest.version,
+                        'reflect-metadata': installedPackage(
+                            undefined,
+                            testModules,
+                            join(testModules, 'reflect-metadata/package.json'),
+                        )!.version!,
+                        rxjs: rxjsManifest.version,
+                    },
+                },
+                spawnGspot,
+                prepareTestRepository,
+            ),
+        );
     });
     afterAll(async () => {
         await resources.disposeAsync();

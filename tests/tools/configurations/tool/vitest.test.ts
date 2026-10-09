@@ -5,22 +5,29 @@ import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
+import { linkInstalledModules } from '#tests/harness/platforms.ts';
+import vitestManifest from 'vitest/package.json' with { type: 'json' };
 
 import {
     UNTESTED,
     REPOSITORY,
     VITEST_SOURCE,
+    VITEST_PACKAGE,
     PROVIDER_FLOORS,
 } from '#tests/config/tools/configurations/tool/vitest.ts';
+
+const files = {
+    ...REPOSITORY.files,
+    'package.json': JSON.stringify({ ...VITEST_PACKAGE, devDependencies: { vitest: vitestManifest.version } }) + '\n',
+};
 
 test.each(['recommended', 'all'] as const)(
     'native Vitest reports a threshold and its fix in root and child scopes at %s',
     async (level) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, REPOSITORY.files);
-        await createFileTree(join(sandbox.path, 'app'), REPOSITORY.files);
+        await createFileTree(sandbox.path, files);
+        await createFileTree(join(sandbox.path, 'app'), files);
         await linkInstalledModules(join(sandbox.path, 'node_modules'));
         await Bun.write(
             join(sandbox.path, 'gspot.toml'),
@@ -58,8 +65,8 @@ test.each([...PROVIDER_FLOORS])(
     'native Vitest at %s runs with a %i floor without its provider',
     async (level, floor) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, REPOSITORY.files);
-        await createFileTree(join(sandbox.path, 'app'), REPOSITORY.files);
+        await createFileTree(sandbox.path, files);
+        await createFileTree(join(sandbox.path, 'app'), files);
         await linkInstalledModules(join(sandbox.path, 'node_modules'));
         await rm(join(sandbox.path, 'node_modules/@vitest/coverage-v8'));
         await Bun.write(

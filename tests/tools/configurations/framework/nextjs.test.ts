@@ -1,18 +1,29 @@
 // One installed Next.js project: its type check, the framework rules the configuration requires, the delegation of
 // type checking to the Next.js check, and the i18n rules.
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { randomUUID } from 'node:crypto';
 import { rm, writeFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { installedModules } from '#tests/harness/environment.ts';
+import nextManifest from 'next/package.json' with { type: 'json' };
+import { prepareTestRepository } from '#tests/harness/repository.ts';
+import reactManifest from 'react/package.json' with { type: 'json' };
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { NEXT_PAGE, NEXT_LAYOUT } from '#tests/config/samples/nextjs.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
-import { COUNT, CASES, REPOSITORY, BUILD_FAILURE } from '#tests/config/tools/configurations/framework/nextjs.ts';
-import type { TestRepository, InstalledScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import reactDomManifest from 'react-dom/package.json' with { type: 'json' };
+import type { TestRepository, InstalledScenario } from '#tests/types/harness/repository.ts';
+
+import {
+    COUNT,
+    CASES,
+    PACKAGE,
+    REPOSITORY,
+    BUILD_FAILURE,
+} from '#tests/config/tools/configurations/framework/nextjs.ts';
 
 // Runs the named checks alone, expects the exit code, and returns the report.
 async function checked(repository: TestRepository, checks: string[], code: number): Promise<RunReport> {
@@ -107,14 +118,35 @@ async function buildLevels(repository: TestRepository): Promise<void> {
     }
 }
 
-const repository: InstalledScenario = {
-    ...REPOSITORY,
-    dirname: join(installedModules, '../..', `gspot-test-${randomUUID()}`),
-};
 const resources = new AsyncDisposableStack();
-let testRepository: OwnedTestRepository;
+let testRepository: TestRepository;
 beforeAll(async () => {
-    testRepository = resources.use(await createTestRepository(repository, spawnGspot, prepareTestRepository));
+    const scenario: InstalledScenario = {
+        ...REPOSITORY,
+        files: {
+            ...REPOSITORY.files,
+            'package.json':
+                JSON.stringify(
+                    {
+                        ...PACKAGE,
+                        dependencies: {
+                            next: nextManifest.version,
+                            ...PACKAGE.dependencies,
+                            react: reactManifest.version,
+                            'react-dom': reactDomManifest.version,
+                        },
+                    },
+                    null,
+                    4,
+                ) + '\n',
+        },
+    };
+    // Webpack needs the sandbox and linked dependencies on one drive, so it sits beside the checkout.
+    const sandbox = resources.use(
+        await testdir({}, { dirname: join(installedModules, '../..', `gspot-test-${randomUUID()}`) }),
+    );
+    const environment = await prepareTestRepository(sandbox.path, scenario);
+    testRepository = { root: sandbox.path, environment, run: spawnGspot };
 });
 afterAll(async () => {
     await resources.disposeAsync();
@@ -127,21 +159,6 @@ describe('the nextjs configuration', () => {
     test('all builds the app without an enabling flag and recommended omits the build', () =>
         buildLevels(testRepository));
     test('the i18n rules reject literal markup', () => literalMarkup(testRepository));
-});
-
-describe('the nextjs configuration', () => {
-    const resources = new AsyncDisposableStack();
-    let testRepository: OwnedTestRepository;
-    beforeAll(async () => {
-        testRepository = resources.use(
-            await createTestRepository(
-                { ...repository, dirname: join(installedModules, '../..', `gspot-test-${randomUUID()}`) },
-                spawnGspot,
-                prepareTestRepository,
-            ),
-        );
-    });
-    afterAll(() => resources.disposeAsync());
     for (const entry of structuredClone(CASES)) {
         const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
         test(`${entry.check} reports ${where} and passes after the fix`, async () => {

@@ -6,6 +6,7 @@ import { containing } from '#tests/harness/expectations.ts';
 import { applyChanges } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import svelteManifest from 'svelte/package.json' with { type: 'json' };
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 import { REPOSITORY, SVELTE_CLEAN } from '#tests/config/tools/configurations/framework/svelte.ts';
@@ -13,7 +14,13 @@ import { REPOSITORY, SVELTE_CLEAN } from '#tests/config/tools/configurations/fra
 const resources = new AsyncDisposableStack();
 let testRepository: OwnedTestRepository;
 beforeAll(async () => {
-    testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot, prepareTestRepository));
+    testRepository = resources.use(
+        await createTestRepository(
+            { ...REPOSITORY, dependencies: { svelte: svelteManifest.version } },
+            spawnGspot,
+            prepareTestRepository,
+        ),
+    );
 });
 afterAll(async () => {
     await resources.disposeAsync();
