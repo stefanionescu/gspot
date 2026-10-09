@@ -55,20 +55,3 @@ export const NATIVE_LOCKFILES = [
     },
     { ...PYTHON_PROJECT, name: 'uv', client: 'uv', lockfileName: 'uv.lock', arguments: ['lock'] },
 ] as const;
-/** Native Syncpack filenames that were absent from the takeover declarations. */
-export const SYNCPACK_TAKEOVERS = [
-    { file: '.syncpackrc.yaml', source: 'versionGroups:\n  - dependencies: [fixture]\n    isIgnored: true\n' },
-    { file: '.syncpackrc.yml', source: 'versionGroups:\n  - dependencies: [fixture]\n    isIgnored: true\n' },
-    {
-        file: '.syncpackrc.ts',
-        source: 'export default { versionGroups: [{ dependencies: ["fixture"], isIgnored: true }] };\n',
-    },
-    {
-        file: '.syncpackrc.mjs',
-        source: 'export default { versionGroups: [{ dependencies: ["fixture"], isIgnored: true }] };\n',
-    },
-    {
-        file: 'syncpack.config.ts',
-        source: 'export default { versionGroups: [{ dependencies: ["fixture"], isIgnored: true }] };\n',
-    },
-];
