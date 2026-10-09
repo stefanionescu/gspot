@@ -145,7 +145,8 @@ test('an unchanged policy does not publish or change its native identity', async
     const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, AUTHORED_POLICY);
     const input = preparePolicy(sandbox.path);
-    const before = await stat(path);
+    await using original = await open(path, 'r');
+    const before = await original.stat();
     using log = openOwnership(sandbox.path);
     writePolicyFile({
         text: input.text,
@@ -155,7 +156,7 @@ test('an unchanged policy does not publish or change its native identity', async
         },
     });
     const after = await stat(path);
-    expect(await readFile(path, 'utf8')).toBe(AUTHORED_POLICY);
+    expect(await original.readFile('utf8')).toBe(AUTHORED_POLICY);
     expect(after.ino).toBe(before.ino);
     expect(after.mtimeMs).toBe(before.mtimeMs);
     expect(after.mode).toBe(before.mode);

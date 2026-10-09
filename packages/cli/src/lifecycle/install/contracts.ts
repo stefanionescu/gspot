@@ -20,7 +20,6 @@ import { inspectTool, toolAvailability } from '#cli/tools/public.ts';
 import { runTool, installationDiagnostics } from '#cli/tools/contracts.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git/public.ts';
 import type { HookPlan, HookStatus, HookContext } from '#cli/types/lifecycle/install.ts';
-import { statSync, lstatSync, mkdirSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 import {
     VALE_CONFIG,
@@ -28,6 +27,19 @@ import {
     STYLES_DIRECTORY,
     VALE_PACKAGE_DIRECTORY,
 } from '#cli/config/platform/locations.ts';
+import {
+    openSync,
+    statSync,
+    closeSync,
+    constants,
+    fstatSync,
+    lstatSync,
+    mkdirSync,
+    existsSync,
+    readdirSync,
+    readFileSync,
+    writeFileSync,
+} from 'node:fs';
 
 // Copies the Vale configuration and the gspot style into the folder vale sync runs in.
 function stageInputs(owner: ValeInstallation['owner'], files: Root, work: string): void {
@@ -196,9 +208,22 @@ export function hookStatus({ policy, repository }: HookContext): HookStatus {
                 hook.kind === 'hooksPath' ? hooksDirectory(repository.root) : resolve(repository.root, hook.path);
             return hook.files.length === 0 ? [directory] : hook.files.map((file) => resolve(directory, file));
         });
-        const ready = paths.some(
-            (file) => statSync(file).isFile() && readFileSync(file, 'utf8').includes('gspot check --hook'),
-        );
+        const ready = paths.some((file) => {
+            let descriptor: number;
+            try {
+                descriptor = openSync(file, constants.O_RDONLY | constants.O_NONBLOCK);
+            } catch (error) {
+                if (!statSync(file).isFile()) return false;
+                throw error;
+            }
+            try {
+                return (
+                    fstatSync(descriptor).isFile() && readFileSync(descriptor, 'utf8').includes('gspot check --hook')
+                );
+            } finally {
+                closeSync(descriptor);
+            }
+        });
         return {
             ready,
             text: ready

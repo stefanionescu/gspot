@@ -1,7 +1,9 @@
 // Git runs the gspot hooks through core.hooksPath; a repository that already runs hooks keeps them.
-import { test, expect } from 'bun:test';
+import * as fs from 'node:fs';
+import { promisify } from 'node:util';
 import { join, delimiter } from 'node:path';
 import { rm, chmod } from 'node:fs/promises';
+import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
@@ -9,8 +11,8 @@ import * as processes from '#cli/platform/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { installCommand } from '#cli/commands/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { isPosix } from '#tests/config/harness/platforms.ts';
 import { readGitSetting } from '#cli/platform/git/public.ts';
+import { isPosix } from '#tests/config/harness/platforms.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
@@ -158,4 +160,134 @@ test('a nested repository reads foreign hooks from the native Git hooks director
     expect(absent.ready).toBe(false);
     expect(absent.text).toContain('gspot check --hook pre-commit');
     expect(readGitSetting(root, 'core.hooksPath')).toBe('.githooks');
+});
+
+test.each([false, true])(
+    'foreign hook readiness keeps the opened file when its pathname changes (ready: %s)',
+    async (isReady) => {
+        await using sandbox = await testdir();
+        const hook = join(sandbox.path, '.githooks/pre-commit');
+        const line = '#!/bin/sh\n';
+        const command = 'gspot check --hook pre-commit\n';
+        const original = line + (isReady ? command : 'exit 0\n');
+        const replacement = line + (isReady ? 'exit 0\n' : command);
+        await createFileTree(sandbox.path, {
+            'app/gspot.toml': buildPolicy([], { tables: '[hooks]\nenabled = true\n' }),
+            '.githooks/pre-commit': original,
+        });
+        gitOutput(sandbox.path, ['init', '-q']);
+        gitOutput(sandbox.path, ['config', 'core.hooksPath', '.githooks']);
+        const context = await hooksOf(join(sandbox.path, 'app'));
+        const open = fs.openSync;
+        const descriptors: number[] = [];
+        const opened = spyOn(fs, 'openSync').mockImplementation((path, flags, mode) => {
+            const descriptor = open(path, flags, mode);
+            if (path === hook) {
+                descriptors.push(descriptor);
+                // eslint-disable-next-line n/no-sync -- reason: The synchronous open spy replaces the path before the readiness read.
+                fs.renameSync(hook, `${hook}.original`);
+                // eslint-disable-next-line n/no-sync -- reason: The synchronous open spy writes the replacement before the readiness read.
+                fs.writeFileSync(hook, replacement);
+            }
+            return descriptor;
+        });
+        const stated = spyOn(fs, 'fstatSync');
+        const read = spyOn(fs, 'readFileSync');
+        const closed = spyOn(fs, 'closeSync');
+        try {
+            expect(hookStatus(context).ready).toBe(isReady);
+            expect(descriptors).toHaveLength(1);
+            expect(stated).toHaveBeenCalledWith(...descriptors);
+            expect(read).toHaveBeenCalledWith(...descriptors, 'utf8');
+            expect(closed).toHaveBeenCalledWith(...descriptors);
+            expect(
+                await Promise.all(descriptors.map((descriptor) => promisify(fs.fstat)(descriptor))).catch(
+                    (error: unknown) => error,
+                ),
+            ).toMatchObject({ code: 'EBADF' });
+        } finally {
+            closed.mockRestore();
+            read.mockRestore();
+            stated.mockRestore();
+            opened.mockRestore();
+        }
+        expect(await Bun.file(hook).text()).toBe(replacement);
+        expect(await Bun.file(`${hook}.original`).text()).toBe(original);
+        expect(readGitSetting(join(sandbox.path, 'app'), 'core.hooksPath')).toBe('.githooks');
+    },
+);
+
+test('foreign hook readiness refuses a directory without reading and closes its descriptor', async () => {
+    await using sandbox = await testdir();
+    const hook = join(sandbox.path, '.githooks/pre-commit');
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy([], { tables: '[hooks]\nenabled = true\n' }),
+        '.githooks/pre-commit/note': 'gspot check --hook pre-commit\n',
+    });
+    gitOutput(sandbox.path, ['init', '-q']);
+    gitOutput(sandbox.path, ['config', 'core.hooksPath', '.githooks']);
+    const context = await hooksOf(sandbox.path);
+    const open = fs.openSync;
+    const descriptors: number[] = [];
+    const opened = spyOn(fs, 'openSync').mockImplementation((path, flags, mode) => {
+        const descriptor = open(path, flags, mode);
+        if (path === hook) descriptors.push(descriptor);
+        return descriptor;
+    });
+    const read = spyOn(fs, 'readFileSync');
+    const closed = spyOn(fs, 'closeSync');
+    try {
+        expect(hookStatus(context).ready).toBe(false);
+        expect(descriptors).toHaveLength(1);
+        expect(read).not.toHaveBeenCalledWith(...descriptors, 'utf8');
+        expect(closed).toHaveBeenCalledWith(...descriptors);
+        expect(
+            await Promise.all(descriptors.map((descriptor) => promisify(fs.fstat)(descriptor))).catch(
+                (error: unknown) => error,
+            ),
+        ).toMatchObject({ code: 'EBADF' });
+    } finally {
+        closed.mockRestore();
+        read.mockRestore();
+        opened.mockRestore();
+    }
+});
+test('foreign hook readiness closes its descriptor and preserves a read failure', async () => {
+    await using sandbox = await testdir();
+    const hook = join(sandbox.path, '.githooks/pre-commit');
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy([], { tables: '[hooks]\nenabled = true\n' }),
+        '.githooks/pre-commit': '#!/bin/sh\ngspot check --hook pre-commit\n',
+    });
+    gitOutput(sandbox.path, ['init', '-q']);
+    gitOutput(sandbox.path, ['config', 'core.hooksPath', '.githooks']);
+    const context = await hooksOf(sandbox.path);
+    const open = fs.openSync;
+    const originalRead = fs.readFileSync;
+    const descriptors: number[] = [];
+    const failure = new Error('Foreign hook read failed');
+    const opened = spyOn(fs, 'openSync').mockImplementation((path, flags, mode) => {
+        const descriptor = open(path, flags, mode);
+        if (path === hook) descriptors.push(descriptor);
+        return descriptor;
+    });
+    const read = spyOn(fs, 'readFileSync').mockImplementation(((path, options) => {
+        if (typeof path === 'number' && descriptors.includes(path)) throw failure;
+        return originalRead(path, options);
+    }) as typeof originalRead);
+    const closed = spyOn(fs, 'closeSync');
+    try {
+        expect(() => hookStatus(context)).toThrow(failure);
+        expect(descriptors).toHaveLength(1);
+        expect(closed).toHaveBeenCalledWith(...descriptors);
+        expect(
+            await Promise.all(descriptors.map((descriptor) => promisify(fs.fstat)(descriptor))).catch(
+                (error: unknown) => error,
+            ),
+        ).toMatchObject({ code: 'EBADF' });
+    } finally {
+        closed.mockRestore();
+        read.mockRestore();
+        opened.mockRestore();
+    }
 });
