@@ -177,17 +177,17 @@ export async function openSession(rootPath: string, policyFiles = readPolicy(roo
         });
     }
     const { scopes, selectInstaller } = await scopeSelections(policy, repository, manifests);
-    let resolved: PackageInstaller | undefined;
-    let resolvedPython: Promise<string> | undefined;
+    let installerState: PackageInstaller | undefined;
+    let uvPath: Promise<string> | undefined;
     const session: ToolSession = {
         pythonInstaller: (cancelSignal) => {
-            resolvedPython ??= installUv(root, policy.runner, cancelSignal);
-            return resolvedPython;
+            uvPath ??= installUv(root, policy.runner, cancelSignal);
+            return uvPath;
         },
         packageInstaller() {
             if (installer === undefined) return undefined;
-            resolved ??= inspectPackageInstaller(root, installer);
-            return resolved;
+            installerState ??= inspectPackageInstaller(root, installer);
+            return installerState;
         },
         root,
         version: RUNNING_VERSION,

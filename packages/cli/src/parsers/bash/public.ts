@@ -9,7 +9,7 @@ import type {
     TemporaryPath,
     CleanupContext,
     BashParseOptions,
-    TemporaryBindings,
+    TemporaryTargets,
 } from '#cli/types/parsers/bash.ts';
 
 // An inner function's parameters belong to it rather than to an enclosing function.
@@ -73,7 +73,7 @@ function isTemporaryValue(assignment: Node): boolean {
 }
 
 // Bare local declarations can shadow a global temporary even without an assignment.
-function localBindings(root: Node): Set<string> {
+function localNames(root: Node): Set<string> {
     const declarations = root
         .descendantsOfType('declaration_command')
         .filter(
@@ -96,9 +96,9 @@ function localBindings(root: Node): Set<string> {
 }
 
 // Reassigning the same variable in its function makes a deferred cleanup target ambiguous.
-function temporaryBindings(root: Node): TemporaryBindings {
+function temporaryTargets(root: Node): TemporaryTargets {
     const assignments = root.descendantsOfType('variable_assignment');
-    const locals = localBindings(root);
+    const locals = localNames(root);
     const counts = new Map<string, number>();
     const names = new Map<string, number>();
     for (const assignment of assignments) {
@@ -108,24 +108,24 @@ function temporaryBindings(root: Node): TemporaryBindings {
         counts.set(key, (counts.get(key) ?? 0) + 1);
         names.set(name, (names.get(name) ?? 0) + 1);
     }
-    const bindings = new Map<string, TemporaryPath>();
+    const targets = new Map<string, TemporaryPath>();
     const paths = assignments.flatMap((assignment) => {
         const name = assignment.childForFieldName('name')?.text;
         if (name === undefined || !isTemporaryValue(assignment)) return [];
         const key = JSON.stringify([functionOwner(assignment)?.id, name]);
         const path: TemporaryPath = { name, line: assignment.startPosition.row + 1, cleanupLines: [] };
         const isUnique = locals.has(key) ? counts.get(key) === 1 : names.get(name) === 1;
-        if (isUnique) bindings.set(key, path);
+        if (isUnique) targets.set(key, path);
         return [path];
     });
-    return { paths, bindings, declared: new Set([...counts.keys(), ...locals]) };
+    return { paths, targets, declared: new Set([...counts.keys(), ...locals]) };
 }
 
 // A cleanup argument must contain only the temporary variable.
 function temporaryTarget(
     argument: Node,
     owner: number | undefined,
-    registry: TemporaryBindings,
+    registry: TemporaryTargets,
 ): TemporaryPath | undefined {
     const references = argument.type === 'string' ? argument.namedChildren : [argument];
     if (references.length !== 1) return undefined;
@@ -136,7 +136,7 @@ function temporaryTarget(
     if (![`$${name}`, `\${${name}}`].includes(reference.text)) return undefined;
     const key = JSON.stringify([owner, name]);
     const target = registry.declared.has(key) ? key : JSON.stringify([undefined, name]);
-    return registry.bindings.get(target);
+    return registry.targets.get(target);
 }
 
 // All removals on a source line must target known temporaries before that line receives an exemption.
@@ -167,7 +167,7 @@ function removalTargets(command: Node): Node[] {
 
 // Parse deferred trap bodies with the same grammar before treating any recursive removal as cleanup.
 async function temporaryCleanups(root: Node, commands: Node[], options: BashParseOptions): Promise<TemporaryPath[]> {
-    const registry = temporaryBindings(root);
+    const registry = temporaryTargets(root);
     const lines = new Map<number, Array<TemporaryPath | undefined>>(
         commands
             .filter((command) => command.childForFieldName('name')?.text === 'rm')
@@ -192,7 +192,7 @@ async function temporaryCleanups(root: Node, commands: Node[], options: BashPars
                 owner: functionOwner(trap)?.id,
                 registry: {
                     ...registry,
-                    bindings: new Map([...registry.bindings].filter(([, path]) => !assigned.has(path.name))),
+                    targets: new Map([...registry.targets].filter(([, path]) => !assigned.has(path.name))),
                 },
                 lines,
             });

@@ -32,7 +32,7 @@ function registryFor(name: string, env: Record<string, string>): string | undefi
 
 // Whether a Bun lockfile entry resolved the standard tarball of a valid npm version through the configured registry.
 function isStandardTarball(entry: BunPackage, env: Record<string, string>): boolean {
-    const [identity, resolved, , integrity] = entry;
+    const [identity, address, , integrity] = entry;
     const separator = identity.lastIndexOf('@');
     const name = identity.slice(0, separator);
     const version = identity.slice(separator + 1);
@@ -41,13 +41,13 @@ function isStandardTarball(entry: BunPackage, env: Record<string, string>): bool
     if (registry === undefined) return false;
     const base = registry.endsWith('/') ? registry : `${registry}/`;
     const filename = posix.basename(name);
-    return resolved === new URL(`${name}/-/${filename}-${version}.tgz`, base).href;
+    return address === new URL(`${name}/-/${filename}-${version}.tgz`, base).href;
 }
 
 // The registry-relative form of a resolved URL under the registry, or undefined when it lies elsewhere.
-function relativeReference(resolved: string, base: URL): string | undefined {
-    if (!HTTP_URL.test(resolved)) return undefined;
-    const url = new URL(resolved);
+function relativeReference(address: string, base: URL): string | undefined {
+    if (!HTTP_URL.test(address)) return undefined;
+    const url = new URL(address);
     if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname)) return undefined;
     return `${url.pathname.slice(base.pathname.length)}${url.search}${url.hash}`;
 }

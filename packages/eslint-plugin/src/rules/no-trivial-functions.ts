@@ -54,7 +54,7 @@ function isArrayElementCall(node: TSESTree.ArrayExpression): boolean {
 }
 
 // The bindings a function can be called through: its own name, and the variable it is assigned to.
-function bindings(node: ImplementedFunction, source: TSESLint.SourceCode): TSESLint.Scope.Variable[] {
+function aliases(node: ImplementedFunction, source: TSESLint.SourceCode): TSESLint.Scope.Variable[] {
     const owners: FunctionBinding[] = [];
     if (node.type !== AST_NODE_TYPES.ArrowFunctionExpression && node.id !== null) owners.push({ node, id: node.id });
     if (node.parent.type === AST_NODE_TYPES.VariableDeclarator) owners.push({ node: node.parent, id: node.parent.id });
@@ -103,7 +103,7 @@ function isInlineValue(node: ImplementedFunction): boolean {
  * @returns whether a reference to the function sits inside its own body
  */
 function isRecursive(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
-    return bindings(node, source)
+    return aliases(node, source)
         .flatMap((variable) => variable.references)
         .some(
             (reference) =>
@@ -122,7 +122,7 @@ function isSharedFunction(node: ImplementedFunction, source: TSESLint.SourceCode
         owner.parent.type === AST_NODE_TYPES.ExportDefaultDeclaration
     )
         return true;
-    const variables = bindings(node, source);
+    const variables = aliases(node, source);
     return variables.some((variable) => {
         const reads = variable.references.filter(
             (reference) => reference.isRead() && reference.identifier.parent.type !== AST_NODE_TYPES.TSTypeQuery,

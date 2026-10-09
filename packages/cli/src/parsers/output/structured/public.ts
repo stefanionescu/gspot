@@ -11,9 +11,9 @@ import type { Finding, KnipReport, OutputSpec, FindingPlace, JsonFindingSpec } f
 
 function indexedArtifact(artifact: SarifArtifactLocation, run: SarifRun): SarifArtifactLocation {
     if (artifact.uri !== undefined || artifact.index === undefined) return artifact;
-    const resolved = run.artifacts?.[artifact.index]?.location;
-    if (resolved?.uri === undefined) throw new Error('SARIF reported a missing artifact location.');
-    return resolved;
+    const location = run.artifacts?.[artifact.index]?.location;
+    if (location?.uri === undefined) throw new Error('SARIF reported a missing artifact location.');
+    return location;
 }
 
 // Source URIs must resolve inside the selected copy before path-specific exceptions can apply.

@@ -20,7 +20,7 @@ export function modulePath(input: ModuleContext, path: string, specifier: string
         allowJs: true,
         resolveJsonModule: true,
     };
-    const resolved = ts.resolveModuleName(specifier, file, options, ts.sys).resolvedModule;
-    if (resolved === undefined) return undefined;
-    return toPosix(relative(input.root, resolved.resolvedFileName));
+    const module = ts.resolveModuleName(specifier, file, options, ts.sys).resolvedModule;
+    if (module === undefined) return undefined;
+    return toPosix(relative(input.root, module.resolvedFileName));
 }

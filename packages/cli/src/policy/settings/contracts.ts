@@ -9,11 +9,11 @@ import type {
     Policy,
     PolicyTable,
     SettingState,
+    SettingEntry,
     KnownSettings,
     PolicyLocation,
     ScopeSelection,
     AuthoredSetting,
-    ResolvedSetting,
     DeclarationMatch,
     ArchitectureDeclaration,
 } from '#cli/types/policy/settings.ts';
@@ -222,7 +222,7 @@ export function settingValue(
     policy: Policy,
     key: string,
     scope?: string,
-): ResolvedSetting | undefined {
+): SettingEntry | undefined {
     const match = declarationFor(surface, key);
     if (!match) return undefined;
     const { declaration } = match;
@@ -254,7 +254,7 @@ export function settingValue(
  * @param scope the scope path whose table applies last, if any
  * @returns the resolved settings in key order
  */
-export function listSettings(surface: KnownSettings, policy: Policy, scope?: string): ResolvedSetting[] {
+export function listSettings(surface: KnownSettings, policy: Policy, scope?: string): SettingEntry[] {
     const keys = surface.declarations
         .keys()
         .toArray()

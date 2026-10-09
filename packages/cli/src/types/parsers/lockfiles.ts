@@ -7,7 +7,7 @@ type ToolProjectLockfile = Extract<Lockfile, { toolProject: true }>;
 /** One npm package entry in a Bun lockfile, with each slot derived from its parser schema. */
 export type BunPackage = [
     identity: z.infer<typeof bunPackageSchema>[0],
-    resolved: z.infer<typeof bunPackageSchema>[1],
+    address: z.infer<typeof bunPackageSchema>[1],
     metadata: z.infer<typeof bunPackageSchema>[2],
     integrity: z.infer<typeof bunPackageSchema>[3],
 ];

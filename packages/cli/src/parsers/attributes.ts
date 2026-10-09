@@ -34,16 +34,16 @@ export function attributeRules(text: string, folder: string): AttributeRule[] {
  * @param previous the attributes inherited from earlier declarations
  * @returns the effective attributes without mutating the inherited table
  */
-export function resolvedAttributes(declarations: string[], previous: Record<string, string>): Record<string, string> {
-    const resolved = { ...previous };
+export function attributesFor(declarations: string[], previous: Record<string, string>): Record<string, string> {
+    const attributes = { ...previous };
     for (const match of declarations) {
         const [name = '', value] = match.split('=');
-        if (name.startsWith('!')) Reflect.deleteProperty(resolved, name.slice(1));
-        else if (name.startsWith('-')) resolved[name.slice(1)] = 'unset';
-        else resolved[name] = value ?? 'set';
-        if (match === 'binary') Object.assign(resolved, { diff: 'unset', merge: 'unset', text: 'unset' });
+        if (name.startsWith('!')) Reflect.deleteProperty(attributes, name.slice(1));
+        else if (name.startsWith('-')) attributes[name.slice(1)] = 'unset';
+        else attributes[name] = value ?? 'set';
+        if (match === 'binary') Object.assign(attributes, { diff: 'unset', merge: 'unset', text: 'unset' });
     }
-    return resolved;
+    return attributes;
 }
 
 /**

@@ -12,37 +12,37 @@ test.each([
     ['github:acme/policies', `${RAW_HOST}/acme/policies/HEAD/${TEMPLATE_FILE}`],
     ['github:acme/policies/team/house.template.toml@v2', `${RAW_HOST}/acme/policies/v2/team/house.template.toml`],
 ])('%s is fetched from %s', async (source, address) => {
-    using fetched = spyOn(globalThis, 'fetch').mockResolvedValue(new Response(TEMPLATE));
+    using request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response(TEMPLATE));
     const template = await getTemplate(source, '.');
-    expect(fetched.mock.calls[0]?.[0]).toBe(address);
+    expect(request.mock.calls[0]?.[0]).toBe(address);
     expect(template.tables.configurations).toStrictEqual(['bash']);
 });
 
 test('a template address that answers 404 is refused with its status', async () => {
-    using fetched = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('Not found', { status: 404 }));
+    using request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('Not found', { status: 404 }));
     expect(await rejection(getTemplate('github:acme/missing', '.'))).toContain('answered 404');
-    expect(fetched).toHaveBeenCalledTimes(1);
+    expect(request).toHaveBeenCalledTimes(1);
 });
 
 test('a template address over plain http is refused before any request', async () => {
-    using fetched = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('No request is expected.'));
+    using request = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('No request is expected.'));
 
     // eslint-disable-next-line unicorn/prefer-https -- reason: This negative test proves plain HTTP is refused before any network request.
     expect(await rejection(getTemplate('http://example.com/house.template.toml', '.'))).toContain('https, not http');
-    expect(fetched).not.toHaveBeenCalled();
+    expect(request).not.toHaveBeenCalled();
 });
 
 test('private GitHub templates receive environment credentials without sending them to other hosts', async () => {
     const previous = environmentVariables()['GITHUB_TOKEN'];
-    using fetched = spyOn(globalThis, 'fetch')
+    using request = spyOn(globalThis, 'fetch')
         .mockResolvedValueOnce(new Response(TEMPLATE))
         .mockResolvedValueOnce(new Response(TEMPLATE));
     setEnvironmentVariable('GITHUB_TOKEN', 'fixture-github-token');
     try {
         await getTemplate('github:acme/policies', '.');
         await getTemplate('https://example.com/house.template.toml', '.');
-        expect(fetched.mock.calls[0]?.[1]?.headers).toStrictEqual({ Authorization: 'Bearer fixture-github-token' });
-        expect(fetched.mock.calls[1]?.[1]?.headers).toStrictEqual({});
+        expect(request.mock.calls[0]?.[1]?.headers).toStrictEqual({ Authorization: 'Bearer fixture-github-token' });
+        expect(request.mock.calls[1]?.[1]?.headers).toStrictEqual({});
     } finally {
         setEnvironmentVariable('GITHUB_TOKEN', previous);
     }

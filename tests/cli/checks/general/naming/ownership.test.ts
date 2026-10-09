@@ -19,7 +19,7 @@ test.each(FRAMEWORK_CONTRACTS)(
     async ({ configuration, names, banned }) => {
         await using sandbox = await testdir();
         const source = names.map((name) => `export function ${name}() { return null; }\n`).join('');
-        const bindings = names.map((name) => `export const ${name} = () => null;\n`).join('');
+        const variables = names.map((name) => `export const ${name} = () => null;\n`).join('');
         const declarations = names.map((name) => `    ${name}() { return null; }\n`).join('');
         const methods = `export class Reader {\n${declarations}}\n`;
         await createFileTree(sandbox.path, {
@@ -32,7 +32,7 @@ test.each(FRAMEWORK_CONTRACTS)(
             }),
             'entry.ts': source,
             'app/entry.ts': source,
-            'app/bindings.ts': bindings,
+            'app/bindings.ts': variables,
             'app/reader.ts': methods,
             'app/parameters.ts': `export function readValue(${names[0]!}: string) { return null; }\n`,
             'sibling/entry.ts': source,
@@ -60,7 +60,7 @@ test.each(FRAMEWORK_CONTRACTS)(
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.report.checks.every(({ findings }) => findings.length === 0)).toBe(true);
         expect(await Bun.file(join(sandbox.path, 'app/entry.ts')).text()).toBe(source);
-        expect(await Bun.file(join(sandbox.path, 'app/bindings.ts')).text()).toBe(bindings);
+        expect(await Bun.file(join(sandbox.path, 'app/bindings.ts')).text()).toBe(variables);
         expect(await Bun.file(join(sandbox.path, 'app/reader.ts')).text()).toBe(methods);
     },
 );

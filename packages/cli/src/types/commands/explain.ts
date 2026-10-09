@@ -1,6 +1,6 @@
 import type { OwnedCheck } from '#cli/types/configurations.ts';
 import type { FileKind } from '#cli/types/repository/inventory.ts';
-import type { ResolvedSetting, RepositoryDefinition } from '#cli/types/policy/settings.ts';
+import type { SettingEntry, RepositoryDefinition } from '#cli/types/policy/settings.ts';
 
 export type Explanation = {
     kind: 'check' | 'tool-rule' | 'configuration' | 'setting' | 'path';
@@ -23,7 +23,7 @@ export type PathExplanation = {
     remedy?: string;
 };
 
-export type SettingScope = { scope: string; shipped: unknown; effective: ResolvedSetting | undefined };
+export type SettingScope = { scope: string; shipped: unknown; effective: SettingEntry | undefined };
 
 export type ConfigurationExplanation = {
     name: string;

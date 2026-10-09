@@ -40,7 +40,7 @@ export type PolicyError = { path: KeyPath; message: string };
 export type FormatSettings = Required<Defined<Omit<NonNullable<RawPolicy['format']>, 'overrides'>>>;
 
 /** Values validated once for a selected scope and then consumed by checks and generators. */
-export type ResolvedSettings = {
+export type ScopeSettings = {
     settings: Record<string, unknown>;
     values: ActiveSettingNamespaces;
     limits: z.output<typeof limitTableSchema>;
@@ -61,7 +61,7 @@ export type ScopeView = {
     verbatim: (name: string) => Record<string, unknown> | undefined;
 };
 
-export type ResolvedSetting = {
+export type SettingEntry = {
     key: string;
     declaration: SettingDeclaration;
     value: unknown;
@@ -131,7 +131,7 @@ export type Policy = {
     scopeTables: Record<string, Partial<Policy> & Pick<Policy, 'authored'>>;
 };
 
-export type AuthoredSetting = Pick<ResolvedSetting, 'value' | 'reason'>;
+export type AuthoredSetting = Pick<SettingEntry, 'value' | 'reason'>;
 
 export type Limits = {
     root: LimitTable;

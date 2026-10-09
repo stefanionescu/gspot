@@ -16,7 +16,7 @@ export type HouseSourceInput = Omit<SourceInput, 'files'> & {
 /** Native imported environment identities and lexical shadows, indexed by scope node. */
 export type EnvironmentKind = 'os' | 'environ' | 'getenv' | undefined;
 export type EnvironmentScope = Map<string, EnvironmentKind>;
-export type EnvironmentBindings = Map<number, EnvironmentScope>;
+export type EnvironmentNames = Map<number, EnvironmentScope>;
 
 /** Declaration visibility and identity from a language's native syntax. */
 export type HouseDeclaration = { node: Node; name: string; visibility: string; isDunder: boolean };

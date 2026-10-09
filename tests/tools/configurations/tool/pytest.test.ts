@@ -46,8 +46,8 @@ beforeAll(async () => {
         'test_root.py': 'def test_root():\n    assert 2 * 3 == 6\n',
         'app/test_child.py': 'def test_child():\n    assert 3 * 2 == 6\n',
     });
-    const synced = await runTestCommand(['uv', 'sync'], { cwd: sandbox.path });
-    expect(synced.code, synced.stdout + synced.stderr).toBe(0);
+    const setup = await runTestCommand(['uv', 'sync'], { cwd: sandbox.path });
+    expect(setup.code, setup.stdout + setup.stderr).toBe(0);
     lockfile = await Bun.file(join(sandbox.path, 'uv.lock')).text();
 });
 

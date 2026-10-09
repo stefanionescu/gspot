@@ -52,10 +52,10 @@ test('name-only declarations resolve by registry name and refuse an absent owner
         ['owner', owner],
     ]);
     for (const entries of [declarations, new Map([...declarations].toReversed())]) {
-        const resolved = linkManifestTools([...entries.values()]);
-        expect(resolved.get('consumer')?.tools[0]).toBe(owner.tools[0]);
+        const linked = linkManifestTools([...entries.values()]);
+        expect(linked.get('consumer')?.tools[0]).toBe(owner.tools[0]);
         expect(() => {
-            assertManifests(resolved);
+            assertManifests(linked);
         }).not.toThrow();
     }
 });

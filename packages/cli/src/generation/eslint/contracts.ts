@@ -2,7 +2,7 @@ import { posix } from 'node:path';
 import { isRecord } from '#cli/platform/contracts.ts';
 import { activeIgnores } from '#cli/policy/settings/public.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
-import type { ResolvedSelector } from '#cli/types/generation/fragments.ts';
+import type { SelectorPaths } from '#cli/types/generation/fragments.ts';
 import { everyTable, policyValue } from '#cli/policy/settings/contracts.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { byScopeDepth, nestedScopes, pathExpressions } from '#cli/repository/paths/public.ts';
@@ -189,7 +189,7 @@ export function fragmentSelectorGroups(
             (entry) =>
                 isAll && (entry.when === undefined || scope.view.settings[entry.when.setting] === entry.when.value),
         );
-        const resolved: ResolvedSelector[] = [...new Map(enabled.map((entry) => [entry.selector, entry])).values()].map(
+        const applied: SelectorPaths[] = [...new Map(enabled.map((entry) => [entry.selector, entry])).values()].map(
             (entry) => {
                 const files =
                     entry.role === undefined
@@ -209,16 +209,16 @@ export function fragmentSelectorGroups(
             },
         );
         const owners = environmentOwners(scope);
-        if (isAll && owners.length > 0) resolved.push({ ...ENVIRONMENT_SELECTOR, except: owners });
+        if (isAll && owners.length > 0) applied.push({ ...ENVIRONMENT_SELECTOR, except: owners });
         const styles = scope.view.values['tools.eslint']?.import_extensions;
         const entries = styles === undefined ? [] : Object.entries(styles);
         for (const [index, [pattern, style]] of entries.entries())
-            resolved.push({
+            applied.push({
                 ...ALIAS_IMPORT_SELECTORS[style === 'extensionless' ? 'never' : 'always'],
                 ...(pattern === '**/*' ? {} : { files: [pattern] }),
                 except: entries.slice(index + 1).map(([path]) => path),
             });
-        return selectorGroups(resolved).map((group) => ({
+        return selectorGroups(applied).map((group) => ({
             ...group,
             scope: scope.scope.path,
             ignoredScopes: nestedScopes(

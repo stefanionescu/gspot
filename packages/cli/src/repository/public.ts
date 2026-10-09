@@ -8,7 +8,7 @@ import { runGitBlocking } from '#cli/platform/git/contracts.ts';
 import { buildScope } from '#cli/repository/paths/contracts.ts';
 import { MANAGED_BLOCK_START } from '#cli/config/platform/managed-blocks.ts';
 import { trackedEntries, readIndexEntries } from '#cli/repository/contracts.ts';
-import { gitAttributes, attributeRules, resolvedAttributes } from '#cli/parsers/attributes.ts';
+import { gitAttributes, attributesFor, attributeRules } from '#cli/parsers/attributes.ts';
 import { tagEntry, isGitRepository, swiftSourceTags } from '#cli/repository/discovery/contracts.ts';
 import { openRoot, readText, readPrefix, readSource, createReadCache } from '#cli/platform/root/public.ts';
 import { DOT_GSPOT, POLICY_FILE, STYLES_DIRECTORY, VALE_PACKAGE_DIRECTORY } from '#cli/config/platform/locations.ts';
@@ -251,7 +251,7 @@ export function readAttributes(root: string, paths: string[], hasGit: boolean): 
     for (const path of paths) {
         let effective: Record<string, string> = {};
         for (const rule of rules.filter((entry) => entry.matcher(path)))
-            effective = resolvedAttributes(rule.attributes, effective);
+            effective = attributesFor(rule.attributes, effective);
         attributes.set(path, effective);
     }
     return attributes;

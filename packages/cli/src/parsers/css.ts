@@ -10,8 +10,8 @@ function moduleBinding(statement: ts.ImportDeclaration): ts.Identifier | undefin
     const clause = statement.importClause;
     if (clause === undefined || clause.phaseModifier === ts.SyntaxKind.TypeKeyword) return undefined;
     if (clause.name !== undefined) return clause.name;
-    const bindings = clause.namedBindings;
-    return bindings !== undefined && ts.isNamespaceImport(bindings) ? bindings.name : undefined;
+    const members = clause.namedBindings;
+    return members !== undefined && ts.isNamespaceImport(members) ? members.name : undefined;
 }
 
 // Resolve one source file against the selected stylesheets before grouping its lexical binding reads.

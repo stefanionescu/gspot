@@ -265,16 +265,16 @@ export function compilerHost(
         );
     host.getCurrentDirectory = () => join(root, scope);
     host.realpath = (path) => {
-        const resolved = nativeRealpath?.(path) ?? path;
+        const target = nativeRealpath?.(path) ?? path;
         const local = toPosix(relative(root, path));
         if (
             (isInside(local) && local.split('/').includes('node_modules')) ||
             [...libraries].some((library) => isInside(relative(library, path)))
         ) {
-            const marker = toPosix(resolved).indexOf('/node_modules/');
-            if (marker !== -1) libraries.add(resolved.slice(0, marker + '/node_modules'.length));
+            const marker = toPosix(target).indexOf('/node_modules/');
+            if (marker !== -1) libraries.add(target.slice(0, marker + '/node_modules'.length));
         }
-        return resolved;
+        return target;
     };
     host.readFile = (path) =>
         [...libraries].some((library) => isInside(relative(library, path)))

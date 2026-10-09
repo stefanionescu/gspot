@@ -67,16 +67,16 @@ test('fetch mapping selectors do not override the native remote-tracking namespa
 test('new references without fetched comparison objects check the full tree', async () => {
     await using sandbox = await testdir();
     const { reviewed, broken, zero } = await preparePushRepository(sandbox.path);
-    const noFetched = await runGspot(
+    const noRemote = await runGspot(
         sandbox.path,
         [...PUSH_CHECK_ARGV, 'unseen', 'unused'],
         {},
         { stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n` },
     );
-    expect(noFetched.code, noFetched.stdout + noFetched.stderr).toBe(1);
+    expect(noRemote.code, noRemote.stdout + noRemote.stderr).toBe(1);
     expect(
         new Set(
-            (JSON.parse(noFetched.stdout) as PushReport).revisions[0]!.report.checks[0]?.findings.map(
+            (JSON.parse(noRemote.stdout) as PushReport).revisions[0]!.report.checks[0]?.findings.map(
                 (finding) => finding.file,
             ),
         ),

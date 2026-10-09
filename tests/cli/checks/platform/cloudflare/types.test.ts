@@ -22,7 +22,7 @@ import {
 } from '#tests/config/cli/checks/platform/cloudflare/types.ts';
 
 // A test Worker whose generator stands in for wrangler types: `bindings.txt` is what it writes, or the failure.
-async function applyChanges(root: string, scope: string, bindings: string): Promise<WorkerTypesProject> {
+async function applyChanges(root: string, scope: string, content: string): Promise<WorkerTypesProject> {
     await createFileTree(root, {
         'gspot.toml':
             scope === ''
@@ -30,7 +30,7 @@ async function applyChanges(root: string, scope: string, bindings: string): Prom
                 : buildPolicy([], { tables: `[scope."${scope}"]\nconfigurations = ["cloudflare"]\n` }),
         [join(scope, 'package.json')]: '{"private":true}\n',
         [join(scope, 'worker-configuration.d.ts')]: '// Committed types\n',
-        [join(scope, 'bindings.txt')]: bindings,
+        [join(scope, 'bindings.txt')]: content,
         [join(scope, 'types')]: CLOUDFLARE_TYPES_GENERATOR,
     });
     commitAll(root);

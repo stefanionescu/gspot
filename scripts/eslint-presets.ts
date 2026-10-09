@@ -94,7 +94,7 @@ if (standard.version !== versions[STYLELINT_RULE_NAMES_MODULE] || installedStyle
     );
 const exportedStylelint: unknown = await import(pathToFileURL(stylelintEntry).href);
 const { default: stylelint } = stylelintModuleSchema.parse(exportedStylelint);
-const resolved = stylelintConfigSchema.parse(
+const style = stylelintConfigSchema.parse(
     await stylelint.resolveConfig(join(process.cwd(), 'capture.css'), {
         config: { extends: standardEntry },
     }),
@@ -105,7 +105,7 @@ prepared.set(
         package: standard.name,
         version: standard.version,
         source: 'resolveConfig.rules',
-        rules: Object.keys(resolved.rules).toSorted((first, second) => first.localeCompare(second)),
+        rules: Object.keys(style.rules).toSorted((first, second) => first.localeCompare(second)),
     }),
 );
 for (const [path, value] of prepared) await writeFormattedJson(path, value);

@@ -128,13 +128,13 @@ test.each(observations)(
         using repeated = await visitParsed({ ...input, files: selectedFiles }, reader, disposeObservations);
         expect(repeated.value).toBe(first.value);
         expect(sources[0]!.tree.rootNode.text).toBe(files[paths[0]]!);
-        using scoped = await visitParsed(
+        using child = await visitParsed(
             { ...input, files: [{ path: paths[1], kind: 'source' }] },
             reader,
             disposeObservations,
         );
-        expect(scoped.value).not.toBe(first.value);
-        expect(scoped.value.functions.map(({ path, name }) => ({ path, name }))).toStrictEqual([
+        expect(child.value).not.toBe(first.value);
+        expect(child.value.functions.map(({ path, name }) => ({ path, name }))).toStrictEqual([
             { path: paths[1], name: 'deliver' },
         ]);
         first[Symbol.dispose]();

@@ -89,8 +89,8 @@ function hostCandidates(root: string, name: string, names: string[]): string[] {
     return candidates.flatMap((path) => {
         if (!path.startsWith(`${launcherDirectory}/`) && !path.startsWith(`${launcherDirectory}\\`)) return [path];
         if (mise === null) return [];
-        const resolved = runBlocking([mise, 'which', name], { cwd: root, timeoutMs: VERSION_TIMEOUT_MS });
-        return resolved.code === 0 ? [resolved.stdout.trim()] : [];
+        const located = runBlocking([mise, 'which', name], { cwd: root, timeoutMs: VERSION_TIMEOUT_MS });
+        return located.code === 0 ? [located.stdout.trim()] : [];
     });
 }
 

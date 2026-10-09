@@ -43,7 +43,7 @@ function bindingCategory(node: Node): string {
     return parent === 'source_file' && isConstant ? 'constants' : 'variables';
 }
 
-function addBindings(sink: ExtractSink, root: Node): void {
+function addNames(sink: ExtractSink, root: Node): void {
     for (const node of root.descendantsOfType('property_declaration')) {
         const category = bindingCategory(node);
         for (const pattern of node.childrenForFieldName('name')) {
@@ -70,7 +70,7 @@ export function swiftIdentifiers(root: Node, file: string): Identifier[] {
     const sink: ExtractSink = { file, language: 'swift', out: [] };
     addTypes(sink, root);
     addFunctions(sink, root);
-    addBindings(sink, root);
+    addNames(sink, root);
     addCases(sink, root);
     return sink.out;
 }

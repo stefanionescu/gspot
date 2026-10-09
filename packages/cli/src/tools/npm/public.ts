@@ -100,14 +100,14 @@ export const packageToolProject: ToolProject<PackageToolProject, PackagePreparat
         if (yarn !== undefined) writeFileSync(join(work, '.yarnrc.yml'), yarn);
         if (recorded !== undefined && packageToolProject.matches(project, recorded))
             writeFileSync(join(work, project.lockfile), recorded);
-        const resolved = await runPackageInstaller(
+        const env = await runPackageInstaller(
             root,
             work,
             project.installer,
             packageInstallerCommands(project.installer).lockfile,
             'lockfile resolution failed',
         );
-        stripRegistryUrls(work, project.installer, resolved);
+        stripRegistryUrls(work, project.installer, env);
         const lockfile = readFileSync(join(work, project.lockfile), 'utf8');
         if (!packageToolProject.matches(project, lockfile))
             throw new GspotError(

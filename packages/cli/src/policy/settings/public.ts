@@ -18,9 +18,9 @@ import type {
     ScopeView,
     IgnoreEntry,
     KnownSettings,
+    ScopeSettings,
     ScopeSelection,
     SettingDefault,
-    ResolvedSettings,
 } from '#cli/types/policy/settings.ts';
 
 // Whether another configuration's scalar default disagrees with this one, and this one may not override it.
@@ -227,11 +227,11 @@ export function effectiveSettings(
     policy: Policy,
     selected: Manifest[],
     scope: string,
-): ResolvedSettings {
-    const resolved = listSettings(surface, policy, scope);
-    const settings = Object.fromEntries(resolved.map((row) => [row.key, row.value]));
+): ScopeSettings {
+    const listed = listSettings(surface, policy, scope);
+    const settings = Object.fromEntries(listed.map((row) => [row.key, row.value]));
     const namespaces: Record<string, unknown> = {};
-    const rows = resolved
+    const rows = listed
         .map((row) => {
             const segments = row.key.split('.');
             const depth = segments[0] === 'tools' ? TOOL_KEY_DEPTH : 1;

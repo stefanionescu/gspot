@@ -57,9 +57,9 @@ test('manifest-owned tool directories are ignored while generated rules and auth
         'ignored = [".gspot/local/downloads/"]\n' + CONFIGURATION_TABLE,
         'configurations/general/local',
     );
-    const resolved = linkManifestTools([manifest]);
-    const block = gitignoreBlock([...configurationManifests().values(), ...resolved.values(), ...resolved.values()]);
-    const selected = gitignoreBlock(resolved.values());
+    const linked = linkManifestTools([manifest]);
+    const block = gitignoreBlock([...configurationManifests().values(), ...linked.values(), ...linked.values()]);
+    const selected = gitignoreBlock(linked.values());
     expect(selected).toContain('.gspot/local/downloads/');
     for (const path of configurationManifests().get('prose')!.ignored) expect(selected).not.toContain(path);
     const authored = '# Authored entries\nprivate.tmp\n';

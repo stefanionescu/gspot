@@ -2,9 +2,9 @@ import { isDeepStrictEqual } from 'node:util';
 import { readAsset } from '#cli/platform/root/public.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { toolProjectPins } from '#cli/configurations/contracts.ts';
+import type { SelectorPaths } from '#cli/types/generation/fragments.ts';
 import { ESLINT_RULE_NAMES_FILE } from '#cli/config/generation/eslint.ts';
 import { extensionsTagged } from '#cli/repository/discovery/contracts.ts';
-import type { ResolvedSelector } from '#cli/types/generation/fragments.ts';
 import type { EslintPresets, EslintRuleNames } from '#cli/types/parsers/eslint.ts';
 import { isInScope, literalGlob, pathMatcher } from '#cli/repository/paths/public.ts';
 import { eslintPresetsSchema, eslintRuleNamesSchema } from '#cli/parsers/schema/public.ts';
@@ -274,7 +274,7 @@ export function validateEslintPresets(manifests: Map<string, Manifest>): void {
  * @param selectors the selectors of the selected fragments, with the paths their allowed settings hold
  * @returns the groups, where an absent files list means every code file
  */
-export function selectorGroups(selectors: ResolvedSelector[]): SelectorGroup[] {
+export function selectorGroups(selectors: SelectorPaths[]): SelectorGroup[] {
     const boundaries = distinctLists(
         selectors.flatMap((entry) => [entry.files ?? [], entry.except ?? []]).filter((paths) => paths.length > 0),
     );

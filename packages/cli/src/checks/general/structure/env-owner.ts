@@ -14,7 +14,7 @@ import type {
     HouseSource,
     EnvironmentKind,
     EnvironmentScope,
-    EnvironmentBindings,
+    EnvironmentNames,
 } from '#cli/types/checks/general/structure.ts';
 
 // Bindings inside a function or class belong to that lexical scope.
@@ -50,42 +50,42 @@ function bindingNames(node: Node): string[] {
 }
 
 // Native os imports are the only bindings that supply environment objects or getters.
-function importBindings(node: Node): EnvironmentScope {
-    const bindings: EnvironmentScope = new Map();
+function importNames(node: Node): EnvironmentScope {
+    const entries: EnvironmentScope = new Map();
     let members: Record<string, EnvironmentKind> = {};
     if (node.type === 'import_statement') members = { os: 'os' };
     else if (node.childForFieldName('module_name')?.text === 'os') members = OS_ENVIRONMENT_MEMBERS;
     for (const item of node.childrenForFieldName('name')) {
         const { name, target } = importName(item);
-        if (name !== undefined && target !== undefined) bindings.set(name, members[target]);
+        if (name !== undefined && target !== undefined) entries.set(name, members[target]);
     }
-    return bindings;
+    return entries;
 }
 
 // Import identities and lexical declarations are calculated once for each source.
-function pythonBindings(source: HouseSource): EnvironmentBindings {
-    const bindings: EnvironmentBindings = new Map();
+function pythonNames(source: HouseSource): EnvironmentNames {
+    const entries: EnvironmentNames = new Map();
     const nodes = [...(source.captures.get('import') ?? []), ...(source.captures.get('binding') ?? [])];
     for (const node of nodes) {
         const scope = bindingScope(node).id;
-        const names = bindings.get(scope) ?? new Map<string, EnvironmentKind>();
+        const names = entries.get(scope) ?? new Map<string, EnvironmentKind>();
         const declared = IMPORTS.has(node.type)
-            ? importBindings(node)
+            ? importNames(node)
             : new Map<string, EnvironmentKind>(bindingNames(node).map((name) => [name, undefined]));
         for (const [name, kind] of declared) names.set(name, kind);
-        bindings.set(scope, names);
+        entries.set(scope, names);
     }
-    return bindings;
+    return entries;
 }
 
 // Resolve lexical imports before applying the environment read rule.
-function environmentKind(node: Node, name: string, bindings: EnvironmentBindings): EnvironmentKind {
+function environmentKind(node: Node, name: string, entries: EnvironmentNames): EnvironmentKind {
     for (
         let scope: Node | null = bindingScope(node);
         scope !== null;
         scope = scope.parent === null ? null : bindingScope(scope)
     ) {
-        const names = bindings.get(scope.id);
+        const names = entries.get(scope.id);
         if (names?.has(name) === true) return names.get(name);
     }
     return undefined;
@@ -99,10 +99,10 @@ function readReceiver(node: Node): Node | null {
 }
 
 // Only native os environment objects and calls use the declared environment owner.
-function pythonEnvironment(node: Node, bindings: EnvironmentBindings, environment: Set<number>): boolean {
+function pythonEnvironment(node: Node, entries: EnvironmentNames, environment: Set<number>): boolean {
     const receiver = readReceiver(node);
     if (receiver?.type !== 'identifier') return false;
-    const kind = environmentKind(node, receiver.text, bindings);
+    const kind = environmentKind(node, receiver.text, entries);
     if (kind === 'os') return environment.has(node.id);
     if (kind === 'getenv') return node.type === 'call';
     return kind === 'environ';
@@ -132,14 +132,14 @@ export async function envOwner(input: CheckInput): Promise<Finding[]> {
     );
     return parsed.value.flatMap((source) => {
         if (isOwner(source.path)) return [];
-        const bindings: EnvironmentBindings =
-            source.language === 'python' ? pythonBindings(source) : new Map<number, EnvironmentScope>();
+        const entries: EnvironmentNames =
+            source.language === 'python' ? pythonNames(source) : new Map<number, EnvironmentScope>();
         const environment = new Set((source.captures.get('environment') ?? []).map((node) => node.id));
         const reads = (source.captures.get('read') ?? []).filter((node) => {
             if (source.language === 'swift') return node.text.replaceAll(/\s+/gu, '') === ENVIRONMENT_READ;
             if (source.language === 'bash') return owned.has(node.text);
             if (node.type === 'identifier' && node.parent?.type !== 'subscript') return false;
-            return pythonEnvironment(node, bindings, environment);
+            return pythonEnvironment(node, entries, environment);
         });
         const lines = new Map<number, Node>();
         for (const node of reads)

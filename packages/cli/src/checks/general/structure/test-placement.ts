@@ -10,7 +10,7 @@ import { typescriptNodes, typescriptProgram } from '#cli/parsers/source/contract
 import { TEST_PATTERN, TEST_DIRECTORIES, ASSERTION_MODULES } from '#cli/config/checks/general/structure.ts';
 
 function hasAssertions(source: ts.SourceFile, checker: ts.TypeChecker): boolean {
-    const bindings = source.statements.flatMap((statement) => {
+    const imports = source.statements.flatMap((statement) => {
         if (
             !ts.isImportDeclaration(statement) ||
             !ts.isStringLiteral(statement.moduleSpecifier) ||
@@ -23,7 +23,7 @@ function hasAssertions(source: ts.SourceFile, checker: ts.TypeChecker): boolean 
             : [];
     });
     const symbols = new Set(
-        bindings.map((binding) => checker.getSymbolAtLocation(binding.name)).filter((symbol) => symbol !== undefined),
+        imports.map((binding) => checker.getSymbolAtLocation(binding.name)).filter((symbol) => symbol !== undefined),
     );
     return typescriptNodes(source).some((node) => {
         if (
