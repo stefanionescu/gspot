@@ -1,9 +1,9 @@
-import { stringify } from 'smol-toml';
 import { buildJsonSchema } from './schema.ts';
 import { isDeepStrictEqual } from 'node:util';
 import type { JSONSchema } from 'zod/v4/core';
 import { cell, table, section, referencePage } from './page.ts';
 import { isRecord } from '@gspothq/cli/src/platform/contracts.ts';
+import { emitPolicy } from '@gspothq/cli/src/policy/document/public.ts';
 import type { Manifest } from '@gspothq/cli/src/types/configurations.ts';
 import { knownSettings } from '@gspothq/cli/src/policy/settings/public.ts';
 import type { ReferencePage, SettingVariant } from '../../types/reference.ts';
@@ -55,9 +55,10 @@ export function policyReference(): string {
                     : `See the [settings reference](/reference/settings/) for ${topic}.`,
             ]);
         const example = schema.examples?.filter(isRecord).find((document) => Object.hasOwn(document, name));
+        const text = example === undefined ? '' : emitPolicy('', example);
         return section(
             name,
-            (example === undefined ? '' : `\`\`\`toml\n${stringify(example)}\`\`\`\n\n`) +
+            (text.trim() === '' ? '' : `\`\`\`toml\n${text}\`\`\`\n\n`) +
                 table(['Key', 'Accepted value', 'Meaning'], rows),
         );
     });

@@ -1,20 +1,20 @@
 // Explain a check, rule, configuration, setting, or file path.
 import { hasPolicy } from '#cli/policy/public.ts';
 import { GspotError } from '#cli/platform/public.ts';
-import type { Session } from '#cli/types/planning.ts';
 import { printResult } from '#cli/terminal/public.ts';
+import type { Session } from '#cli/types/planning.ts';
 import { quoteArgument } from '#cli/platform/contracts.ts';
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
-import type { Program } from '#cli/types/commands/program.ts';
 import { pathMatcher } from '#cli/repository/paths/public.ts';
-import type { ToolSession } from '#cli/types/tools/session.ts';
+import type { Program } from '#cli/types/commands/program.ts';
 import { knownSettings } from '#cli/policy/settings/public.ts';
 import { ownersOf } from '#cli/repository/selection/public.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { checkStageSchema } from '#cli/parsers/schema/command.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import type { SettingDeclaration } from '#cli/types/configurations.ts';
 import { readEslintRuleNames } from '#cli/generation/eslint/public.ts';
+import type { SettingDeclaration } from '#cli/types/configurations.ts';
 import { ownedInputs, configuredChecks } from '#cli/planning/public.ts';
 import { unknownSettingDiagnostic } from '#cli/policy/errors/public.ts';
 import { commandHelp, commandRoot, openSession } from '#cli/commands/public.ts';
@@ -164,14 +164,14 @@ function explainSlashed(
     if (check !== undefined) return check;
     if (file !== undefined) return file;
     const slash = subject.indexOf('/');
-    return explainToolRule(session, subject.slice(0, slash), subject.slice(slash + 1));
+    return explainToolRule(subject.slice(0, slash), subject.slice(slash + 1));
 }
 
 function explainNamed(session: ToolSession | undefined, subject: string): Explanation | undefined {
     const named = explainSetting(session, subject) ?? explainConfiguration(subject);
     if (named !== undefined) return named;
     if (!readEslintRuleNames().rules.includes(subject)) return undefined;
-    return explainToolRule(session, 'eslint', subject);
+    return explainToolRule('eslint', subject);
 }
 
 function uncheckedNote(file: TrackedFile): string | undefined {

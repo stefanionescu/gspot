@@ -7,8 +7,9 @@ import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { policySchema } from '#cli/policy/schema/public.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
-import { buildJsonSchema } from '#docs/src/content/reference/schema.ts';
 import { policyReference } from '#docs/src/content/reference/policy.ts';
+import { buildJsonSchema } from '#docs/src/content/reference/schema.ts';
+import { emitPolicy, parseTomlText } from '#cli/policy/document/public.ts';
 import { UNSAFE_DIRECTORIES } from '#tests/config/cli/policy/boundaries.ts';
 import { NAMING_SCHEMA_CASES } from '#tests/config/cli/policy/schema/naming.ts';
 import { POLICY_FIELD_SCHEMA_CASES } from '#tests/config/cli/policy/schema/fields.ts';
@@ -214,8 +215,20 @@ test.each(examples)('native policy metadata example %j parses in every published
     expect(validate(example)).toBe(true);
 });
 
-test('the policy reference retains every native metadata example', () => {
+test('the policy reference emits canonical examples and retains native editor metadata', () => {
     expect(buildJsonSchema()['examples']).toEqual(examples);
     const reference = policyReference();
-    for (const example of examples.filter(isRecord)) expect(reference).toContain(stringify(example));
+    for (const example of examples.filter(isRecord)) {
+        const text = emitPolicy('', example);
+        if (text.trim() !== '') expect(reference).toContain(text);
+    }
+    expect(reference).toContain('[hooks]\nenabled = true\npush_files = "all"\n');
+    for (const match of reference.matchAll(/```toml\n([\s\S]*?)```/gu)) {
+        const text = match[1]!;
+        expect(text).toBeDefined();
+        expect(text.trim()).not.toBe('');
+        const document = parseTomlText(text, 'gspot.toml', 'policy');
+        expect(policySchema.safeParse(document).success).toBe(true);
+        expect(emitPolicy(text, document)).toBe(text);
+    }
 });

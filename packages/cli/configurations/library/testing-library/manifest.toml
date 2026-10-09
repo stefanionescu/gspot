@@ -17,6 +17,7 @@ dependencies = ["@testing-library/*"]
 
 [[tool]]
 name = "eslint-plugin-testing-library"
+rule_prefix = "testing-library"
 kind = "library"
 version = "7.16.2"
 npm = "eslint-plugin-testing-library"

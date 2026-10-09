@@ -20,18 +20,21 @@ dependencies = ["react"]
 
 [[tool]]
 name = "eslint-plugin-react-hooks"
+rule_prefix = "react-hooks"
 kind = "library"
 version = "7.1.1"
 npm = "eslint-plugin-react-hooks"
 
 [[tool]]
 name = "eslint-plugin-react"
+rule_prefix = "react"
 kind = "library"
 version = "7.37.5"
 npm = "eslint-plugin-react"
 
 [[tool]]
 name = "eslint-plugin-react-refresh"
+rule_prefix = "react-refresh"
 kind = "library"
 version = "0.5.7"
 npm = "eslint-plugin-react-refresh"

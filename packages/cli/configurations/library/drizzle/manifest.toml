@@ -9,6 +9,7 @@ dependencies = ["drizzle-orm"]
 
 [[tool]]
 name = "eslint-plugin-drizzle"
+rule_prefix = "drizzle"
 kind = "library"
 version = "0.2.3"
 npm = "eslint-plugin-drizzle"

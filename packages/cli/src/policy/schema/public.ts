@@ -254,7 +254,7 @@ export const policySchema = z
                     },
                 },
             },
-            { hooks: { push_files: 'changed' } },
+            { hooks: { enabled: true, push_files: 'all' } },
             { ci: { provider: 'github', platforms: ['linux'], files: 'changed' } },
             { agent_rules: { enabled: true, instruction_files: ['.github/copilot-instructions.md'] } },
             { tool_timeout_seconds: 300 },

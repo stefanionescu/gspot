@@ -48,6 +48,3 @@ export type CheckFacts = {
     minVersions: Record<string, string> | undefined;
     versionRequirements: string[];
 };
-
-/** A native tool's rule-description command. */
-export type RuleSummarizer = (rule: string, executable: string) => string | undefined;

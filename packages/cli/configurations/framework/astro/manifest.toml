@@ -32,6 +32,7 @@ filenames = ["astro.config.mjs", "astro.config.ts"]
 
 [[tool]]
 name = "eslint-plugin-astro"
+rule_prefix = "astro"
 eslint = { extensions = [".astro"] }
 kind = "library"
 version = "1.7.0"

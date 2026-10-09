@@ -18,6 +18,7 @@ filenames = ["app.json", "app.config.js", "app.config.ts", "eas.json"]
 
 [[tool]]
 name = "eslint-plugin-expo"
+rule_prefix = "expo"
 kind = "library"
 version = "1.1.0"
 npm = "eslint-plugin-expo"

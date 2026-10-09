@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { pathKey } from '#cli/platform/contracts.ts';
 import { INSTALLATION_KINDS } from '#cli/config/configurations.ts';
 import { BLOCK_STYLES } from '#cli/config/platform/managed-blocks.ts';
-import { ruleSettingsSchema } from '#cli/parsers/schema/tool-rule.ts';
+import { ruleSettingsSchema } from '#cli/parsers/schema/contracts.ts';
 import { assertMutationTarget } from '#cli/platform/root/contracts.ts';
 import { OWNED_KINDS, MERGED_CONFIGURATION_FORMATS } from '#cli/config/lifecycle/ownership.ts';
 

@@ -25,6 +25,7 @@ npm = "vitest"
 
 [[tool]]
 name = "@vitest/eslint-plugin"
+rule_prefix = "vitest"
 kind = "library"
 version = "1.3.4"
 npm = "@vitest/eslint-plugin"

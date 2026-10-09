@@ -12,6 +12,7 @@ dependencies = ["next-intl", "react-i18next", "i18next", "react-intl", "@lingui/
 
 [[tool]]
 name = "eslint-plugin-i18next"
+rule_prefix = "i18next"
 kind = "library"
 version = "6.1.5"
 npm = "eslint-plugin-i18next"

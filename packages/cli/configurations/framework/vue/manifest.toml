@@ -38,6 +38,7 @@ extensions = [".vue"]
 
 [[tool]]
 name = "eslint-plugin-vue"
+rule_prefix = "vue"
 eslint = { extensions = [".vue"] }
 kind = "library"
 version = "10.11.0"
@@ -51,6 +52,7 @@ npm = "vue-eslint-parser"
 
 [[tool]]
 name = "eslint-plugin-vuejs-accessibility"
+rule_prefix = "vuejs-accessibility"
 kind = "library"
 version = "2.6.0"
 npm = "eslint-plugin-vuejs-accessibility"

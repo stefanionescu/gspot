@@ -314,6 +314,7 @@ npm = "@eslint/js"
 
 [[tool]]
 name = "@gspothq/eslint-plugin"
+rule_prefix = "gspot"
 kind = "library"
 version = "0.1.0"
 npm = "@gspothq/eslint-plugin"
@@ -321,6 +322,7 @@ rule_url = "https://generativespotting.com/reference/plugin/{rule}/"
 
 [[tool]]
 name = "eslint-plugin-sonarjs"
+rule_prefix = "sonarjs"
 kind = "library"
 version = "4.2.0"
 npm = "eslint-plugin-sonarjs"
@@ -328,6 +330,7 @@ min_version = "3.0.0"
 
 [[tool]]
 name = "eslint-plugin-unicorn"
+rule_prefix = "unicorn"
 rule_url = "https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/{rule}.md"
 kind = "library"
 version = "65.0.1"
@@ -336,12 +339,14 @@ min_version = "63.0.0"
 
 [[tool]]
 name = "eslint-plugin-security"
+rule_prefix = "security"
 kind = "library"
 version = "4.0.1"
 npm = "eslint-plugin-security"
 
 [[tool]]
 name = "eslint-plugin-barrel-files"
+rule_prefix = "barrel-files"
 kind = "library"
 version = "3.0.1"
 npm = "eslint-plugin-barrel-files"
@@ -355,6 +360,7 @@ version = "5.12.1"
 
 [[tool]]
 name = "eslint-plugin-n"
+rule_prefix = "n"
 kind = "library"
 version = "18.3.0"
 npm = "eslint-plugin-n"
@@ -362,6 +368,7 @@ min_version = "17.24.0"
 
 [[tool]]
 name = "eslint-plugin-jsdoc"
+rule_prefix = "jsdoc"
 kind = "library"
 version = "64.3.9"
 npm = "eslint-plugin-jsdoc"
@@ -369,6 +376,7 @@ min_version = "50.8.0"
 
 [[tool]]
 name = "eslint-plugin-regexp"
+rule_prefix = "regexp"
 kind = "library"
 version = "3.3.0"
 npm = "eslint-plugin-regexp"
@@ -376,12 +384,14 @@ min_version = "2.10.0"
 
 [[tool]]
 name = "eslint-plugin-import-x"
+rule_prefix = "import-x"
 kind = "library"
 version = "4.17.1"
 npm = "eslint-plugin-import-x"
 
 [[tool]]
 name = "@eslint-community/eslint-plugin-eslint-comments"
+rule_prefix = "@eslint-community/eslint-comments"
 kind = "library"
 version = "4.8.0"
 npm = "@eslint-community/eslint-plugin-eslint-comments"
@@ -394,6 +404,7 @@ npm = "eslint-import-resolver-typescript"
 
 [[tool]]
 name = "eslint-plugin-boundaries"
+rule_prefix = "boundaries"
 kind = "library"
 version = "7.2.0"
 npm = "eslint-plugin-boundaries"
@@ -401,6 +412,7 @@ min_version = "5.0.0"
 
 [[tool]]
 name = "eslint-plugin-package-json"
+rule_prefix = "package-json"
 kind = "library"
 version = "1.8.0"
 npm = "eslint-plugin-package-json"

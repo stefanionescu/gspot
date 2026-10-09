@@ -42,12 +42,14 @@ filenames = ["app.json", "app.config.js", "app.config.ts", "metro.config.js", "e
 
 [[tool]]
 name = "@react-native/eslint-plugin"
+rule_prefix = "@react-native"
 kind = "library"
 version = "0.87.1"
 npm = "@react-native/eslint-plugin"
 
 [[tool]]
 name = "eslint-plugin-react-native"
+rule_prefix = "react-native"
 kind = "library"
 version = "5.0.0"
 npm = "eslint-plugin-react-native"

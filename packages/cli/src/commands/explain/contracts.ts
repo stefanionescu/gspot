@@ -1,37 +1,12 @@
 // Explain a check, or one rule of the tool a check runs.
-import { inspectTool } from '#cli/tools/public.ts';
-import { runBlocking } from '#cli/platform/public.ts';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { compact, quoteArgument } from '#cli/platform/contracts.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
-import { parseRuffRuleSummary } from '#cli/parsers/tool/contracts.ts';
 import { toolName, allChecks } from '#cli/configurations/contracts.ts';
 import type { RepositoryDefinition } from '#cli/types/policy/settings.ts';
-import type { Found, CheckFacts, Explanation, RuleSummarizer } from '#cli/types/commands/explain.ts';
+import type { Found, CheckFacts, Explanation } from '#cli/types/commands/explain.ts';
 import { configurationFiles, configurationManifests, isConfigurationSelected } from '#cli/configurations/public.ts';
-import { ESLINT_RULE_PACKAGES, SWIFTLINT_LINE_LIMIT, RULE_LOOKUP_TIMEOUT_MS } from '#cli/config/commands/explain.ts';
-
-const RULE_SUMMARIZERS: Record<string, RuleSummarizer> = {
-    ruff: (rule, path) => {
-        const result = runBlocking([path, 'rule', rule, '--output-format', 'json'], {
-            cwd: process.cwd(),
-            timeoutMs: RULE_LOOKUP_TIMEOUT_MS,
-        });
-        if (result.code !== 0) return undefined;
-        try {
-            return parseRuffRuleSummary(result.stdout);
-        } catch {
-            return undefined;
-        }
-    },
-    swiftlint: (rule, path) => {
-        const result = runBlocking([path, 'rules', rule], { cwd: process.cwd(), timeoutMs: RULE_LOOKUP_TIMEOUT_MS });
-        return result.code === 0
-            ? result.stdout.split('\n').slice(0, SWIFTLINT_LINE_LIMIT).join('\n').trim()
-            : undefined;
-    },
-};
 
 function getToolPin(name: string | undefined, check?: CheckDeclaration): ToolPin | undefined {
     if (name === undefined) return undefined;
@@ -49,11 +24,11 @@ function getToolPin(name: string | undefined, check?: CheckDeclaration): ToolPin
         .find((entry) => entry.name === name);
 }
 
-function getRulePlugin(prefix: string, tool: string): ToolPin | undefined {
-    const name = prefix.replace(/^@/u, '');
-    return [ESLINT_RULE_PACKAGES[name], `${tool}-plugin-${name}`, `@${name}/${tool}-plugin`]
-        .map((packageName) => getToolPin(packageName))
-        .find((pin) => pin !== undefined);
+function getRulePlugin(prefix: string): ToolPin | undefined {
+    return configurationManifests()
+        .values()
+        .flatMap((manifest) => manifest.tools)
+        .find((pin) => pin.rule_prefix === prefix);
 }
 
 // The page a manifest declares for a rule: the tool's own page, or the page of the plugin whose prefix the rule carries.
@@ -63,7 +38,7 @@ function getRulePage(check: CheckDeclaration, tool: string, rule: string): strin
         const pin = getToolPin(tool, check) ?? getToolPin(toolName(check), check);
         return pin?.rule_url?.replace('{rule}', rule);
     }
-    const plugin = getRulePlugin(rule.slice(0, slash), tool);
+    const plugin = getRulePlugin(rule.slice(0, slash));
     return plugin?.rule_url?.replace('{rule}', rule.slice(slash + 1));
 }
 
@@ -146,14 +121,6 @@ function describeCheck(
     return `${lines.join('\n')}\n`;
 }
 
-function getRuleSummary(session: ToolSession | undefined, tool: string, rule: string): string | undefined {
-    const summarize = RULE_SUMMARIZERS[tool];
-    if (!summarize) return undefined;
-    const pin = getToolPin(tool);
-    const inspection = session && pin ? inspectTool(session, pin) : undefined;
-    return summarize(rule, inspection?.path ?? tool);
-}
-
 /**
  * Explains a check by name: a shipped check, or a [[check]] entry of the policy.
  * @param session the session, or undefined outside a repository
@@ -196,16 +163,16 @@ export function explainCheck(session: ToolSession | undefined, checkName: string
 }
 
 /**
- * Explains one rule of a tool: what the tool says about it, and how to turn it off or change its options.
- * @param session the session, or undefined outside a repository
+ * Explains one rule of a tool: its declared documentation page, and how to turn it off or change its options.
  * @param tool the tool
  * @param rule the rule
  * @returns the explanation, or undefined when no check runs the tool
  */
-export function explainToolRule(session: ToolSession | undefined, tool: string, rule: string): Explanation | undefined {
-    const plugin = getRulePlugin(tool, 'eslint');
+export function explainToolRule(tool: string, rule: string): Explanation | undefined {
+    const qualified = `${tool}/${rule}`;
+    const plugin = getRulePlugin(qualified.slice(0, qualified.lastIndexOf('/')));
     const ruleTool = plugin === undefined ? tool : 'eslint';
-    const identifier = plugin === undefined ? rule : `${tool}/${rule}`;
+    const identifier = plugin === undefined ? rule : qualified;
     const found = allChecks(configurationManifests().values())
         .values()
         .find(
@@ -213,7 +180,6 @@ export function explainToolRule(session: ToolSession | undefined, tool: string, 
         );
     if (!found) return undefined;
     const { check, configuration } = found;
-    const summary = getRuleSummary(session, ruleTool, identifier);
     const page = getRulePage(check, ruleTool, identifier);
     const key = quoteArgument(`tools.${ruleTool}.rules.${identifier}`);
     const optionLines = configuration.settings
@@ -221,7 +187,6 @@ export function explainToolRule(session: ToolSession | undefined, tool: string, 
         .map(() => `Change its options: gspot set ${key} <options> --reason "..."`);
     let description = `Read the ${ruleTool} documentation for ${identifier}.`;
     if (page !== undefined) description = `The tool's page: ${page}`;
-    if (summary !== undefined) description = `The tool says: ${summary}`;
     const lines = [
         `${ruleTool}/${identifier}  (run by ${check.name})`,
         '',
@@ -235,6 +200,6 @@ export function explainToolRule(session: ToolSession | undefined, tool: string, 
         kind: 'tool-rule',
         subject: `${ruleTool}/${identifier}`,
         text: `${lines.join('\n')}\n`,
-        data: { tool: ruleTool, rule: identifier, check: check.name, summary: summary ?? null, page: page ?? null },
+        data: { tool: ruleTool, rule: identifier, check: check.name, summary: null, page: page ?? null },
     };
 }

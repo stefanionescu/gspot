@@ -51,10 +51,11 @@ test('query-pack metadata refuses a version range and accepts an exact release',
 test('a tool names its rule page with the rule placeholder and its crash pattern as a regular expression', () => {
     const manifest = parseConfigurationManifest('example', {
         kind: 'infra',
-        tables: `${TOOL_DECLARATION}rule_url = "https://example.test/rules/{rule}"\ncrash_pattern = '^Fatal:'\n`,
+        tables: `${TOOL_DECLARATION}rule_url = "https://example.test/rules/{rule}"\nrule_prefix = "@example/plugin"\ncrash_pattern = '^Fatal:'\n`,
     });
     expect(manifest.tools[0]).toMatchObject({
         rule_url: 'https://example.test/rules/{rule}',
+        rule_prefix: '@example/plugin',
         crash_pattern: '^Fatal:',
     });
     expect(() =>
@@ -66,9 +67,18 @@ test('a tool names its rule page with the rule placeholder and its crash pattern
     expect(() =>
         parseConfigurationManifest('example', {
             kind: 'infra',
-            tables: `${TOOL_DECLARATION}rule_url = "https://example.test/rules/{rule}"\ncrash_pattern = '(Fatal'\n`,
+            tables: `${TOOL_DECLARATION}rule_url = "https://example.test/rules/{rule}"\nrule_prefix = "@example/plugin"\ncrash_pattern = '(Fatal'\n`,
         }),
     ).toThrow('regular expression');
+});
+
+test.each(['rule_prefix = ""', 'rule_prefix = 1'])('a tool refuses invalid prefix metadata %s', (prefix) => {
+    expect(() =>
+        parseConfigurationManifest('example', {
+            kind: 'infra',
+            tables: `${TOOL_DECLARATION}${prefix}\n`,
+        }),
+    ).toThrow('rule_prefix');
 });
 
 test('tool suppression metadata validates an inline pattern without requiring it', () => {

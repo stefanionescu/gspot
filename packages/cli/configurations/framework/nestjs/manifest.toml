@@ -20,6 +20,7 @@ filenames = ["nest-cli.json"]
 
 [[tool]]
 name = "@darraghor/eslint-plugin-nestjs-typed"
+rule_prefix = "@darraghor/nestjs-typed"
 kind = "library"
 version = "7.5.5"
 npm = "@darraghor/eslint-plugin-nestjs-typed"

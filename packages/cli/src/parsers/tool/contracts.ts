@@ -4,10 +4,9 @@ import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { stripVTControlCharacters } from 'node:util';
 import { isRecord } from '#cli/platform/contracts.ts';
-import type { DirectiveScan } from '#cli/types/parsers/nginx.ts';
 import { NO_VERSION } from '#cli/config/parsers/tool/version.ts';
+import type { DirectiveScan } from '#cli/types/parsers/nginx.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
-import { ruffRuleSchema } from '#cli/parsers/schema/tool-rule.ts';
 import { TOOL_FILE_FORMATS } from '#cli/config/parsers/tool/tool-file.ts';
 import type { ToolPin, ParsedToolVersion } from '#cli/types/parsers/tool.ts';
 
@@ -237,15 +236,4 @@ export function parseVersionOutput(tool: ToolPin, result: SpawnResult, installed
     if (version === undefined || semver.coerce(version) === null)
         return { state: 'error', note: `${tool.name} did not report a valid version: ${text}` };
     return { version };
-}
-
-/**
- * Summarize the Ruff reported rule metadata after validating the JSON response.
- * @param text the native rule response
- * @returns the nonempty rule name and summary joined for display
- */
-export function parseRuffRuleSummary(text: string): string {
-    const parsed = ruffRuleSchema.parse(JSON.parse(text));
-    const parts = [parsed.name, parsed.summary].filter((part) => part !== undefined && part !== '');
-    return parts.join(': ');
 }

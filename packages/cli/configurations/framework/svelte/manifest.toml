@@ -31,6 +31,7 @@ filenames = ["svelte.config.js", "svelte.config.ts"]
 
 [[tool]]
 name = "eslint-plugin-svelte"
+rule_prefix = "svelte"
 eslint = { extensions = [".svelte"] }
 kind = "library"
 version = "3.23.0"

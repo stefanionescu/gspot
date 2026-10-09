@@ -1,4 +1,8 @@
-import { test, expect } from 'bun:test';
+import { join } from 'node:path';
+import { test, spyOn, expect } from 'bun:test';
+import { runGspot } from '#tests/harness/gspot.ts';
+import { testdir, createFileTree } from 'testdirs';
+import * as platform from '#cli/platform/public.ts';
 import { explain } from '#cli/commands/explain/public.ts';
 
 test('a rule is explained with the page its manifest declares', () => {
@@ -78,4 +82,58 @@ test('TypeScript errors have no invented rule options or error-page link', () =>
     expect(explain(undefined, 'javascript/tsc')).toMatchObject({
         data: { help: 'Add or fix the JSDoc type that the error names.' },
     });
+});
+
+test('declared native rule pages need no tool executable or summary process', () => {
+    using command = spyOn(platform, 'runBlocking').mockImplementation(() => {
+        throw new Error('Rule explanations must not run a tool.');
+    });
+    const ruff = explain(undefined, 'ruff/F401');
+    expect(ruff).toMatchObject({
+        data: { tool: 'ruff', rule: 'F401', summary: null, page: 'https://docs.astral.sh/ruff/rules/F401/' },
+    });
+    expect(ruff.text).toContain("The tool's page: https://docs.astral.sh/ruff/rules/F401/");
+    expect(ruff.text).toContain('gspot ignore python/ruff --rule F401');
+    expect(ruff.text).not.toContain('The tool says:');
+    const swiftlint = explain(undefined, 'swiftlint/type_body_length');
+    expect(swiftlint).toMatchObject({
+        data: { page: 'https://realm.github.io/SwiftLint/type_body_length.html', summary: null },
+    });
+    expect(swiftlint.text).toContain('gspot ignore swift/swiftlint --rule type_body_length');
+    expect(command).not.toHaveBeenCalled();
+});
+
+test('native scoped plugin prefixes are exact manifest declarations', () => {
+    expect(explain(undefined, '@next/next/no-html-link-for-pages')).toMatchObject({
+        subject: 'eslint/@next/next/no-html-link-for-pages',
+        data: { tool: 'eslint', rule: '@next/next/no-html-link-for-pages', page: null },
+    });
+    expect(explain(undefined, 'eslint/@next/next/no-html-link-for-pages')).toMatchObject({
+        data: { tool: 'eslint', rule: '@next/next/no-html-link-for-pages', page: null },
+    });
+    expect(() => explain(undefined, 'typescript-eslint/no-explicit-any')).toThrow('typescript-eslint/no-explicit-any');
+    expect(explain(undefined, 'eslint/typescript-eslint/no-explicit-any')).toMatchObject({ data: { page: null } });
+});
+
+test.each(['recommended', 'all'])('declared rule pages remain available in root and child at %s', async (level) => {
+    await using sandbox = await testdir();
+    const policy = `level = "${level}"\nconfigurations = ["python"]\n[scope.app]\nconfigurations = ["swift"]\n`;
+    await createFileTree(sandbox.path, { 'gspot.toml': policy, 'app/sample.swift': 'let value = 1\n' });
+    const root = await runGspot(sandbox.path, ['explain', 'ruff/F401', '--json']);
+    expect(root.code, root.stdout + root.stderr).toBe(0);
+    expect(JSON.parse(root.stdout)).toMatchObject({
+        tool: 'ruff',
+        rule: 'F401',
+        check: 'python/ruff',
+        page: 'https://docs.astral.sh/ruff/rules/F401/',
+    });
+    const child = await runGspot(join(sandbox.path, 'app'), ['explain', 'swiftlint/type_body_length', '--json']);
+    expect(child.code, child.stdout + child.stderr).toBe(0);
+    expect(JSON.parse(child.stdout)).toMatchObject({
+        tool: 'swiftlint',
+        rule: 'type_body_length',
+        check: 'swift/swiftlint',
+        page: 'https://realm.github.io/SwiftLint/type_body_length.html',
+    });
+    expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
 });

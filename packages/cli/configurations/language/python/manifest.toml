@@ -30,6 +30,7 @@ mise = "uv"
 
 [[tool]]
 name = "ruff"
+rule_url = "https://docs.astral.sh/ruff/rules/{rule}/"
 suppression = { inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)", reason = "#[^#]*# ?(?<reason>\\S.*)" }
 version = "0.16.8"
 min_version = "0.9.0"

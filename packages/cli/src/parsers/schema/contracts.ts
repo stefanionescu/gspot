@@ -234,3 +234,6 @@ export const settingValueDeclarationSchema = z.strictObject({
     default: z.unknown().optional(),
     default_all: z.unknown().optional(),
 });
+
+/** Rule values captured before serialization, grouped by their declared manifest paths. */
+export const ruleSettingsSchema = z.record(z.string(), z.record(z.string(), z.json()));

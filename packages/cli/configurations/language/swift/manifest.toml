@@ -18,6 +18,7 @@ filenames = ["Package.swift", "Package.resolved"]
 
 [[tool]]
 name = "swiftlint"
+rule_url = "https://realm.github.io/SwiftLint/{rule}.html"
 suppression = { marker = "\\bswiftlint:disable\\b", reason = " - (?<reason>\\S.*)" }
 platforms = ["macos", "linux"]
 version = "0.63.2"

@@ -20,6 +20,7 @@ system = true
 
 [[tool]]
 name = "eslint-plugin-jest"
+rule_prefix = "jest"
 kind = "library"
 version = "29.16.6"
 npm = "eslint-plugin-jest"
