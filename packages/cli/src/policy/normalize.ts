@@ -166,10 +166,13 @@ export function buildPolicy(raw: RawPolicy): Policy {
         hooks: raw.hooks,
         ci: raw.ci,
     });
-    const scopeTables: Policy['scopeTables'] = {};
     const scopes = Object.entries({ ...raw.scope });
-    for (const [path, scope] of scopes)
-        scopeTables[trimTrailingSlashes(path)] = normalizeScopeTables(scope, trimTrailingSlashes(path));
+    const scopeTables = Object.fromEntries(
+        scopes.map(([path, scope]) => [
+            trimTrailingSlashes(path),
+            normalizeScopeTables(scope, trimTrailingSlashes(path)),
+        ]),
+    );
     return {
         authored: raw,
         level: defaultValue(policySchema.shape.level, raw.level),

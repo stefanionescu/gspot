@@ -20,3 +20,27 @@ export const SYNTAX_FINDINGS = [
     },
     { check: 'bash/bash-syntax', file: 'broken.sh', line: 1, message: "`if then'" },
 ];
+
+/** Own record keys remain authored data in the installed CLI's native policy parser. */
+export const RECORD_POLICY = `configurations = []
+[words]
+"__proto__" = "A reviewed project word."
+[check."__proto__"]
+stage = "commit"
+paths = ["README.md"]
+command = ["echo", "accepted"]
+[tools.commitlint.rules]
+"__proto__" = ["always"]
+[reasons]
+"tools.commitlint.rules.__proto__" = "The project uses this native rule option."
+`;
+
+/** Native validators refuse each malformed value rather than discarding its authored key. */
+export const INVALID_RECORD_POLICIES = [
+    { source: '[limits]\n"__proto__" = "invalid"\n', diagnostic: 'limits.__proto__' },
+    { source: '[tools.commitlint.rules]\n"__proto__" = ["invalid"]\n', diagnostic: '--rule __proto__' },
+    {
+        source: '[tools.eslint.rules]\n"project/rule" = [{ "__proto__" = 2026-10-09 }]\n',
+        diagnostic: 'ESLint rule selection',
+    },
+];

@@ -185,7 +185,7 @@ export function emitAll(session: Session): Generated {
     if (policy.runner === 'mise') generated.files.push(miseFile(manifests, version));
     workflowOutput(policy, scopes, version, generated);
     const selected = everyManifest(scopes);
-    const rules = selectRuleFiles(policy.agent_rules, selected, repository, policy.level);
+    const rules = selectRuleFiles(policy.agent_rules, selected, repository, policy.level, session.packageManifests);
     generated.files.push(
         ...rules.map((file) => ({
             path: file.target,

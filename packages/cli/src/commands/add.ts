@@ -11,10 +11,10 @@ import type { Mutation } from '#cli/types/policy/settings.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { defaultValue } from '#cli/policy/schema/contracts.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import { getScopeTable } from '#cli/policy/document/contracts.ts';
 import { commandHelp, commandRoot } from '#cli/commands/public.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { unknownConfigurations } from '#cli/configurations/errors/public.ts';
+import { getScopeTable, preparePolicy } from '#cli/policy/document/contracts.ts';
 
 /**
  * gspot add: appends configurations to the root list or to one scope's list.
@@ -35,6 +35,7 @@ async function addCommand(options: AddOptions): Promise<CommandResult> {
         throw new GspotError('policy', [
             `The ${general} configuration follows repository inputs and the selected level. Change coverage with gspot set level, or record a check exception with gspot ignore and a reason.`,
         ]);
+    const input = preparePolicy(root);
     const mutation: Mutation = (raw) => {
         const holder = getScopeTable(raw, options.scope);
         const list = policySchema.shape.configurations.unwrap().parse(holder['configurations'] ?? []);
@@ -47,6 +48,7 @@ async function addCommand(options: AddOptions): Promise<CommandResult> {
     const where = options.scope === undefined ? '' : ` to scope ${options.scope}`;
     const description = `added ${options.configurations.join(', ')}${where}`;
     return await savePolicy(root, {
+        input,
         change: mutation,
         summary: description,
         isDryRun: options.isDryRun,

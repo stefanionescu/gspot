@@ -29,7 +29,7 @@ const result = await Bun.build({
     naming: '[name].js',
     format: 'esm',
     target: 'node',
-    external: Object.keys(packageManifest.dependencies),
+    external: Object.keys(packageManifest.dependencies).filter((dependency) => dependency !== 'zod'),
     banner: '#!/usr/bin/env node',
     minify: false,
     sourcemap: 'none',
@@ -38,6 +38,7 @@ if (!result.success) throw new Error(result.logs.map((log) => log.message).join(
 await rename(join(distribution, 'main.js'), join(distribution, 'gspot.js'));
 await chmod(join(distribution, 'gspot.js'), EXECUTABLE_FILE);
 await copyFile(join(root, '../..', 'LICENSE.md'), join(distribution, 'LICENSE.md'));
+await copyFile(join(dirname(fileURLToPath(import.meta.resolve('zod'))), 'LICENSE'), join(distribution, 'zod.LICENSE'));
 const readme = await readFile(join(root, '../..', 'README.md'), 'utf8');
 const sections = readme.slice(readme.indexOf('\ngspot ')).trim().split('\n## ');
 const packageReadme = sections

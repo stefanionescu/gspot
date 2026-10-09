@@ -271,3 +271,6 @@ export const LOCALE_SCHEMA_CASES = [
         valid: true,
     },
 ];
+
+/** Every ordinary or prototype-named own key has the same authored record contract. */
+export const OWN_RECORD_KEYS = ['ordinary', '__proto__', 'constructor', 'prototype', 'toString'];

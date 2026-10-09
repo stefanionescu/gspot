@@ -1,8 +1,8 @@
 // Preview or publish setting changes with the same validation and mutation.
-import { readPolicy } from '#cli/policy/public.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import { Option } from '@commander-js/extra-typings';
 import { printResult } from '#cli/terminal/public.ts';
+import { readPolicyTable } from '#cli/policy/public.ts';
 import { savePolicy } from '#cli/commands/contracts.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/lifecycle/public.ts';
@@ -20,8 +20,16 @@ import { DECIMAL, INTEGER, STRUCTURED } from '#cli/config/commands/set.ts';
 import { compact, isRecord, quoteArgument } from '#cli/platform/contracts.ts';
 import type { SetOptions, ParsedSettingValue } from '#cli/types/commands/set.ts';
 import { settingValue, declarationFor } from '#cli/policy/settings/contracts.ts';
-import type { Policy, Mutation, KnownSettings } from '#cli/types/policy/settings.ts';
-import { setKey, addToList, deleteKey, getScopeTable, removeFromList } from '#cli/policy/document/contracts.ts';
+import type { Policy, Mutation, KnownSettings, CapturedPolicyEdit } from '#cli/types/policy/settings.ts';
+
+import {
+    setKey,
+    addToList,
+    deleteKey,
+    getScopeTable,
+    preparePolicy,
+    removeFromList,
+} from '#cli/policy/document/contracts.ts';
 
 // Text that reads as neither is refused: kept as a string, it lands in the policy as a quoted table nothing reads.
 function parseStructured(text: string): unknown {
@@ -105,6 +113,7 @@ function describeSet(
 
 async function changeSetting(
     root: string,
+    input: CapturedPolicyEdit,
     policy: Policy,
     surface: KnownSettings,
     options: SetOptions,
@@ -134,7 +143,7 @@ async function changeSetting(
         }
     };
     const summary = describeSet(policy, surface, options, shown, value, isList);
-    const result = await savePolicy(root, { change: mutation, summary, isDryRun: options.isDryRun });
+    const result = await savePolicy(root, { input, change: mutation, summary, isDryRun: options.isDryRun });
     return options.remove && result.exitCode === 0 && !result.json.changed
         ? { ...result, text: 'nothing to remove\n' }
         : result;
@@ -148,7 +157,8 @@ async function changeSetting(
 async function setCommand(options: SetOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
     assertVersionPin(root);
-    const { policy } = readPolicy(root);
+    const input = preparePolicy(root);
+    const { policy } = readPolicyTable(input.table, root);
     if (options.scope !== undefined && !Object.hasOwn(policy.scope, options.scope))
         throw new GspotError('policy', [
             `No policy scope matches ${options.scope}. Available scopes: ${['root', ...Object.keys(policy.scope)].join(', ')}.`,
@@ -157,7 +167,7 @@ async function setCommand(options: SetOptions): Promise<CommandResult> {
     const match = declarationFor(surface, options.key);
     if (!match) throw buildSettingError(policy, surface, options.key);
     const shown = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
-    if (!options.toDefault) return await changeSetting(root, policy, surface, options, match.declaration, shown);
+    if (!options.toDefault) return await changeSetting(root, input, policy, surface, options, match.declaration, shown);
     const mutation: Mutation = (raw) => {
         const holder = getScopeTable(raw, options.scope);
         deleteKey(holder, options.key);
@@ -168,7 +178,7 @@ async function setCommand(options: SetOptions): Promise<CommandResult> {
         }
     };
     const summary = `${shown} back to the shipped default`;
-    return await savePolicy(root, { change: mutation, summary, isDryRun: options.isDryRun });
+    return await savePolicy(root, { input, change: mutation, summary, isDryRun: options.isDryRun });
 }
 
 /**

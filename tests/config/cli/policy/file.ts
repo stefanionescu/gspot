@@ -177,3 +177,7 @@ export const AUTHORED_POLICY =
 
 /** An explicit empty project path keeps repository inference disabled. */
 export const EMPTY_PROJECT_POLICY = 'configurations = ["swift", "xcode"]\n[swift]\nxcode_project = ""\n';
+
+/** Native expiry remains mutable while the captured value identity stays unchanged. */
+export const NATIVE_EDIT_POLICY =
+    'configurations = ["bash"]\n# Keep the authored expiry.\n[[ignore]]\ncheck = "bash/shellcheck"\nreason = "The launcher intentionally retains word splitting."\nuntil = 2099-05-20\n';

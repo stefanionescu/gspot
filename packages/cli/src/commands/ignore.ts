@@ -1,21 +1,21 @@
 import { isDeepStrictEqual } from 'node:util';
-import { readPolicy } from '#cli/policy/public.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import { printResult } from '#cli/terminal/public.ts';
+import { readPolicyTable } from '#cli/policy/public.ts';
 import { savePolicy } from '#cli/commands/contracts.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/lifecycle/public.ts';
 import { knownChecks } from '#cli/configurations/public.ts';
 import type { Program } from '#cli/types/commands/program.ts';
-import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
+import { preparePolicy } from '#cli/policy/document/contracts.ts';
 import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { commandHelp, commandRoot } from '#cli/commands/public.ts';
 import { reasonDiagnostic } from '#cli/policy/errors/contracts.ts';
 import { compact, quoteArgument } from '#cli/platform/contracts.ts';
 import { unknownCheckDiagnostic } from '#cli/configurations/errors/public.ts';
-import type { Policy, Mutation, TomlTable } from '#cli/types/policy/settings.ts';
-import { emitPolicy, mergeIgnore, parseTomlText, parseExpiryDate } from '#cli/policy/document/public.ts';
+import { emitPolicy, mergeIgnore, parseExpiryDate } from '#cli/policy/document/public.ts';
+import type { Policy, Mutation, TomlTable, CapturedPolicyEdit } from '#cli/types/policy/settings.ts';
 
 function assertKnownCheck(checkName: string, policy: Policy): void {
     const known = knownChecks(Object.values(policy.check));
@@ -45,7 +45,7 @@ function buildIgnore(options: IgnoreOptions): TomlTable {
     return entry;
 }
 
-async function deleteIgnore(root: string, options: IgnoreOptions, ignores: TomlTable[]): Promise<CommandResult> {
+async function deleteIgnore(root: string, options: IgnoreOptions, input: CapturedPolicyEdit): Promise<CommandResult> {
     const selector = {
         check: options.check,
         rule: options.rule,
@@ -62,6 +62,7 @@ async function deleteIgnore(root: string, options: IgnoreOptions, ignores: TomlT
             ? paths === undefined || paths.length === 0
             : paths?.some((path) => removed.has(path)) === true;
     };
+    const ignores = (input.table['ignore'] as TomlTable[] | undefined) ?? [];
     const removedCount = ignores.filter((entry) => hasMatchingRemoval(entry)).length;
     const noun = removedCount === 1 ? 'entry' : 'entries';
     const summary =
@@ -69,8 +70,7 @@ async function deleteIgnore(root: string, options: IgnoreOptions, ignores: TomlT
             ? 'nothing to remove: no matching ignore entry'
             : `removed ${String(removedCount)} ignore ${noun} for ${options.check}`;
     const mutation: Mutation = (raw) => {
-        const list = (raw['ignore'] as TomlTable[] | undefined) ?? [];
-        const kept = list.filter((entry) => {
+        const kept = ignores.filter((entry) => {
             if (!hasMatchingRemoval(entry)) return true;
             if (removed.size === 0) return false;
             const paths = entry['paths'] as string[];
@@ -81,7 +81,7 @@ async function deleteIgnore(root: string, options: IgnoreOptions, ignores: TomlT
         if (kept.length === 0) Reflect.deleteProperty(raw, 'ignore');
         else raw['ignore'] = kept;
     };
-    const committed = await savePolicy(root, { change: mutation, summary, isDryRun: options.isDryRun });
+    const committed = await savePolicy(root, { input, change: mutation, summary, isDryRun: options.isDryRun });
     return !committed.json.changed && committed.exitCode === 0 ? { ...committed, text: `${summary}\n` } : committed;
 }
 
@@ -93,7 +93,8 @@ async function deleteIgnore(root: string, options: IgnoreOptions, ignores: TomlT
 async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
     assertVersionPin(root);
-    const { policy, text } = readPolicy(root);
+    const input = preparePolicy(root);
+    const { policy } = readPolicyTable(input.table, root);
     assertKnownCheck(options.check, policy);
     if (!options.remove) {
         const diagnostic = reasonDiagnostic(`gspot ignore ${options.check}`, options.reason, buildReasonHint(options));
@@ -101,21 +102,19 @@ async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     }
     if (options.remove) {
         // Effective policy omits invalid ignores; removal can repair the authored entries too.
-        const ignores = (parseTomlText(text, POLICY_FILE, 'policy')['ignore'] as TomlTable[] | undefined) ?? [];
-        return await deleteIgnore(root, options, ignores);
+        return await deleteIgnore(root, options, input);
     }
-    const entry = buildIgnore(options);
-    let written = '';
+    const list = (input.table['ignore'] as TomlTable[] | undefined) ?? [];
+    const saved = mergeIgnore(list, buildIgnore(options));
     const result = await savePolicy(root, {
+        input,
         change: (raw) => {
-            const list = (raw['ignore'] as TomlTable[] | undefined) ?? [];
-            const saved = mergeIgnore(list, entry);
             raw['ignore'] = list;
-            written = emitPolicy('', { ignore: [saved] }).trimEnd();
         },
         summary: options.isDryRun ? 'Ignore proposed.' : 'Ignore saved.',
         isDryRun: options.isDryRun,
     });
+    const written = emitPolicy('', { ignore: [saved] }).trimEnd();
     return result.exitCode === 0 && result.json.changed ? { ...result, text: `${written}\n${result.text}` } : result;
 }
 

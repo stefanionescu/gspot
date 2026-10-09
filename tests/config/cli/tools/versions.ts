@@ -36,7 +36,17 @@ export const HOST_PLUGIN_REPORTS = [
 
 /** Native version-process bytes and their inspection outcomes. */
 export const VERSION_PROCESS_CASES = [
-    ['console.log("3.8.1"); process.exitCode = 7;', 'error', 'exited 7'],
-    ['console.log("unrecognized output");', 'error', 'valid version'],
-    ['console.error("3.8.1");', 'ok', undefined],
+    [
+        'console.log("3.8.1"); process.exitCode = 7;',
+        'error',
+        undefined,
+        'version-teller version inspection exited 7: 3.8.1',
+    ],
+    [
+        'console.log("unrecognized output");',
+        'error',
+        undefined,
+        'version-teller did not report a valid version: unrecognized output',
+    ],
+    ['console.error("3.8.1");', 'ok', '3.8.1', undefined],
 ] as const;

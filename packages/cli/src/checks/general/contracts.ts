@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { findingAt } from '#cli/checks/finding.ts';
 import { emitAll } from '#cli/generation/public.ts';
 import { emptyResult } from '#cli/execution/report.ts';
@@ -7,6 +6,7 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import { pathMatcher } from '#cli/repository/paths/public.ts';
 import { trackedEntries } from '#cli/repository/contracts.ts';
 import { everyTable } from '#cli/policy/settings/contracts.ts';
+import { relativePath } from '#cli/policy/schema/contracts.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { mapPolicyPaths, prefixScopePath } from '#cli/policy/paths.ts';
@@ -144,8 +144,7 @@ export async function unmatchedPaths(input: CheckInput): Promise<Finding[]> {
             );
             return pattern;
         };
-        if (scope !== '')
-            mapPolicyPaths(z.instanceof(z.ZodType).parse(policySchema.shape.scope.unwrap().keyType), scope, visit, []);
+        if (scope !== '') mapPolicyPaths(relativePath, scope, visit, []);
         mapPolicyPaths(
             schema,
             Object.fromEntries(

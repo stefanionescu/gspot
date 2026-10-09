@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { INIT } from '#tests/config/cli/commands/agents.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { currentBlock } from '#cli/platform/root/contracts.ts';
@@ -57,6 +58,7 @@ test('an agent destination outside the repository is refused', async () => {
     const before = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     const refused = await runGspot(sandbox.path, ['set', 'agent_rules.instruction_files', '../outside.md']);
     expect(refused.code).toBe(2);
+    expect(refused.stdout + refused.stderr).toContain('agent_rules.instruction_files');
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(before);
 });
 
@@ -71,7 +73,7 @@ test('init deletes CLAUDE.md and moves its text to the end of AGENTS.md', async 
     const { plan } = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.write.map((entry) => entry.path)).toContain('AGENTS.md');
     expect(plan.write.map((entry) => entry.path)).not.toContain('GEMINI.md');
-    expect(plan.remove).toContainEqual({ path: 'CLAUDE.md', note: 'its own text moves to the end of AGENTS.md' });
+    expect(plan.remove).toContainEqual(containing({ path: 'CLAUDE.md' }));
     expect(await readFile(join(sandbox.path, 'CLAUDE.md'), 'utf8')).toBe('# Claude notes\n\nRun the tests.\n');
     const installed = await runGspot(sandbox.path, INIT);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);

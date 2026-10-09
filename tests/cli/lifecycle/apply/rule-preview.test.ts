@@ -60,9 +60,9 @@ test('Vale previews its added style packages and native rule options at all', as
     expect(changes.find((group) => group.path === '*.BasedOnStyles')?.added).toContain('Google');
     const options = changes.find((group) => group.path === '*.rules')!;
     expect(options.added).toContain('Google.Passive');
-    expect(options.added).toContain('Microsoft.Spelling');
+    expect(options.added).toContain('Google.Spelling');
     expect(options.removed).toContain('gspot.sentence-length');
-    expect(options.changed).toStrictEqual([]);
+    expect(options.changed).toStrictEqual(['gspot.us-english']);
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
     expect(getOwnership(sandbox.path).rules?.[path]).toStrictEqual(baseline);
     const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });

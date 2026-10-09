@@ -1,16 +1,28 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
+import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { readRepository } from '#cli/repository/public.ts';
+import { rejection } from '#tests/harness/expectations.ts';
+import { selectRuleFiles } from '#cli/agent-rules/public.ts';
+import { everyManifest } from '#cli/configurations/public.ts';
 import { rm, mkdir, symlink, writeFile } from 'node:fs/promises';
+import { etaInputs } from '#cli/generation/compilation/public.ts';
 import { PYTHON_PROJECT_FILES } from '#tests/config/samples/python.ts';
+import { detectUnselected } from '#cli/repository/selection/contracts.ts';
 import { readPackageManifest, readPackageManifests, getProjectDependencies } from '#cli/repository/contracts.ts';
 
 import {
     INVALID_MANIFESTS,
+    SESSION_PACKAGE_FIX,
+    SESSION_PACKAGE_FILES,
     AUTHORED_PACKAGE_FIELDS,
     PROJECT_DEPENDENCY_FILES,
     PROJECT_DEPENDENCY_SCOPES,
+    SESSION_PACKAGE_REPLACEMENT,
     INVALID_PYTHON_DEPENDENCY_CASES,
 } from '#tests/config/cli/repository/package-manifests.ts';
 
@@ -145,4 +157,81 @@ test.each(INVALID_MANIFESTS)('invalid %s content %s remains a manifest-reader er
     await createFileTree(sandbox.path, { [path]: content, 'source.ts': 'export {};\n' });
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(() => readPackageManifests(sandbox.path, repository.files)).toThrow(path);
+});
+
+test.each(['recommended', 'all'] as const)(
+    'session package facts retain root and child detection at %s',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            ...SESSION_PACKAGE_FILES,
+            'gspot.toml': buildPolicy(['javascript'], {
+                level,
+                tables: '[scope.app]\nconfigurations = ["javascript"]\n',
+            }),
+        });
+        const session = await openSession(sandbox.path);
+        await writeFile(join(sandbox.path, 'package.json'), '{');
+        const dependencies = session.scopes.map(
+            (selection) => etaInputs(session, selection, everyManifest(session.scopes)).scopeDependencies,
+        );
+        expect(dependencies).toStrictEqual([['react'], ['vue']]);
+        expect(
+            selectRuleFiles(
+                session.policyFiles.policy.agent_rules,
+                everyManifest(session.scopes),
+                session.repository,
+                level,
+                session.packageManifests,
+            ).map(({ path }) => path),
+        ).toContain('language/javascript/COMPONENTS.md');
+        expect(
+            detectUnselected(
+                sandbox.path,
+                session.repository.files,
+                session.manifests,
+                [],
+                session.packageManifests,
+            ).map(({ configuration }) => configuration),
+        ).toContain('react');
+        expect(await rejection(openSession(sandbox.path))).toContain('Cannot inspect manifest package.json');
+        await writeFile(join(sandbox.path, 'package.json'), SESSION_PACKAGE_REPLACEMENT);
+        const current = await openSession(sandbox.path);
+        expect(
+            current.scopes.map(
+                (selection) => etaInputs(current, selection, everyManifest(current.scopes)).scopeDependencies,
+            ),
+        ).toStrictEqual([[], ['vue']]);
+    },
+);
+
+test('fix verification refreshes the opened session package facts without changing its child', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        ...SESSION_PACKAGE_FILES,
+        'gspot.toml': buildPolicy(['javascript'], {
+            tables: `[scope.app]
+configurations = ["javascript"]
+[check."project/update-package"]
+command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
+fix = ${JSON.stringify([process.execPath, '-e', SESSION_PACKAGE_FIX])}
+paths = ["package.json"]
+stage = "commit"
+[check."project/update-package".output]
+format = "none"
+`,
+        }),
+    });
+    const session = await openSession(sandbox.path);
+    const outcome = await executeRun(session, buildRunOptions({ only: ['project/update-package'], fix: true }));
+    expect(outcome.report.exitCode).toBe(0);
+    expect(outcome.fixes?.results).toMatchObject([
+        { check: 'project/update-package', status: 'changed', changed: ['package.json'] },
+    ]);
+    expect(getProjectDependencies(session.packageManifests, '')).toStrictEqual({});
+    expect(getProjectDependencies(session.packageManifests, 'app')).toStrictEqual({ vue: '3.5.0' });
+    expect(await Bun.file(join(sandbox.path, 'package.json')).text()).toBe(SESSION_PACKAGE_REPLACEMENT);
+    expect(await Bun.file(join(sandbox.path, 'app/package.json')).text()).toBe(
+        SESSION_PACKAGE_FILES['app/package.json'],
+    );
 });

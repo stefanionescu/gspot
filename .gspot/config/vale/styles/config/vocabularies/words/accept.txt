@@ -125,6 +125,7 @@ NVIDIA
 OCSP
 ODF
 OIDC
+optin
 ORM
 osv-scanner
 OTP

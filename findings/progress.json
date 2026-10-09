@@ -1,5 +1,5 @@
 {
-    "openRecords": 564,
+    "openRecords": 561,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -268,7 +268,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 564,
+        "openRecords": 561,
         "records": 1092,
         "batches": [
             {
@@ -574,8 +574,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 151,
-                "unresolvedAssignments": 140
+                "completedAssignments": 153,
+                "unresolvedAssignments": 138
             },
             {
                 "id": "python",
@@ -728,8 +728,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 29,
-                "unresolvedAssignments": 70
+                "completedAssignments": 30,
+                "unresolvedAssignments": 69
             },
             {
                 "id": "swift-bash-sql",
@@ -957,8 +957,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 38,
-                "unresolvedAssignments": 93
+                "completedAssignments": 39,
+                "unresolvedAssignments": 92
             },
             {
                 "id": "test-quality",
@@ -1434,8 +1434,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 201,
-                "unresolvedAssignments": 268
+                "completedAssignments": 202,
+                "unresolvedAssignments": 267
             },
             {
                 "id": "scripts-repository",
@@ -1915,8 +1915,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 49,
-                "unresolvedAssignments": 40
+                "completedAssignments": 50,
+                "unresolvedAssignments": 39
             },
             {
                 "id": "configurations",
@@ -3119,10 +3119,16 @@
             ]
         },
         "areas/kits/031": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7d7af416eb58f62528dfb9396ebf12fe78dd0f3f",
+            "verification": [
+                "Original root tests concern, now canonical test_files after glossary; no duplicate hard-coded test paths in translation literal-string rules. ignores: test_files directly consumes existing Eta setting delivery. Selected translations replaced pushed i18n identity only; no new setting alias.",
+                "Jest [files].paths reads effective tests while retaining **/jest.config.*. paths = [\"{setting:test_files}\", \"**/jest.config.*\"]; manifest boundary permits exact whole-setting token and actual selected ownership calculation receives effective scoped tests.",
+                "Original Semgrep secrets Eta source was already deleted in final status; preserve its retirement. No restoration, duplicate test-glob secret asset, or compatibility name.",
+                "Native root/child/inherited/sibling/empty explicit list boundary and both levels; preserve ordinary default test_files list semantics. Actual JSX rule absent at recommended and active at all; tests-only exclusions follow root/scoped lists. Normal openSession retains native default test patterns; the exact probe explicitly records that behavior rather than claiming empty authored list erases defaults.",
+                "Native evidence: /tmp/gspot-configuration-five-focused-after-grammar.log:371pass0fail1519assert13files27.66s; /tmp/gspot-configuration-five-test-files-probe-final.log: actual native openSession scope views and unchanged default patterns retained; Pushed commit message:171tests1134assert workspace types; normal staged/push passed."
+            ]
         },
         "areas/kits/032": {
             "status": "partial",
@@ -3617,10 +3623,15 @@
             ]
         },
         "areas/kits/082": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7d7af416eb58f62528dfb9396ebf12fe78dd0f3f",
+            "verification": [
+                "Move sole folder-name bans into required naming group, excluding language names. All9 terms common/core/helper/helpers/util/utils/support/misc/shared. BANNED_FOLDERS removed; folderNames reads namingTerms().groups.folders.terms. Language names intersection empty.",
+                "No removable group; accept a name through exact reasoned [[ignore]], not a parallel exemption knob. Both levels/root/child actual check; all-only bans, duplicate-folder dedup, language names legal, shared/** exact native ignore leaves app/worker/shared finding/source intact. Closed owner-decisions003 and checks060 retained.",
+                "Original NestJS kind move is explicitly allocated by final row to areas/checks/059. NESTJS_KINDS remains in general constants and selected NestJS matching; manifest has no ownership field. areas/checks/059 is still partial; do not claim this original branch completed.",
+                "Native evidence: /tmp/gspot-configuration-five-focused-after-grammar.log; /tmp/gspot-configuration-five-folder-projection-proof.json; Same pushed shared-config171/1134 evidence."
+            ]
         },
         "areas/kits/083": {
             "status": "complete",
@@ -9005,10 +9016,15 @@
             ]
         },
         "review/source-layout/055": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7d7af416eb58f62528dfb9396ebf12fe78dd0f3f",
+            "verification": [
+                "Six exact mirror owner moves and seven direct caller literals preserve static/type bodies; no aliases. All final owners present and equal pushed HEAD; original six old mirror owners absent. Byte-identical move proof and import-only real callers preserved.",
+                "Strict native prefix collision prevails over historical flat no-* targets. Explicit strict-plugin-rule-mirror-grouping owner decision pushed7d: group no/index-imports and no/trivial files/functions, no waiver or compatibility export.",
+                "Other mirror obligations follow rules002/004/006/007/008 dispositions. Custom import-direction/extensions/reexports/barrel/test-placement source/config/type owners retired via already completed native replacements. No restoration of deleted mirrors or aliases.",
+                "Native evidence: /tmp/gspot-source-layout055-body-proof.json: same literal/types/real rule bodies; /tmp/gspot-source-layout055-approved-grouping-cp-native.log:208pass0fail4files; Commit7d7af416:workspace types, native apply,76 staged checks0findings, normal commit/push."
+            ]
         },
         "review/source-layout/056": {
             "status": "complete",
@@ -17629,6 +17645,21 @@
             ],
             "limitations": [
                 "GitHub Actions37860227794 remains pending with no jobs; earlier37858961107 was cancelled. Neither proves Linux/macOS/Windows completion."
+            ]
+        },
+        {
+            "commit": "7d7af416eb58f62528dfb9396ebf12fe78dd0f3f",
+            "completedRecords": ["areas/kits/031", "areas/kits/082", "review/source-layout/055"],
+            "unresolvedRecords": 561,
+            "validation": [
+                "Exact original/current binding and owner audit completed. Shared config171 cases/1134 assertions; mirror208 cases and normal staged/push gates passed.",
+                "Original IDs, quotations, closed rows, memberships, and owner decisions preserved."
+            ],
+            "limitations": [
+                "CI at7d7af416 has two identified test failures and is not claimed as full cross-platform proof.",
+                "The separate NestJS defaults obligation areas/checks/059 remains partial as the final082 row assigns it.",
+                "Working namespace/category projections excluded from pushed implementation credit.",
+                "Plugin066 remains partial pending owner-specific simplification accounting."
             ]
         }
     ],

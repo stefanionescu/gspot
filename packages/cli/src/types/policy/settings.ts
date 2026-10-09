@@ -181,6 +181,12 @@ export type AuthoredReasons = {
     scope?: Record<string, { reasons?: Record<string, string> | undefined }> | undefined;
 };
 
+/** Native authored values and their immutable serialization before a mutation. */
+export type PolicyEdit = { text: string; table: TomlTable; values: string };
+
+/** The native edit and the private file identity captured before publication. */
+export type CapturedPolicyEdit = PolicyEdit & { original: FileCopy };
+
 export type PreparedPolicy = Proposal & { original: FileCopy };
 
 export type Proposal = { text: string; policy: Policy; changed: boolean };

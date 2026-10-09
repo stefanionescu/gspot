@@ -4,8 +4,9 @@ import { parse, stringify } from 'smol-toml';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { policySchema } from '#cli/policy/schema/public.ts';
+import { parseTomlText } from '#cli/policy/document/public.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
-import { readPolicy, readPolicyText, parseStrictPolicy } from '#cli/policy/public.ts';
+import { readPolicy, readPolicyTable, parseStrictPolicy } from '#cli/policy/public.ts';
 
 import {
     DISABLED_RULES,
@@ -39,7 +40,7 @@ test.each(
     const path = entry.scoped ? 'scope.app.reasons.limits.file_lines' : 'reasons.limits.file_lines';
     const diagnostic = `gspot.toml: ${path}: Invalid input: expected string, received ${entry.received}`;
     expect(policyFindings(source)).toStrictEqual([diagnostic]);
-    expect(() => readPolicyText(source)).toThrow(diagnostic);
+    expect(() => readPolicyTable(parseTomlText(source, 'gspot.toml', 'policy'))).toThrow(diagnostic);
 });
 
 describe('policy value normalization', () => {
@@ -123,8 +124,10 @@ test('refuses an empty correction command', () => {
 });
 
 test('schema defaults preserve absent and explicitly authored empty policy tables', () => {
-    const absent = readPolicyText('configurations = []\n');
-    const authored = readPolicyText('configurations = []\n[naming]\n[architecture]\n[structure]\n');
+    const absent = readPolicyTable(parseTomlText('configurations = []\n', 'gspot.toml', 'policy'));
+    const authored = readPolicyTable(
+        parseTomlText('configurations = []\n[naming]\n[architecture]\n[structure]\n', 'gspot.toml', 'policy'),
+    );
     expect({
         architecture: absent.policy.architecture,
         structure: absent.policy.structure,
@@ -150,7 +153,9 @@ test.each(DISABLED_RULES)(
     ({ tool, configuration, rule, value, check }) => {
         const source = stringify({ configurations: [configuration], tools: { [tool]: { rules: { [rule]: value } } } });
         expect(() => parseStrictPolicy(source)).toThrow(`gspot ignore ${check} --rule ${rule}`);
-        expect(() => readPolicyText(source)).toThrow(`gspot ignore ${check} --rule ${rule}`);
+        expect(() => readPolicyTable(parseTomlText(source, 'gspot.toml', 'policy'))).toThrow(
+            `gspot ignore ${check} --rule ${rule}`,
+        );
     },
 );
 
@@ -160,7 +165,7 @@ test('native zero-valued Stylelint options and false Taplo formatting remain act
         tools: { stylelint: { rules: { 'max-nesting-depth': 0 } }, taplo: { verbatim: { reorder_keys: false } } },
         reasons: { 'tools.taplo.verbatim': 'This sandbox retains a native formatting option.' },
     });
-    const result = readPolicyText(source);
+    const result = readPolicyTable(parseTomlText(source, 'gspot.toml', 'policy'));
     expect(result.errors).toStrictEqual([]);
     expect(result.policy.tools).toMatchObject({
         stylelint: { rules: { 'max-nesting-depth': 0 } },

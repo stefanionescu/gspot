@@ -20,7 +20,7 @@ import { noteLines, printResult } from '#cli/terminal/public.ts';
 import { writePolicyFile } from '#cli/policy/document/public.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import { preparePolicy } from '#cli/policy/document/contracts.ts';
+import { readPackageManifests } from '#cli/repository/contracts.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import type { ScopeSelections } from '#cli/types/commands/session.ts';
 import { XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
@@ -31,6 +31,7 @@ import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { scopeView, knownSettings } from '#cli/policy/settings/public.ts';
 import type { Program, GlobalCommand } from '#cli/types/commands/program.ts';
 import { detectConfigurations } from '#cli/repository/selection/contracts.ts';
+import { editPolicy, preparePolicy } from '#cli/policy/document/contracts.ts';
 import { pathMatcher, filenameMatcher } from '#cli/repository/paths/public.ts';
 import type { ApplyOptions, ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/selection/contracts.ts';
@@ -193,6 +194,7 @@ export async function openSession(rootPath: string, policyFiles = readPolicy(roo
         policyFiles: { ...policyFiles, policy },
         manifests,
         repository,
+        packageManifests: readPackageManifests(root, repository.files),
         scopes,
         inspections: new Map(),
         getPendingInstallations: (path) => getOwnership(path).installing,
@@ -262,7 +264,8 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
     using log = options.isDryRun ? undefined : openOwnership(root);
     const current = await openSession(root);
     const reconciliation = reconcileConfigurations(current);
-    const proposal = preparePolicy(root, reconciliation.mutate);
+    const input = preparePolicy(root);
+    const proposal = { ...editPolicy(root, input, reconciliation.mutate), original: input.original };
     if (!proposal.original.bytes.equals(Buffer.from(current.policyFiles.text)))
         throw new GspotError('policy', ['The gspot.toml file changed while gspot was running. Run the command again.']);
     const session = await openSession(root, {

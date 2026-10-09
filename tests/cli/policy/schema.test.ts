@@ -13,8 +13,13 @@ import { UNSAFE_DIRECTORIES } from '#tests/config/cli/policy/boundaries.ts';
 import { NAMING_SCHEMA_CASES } from '#tests/config/cli/policy/schema/naming.ts';
 import { POLICY_FIELD_SCHEMA_CASES } from '#tests/config/cli/policy/schema/fields.ts';
 import { EXCEPTION_SCHEMA_CASES } from '#tests/config/cli/policy/schema/exceptions.ts';
-import { SCHEMA_CHECK, LOCALE_SCHEMA_CASES, RUNTIME_SCHEMA_CASES } from '#tests/config/cli/policy/schema/cases.ts';
 
+import {
+    SCHEMA_CHECK,
+    OWN_RECORD_KEYS,
+    LOCALE_SCHEMA_CASES,
+    RUNTIME_SCHEMA_CASES,
+} from '#tests/config/cli/policy/schema/cases.ts';
 import {
     TOOL_SCHEMA_CASES,
     TOOL_SCHEMA_SCOPES,
@@ -44,8 +49,45 @@ describe('the JSON schema of gspot.toml', () => {
     test('the published schema accepts a check with and without its correction command', () => {
         expect(validate({ check: { 'project/lint': SCHEMA_CHECK } })).toBe(true);
         expect(validate({ check: { 'project/lint': { ...SCHEMA_CHECK, fix: ['lint', '--fix'] } } })).toBe(true);
+        for (const key of OWN_RECORD_KEYS) {
+            for (const [table, value] of [
+                ['check', SCHEMA_CHECK],
+                ['scope', {}],
+                ['words', 'A project term.'],
+            ] as const) {
+                const document = { [table]: Object.fromEntries([[key, value]]) };
+                const result = policySchema.parse(document);
+                expect(Object.keys({ ...result[table] })).toStrictEqual([key]);
+                expect(validate(document)).toBe(true);
+                const invalid = { [table]: Object.fromEntries([[key, 5]]) };
+                const rejected = policySchema.safeParse(invalid);
+                expect(rejected.success).toBe(false);
+                if (!rejected.success) expect(rejected.error.issues[0]?.path).toStrictEqual([table, key]);
+                expect(validate(invalid)).toBe(false);
+            }
+        }
+        expect(Object.hasOwn(Object.prototype, 'command')).toBe(false);
     });
 });
+
+test.each(OWN_RECORD_KEYS.flatMap((key) => ['', 'app'].map((scope) => ({ key, scope }))))(
+    'numeric limit $key retains its authored key with scope=$scope',
+    ({ key, scope }) => {
+        const fields = {
+            limits: Object.fromEntries([[key, 1]]),
+            reasons: { [`limits.${key}`]: 'The project has a reviewed numeric limit.' },
+        };
+        const input = scope === '' ? fields : { scope: { app: fields } };
+        const output = policySchema.parse(input);
+        const values = scope === '' ? output.limits : output.scope?.['app']?.limits;
+        expect(Object.keys(values!)).toStrictEqual([key]);
+        expect(validate(input)).toBe(true);
+        const invalid = { ...fields, limits: Object.fromEntries([[key, 'invalid']]) };
+        const rejected = scope === '' ? invalid : { scope: { app: invalid } };
+        expect(policySchema.safeParse(rejected).success).toBe(false);
+        expect(validate(rejected)).toBe(false);
+    },
+);
 
 test.each([
     ...RUNTIME_SCHEMA_CASES,

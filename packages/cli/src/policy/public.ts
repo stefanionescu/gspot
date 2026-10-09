@@ -18,7 +18,6 @@ import { parseTomlText, readPolicyFile } from '#cli/policy/document/public.ts';
 import { similar, valueAt, codeList, isRecord } from '#cli/platform/contracts.ts';
 import { configurationFiles, configurationManifests } from '#cli/configurations/public.ts';
 import { FIRST_READ, FIELD_PROBLEMS, SCOPE_KEY_DEPTH } from '#cli/config/policy/settings.ts';
-import type { Policy, RawPolicy, PolicyFile, PolicyError, RuleExclusionError } from '#cli/types/policy/settings.ts';
 
 import {
     reasonErrors,
@@ -26,6 +25,14 @@ import {
     restrictionErrors,
     pathErrors as getPathErrors,
 } from '#cli/policy/errors/contracts.ts';
+import type {
+    Policy,
+    RawPolicy,
+    TomlTable,
+    PolicyFile,
+    PolicyError,
+    RuleExclusionError,
+} from '#cli/types/policy/settings.ts';
 
 function issueLines(path: string, issue: z.core.$ZodIssue): string[] {
     if (issue.code === 'invalid_key')
@@ -46,8 +53,8 @@ function throwErrors(errors: PolicyError[]): never {
     );
 }
 
-function validatedRaw(text: string): RawPolicy {
-    const result = policySchema.safeParse(parseTomlText(text, POLICY_FILE, 'policy'));
+function validatedRaw(table: TomlTable): RawPolicy {
+    const result = policySchema.safeParse(table);
     if (!result.success)
         throw new GspotError(
             'policy',
@@ -200,7 +207,7 @@ export function errorText(error: PolicyError, file?: string): string {
  * @returns the normalized policy
  */
 export function parseStrictPolicy(text: string, root?: string): Policy {
-    const policy = normalizeKnownConfigurations(validatedRaw(text));
+    const policy = normalizeKnownConfigurations(validatedRaw(parseTomlText(text, POLICY_FILE, 'policy')));
     const errors = collectErrors(policy, root);
     if (errors.length > 0) throwErrors(errors);
     return policy;
@@ -210,12 +217,12 @@ export function parseStrictPolicy(text: string, root?: string): Policy {
  * Reads policy for check execution. Invalid values become findings and are excluded from the effective policy.
  * Syntax errors, unknown keys, and invalid document shapes throw GspotError('policy').
  *
- * @param text the file's text.
+ * @param table the native authored values.
  * @param root the repository root, when scopes are to be checked against the file system.
  * @returns the policy without invalid entries, and each located error.
  */
-export function readPolicyText(text: string, root?: string): Pick<PolicyFile, 'policy' | 'errors'> {
-    const raw = validatedRaw(text);
+export function readPolicyTable(table: TomlTable, root?: string): Pick<PolicyFile, 'policy' | 'errors'> {
+    const raw = validatedRaw(table);
     const complete = normalizeKnownConfigurations(raw);
     const found = collectErrors(complete, root);
 
@@ -256,7 +263,7 @@ export function hasPolicy(root: string): boolean {
 export function readPolicy(root: string): PolicyFile {
     const path = join(root, POLICY_FILE);
     const text = readPolicyFile(root);
-    const { policy, errors } = readPolicyText(text, root);
+    const { policy, errors } = readPolicyTable(parseTomlText(text, POLICY_FILE, 'policy'), root);
     return { policy, path, text, errors };
 }
 

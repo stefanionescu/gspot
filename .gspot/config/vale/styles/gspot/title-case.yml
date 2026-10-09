@@ -102,6 +102,7 @@ exceptions:
     - "\\x4fCSP"
     - "\\x4fDF"
     - "\\x4fIDC"
+    - "\\x6fptin"
     - "\\x4fRM"
     - "\\x4fTP"
     - "\\x4fWASP"

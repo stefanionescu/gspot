@@ -5,7 +5,6 @@ import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import { everyManifest } from '#cli/configurations/public.ts';
 import { ownedBy } from '#cli/repository/selection/public.ts';
 import { GspotError, hostPlatform } from '#cli/platform/public.ts';
-import { readPackageManifests } from '#cli/repository/contracts.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { declaredArchitectures } from '#cli/policy/settings/contracts.ts';
 import { filesFor, runsAtRoot, childScopes } from '#cli/planning/files.ts';
@@ -119,12 +118,6 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const wholeSeen = new Set<string>();
     const platform = hostPlatform();
     const narrow = narrowSet(options);
-    const needsDependencies = session.scopes.some((scope) =>
-        entriesFor(session, scope).some(
-            ({ check }) => isWanted(check, options) && check.when?.dependencies !== undefined,
-        ),
-    );
-    const projects = needsDependencies ? readPackageManifests(session.root, session.repository.files) : [];
     return session.scopes.map((scope) => {
         const context: PlanInputs = {
             session,
@@ -133,7 +126,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
             platform,
             narrow,
             children: childScopes(session, scope),
-            projects,
+            projects: session.packageManifests,
         };
         return planScope(context, wholeSeen);
     });

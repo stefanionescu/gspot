@@ -6,33 +6,39 @@ import { selectForScope } from '#cli/repository/selection/public.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { GOOD_IGNORE } from '#tests/config/cli/policy/read/recovery.ts';
-import { readPolicyText, parseStrictPolicy } from '#cli/policy/public.ts';
 import { scopeView, knownSettings } from '#cli/policy/settings/public.ts';
+import { readPolicyTable, parseStrictPolicy } from '#cli/policy/public.ts';
+import { policyValues, parseTomlText } from '#cli/policy/document/public.ts';
 
 test('forbidden ShellCheck settings in a scope are reported and removed at the scoped key', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'api/source.sh': 'echo value' });
     const text =
         'configurations = ["bash"]\n[scope."api"]\n[scope."api".tools.shellcheck.verbatim]\ndisable = "SC2086"\n[scope."api".reasons]\n"tools.shellcheck.verbatim" = "Exercise the native rule-selection refusal."\n';
-    const result = readPolicyText(text, sandbox.path);
+    const result = readPolicyTable(parseTomlText(text, 'gspot.toml', 'policy'), sandbox.path);
     expect(result.errors).toMatchObject([{ path: ['scope', 'api', 'tools', 'shellcheck', 'verbatim'] }]);
     expect(result.policy.scopeTables['api']?.tools?.['shellcheck']?.verbatim).toBeUndefined();
     expect(result.policy.configurations).toStrictEqual(['bash']);
 });
 test('an ignore without a reason is a finding at its key path, and the other ignore stands', () => {
     const text = `${buildPolicy(['bash'])}${GOOD_IGNORE}[[ignore]]\ncheck = "bash/bash-syntax"\n`;
-    const { policy, errors } = readPolicyText(text);
+    const authored = parseTomlText(text, 'gspot.toml', 'policy');
+    const original = policyValues(authored);
+    const { policy, errors } = readPolicyTable(authored);
+    expect(policyValues(authored)).toBe(original);
     expect(errors).toMatchObject([{ path: ['ignore', 1, 'reason'], message: textContaining('needs a reason') }]);
     expect(policy.ignore.map((entry) => entry.check)).toStrictEqual(['bash/shellcheck']);
     expect(() => parseStrictPolicy(text)).toThrow('gspot.toml: ignore.1.reason:');
-    const corrected = readPolicyText(`${text}reason = "The syntax check reads the shebang alone."\n`);
+    const corrected = readPolicyTable(
+        parseTomlText(`${text}reason = "The syntax check reads the shebang alone."\n`, 'gspot.toml', 'policy'),
+    );
     expect(corrected.errors).toStrictEqual([]);
     expect(corrected.policy.ignore).toHaveLength(2);
 });
 
 test('a limit with a placeholder reason is dropped with its value, and the tightened limit stays', () => {
     const text = `${buildPolicy(['bash'])}[limits]\nfile_lines = 900\ncyclomatic_complexity = 6\n[reasons]\n"limits.file_lines" = "TBD"\n`;
-    const { policy, errors } = readPolicyText(text);
+    const { policy, errors } = readPolicyTable(parseTomlText(text, 'gspot.toml', 'policy'));
     expect(errors).toMatchObject([
         { path: ['reasons', 'limits.file_lines'], message: textContaining('"TBD" is refused') },
     ]);
@@ -44,7 +50,7 @@ test('a loosening without a reason and an unknown nested setting are findings, a
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'api/main.sh': '' });
     const text = `${buildPolicy(['bash'])}[limits]\nfile_lines = 1000\n[scope."api"]\n[scope."api".limits]\nfile_linse = 200\n`;
-    const { policy, errors } = readPolicyText(text, sandbox.path);
+    const { policy, errors } = readPolicyTable(parseTomlText(text, 'gspot.toml', 'policy'), sandbox.path);
     expect(errors).toMatchObject([
         { path: ['limits', 'file_lines'], message: textContaining('`limits.file_lines = 1000` is looser') },
         {
@@ -72,20 +78,28 @@ test('a loosening without a reason and an unknown nested setting are findings, a
 });
 
 test('an unknown configuration stops reading and names a matching configuration', () => {
-    expect(() => readPolicyText(buildPolicy(['bash']).replace('bash', 'bas'))).toThrow('bash');
+    expect(() =>
+        readPolicyTable(parseTomlText(buildPolicy(['bash']).replace('bash', 'bas'), 'gspot.toml', 'policy')),
+    ).toThrow('bash');
 });
 
 test('an unknown native tool option is refused at its table', () => {
     const source = `${buildPolicy(['bash'])}[tools.shellcheck]\nrules = { SC2086 = "error" }\n`;
-    expect(() => readPolicyText(source)).toThrow('`rules` is not a setting gspot knows under [tools.shellcheck]');
+    expect(() => readPolicyTable(parseTomlText(source, 'gspot.toml', 'policy'))).toThrow(
+        '`rules` is not a setting gspot knows under [tools.shellcheck]',
+    );
 });
 
 test('a syntax error stops reading with a TOML diagnostic', () => {
-    expect(() => readPolicyText(`${buildPolicy(['bash'])}level = \n`)).toThrow('is not valid TOML');
+    expect(() => readPolicyTable(parseTomlText(`${buildPolicy(['bash'])}level = \n`, 'gspot.toml', 'policy'))).toThrow(
+        'is not valid TOML',
+    );
 });
 
 test('an unknown top-level key stops reading and names that key', () => {
-    expect(() => readPolicyText(`${buildPolicy(['bash'])}hue = "red"\n`)).toThrow('`hue`');
+    expect(() =>
+        readPolicyTable(parseTomlText(`${buildPolicy(['bash'])}hue = "red"\n`, 'gspot.toml', 'policy')),
+    ).toThrow('`hue`');
 });
 
 test('unknown configurations retain duplicate root entries and scoped declaration order', () => {

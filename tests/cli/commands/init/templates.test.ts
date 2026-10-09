@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
@@ -17,7 +18,8 @@ test('templates > init validates a template in a dry run without changing the re
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'scripts/a.sh': CLEAN_BASH_SCRIPT,
-        'team.template.toml': 'template = "team"\nselection = "exact"\nconfigurations = ["bash"]\n',
+        'team.template.toml':
+            'template = "team"\nselection = "exact"\nconfigurations = ["bash"]\n[check."__proto__"]\ncommand = ["git", "status"]\npaths = ["**/*"]\nstage = "manual"\n',
     });
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
@@ -34,6 +36,13 @@ test('templates > init validates a template in a dry run without changing the re
         dryRun: true,
         plan: { template: { name: 'team', selection: 'exact' } },
     });
+    const { policy } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'policy'>>;
+    const original = parse(await Bun.file(join(sandbox.path, 'team.template.toml')).text());
+    const emitted = parse(policy);
+    expect(emitted['check']).toStrictEqual(original['check']);
+    expect(Object.keys(parseStrictPolicy(policy, sandbox.path).check)).toStrictEqual(['__proto__']);
+    expect(Object.hasOwn(Object.prototype, 'command')).toBe(false);
+    for (const key of ['test_files', 'ci']) expect(Object.hasOwn(emitted, key)).toBe(false);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

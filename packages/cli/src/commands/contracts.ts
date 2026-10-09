@@ -28,7 +28,7 @@ import { assertVersionPin, writeGeneratedFiles } from '#cli/lifecycle/public.ts'
 import type { InstallJson, InstallOptions } from '#cli/types/commands/install.ts';
 import { installTools, installationPlan } from '#cli/lifecycle/install/public.ts';
 import type { PolicySaveResult, SavePolicyOptions } from '#cli/types/commands/save-policy.ts';
-import { parseTemplate, preparePolicy, exportTemplate } from '#cli/policy/document/contracts.ts';
+import { editPolicy, parseTemplate, exportTemplate } from '#cli/policy/document/contracts.ts';
 
 // Both failure phases report native errors and non-Error throws with the same text.
 function errorText(error: unknown): string {
@@ -118,9 +118,9 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
  * @returns the prepared policy diff or the result of applying generated outputs
  */
 export async function savePolicy(root: string, options: SavePolicyOptions): Promise<PolicySaveResult> {
-    const { change, summary, isDryRun } = options;
+    const { input, change, summary, isDryRun } = options;
     using log = isDryRun ? undefined : openOwnership(root);
-    const result = preparePolicy(root, change);
+    const result = { ...editPolicy(root, input, change), original: input.original };
     if (log === undefined) return planPolicy(result, summary);
     if (!result.changed)
         return {

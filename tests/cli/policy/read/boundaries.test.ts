@@ -28,16 +28,31 @@ describe('configuration directory boundaries', () => {
     test('accepts relative directories containing spaces, percent signs, and Unicode', async () => {
         const path = 'apps/café 100%';
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { [`${path}/source.ts`]: 'export const count = 1;\n' });
+        await createFileTree(sandbox.path, {
+            [`${path}/source.ts`]: 'export const count = 1;\n',
+            '__proto__/source.ts': 'export const count = 1;\n',
+        });
         const policy = parseStrictPolicy(
             stringify({
-                scope: { [path]: {} },
+                scope: Object.fromEntries([
+                    [path, {}],
+                    ['__proto__', { test_files: ['tests/**', '!tests/old/**'] }],
+                ]),
+                words: Object.fromEntries([['__proto__', 'A project term.']]),
                 agent_rules: { folder: 'agent rules/café 100%', own_rules_folder: 'rules/café 100%' },
                 architecture: { roles: { test_harness: 'tests/fixtures' } },
             }),
             sandbox.path,
         );
-        expect(Object.keys(policy.scope)).toStrictEqual([path]);
+        expect(Object.keys(policy.scope)).toStrictEqual([path, '__proto__']);
+        expect(Object.hasOwn(policy.scopeTables, '__proto__')).toBe(true);
+        expect(policy.scopeTables['__proto__']?.test_files).toStrictEqual([
+            '__proto__/tests/**',
+            '!__proto__/tests/old/**',
+        ]);
+        expect(Object.keys(policy.words)).toStrictEqual(['__proto__']);
+        expect(Object.getPrototypeOf(policy.scopeTables)).toBe(Object.prototype);
+        expect(Object.hasOwn(Object.prototype, 'source.ts')).toBe(false);
         expect(policy.agent_rules.folder).toBe('agent rules/café 100%');
         expect(policy.architecture.roles['test_harness']).toBe('tests/fixtures');
         expect(policy.agent_rules.own_rules_folder).toBe('rules/café 100%');

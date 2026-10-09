@@ -4,9 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { Mutation } from '#cli/types/policy/settings.ts';
-import { writePolicyFile } from '#cli/policy/document/public.ts';
 import { AUTHORED_POLICY } from '#tests/config/cli/policy/file.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { parsePolicyEdit, writePolicyFile } from '#cli/policy/document/public.ts';
 
 import {
     setKey,
@@ -28,11 +28,11 @@ test('policy edits keep a trailing array comma and write inline tables without o
     const mutate: Mutation = (raw) => {
         setKey(raw, 'ignore', [entry]);
     };
-    const proposed = editPolicy('.', original, mutate);
+    const proposed = editPolicy('.', parsePolicyEdit(original), mutate);
     expect(proposed.text).toContain('# Authored selection.');
     expect(proposed.text).not.toMatch(/,\s*\}/u);
     expect(proposed.policy.ignore).toStrictEqual([entry]);
-    const repeated = editPolicy('.', proposed.text, mutate);
+    const repeated = editPolicy('.', parsePolicyEdit(proposed.text), mutate);
     expect(repeated.changed).toBe(false);
     expect(repeated.text).toBe(proposed.text);
 });
@@ -44,7 +44,7 @@ test('preparePolicy rejects an external symlink before evaluating its mutation',
     await symlink('../outside.toml', join(root, 'gspot.toml'));
     let evaluated = false;
     expect(() =>
-        preparePolicy(root, () => {
+        editPolicy(root, preparePolicy(root), () => {
             evaluated = true;
         }),
     ).toThrow('private regular file');
@@ -54,11 +54,11 @@ test('preparePolicy rejects an external symlink before evaluating its mutation',
 });
 
 const changesKey = () => {
-    const written = editPolicy('.', AUTHORED_POLICY, (raw) => {
+    const written = editPolicy('.', parsePolicyEdit(AUTHORED_POLICY), (raw) => {
         setKey(raw, 'limits.bash.file_lines', 100);
     }).text;
     expect(written).toContain('[limits.bash]');
-    const removed = editPolicy('.', written, (raw) => {
+    const removed = editPolicy('.', parsePolicyEdit(written), (raw) => {
         deleteKey(raw, 'limits.bash.file_lines');
     }).text;
     expect(removed).not.toContain('file_lines');
@@ -66,14 +66,14 @@ const changesKey = () => {
 };
 
 const deduplicatesEntries = () => {
-    const added = editPolicy('.', AUTHORED_POLICY, (raw) => {
+    const added = editPolicy('.', parsePolicyEdit(AUTHORED_POLICY), (raw) => {
         addToList(raw, 'naming.banned', ['dispatcher', 'orchestrator']);
     }).text;
-    const written = editPolicy('.', added, (raw) => {
+    const written = editPolicy('.', parsePolicyEdit(added), (raw) => {
         addToList(raw, 'naming.banned', ['dispatcher']);
     }).text;
     expect(written.match(/dispatcher/g)).toHaveLength(1);
-    const formatted = editPolicy('.', written, (raw) => {
+    const formatted = editPolicy('.', parsePolicyEdit(written), (raw) => {
         addToList(raw, 'format.overrides', [
             { paths: ['legacy/**'], indent_style: 'tab' },
             { indent_style: 'tab', paths: ['legacy/**'] },
@@ -95,9 +95,13 @@ describe('writePolicyFile', () => {
     ])('a scope setting written into %s loads with the ones already there', async (_form, scope) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': `${AUTHORED_POLICY}\n${scope}`, 'api/run.sh': '' });
-        const result = preparePolicy(sandbox.path, (raw) => {
-            setKey(getScopeTable(raw, 'api'), 'limits.function_lines', 20);
-        });
+        const resultInput = preparePolicy(sandbox.path);
+        const result = {
+            ...editPolicy(sandbox.path, resultInput, (raw) => {
+                setKey(getScopeTable(raw, 'api'), 'limits.function_lines', 20);
+            }),
+            original: resultInput.original,
+        };
         {
             using log = openOwnership(sandbox.path);
             writePolicyFile({
@@ -113,7 +117,9 @@ describe('writePolicyFile', () => {
             file_lines: 100,
             function_lines: 20,
         });
-        expect(preparePolicy(sandbox.path, () => {}).policy.scopeTables['api']?.limits?.root).toMatchObject({
+        expect(
+            editPolicy(sandbox.path, preparePolicy(sandbox.path), () => {}).policy.scopeTables['api']?.limits?.root,
+        ).toMatchObject({
             function_lines: 20,
         });
     });

@@ -17,7 +17,7 @@ describe('the managed block', () => {
         const selected = everyManifest(session.scopes);
         const block = managedBlock({
             rules,
-            files: selectRuleFiles(rules, selected, session.repository, level),
+            files: selectRuleFiles(rules, selected, session.repository, level, session.packageManifests),
             level,
             hasChecks: allChecks(selected).size > 0,
         });
@@ -38,7 +38,7 @@ describe('the managed block', () => {
         const selected = everyManifest(session.scopes);
         const block = managedBlock({
             rules,
-            files: selectRuleFiles(rules, selected, session.repository, level),
+            files: selectRuleFiles(rules, selected, session.repository, level, session.packageManifests),
             level,
             hasChecks: allChecks(selected).size > 0,
         });

@@ -10,7 +10,6 @@ import { applicableManifests } from '#cli/planning/public.ts';
 import { everyManifest } from '#cli/configurations/public.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/public.ts';
-import { readPackageManifests } from '#cli/repository/contracts.ts';
 import { detectUnselected } from '#cli/repository/selection/contracts.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';
 import { getTooling, getLintJobs } from '#cli/repository/discovery/public.ts';
@@ -102,7 +101,7 @@ function getUnownedOutputs(session: Session): SuggestionRow[] {
  * @returns detected and suggested configurations, unowned config files, authored lint jobs, and duplicate pins
  */
 export function getSuggestions(session: Session): Suggestions {
-    const packageManifests = readPackageManifests(session.root, session.repository.files);
+    const { packageManifests } = session;
     const selected = new Set(everyManifest(session.scopes).map((manifest) => manifest.configuration.name));
     const tooling = getTooling(session.root, session.repository.files, packageManifests);
     const generated = emitAll(session);
@@ -114,6 +113,7 @@ export function getSuggestions(session: Session): Suggestions {
             session.repository.files,
             session.manifests,
             everyManifest(session.scopes),
+            session.packageManifests,
         ),
         suggested: suggestedConfigurations(session, selected),
         unowned: [...unownedConfigs(session, tooling, tools, generated), ...getUnownedOutputs(session)],

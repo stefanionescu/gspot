@@ -13,13 +13,13 @@ import type { ToolSession } from '#cli/types/tools/session.ts';
 import { activeIgnores } from '#cli/policy/settings/public.ts';
 import { createReadCache } from '#cli/platform/root/public.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import { readIndexEntries } from '#cli/repository/contracts.ts';
 import type { IgnoreEntry } from '#cli/types/policy/settings.ts';
 import { toPosix, quoteArgument } from '#cli/platform/contracts.ts';
 import { emptyResult, buildRunReport } from '#cli/execution/report.ts';
 import type { ReproduceOptions } from '#cli/types/execution/reproduce.ts';
 import { GspotError, environmentVariables } from '#cli/platform/public.ts';
 import { copyIntoScratch, projectCopyInputs } from '#cli/execution/copy/public.ts';
+import { readIndexEntries, readPackageManifests } from '#cli/repository/contracts.ts';
 import { checkRun, contentsOf, fixerPasses, changedPaths } from '#cli/execution/contracts.ts';
 import { POLICY_CHECK, RAN_STATUSES, FAILED_STATUSES, FIX_DIFF_CONTEXT } from '#cli/config/execution/runtime.ts';
 
@@ -63,7 +63,9 @@ async function refreshAfterFixes(session: ToolSession, opened: ToolSession): Pro
     const scopes = Object.entries(scope).map(([path, entry]) => ({ path, configurations: entry.configurations }));
     session.reads = createReadCache(session.root);
     session.repository = await readRepository(session.root, declarations, scopes, exclude, session.reads);
+    session.packageManifests = readPackageManifests(session.root, session.repository.files);
     opened.repository = session.repository;
+    opened.packageManifests = session.packageManifests;
     session.inspections.clear();
 }
 

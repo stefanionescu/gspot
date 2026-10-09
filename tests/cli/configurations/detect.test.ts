@@ -41,14 +41,20 @@ test.each([
     });
     const selected = await openSession(sandbox.path);
     expect(
-        detectUnselected(sandbox.path, selected.repository.files, selected.manifests, []).find(
-            (row) => row.configuration === 'tanstack-query',
-        ),
+        detectUnselected(
+            sandbox.path,
+            selected.repository.files,
+            selected.manifests,
+            [],
+            selected.packageManifests,
+        ).find((row) => row.configuration === 'tanstack-query'),
     ).toMatchObject({ configuration: 'tanstack-query', command: 'gspot add tanstack-query' });
     await Bun.write(join(sandbox.path, 'package.json'), '{"name":"app","private":true}\n');
     const removed = await openSession(sandbox.path);
     expect(
-        detectUnselected(sandbox.path, removed.repository.files, removed.manifests, []).map((row) => row.configuration),
+        detectUnselected(sandbox.path, removed.repository.files, removed.manifests, [], removed.packageManifests).map(
+            (row) => row.configuration,
+        ),
     ).not.toContain('tanstack-query');
 });
 
@@ -102,16 +108,20 @@ test.each(['.d.ts', '.d.mts', '.d.cts'])(
         });
         const before = await openSession(sandbox.path);
         expect(
-            detectUnselected(sandbox.path, before.repository.files, before.manifests, []).map(
+            detectUnselected(sandbox.path, before.repository.files, before.manifests, [], before.packageManifests).map(
                 ({ configuration }) => configuration,
             ),
         ).not.toContain('typescript');
         await Bun.write(join(sandbox.path, 'tsconfig.json'), '{"compilerOptions":{"strict":true}}\n');
         const configured = await openSession(sandbox.path);
         expect(
-            detectUnselected(sandbox.path, configured.repository.files, configured.manifests, []).find(
-                ({ configuration }) => configuration === 'typescript',
-            )?.evidence,
+            detectUnselected(
+                sandbox.path,
+                configured.repository.files,
+                configured.manifests,
+                [],
+                configured.packageManifests,
+            ).find(({ configuration }) => configuration === 'typescript')?.evidence,
         ).toBe('tsconfig.json');
     },
 );

@@ -9,10 +9,15 @@ import { configurationManifests } from '#cli/configurations/public.ts';
 import { GspotError, environmentVariables } from '#cli/platform/public.ts';
 import { unknownConfigurations } from '#cli/configurations/errors/public.ts';
 import type { Template, ExportedTemplate } from '#cli/types/policy/templates.ts';
-import { emitPolicy, parseTomlText, readPolicyFile } from '#cli/policy/document/public.ts';
 import { valueAt, isRecord, createTable, contentDigest, normalizeTables } from '#cli/platform/contracts.ts';
-import type { Mutation, Proposal, PolicyKey, TomlTable, PreparedPolicy } from '#cli/types/policy/settings.ts';
 
+import {
+    emitPolicy,
+    policyValues,
+    parseTomlText,
+    readPolicyFile,
+    parsePolicyEdit,
+} from '#cli/policy/document/public.ts';
 import {
     RAW_HOST,
     GITHUB_PREFIX,
@@ -20,6 +25,14 @@ import {
     REQUEST_TIMEOUT_MS,
     TEMPLATE_EXTENSION,
 } from '#cli/config/policy/templates.ts';
+import type {
+    Mutation,
+    Proposal,
+    PolicyKey,
+    TomlTable,
+    PolicyEdit,
+    CapturedPolicyEdit,
+} from '#cli/types/policy/settings.ts';
 
 function buildGithubUrl(source: string): string {
     const [location = '', ref = 'HEAD'] = source.slice(GITHUB_PREFIX.length).split('@');
@@ -99,7 +112,7 @@ export function parseTemplate(text: string, source: string): Template {
         text,
         digest: contentDigest(text),
         tables: {
-            ...result.data,
+            ...raw,
             template: result.data.template ?? basename(source).replace(TEMPLATE_EXTENSION, ''),
             selection: result.data.selection ?? 'exact',
         },
@@ -120,16 +133,16 @@ export async function getTemplate(source: string, cwd: string): Promise<Template
 }
 
 /**
- * Propose a policy mutation in memory and validate its resulting document.
- * @param root the repository root
- * @param text the original policy text
- * @param mutate the change to apply to the parsed document
- * @returns the new text, the parsed policy, and whether the text changed
+ * Validate a captured policy change.
+ * @param root the repository root.
+ * @param input the captured table, text, and value snapshot.
+ * @param mutate the change applied once.
+ * @returns the new text, validated policy, and change status.
  */
-export function editPolicy(root: string, text: string, mutate: Mutation): Proposal {
-    const raw = parseTomlText(text, POLICY_FILE, 'policy');
-    mutate(raw);
-    const next = isDeepStrictEqual(raw, parseTomlText(text, POLICY_FILE, 'policy')) ? text : emitPolicy(text, raw);
+export function editPolicy(root: string, input: PolicyEdit, mutate: Mutation): Proposal {
+    const { text, table, values } = input;
+    mutate(table);
+    const next = policyValues(table) === values ? text : emitPolicy(text, table);
     const policy = parseStrictPolicy(next, root);
     return { text: next, policy, changed: next !== text };
 }
@@ -244,14 +257,13 @@ export function getScopeTable(raw: TomlTable, scope: string | undefined): TomlTa
 /**
  * Capture the input bytes and mode before evaluating and validating a policy mutation.
  * @param root the repository root
- * @param mutate the change to apply to the policy text
- * @returns the validated plan with the original file
+ * @returns the native edit input with the original private file
  */
-export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
+export function preparePolicy(root: string): CapturedPolicyEdit {
     using files = openRoot(root);
     const original = files.read(POLICY_FILE);
     const text = readPolicyFile(root);
     if (original?.bytes.equals(Buffer.from(text)) !== true)
         throw new GspotError('policy', ['The gspot.toml file changed while gspot was running. Run the command again.']);
-    return { ...editPolicy(root, text, mutate), original };
+    return { ...parsePolicyEdit(text), original };
 }

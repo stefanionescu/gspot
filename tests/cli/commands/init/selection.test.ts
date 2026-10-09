@@ -11,12 +11,13 @@ import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { policySchema } from '#cli/policy/schema/public.ts';
 import { applicableManifests } from '#cli/planning/public.ts';
+import { parseTomlText } from '#cli/policy/document/public.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { parseToolProject } from '#cli/parsers/packages/contracts.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { npmPins, pythonPins } from '#cli/configurations/contracts.ts';
-import { readPolicyText, parseStrictPolicy } from '#cli/policy/public.ts';
+import { readPolicyTable, parseStrictPolicy } from '#cli/policy/public.ts';
 import { COMPONENT, SELECTION_INIT } from '#tests/config/cli/commands/init/selection.ts';
 
 test('accepting defaults leaves the detected initialization plan unchanged', async () => {
@@ -168,7 +169,7 @@ test('init previews only applicable tool projects and duplicate pins for the sel
     const { plan, policy } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'policy'>>;
     const selected = applicableManifests(
         await openSession(sandbox.path, {
-            ...readPolicyText(policy, sandbox.path),
+            ...readPolicyTable(parseTomlText(policy, 'gspot.toml', 'policy'), sandbox.path),
             path: join(sandbox.path, 'gspot.toml'),
             text: policy,
         }),

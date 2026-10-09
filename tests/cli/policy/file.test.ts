@@ -1,14 +1,23 @@
 import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { valueAt } from '#cli/platform/contracts.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { hasPolicy, readPolicy } from '#cli/policy/public.ts';
+import { localDateSchema } from '#cli/policy/schema/contracts.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import type { PreparedPolicy } from '#cli/types/policy/settings.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
-import { setKey, preparePolicy } from '#cli/policy/document/contracts.ts';
+import { setKey, editPolicy, preparePolicy } from '#cli/policy/document/contracts.ts';
 import { link, open, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
-import { emitPolicy, parseTomlText, writePolicyFile } from '#cli/policy/document/public.ts';
-import { AUTHORED_POLICY, POLICY_FILE_CASES, EMPTY_PROJECT_POLICY } from '#tests/config/cli/policy/file.ts';
+import { emitPolicy, parseTomlText, parsePolicyEdit, writePolicyFile } from '#cli/policy/document/public.ts';
+
+import {
+    AUTHORED_POLICY,
+    POLICY_FILE_CASES,
+    NATIVE_EDIT_POLICY,
+    EMPTY_PROJECT_POLICY,
+} from '#tests/config/cli/policy/file.ts';
 
 test.each(POLICY_FILE_CASES)(
     '$name keeps canonical values and comments through repeated writes',
@@ -21,15 +30,24 @@ test.each(POLICY_FILE_CASES)(
     },
 );
 
+/** Prepare an edit with the captured file required by the native publication boundary. */
+function proposeEdit(root: string): PreparedPolicy {
+    const input = preparePolicy(root);
+    return {
+        ...editPolicy(root, input, (raw) => {
+            setKey(raw, 'level', 'all');
+        }),
+        original: input.original,
+    };
+}
+
 const refusesBytes = async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
     const invalid = Buffer.concat([Buffer.from(AUTHORED_POLICY), Buffer.from([0xff])]);
     await writeFile(path, invalid);
     expect(() => {
-        const plan = preparePolicy(sandbox.path, (raw) => {
-            setKey(raw, 'level', 'all');
-        });
+        const plan = proposeEdit(sandbox.path);
         using log = openOwnership(sandbox.path);
         writePolicyFile({
             files: log.files,
@@ -48,9 +66,7 @@ const refusesMode = async () => {
     const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, AUTHORED_POLICY);
     await chmod(path, 0o644);
-    const plan = preparePolicy(sandbox.path, (raw) => {
-        setKey(raw, 'level', 'all');
-    });
+    const plan = proposeEdit(sandbox.path);
     await chmod(path, 0o444);
     using log = openOwnership(sandbox.path);
     const before = await readTree(sandbox.path);
@@ -80,9 +96,7 @@ test('a prepared policy edit refuses stale bytes and accepts a fresh plan', asyn
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, AUTHORED_POLICY);
-    const plan = preparePolicy(sandbox.path, (raw) => {
-        setKey(raw, 'level', 'all');
-    });
+    const plan = proposeEdit(sandbox.path);
     await writeFile(path, `${AUTHORED_POLICY}\n# Concurrent edit.\n`);
     {
         using log = openOwnership(sandbox.path);
@@ -100,21 +114,18 @@ test('a prepared policy edit refuses stale bytes and accepts a fresh plan', asyn
         expect(await readTree(sandbox.path)).toStrictEqual(before);
     }
     expect(await readFile(path, 'utf8')).toBe(`${AUTHORED_POLICY}\n# Concurrent edit.\n`);
-    const corrected = preparePolicy(sandbox.path, (raw) => {
-        setKey(raw, 'level', 'all');
-    });
+    const corrected = proposeEdit(sandbox.path);
     {
-        const plan = corrected;
         using log = openOwnership(sandbox.path);
         writePolicyFile({
             files: log.files,
-            text: plan.text,
-            original: plan.original,
+            text: corrected.text,
+            original: corrected.original,
             publish: (next, expected) => {
                 log.files.write('gspot.toml', next, expected);
             },
         });
-        expect(plan.policy.level).toBe('all');
+        expect(corrected.policy.level).toBe('all');
     }
     expect(await readFile(path, 'utf8')).toBe(corrected.text);
 });
@@ -127,7 +138,7 @@ test('policy inspection accepts linked authored text inside the root while edits
     expect(hasPolicy(sandbox.path)).toBe(true);
     expect(readPolicy(sandbox.path).text).toBe(policy);
     expect(() =>
-        preparePolicy(sandbox.path, (raw) => {
+        editPolicy(sandbox.path, preparePolicy(sandbox.path), (raw) => {
             setKey(raw, 'level', 'all');
         }),
     ).toThrow('private regular file');
@@ -149,7 +160,7 @@ test('policy inspection accepts hardlinked authored text while edits preserve bo
     expect(readPolicy(sandbox.path).text).toBe(policy);
     let evaluated = false;
     expect(() =>
-        preparePolicy(sandbox.path, () => {
+        editPolicy(sandbox.path, preparePolicy(sandbox.path), () => {
             evaluated = true;
         }),
     ).toThrow('private regular file');
@@ -165,4 +176,30 @@ test('canonical writes retain an explicitly empty project path', () => {
     const written = parseTomlText(output, 'gspot.toml', 'policy');
     expect(written['swift']).toStrictEqual({ xcode_project: '' });
     expect(emitPolicy(output, written)).toBe(output);
+});
+
+test('an in-place native expiry mutation changes the captured policy and retains its comment', () => {
+    const input = parsePolicyEdit(NATIVE_EDIT_POLICY);
+    const until = localDateSchema.parse(valueAt(input.table, ['ignore', 0, 'until']));
+    const original = input.values;
+    const proposed = editPolicy('.', input, () => {
+        until.setUTCDate(21);
+    });
+    expect(proposed.changed).toBe(true);
+    expect(proposed.text).toContain('# Keep the authored expiry.');
+    expect(proposed.text).toContain('until = 2099-05-21');
+    expect(proposed.policy.ignore[0]?.until?.toISOString()).toBe('2099-05-21');
+    expect(input.values).toBe(original);
+});
+
+test('reordering native table keys leaves the captured text unchanged', () => {
+    const input = parsePolicyEdit(NATIVE_EDIT_POLICY);
+    const proposed = editPolicy('.', input, (raw) => {
+        const configurations = raw['configurations'];
+        Reflect.deleteProperty(raw, 'configurations');
+        raw['configurations'] = configurations;
+    });
+    expect(proposed.changed).toBe(false);
+    expect(proposed.text).toBe(NATIVE_EDIT_POLICY);
+    expect(proposed.policy.ignore[0]?.until?.toISOString()).toBe('2099-05-20');
 });

@@ -1,0 +1,446 @@
+diff --git a/src/v4/core/schemas.ts b/src/v4/core/schemas.ts
+--- a/src/v4/core/schemas.ts
++++ b/src/v4/core/schemas.ts
+@@ -1986,6 +1986,6 @@
+     if (isPresent || (optin === "defaulted" && !isOptionalOut)) {
+-      (final.value as any)[key] = undefined;
++      util.assignProp(final.value, key, undefined);
+     }
+   } else {
+-    (final.value as any)[key] = result.value;
++    util.assignProp(final.value, key, result.value);
+   }
+@@ -2092,9 +2092,3 @@
+     }
+-    // Must precede the __proto__ branch: a declared key is not unrecognized, even though the shape loop deliberately strips __proto__ from the parsed output.
+     if (keySet.has(key)) continue;
+-    // Don't copy an undeclared __proto__ into the result; assignment to a plain {} would replace the result prototype. But in strict mode it is still an unknown key, so report it before skipping.
+-    if (key === "__proto__") {
+-      if (t === "never") unrecognized.push(key);
+-      continue;
+-    }
+     if (t === "never") {
+@@ -3240,4 +3234,2 @@
+           recordKeys.add(typeof key === "number" ? key.toString() : key);
+-          // A declared __proto__ is stripped but is not an unrecognized key.
+-          if (key === "__proto__") continue;
+           const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+@@ -3258,3 +3250,2 @@
+           const outKey = keyResult.value as PropertyKey;
+-          if (outKey === "__proto__") continue;
+           const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+@@ -3267,3 +3258,3 @@
+                 }
+-                payload.value[outKey] = result.value;
++                util.assignProp(payload.value, outKey, result.value);
+               })
+@@ -3274,3 +3265,3 @@
+             }
+-            payload.value[outKey] = result.value;
++            util.assignProp(payload.value, outKey, result.value);
+           }
+@@ -3283,5 +3274,3 @@
+           if (def.mode === "loose") {
+-            // skip __proto__ so it can't replace the result prototype via the assignment setter on the plain {} we build into
+-            if (key === "__proto__") continue;
+-            payload.value[key] = input[key];
++            util.assignProp(payload.value, key, input[key]);
+           } else {
+@@ -3308,3 +3297,2 @@
+       for (const key of Reflect.ownKeys(input)) {
+-        if (key === "__proto__") continue;
+         if (!Object.prototype.propertyIsEnumerable.call(input, key)) continue;
+@@ -3330,3 +3318,3 @@
+             // Pass through unchanged
+-            payload.value[key] = input[key];
++            util.assignProp(payload.value, key, input[key]);
+           } else if (values) {
+@@ -3348,5 +3336,3 @@
+ 
+-        // the guard above tests the raw input key, but the key schema can normalize an ordinary key into __proto__; re-check the key we actually write under
+         const outKey = keyResult.value as PropertyKey;
+-        if (outKey === "__proto__") continue;
+ 
+@@ -3360,3 +3346,3 @@
+               }
+-              payload.value[outKey] = result.value;
++              util.assignProp(payload.value, outKey, result.value);
+             })
+@@ -3367,3 +3353,3 @@
+           }
+-          payload.value[outKey] = result.value;
++          util.assignProp(payload.value, outKey, result.value);
+         }
+diff --git a/src/v4/core/compile.ts b/src/v4/core/compile.ts
+--- a/src/v4/core/compile.ts
++++ b/src/v4/core/compile.ts
+@@ -1314,9 +1314,8 @@
+     const knownSet = keys.length > 0 ? addConstant(ctx, new Set(keys)) : null;
++    const assignPropConst = addConstant(ctx, util.assignProp);
+     doc.write(`for (const k in ${accessor}) {`);
+     doc.indented((d) => {
+-      // Skip __proto__: assigning obj["__proto__"] on a plain {} replaces the prototype via the setter rather than adding an own property. Mirrors the runtime catchall fix (#5898).
+-      d.write(`if (k === "__proto__") continue;`);
+       if (knownSet) d.write(`if (${knownSet}.has(k)) continue;`);
+       if (unknownKeysMode === "passthrough") {
+-        d.write(`${outputVar}[k] = ${accessor}[k];`);
++        d.write(`${assignPropConst}(${outputVar}, k, ${accessor}[k]);`);
+       } else {
+@@ -1325,3 +1324,3 @@
+         const catchallOut = compileChild(d, ctx, catchall!, valVar);
+-        d.write(`${outputVar}[k] = ${catchallOut};`);
++        d.write(`${assignPropConst}(${outputVar}, k, ${catchallOut});`);
+       }
+@@ -1933,2 +1932,3 @@
+   const isPlainObjectConst = addConstant(ctx, util.isPlainObject);
++  const assignPropConst = addConstant(ctx, util.assignProp);
+   doc.write(`if (!${isPlainObjectConst}(${accessor})) return INVALID;`);
+@@ -1952,6 +1952,2 @@
+       const inputKey = typeof key === "number" ? key.toString() : key;
+-      if (inputKey === "__proto__") {
+-        // `out["__proto__"] = v` would hit the prototype setter on the output.
+-        throw new ZodCompileUnsupportedError('record key "__proto__"');
+-      }
+       inputKeys.push(inputKey);
+@@ -1964,6 +1960,5 @@
+       const valOutput = compileChild(doc, ctx, def.valueType, valueVar);
+-      doc.write(`${outputVar}[${outKey}] = ${valOutput};`);
+-    }
+-
+-    // `mode: "loose"` changes only what happens to unrecognized keys, so it belongs here rather than the per-present-key scan. Passing them through matches the runtime, which skips `__proto__`.
++      doc.write(`${assignPropConst}(${outputVar}, ${outKey}, ${valOutput});`);
++    }
++
+     const knownKeysConst = addConstant(ctx, new Set(inputKeys));
+@@ -1973,3 +1968,3 @@
+       if (recordDef.mode === "loose") {
+-        d.write(`if (${kVar} !== "__proto__") ${outputVar}[${kVar}] = ${accessor}[${kVar}];`);
++        d.write(`${assignPropConst}(${outputVar}, ${kVar}, ${accessor}[${kVar}]);`);
+       } else {
+@@ -2012,3 +2007,3 @@
+         // A loose record keeps a key its schema rejects, copying the value across unvalidated rather than failing the parse.
+-        d.write(`if (${outKeyVar} === INVALID) { ${outputVar}[${kVar}] = ${accessor}[${kVar}]; continue; }`);
++        d.write(`if (${outKeyVar} === INVALID) { ${assignPropConst}(${outputVar}, ${kVar}, ${accessor}[${kVar}]); continue; }`);
+       } else {
+@@ -2016,4 +2011,2 @@
+       }
+-      // The guard above tested the input key, but the schema can normalize an ordinary key into __proto__; re-check the one actually written under.
+-      d.write(`if (${outKeyVar} === "__proto__") continue;`);
+       // Read once: the raw expression would be evaluated again by the output write below, so an accessor could return an unvalidated second value.
+@@ -2022,3 +2015,3 @@
+       const valOutput = compileChild(d, ctx, def.valueType, valueVar);
+-      d.write(`${outputVar}[${outKeyVar}] = ${valOutput};`);
++      d.write(`${assignPropConst}(${outputVar}, ${outKeyVar}, ${valOutput});`);
+     });
+@@ -2036,3 +2029,3 @@
+       const valOutput = compileChild(d, ctx, def.valueType, valVar);
+-      d.write(`${outputVar}[${kVar}] = ${valOutput};`);
++      d.write(`${assignPropConst}(${outputVar}, ${kVar}, ${valOutput});`);
+     },
+@@ -2062,3 +2055,3 @@
+     d.write(`const ${kVar} = ${keysVar}[${iVar}];`);
+-    d.write(`if (${kVar} === "__proto__" || !${propIsEnumerableConst}.call(${accessor}, ${kVar})) continue;`);
++    d.write(`if (!${propIsEnumerableConst}.call(${accessor}, ${kVar})) continue;`);
+     body(d);
+diff --git a/v4/core/schemas.js b/v4/core/schemas.js
+--- a/v4/core/schemas.js
++++ b/v4/core/schemas.js
+@@ -872,3 +872,3 @@
+         if (isPresent || (optin === "defaulted" && !isOptionalOut)) {
+-            final.value[key] = undefined;
++            util.assignProp(final.value, key, undefined);
+         }
+@@ -876,3 +876,3 @@
+     else {
+-        final.value[key] = result.value;
++        util.assignProp(final.value, key, result.value);
+     }
+@@ -918,11 +918,4 @@
+         }
+-        // Must precede the __proto__ branch: a declared key is not unrecognized, even though the shape loop deliberately strips __proto__ from the parsed output.
+         if (keySet.has(key))
+             continue;
+-        // Don't copy an undeclared __proto__ into the result; assignment to a plain {} would replace the result prototype. But in strict mode it is still an unknown key, so report it before skipping.
+-        if (key === "__proto__") {
+-            if (t === "never")
+-                unrecognized.push(key);
+-            continue;
+-        }
+         if (t === "never") {
+@@ -1695,5 +1688,2 @@
+                     recordKeys.add(typeof key === "number" ? key.toString() : key);
+-                    // A declared __proto__ is stripped but is not an unrecognized key.
+-                    if (key === "__proto__")
+-                        continue;
+                     const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+@@ -1714,4 +1704,2 @@
+                     const outKey = keyResult.value;
+-                    if (outKey === "__proto__")
+-                        continue;
+                     const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+@@ -1722,3 +1710,3 @@
+                             }
+-                            payload.value[outKey] = result.value;
++                            util.assignProp(payload.value, outKey, result.value);
+                         }));
+@@ -1729,3 +1717,3 @@
+                         }
+-                        payload.value[outKey] = result.value;
++                        util.assignProp(payload.value, outKey, result.value);
+                     }
+@@ -1737,6 +1725,3 @@
+                     if (def.mode === "loose") {
+-                        // skip __proto__ so it can't replace the result prototype via the assignment setter on the plain {} we build into
+-                        if (key === "__proto__")
+-                            continue;
+-                        payload.value[key] = input[key];
++                        util.assignProp(payload.value, key, input[key]);
+                     }
+@@ -1764,4 +1749,2 @@
+             for (const key of Reflect.ownKeys(input)) {
+-                if (key === "__proto__")
+-                    continue;
+                 if (!Object.prototype.propertyIsEnumerable.call(input, key))
+@@ -1786,3 +1769,3 @@
+                         // Pass through unchanged
+-                        payload.value[key] = input[key];
++                        util.assignProp(payload.value, key, input[key]);
+                     }
+@@ -1805,6 +1788,3 @@
+                 }
+-                // the guard above tests the raw input key, but the key schema can normalize an ordinary key into __proto__; re-check the key we actually write under
+                 const outKey = keyResult.value;
+-                if (outKey === "__proto__")
+-                    continue;
+                 const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+@@ -1815,3 +1795,3 @@
+                         }
+-                        payload.value[outKey] = result.value;
++                        util.assignProp(payload.value, outKey, result.value);
+                     }));
+@@ -1822,3 +1802,3 @@
+                     }
+-                    payload.value[outKey] = result.value;
++                    util.assignProp(payload.value, outKey, result.value);
+                 }
+diff --git a/v4/core/schemas.cjs b/v4/core/schemas.cjs
+--- a/v4/core/schemas.cjs
++++ b/v4/core/schemas.cjs
+@@ -914,3 +914,3 @@
+         if (isPresent || (optin === "defaulted" && !isOptionalOut)) {
+-            final.value[key] = undefined;
++            util.assignProp(final.value, key, undefined);
+         }
+@@ -918,3 +918,3 @@
+     else {
+-        final.value[key] = result.value;
++        util.assignProp(final.value, key, result.value);
+     }
+@@ -960,11 +960,4 @@
+         }
+-        // Must precede the __proto__ branch: a declared key is not unrecognized, even though the shape loop deliberately strips __proto__ from the parsed output.
+         if (keySet.has(key))
+             continue;
+-        // Don't copy an undeclared __proto__ into the result; assignment to a plain {} would replace the result prototype. But in strict mode it is still an unknown key, so report it before skipping.
+-        if (key === "__proto__") {
+-            if (t === "never")
+-                unrecognized.push(key);
+-            continue;
+-        }
+         if (t === "never") {
+@@ -1737,5 +1730,2 @@
+                     recordKeys.add(typeof key === "number" ? key.toString() : key);
+-                    // A declared __proto__ is stripped but is not an unrecognized key.
+-                    if (key === "__proto__")
+-                        continue;
+                     const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+@@ -1756,4 +1746,2 @@
+                     const outKey = keyResult.value;
+-                    if (outKey === "__proto__")
+-                        continue;
+                     const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+@@ -1764,3 +1752,3 @@
+                             }
+-                            payload.value[outKey] = result.value;
++                            util.assignProp(payload.value, outKey, result.value);
+                         }));
+@@ -1771,3 +1759,3 @@
+                         }
+-                        payload.value[outKey] = result.value;
++                        util.assignProp(payload.value, outKey, result.value);
+                     }
+@@ -1779,6 +1767,3 @@
+                     if (def.mode === "loose") {
+-                        // skip __proto__ so it can't replace the result prototype via the assignment setter on the plain {} we build into
+-                        if (key === "__proto__")
+-                            continue;
+-                        payload.value[key] = input[key];
++                        util.assignProp(payload.value, key, input[key]);
+                     }
+@@ -1806,4 +1791,2 @@
+             for (const key of Reflect.ownKeys(input)) {
+-                if (key === "__proto__")
+-                    continue;
+                 if (!Object.prototype.propertyIsEnumerable.call(input, key))
+@@ -1828,3 +1811,3 @@
+                         // Pass through unchanged
+-                        payload.value[key] = input[key];
++                        util.assignProp(payload.value, key, input[key]);
+                     }
+@@ -1847,6 +1830,3 @@
+                 }
+-                // the guard above tests the raw input key, but the key schema can normalize an ordinary key into __proto__; re-check the key we actually write under
+                 const outKey = keyResult.value;
+-                if (outKey === "__proto__")
+-                    continue;
+                 const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+@@ -1857,3 +1837,3 @@
+                         }
+-                        payload.value[outKey] = result.value;
++                        util.assignProp(payload.value, outKey, result.value);
+                     }));
+@@ -1864,3 +1844,3 @@
+                     }
+-                    payload.value[outKey] = result.value;
++                    util.assignProp(payload.value, outKey, result.value);
+                 }
+diff --git a/v4/core/compile.js b/v4/core/compile.js
+--- a/v4/core/compile.js
++++ b/v4/core/compile.js
+@@ -1024,6 +1024,5 @@
+         const knownSet = keys.length > 0 ? addConstant(ctx, new Set(keys)) : null;
++    const assignPropConst = addConstant(ctx, util.assignProp);
+         doc.write(`for (const k in ${accessor}) {`);
+         doc.indented((d) => {
+-            // Skip __proto__: assigning obj["__proto__"] on a plain {} replaces the prototype via the setter rather than adding an own property. Mirrors the runtime catchall fix (#5898).
+-            d.write(`if (k === "__proto__") continue;`);
+             if (knownSet)
+@@ -1031,3 +1030,3 @@
+             if (unknownKeysMode === "passthrough") {
+-                d.write(`${outputVar}[k] = ${accessor}[k];`);
++                d.write(`${assignPropConst}(${outputVar}, k, ${accessor}[k]);`);
+             }
+@@ -1037,3 +1036,3 @@
+                 const catchallOut = compileChild(d, ctx, catchall, valVar);
+-                d.write(`${outputVar}[k] = ${catchallOut};`);
++                d.write(`${assignPropConst}(${outputVar}, k, ${catchallOut});`);
+             }
+@@ -1556,2 +1555,3 @@
+     const isPlainObjectConst = addConstant(ctx, util.isPlainObject);
++  const assignPropConst = addConstant(ctx, util.assignProp);
+     doc.write(`if (!${isPlainObjectConst}(${accessor})) return INVALID;`);
+@@ -1571,6 +1571,2 @@
+             const inputKey = typeof key === "number" ? key.toString() : key;
+-            if (inputKey === "__proto__") {
+-                // `out["__proto__"] = v` would hit the prototype setter on the output.
+-                throw new ZodCompileUnsupportedError('record key "__proto__"');
+-            }
+             inputKeys.push(inputKey);
+@@ -1582,5 +1578,4 @@
+             const valOutput = compileChild(doc, ctx, def.valueType, valueVar);
+-            doc.write(`${outputVar}[${outKey}] = ${valOutput};`);
+-        }
+-        // `mode: "loose"` changes only what happens to unrecognized keys, so it belongs here rather than the per-present-key scan. Passing them through matches the runtime, which skips `__proto__`.
++            doc.write(`${assignPropConst}(${outputVar}, ${outKey}, ${valOutput});`);
++        }
+         const knownKeysConst = addConstant(ctx, new Set(inputKeys));
+@@ -1590,3 +1585,3 @@
+             if (recordDef.mode === "loose") {
+-                d.write(`if (${kVar} !== "__proto__") ${outputVar}[${kVar}] = ${accessor}[${kVar}];`);
++                d.write(`${assignPropConst}(${outputVar}, ${kVar}, ${accessor}[${kVar}]);`);
+             }
+@@ -1626,3 +1621,3 @@
+                 // A loose record keeps a key its schema rejects, copying the value across unvalidated rather than failing the parse.
+-                d.write(`if (${outKeyVar} === INVALID) { ${outputVar}[${kVar}] = ${accessor}[${kVar}]; continue; }`);
++                d.write(`if (${outKeyVar} === INVALID) { ${assignPropConst}(${outputVar}, ${kVar}, ${accessor}[${kVar}]); continue; }`);
+             }
+@@ -1631,4 +1626,2 @@
+             }
+-            // The guard above tested the input key, but the schema can normalize an ordinary key into __proto__; re-check the one actually written under.
+-            d.write(`if (${outKeyVar} === "__proto__") continue;`);
+             // Read once: the raw expression would be evaluated again by the output write below, so an accessor could return an unvalidated second value.
+@@ -1637,3 +1630,3 @@
+             const valOutput = compileChild(d, ctx, def.valueType, valueVar);
+-            d.write(`${outputVar}[${outKeyVar}] = ${valOutput};`);
++            d.write(`${assignPropConst}(${outputVar}, ${outKeyVar}, ${valOutput});`);
+         });
+@@ -1645,3 +1638,3 @@
+         const valOutput = compileChild(d, ctx, def.valueType, valVar);
+-        d.write(`${outputVar}[${kVar}] = ${valOutput};`);
++        d.write(`${assignPropConst}(${outputVar}, ${kVar}, ${valOutput});`);
+     }, `return INVALID;`);
+@@ -1660,3 +1653,3 @@
+         d.write(`const ${kVar} = ${keysVar}[${iVar}];`);
+-        d.write(`if (${kVar} === "__proto__" || !${propIsEnumerableConst}.call(${accessor}, ${kVar})) continue;`);
++        d.write(`if (!${propIsEnumerableConst}.call(${accessor}, ${kVar})) continue;`);
+         body(d);
+diff --git a/v4/core/compile.cjs b/v4/core/compile.cjs
+--- a/v4/core/compile.cjs
++++ b/v4/core/compile.cjs
+@@ -1055,6 +1055,5 @@
+         const knownSet = keys.length > 0 ? addConstant(ctx, new Set(keys)) : null;
++    const assignPropConst = addConstant(ctx, util.assignProp);
+         doc.write(`for (const k in ${accessor}) {`);
+         doc.indented((d) => {
+-            // Skip __proto__: assigning obj["__proto__"] on a plain {} replaces the prototype via the setter rather than adding an own property. Mirrors the runtime catchall fix (#5898).
+-            d.write(`if (k === "__proto__") continue;`);
+             if (knownSet)
+@@ -1062,3 +1061,3 @@
+             if (unknownKeysMode === "passthrough") {
+-                d.write(`${outputVar}[k] = ${accessor}[k];`);
++                d.write(`${assignPropConst}(${outputVar}, k, ${accessor}[k]);`);
+             }
+@@ -1068,3 +1067,3 @@
+                 const catchallOut = compileChild(d, ctx, catchall, valVar);
+-                d.write(`${outputVar}[k] = ${catchallOut};`);
++                d.write(`${assignPropConst}(${outputVar}, k, ${catchallOut});`);
+             }
+@@ -1587,2 +1586,3 @@
+     const isPlainObjectConst = addConstant(ctx, util.isPlainObject);
++  const assignPropConst = addConstant(ctx, util.assignProp);
+     doc.write(`if (!${isPlainObjectConst}(${accessor})) return INVALID;`);
+@@ -1602,6 +1602,2 @@
+             const inputKey = typeof key === "number" ? key.toString() : key;
+-            if (inputKey === "__proto__") {
+-                // `out["__proto__"] = v` would hit the prototype setter on the output.
+-                throw new ZodCompileUnsupportedError('record key "__proto__"');
+-            }
+             inputKeys.push(inputKey);
+@@ -1613,5 +1609,4 @@
+             const valOutput = compileChild(doc, ctx, def.valueType, valueVar);
+-            doc.write(`${outputVar}[${outKey}] = ${valOutput};`);
+-        }
+-        // `mode: "loose"` changes only what happens to unrecognized keys, so it belongs here rather than the per-present-key scan. Passing them through matches the runtime, which skips `__proto__`.
++            doc.write(`${assignPropConst}(${outputVar}, ${outKey}, ${valOutput});`);
++        }
+         const knownKeysConst = addConstant(ctx, new Set(inputKeys));
+@@ -1621,3 +1616,3 @@
+             if (recordDef.mode === "loose") {
+-                d.write(`if (${kVar} !== "__proto__") ${outputVar}[${kVar}] = ${accessor}[${kVar}];`);
++                d.write(`${assignPropConst}(${outputVar}, ${kVar}, ${accessor}[${kVar}]);`);
+             }
+@@ -1657,3 +1652,3 @@
+                 // A loose record keeps a key its schema rejects, copying the value across unvalidated rather than failing the parse.
+-                d.write(`if (${outKeyVar} === INVALID) { ${outputVar}[${kVar}] = ${accessor}[${kVar}]; continue; }`);
++                d.write(`if (${outKeyVar} === INVALID) { ${assignPropConst}(${outputVar}, ${kVar}, ${accessor}[${kVar}]); continue; }`);
+             }
+@@ -1662,4 +1657,2 @@
+             }
+-            // The guard above tested the input key, but the schema can normalize an ordinary key into __proto__; re-check the one actually written under.
+-            d.write(`if (${outKeyVar} === "__proto__") continue;`);
+             // Read once: the raw expression would be evaluated again by the output write below, so an accessor could return an unvalidated second value.
+@@ -1668,3 +1661,3 @@
+             const valOutput = compileChild(d, ctx, def.valueType, valueVar);
+-            d.write(`${outputVar}[${outKeyVar}] = ${valOutput};`);
++            d.write(`${assignPropConst}(${outputVar}, ${outKeyVar}, ${valOutput});`);
+         });
+@@ -1676,3 +1669,3 @@
+         const valOutput = compileChild(d, ctx, def.valueType, valVar);
+-        d.write(`${outputVar}[${kVar}] = ${valOutput};`);
++        d.write(`${assignPropConst}(${outputVar}, ${kVar}, ${valOutput});`);
+     }, `return INVALID;`);
+@@ -1691,3 +1684,3 @@
+         d.write(`const ${kVar} = ${keysVar}[${iVar}];`);
+-        d.write(`if (${kVar} === "__proto__" || !${propIsEnumerableConst}.call(${accessor}, ${kVar})) continue;`);
++        d.write(`if (!${propIsEnumerableConst}.call(${accessor}, ${kVar})) continue;`);
+         body(d);

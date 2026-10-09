@@ -18,6 +18,9 @@ test('check path ignores must match tracked paths even when documentation mentio
         join(sandbox.path, 'gspot.toml'),
         stringify({
             level: 'all',
+            check: Object.fromEntries([
+                ['__proto__', { command: ['git', 'status'], paths: ['missing-prototype.ts'], stage: 'manual' }],
+            ]),
             configurations: ['docs', 'structure', 'nextjs'],
             generated: [{ paths: ['missing.d.ts'], reason: 'The authored output must match a tracked file.' }],
             ignore: [
@@ -37,6 +40,7 @@ test('check path ignores must match tracked paths even when documentation mentio
         '.reports/output.json under [[ignore]] matches no tracked file or folder.',
         '.reports/unused.json under [[ignore]] matches no tracked file or folder.',
         'missing.d.ts under [[generated]] matches no tracked file or folder.',
+        'missing-prototype.ts under check.__proto__ matches no tracked file or folder.',
     ]);
 });
 

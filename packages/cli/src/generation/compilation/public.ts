@@ -18,6 +18,7 @@ import { TEST_RULE_NAMES } from '#cli/config/generation/eslint.ts';
 import { JSON_EXTENSIONS } from '#cli/config/generation/headers.ts';
 import { compileSettingValue } from '#cli/policy/schema/contracts.ts';
 import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
+import { getProjectDependencies } from '#cli/repository/contracts.ts';
 import { eslintInputs } from '#cli/generation/eslint/configuration.ts';
 import { packageWorkspaces } from '#cli/repository/paths/contracts.ts';
 import type { CompiledSetting } from '#cli/types/policy/setting-values.ts';
@@ -27,7 +28,6 @@ import type { EtaInputs, ScopeEtaInputs } from '#cli/types/generation/eta.ts';
 import { buildTsconfig, requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import type { Policy, ScopeView, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { ETA_OPTIONS, JSON_INDENT, LEADING_NEWLINES } from '#cli/config/generation/eta.ts';
-import { readPackageManifests, getProjectDependencies } from '#cli/repository/contracts.ts';
 import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/documents/public.ts';
 import nativeStylelintRuleNames from '../../../configurations/language/css/rule-names.json' with { type: 'json' };
 
@@ -162,7 +162,7 @@ export function etaInputs(session: Session, selection: ScopeSelection, manifests
     };
     return {
         ...view,
-        ...scopeInputs({ session, selection, manifests, projects: readPackageManifests(root, sourceFiles) }),
+        ...scopeInputs({ session, selection, manifests, projects: session.packageManifests }),
         ...eslintInputs(session, selection),
         javascriptConfig: (target) =>
             buildJsconfig({

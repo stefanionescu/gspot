@@ -134,6 +134,7 @@ test.each(PACKAGE_PROJECTS)(
                 session.repository.files,
                 session.manifests,
                 session.scopes.flatMap(({ selected }) => selected),
+                session.packageManifests,
             ).some(({ configuration }) => configuration === 'swift-snapshot-testing'),
         ).toBe(selected);
         const planned = planRun(session, { stage: 'commit', skips: [], only: ['swift-snapshot-testing/recording'] });

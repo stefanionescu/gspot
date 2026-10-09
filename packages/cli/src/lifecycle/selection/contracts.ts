@@ -5,7 +5,6 @@ import { isRecord } from '#cli/platform/contracts.ts';
 import { npmToolNames } from '#cli/configurations/contracts.ts';
 import { plannedScopes } from '#cli/repository/paths/contracts.ts';
 import { selectForInit } from '#cli/lifecycle/selection/public.ts';
-import { readPackageManifests } from '#cli/repository/contracts.ts';
 import type { Policy, Mutation } from '#cli/types/policy/settings.ts';
 import type { InitSelection, ConfigurationMerge, ConfigurationReconciliation } from '#cli/types/lifecycle/selection.ts';
 
@@ -63,8 +62,7 @@ function configurationMutation(policy: Policy, rootIds: string[], scopeIds: Map<
  * @returns the policy mutation and descriptions of changed selections
  */
 export function reconcileConfigurations(session: Session): ConfigurationReconciliation {
-    const { root, repository: repo, manifests } = session;
-    const packageManifests = readPackageManifests(root, repo.files);
+    const { root, repository: repo, manifests, packageManifests } = session;
     const discovered = plannedScopes(
         repo.files,
         packageManifests,

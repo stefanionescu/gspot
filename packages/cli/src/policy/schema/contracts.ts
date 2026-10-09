@@ -165,6 +165,25 @@ export function defaultValue<Schema extends z.ZodType>(field: z.ZodOptional<Sche
     return field.unwrap().parse(value === undefined ? field.meta()?.['default'] : value);
 }
 
+/**
+ * Publish native policy input schemas while retaining authored defaults and declaration metadata.
+ * @param schema the authoritative runtime validator.
+ * @returns its native object projection, with TOML dates represented as calendar strings.
+ */
+export function policyJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
+    return z.toJSONSchema(schema, {
+        io: 'input',
+        unrepresentable: ({ zodSchema }) =>
+            zodSchema === localDateSchema ? z.toJSONSchema(calendarDateSchema) : 'throw',
+        override: ({ zodSchema, jsonSchema }) => {
+            const metadata = z.globalRegistry.get(zodSchema);
+            if (metadata && Object.hasOwn(metadata, 'default')) jsonSchema.default = metadata['default'];
+            if (metadata && Object.hasOwn(metadata, 'examples'))
+                Object.assign(jsonSchema, { examples: metadata['examples'] });
+        },
+    });
+}
+
 /** The six architecture roles read by gspot without a configuration declaration. */
 export const architectureRolesSchema = z.strictObject({
     tests: rolePaths().optional(),

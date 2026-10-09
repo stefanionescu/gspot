@@ -3,9 +3,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse, stringify } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
-import { parseExpiryDate } from '#cli/policy/document/public.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { ESLINT_OVERRIDE_POLICY } from '#tests/config/samples/javascript.ts';
 import { FORMAT_OVERRIDES_POLICY } from '#tests/config/samples/formatting.ts';
+import { parseTomlText, parseExpiryDate } from '#cli/policy/document/public.ts';
 import { getTemplate, parseTemplate, exportTemplate } from '#cli/policy/document/contracts.ts';
 
 test.each([
@@ -23,11 +24,27 @@ test.each([
 });
 
 test('template export preserves authored empty integrations and rule tables', () => {
-    const exported = exportTemplate('configurations = []\n[hooks]\n[tools.eslint.rules]\n', 'team.template.toml');
+    const checks = Object.fromEntries(
+        ['ordinary', '__proto__', 'constructor'].map((key) => [
+            key,
+            {
+                command: ['git', 'status'],
+                paths: ['**/*'],
+                stage: 'manual',
+            },
+        ]),
+    );
+    const authored = 'configurations = []\n[hooks]\n[tools.eslint.rules]\n' + stringify({ check: checks });
+    const exported = exportTemplate(authored, 'team.template.toml');
     const imported = parseTemplate(exported.text, 'team.template.toml');
     expect(exported.text).toContain('[hooks]');
     expect(imported.tables.hooks).toStrictEqual({});
     expect(imported.tables.tools?.eslint?.rules).toStrictEqual({});
+    expect(parseTomlText(authored, 'source.template.toml', 'template')['check']).toStrictEqual(imported.tables.check);
+    expect(Object.keys(parseStrictPolicy(stringify({ check: imported.tables.check })).check)).toStrictEqual(
+        Object.keys({ ...imported.tables.check }),
+    );
+    expect(Object.hasOwn(Object.prototype, 'command')).toBe(false);
 });
 
 test('template export preserves advisory reasons and expiry and path-specific rows', () => {

@@ -125,7 +125,7 @@ test('init from a template address that answers 404 exits 2 and writes nothing',
     const result = await runGspot(sandbox.path, ['init', '--yes', '--from', 'github:acme/missing', ...QUIET]);
     expect(fetched).toHaveBeenCalledTimes(1);
     expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stderr).toContain('answered 404');
+    expect(result.stdout + result.stderr).toContain('answered 404');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

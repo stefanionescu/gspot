@@ -1,11 +1,11 @@
 // Settings and defaults declared by gspot and selected configurations. Framework, platform, library, and database
 // configurations override an earlier scalar default; other scalar disagreements are reported as conflicts.
-import { z } from 'zod';
+import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { createTable } from '#cli/platform/contracts.ts';
 import { toolsSchema } from '#cli/policy/schema/tools.ts';
 import { coversScope } from '#cli/repository/paths/public.ts';
-import { limitTableSchema } from '#cli/policy/schema/contracts.ts';
+import { limitTableSchema, policyJsonSchema } from '#cli/policy/schema/contracts.ts';
 import { rootSettingSchemas, tableSettingSchemas } from '#cli/policy/schema/public.ts';
 import type { Level, Manifest, SettingDeclaration } from '#cli/types/configurations.ts';
 import { settingTypeSchema, settingItemsSchema } from '#cli/parsers/schema/contracts.ts';
@@ -77,7 +77,7 @@ function typeOf(type: z.core.JSONSchema.JSONSchema['type']): SettingDeclaration[
 
 // Convert each native declaration once, retaining typed record items whose reasons belong to the item.
 function declarationOf(schema: z.ZodType): Pick<SettingDeclaration, 'type' | 'items'> {
-    const input = z.toJSONSchema(schema, { io: 'input' });
+    const input = policyJsonSchema(schema);
     const type = typeOf(input.type);
     const item = input.items;
     if (typeof item !== 'object' || Array.isArray(item) || item.properties?.['reason'] === undefined) return { type };

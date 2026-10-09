@@ -4,8 +4,8 @@ import { isExcluded } from '#cli/policy/public.ts';
 import { ruleSections } from '#cli/parsers/public.ts';
 import { readAsset } from '#cli/platform/root/public.ts';
 import { FRONT_MATTER } from '#cli/config/agent-rules.ts';
-import { readPackageManifests } from '#cli/repository/contracts.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
+import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import type { RuleFile, AgentRules } from '#cli/types/agent-rules.ts';
 import { detectConditions } from '#cli/repository/selection/contracts.ts';
 import { CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
@@ -13,14 +13,13 @@ import type { Level, Manifest, RuleSource } from '#cli/types/configurations.ts';
 import { configurationFiles, configurationManifests } from '#cli/configurations/public.ts';
 
 // The rules of the selected configurations; a file with a condition installs only when the repository meets it.
-function configurationRules(manifests: Manifest[], repository: Repository): RuleSource[] {
+function configurationRules(
+    manifests: Manifest[],
+    repository: Repository,
+    packageManifests: PackageManifest[],
+): RuleSource[] {
     const conditions = manifests.flatMap((manifest) => Object.values(manifest.agent_rules));
-    const isRead = conditions.some((condition) => condition.dependencies.length > 0 || condition.runtimes.length > 0);
-    const matched = detectConditions(
-        conditions,
-        repository.files,
-        isRead ? readPackageManifests(repository.root, repository.files) : [],
-    );
+    const matched = detectConditions(conditions, repository.files, packageManifests);
     return manifests.flatMap((manifest) =>
         configurationFiles(manifest).filter((file) => {
             const condition =
@@ -37,6 +36,7 @@ function configurationRules(manifests: Manifest[], repository: Repository): Rule
  * @param manifests the selected configurations
  * @param repository the source inventory for the conditional rules.
  * @param level the selected enforcement level
+ * @param packageManifests the parsed source package manifests
  * @returns each rule with its final content and destination
  */
 export function selectRuleFiles(
@@ -44,10 +44,13 @@ export function selectRuleFiles(
     manifests: Manifest[],
     repository: Repository,
     level: Level,
+    packageManifests: PackageManifest[],
 ): RuleFile[] {
     if (!rules.enabled) return [];
     const shared = [...configurationManifests().values()].filter((manifest) => manifest.configuration.always_selected);
-    const sources = new Map(configurationRules([...shared, ...manifests], repository).map((file) => [file.path, file]));
+    const sources = new Map(
+        configurationRules([...shared, ...manifests], repository, packageManifests).map((file) => [file.path, file]),
+    );
     return sources
         .values()
         .filter(({ path }) => !rules.exclude.some((entry) => isExcluded(entry, path)))

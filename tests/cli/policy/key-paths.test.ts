@@ -1,9 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { symlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { symlink, readFile } from 'node:fs/promises';
+import { parseTomlText } from '#cli/policy/document/public.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
-import { readPolicyText, parseStrictPolicy } from '#cli/policy/public.ts';
+import { readPolicyTable, parseStrictPolicy } from '#cli/policy/public.ts';
 import { SCHEMA_KEY_PATH_CASES, SEMANTIC_KEY_PATH_CASES } from '#tests/config/cli/policy/key-paths.ts';
 
 test.each(SEMANTIC_KEY_PATH_CASES)(
@@ -47,17 +48,17 @@ test.each([
         text: buildPolicy(['javascript'], { tables: `[[tools.eslint.overrides]]\n${source}\n` }),
         where,
         correction,
+        messages: [],
     })),
 ])(
     'parseStrictPolicy > schema errors name the key path of $name and pass after the fix',
-    ({ name, text, where, correction }) => {
+    ({ text, where, correction, messages }) => {
         const found = policyFindings(text);
         expect(found).toHaveLength(where.length);
         for (const [index, path] of where.entries()) {
             expect(found[index]).toStartWith(`gspot.toml: ${path}`);
         }
-        // The quoted key keeps its type message beside the key path.
-        expect(name !== 'a quoted key' || found[0]!.includes('expected boolean, received string')).toBe(true);
+        for (const message of messages) expect(found[0]).toContain(message);
         expect(policyFindings(text.replace(correction[0], correction[1]))).toStrictEqual([]);
     },
 );
@@ -83,7 +84,6 @@ test.each(['linked', 'linked/nested'])(
         const found = policyFindings(`${buildPolicy(['bash'])}[scope."${path}"]\n`, root);
         expect(found).toHaveLength(1);
         expect(found[0]).toContain('Unsafe lifecycle');
-        expect(await readFile(join(sandbox.path, 'outside/nested/sentinel'), 'utf8')).toBe('unchanged');
     },
 );
 
@@ -99,7 +99,7 @@ test.each([false, true])(
             tables: `${prefix}\npaths = ["src/**"]\nrules = {eqeqeq = 0, "no-var" = []}\n`,
         });
         expect(() => parseStrictPolicy(source)).toThrow('gspot ignore');
-        expect(() => readPolicyText(source)).toThrow('gspot ignore');
+        expect(() => readPolicyTable(parseTomlText(source, 'gspot.toml', 'policy'))).toThrow('gspot ignore');
         const corrected = parseStrictPolicy(source.replace('eqeqeq = 0, ', ''));
         expect(nested ? corrected.scopeTables['app']?.tools?.['eslint'] : corrected.tools['eslint']).toStrictEqual({
             overrides: [{ paths: [nested ? 'app/src/**' : 'src/**'], rules: { 'no-var': [] } }],

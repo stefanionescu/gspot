@@ -2,7 +2,6 @@
 import { readText } from '#cli/platform/root/public.ts';
 import { extensionOf } from '#cli/platform/contracts.ts';
 import { npmToolNames } from '#cli/configurations/contracts.ts';
-import { readPackageManifests } from '#cli/repository/contracts.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import type { Layout, TrackedFile } from '#cli/types/repository/inventory.ts';
 import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
@@ -206,6 +205,7 @@ export function detectConditions(
  * @param files the source inventory
  * @param manifests all available configurations
  * @param configured the manifests selected across the repository scopes
+ * @param packageManifests the parsed source package manifests
  * @returns detected configuration choices and their add commands
  */
 export function detectUnselected(
@@ -213,9 +213,9 @@ export function detectUnselected(
     files: TrackedFile[],
     manifests: Map<string, Manifest>,
     configured: Manifest[],
+    packageManifests: PackageManifest[],
 ): ConfigurationSuggestion[] {
     const selected = new Set(configured.map((manifest) => manifest.configuration.name));
-    const packageManifests = readPackageManifests(root, files);
     return detectConfigurations(root, files, manifests, packageManifests)
         .filter((detection) => detection.kind !== 'general' && !selected.has(detection.configuration))
         .map((detection) => ({

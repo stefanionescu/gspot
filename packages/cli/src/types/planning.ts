@@ -20,6 +20,8 @@ export type Session = {
     policyFiles: PolicyFile;
     manifests: Map<string, Manifest>;
     repository: Repository;
+    /** Package manifests parsed from this session's source inventory. */
+    packageManifests: PackageManifest[];
     scopes: ScopeSelection[];
 };
 

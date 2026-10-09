@@ -3,17 +3,17 @@ import { GspotError } from '#cli/platform/public.ts';
 import { policyLayout } from '#cli/policy/layout.ts';
 import { policyComments } from '#cli/policy/comments.ts';
 import { readSource } from '#cli/platform/root/public.ts';
-import { parse, LocalDate } from '@decimalturn/toml-patch';
 import { policySchema } from '#cli/policy/schema/public.ts';
 import { tomlSyntax } from '#cli/parsers/toml/contracts.ts';
 import { omitPolicyDefaults } from '#cli/policy/defaults.ts';
-import type { TomlTable } from '#cli/types/policy/settings.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { isRecord, decodeUtf8 } from '#cli/platform/contracts.ts';
 import type { PolicyWriteRequest } from '#cli/types/policy/file.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { calendarDateSchema } from '#cli/policy/schema/contracts.ts';
+import { parse, LocalDate, stringify } from '@decimalturn/toml-patch';
 import { configurationManifests } from '#cli/configurations/public.ts';
+import type { TomlTable, PolicyEdit } from '#cli/types/policy/settings.ts';
 
 import {
     POLICY_TAIL,
@@ -132,6 +132,25 @@ export function parseTomlText(text: string, path: string, kind: 'policy' | 'temp
         const detail = error.message.split('\n').slice(POLICY_PARSE_CONTEXT_LINES).join('\n');
         throw new GspotError(kind, [`${path}:${String(line)}:${String(column + 1)} is not valid TOML: ${detail}`]);
     }
+}
+
+/**
+ * Encode authored values in a stable key order without adding or omitting defaults.
+ * @param table the native authored table
+ * @returns native TOML that retains dates, number kinds, and array order
+ */
+export function policyValues(table: TomlTable): string {
+    return stringify(sortTable(table));
+}
+
+/**
+ * Parse one native edit while retaining its original text and value identity.
+ * @param text the authored policy text
+ * @returns the table to mutate and its original native value snapshot
+ */
+export function parsePolicyEdit(text: string): PolicyEdit {
+    const table = parseTomlText(text, POLICY_FILE, 'policy');
+    return { text, table, values: policyValues(table) };
 }
 
 /**

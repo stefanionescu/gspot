@@ -13,14 +13,14 @@ import { configurationManifests } from '#cli/configurations/public.ts';
 import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';
 import { VERSION_PROCESS_CASES, PACKAGE_METADATA_FAILURES } from '#tests/config/cli/tools/versions.ts';
 
-test.each(VERSION_PROCESS_CASES)('a version process classifies %s as %s', async (script, state, note) => {
+test.each(VERSION_PROCESS_CASES)('a version process classifies %s as %s', async (script, state, found, note) => {
     await using sandbox = await testdir();
     using _which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     const tool = { ...buildBinaryPin('version-teller', '3.8.1'), version_command: ['-e', script] };
     const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
     expect(inspection.state).toBe(state);
-    // A usable tool reports the version it printed; any other state explains itself in the note.
-    expect(note === undefined ? inspection.found : inspection.note).toContain(note ?? '3.8.1');
+    expect(inspection.found).toBe(found);
+    expect(inspection.note).toBe(note);
 });
 
 test('an npm package version does not hide a failed executable', async () => {

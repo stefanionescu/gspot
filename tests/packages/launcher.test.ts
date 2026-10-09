@@ -1,19 +1,26 @@
 // Delivered commands preserve authored instructions, report findings, and terminate canceled tools.
-import { join } from 'node:path';
+import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { join, basename } from 'node:path';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { readFile, writeFile } from 'node:fs/promises';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { createConsumer } from '#tests/harness/consumer.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
+import { mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runTestCommand, prepareTestCommand } from '#tests/harness/command.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/harness/release.ts';
-import { LAUNCHER_FILES, SYNTAX_FINDINGS } from '#tests/config/packages/launcher.ts';
+
+import {
+    RECORD_POLICY,
+    LAUNCHER_FILES,
+    SYNTAX_FINDINGS,
+    INVALID_RECORD_POLICIES,
+} from '#tests/config/packages/launcher.ts';
 
 const release = getPublishedRelease();
 
@@ -137,4 +144,39 @@ test('init replaces formatter files, moves authored instructions, and check repo
     expect(clean.checks).toHaveLength(1);
     expect(clean.checks[0]).toMatchObject({ check: 'bash/bash-syntax', status: 'passed', fileCount: 1, findings: [] });
     expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe(LAUNCHER_FILES['authored.txt']);
+});
+
+test('the packed CLI validates own record keys in Node and Bun without Node on PATH', async () => {
+    await using consumer = await createConsumer(release.registry, release.version);
+    const artifact = await readFile(new URL('../../packages/cli/dist/gspot.js', import.meta.url));
+    expect(await readFile(consumer.command[1]!)).toEqual(artifact);
+    expect(await readFile(new URL('../../packages/cli/dist/zod.LICENSE', import.meta.url))).toEqual(
+        await readFile(join(consumer.root, 'node_modules/@gspothq/cli/dist/zod.LICENSE')),
+    );
+    const git = Bun.which('git');
+    expect(git).not.toBeNull();
+    const path = join(consumer.workspace, 'git-only');
+    await mkdir(path);
+    await symlink(git!, join(path, basename(git!)));
+    expect(Bun.which('node', { PATH: path })).toBeNull();
+    for (const command of [consumer.command, [process.execPath, consumer.command[1]!]]) {
+        const options =
+            command === consumer.command
+                ? consumer.offlineOptions
+                : { ...consumer.offlineOptions, env: { ...consumer.offlineOptions.env, PATH: path } };
+        await writeFile(join(consumer.root, 'gspot.toml'), RECORD_POLICY);
+        const exported = await runTestCommand([...command, 'export', 'record.template.toml', '--json'], options);
+        expect(exported.code, exported.stdout + exported.stderr).toBe(0);
+        const saved = parse(await readFile(join(consumer.root, 'record.template.toml'), 'utf8'));
+        expect(Object.keys(saved['words']!)).toStrictEqual(['__proto__']);
+        expect(Object.keys(saved['check']!)).toStrictEqual(['__proto__']);
+        expect(await readFile(join(consumer.root, 'gspot.toml'), 'utf8')).toBe(RECORD_POLICY);
+        for (const { source, diagnostic } of INVALID_RECORD_POLICIES) {
+            await writeFile(join(consumer.root, 'gspot.toml'), `configurations = []\n${source}`);
+            const refused = await runTestCommand([...command, 'export', 'record.template.toml', '--json'], options);
+            expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+            expect(refused.stdout + refused.stderr).toContain(diagnostic);
+            expect(await readFile(join(consumer.root, 'gspot.toml'), 'utf8')).toBe(`configurations = []\n${source}`);
+        }
+    }
 });

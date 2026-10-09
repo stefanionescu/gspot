@@ -102,8 +102,13 @@ function buildDoctorReport(session: ToolSession, pinned: string | undefined): Do
         ci: policy.ci === undefined ? 'none' : CI_REPORT_PATHS[policy.ci.provider],
         rules: {
             files: policy.agent_rules.enabled
-                ? selectRuleFiles(policy.agent_rules, everyManifest(session.scopes), session.repository, policy.level)
-                      .length
+                ? selectRuleFiles(
+                      policy.agent_rules,
+                      everyManifest(session.scopes),
+                      session.repository,
+                      policy.level,
+                      session.packageManifests,
+                  ).length
                 : 0,
         },
         version: {

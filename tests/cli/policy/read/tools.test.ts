@@ -75,3 +75,23 @@ test('refuses authored Stylelint warning severity in root and scoped native opti
         expect(() => parseStrictPolicy(buildPolicy(['css'], { tables }))).toThrow('Stylelint rule selection');
     }
 });
+
+test('native rule options preserve path-dependent diagnostics and nested JSON validation', () => {
+    for (const scope of ['', 'app']) {
+        const prefix = scope === '' ? '' : 'scope.app.';
+        for (const key of ['ordinary', '__proto__', 'constructor', 'prototype', 'toString']) {
+            const commitlint = buildPolicy(['commits'], {
+                tables: `[${prefix}tools.commitlint.rules]\n"${key}" = ["invalid"]\n`,
+            });
+            expect(() => parseStrictPolicy(commitlint)).toThrow(`--rule ${key}`);
+            const eslint = buildPolicy(['javascript'], {
+                tables: `[${prefix}tools.eslint.rules]\n"project/rule" = [{ "${key}" = 2026-10-09 }]\n`,
+            });
+            expect(() => parseStrictPolicy(eslint)).toThrow('ESLint rule selection');
+            const yamllint = buildPolicy(['files'], {
+                tables: `[${prefix}tools.yamllint.rules]\n"${key}" = 5\n`,
+            });
+            expect(() => parseStrictPolicy(yamllint)).toThrow(`--rule ${key}`);
+        }
+    }
+});

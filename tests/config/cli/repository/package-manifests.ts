@@ -43,3 +43,15 @@ export const INVALID_MANIFESTS = [
     ['pyproject.toml', '[project'],
     ['pyproject.toml', '[project]\ndependencies = [7]\n'],
 ];
+
+/** Distinct root and child package facts belong to the same captured source inventory. */
+export const SESSION_PACKAGE_FILES = {
+    'package.json': '{"name":"root-sandbox","private":true,"dependencies":{"react":"19.0.0"}}',
+    'app/package.json': '{"name":"child-sandbox","private":true,"dependencies":{"vue":"3.5.0"}}',
+    'main.js': 'export const ready = true;\n',
+    'app/main.js': 'export const ready = true;\n',
+};
+
+export const SESSION_PACKAGE_REPLACEMENT = '{"name":"root-sandbox","private":true,"dependencies":{}}';
+
+export const SESSION_PACKAGE_FIX = `require('node:fs').writeFileSync('package.json', '{"name":"root-sandbox","private":true,"dependencies":{}}')`;

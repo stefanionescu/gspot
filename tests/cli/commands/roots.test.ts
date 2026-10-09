@@ -20,6 +20,7 @@ test('init refuses a symlinked managed directory without writing outside the con
     await symlink(outside, join(project, '.gspot'));
     const refused = await runGspot(project, INIT);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stdout + refused.stderr).toContain('.gspot');
     expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
     expect(await pathExists(join(outside, 'mutation.lock'))).toBe(false);
     expect(await pathExists(join(outside, 'ownership.json'))).toBe(false);

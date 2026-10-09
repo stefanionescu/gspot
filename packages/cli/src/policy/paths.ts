@@ -8,6 +8,10 @@ import { valueAt, isRecord, createTable, normalizeTables } from '#cli/platform/c
 const settingSchemas = new Map<string, z.ZodType>(Object.entries({ ...rootSettingSchemas, ...settingValueSchemas }));
 
 function tablePaths(schema: z.ZodType, value: unknown, visit: PolicyPathCallback, keys: KeyPath): unknown {
+    if (schema instanceof z.ZodUnion) {
+        const branch = schema.options.find((option) => z.safeParse(option, value).success);
+        return mapPolicyPaths(z.instanceof(z.ZodType).parse(branch), value, visit, keys);
+    }
     if (schema instanceof z.ZodArray && Array.isArray(value))
         return value.map((entry: unknown, index) =>
             mapPolicyPaths(z.instanceof(z.ZodType).parse(schema.element), entry, visit, [...keys, index]),
@@ -45,10 +49,6 @@ export function mapPolicyPaths(schema: z.ZodType, value: unknown, visit: PolicyP
     if (typeof value === 'string' && role !== undefined) return visit(value, keys, role);
     if (schema instanceof z.ZodOptional || schema instanceof z.ZodDefault)
         return mapPolicyPaths(z.instanceof(z.ZodType).parse(schema.unwrap()), value, visit, keys);
-    if (schema instanceof z.ZodUnion) {
-        const branch = schema.options.find((option) => z.safeParse(option, value).success);
-        return mapPolicyPaths(z.instanceof(z.ZodType).parse(branch), value, visit, keys);
-    }
     return tablePaths(schema, value, visit, keys);
 }
 

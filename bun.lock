@@ -206,6 +206,7 @@
     "@expressive-code/core@0.44.2": "patches/expressive-code.patch",
     "@expressive-code/plugin-frames@0.44.2": "patches/frames.patch",
     "@astrojs/starlight@0.42.0": "patches/starlight.patch",
+    "zod@4.6.2": "patches/zod.patch",
   },
   "overrides": {
     "@xmldom/xmldom": "0.8.15",
