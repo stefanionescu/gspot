@@ -22,6 +22,6 @@ mise installs the native tool pins gspot writes to `.mise/conf.d/gspot-tools.tom
 
 SwiftFormat supports macOS and Linux. Xcode checks and XCTest coverage require macOS with Xcode selected by `xcode-select`. Container checks can require a running Docker daemon. Some scans and generators need network access. Each [check page](/reference/checks/) states its platforms and external requirements.
 
-The Bash, zsh, and Bats scripts configuration uses Bash 4.4 or newer for its Bash checks. macOS's bundled Bash is older. Install the required Bash . A check that cannot run reports the missing requirement instead of counting as passed.
+The Bash, zsh, and Bats scripts configuration uses Bash 4.4 or newer for its Bash checks. The Bash bundled with macOS is older. Install Bash 4.4 or newer. A check that cannot run reports the missing requirement instead of counting as passed.
 
 If gspot reports that its runtime cannot resolve an existing filesystem path, use a path or runtime that supports that filename. This requirement applies to repository roots and source files.

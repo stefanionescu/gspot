@@ -92,3 +92,38 @@ export const ROLE_TARGETS = {
     'runtime/public.ts': 'export const value = 1;\n',
     'runtime/contracts.ts': 'export const value = 1;\n',
 };
+
+export const ENVIRONMENT_TABLES = `[[architecture.modules]]
+name = "environment"
+paths = ["config/**"]
+[architecture.roles]
+env = "environment"
+[scope."app"]
+configurations = ["typescript"]
+[[scope."app".architecture.modules]]
+name = "environment"
+paths = ["src/env/**"]
+[scope."app".architecture.roles]
+env = "environment"
+[scope."sibling"]
+configurations = ["typescript"]
+[scope."app/deep"]
+configurations = ["typescript"]
+[scope."literal"]
+configurations = ["typescript"]
+[scope."literal".architecture.roles]
+env = ["config/**"]
+[scope."empty"]
+configurations = ["typescript"]
+[scope."empty".architecture.roles]
+env = []
+`;
+
+export const ENVIRONMENT_CASES = [
+    { source: 'const port = process.env.PORT;\n', rule: 'n/no-process-env' },
+    { source: 'const port = Bun.env.PORT;\n', rule: 'no-restricted-properties' },
+    { source: "const port = Deno.env.get('PORT');\n", rule: 'no-restricted-properties' },
+    { source: 'const port = import.meta.env.PORT;\n', rule: 'no-restricted-syntax' },
+];
+
+export const ENVIRONMENT_COMPOSED = "export * from './other.js';\nconst port = import.meta.env.PORT;\n";

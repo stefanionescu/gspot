@@ -1,8 +1,5 @@
 import type { Plugin } from '#plugin/types/plugin.ts';
-import { envOwner } from '#plugin/rules/env-owner.ts';
 import { headerFirst } from '#plugin/rules/header-first.ts';
-import { sortExports } from '#plugin/rules/sort-exports.ts';
-import { sortImports } from '#plugin/rules/sort-imports.ts';
 import { noClientEnv } from '#plugin/rules/no-client-env.ts';
 import { noAliasExports } from '#plugin/rules/no-alias-exports.ts';
 import { noIndexImports } from '#plugin/rules/no-index-imports.ts';
@@ -13,10 +10,7 @@ import { requireServerOnly } from '#plugin/rules/require-server-only.ts';
 import { noTrivialFunctions } from '#plugin/rules/no-trivial-functions.ts';
 
 const rules = {
-    'env-owner': envOwner,
-    'sort-exports': sortExports,
     'header-first': headerFirst,
-    'sort-imports': sortImports,
     'no-client-env': noClientEnv,
     'import-boundaries': importBoundaries,
     'no-alias-exports': noAliasExports,

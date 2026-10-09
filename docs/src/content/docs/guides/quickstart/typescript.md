@@ -228,7 +228,7 @@ commit hook rejects the forwarding helper. Read [Requirements](/guides/requireme
 
     The forwarding-helper findings are gone. The report lists any remaining findings and names each skipped check with its cause. A skipped check has no applicable input or unmet optional condition and does not count as passed.
 
-## Next steps
+## Continue
 
 - [Fix findings](/guides/findings/): read a finding and run one check alone.
 - [`gspot.toml`](/guides/policy/): change the level, limits, and exceptions.

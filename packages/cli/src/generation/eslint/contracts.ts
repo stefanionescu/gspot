@@ -3,17 +3,11 @@ import { isRecord } from '#cli/platform/contracts.ts';
 import { activeIgnores } from '#cli/policy/settings/public.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 import type { ResolvedSelector } from '#cli/types/generation/fragments.ts';
-import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { everyTable, policyValue } from '#cli/policy/settings/contracts.ts';
+import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { byScopeDepth, nestedScopes, pathExpressions } from '#cli/repository/paths/public.ts';
 import { selectorGroups, eslintNodePatterns, eslintSourcePattern } from '#cli/generation/eslint/public.ts';
 
-import {
-    LINT_CHECK,
-    IMPORT_EXTENSIONS,
-    ALIAS_IMPORT_SELECTORS,
-    TYPESCRIPT_EXTENSION_MAP,
-} from '#cli/config/generation/eslint.ts';
 import type {
     EslintBlock,
     EslintContext,
@@ -22,6 +16,22 @@ import type {
     EslintRuleOptions,
     ScopeEslintSettings,
 } from '#cli/types/generation/eslint.ts';
+import {
+    LINT_CHECK,
+    ENVIRONMENT_RULES,
+    IMPORT_EXTENSIONS,
+    ENVIRONMENT_SELECTOR,
+    ALIAS_IMPORT_SELECTORS,
+    TYPESCRIPT_EXTENSION_MAP,
+} from '#cli/config/generation/eslint.ts';
+
+// Normalized role paths and module identities use the same effective scope.
+function environmentOwners(selection: ScopeSelection): string[] {
+    const modules = selection.view.values.architecture?.modules ?? [];
+    return [selection.view.roles.env ?? []]
+        .flat()
+        .flatMap((entry) => modules.find(({ name }) => name === entry)?.paths ?? [entry]);
+}
 
 // The paths a loosening setting allows: every entry's paths, in the order written.
 function allowedPaths(selection: ScopeSelection, setting: string): string[] {
@@ -74,13 +84,12 @@ export function eslintIgnoreBlocks(policy: Policy): EslintRuleBlock[] {
 }
 
 /**
- * The per-scope rule blocks that carry the trivial-statement ceiling into the structural plugin rules.
+ * The per-scope native environment restrictions and structural plugin ceilings.
  * @param input the resolved scopes, structural policy, and detected authored Node paths
- * @returns disabled rules at recommended, otherwise one block per scope and language, shallowest first
+ * @returns disabled structural rules at recommended, otherwise scope-bound native environment and structural rules
  */
 export function structuralRuleBlocks(input: Pick<EslintContext, 'scopes' | 'policy' | 'nodeFiles'>): EslintRuleBlock[] {
     const { scopes, policy, nodeFiles } = input;
-    const blocks: EslintRuleBlock[] = [];
     if (policy.level !== 'all')
         return [
             {
@@ -89,6 +98,26 @@ export function structuralRuleBlocks(input: Pick<EslintContext, 'scopes' | 'poli
                 rules: { 'gspot/no-trivial-files': 'off', 'gspot/no-trivial-functions': 'off' },
             },
         ];
+    const blocks: EslintRuleBlock[] = scopes.flatMap((selection) => {
+        const owners = environmentOwners(selection);
+        return owners.length === 0
+            ? []
+            : [
+                  {
+                      scope: selection.scope.path,
+                      ...pathExpressions([
+                          eslintSourcePattern('javascript', 'typescript', 'vue', 'svelte', 'astro'),
+                          ...eslintNodePatterns(nodeFiles, selection.scope.path),
+                          ...owners.map((path) => `!${path}`),
+                          ...nestedScopes(
+                              scopes.map(({ scope }) => scope.path),
+                              selection.scope.path,
+                          ).map((path) => `!${path}/**`),
+                      ]),
+                      rules: ENVIRONMENT_RULES,
+                  },
+              ];
+    });
     for (const selection of scopes.toSorted((a, b) => byScopeDepth(a.scope.path, b.scope.path))) {
         for (const [language, patterns] of [
             ['javascript', [eslintSourcePattern('javascript'), ...eslintNodePatterns(nodeFiles, selection.scope.path)]],
@@ -186,6 +215,8 @@ export function fragmentSelectorGroups(
                 };
             },
         );
+        const owners = environmentOwners(scope);
+        if (isAll && owners.length > 0) resolved.push({ ...ENVIRONMENT_SELECTOR, except: owners });
         const styles = scope.view.values['tools.eslint']?.import_extensions;
         const entries = styles === undefined ? [] : Object.entries(styles);
         for (const [index, [pattern, style]] of entries.entries())

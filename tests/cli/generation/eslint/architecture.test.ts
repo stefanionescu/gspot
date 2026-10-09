@@ -13,9 +13,12 @@ import {
     ROLE_TABLES,
     ROLE_TARGETS,
     ROLE_TSCONFIG,
+    ENVIRONMENT_CASES,
     ROLE_IMPORT_CASES,
     ARCHITECTURE_CASES,
+    ENVIRONMENT_TABLES,
     ARCHITECTURE_PROJECT,
+    ENVIRONMENT_COMPOSED,
     ARCHITECTURE_POLICIES,
     ARCHITECTURE_CORRECTION,
 } from '#tests/config/cli/generation/eslint/architecture.ts';
@@ -116,4 +119,75 @@ test.each(['recommended', 'all'])('native role ownership respects %s scopes', as
         expect(findings).toHaveLength(level === 'all' && row.rejected ? 1 : 0);
     }
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
+});
+
+test.each(['recommended', 'all'])(
+    'native environment ownership respects %s modules and project scopes',
+    async (level) => {
+        await using sandbox = await testdir();
+        const policy = buildPolicy(['typescript'], { level, tables: ENVIRONMENT_TABLES });
+        const paths = [
+            'src/source.js',
+            'config/env.js',
+            'app/src/source.js',
+            'app/src/env/source.js',
+            'sibling/src/source.js',
+            'app/deep/src/source.js',
+            'literal/src/source.js',
+            'literal/config/env.js',
+            'empty/src/source.js',
+        ];
+        await createFileTree(sandbox.path, {
+            'gspot.toml': policy,
+            'package.json': '{"private":true,"type":"module"}',
+            ...Object.fromEntries(paths.map((path) => [path, ''])),
+            ...Object.fromEntries(
+                ['', 'app/', 'sibling/', 'app/deep/', 'literal/', 'empty/'].map((prefix) => [
+                    `${prefix}tsconfig.json`,
+                    '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
+                ]),
+            ),
+        });
+        const eslint = await createEslint(sandbox.path);
+        for (const path of paths) {
+            const config = eslintConfigurationSchema.parse(await eslint.calculateConfigForFile(path));
+            expect(config.rules['gspot/env-owner']).toBeUndefined();
+            const rejected =
+                level === 'all' &&
+                !['config/env.js', 'app/src/env/source.js', 'literal/config/env.js', 'empty/src/source.js'].includes(
+                    path,
+                );
+            for (const { source, rule } of ENVIRONMENT_CASES) {
+                const [result] = await eslint.lintText(source, { filePath: path });
+                expect(result?.fatalErrorCount).toBe(0);
+                expect(result!.messages.filter(({ ruleId }) => ruleId === rule)).toHaveLength(rejected ? 1 : 0);
+            }
+            const [corrected] = await eslint.lintText('const port = "3000";\n', { filePath: path });
+            expect(
+                corrected!.messages.filter(({ ruleId }) => ENVIRONMENT_CASES.some(({ rule }) => rule === ruleId)),
+            ).toStrictEqual([]);
+        }
+        const [composed] = await eslint.lintText(ENVIRONMENT_COMPOSED, { filePath: 'app/src/source.js' });
+        expect(composed?.fatalErrorCount).toBe(0);
+        expect(composed!.messages.filter(({ ruleId }) => ruleId === 'no-restricted-syntax')).toHaveLength(
+            level === 'all' ? 2 : 0,
+        );
+        expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
+    },
+);
+
+test.each(['recommended', 'all'])('native %s environment rules stay absent without an owner', async (level) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['typescript'], { level }),
+        'package.json': '{"private":true,"type":"module"}',
+        'src/source.js': '',
+        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
+    });
+    const eslint = await createEslint(sandbox.path);
+    for (const { source, rule } of ENVIRONMENT_CASES) {
+        const [result] = await eslint.lintText(source, { filePath: 'src/source.js' });
+        expect(result?.fatalErrorCount).toBe(0);
+        expect(result!.messages.filter(({ ruleId }) => ruleId === rule)).toStrictEqual([]);
+    }
 });

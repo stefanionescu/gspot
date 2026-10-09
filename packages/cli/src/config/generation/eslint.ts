@@ -155,3 +155,15 @@ export const IMPORT_EXTENSIONS = [
     '.json',
     '.node',
 ] as const;
+
+/** Native environment reads are restricted outside the architecture role. */
+export const ENVIRONMENT_RULES = {
+    'n/no-process-env': ['error', { allowedVariables: ['NODE_ENV'] }],
+    'no-restricted-properties': ['error', { object: 'Bun', property: 'env' }, { object: 'Deno', property: 'env' }],
+};
+
+export const ENVIRONMENT_SELECTOR = {
+    selector:
+        'MemberExpression[object.type="MetaProperty"][object.meta.name="import"][object.property.name="meta"][property.name="env"]',
+    message: 'Read the environment in its architecture owner and pass the value to other modules.',
+};

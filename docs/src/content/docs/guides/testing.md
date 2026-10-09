@@ -9,7 +9,7 @@ the floor you set. Keep the test runner and its dependencies in your own project
 The default floors for Jest, Vitest, and pytest are 0% at `recommended` and 80% at `all`. Swift coverage stays off until you name a target in `tools.swift-tests.coverage`. A floor you set applies at both
 levels. For a test runner without a configuration, write a [command check](/guides/command-checks/).
 
-## Jest
+## Coverage with `jest`
 
 Run `gspot add jest`, then run the coverage check:
 

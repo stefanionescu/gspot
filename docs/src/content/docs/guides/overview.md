@@ -27,6 +27,6 @@ Use `gspot set level all` to select the additional conventions. The [level refer
 - A **runner** launches gspot through mise or a package manager. [Runners](/guides/runners/).
 - A **managed block** is a marked section gspot can update while keeping the rest of the file. A **pointer** is an editor-facing tool file that refers to generated files. [Generated files](/guides/generated-files/).
 
-## Next steps
+## Continue
 
 Read the [requirements](/guides/requirements/), choose an [installation method](/guides/install/), and follow a quickstart for [TypeScript](/guides/quickstart/typescript/), [Python](/guides/quickstart/python/), or [Swift](/guides/quickstart/swift/).

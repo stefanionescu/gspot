@@ -1,9 +1,9 @@
 // The parts of the ESLint configuration that the policy and the emitted scope decide.
 import type { Session } from '#cli/types/planning.ts';
 import { aliasesFor } from '#cli/repository/contracts.ts';
-import type { EtaInputs } from '#cli/types/generation/eta.ts';
-import { pathMatcher } from '#cli/repository/paths/public.ts';
 import { tablesFor } from '#cli/policy/settings/contracts.ts';
+import { pathMatcher } from '#cli/repository/paths/public.ts';
+import type { EtaInputs } from '#cli/types/generation/eta.ts';
 import type { EslintPresets } from '#cli/types/parsers/eslint.ts';
 import { boundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
 import { generatedIgnores } from '#cli/generation/documents/contracts.ts';
@@ -54,37 +54,25 @@ function scopeBlocks(context: EslintContext): EslintBlock[] {
         });
 }
 
-// The gspot rules the all level adds: import layout, direction, ownership, and re-exports.
-function allLevelRules(context: EslintContext, aliases: Record<string, string>, owners: string[]) {
+// The structural ceilings and native plugin options the all-level policy decides.
+function gspotRules(context: EslintContext, aliases: Record<string, string>, limits: EslintConfiguration['limits']) {
+    const { policy } = context;
+    if (policy.level !== 'all') return {};
     const scopePaths = context.scopes.map((entry) => entry.scope.path).filter((path) => path !== '');
     return {
         'gspot/no-alias-exports': 'error',
         'gspot/no-index-imports': 'error',
         'gspot/header-first': 'error',
-        'gspot/sort-imports': 'error',
-        'gspot/sort-exports': 'error',
         'gspot/import-boundaries': ['error', { folders: [...ESLINT_BOUNDARY_FOLDERS, ...scopePaths], aliases }],
         'import-x/exports-last': 'error',
-        'gspot/env-owner': ['error', { owners }],
-    };
-}
-
-// The structural ceilings and all-level rules the policy decides.
-function gspotRules(context: EslintContext, aliases: Record<string, string>, limits: EslintConfiguration['limits']) {
-    const { policy, selection } = context;
-    const { architecture } = policy;
-    const owners = [selection.view.roles.env ?? []]
-        .flat()
-        .flatMap((entry) => architecture.modules.find((module) => module.name === entry)?.paths ?? [entry]);
-    const barrels = {
-        'barrel-files/avoid-barrel-files': [
-            'error',
-            { amountOfExportsToConsiderModuleAsBarrel: limits['indexExports'] },
-        ],
-    };
-    return {
-        ...(policy.level === 'all' ? allLevelRules(context, aliases, owners) : {}),
-        ...(policy.level === 'all' && policy.structure.reexports !== 'none' ? barrels : {}),
+        ...(policy.structure.reexports === 'none'
+            ? {}
+            : {
+                  'barrel-files/avoid-barrel-files': [
+                      'error',
+                      { amountOfExportsToConsiderModuleAsBarrel: limits['indexExports'] },
+                  ],
+              }),
     };
 }
 

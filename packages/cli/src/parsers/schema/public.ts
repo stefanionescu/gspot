@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import semver from 'semver';
 import { compact } from '#cli/platform/contracts.ts';
-import type { InstallerPin } from '#cli/types/parsers/tool.ts';
 import { commandSchema } from '#cli/parsers/schema/command.ts';
+import type { InstallerPin } from '#cli/types/parsers/tool.ts';
 import { MAX_EXIT_CODE } from '#cli/config/platform/runtime.ts';
 import type { EslintPresets } from '#cli/types/parsers/eslint.ts';
 import { VERSION_FLOOR } from '#cli/config/parsers/tool/version.ts';
@@ -111,6 +111,7 @@ export const toolSchema = z
         diagnostic_header_pattern: suppressionPattern.optional(),
         // Where the tool documents one rule; explain prints it with the rule name in place of `{rule}`.
         rule_url: z.string().includes('{rule}', { message: 'A rule page names where {rule} goes.' }).optional(),
+        rule_prefix: z.string().min(1).optional(),
         suppression: z
             .strictObject({
                 marker: suppressionPattern,

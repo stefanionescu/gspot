@@ -3,7 +3,6 @@ products = ["JavaScript", "ESLint", "knip"]
 eslint_presets = { eslint = { package = "@eslint/js", source = "configs.recommended" }, sonar = { package = "eslint-plugin-sonarjs", source = "configs.recommended" }, unicorn = { package = "eslint-plugin-unicorn", source = "configs.recommended" }, packageJson = { package = "eslint-plugin-package-json", source = "configs.recommended" }, prettier = { package = "eslint-config-prettier", source = "" }, gspot = { package = "@gspothq/eslint-plugin", source = "configs.recommended" } }
 eslint_all_rules = [
     "complexity",
-    "gspot/env-owner",
     "gspot/header-first",
     "gspot/import-boundaries",
     "gspot/import-direction",
@@ -11,8 +10,6 @@ eslint_all_rules = [
     "gspot/no-index-imports",
     "gspot/no-trivial-files",
     "gspot/no-trivial-functions",
-    "gspot/sort-exports",
-    "gspot/sort-imports",
     "import-x/exports-last",
     "jsdoc/no-types",
     "jsdoc/require-description",
@@ -242,7 +239,7 @@ gspot translates policy settings into plugin rule options:
 
 | Policy setting | Plugin rule | Rule option |
 | --- | --- | --- |
-| `architecture.roles.env` | `env-owner` | `owners` |
+| `architecture.roles.env` | `n/no-process-env`, `no-restricted-properties`, `no-restricted-syntax` | owner path exclusions |
 | `tools.eslint.import_extensions` | `n/file-extension-in-import` | native import style |
 | `limits.index_exports` | `barrel-files/avoid-barrel-files` | `amountOfExportsToConsiderModuleAsBarrel` |
 | `structure.reexports = "index-only"` | core re-export selectors and `no-trivial-files` | index exemptions |
@@ -348,6 +345,13 @@ name = "eslint-plugin-barrel-files"
 kind = "library"
 version = "3.0.1"
 npm = "eslint-plugin-barrel-files"
+
+[[tool]]
+name = "eslint-plugin-perfectionist"
+rule_prefix = "perfectionist"
+kind = "library"
+npm = "eslint-plugin-perfectionist"
+version = "5.12.1"
 
 [[tool]]
 name = "eslint-plugin-n"

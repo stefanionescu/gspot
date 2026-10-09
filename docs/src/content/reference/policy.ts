@@ -1,7 +1,7 @@
 import { stringify } from 'smol-toml';
-import type { JSONSchema } from 'zod/v4/core';
 import { buildJsonSchema } from './schema.ts';
 import { isDeepStrictEqual } from 'node:util';
+import type { JSONSchema } from 'zod/v4/core';
 import { cell, table, section, referencePage } from './page.ts';
 import { isRecord } from '@gspothq/cli/src/platform/contracts.ts';
 import type { Manifest } from '@gspothq/cli/src/types/configurations.ts';

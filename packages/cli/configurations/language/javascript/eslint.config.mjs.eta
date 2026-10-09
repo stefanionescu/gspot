@@ -13,6 +13,9 @@ import boundaries from 'eslint-plugin-boundaries';
 import importX from 'eslint-plugin-import-x';
 import jsdoc from 'eslint-plugin-jsdoc';
 import nodePlugin from 'eslint-plugin-n';
+<% if (isAll) { %>
+import perfectionist from 'eslint-plugin-perfectionist';
+<% } %>
 <% if (isAll && policy.structure.reexports === 'index-only') { %>
 import barrelFiles from 'eslint-plugin-barrel-files';
 <% } %>
@@ -75,6 +78,22 @@ const coreRules = {
     'no-empty': ['error', { allowEmptyCatch: false }],
     'no-restricted-syntax': ['error', ...BASE_SELECTORS],
 };
+
+const sortingRules = IS_ALL ? {
+    'perfectionist/sort-imports': ['error', {
+        type: 'line-length', order: 'asc', ignoreCase: false,
+        groups: ['singleline-import', 'multiline-import'],
+        fallbackSort: { type: 'alphabetical', order: 'asc' },
+        newlinesBetween: 1, newlinesInside: 0, sortSideEffects: false,
+        useExperimentalDependencyDetection: false,
+    }],
+    'perfectionist/sort-named-imports': ['error', { type: 'line-length', ignoreCase: false }],
+    'perfectionist/sort-exports': ['error', {
+        type: 'line-length', groups: ['singleline-export', 'multiline-export'],
+        newlinesBetween: 1, ignoreCase: false,
+    }],
+    'perfectionist/sort-named-exports': ['error', { type: 'line-length', ignoreCase: false }],
+} : {};
 
 const gspotRules = { ...presets.gspot.blocks[0].rules, ...config.gspotRules };
 
@@ -275,7 +294,7 @@ export default [
 <% for (const [name, source] of [['eslint', 'eslint.configs.recommended'], ['sonar', 'sonarjs.configs.recommended'], ['unicorn', 'unicorn.configs.recommended']]) { const { parser, ...preset } = presets[name].blocks[0]; %>
     <%~ eslintModule.block({ files: CODE, ...preset }, `...${source}`) %>,
 <% } %>
-    <%~ eslintModule.block({ files: CODE, rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules } }, `plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin${isAll && policy.structure.reexports === 'index-only' ? ", 'barrel-files': barrelFiles" : ''}, regexp, security${config.boundaryBlocks.length > 0 ? ', boundaries' : ''}${config.commentLevel === 'error' ? ", '@eslint-community/eslint-comments': eslintComments" : ''} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }${config.boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`) %>,
+    <%~ eslintModule.block({ files: CODE, rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sortingRules, ...sonarRules, ...unicornRules, ...securityRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules } }, `plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin${isAll ? ', perfectionist' : ''}${isAll && policy.structure.reexports === 'index-only' ? ", 'barrel-files': barrelFiles" : ''}, regexp, security${config.boundaryBlocks.length > 0 ? ', boundaries' : ''}${config.commentLevel === 'error' ? ", '@eslint-community/eslint-comments': eslintComments" : ''} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }${config.boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`) %>,
     <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } }) %>,
     <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'jsdoc/require-param-type': 'error', 'jsdoc/require-returns-type': 'error', 'jsdoc/check-types': 'error', 'jsdoc/no-undefined-types': 'error', 'jsdoc/valid-types': 'error' } }) %>,
 <% for (const block of [...config.importStyleBlocks, ...config.scopeBlocks, ...config.boundaryBlocks]) { const { settings, ...data } = block; %>
