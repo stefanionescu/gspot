@@ -1,11 +1,14 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
+import { test, expect, afterAll, beforeAll } from 'bun:test';
+import { levelSchema } from '#cli/parsers/schema/contracts.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { buildToolsPath, installToolProjects } from '#tests/harness/install.ts';
 import { FORMAT_CASES, FORMAT_OVERRIDES_POLICY } from '#tests/config/samples/formatting.ts';
+import { EDITORCONFIG_VIOLATIONS } from '#tests/config/tools/configurations/general/format.ts';
 
 async function expectFormatterCorrection(root: string): Promise<void> {
     const args = ['check', '--only', 'format/prettier', '--json'];
@@ -44,8 +47,11 @@ async function expectFormatterCorrection(root: string): Promise<void> {
     expect(editor.code, editor.stdout + editor.stderr).toBe(0);
 }
 
-test('formatter overrides drive CLI findings and correction without EditorConfig conflicts', async () => {
-    await using directory = await testdir();
+let directory: Awaited<ReturnType<typeof testdir>>;
+let applied: Awaited<ReturnType<typeof spawnGspot>>;
+
+beforeAll(async () => {
+    directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': FORMAT_OVERRIDES_POLICY,
         'package.json': '{"private":true}\n',
@@ -53,9 +59,17 @@ test('formatter overrides drive CLI findings and correction without EditorConfig
             FORMAT_CASES.map(({ file }) => [file, 'const greeting="hello";if(greeting){console.log(greeting);}']),
         ),
     });
-    const applied = await spawnGspot(directory.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    applied = await spawnGspot(directory.path, ['apply']);
+    if (applied.code !== 0) throw new Error(applied.stdout + applied.stderr);
     await installToolProjects(directory.path);
+});
+
+afterAll(async () => {
+    await directory[Symbol.asyncDispose]();
+});
+
+test('formatter overrides drive CLI findings and correction without EditorConfig conflicts', async () => {
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     await expectFormatterCorrection(directory.path);
     const { path: root } = directory;
     const reason = 'Generated outputs retain their upstream layout except the reviewed file.';
@@ -95,3 +109,37 @@ test('formatter overrides drive CLI findings and correction without EditorConfig
         true,
     );
 });
+
+test.each(levelSchema.options)(
+    'EditorConfig leaves indentation to formatters and retains native file constraints at %s',
+    async (level) => {
+        const { path: root } = directory;
+        await createFileTree(root, {
+            'gspot.toml': buildPolicy(['format'], { level }),
+            'indented.txt': '\tcontent\n',
+        });
+        const applied = await spawnGspot(root, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const args = ['check', '--only', 'format/editorconfig-checker', '--json', '--'];
+        const environment = { PATH: buildToolsPath(['editorconfig-checker']) };
+        const accepted = await spawnGspot(root, [...args, 'indented.txt'], environment);
+        expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
+        expect(await readFile(join(root, 'indented.txt'), 'utf8')).toBe('\tcontent\n');
+        for (const { file, broken, corrected } of EDITORCONFIG_VIOLATIONS) {
+            await createFileTree(root, { [file]: broken });
+            const rejected = await spawnGspot(root, [...args, file], environment);
+            expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
+            const report = JSON.parse(rejected.stdout) as RunReport;
+            expect(report.checks).toMatchObject([{ check: 'format/editorconfig-checker', status: 'failed' }]);
+            expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toContain(file);
+            expect(await readFile(join(root, file), 'utf8')).toBe(broken);
+            await createFileTree(root, { [file]: corrected });
+            const fixed = await spawnGspot(root, [...args, file], environment);
+            expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+            expect((JSON.parse(fixed.stdout) as RunReport).checks).toMatchObject([
+                { check: 'format/editorconfig-checker', status: 'passed', findings: [] },
+            ]);
+            expect(await readFile(join(root, file), 'utf8')).toBe(corrected);
+        }
+    },
+);

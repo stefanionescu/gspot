@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { buildToolsPath } from '#tests/harness/install.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
@@ -15,7 +16,10 @@ import { RULE_SOURCE } from '#tests/config/tools/configurations/language/python/
 
 let previewCodes: string[];
 beforeAll(() => {
-    const result = runTestCommandBlocking(['ruff', 'rule', '--all', '--output-format', 'json'], { cwd: process.cwd() });
+    const result = runTestCommandBlocking(['ruff', 'rule', '--all', '--output-format', 'json'], {
+        cwd: process.cwd(),
+        env: { PATH: buildToolsPath(['ruff']) },
+    });
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const rules = z
         .array(z.object({ code: z.string().nullable(), preview: z.boolean() }))
@@ -54,6 +58,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     const run = (path: string) =>
         runTestCommandBlocking(['ruff', 'check', '--no-cache', '--output-format', 'json', path], {
             cwd: sandbox.path,
+            env: { PATH: buildToolsPath(['ruff']) },
         });
     const unselected = run('tests/test_example.py');
     expect(unselected.code, unselected.stdout + unselected.stderr).toBe(0);
@@ -99,7 +104,7 @@ test.each(['recommended', 'all'] as const)(
             .object({ lint: z.object({ select: z.array(z.string()) }) })
             .parse(parse(await Bun.file(join(sandbox.path, '.gspot/config/ruff.toml')).text()));
         expect(config.lint.select.filter((code) => previewCodes.includes(code))).toStrictEqual([]);
-        const result = runTestCommandBlocking(command, { cwd: sandbox.path });
+        const result = runTestCommandBlocking(command, { cwd: sandbox.path, env: { PATH: buildToolsPath(['ruff']) } });
         expect(result.code, result.stdout + result.stderr).toBe(1);
         const findings = JSON.parse(result.stdout) as RuffFinding[];
         expect(
@@ -115,7 +120,10 @@ test.each(['recommended', 'all'] as const)(
                 : [['F821', 1]],
         );
         await Bun.write(join(sandbox.path, 'sample.py'), '"""An arithmetic example."""\n\nanswer = 42\n');
-        const corrected = runTestCommandBlocking(command, { cwd: sandbox.path });
+        const corrected = runTestCommandBlocking(command, {
+            cwd: sandbox.path,
+            env: { PATH: buildToolsPath(['ruff']) },
+        });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(JSON.parse(corrected.stdout)).toStrictEqual([]);
     },

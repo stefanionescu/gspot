@@ -8,9 +8,9 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { installToolProjects } from '#tests/harness/install.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
+import { buildToolsPath, installToolProjects } from '#tests/harness/install.ts';
 
 import {
     RULE_CODES,
@@ -34,7 +34,7 @@ test('Python uses one function-size ceiling without a second statement-count fin
     writeGeneratedFiles(session, emitAll(session), log);
     const checked = runTestCommandBlocking(
         ['ruff', 'check', '--config', '.gspot/config/ruff.toml', '--no-cache', '--output-format', 'json', 'sample.py'],
-        { cwd: sandbox.path },
+        { cwd: sandbox.path, env: { PATH: buildToolsPath(['ruff']) } },
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(JSON.parse(checked.stdout)).toStrictEqual([]);
@@ -59,11 +59,13 @@ test('Ruff editor discovery and explicit formatting agree on root and nested pol
     for (const { file, config, formatted } of FORMAT_CASES) {
         const fixed = runTestCommandBlocking(['ruff', 'format', '--config', config, '--no-cache', file], {
             cwd: sandbox.path,
+            env: { PATH: buildToolsPath(['ruff']) },
         });
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, file)).text()).toBe(formatted);
         const editor = runTestCommandBlocking(['ruff', 'format', '--check', '--no-cache', file], {
             cwd: sandbox.path,
+            env: { PATH: buildToolsPath(['ruff']) },
         });
         expect(editor.code, editor.stdout + editor.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, file)).text()).toBe(formatted);
@@ -177,7 +179,7 @@ reason = "The import has an external side effect."
                 const config = join('.gspot/config', folder, 'ruff.toml');
                 const result = runTestCommandBlocking(
                     ['ruff', 'check', '--config', config, '--show-settings', join(folder, 'sample.py')],
-                    { cwd: sandbox.path },
+                    { cwd: sandbox.path, env: { PATH: buildToolsPath(['ruff']) } },
                 );
                 expect(result.code, result.stderr).toBe(0);
                 const selected = ENABLED_RULES.exec(result.stdout);

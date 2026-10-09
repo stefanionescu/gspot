@@ -1,5 +1,5 @@
 {
-    "openRecords": 442,
+    "openRecords": 434,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -319,7 +319,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 442,
+        "openRecords": 434,
         "records": 1092,
         "batches": [
             {
@@ -1485,8 +1485,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 295,
-                "unresolvedAssignments": 174
+                "completedAssignments": 296,
+                "unresolvedAssignments": 173
             },
             {
                 "id": "scripts-repository",
@@ -1625,8 +1625,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 48,
-                "unresolvedAssignments": 84
+                "completedAssignments": 54,
+                "unresolvedAssignments": 78
             },
             {
                 "id": "installation-docs",
@@ -1966,8 +1966,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 51,
-                "unresolvedAssignments": 38
+                "completedAssignments": 52,
+                "unresolvedAssignments": 37
             },
             {
                 "id": "configurations",
@@ -2140,7 +2140,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -2157,12 +2157,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": [
-                "Evidence 7d5a7e28cdd5834c.",
-                "Evidence ccbae0f6d4f25198.",
-                "Evidence 3142ce44f04114bf.",
-                "Evidence ed935fc24cd36735."
-            ],
+            "verification": ["Evidence 27d0b04108bd5747."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-output-contract-final-freeze.json",
@@ -2190,7 +2185,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 45933ced652369a7.", "Evidence d46319e4935c1707.", "Evidence aaa450b84f7aba90."],
+            "verification": ["Evidence 9b3e70df41c7ce2f."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-native-names-final-freeze.json",
@@ -2395,7 +2390,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."],
+            "verification": ["Evidence f4fb4b0dc9709bbe."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-domain-checkpoint1-final-freeze.json",
@@ -2416,7 +2411,7 @@
             "status": "complete",
             "owner": "main",
             "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
-            "verification": ["Evidence 27abb11aac798efa.", "Evidence e4090236ccab56d6.", "Evidence 53b14a9224be0c46."]
+            "verification": ["Evidence 24db65f4cb159ef6."]
         },
         "areas/checks/059": {
             "status": "complete",
@@ -2504,7 +2499,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 5f58eb0f034f8415.", "Evidence dd1d38818d82452e."],
+            "verification": ["Evidence 5b957e6e99d0f667."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-next-checks-v2-final-freeze.json",
@@ -2654,7 +2649,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."],
+            "verification": ["Evidence f4fb4b0dc9709bbe."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-domain-checkpoint1-final-freeze.json",
@@ -3090,7 +3085,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 237b72c048af1fe0.", "Evidence ad7c37a4f5743523."],
+            "verification": ["Evidence 417887cb72fd237f."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-final-freeze.json",
@@ -3126,7 +3121,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 5400a3fb6823e048.", "Evidence 047e81e21c1f0076."],
+            "verification": ["Evidence 6a8bfd964fec04e5."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-next-five-final-freeze.json",
@@ -3139,7 +3134,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 4b8bf83bd543ad8b.", "Evidence de1cb2d09c9a5ef8."],
+            "verification": ["Evidence 0342c600c21c7f5b."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-eight-final-freeze.json",
@@ -3152,7 +3147,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 4b8bf83bd543ad8b.", "Evidence de1cb2d09c9a5ef8."],
+            "verification": ["Evidence 0342c600c21c7f5b."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-eight-final-freeze.json",
@@ -3165,7 +3160,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 4b8bf83bd543ad8b.", "Evidence de1cb2d09c9a5ef8."],
+            "verification": ["Evidence 0342c600c21c7f5b."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-eight-final-freeze.json",
@@ -3453,7 +3448,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -3489,7 +3484,7 @@
             "status": "complete",
             "owner": "main",
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
-            "verification": ["Evidence ae239a374cae9bb3.", "Evidence 77d239eb11159e41.", "Evidence d9b2ac2020e5cf0c."]
+            "verification": ["Evidence ef353033828327b5."]
         },
         "areas/kits/082": {
             "status": "complete",
@@ -3516,7 +3511,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -3556,7 +3551,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -3595,7 +3590,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -3632,7 +3627,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 45933ced652369a7.", "Evidence d46319e4935c1707.", "Evidence aaa450b84f7aba90."],
+            "verification": ["Evidence 9b3e70df41c7ce2f."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-native-names-final-freeze.json",
@@ -3645,7 +3640,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 45933ced652369a7.", "Evidence d46319e4935c1707.", "Evidence aaa450b84f7aba90."],
+            "verification": ["Evidence 9b3e70df41c7ce2f."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-native-names-final-freeze.json",
@@ -3763,7 +3758,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -3796,7 +3791,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 5400a3fb6823e048.", "Evidence 047e81e21c1f0076."],
+            "verification": ["Evidence 6a8bfd964fec04e5."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-next-five-final-freeze.json",
@@ -3867,7 +3862,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 5f58eb0f034f8415.", "Evidence dd1d38818d82452e."],
+            "verification": ["Evidence 5b957e6e99d0f667."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-next-checks-v2-final-freeze.json",
@@ -3880,7 +3875,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -3897,7 +3892,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -3923,7 +3918,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -4037,7 +4032,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 7b075accc4c1b2a3.", "Evidence 4d963f8301a62b9b."],
+            "verification": ["Evidence 77d1b12e5cf9e51e."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-test-cleanup-checkpoint4-final-freeze.json",
@@ -4050,7 +4045,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."],
+            "verification": ["Evidence f4fb4b0dc9709bbe."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-domain-checkpoint1-final-freeze.json",
@@ -4065,7 +4060,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 7b075accc4c1b2a3.", "Evidence 4d963f8301a62b9b."],
+            "verification": ["Evidence 77d1b12e5cf9e51e."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-test-cleanup-checkpoint4-final-freeze.json",
@@ -4182,7 +4177,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 7b075accc4c1b2a3.", "Evidence 4d963f8301a62b9b."],
+            "verification": ["Evidence 77d1b12e5cf9e51e."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-test-cleanup-checkpoint4-final-freeze.json",
@@ -4196,7 +4191,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 7b075accc4c1b2a3.", "Evidence 4d963f8301a62b9b."],
+            "verification": ["Evidence 77d1b12e5cf9e51e."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-test-cleanup-checkpoint4-final-freeze.json",
@@ -4415,7 +4410,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -4524,7 +4519,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -4593,7 +4588,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -4628,7 +4623,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -4645,7 +4640,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -4739,7 +4734,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -4942,7 +4937,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -5481,7 +5476,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -5498,7 +5493,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -5515,7 +5510,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -5532,7 +5527,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -5549,7 +5544,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -5590,7 +5585,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -5654,7 +5649,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -5699,7 +5694,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -6317,13 +6312,13 @@
             "status": "complete",
             "owner": "main",
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
-            "verification": ["Evidence ae239a374cae9bb3.", "Evidence 77d239eb11159e41.", "Evidence d9b2ac2020e5cf0c."]
+            "verification": ["Evidence ef353033828327b5."]
         },
         "review/configurations-plugin/041": {
             "status": "complete",
             "owner": "main",
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
-            "verification": ["Evidence ae239a374cae9bb3.", "Evidence 77d239eb11159e41.", "Evidence d9b2ac2020e5cf0c."]
+            "verification": ["Evidence ef353033828327b5."]
         },
         "review/configurations-plugin/042": {
             "status": "complete",
@@ -6383,13 +6378,13 @@
             "status": "complete",
             "owner": "main",
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
-            "verification": ["Evidence ae239a374cae9bb3.", "Evidence 77d239eb11159e41.", "Evidence d9b2ac2020e5cf0c."]
+            "verification": ["Evidence ef353033828327b5."]
         },
         "review/configurations-plugin/050": {
             "status": "complete",
             "owner": "main",
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
-            "verification": ["Evidence ae239a374cae9bb3.", "Evidence 77d239eb11159e41.", "Evidence d9b2ac2020e5cf0c."]
+            "verification": ["Evidence ef353033828327b5."]
         },
         "review/configurations-plugin/051": {
             "status": "complete",
@@ -7008,7 +7003,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7070,7 +7065,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7157,7 +7152,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7350,7 +7345,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7367,7 +7362,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7384,7 +7379,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7401,7 +7396,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7446,7 +7441,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7512,7 +7507,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7529,7 +7524,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7546,7 +7541,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7563,7 +7558,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7580,7 +7575,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7624,7 +7619,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7792,7 +7787,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7833,7 +7828,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7905,7 +7900,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7946,7 +7941,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8020,13 +8015,48 @@
             ]
         },
         "review/repository-root/016": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/repository-root/019": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/repository-root/019": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "35fca2bc08540fadb2402a3d8f28968c7b552ca8",
+            "verification": [
+                "Remove unused check/check:fix/build tasks and rename dev to serve:docs; no redundant tool/package working-directory tasks or archive task remain. Task inventory and required command contracts pass. Pushed bb1f03b3a."
+            ]
+        },
         "review/repository-root/020": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/repository-root/024": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/repository-root/025": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/repository-root/026": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/repository-root/024": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "35fca2bc08540fadb2402a3d8f28968c7b552ca8",
+            "verification": [
+                "CI always validates registry pins. Delete conditional detection, its path list, rg dependency and skipped-pin branch; native actionlint, zizmor, YAML, formatting and staged checks pass."
+            ]
+        },
+        "review/repository-root/025": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "35fca2bc08540fadb2402a3d8f28968c7b552ca8",
+            "verification": [
+                "Delete unused workflow_call trigger; push, pull_request and workflow_dispatch remain. Native workflow checks pass."
+            ]
+        },
+        "review/repository-root/026": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "35fca2bc08540fadb2402a3d8f28968c7b552ca8",
+            "verification": [
+                "One workflow Bash default replaces repeated job defaults; Windows Defender retains its required PowerShell. Native workflow checks pass."
+            ]
+        },
         "review/repository-root/027": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/repository-root/031": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/repository-root/031": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "35fca2bc08540fadb2402a3d8f28968c7b552ca8",
+            "verification": [
+                "Cartesian three-OS/four-shard matrix retains all twelve tool jobs and uses the prescribed shard argument, with no platform-only field. Native workflow checks pass."
+            ]
+        },
         "review/repository-root/032": { "status": "pending", "owner": null, "commit": null, "verification": [] },
         "review/repository-root/033": { "status": "pending", "owner": null, "commit": null, "verification": [] },
         "review/repository-root/034": {
@@ -8047,7 +8077,14 @@
                 "Evidence aedf99cbeb97c5eb."
             ]
         },
-        "review/repository-root/037": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/repository-root/037": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "35fca2bc08540fadb2402a3d8f28968c7b552ca8",
+            "verification": [
+                "Before touching the distribution, native build validates all ten grammar/runtime assets. Ten missing-asset probes preserve the existing distribution; complete-input build, all twelve CLI commands, package contents and staged checks pass. Pushed bb1f03b3a."
+            ]
+        },
         "review/repository-root/038": {
             "status": "complete",
             "owner": "main",
@@ -8133,7 +8170,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8259,12 +8296,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": [
-                "Evidence 7d5a7e28cdd5834c.",
-                "Evidence ccbae0f6d4f25198.",
-                "Evidence 3142ce44f04114bf.",
-                "Evidence ed935fc24cd36735."
-            ],
+            "verification": ["Evidence 27d0b04108bd5747."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-output-contract-final-freeze.json",
@@ -8417,7 +8449,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "verification": ["Evidence 99cedf9c066772ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8661,7 +8693,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence d94973391abb2fc4.", "Evidence ebcecf8b5720e73b."],
+            "verification": ["Evidence e071d5036af2be81."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-naming-test-partial-freeze.json",
@@ -8932,7 +8964,7 @@
             "status": "complete",
             "owner": "main",
             "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
-            "verification": ["Evidence c820f6cbc49fdb28.", "Evidence dcf5932419985b4a."]
+            "verification": ["Evidence 1a3ace4a844eb365."]
         },
         "review/tests-cli/037": {
             "status": "complete",
@@ -9404,7 +9436,7 @@
             "status": "complete",
             "owner": "main",
             "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
-            "verification": ["Evidence c820f6cbc49fdb28.", "Evidence dcf5932419985b4a."]
+            "verification": ["Evidence 1a3ace4a844eb365."]
         },
         "review/tests-cli/080": {
             "status": "partial",
@@ -9446,7 +9478,7 @@
             "status": "complete",
             "owner": "main",
             "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
-            "verification": ["Evidence c820f6cbc49fdb28.", "Evidence dcf5932419985b4a."]
+            "verification": ["Evidence 1a3ace4a844eb365."]
         },
         "review/tests-cli/085": {
             "status": "complete",
@@ -10266,7 +10298,14 @@
             ]
         },
         "review/tests-layout/012": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/tests-layout/013": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-layout/013": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "38ccc4d35eb84863786d6e2d0f1a926774c8a48a",
+            "verification": [
+                "Merge release and package-check support into the consumer owner, merge its result types, delete both former owners and update all five package consumers. Existing function bodies, argv, assertions and resource cleanup are preserved exactly."
+            ]
+        },
         "review/tests-layout/015": {
             "status": "complete",
             "owner": "main",
@@ -10283,7 +10322,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab2ac0d5268126a7.", "Evidence 74123bdcdee621fe.", "Evidence 999a19c9a211b7d7."]
+            "verification": ["Evidence 465ecfb7ffcbe2c5."]
         },
         "review/tests-layout/019": { "status": "pending", "owner": null, "commit": null, "verification": [] },
         "review/tests-layout/020": { "status": "pending", "owner": null, "commit": null, "verification": [] },
@@ -10291,12 +10330,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": [
-                "Evidence 7d5a7e28cdd5834c.",
-                "Evidence ccbae0f6d4f25198.",
-                "Evidence 3142ce44f04114bf.",
-                "Evidence ed935fc24cd36735."
-            ],
+            "verification": ["Evidence 27d0b04108bd5747."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-output-contract-final-freeze.json",
@@ -10375,7 +10409,7 @@
             "status": "in-progress",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab2ac0d5268126a7.", "Evidence 74123bdcdee621fe.", "Evidence 999a19c9a211b7d7."]
+            "verification": ["Evidence 465ecfb7ffcbe2c5."]
         },
         "review/tests-layout/030": { "status": "pending", "owner": null, "commit": null, "verification": [] },
         "review/tests-layout/031": {
@@ -10828,7 +10862,14 @@
                 "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. -4518 bytes / +3 lines / +38 AST nodes; no all-dimensions reduction claim."
             ]
         },
-        "review/tests-tools/037": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-tools/037": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "38ccc4d35eb84863786d6e2d0f1a926774c8a48a",
+            "verification": [
+                "Move live suite-only marker and captured-invocation types to their test mirrors; split empty tooling and shared check declarations into init and sample owners. Existing selected-configuration and secret owners already satisfy the delegated fixes. Consumer support now has one owner."
+            ]
+        },
         "review/tests-tools/038": {
             "status": "partial",
             "owner": "main",
@@ -11203,7 +11244,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 5400a3fb6823e048.", "Evidence 047e81e21c1f0076."],
+            "verification": ["Evidence 6a8bfd964fec04e5."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-next-five-final-freeze.json",
@@ -11216,7 +11257,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 5400a3fb6823e048.", "Evidence 047e81e21c1f0076."],
+            "verification": ["Evidence 6a8bfd964fec04e5."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-next-five-final-freeze.json",
@@ -11229,7 +11270,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 237b72c048af1fe0.", "Evidence ad7c37a4f5743523."],
+            "verification": ["Evidence 417887cb72fd237f."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-final-freeze.json",
@@ -11242,7 +11283,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 780649c77214e43b.", "Evidence 404b17c6c7cee1e4."],
+            "verification": ["Evidence abbeaa78e91a2fd0."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-options-final-freeze.json",
@@ -11256,7 +11297,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 5f58eb0f034f8415.", "Evidence dd1d38818d82452e."],
+            "verification": ["Evidence 5b957e6e99d0f667."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-next-checks-v2-final-freeze.json",
@@ -11269,7 +11310,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 237b72c048af1fe0.", "Evidence ad7c37a4f5743523."],
+            "verification": ["Evidence 417887cb72fd237f."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-final-freeze.json",
@@ -11282,7 +11323,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 237b72c048af1fe0.", "Evidence ad7c37a4f5743523."],
+            "verification": ["Evidence 417887cb72fd237f."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-final-freeze.json",
@@ -11303,7 +11344,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 5f58eb0f034f8415.", "Evidence dd1d38818d82452e."],
+            "verification": ["Evidence 5b957e6e99d0f667."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-next-checks-v2-final-freeze.json",
@@ -11323,7 +11364,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 780649c77214e43b.", "Evidence 404b17c6c7cee1e4."],
+            "verification": ["Evidence abbeaa78e91a2fd0."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-options-final-freeze.json",
@@ -11455,13 +11496,13 @@
             "status": "complete",
             "owner": "main",
             "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
-            "verification": ["Evidence 27abb11aac798efa.", "Evidence e4090236ccab56d6.", "Evidence 53b14a9224be0c46."]
+            "verification": ["Evidence 24db65f4cb159ef6."]
         },
         "slices/kits-frameworks-tools/068": {
             "status": "complete",
             "owner": "main",
             "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
-            "verification": ["Evidence 27abb11aac798efa.", "Evidence e4090236ccab56d6.", "Evidence 53b14a9224be0c46."]
+            "verification": ["Evidence 24db65f4cb159ef6."]
         },
         "slices/kits-general/014": { "status": "pending", "owner": null, "commit": null, "verification": [] },
         "slices/kits-general/015": { "status": "pending", "owner": null, "commit": null, "verification": [] },
@@ -11480,13 +11521,13 @@
             "status": "complete",
             "owner": "main",
             "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
-            "verification": ["Evidence 27abb11aac798efa.", "Evidence e4090236ccab56d6.", "Evidence 53b14a9224be0c46."]
+            "verification": ["Evidence 24db65f4cb159ef6."]
         },
         "slices/kits-general/053": {
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 5400a3fb6823e048.", "Evidence 047e81e21c1f0076."],
+            "verification": ["Evidence 6a8bfd964fec04e5."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-next-five-final-freeze.json",
@@ -11693,7 +11734,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 780649c77214e43b.", "Evidence 404b17c6c7cee1e4."],
+            "verification": ["Evidence abbeaa78e91a2fd0."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-options-final-freeze.json",
@@ -11706,7 +11747,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 4b8bf83bd543ad8b.", "Evidence de1cb2d09c9a5ef8."],
+            "verification": ["Evidence 0342c600c21c7f5b."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-eight-final-freeze.json",
@@ -11737,7 +11778,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 4b8bf83bd543ad8b.", "Evidence de1cb2d09c9a5ef8."],
+            "verification": ["Evidence 0342c600c21c7f5b."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-eight-final-freeze.json",
@@ -11750,7 +11791,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 237b72c048af1fe0.", "Evidence ad7c37a4f5743523."],
+            "verification": ["Evidence 417887cb72fd237f."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-final-freeze.json",
@@ -11763,19 +11804,19 @@
             "status": "complete",
             "owner": "main",
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
-            "verification": ["Evidence 672c02aeb5fa0abe.", "Evidence 86dd346ffb7398e8."]
+            "verification": ["Evidence 46775009354c2b25."]
         },
         "slices/tests-acceptance/003": {
             "status": "complete",
             "owner": "main",
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
-            "verification": ["Evidence 672c02aeb5fa0abe.", "Evidence 86dd346ffb7398e8."]
+            "verification": ["Evidence 46775009354c2b25."]
         },
         "slices/tests-acceptance/004": {
             "status": "complete",
             "owner": "main",
             "commit": "29b12024ea85a52baf2a78387db280fa6cfdb6f4",
-            "verification": ["Evidence ab10dc2c090d02f3.", "Evidence 4d84023c177e288a."]
+            "verification": ["Evidence 6a64b48d04409bf4."]
         },
         "slices/tests-acceptance/007": {
             "status": "complete",
@@ -11790,7 +11831,7 @@
             "status": "complete",
             "owner": "main",
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
-            "verification": ["Evidence 672c02aeb5fa0abe.", "Evidence 86dd346ffb7398e8."]
+            "verification": ["Evidence 46775009354c2b25."]
         },
         "slices/tests-acceptance/012": {
             "status": "complete",
@@ -11856,7 +11897,7 @@
             "status": "complete",
             "owner": "main",
             "commit": "29b12024ea85a52baf2a78387db280fa6cfdb6f4",
-            "verification": ["Evidence ab10dc2c090d02f3.", "Evidence 4d84023c177e288a."]
+            "verification": ["Evidence 6a64b48d04409bf4."]
         },
         "slices/tests-acceptance/028": {
             "status": "complete",
@@ -11879,7 +11920,7 @@
             "status": "complete",
             "owner": "main",
             "commit": "29b12024ea85a52baf2a78387db280fa6cfdb6f4",
-            "verification": ["Evidence ab10dc2c090d02f3.", "Evidence 4d84023c177e288a."]
+            "verification": ["Evidence 6a64b48d04409bf4."]
         },
         "slices/tests-acceptance/031": {
             "status": "complete",
@@ -11947,7 +11988,7 @@
             "status": "complete",
             "owner": "main",
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
-            "verification": ["Evidence 672c02aeb5fa0abe.", "Evidence 86dd346ffb7398e8."]
+            "verification": ["Evidence 46775009354c2b25."]
         },
         "slices/tests-acceptance/042": {
             "status": "complete",
@@ -12059,7 +12100,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence d94973391abb2fc4.", "Evidence ebcecf8b5720e73b."],
+            "verification": ["Evidence e071d5036af2be81."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-naming-test-partial-freeze.json",
@@ -12072,7 +12113,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 12dad70f52583c5c.", "Evidence 9f680f212e94e96d."],
+            "verification": ["Evidence cd8daf74a1109d28."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-swift-test-isolation-freeze.json",
@@ -12085,7 +12126,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 12dad70f52583c5c.", "Evidence 9f680f212e94e96d."],
+            "verification": ["Evidence cd8daf74a1109d28."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-swift-test-isolation-freeze.json",
@@ -12098,7 +12139,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 12dad70f52583c5c.", "Evidence 9f680f212e94e96d."],
+            "verification": ["Evidence cd8daf74a1109d28."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-swift-test-isolation-freeze.json",
@@ -12137,7 +12178,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence d94973391abb2fc4.", "Evidence ebcecf8b5720e73b."],
+            "verification": ["Evidence e071d5036af2be81."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-naming-test-partial-freeze.json",
@@ -12150,7 +12191,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence d94973391abb2fc4.", "Evidence ebcecf8b5720e73b."],
+            "verification": ["Evidence e071d5036af2be81."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-naming-test-partial-freeze.json",
@@ -12163,7 +12204,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence d94973391abb2fc4.", "Evidence ebcecf8b5720e73b."],
+            "verification": ["Evidence e071d5036af2be81."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-naming-test-partial-freeze.json",
@@ -12540,7 +12581,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."],
+            "verification": ["Evidence f4fb4b0dc9709bbe."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-domain-checkpoint1-final-freeze.json",
@@ -12562,7 +12603,7 @@
             "status": "in-progress",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab2ac0d5268126a7.", "Evidence 74123bdcdee621fe.", "Evidence 999a19c9a211b7d7."]
+            "verification": ["Evidence 465ecfb7ffcbe2c5."]
         },
         "slices/tests-integration-execution/005": {
             "status": "complete",
@@ -12634,7 +12675,7 @@
             "status": "in-progress",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab2ac0d5268126a7.", "Evidence 74123bdcdee621fe.", "Evidence 999a19c9a211b7d7."]
+            "verification": ["Evidence 465ecfb7ffcbe2c5."]
         },
         "slices/tests-integration-execution/026": {
             "status": "partial",
@@ -12646,7 +12687,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ab2ac0d5268126a7.", "Evidence 74123bdcdee621fe.", "Evidence 999a19c9a211b7d7."]
+            "verification": ["Evidence 465ecfb7ffcbe2c5."]
         },
         "slices/tests-integration-execution/029": {
             "status": "complete",
@@ -12919,7 +12960,7 @@
             "status": "complete",
             "owner": "main",
             "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
-            "verification": ["Evidence 6984e15849e6fb35.", "Evidence 27ae11b810641048."]
+            "verification": ["Evidence e85836a5809d8692."]
         },
         "slices/tests-integration-lifecycle/025": {
             "status": "complete",
@@ -12935,13 +12976,13 @@
             "status": "complete",
             "owner": "main",
             "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
-            "verification": ["Evidence 6984e15849e6fb35.", "Evidence 27ae11b810641048."]
+            "verification": ["Evidence e85836a5809d8692."]
         },
         "slices/tests-integration-lifecycle/027": {
             "status": "complete",
             "owner": "main",
             "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
-            "verification": ["Evidence 6984e15849e6fb35.", "Evidence 27ae11b810641048."]
+            "verification": ["Evidence e85836a5809d8692."]
         },
         "slices/tests-integration-lifecycle/028": {
             "status": "partial",
@@ -12953,7 +12994,7 @@
             "status": "complete",
             "owner": "main",
             "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
-            "verification": ["Evidence 6984e15849e6fb35.", "Evidence 27ae11b810641048."]
+            "verification": ["Evidence e85836a5809d8692."]
         },
         "slices/tests-integration-lifecycle/030": {
             "status": "complete",
@@ -13031,19 +13072,19 @@
             "status": "complete",
             "owner": "main",
             "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
-            "verification": ["Evidence 6984e15849e6fb35.", "Evidence 27ae11b810641048."]
+            "verification": ["Evidence e85836a5809d8692."]
         },
         "slices/tests-integration-lifecycle/039": {
             "status": "complete",
             "owner": "main",
             "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
-            "verification": ["Evidence 6984e15849e6fb35.", "Evidence 27ae11b810641048."]
+            "verification": ["Evidence e85836a5809d8692."]
         },
         "slices/tests-integration-lifecycle/040": {
             "status": "complete",
             "owner": "main",
             "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
-            "verification": ["Evidence 6984e15849e6fb35.", "Evidence 27ae11b810641048."]
+            "verification": ["Evidence e85836a5809d8692."]
         },
         "slices/tests-integration-lifecycle/041": {
             "status": "partial",
@@ -13118,43 +13159,19 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": [
-                "Evidence 339e75faa698393e.",
-                "Evidence 61a5a63b93434b2b.",
-                "Evidence 953e158c3f16aad4.",
-                "Evidence 38e64765cade685b.",
-                "Evidence e9b181750aa1b3bf.",
-                "Evidence 4f7fd77aef43ca03.",
-                "Evidence 4ee54ef7cf8cd8f6."
-            ]
+            "verification": ["Evidence 4db2c93c6fa16cf1."]
         },
         "slices/tests-integration-lifecycle/045": {
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": [
-                "Evidence 339e75faa698393e.",
-                "Evidence 61a5a63b93434b2b.",
-                "Evidence 953e158c3f16aad4.",
-                "Evidence 38e64765cade685b.",
-                "Evidence e9b181750aa1b3bf.",
-                "Evidence 4f7fd77aef43ca03.",
-                "Evidence 4ee54ef7cf8cd8f6."
-            ]
+            "verification": ["Evidence 4db2c93c6fa16cf1."]
         },
         "slices/tests-integration-lifecycle/046": {
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": [
-                "Evidence 339e75faa698393e.",
-                "Evidence 61a5a63b93434b2b.",
-                "Evidence 953e158c3f16aad4.",
-                "Evidence 38e64765cade685b.",
-                "Evidence e9b181750aa1b3bf.",
-                "Evidence 4f7fd77aef43ca03.",
-                "Evidence 4ee54ef7cf8cd8f6."
-            ]
+            "verification": ["Evidence 4db2c93c6fa16cf1."]
         },
         "slices/tests-integration-lifecycle/048": {
             "status": "pending",
@@ -13599,7 +13616,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 12dad70f52583c5c.", "Evidence 9f680f212e94e96d."],
+            "verification": ["Evidence cd8daf74a1109d28."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-swift-test-isolation-freeze.json",
@@ -13695,7 +13712,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 12dad70f52583c5c.", "Evidence 9f680f212e94e96d."],
+            "verification": ["Evidence cd8daf74a1109d28."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-swift-test-isolation-freeze.json",
@@ -17106,6 +17123,37 @@
             "limitations": [
                 "No Linux/Windows native acceptance inferred from Darwin tests; current CI will validate supported platforms. No publication/deployment."
             ]
+        },
+        {
+            "commit": "35fca2bc08540fadb2402a3d8f28968c7b552ca8",
+            "completedRecords": [
+                "review/repository-root/019",
+                "review/repository-root/037",
+                "review/repository-root/024",
+                "review/repository-root/025",
+                "review/repository-root/026",
+                "review/repository-root/031"
+            ],
+            "unresolvedRecords": 436,
+            "validation": [
+                "Build: ten missing-asset failures preserve distribution; complete build/help/package contents pass. /tmp/gspot-build-grammar-native-results/proof.json and /tmp/gspot-build-ownership-native-package-proof.json.",
+                "Build checkpoint staged85/0/10; normal commit56/0/2 and commitlint0; normal push85/0/10. CI checkpoint native staged38/0/7, normal commit and push pass. /tmp/gspot-ci-four-main-cp-final-staged.log."
+            ],
+            "limitations": [
+                "New CI runs are pending or superseded; no Linux/macOS/Windows suite result is inferred from native workflow validation. CLI sideEffects deletion remains held for the outstanding owner decision."
+            ]
+        },
+        {
+            "commit": "38ccc4d35eb84863786d6e2d0f1a926774c8a48a",
+            "completedRecords": ["review/tests-layout/013", "review/tests-tools/037"],
+            "unresolvedRecords": 434,
+            "validation": [
+                "Main native103 CLI tests/285 assertions and root types pass. Staged67/0/10, normal commit and push passed. /tmp/gspot-owner-moves-main-cp-final-staged.log.",
+                "Agent native149 CLI/429 assertions,39 tools/319 assertions; original package7 survivors and unchanged plugin replay1/6 passed after the sole normal plugin build. Exact source/function/expect/argv/data/resource-body preservation and DAG proofs retained in /tmp/gspot-test-boundary-final-freeze.json."
+            ],
+            "limitations": [
+                "Native macOS acceptance; no Windows/Linux suite result inferred. PATH declarations are a separate behavior packet, with test growth recorded."
+            ]
         }
     ],
     "verificationEvidence": {
@@ -17477,6 +17525,39 @@
         "a4403efb371df5d5": "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved.",
         "d1e1c8d6d52eb677": "Queued CI37577232561 was superseded by the callback preparation push and cancelled by workflow concurrency before jobs started; no platform results.",
         "d48254c173842b29": "Main Git metadata protected; mandatory main commits/push pending.",
-        "5f7f88ecb50555f5": "Native full staged gate and cross-platform CI pending."
+        "5f7f88ecb50555f5": "Native full staged gate and cross-platform CI pending.",
+        "99cedf9c066772ef": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+        "27d0b04108bd5747": [
+            "Evidence 7d5a7e28cdd5834c.",
+            "Evidence ccbae0f6d4f25198.",
+            "Evidence 3142ce44f04114bf.",
+            "Evidence ed935fc24cd36735."
+        ],
+        "9b3e70df41c7ce2f": ["Evidence 45933ced652369a7.", "Evidence d46319e4935c1707.", "Evidence aaa450b84f7aba90."],
+        "f4fb4b0dc9709bbe": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."],
+        "24db65f4cb159ef6": ["Evidence 27abb11aac798efa.", "Evidence e4090236ccab56d6.", "Evidence 53b14a9224be0c46."],
+        "5b957e6e99d0f667": ["Evidence 5f58eb0f034f8415.", "Evidence dd1d38818d82452e."],
+        "417887cb72fd237f": ["Evidence 237b72c048af1fe0.", "Evidence ad7c37a4f5743523."],
+        "6a8bfd964fec04e5": ["Evidence 5400a3fb6823e048.", "Evidence 047e81e21c1f0076."],
+        "0342c600c21c7f5b": ["Evidence 4b8bf83bd543ad8b.", "Evidence de1cb2d09c9a5ef8."],
+        "ef353033828327b5": ["Evidence ae239a374cae9bb3.", "Evidence 77d239eb11159e41.", "Evidence d9b2ac2020e5cf0c."],
+        "77d1b12e5cf9e51e": ["Evidence 7b075accc4c1b2a3.", "Evidence 4d963f8301a62b9b."],
+        "e071d5036af2be81": ["Evidence d94973391abb2fc4.", "Evidence ebcecf8b5720e73b."],
+        "1a3ace4a844eb365": ["Evidence c820f6cbc49fdb28.", "Evidence dcf5932419985b4a."],
+        "465ecfb7ffcbe2c5": ["Evidence ab2ac0d5268126a7.", "Evidence 74123bdcdee621fe.", "Evidence 999a19c9a211b7d7."],
+        "abbeaa78e91a2fd0": ["Evidence 780649c77214e43b.", "Evidence 404b17c6c7cee1e4."],
+        "46775009354c2b25": ["Evidence 672c02aeb5fa0abe.", "Evidence 86dd346ffb7398e8."],
+        "6a64b48d04409bf4": ["Evidence ab10dc2c090d02f3.", "Evidence 4d84023c177e288a."],
+        "cd8daf74a1109d28": ["Evidence 12dad70f52583c5c.", "Evidence 9f680f212e94e96d."],
+        "e85836a5809d8692": ["Evidence 6984e15849e6fb35.", "Evidence 27ae11b810641048."],
+        "4db2c93c6fa16cf1": [
+            "Evidence 339e75faa698393e.",
+            "Evidence 61a5a63b93434b2b.",
+            "Evidence 953e158c3f16aad4.",
+            "Evidence 38e64765cade685b.",
+            "Evidence e9b181750aa1b3bf.",
+            "Evidence 4f7fd77aef43ca03.",
+            "Evidence 4ee54ef7cf8cd8f6."
+        ]
     }
 }

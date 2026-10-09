@@ -1,4 +1,4 @@
-// Explicitly refresh shipped preset data from an already installed tool project.
+// Explicitly refresh shipped preset data from the installed test packages.
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -8,7 +8,6 @@ import { JSON_INDENT } from '#cli/config/generation/eta.ts';
 import { toolProjectPins } from '#cli/configurations/contracts.ts';
 import { readInstalledNpmPackage } from '#automation/parsers/npm.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import { ESLINT_REFRESH_ARGUMENT_COUNT } from '#automation/config/eslint-presets.ts';
 import { STYLELINT_RULE_NAMES_FILE, STYLELINT_RULE_NAMES_MODULE } from '#cli/config/parsers/stylelint.ts';
 
 import {
@@ -30,13 +29,12 @@ import {
     eslintRuleModuleSchema,
 } from '#cli/parsers/schema/public.ts';
 
-const project = process.argv[2];
-if (project === undefined || process.argv.length !== ESLINT_REFRESH_ARGUMENT_COUNT)
-    throw new Error('Pass the folder of the installed tool project: bun scripts/eslint-presets.ts .gspot');
+const project = join(process.cwd(), 'tests');
+process.chdir(project);
 const manifests = configurationManifests();
 const versions = toolProjectPins([...manifests.values()]).npm;
 const prepared = new Map<string, unknown>();
-const eslintEntry = Bun.resolveSync(ESLINT_RULE_NAMES_MODULE, join(process.cwd(), project));
+const eslintEntry = Bun.resolveSync(ESLINT_RULE_NAMES_MODULE, project);
 const eslintPackage = readInstalledNpmPackage(eslintEntry, 'eslint');
 if (eslintPackage.version !== versions['eslint'])
     throw new Error(`The core rule catalog needs eslint@${String(versions['eslint'])}; install that pin first.`);
@@ -55,7 +53,7 @@ for (const manifest of [...manifests.values()].filter((entry) => Object.keys(ent
     const presetsByName = Object.fromEntries(
         await Promise.all(
             Object.entries(manifest.eslint_presets).map(async ([name, { package: packageName, source }]) => {
-                const entry = Bun.resolveSync(packageName, join(process.cwd(), project));
+                const entry = Bun.resolveSync(packageName, project);
                 const installed = readInstalledNpmPackage(entry, packageName);
                 const version = versions[packageName];
                 if (installed.version !== version)
@@ -71,7 +69,7 @@ for (const manifest of [...manifests.values()].filter((entry) => Object.keys(ent
     const presetsPath = assetPath(`${manifest.dir}/eslint-presets.json`);
     prepared.set(presetsPath, presetsByName);
 }
-const globalsEntry = Bun.resolveSync(ESLINT_RUNTIME_NAMES_MODULE, join(process.cwd(), project));
+const globalsEntry = Bun.resolveSync(ESLINT_RUNTIME_NAMES_MODULE, project);
 const installedGlobals = readInstalledNpmPackage(globalsEntry, ESLINT_RUNTIME_NAMES_MODULE);
 if (installedGlobals.version !== versions[ESLINT_RUNTIME_NAMES_MODULE])
     throw new Error(
@@ -86,9 +84,9 @@ prepared.set(
         .concat('service-worker')
         .toSorted((first, second) => first.localeCompare(second)),
 );
-const standardEntry = Bun.resolveSync(STYLELINT_RULE_NAMES_MODULE, join(process.cwd(), project));
+const standardEntry = Bun.resolveSync(STYLELINT_RULE_NAMES_MODULE, project);
 const standard = readInstalledNpmPackage(standardEntry, STYLELINT_RULE_NAMES_MODULE);
-const stylelintEntry = Bun.resolveSync('stylelint', join(process.cwd(), project));
+const stylelintEntry = Bun.resolveSync('stylelint', project);
 const installedStylelint = readInstalledNpmPackage(stylelintEntry, 'stylelint');
 if (standard.version !== versions[STYLELINT_RULE_NAMES_MODULE] || installedStylelint.version !== versions['stylelint'])
     throw new Error(

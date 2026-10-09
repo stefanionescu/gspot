@@ -1,1 +1,0 @@
-export const ESLINT_REFRESH_ARGUMENT_COUNT = 3;

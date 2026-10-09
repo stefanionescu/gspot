@@ -79,7 +79,7 @@ title = "Check EditorConfig formatting"
 example = "A file containing CRLF line endings when `.editorconfig` requires LF reports a line-ending finding. Save it with LF endings and rerun. Use the exact configured indentation and final-newline settings as well."
 level = "recommended"
 stage = "commit"
-command = ["editorconfig-checker", "-no-color", "-disable-indent-size", "{files}"]
+command = ["editorconfig-checker", "-no-color", "-disable-indentation", "{files}"]
 tool = "editorconfig-checker"
 files = { paths = ["**"] }
 output = { format = "grouped", file_pattern = "^(?<file>.+):$", pattern = "^\\s+(?:(?<line>\\d+)(?:-\\d+)?: )?(?<message>\\S.*)$" }

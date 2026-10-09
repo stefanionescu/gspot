@@ -6,6 +6,7 @@ import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
+import { buildToolsPath } from '#tests/harness/install.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { TypoEntry } from '#cli/types/parsers/output.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
@@ -33,6 +34,7 @@ test('native spelling file-type allowances preserve unrelated findings and neigh
         ['typos', '--isolated', '--config', '.gspot/config/typos.toml', 'gspot.toml'],
         {
             cwd: sandbox.path,
+            env: { PATH: buildToolsPath(['typos']) },
         },
     );
     expect(policy.code, policy.stdout + policy.stderr).toBe(0);
@@ -47,7 +49,7 @@ test('native spelling file-type allowances preserve unrelated findings and neigh
             'fixture.txt',
             'neighbor.txt',
         ],
-        { cwd: sandbox.path },
+        { cwd: sandbox.path, env: { PATH: buildToolsPath(['typos']) } },
     );
     expect(result.code, result.stderr).toBe(2);
     const found = result.stdout
@@ -94,6 +96,7 @@ test('spelling locales and word allowances remain scoped in generated configurat
             ['typos', '--isolated', '--config', config, '--format', 'brief', '--color', 'never', path],
             {
                 cwd: sandbox.path,
+                env: { PATH: buildToolsPath(['typos']) },
             },
         );
     const root = run('.gspot/config/typos.toml', 'sample.txt');
@@ -154,7 +157,7 @@ test.each([
                 'json',
                 ...paths.map((path) => `nested/${path}`),
             ],
-            { cwd: sandbox.path },
+            { cwd: sandbox.path, env: { PATH: buildToolsPath(['typos']) } },
         );
         expect([0, 2], result.stdout + result.stderr).toContain(result.code);
         return result.stdout

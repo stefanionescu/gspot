@@ -5,6 +5,7 @@ import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { buildToolsPath } from '#tests/harness/install.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { FOREIGN_DIALECT_CASES } from '#tests/config/cli/checks/language/sql.ts';
@@ -27,7 +28,7 @@ test('SQLFluff honors root and nested dialect settings over the database default
     using log = openOwnership(sandbox.path);
     writeGeneratedFiles(session, emitted, log);
     const lint = ['sqlfluff', 'lint', '--config', config.path, '--ignore-local-config', '--rules', 'LT01'];
-    const options = { cwd: sandbox.path };
+    const options = { cwd: sandbox.path, env: { PATH: buildToolsPath(['sqlfluff']) } };
     const wrong = await runTestCommand([...lint, '--dialect', 'postgres', 'query.sql'], options);
     expect(wrong.code, wrong.stderr).toBe(1);
     expect(wrong.stdout).toContain('PRS');
@@ -80,15 +81,24 @@ test.each(['recommended', 'all'] as const)(
         using ownership = openOwnership(sandbox.path);
         writeGeneratedFiles(session, emitted, ownership);
         const parseArguments = ['parse', '--config', configuration.path, '--ignore-local-config', 'query.sql'];
-        const accepted = await runTestCommand(['sqlfluff', ...parseArguments], { cwd: sandbox.path });
+        const accepted = await runTestCommand(['sqlfluff', ...parseArguments], {
+            cwd: sandbox.path,
+            env: { PATH: buildToolsPath(['sqlfluff']) },
+        });
         expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, 'query.sql')).text()).toBe(source);
         await Bun.write(join(sandbox.path, 'query.sql'), '/* Explains the query. */\nSELECT FROM;\n');
-        const failed = await runTestCommand(['sqlfluff', ...parseArguments], { cwd: sandbox.path });
+        const failed = await runTestCommand(['sqlfluff', ...parseArguments], {
+            cwd: sandbox.path,
+            env: { PATH: buildToolsPath(['sqlfluff']) },
+        });
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(failed.stdout).toContain('PRS');
         await Bun.write(join(sandbox.path, 'query.sql'), source);
-        const corrected = await runTestCommand(['sqlfluff', ...parseArguments], { cwd: sandbox.path });
+        const corrected = await runTestCommand(['sqlfluff', ...parseArguments], {
+            cwd: sandbox.path,
+            env: { PATH: buildToolsPath(['sqlfluff']) },
+        });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
 );
@@ -107,7 +117,7 @@ test.each(FOREIGN_DIALECT_CASES)(
         using log = openOwnership(sandbox.path);
         writeGeneratedFiles(session, emitted, log);
         const lint = ['sqlfluff', 'lint', '--config', config.path, '--ignore-local-config', '--rules', 'LT01'];
-        const options = { cwd: sandbox.path };
+        const options = { cwd: sandbox.path, env: { PATH: buildToolsPath(['sqlfluff']) } };
         const native = await runTestCommand([...lint, 'query.sql'], options);
         expect(native.code, native.stdout + native.stderr).toBe(0);
         const postgres = await runTestCommand([...lint, '--dialect', 'postgres', 'query.sql'], options);
@@ -137,7 +147,7 @@ test.each(['recommended', 'all'] as const)(
             'CP02,CP03',
             'functions.sql',
         ];
-        const options = { cwd: sandbox.path };
+        const options = { cwd: sandbox.path, env: { PATH: buildToolsPath(['sqlfluff']) } };
         const positive = await runTestCommand(['sqlfluff', 'lint', '--format', 'json', ...lintArguments], options);
         expect(positive.code, positive.stdout + positive.stderr).toBe(0);
         expect(JSON.parse(positive.stdout)).toMatchObject([{ filepath: 'functions.sql', violations: [] }]);

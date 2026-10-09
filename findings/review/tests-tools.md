@@ -1,6 +1,6 @@
 # Tests: Tools, Plugin, Packages, and the Harness
 
-6 unresolved review records remain.
+5 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -299,3 +299,11 @@ Original records and quotations remain above. These records are complete at `b5c
 | `review/tests-tools/009` | complete | The historical override-and-restore suite was superseded by the adopted code-execution/048 contract and its owner decision preserving level and Pages applicability. Its surviving in-process table verifies required-rule on/off expectations; the obsolete worker and override suite remain deleted. This disposition does not claim implementation of the historical override table. /tmp/gspot-tests-tools-closure-readiness-six-ab842-supplement.json records native evidence and pushed owner hashes. Commit `b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1`.                                                                                   |
 | `review/tests-tools/040` | complete | The sole-use TypeScript outcome type moved with its merged native TypeScript test. The native compiler outcome and declaration are preserved; frozen body and pushed owner hashes are verified in /tmp/gspot-tests-tools-closure-readiness-six-ab842-supplement.json. Commit `b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1`.                                                                                                                                                                                                                                                                                                                         |
 | `review/tests-tools/024` | complete | Vue is installed once as a test dependency, upgraded to the stable patched 3.5.42 after the native advisory finding. The approved contained HTML cache copy and public npm redirect remove repeated downloads; private credential controls remain. Main focused replay passed 18 tests and 195 assertions; the patched Vue replay passed 4 tests and 20 assertions. Actual HTTP proof confirms no Authorization header reaches public npm. /tmp/gspot-tests-tools024-reviewed-candidate.json preserves original failures and /tmp/gspot-tests-tools024-cp-native.log records Main acceptance. Commit `b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1`. |
+
+## Implementation checkpoint 38ccc4d35 of October 9, 2026 for consumer-support-and-test-mirrors
+
+Original records and quotations remain above. These records are complete at `38ccc4d35eb84863786d6e2d0f1a926774c8a48a`.
+
+| ID                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-tools/037` | complete | Move live suite-only marker and captured-invocation types to their test mirrors; split empty tooling and shared check declarations into init and sample owners. Existing selected-configuration and secret owners already satisfy the delegated fixes. Consumer support now has one owner. Commit `38ccc4d35eb84863786d6e2d0f1a926774c8a48a`. |

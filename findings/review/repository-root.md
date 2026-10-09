@@ -1,6 +1,6 @@
 # Repository Root, Scripts, Workflows, and Package Wiring
 
-22 unresolved review records remain.
+16 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -280,3 +280,16 @@ Original records and quotations remain above. These records are complete at `1ec
 | ID                           | Status   | Evidence                                                                                                                                                                     |
 | ---------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/repository-root/038` | complete | Grammar copy function is private and executes unconditionally. Native cold, cached, corrupt-cache and EISDIR checks pass. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`. |
+
+## Implementation checkpoint 35fca2bc0 of October 9, 2026 for build-and-ci-ownership
+
+Original records and quotations remain above. These records are complete at `35fca2bc08540fadb2402a3d8f28968c7b552ca8`.
+
+| ID                           | Status   | Evidence                                                                                                                                                                                                                                                                                                           |
+| ---------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/repository-root/019` | complete | Remove unused check/check:fix/build tasks and rename dev to serve:docs; no redundant tool/package working-directory tasks or archive task remain. Task inventory and required command contracts pass. Pushed bb1f03b3a. Commit `35fca2bc08540fadb2402a3d8f28968c7b552ca8`.                                         |
+| `review/repository-root/037` | complete | Before touching the distribution, native build validates all ten grammar/runtime assets. Ten missing-asset probes preserve the existing distribution; complete-input build, all twelve CLI commands, package contents and staged checks pass. Pushed bb1f03b3a. Commit `35fca2bc08540fadb2402a3d8f28968c7b552ca8`. |
+| `review/repository-root/024` | complete | CI always validates registry pins. Delete conditional detection, its path list, rg dependency and skipped-pin branch; native actionlint, zizmor, YAML, formatting and staged checks pass. Commit `35fca2bc08540fadb2402a3d8f28968c7b552ca8`.                                                                       |
+| `review/repository-root/025` | complete | Delete unused workflow_call trigger; push, pull_request and workflow_dispatch remain. Native workflow checks pass. Commit `35fca2bc08540fadb2402a3d8f28968c7b552ca8`.                                                                                                                                              |
+| `review/repository-root/026` | complete | One workflow Bash default replaces repeated job defaults; Windows Defender retains its required PowerShell. Native workflow checks pass. Commit `35fca2bc08540fadb2402a3d8f28968c7b552ca8`.                                                                                                                        |
+| `review/repository-root/031` | complete | Cartesian three-OS/four-shard matrix retains all twelve tool jobs and uses the prescribed shard argument, with no platform-only field. Native workflow checks pass. Commit `35fca2bc08540fadb2402a3d8f28968c7b552ca8`.                                                                                             |

@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { buildToolsPath } from '#tests/harness/install.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { FILES, TABLES, TABLE_COLUMN_SAMPLE } from '#tests/config/tools/configurations/language/markdown.ts';
@@ -70,7 +71,7 @@ test('native Markdown discovery reads shipped defaults and scoped options throug
                 '--no-globs',
                 ...(folder === '' ? [':root.md', ':title.md', ':long.md'] : [':guide.md']),
             ],
-            { cwd: join(sandbox.path, folder) },
+            { cwd: join(sandbox.path, folder), env: { PATH: buildToolsPath(['markdownlint-cli2']) } },
         );
         expect(native.code, native.stdout + native.stderr).toBe(0);
     }

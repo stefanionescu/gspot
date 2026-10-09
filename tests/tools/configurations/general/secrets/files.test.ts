@@ -6,8 +6,10 @@ import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { buildToolsPath } from '#tests/harness/install.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { useEnvironment } from '#tests/harness/environment.ts';
 import { testApiToken } from '#tests/config/samples/secrets.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import type { RunReport, RunOptions } from '#cli/types/execution/check.ts';
@@ -22,7 +24,7 @@ async function secretChecks(root: string): Promise<RunReport['checks']> {
 }
 
 test('a folder with no git scans its files for secrets, and a git repository scans its changes instead', async () => {
-    if (Bun.which('gitleaks') === null) throw new Error('The native secrets test requires gitleaks.');
+    using _tools = useEnvironment({ PATH: buildToolsPath(['gitleaks']) });
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': SECRETS_FILES_POLICY,

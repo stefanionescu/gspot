@@ -75,7 +75,7 @@ stage = "commit"
 runs = "scope"
 summary = "Checks that secret and service role keys are named only in edge functions and test files."
 why = "Secret and service role keys bypass row level security, so a client bundle that holds either exposes privileged database access."
-help = "Move the code into edge functions or tests, or record a reason with gspot ignore supabase/admin-key."
+help = "Move code to edge functions or tests, or run gspot ignore supabase/service-role-key with a reason."
 
 [[check]]
 name = "deno-lint"

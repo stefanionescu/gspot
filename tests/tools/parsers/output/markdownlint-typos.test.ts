@@ -8,6 +8,7 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { buildToolsPath } from '#tests/harness/install.ts';
 import { parseOutput } from '#cli/parsers/output/public.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
@@ -32,7 +33,7 @@ async function runMarkdown(root: string, paths: string[]) {
         configuration.path,
         ...paths.map((path) => `:${path}`),
     ];
-    const failed = await runTestCommand(command, { cwd: root });
+    const failed = await runTestCommand(command, { cwd: root, env: { PATH: buildToolsPath(['markdownlint-cli2']) } });
     return { planned, command, failed };
 }
 
@@ -57,7 +58,10 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
         expect(findings).toContainEqual(containing({ file, line: 1, rule: 'MD041', fixable: false }));
     }
     for (const path of paths) await Bun.write(join(sandbox.path, path), '# Title\n');
-    const corrected = await runTestCommand(command, { cwd: sandbox.path });
+    const corrected = await runTestCommand(command, {
+        cwd: sandbox.path,
+        env: { PATH: buildToolsPath(['markdownlint-cli2']) },
+    });
     expect(corrected.code, corrected.stderr).toBe(0);
     expect(parseOutput(planned.check, corrected.stdout, '', { root: sandbox.path, cwd: sandbox.path })).toStrictEqual(
         [],
@@ -109,7 +113,7 @@ test('native spelling JSON retains filename delimiters, Unicode columns, and for
         .checks.find((check) => check.name === 'spelling/typos')!;
     const cwd = join(sandbox.path, 'nested');
     const typos = ['typos', '--isolated', '--config', configuration, '--format', 'json', 'word.txt'];
-    const options = { cwd };
+    const options = { cwd, env: { PATH: buildToolsPath(['typos']) } };
     const native = await runTestCommand([...typos, ...paths], options);
     expect(native.code, native.stderr).toBe(2);
     const findings = parseOutput(check, native.stdout, native.stderr, {

@@ -27,8 +27,8 @@ run = ["bun install --frozen-lockfile", "bun packages/cli/scripts/grammars.ts"]
 depends_post = ["generate:docs", "build:plugin"]
 
 [tasks."pin:eslint-presets"]
-description = "Refresh shipped ESLint preset data from the installed pinned tool project."
-run = "bun scripts/eslint-presets.ts .gspot"
+description = "Refresh shipped ESLint preset data from the installed test packages."
+run = "bun scripts/eslint-presets.ts"
 
 [tasks."check:pins"]
 description = "Check that every tool pin of the configuration manifests exists in its registry."
