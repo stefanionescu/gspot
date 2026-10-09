@@ -1,11 +1,11 @@
 import executables from 'which';
 import { join } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
 import { readPolicy } from '#cli/policy/public.ts';
 import { inspectTool } from '#cli/tools/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as environment from '#cli/platform/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { test, spyOn, expect, describe } from 'bun:test';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
@@ -16,30 +16,27 @@ import { configurationManifests } from '#cli/configurations/public.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { buildBinaryPin, buildLibraryPin, inspectionContext } from '#tests/harness/pins.ts';
 
-test.skipIf(!isPosix)(
-    'the tool inspection > version inspections and tool execution prefer helpers from the selected installation',
-    async () => {
-        await using sandbox = await testdir();
-        const launcher = `#!${process.execPath}\nconst child = Bun.spawnSync(['companion'], {stdout:'pipe', stderr:'pipe'}); process.stdout.write(child.stdout); process.exitCode = child.exitCode;\n`;
-        await createFileTree(sandbox.path, {
-            'node_modules/.bin/teller': launcher,
-            'node_modules/.bin/companion': `#!${process.execPath}\nconsole.log('3.8.1');\n`,
-            'unrelated/companion': `#!${process.execPath}\nconsole.log('9.0.0');\n`,
-        });
-        for (const path of ['node_modules/.bin/teller', 'node_modules/.bin/companion', 'unrelated/companion'])
-            await chmod(join(sandbox.path, path), EXECUTABLE_FILE);
-        const env = { PATH: join(sandbox.path, 'unrelated') };
-        const tool = { ...buildBinaryPin('teller', '3.8.1'), env };
-        const read = inspectTool(inspectionContext(sandbox.path), tool);
-        expect(read).toMatchObject({ state: 'ok', found: '3.8.1' });
-        const executed = await runTool([read.path!], { cwd: sandbox.path, env });
-        expect(executed.code).toBe(0);
-        expect(executed.stdout.trim()).toBe('3.8.1');
-        expect(await Bun.file(join(sandbox.path, 'node_modules/.bin/teller')).text()).toBe(launcher);
-    },
-);
+const toolCompanions = async () => {
+    await using sandbox = await testdir();
+    const launcher = `#!${process.execPath}\nconst child = Bun.spawnSync(['companion'], {stdout:'pipe', stderr:'pipe'}); process.stdout.write(child.stdout); process.exitCode = child.exitCode;\n`;
+    await createFileTree(sandbox.path, {
+        'node_modules/.bin/teller': launcher,
+        'node_modules/.bin/companion': `#!${process.execPath}\nconsole.log('3.8.1');\n`,
+        'unrelated/companion': `#!${process.execPath}\nconsole.log('9.0.0');\n`,
+    });
+    for (const path of ['node_modules/.bin/teller', 'node_modules/.bin/companion', 'unrelated/companion'])
+        await chmod(join(sandbox.path, path), EXECUTABLE_FILE);
+    const env = { PATH: join(sandbox.path, 'unrelated') };
+    const tool = { ...buildBinaryPin('teller', '3.8.1'), env };
+    const read = inspectTool(inspectionContext(sandbox.path), tool);
+    expect(read).toMatchObject({ state: 'ok', found: '3.8.1' });
+    const executed = await runTool([read.path!], { cwd: sandbox.path, env });
+    expect(executed.code).toBe(0);
+    expect(executed.stdout.trim()).toBe('3.8.1');
+    expect(await Bun.file(join(sandbox.path, 'node_modules/.bin/teller')).text()).toBe(launcher);
+};
 
-test('the tool inspection > an active PATH executable wins over an unrelated mise shim', async () => {
+const activeExecutable = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'active/teller': '#!/bin/sh\necho 3.8.1\n',
@@ -53,9 +50,9 @@ test('the tool inspection > an active PATH executable wins over an unrelated mis
     const inspection = inspectTool(inspectionContext(sandbox.path), buildBinaryPin('teller', '3.8.1'));
     expect(inspection.state).toBe('ok');
     expect(inspection.path).toBe(active);
-});
+};
 
-test('the tool inspection > a managed npm inspection refuses a linked manifest before executing and passes after the fix', async () => {
+const linkedManifest = async () => {
     await using sandbox = await testdir();
     await using outside = await testdir();
     await createFileTree(sandbox.path, {
@@ -76,9 +73,9 @@ test('the tool inspection > a managed npm inspection refuses a linked manifest b
     expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
     expect(await pathExists(join(sandbox.path, 'executed'))).toBe(true);
     expect(await Bun.file(join(outside.path, 'package.json')).text()).toBe('{"name":"teller","version":"5.0.1"}');
-});
+};
 
-test('the tool inspection > an npm tool is the version its package holds, whatever it prints about itself', async () => {
+const packageVersion = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         '.gspot/node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
@@ -90,14 +87,74 @@ test('the tool inspection > an npm tool is the version its package holds, whatev
     const inspection = inspectTool(inspectionContext(sandbox.path), buildBinaryPin('teller', '5.0.1', 'teller'));
     expect(inspection.found).toBe('5.0.1');
     expect(inspection.state).toBe('ok');
-});
+};
 
-test.each([
-    ['0.9.0', 'ok'],
-    ['0.8.0', 'outdated'],
-] as const)(
-    'the tool inspection > an independently versioned wrapper runs native %s and reports %s',
-    async (native, state) => {
+const missingVersion = async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'node_modules/.bin/shimmed': "#!/bin/sh\necho 'mise ERROR No version is set for shim: shimmed' >&2\nexit 1\n",
+    });
+    await chmod(join(sandbox.path, 'node_modules/.bin/shimmed'), EXECUTABLE_FILE);
+    const inspection = inspectTool(inspectionContext(sandbox.path), buildBinaryPin('shimmed', '3.8.1'));
+    expect(inspection.state).toBe('missing');
+    expect(inspection.want).toBe('3.8.1');
+};
+
+const versionColors = async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'node_modules/.bin/painter': "#!/bin/sh\nprintf 'painter \\033[1;36m26.8.0\\033[0m using more\\n'\n",
+    });
+    await chmod(join(sandbox.path, 'node_modules/.bin/painter'), EXECUTABLE_FILE);
+    const inspection = inspectTool(inspectionContext(sandbox.path), buildBinaryPin('painter', '26.8.0'));
+    expect(inspection.found).toBe('26.8.0');
+    expect(inspection.state).toBe('ok');
+};
+
+const installedLibrary = async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        '.gspot/node_modules/globals/package.json': '{"name":"globals","version":"17.12.0"}',
+        'api/node_modules/eslint-plugin-n/package.json': '{"name":"eslint-plugin-n","version":"18.3.0"}',
+    });
+    expect(inspectTool(inspectionContext(sandbox.path), buildLibraryPin('globals', '17.12.0')).state).toBe('ok');
+    expect(inspectTool(inspectionContext(sandbox.path), buildLibraryPin('eslint-plugin-n', '18.3.0')).state).toBe(
+        'missing',
+    );
+};
+
+const libraryVersion = async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        '.gspot/node_modules/typescript/package.json': '{"name":"typescript","version":"6.0.0"}',
+    });
+    const absent = inspectTool(inspectionContext(sandbox.path), buildLibraryPin('eslint-plugin-regexp', '3.3.0'));
+    expect(absent.state).toBe('missing');
+    expect(absent.want).toBe('3.3.0');
+    const newer = inspectTool(inspectionContext(sandbox.path), buildLibraryPin('typescript', '5.9.3'));
+    expect(newer.state).toBe('newer');
+    expect(newer.found).toBe('6.0.0');
+};
+
+describe('the tool inspection', () => {
+    test.skipIf(!isPosix)(
+        'version inspections and tool execution prefer helpers from the selected installation',
+        toolCompanions,
+    );
+
+    test('an active PATH executable wins over an unrelated mise shim', activeExecutable);
+
+    test(
+        'a managed npm inspection refuses a linked manifest before executing and passes after the fix',
+        linkedManifest,
+    );
+
+    test('an npm tool is the version its package holds, whatever it prints about itself', packageVersion);
+
+    test.each([
+        ['0.9.0', 'ok'],
+        ['0.8.0', 'outdated'],
+    ] as const)('an independently versioned wrapper runs native %s and reports %s', async (native, state) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             '.gspot/node_modules/wrapper/package.json': '{"name":"wrapper","version":"0.7.0"}',
@@ -113,54 +170,15 @@ test.each([
         const inspection = inspectTool(inspectionContext(sandbox.path), tool);
         expect(inspection.found).toBe(native);
         expect(inspection.state).toBe(state);
-    },
-);
-
-test('the tool inspection > a shim that no configuration gives a version is missing, not broken', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'node_modules/.bin/shimmed': "#!/bin/sh\necho 'mise ERROR No version is set for shim: shimmed' >&2\nexit 1\n",
     });
-    await chmod(join(sandbox.path, 'node_modules/.bin/shimmed'), EXECUTABLE_FILE);
-    const inspection = inspectTool(inspectionContext(sandbox.path), buildBinaryPin('shimmed', '3.8.1'));
-    expect(inspection.state).toBe('missing');
-    expect(inspection.want).toBe('3.8.1');
-});
 
-test('the tool inspection > color codes around a version are no part of it', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'node_modules/.bin/painter': "#!/bin/sh\nprintf 'painter \\033[1;36m26.8.0\\033[0m using more\\n'\n",
-    });
-    await chmod(join(sandbox.path, 'node_modules/.bin/painter'), EXECUTABLE_FILE);
-    const inspection = inspectTool(inspectionContext(sandbox.path), buildBinaryPin('painter', '26.8.0'));
-    expect(inspection.found).toBe('26.8.0');
-    expect(inspection.state).toBe('ok');
-});
+    test('a shim that no configuration gives a version is missing, not broken', missingVersion);
 
-test('the tool inspection > a library is found only in its tool project installation', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        '.gspot/node_modules/globals/package.json': '{"name":"globals","version":"17.12.0"}',
-        'api/node_modules/eslint-plugin-n/package.json': '{"name":"eslint-plugin-n","version":"18.3.0"}',
-    });
-    expect(inspectTool(inspectionContext(sandbox.path), buildLibraryPin('globals', '17.12.0')).state).toBe('ok');
-    expect(inspectTool(inspectionContext(sandbox.path), buildLibraryPin('eslint-plugin-n', '18.3.0')).state).toBe(
-        'missing',
-    );
-});
+    test('color codes around a version are no part of it', versionColors);
 
-test('the tool inspection > a library that is absent is missing, and one off its pin is reported', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        '.gspot/node_modules/typescript/package.json': '{"name":"typescript","version":"6.0.0"}',
-    });
-    const absent = inspectTool(inspectionContext(sandbox.path), buildLibraryPin('eslint-plugin-regexp', '3.3.0'));
-    expect(absent.state).toBe('missing');
-    expect(absent.want).toBe('3.3.0');
-    const newer = inspectTool(inspectionContext(sandbox.path), buildLibraryPin('typescript', '5.9.3'));
-    expect(newer.state).toBe('newer');
-    expect(newer.found).toBe('6.0.0');
+    test('a library is found only in its tool project installation', installedLibrary);
+
+    test('a library that is absent is missing, and one off its pin is reported', libraryVersion);
 });
 
 test.each(['mise', 'npm'])(

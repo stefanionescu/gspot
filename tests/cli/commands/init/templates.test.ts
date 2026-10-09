@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
-import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
+import { test, expect, describe } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
@@ -15,7 +15,7 @@ import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
 import { selectConfigurations, configurationManifests } from '#cli/configurations/public.ts';
 
-test('templates > init validates a template in a dry run without changing the repository', async () => {
+const templateDryRun = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'scripts/a.sh': CLEAN_BASH_SCRIPT,
@@ -53,9 +53,9 @@ test('templates > init validates a template in a dry run without changing the re
     for (const configuration of [...alwaysSelectedConfigurations(), 'bash', 'commits']) {
         expect(selected).toContain(configuration);
     }
-});
+};
 
-test.each(['exact', 'detect'])('an empty %s template controls root detection without writing', async (selection) => {
+const templateSelection = async (selection: string) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'source.js': 'export const port = 8080;\n',
@@ -85,29 +85,35 @@ test.each(['exact', 'detect'])('an empty %s template controls root detection wit
     }
     expect(report.plan.template).toMatchObject({ name: 'team', selection });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
+};
 
-test('templates > a template with a wrong value, an unknown configuration and a path stops init before anything is written', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'scripts/a.sh': CLEAN_BASH_SCRIPT,
-        'bad.template.toml': `template = "bad"\nselection = "sometimes"\nconfigurations = ["${TYPO.spelling}"]\n\n[[ignore]]\ncheck = "spelling/typos"\npaths = ["a/**"]\nreason = "A reason that says something."\n`,
+describe('templates', () => {
+    test('init validates a template in a dry run without changing the repository', templateDryRun);
+
+    test.each(['exact', 'detect'])('an empty %s template controls root detection without writing', templateSelection);
+
+    test('a template with a wrong value, an unknown configuration and a path stops init before anything is written', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'scripts/a.sh': CLEAN_BASH_SCRIPT,
+            'bad.template.toml': `template = "bad"\nselection = "sometimes"\nconfigurations = ["${TYPO.spelling}"]\n\n[[ignore]]\ncheck = "spelling/typos"\npaths = ["a/**"]\nreason = "A reason that says something."\n`,
+        });
+        commitAll(sandbox.path);
+        const init = await runGspot(sandbox.path, ['init', '--yes', '--from', 'bad.template.toml', '--json']);
+        expect(init.code).toBe(2);
+        expect(JSON.parse(init.stdout)).toMatchObject({ error: 'template', message: textContaining('selection') });
+        expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
+        const preview = await runGspot(sandbox.path, [
+            'init',
+            '--yes',
+            '--from',
+            'bad.template.toml',
+            '--dry-run',
+            '--json',
+        ]);
+        expect(preview.code).toBe(2);
+        expect(JSON.parse(preview.stdout)).toMatchObject({ error: 'template', message: textContaining('selection') });
     });
-    commitAll(sandbox.path);
-    const init = await runGspot(sandbox.path, ['init', '--yes', '--from', 'bad.template.toml', '--json']);
-    expect(init.code).toBe(2);
-    expect(JSON.parse(init.stdout)).toMatchObject({ error: 'template', message: textContaining('selection') });
-    expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
-    const preview = await runGspot(sandbox.path, [
-        'init',
-        '--yes',
-        '--from',
-        'bad.template.toml',
-        '--dry-run',
-        '--json',
-    ]);
-    expect(preview.code).toBe(2);
-    expect(JSON.parse(preview.stdout)).toMatchObject({ error: 'template', message: textContaining('selection') });
 });
 
 test.each(['recommended', 'all'] as const)(

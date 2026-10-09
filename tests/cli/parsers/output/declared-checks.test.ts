@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/public.ts';
+import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
@@ -56,18 +56,20 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
     expect(await Bun.file(join(sandbox.path, 'notes/reported.txt')).text()).toBe(source);
 });
 
-test('a named check entry > runs the command of the repository and reports file and line through its output format', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': ENTRY, 'notes/plan.txt': 'one\nPENDING later\n' });
-    const check = await checkReport(sandbox.path, ['check', '--only', 'notes/no-pending', '--json']);
-    expect(check.code, check.stdout + check.stderr).toBe(1);
-    expect(check.report.checks).toMatchObject([
-        {
-            check: 'notes/no-pending',
-            status: 'failed',
-            findings: [{ file: 'notes/plan.txt', line: 2, message: 'PENDING later' }],
-        },
-    ]);
+describe('a named check entry', () => {
+    test('runs the command of the repository and reports file and line through its output format', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': ENTRY, 'notes/plan.txt': 'one\nPENDING later\n' });
+        const check = await checkReport(sandbox.path, ['check', '--only', 'notes/no-pending', '--json']);
+        expect(check.code, check.stdout + check.stderr).toBe(1);
+        expect(check.report.checks).toMatchObject([
+            {
+                check: 'notes/no-pending',
+                status: 'failed',
+                findings: [{ file: 'notes/plan.txt', line: 2, message: 'PENDING later' }],
+            },
+        ]);
+    });
 });
 
 test('malformed custom JSON output produces inability instead of a discarded finding', async () => {

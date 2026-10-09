@@ -1,7 +1,7 @@
 // The swift configuration inside a scope: the tools read the scope's configuration and findings carry its path.
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
+import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
@@ -12,41 +12,47 @@ import type { RunReport } from '#cli/types/execution/check.ts';
 import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
 import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
 
-test.skipIf(!hasToolBuild('swiftlint'))(
-    'the swift configuration inside a scope > SwiftLint and SwiftFormat read the configuration of their scope, and the findings keep the scope path',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'ios/Sources/App/Greeting.swift': CLEAN_SWIFT,
-            'README.md': '# test\n',
-        });
-        commitAll(sandbox.path);
-        const environment = { PATH: buildToolsPath(['swiftlint', 'swiftformat', 'typos', 'editorconfig-checker']) };
-        const argv = [...buildInitArguments([]), '--scope-configurations', 'ios=swift'];
-        await initRepository(sandbox.path, argv, environment, { level: 'all' });
-        for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
-            const clean = await spawnGspot(sandbox.path, ['check', '--only', id], environment);
-            expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
-        }
-        const outcome = await runCheckCase(
-            sandbox.path,
-            { check: 'swift/swiftlint', files: { 'ios/Sources/App/Cast.swift': CAST_SWIFT } },
-            environment,
-        );
-        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-        const failed = JSON.parse(outcome.stdout) as RunReport;
-        expect(failed.checks).toMatchObject([{ check: 'swift/swiftlint', scope: 'ios', status: 'failed' }]);
-        expect(failed.checks[0]!.findings).toContainEqual(
-            containing({ file: 'ios/Sources/App/Cast.swift', rule: 'force_cast', line: 5 }),
-        );
-        await Bun.write(
-            join(sandbox.path, 'ios/Sources/App/Cast.swift'),
-            CLEAN_SWIFT.replace('greeting', 'correctedGreeting'),
-        );
-        const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'swift/swiftlint', '--json'], environment);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'swift/swiftlint', scope: 'ios', status: 'passed', findings: [] },
-        ]);
-    },
-);
+describe('the swift configuration inside a scope', () => {
+    test.skipIf(!hasToolBuild('swiftlint'))(
+        'SwiftLint and SwiftFormat read the configuration of their scope, and the findings keep the scope path',
+        async () => {
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
+                'ios/Sources/App/Greeting.swift': CLEAN_SWIFT,
+                'README.md': '# test\n',
+            });
+            commitAll(sandbox.path);
+            const environment = { PATH: buildToolsPath(['swiftlint', 'swiftformat', 'typos', 'editorconfig-checker']) };
+            const argv = [...buildInitArguments([]), '--scope-configurations', 'ios=swift'];
+            await initRepository(sandbox.path, argv, environment, { level: 'all' });
+            for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
+                const clean = await spawnGspot(sandbox.path, ['check', '--only', id], environment);
+                expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+            }
+            const outcome = await runCheckCase(
+                sandbox.path,
+                { check: 'swift/swiftlint', files: { 'ios/Sources/App/Cast.swift': CAST_SWIFT } },
+                environment,
+            );
+            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+            const failed = JSON.parse(outcome.stdout) as RunReport;
+            expect(failed.checks).toMatchObject([{ check: 'swift/swiftlint', scope: 'ios', status: 'failed' }]);
+            expect(failed.checks[0]!.findings).toContainEqual(
+                containing({ file: 'ios/Sources/App/Cast.swift', rule: 'force_cast', line: 5 }),
+            );
+            await Bun.write(
+                join(sandbox.path, 'ios/Sources/App/Cast.swift'),
+                CLEAN_SWIFT.replace('greeting', 'correctedGreeting'),
+            );
+            const corrected = await spawnGspot(
+                sandbox.path,
+                ['check', '--only', 'swift/swiftlint', '--json'],
+                environment,
+            );
+            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+            expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+                { check: 'swift/swiftlint', scope: 'ios', status: 'passed', findings: [] },
+            ]);
+        },
+    );
+});

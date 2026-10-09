@@ -1,8 +1,8 @@
 // Bun command sandboxes distinguish named explanations from tracked or explicit file paths.
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
+import { test, expect, describe } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
@@ -11,7 +11,7 @@ import { TAPLO_REASON, TAPLO_OPTIONS } from '#tests/config/samples/taplo.ts';
 import { containing, containingAll, textContaining } from '#tests/harness/expectations.ts';
 import { EXPLAIN_POLICY, NEUTRAL_SETTING_VALUES } from '#tests/config/cli/commands/explain.ts';
 
-test('explain > setting explanations include nested-only settings and each inherited value', async () => {
+const inheritedSettings = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': `configurations = []
@@ -35,8 +35,9 @@ lines = 95
             { scope: 'api/worker', current: 95, source: '[scope."api/worker"]' },
         ],
     });
-});
-test('explain > path explanations include enabled repository commands and global exceptions', async () => {
+};
+
+const repositoryPaths = async () => {
     await using sandbox = await testdir();
     const policy = `configurations = []
 [scope."api"]
@@ -75,8 +76,9 @@ stage = "manual"
     const remaining = (JSON.parse(ignored.stdout) as PathExplanation).checks;
     expect(remaining.map((entry) => entry.check)).not.toContain('project/syntax');
     expect(remaining.map((entry) => entry.check)).toContain('format/editorconfig-checker');
-});
-test('explain > a recognized name keeps its meaning, and a tracked or explicit path selects a colliding file', async () => {
+};
+
+const collidingNames = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': EXPLAIN_POLICY,
@@ -99,9 +101,9 @@ test('explain > a recognized name keeps its meaning, and a tracked or explicit p
     const tracked = await runGspot(sandbox.path, ['explain', 'shellcheck/run.sh', '--json']);
     expect(tracked.code, tracked.stdout + tracked.stderr).toBe(0);
     expect(JSON.parse(tracked.stdout)).toMatchObject({ kind: 'path', subject: 'shellcheck/run.sh' });
-});
+};
 
-test('explain > a file path reports its scope, checks, and recorded ignores', async () => {
+const recordedIgnores = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': EXPLAIN_POLICY,
@@ -126,18 +128,18 @@ test('explain > a file path reports its scope, checks, and recorded ignores', as
             },
         ],
     });
-});
+};
 
-test('explain > a missing explicit path fails', async () => {
+const missingPath = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': EXPLAIN_POLICY, 'api/build.sh': CLEAN_BASH_SCRIPT });
     commitAll(sandbox.path);
     const missing = await runGspot(sandbox.path, ['explain', './missing.sh', '--json']);
     expect(missing.code).toBe(2);
     expect(JSON.parse(missing.stdout)).toMatchObject({ error: 'selection', message: textContaining('missing.sh') });
-});
+};
 
-test('an unknown explanation subject uses the command error contract', async () => {
+const unknownSubject = async () => {
     await using sandbox = await testdir();
     const result = await runGspot(sandbox.path, ['explain', 'unknown-configuration', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
@@ -145,9 +147,9 @@ test('an unknown explanation subject uses the command error contract', async () 
         error: 'selection',
         message: textContaining('There is no configuration called `unknown-configuration`.'),
     });
-});
+};
 
-test('explain > configuration and check explanations still resolve without a policy', async () => {
+const policyFreeNames = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'README.md': '# Example\n' });
     commitAll(sandbox.path);
@@ -159,6 +161,25 @@ test('explain > configuration and check explanations still resolve without a pol
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(JSON.parse(result.stdout)).toMatchObject({ kind, subject });
     }
+};
+
+describe('explain', () => {
+    test('setting explanations include nested-only settings and each inherited value', inheritedSettings);
+
+    test('path explanations include enabled repository commands and global exceptions', repositoryPaths);
+
+    test(
+        'a recognized name keeps its meaning, and a tracked or explicit path selects a colliding file',
+        collidingNames,
+    );
+
+    test('a file path reports its scope, checks, and recorded ignores', recordedIgnores);
+
+    test('a missing explicit path fails', missingPath);
+
+    test('an unknown explanation subject uses the command error contract', unknownSubject);
+
+    test('configuration and check explanations still resolve without a policy', policyFreeNames);
 });
 
 test.each([

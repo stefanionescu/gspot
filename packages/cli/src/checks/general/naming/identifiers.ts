@@ -1,17 +1,17 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { scopeOf } from '#cli/repository/paths/contracts.ts';
+import { isOwned } from '#cli/repository/selection/public.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths/public.ts';
-import { isOwned, selectForScope } from '#cli/repository/selection/public.ts';
 import type { CheckInput, BuiltInCheck } from '#cli/types/execution/check.ts';
 import { everyTable, harnessFolders } from '#cli/policy/settings/contracts.ts';
 import { CASE_NAMES, nameFindings } from '#cli/checks/general/naming/public.ts';
-import type { FileNames, NamingSource, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
+import type { NamingSource, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
 import {
+    declaredNames,
     identifiersOf,
     fileIdentifier,
     effectivePolicy,
@@ -67,40 +67,6 @@ function pathIdentifiers(input: CheckInput): Identifier[] {
             return true;
         });
     });
-}
-
-async function declaredNames(input: CheckInput): Promise<FileNames[]> {
-    const policy = input.policyFiles.policy;
-    const selections = new Map(
-        input.scopeEntries.map((scope) => [scope.path, selectForScope(policy, scope.path, input.manifests)]),
-    );
-    const files: FileNames[] = [];
-    for (const file of input.files) {
-        if (file.kind !== 'source') continue;
-        const scope = scopeOf(file.path, input.scopeEntries);
-        const selected = selections.get(scope.path) ?? [];
-        const language = selected.find(
-            (manifest) => manifest.configuration.kind === 'language' && isOwned(manifest.files, file),
-        );
-        const containers = selected.flatMap((manifest) => manifest.naming?.path_containers ?? []);
-        if (language === undefined) continue;
-        const name = language.configuration.name;
-        const identifiers = await identifiersOf(
-            file.path,
-            readSource(input.root, file.path, input.reads).toString('utf8'),
-            name,
-            input,
-        );
-        files.push({
-            path: file.path,
-            names: [
-                fileIdentifier(file.path, name, containers),
-                ...directoryIdentifiers(file.path, name, containers),
-                ...identifiers,
-            ].map((identifier) => identifier.name),
-        });
-    }
-    return files;
 }
 
 // Reports root and scope entries in gspot.toml that match no file or name.

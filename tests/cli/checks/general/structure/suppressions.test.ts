@@ -9,7 +9,11 @@ import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { commentText, parseComments } from '#cli/parsers/source/public.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { suppressionComments } from '#cli/checks/general/structure/public.ts';
-import { SUPPRESSION_COMMENTS } from '#tests/config/cli/checks/general/structure/suppressions.ts';
+
+import {
+    SUPPRESSION_COMMENTS,
+    SUPPRESSION_REASON_CASES,
+} from '#tests/config/cli/checks/general/structure/suppressions.ts';
 
 describe('suppression comments match native ESLint', () => {
     const sources = SUPPRESSION_COMMENTS.map(([comment, active], index) => ({
@@ -43,34 +47,7 @@ describe('suppression comments match native ESLint', () => {
     });
 });
 
-test.each([
-    [
-        'source.ts',
-        '// reason: The external interface requires this call.\n// eslint-disable-next-line no-console\nconsole.log(1);\n',
-        [],
-    ],
-    [
-        'source.sh',
-        '# reason: The external command requires word splitting.\n# shellcheck disable=SC2086\necho $name\n',
-        [],
-    ],
-    ['source.sh', '# shellcheck disable=SC2086\necho $name\n', [1]],
-    [
-        'source.ts',
-        '// reason: The external interface requires this call.\n\n// eslint-disable-next-line no-console\nconsole.log(1);\n',
-        [3],
-    ],
-    [
-        'source.ts',
-        'const text = "// reason: The external interface requires this call.";\n// eslint-disable-next-line no-console\nconsole.log(1);\n',
-        [2],
-    ],
-    [
-        'source.ts',
-        '// reason: The external interface requires this call.\n// eslint-disable-next-line no-console -- N/A\nconsole.log(1);\n',
-        [2],
-    ],
-] as const)(
+test.each(SUPPRESSION_REASON_CASES)(
     'suppression reasons immediately above %s require an adjacent explanation comment',
     async (path, source, lines) => {
         await using sandbox = await testdir();

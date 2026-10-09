@@ -7,31 +7,33 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
-import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
+import { test, expect, describe, afterAll, beforeAll } from 'bun:test';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
 import { MATH, PROJECT, ARITHMETIC_TESTS } from '#tests/config/samples/python.ts';
 import { PROVIDER_FLOORS } from '#tests/config/tools/configurations/tool/pytest.ts';
 
-test('the pytest configuration > naming accepts the test_ prefix of a test function and Ruff and coverage accept its clean source', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'pyproject.toml': PROJECT,
-        'example/__init__.py': '"""The package."""\n',
-        'example/math.py': MATH,
-        'tests/__init__.py': '"""Arithmetic tests."""\n',
-        'tests/test_math.py': ARITHMETIC_TESTS,
+describe('the pytest configuration', () => {
+    test('naming accepts the test_ prefix of a test function and Ruff and coverage accept its clean source', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'pyproject.toml': PROJECT,
+            'example/__init__.py': '"""The package."""\n',
+            'example/math.py': MATH,
+            'tests/__init__.py': '"""Arithmetic tests."""\n',
+            'tests/test_math.py': ARITHMETIC_TESTS,
+        });
+        const environment = { PATH: buildToolsPath(['ruff', 'typos', 'editorconfig-checker']) };
+        const project = await runTestCommand(['uv', 'sync'], { cwd: sandbox.path, env: environment });
+        expect(project.code, project.stdout + project.stderr).toBe(0);
+        commitAll(sandbox.path);
+        await initRepository(sandbox.path, buildInitArguments(['python', 'pytest', 'naming']), environment);
+        for (const id of ['pytest/coverage', 'naming/identifiers', 'python/ruff']) {
+            const clean = await spawnGspot(sandbox.path, ['check', '--only', id], environment);
+            expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+        }
     });
-    const environment = { PATH: buildToolsPath(['ruff', 'typos', 'editorconfig-checker']) };
-    const project = await runTestCommand(['uv', 'sync'], { cwd: sandbox.path, env: environment });
-    expect(project.code, project.stdout + project.stderr).toBe(0);
-    commitAll(sandbox.path);
-    await initRepository(sandbox.path, buildInitArguments(['python', 'pytest', 'naming']), environment);
-    for (const id of ['pytest/coverage', 'naming/identifiers', 'python/ruff']) {
-        const clean = await spawnGspot(sandbox.path, ['check', '--only', id], environment);
-        expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
-    }
 });
 
 let sandbox: TestdirResult;

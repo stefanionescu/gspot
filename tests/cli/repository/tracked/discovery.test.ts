@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import * as childProcess from 'node:child_process';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
+import { test, spyOn, expect, describe } from 'bun:test';
 import { readRepository } from '#cli/repository/public.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
@@ -14,16 +14,16 @@ import { trackedEntries, readIndexEntries } from '#cli/repository/contracts.ts';
 import { REPLACED_PARENT_PATHS } from '#tests/config/cli/repository/tracked.ts';
 import { findRoot, isGitRepository } from '#cli/repository/discovery/contracts.ts';
 
-test('repository file discovery > keeps tracked deletions out of readable entries', async () => {
+const trackedDeletions = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', 'source.ts']);
     await rm(join(sandbox.path, 'source.ts'));
     expect(await trackedEntries(sandbox.path)).toStrictEqual([]);
-});
+};
 
-test('repository file discovery > classifies a dangling tracked symlink without reading its absent target', async () => {
+const danglingLink = async () => {
     await using sandbox = await testdir();
     await symlink('missing.ts', join(sandbox.path, 'linked.ts'), 'file');
     gitOutput(sandbox.path, ['init']);
@@ -32,25 +32,25 @@ test('repository file discovery > classifies a dangling tracked symlink without 
     expect(repository.files).toHaveLength(1);
     expect(repository.files[0]?.tags).toContain('symlink');
     expect(repository.files[0]?.kind).toBe('source');
-});
+};
 
-test('repository file discovery > finds the nearest policy in a non-Git directory', async () => {
+const nearestPolicy = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'configurations = []\n',
         'nested/source.ts': 'export {};\n',
     });
     expect(findRoot(join(sandbox.path, 'nested'))).toBe(sandbox.path);
-});
+};
 
-test('repository file discovery > keeps the requested directory when no Git root or policy exists', async () => {
+const emptyDirectory = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     expect(findRoot(sandbox.path)).toBe(sandbox.path);
     expect(isGitRepository(sandbox.path)).toBe(false);
-});
+};
 
-test('repository file discovery > reports a corrupt Git index instead of switching to a directory walk', async () => {
+const corruptIndex = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     const cwd = sandbox.path;
@@ -61,9 +61,9 @@ test('repository file discovery > reports a corrupt Git index instead of switchi
     expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
     await writeFile(join(cwd, '.git', 'index'), 'corrupt index');
     expect(await rejection(trackedEntries(cwd))).toContain('Git ls-files failed');
-});
+};
 
-test('repository file discovery > reports invalid Git metadata instead of treating the directory as non-Git', async () => {
+const invalidMetadata = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         '.git/sentinel': 'incomplete metadata',
@@ -72,9 +72,9 @@ test('repository file discovery > reports invalid Git metadata instead of treati
     expect(await rejection(trackedEntries(sandbox.path))).toContain('Git ls-files failed');
     expect(() => findRoot(sandbox.path)).toThrow('Git root discovery failed');
     expect(() => isGitRepository(sandbox.path)).toThrow('Git work-tree discovery failed');
-});
+};
 
-test('repository file discovery > reports a missing Git executable instead of returning a successful walk', async () => {
+const missingGit = async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     using resources = new DisposableStack();
@@ -101,6 +101,22 @@ test('repository file discovery > reports a missing Git executable instead of re
     expect(await rejection(trackedEntries(sandbox.path))).toContain('git executable not found');
     expect(() => findRoot(sandbox.path)).toThrow('git executable not found');
     expect(() => isGitRepository(sandbox.path)).toThrow('git executable not found');
+};
+
+describe('repository file discovery', () => {
+    test('keeps tracked deletions out of readable entries', trackedDeletions);
+
+    test('classifies a dangling tracked symlink without reading its absent target', danglingLink);
+
+    test('finds the nearest policy in a non-Git directory', nearestPolicy);
+
+    test('keeps the requested directory when no Git root or policy exists', emptyDirectory);
+
+    test('reports a corrupt Git index instead of switching to a directory walk', corruptIndex);
+
+    test('reports invalid Git metadata instead of treating the directory as non-Git', invalidMetadata);
+
+    test('reports a missing Git executable instead of returning a successful walk', missingGit);
 });
 
 test.each(REPLACED_PARENT_PATHS)('tracked discovery reports a replaced parent of %s', async (path) => {

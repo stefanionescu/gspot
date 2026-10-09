@@ -1,6 +1,6 @@
 // The Python configuration reports lint, layout, and type errors and passes after the fixes.
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { git, commitAll } from '#tests/harness/git.ts';
@@ -59,46 +59,48 @@ test('deptry excludes private tools without Git and preserves authored exclusion
     ]);
 });
 
-test('the python configuration > init replaces an authored Pyright configuration with the pointer, and the check reports the type error', async () => {
-    const typed = `${CLEAN_MODULE}\n\nTOTAL: int = "three"\n`;
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'pyproject.toml': PYPROJECT,
-        'pyrightconfig.json':
-            '{\n    "typeCheckingMode": "basic",\n    "exclude": [".venv", "example/skipped.py"]\n}\n',
-        'example/__init__.py': '"""The test package."""\n',
-        'example/skipped.py': '"""A file the old setup left out."""\n',
-        [MODULE_PATH]: typed,
+describe('the python configuration', () => {
+    test('init replaces an authored Pyright configuration with the pointer, and the check reports the type error', async () => {
+        const typed = `${CLEAN_MODULE}\n\nTOTAL: int = "three"\n`;
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'pyproject.toml': PYPROJECT,
+            'pyrightconfig.json':
+                '{\n    "typeCheckingMode": "basic",\n    "exclude": [".venv", "example/skipped.py"]\n}\n',
+            'example/__init__.py': '"""The test package."""\n',
+            'example/skipped.py': '"""A file the old setup left out."""\n',
+            [MODULE_PATH]: typed,
+        });
+        commitAll(sandbox.path);
+        const environment = { PATH: buildToolsPath(['ruff', 'basedpyright', 'typos', 'editorconfig-checker']) };
+        await initRepository(sandbox.path, buildInitArguments(['python']), environment, {});
+        // The authored file is gone; the pointer stands in its place, and the policy carries none of its settings.
+        const pointer = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();
+        expect(pointer).toContain('"extends": "./.gspot/config/basedpyrightconfig.json"');
+        expect(pointer).not.toContain('basic');
+        const policy = await Bun.file(`${sandbox.path}/gspot.toml`).text();
+        expect(policy).not.toContain('example/skipped.py');
+        const command = ['check', '--only', 'python/basedpyright', '--json'];
+        const refused = await spawnGspot(sandbox.path, command, environment);
+        expect(refused.code, refused.stdout + refused.stderr).toBe(1);
+        const report = JSON.parse(refused.stdout) as RunReport;
+        expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
+            ['python/basedpyright', 'failed'],
+        ]);
+        expect(report.checks[0]?.findings).toContainEqual(
+            containing({
+                file: MODULE_PATH,
+                rule: 'reportAssignmentType',
+            }),
+        );
+        await Bun.write(`${sandbox.path}/${MODULE_PATH}`, `${CLEAN_MODULE}\n\nTOTAL: int = 3\n`);
+        const corrected = await spawnGspot(sandbox.path, command, environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        const accepted = JSON.parse(corrected.stdout) as RunReport;
+        expect(accepted.checks.map((check) => [check.check, check.status])).toStrictEqual([
+            ['python/basedpyright', 'passed'],
+        ]);
     });
-    commitAll(sandbox.path);
-    const environment = { PATH: buildToolsPath(['ruff', 'basedpyright', 'typos', 'editorconfig-checker']) };
-    await initRepository(sandbox.path, buildInitArguments(['python']), environment, {});
-    // The authored file is gone; the pointer stands in its place, and the policy carries none of its settings.
-    const pointer = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();
-    expect(pointer).toContain('"extends": "./.gspot/config/basedpyrightconfig.json"');
-    expect(pointer).not.toContain('basic');
-    const policy = await Bun.file(`${sandbox.path}/gspot.toml`).text();
-    expect(policy).not.toContain('example/skipped.py');
-    const command = ['check', '--only', 'python/basedpyright', '--json'];
-    const refused = await spawnGspot(sandbox.path, command, environment);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(1);
-    const report = JSON.parse(refused.stdout) as RunReport;
-    expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
-        ['python/basedpyright', 'failed'],
-    ]);
-    expect(report.checks[0]?.findings).toContainEqual(
-        containing({
-            file: MODULE_PATH,
-            rule: 'reportAssignmentType',
-        }),
-    );
-    await Bun.write(`${sandbox.path}/${MODULE_PATH}`, `${CLEAN_MODULE}\n\nTOTAL: int = 3\n`);
-    const corrected = await spawnGspot(sandbox.path, command, environment);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const accepted = JSON.parse(corrected.stdout) as RunReport;
-    expect(accepted.checks.map((check) => [check.check, check.status])).toStrictEqual([
-        ['python/basedpyright', 'passed'],
-    ]);
 });
 
 test.each(['recommended', 'all'] as const)(

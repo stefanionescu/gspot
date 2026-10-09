@@ -1,6 +1,8 @@
 import { posix } from 'node:path';
+import { readSource } from '#cli/platform/root/public.ts';
 import { namingTerms } from '#cli/configurations/public.ts';
 import { stemOf, compact } from '#cli/platform/contracts.ts';
+import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { bashIdentifiers } from '#cli/parsers/naming/bash.ts';
 import { pathMatcher } from '#cli/repository/paths/public.ts';
@@ -14,9 +16,10 @@ import { CATEGORY_PARENTS } from '#cli/config/checks/general/naming.ts';
 import { grammarFor, parseSource } from '#cli/parsers/source/public.ts';
 import { typescriptIdentifiers } from '#cli/parsers/naming/typescript.ts';
 import { tablesFor, settingValue } from '#cli/policy/settings/contracts.ts';
+import { isOwned, selectForScope } from '#cli/repository/selection/public.ts';
 import type { Policy, KnownSettings, NamingSettings } from '#cli/types/policy/settings.ts';
-import type { Term, PathRule, PathContainer, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 import type { Identifier, NamingTerms, NamingLanguage, NamingOverride } from '#cli/types/parsers/naming.ts';
+import type { Term, PathRule, FileNames, PathContainer, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
 function segmentName(segment: string, containers: PathContainer[]): Pick<Identifier, 'name' | 'category'> | undefined {
     const bracket = containers.find((entry) => segment.startsWith(entry.open) && segment.endsWith(entry.close));
@@ -225,4 +228,43 @@ export function effectivePolicy(
         isDigitsAllowed: shipped.allow_digits,
         isRepeatAllowed: shipped.allow_repeated_words,
     };
+}
+
+/**
+ * Read lexical declarations and path names using each source file's selected language.
+ * @param input the scoped repository and native parse resources.
+ * @returns lexical and path names for every readable source.
+ */
+export async function declaredNames(input: CheckInput): Promise<FileNames[]> {
+    const policy = input.policyFiles.policy;
+    const selections = new Map(
+        input.scopeEntries.map((scope) => [scope.path, selectForScope(policy, scope.path, input.manifests)]),
+    );
+    const files: FileNames[] = [];
+    for (const file of input.files) {
+        if (file.kind !== 'source') continue;
+        const scope = scopeOf(file.path, input.scopeEntries);
+        const selected = selections.get(scope.path) ?? [];
+        const language = selected.find(
+            (manifest) => manifest.configuration.kind === 'language' && isOwned(manifest.files, file),
+        );
+        const containers = selected.flatMap((manifest) => manifest.naming?.path_containers ?? []);
+        if (language === undefined) continue;
+        const name = language.configuration.name;
+        const identifiers = await identifiersOf(
+            file.path,
+            readSource(input.root, file.path, input.reads).toString('utf8'),
+            name,
+            input,
+        );
+        files.push({
+            path: file.path,
+            names: [
+                fileIdentifier(file.path, name, containers),
+                ...directoryIdentifiers(file.path, name, containers),
+                ...identifiers,
+            ].map((identifier) => identifier.name),
+        });
+    }
+    return files;
 }
