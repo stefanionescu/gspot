@@ -11,7 +11,7 @@ import type { ComposeProject } from '#cli/types/parsers/docker.ts';
 import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
 import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { composeSchema, imageReportSchema } from '#cli/parsers/schema/docker.ts';
-import { TRIVY_EXIT, COMPOSE_FILES, DOCKERIGNORE_ENTRIES } from '#cli/config/checks/tool/docker.ts';
+import { TRIVY_EXIT, DOCKERIGNORE_ENTRIES } from '#cli/config/checks/tool/docker.ts';
 
 // Interpolated image names require Compose environment resolution and are not literal scan targets.
 function composeImages(input: CheckInput, path: string): Set<string> {
@@ -123,7 +123,9 @@ export function dockerignore(input: CheckInput): Finding[] {
  * @returns the findings
  */
 export async function trivyImage(input: CheckInput): Promise<Finding[]> {
-    const isCompose = pathMatcher(COMPOSE_FILES);
+    const isCompose = pathMatcher(
+        input.manifests.get('docker')?.checks.find(({ name }) => name === 'docker/compose')?.files?.paths ?? [],
+    );
     const findings: Finding[] = [];
     for (const file of input.files) {
         if (!isCompose(file.path)) continue;

@@ -28,7 +28,7 @@ const repository: InstalledScenario = {
     ...REPOSITORY,
     files: { ...REPOSITORY.files, 'jsconfig.json': JSON.stringify(JAVASCRIPT_CONFIG, null, 4) + '\n' },
     prepare: async (root, environment) => {
-        await appendFile(join(root, 'gspot.toml'), `\n${ARCHITECTURE}`);
+        await appendFile(join(root, 'gspot.toml'), ARCHITECTURE);
         const applied = await spawnGspot(root, ['apply'], environment);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installToolProjects(root);

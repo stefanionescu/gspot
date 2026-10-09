@@ -190,7 +190,7 @@ const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
                 'jsconfig.json': JSON.stringify(languageTypescriptChecks.JAVASCRIPT_CONFIG, null, 4) + '\n',
             },
             prepare: async (root, environment) => {
-                await appendFile(join(root, 'gspot.toml'), `\n${ARCHITECTURE}`);
+                await appendFile(join(root, 'gspot.toml'), ARCHITECTURE);
                 const applied = await spawnGspot(root, ['apply'], environment);
                 if (applied.code !== 0) throw new Error(applied.stdout + applied.stderr);
                 await installToolProjects(root);

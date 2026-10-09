@@ -3,7 +3,7 @@ import { TYPO } from '#tests/config/samples/spelling.ts';
 // The entry may import the orders, and the orders only each other.
 
 export const ARCHITECTURE =
-    '[[architecture.modules]]\nname = "entry"\npaths = ["src/main.ts"]\nmay_import = ["entry", "orders"]\n[[architecture.modules]]\nname = "orders"\npaths = ["src/orders/**"]\nmay_import = ["orders"]\n';
+    '\n[[architecture.modules]]\nmay_import = ["entry", "orders"]\nname = "entry"\npaths = ["src/main.ts"]\n\n[[architecture.modules]]\nmay_import = ["orders"]\nname = "orders"\npaths = ["src/orders/**"]\n';
 
 export const CHECK_SCRIPT = `// The receipt of one order.
 import { wrong } from './orders/double.js';
