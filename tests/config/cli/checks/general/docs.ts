@@ -31,7 +31,7 @@ export const DOC_TASK_FINDINGS = [
     { file: 'sibling/guide.md', line: 2, command: 'mise run child-mise' },
 ];
 
-/** Only a real title attribute and the established free-text language hide example paths. */
+/** Only untitled command bodies report paths. */
 export const DOC_FENCE_PATH_CASES = [
     { metadata: 'title="example.sh"', language: 'sh', reported: false },
     { metadata: 'title="example.sql"', language: 'sql', reported: false },
@@ -39,6 +39,6 @@ export const DOC_FENCE_PATH_CASES = [
     { metadata: 'start=1\ttitle="example.sh"', language: 'sh', reported: false },
     { metadata: '', language: 'text', reported: false },
     { metadata: '', language: 'sh', reported: true },
-    { metadata: 'notitle="example.sh"', language: 'sh', reported: true },
-    { metadata: 'description="title=example.sh"', language: 'sh', reported: true },
+    { metadata: 'notitle="example.sh"', language: 'bash', reported: true },
+    { metadata: 'description="title=example.sh"', language: 'console', reported: true },
 ];

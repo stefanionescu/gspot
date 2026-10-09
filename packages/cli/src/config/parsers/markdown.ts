@@ -6,7 +6,7 @@ export const PATH_CHARS = /^[\w./-]+$/u;
 
 export const TOKEN_SEPARATORS = /[\s`'"()[\],;:!?<>|]+/u;
 
-export const FREE_TEXT_FENCES = new Set(['text', 'plaintext', 'console', 'diff']);
+export const COMMAND_FENCES = new Set(['sh', 'bash', 'console']);
 
 export const PATH_TOKEN_SKIPS = [/^\.\.?\/?$/u, /^\d+\/\d+$/u, /^\//u];
 

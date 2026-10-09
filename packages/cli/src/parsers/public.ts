@@ -25,8 +25,8 @@ import {
     PATH_CHARS,
     ELLIPSIS_LINE,
     FENCE_PARSERS,
+    COMMAND_FENCES,
     BASH_ERROR_LINE,
-    FREE_TEXT_FENCES,
     PATH_TOKEN_SKIPS,
     TOKEN_SEPARATORS,
     ANGLE_PLACEHOLDER,
@@ -113,16 +113,19 @@ export function codeFences(text: string): FencedBlock[] {
 }
 
 /**
- * The lines of Markdown outside free-text and titled example fences, with their numbers.
+ * Prose and untitled command bodies, with their numbers.
  * @param text the Markdown text.
  * @returns the lines a path check reads.
  */
 export function proseLines(text: string): ProseLine[] {
     const ignored = new Set<number>();
     visit(fromMarkdown(text), 'code', (node) => {
+        if (node.position === undefined) return;
         const titled = node.meta?.split(/\s+/u).some((attribute) => attribute.startsWith('title=')) === true;
-        if ((!FREE_TEXT_FENCES.has(node.lang ?? '') && !titled) || node.position === undefined) return;
-        for (let line = node.position.start.line; line <= node.position.end.line; line += 1) ignored.add(line);
+        const { start, end } = node.position;
+        for (let line = start.line; line <= end.line; line += 1)
+            if ([start.line, end.line].includes(line) || !COMMAND_FENCES.has(node.lang ?? '') || titled)
+                ignored.add(line);
     });
     return text.split('\n').flatMap((line, index) => (ignored.has(index + 1) ? [] : [{ number: index + 1, line }]));
 }
