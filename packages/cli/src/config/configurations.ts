@@ -19,7 +19,8 @@ export const CONFIGURATION_LABELS: Record<Manifest['configuration']['kind'], str
     framework: 'Frameworks',
     platform: 'Platforms',
     database: 'Databases',
-    tool: 'Tools',
+    test: 'Test runners',
+    infra: 'Infrastructure',
     library: 'Libraries',
     general: 'Repository',
 };

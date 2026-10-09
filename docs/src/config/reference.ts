@@ -27,7 +27,8 @@ export const COMMAND_OWNERS: Record<string, string> = {
 export const CONFIGURATION_GROUPS: [string, string][] = [
     ['language', 'Languages'],
     ['framework', 'Frameworks'],
-    ['tool', 'Tools'],
+    ['test', 'Test runners'],
+    ['infra', 'Infrastructure'],
     ['library', 'Libraries'],
     ['platform', 'Platforms'],
     ['database', 'Databases'],

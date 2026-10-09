@@ -261,7 +261,7 @@ export const manifestSchema = z
         ignored: z.array(z.string().refine(isIgnoredPath, 'Ignored paths must stay inside .gspot.')).default([]),
         configuration: z.strictObject({
             name: z.string().regex(/^[a-z0-9-]+$/),
-            kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'general']),
+            kind: z.enum(['language', 'framework', 'platform', 'test', 'infra', 'library', 'database', 'general']),
             title: z.string(),
             requires: stringList,
             suggests: stringList,

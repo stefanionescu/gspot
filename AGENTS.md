@@ -58,10 +58,9 @@ Languages:
 - `.gspot/rules/language/python/PYTHON.md`
 - `.gspot/rules/language/python/TYPING.md`
 
-Tools:
+Infrastructure:
 
-- `.gspot/rules/tool/github-actions/GITHUB-ACTIONS.md`
-- `.gspot/rules/tool/vitest/VITEST.md`
+- `.gspot/rules/infra/github-actions/GITHUB-ACTIONS.md`
 
 Frameworks:
 
@@ -79,6 +78,10 @@ Libraries:
 Platforms:
 
 - `.gspot/rules/platform/cloudflare/WORKERS.md`
+
+Test runners:
+
+- `.gspot/rules/test/vitest/VITEST.md`
 
 Run `gspot check --staged` before committing. Change policy with `gspot set` or `gspot ignore`. After a hand edit of `gspot.toml`, run `gspot apply`. Never edit files under `.gspot/`.
 

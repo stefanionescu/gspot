@@ -116,7 +116,7 @@ describe('assertManifests installation and guide declarations', () => {
         ['[[tool]]\nname = "unpinned"\nnpm = "unpinned"\n', 'has no version and no floor'],
         ['[[tool]]\nname = "low"\nversion = "1.0.0"\nmin_version = "2.0.0"\nnpm = "low"\n', 'below its floor 2.0.0'],
     ])('a manifest whose tool is not pinned is refused: %s', (tables, diagnostic) => {
-        const manifest = parseConfigurationManifest('pinned', { kind: 'tool', tables });
+        const manifest = parseConfigurationManifest('pinned', { kind: 'infra', tables });
         expect(() => {
             assertManifests(new Map([['pinned', manifest]]));
         }).toThrow(diagnostic);
@@ -132,7 +132,7 @@ describe('assertManifests installation and guide declarations', () => {
         { name: 'the declared wait', wait: 'when = {setting = "tools.waiting.target"}\n', message: undefined },
     ])('a check reading an empty setting validates $name', ({ wait, message: diagnostic }) => {
         const manifest = parseConfigurationManifest('waiting', {
-            kind: 'tool',
+            kind: 'infra',
             tables: `[[check]]\nname = "run"\ncommand = ["tool", "{setting:tools.waiting.target}"]\n${wait}${CHECK_FIELDS}${WAITING_SETTING}`,
         });
         const manifests = new Map([['waiting', manifest]]);
@@ -158,8 +158,8 @@ describe('assertManifests installation and guide declarations', () => {
 });
 
 test('a generated config refuses an undeclared consuming tool and accepts a tool declared by another configuration', () => {
-    const consumer = parseConfigurationManifest('consumer', { kind: 'tool', tables: CONSUMER_DECLARATION });
-    const executable = parseConfigurationManifest('executable', { kind: 'tool', tables: SYSTEM_TOOL_DECLARATION });
+    const consumer = parseConfigurationManifest('consumer', { kind: 'infra', tables: CONSUMER_DECLARATION });
+    const executable = parseConfigurationManifest('executable', { kind: 'infra', tables: SYSTEM_TOOL_DECLARATION });
     const manifests = new Map([['consumer', consumer]]);
     expect(() => {
         assertManifests(manifests);
@@ -179,7 +179,7 @@ test('a generated config refuses an undeclared consuming tool and accepts a tool
     expect(consumer.toolFiles[0]?.tool).toStrictEqual(['example']);
     expect(
         parseConfigurationManifest('consumer', {
-            kind: 'tool',
+            kind: 'infra',
             tables: CONSUMER_DECLARATION.replace('["example"]', '"example"'),
         }).toolFiles[0]?.tool,
     ).toStrictEqual(['example']);

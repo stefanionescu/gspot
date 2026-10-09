@@ -91,7 +91,7 @@ test.each([...DRIZZLE_DRIVERS])(
 test('shared HTTP and OpenAPI instructions use their engineering and tool owners', async () => {
     const guides = await generatedGuides('all', { 'openapi.yaml': 'openapi: 3.1.0\n' });
     expect(guides.has(`${RULES_DIRECTORY}/general/engineering/code/HTTP.md`)).toBe(true);
-    expect(guides.has(`${RULES_DIRECTORY}/tool/openapi/OPENAPI.md`)).toBe(true);
+    expect(guides.has(`${RULES_DIRECTORY}/infra/openapi/OPENAPI.md`)).toBe(true);
     expect(guides.has(`${RULES_DIRECTORY}/framework/express/HTTP.md`)).toBe(false);
     expect(guides.has(`${RULES_DIRECTORY}/framework/express/OPENAPI.md`)).toBe(false);
 });
@@ -123,6 +123,6 @@ test.each(
     expect(paths.filter((path) => path === `${RULES_DIRECTORY}/language/javascript/PLAYWRIGHT.md`)).toHaveLength(
         entry.present ? 1 : 0,
     );
-    expect(paths).not.toContain(`${RULES_DIRECTORY}/tool/vitest/PLAYWRIGHT.md`);
+    expect(paths).not.toContain(`${RULES_DIRECTORY}/test/vitest/PLAYWRIGHT.md`);
     expect(paths).toContain(`${RULES_DIRECTORY}/general/engineering/agent/TALKING.md`);
 });

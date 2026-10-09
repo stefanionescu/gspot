@@ -121,7 +121,7 @@ test.each(FILE_PATH_REFERENCES)('manifest file setting reference "$path" accepte
             '[configuration]\ntitle = "Reader"\ndescription = "Select the authored source files."\n[files]\npaths = ' +
                 JSON.stringify([path]) +
                 '\n',
-            'configurations/tool/reader',
+            'configurations/infra/reader',
         );
     if (accepted) expect(parse().files.paths).toStrictEqual([path]);
     else expect(parse).toThrow('A file path setting reference must be the whole {setting:test_files} token.');

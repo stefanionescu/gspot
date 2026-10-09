@@ -126,11 +126,11 @@ test('coverage gating leaves unrelated commands, authored checks, and supplied a
 
 test('isolated scope commands require a root placeholder, including embedded native rootDir values', async () => {
     const text = await readFile(
-        new URL('../../../../packages/cli/configurations/tool/jest/manifest.toml', import.meta.url),
+        new URL('../../../../packages/cli/configurations/test/jest/manifest.toml', import.meta.url),
         'utf8',
     );
-    expect(parseManifest(text, 'configurations/tool/jest').checks[0]!.command).toContain('--rootDir={root}/{scope}');
+    expect(parseManifest(text, 'configurations/test/jest').checks[0]!.command).toContain('--rootDir={root}/{scope}');
     expect(() =>
-        parseManifest(text.replace('--rootDir={root}/{scope}', '--rootDir=.'), 'configurations/tool/jest'),
+        parseManifest(text.replace('--rootDir={root}/{scope}', '--rootDir=.'), 'configurations/test/jest'),
     ).toThrow('requires runs');
 });

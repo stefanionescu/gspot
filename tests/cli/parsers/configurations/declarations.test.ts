@@ -12,11 +12,11 @@ import {
 } from '#tests/config/cli/parsers/configurations.ts';
 
 test('the folder gives a configuration its name and kind, and the [configuration] table cannot repeat them', () => {
-    const { configuration } = parseConfigurationManifest('example', { kind: 'tool' });
-    expect([configuration.name, configuration.kind]).toStrictEqual(['example', 'tool']);
+    const { configuration } = parseConfigurationManifest('example', { kind: 'infra' });
+    expect([configuration.name, configuration.kind]).toStrictEqual(['example', 'infra']);
     expect(() =>
         parseConfigurationManifest('example', {
-            kind: 'tool',
+            kind: 'infra',
             tables: 'name = "example"\n',
         }),
     ).toThrow('its folder already gives');
@@ -50,7 +50,7 @@ test('query-pack metadata refuses a version range and accepts an exact release',
 
 test('a tool names its rule page with the rule placeholder and its crash pattern as a regular expression', () => {
     const manifest = parseConfigurationManifest('example', {
-        kind: 'tool',
+        kind: 'infra',
         tables: `${TOOL_DECLARATION}rule_url = "https://example.test/rules/{rule}"\ncrash_pattern = '^Fatal:'\n`,
     });
     expect(manifest.tools[0]).toMatchObject({
@@ -59,13 +59,13 @@ test('a tool names its rule page with the rule placeholder and its crash pattern
     });
     expect(() =>
         parseConfigurationManifest('example', {
-            kind: 'tool',
+            kind: 'infra',
             tables: `${TOOL_DECLARATION}rule_url = "https://example.test/rules"\ncrash_pattern = '^Fatal:'\n`,
         }),
     ).toThrow('{rule}');
     expect(() =>
         parseConfigurationManifest('example', {
-            kind: 'tool',
+            kind: 'infra',
             tables: `${TOOL_DECLARATION}rule_url = "https://example.test/rules/{rule}"\ncrash_pattern = '(Fatal'\n`,
         }),
     ).toThrow('regular expression');
@@ -98,11 +98,11 @@ test('tool suppression metadata validates an inline pattern without requiring it
 test('tool failure headers validate their pattern and survive manifest parsing', () => {
     const text = `${TOOL_DECLARATION}diagnostic_header_pattern = '^Banner:'\n`;
     expect(
-        parseConfigurationManifest('example', { kind: 'tool', tables: text }).tools[0]?.diagnostic_header_pattern,
+        parseConfigurationManifest('example', { kind: 'infra', tables: text }).tools[0]?.diagnostic_header_pattern,
     ).toBe('^Banner:');
     expect(() =>
         parseConfigurationManifest('example', {
-            kind: 'tool',
+            kind: 'infra',
             tables: `${TOOL_DECLARATION}diagnostic_header_pattern = '('\n`,
         }),
     ).toThrow('regular expression');
@@ -111,7 +111,7 @@ test('tool failure headers validate their pattern and survive manifest parsing',
 test('companion tools refuse a configuration with no consuming tool or check', () => {
     expect(() =>
         parseConfigurationManifest('consumer', {
-            kind: 'tool',
+            kind: 'infra',
             tables: '[[tool_file]]\ntarget = ".gspot/config/example.json"\nfragment = true\nrequired_tools = ["example"]\n',
         }),
     ).toThrow('Companion tools require a consuming tool or check.');

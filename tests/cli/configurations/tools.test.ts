@@ -43,7 +43,7 @@ test('name-only declarations resolve by registry name and refuse an absent owner
     expect(toolDeclarationSchema.parse({ name: 'probe' })).toBe('probe');
     const consumer = parseManifest(
         '[configuration]\ntitle = "Consumer"\ndescription = "Consumes a tool declared by another configuration."\n[[tool]]\nname = "probe"\n',
-        'configurations/tool/consumer',
+        'configurations/infra/consumer',
     );
     expect(() => linkManifestTools([consumer])).toThrow('tool probe has no declaration.');
     const owner = parseConfigurationManifest('owner', { tables: '[[tool]]\nname = "probe"\nsystem = true\n' });
