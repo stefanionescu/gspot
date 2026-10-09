@@ -1,6 +1,6 @@
 # Code Review: Execution, Tools, Parsers, Platform, Repository, Checks
 
-4 unresolved review records remain.
+3 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -317,3 +317,11 @@ Original records and quotations remain above. These records are complete at `f3b
 | `review/code-execution/017` | complete | One outputFormats descriptor per native format owns read/namesFiles/verifyFiles/withholdOutput. Execution consumes descriptors for filename verification, broken-tool checks and withheld sensitive output. Existing empty/invalid/JSON/native exit and secret privacy assertions retained. Focused native acceptance passed on the exact pushed tree. Commit `f3b216f87c910bf1fc1aeedeb20cea49358c508e`. |
 | `review/code-execution/046` | complete | No charOffset/sourceText/offsetPosition/newlineSequences/encoding decoding branch. SARIF startLine absent keeps file and omits line/column. Generic SARIF command file-only and repository findings remain supported. Focused native acceptance passed on the exact pushed tree. Commit `f3b216f87c910bf1fc1aeedeb20cea49358c508e`.                                                                       |
 | `review/code-execution/031` | complete | Native package-json/restrict-dependency-ranges uses rangeType pin. version-range/EXACT_VERSION/ranges_allowed absent. Package-manager and lockfile checks retained. Root/child/both-level exact path ignore plus registry alias controls pass. Focused native acceptance passed on the exact pushed tree. Commit `f3b216f87c910bf1fc1aeedeb20cea49358c508e`.                                              |
+
+## Implementation checkpoint b5c857be7 of October 9, 2026
+
+Original records and quotations remain above. These records are complete at `b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1`.
+
+| ID                          | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| --------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/code-execution/009` | complete | The five check settings declare policy path validation; duplicate setting guards are removed. The exact 16 owners match pushed source. Actual Node 24 and Bun probes agree on 33 nonempty cases; focused integration passed 143 tests and 889 assertions. Implementation ab8425e0561ff564e25a95848809a4663173690a; audit /tmp/gspot-checks012-continuation-closure-audit.json. Commit `b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1`. |

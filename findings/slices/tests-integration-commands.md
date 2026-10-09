@@ -1,6 +1,6 @@
 # Tests: Command, Policy, Platform, and Tools Integration Tests
 
-17 unresolved review records remain.
+16 unresolved review records remain.
 
 ## Open findings
 
@@ -67,3 +67,11 @@ Original records and quotations remain above. These records are complete at `4c6
 | ID                                      | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                 |
 | --------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-commands/040` | complete | Two unused .gspot/version planted entries and their import removed; lockfile/constraint/refusal cases retained. Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. Related Python packet -6491 bytes / -13 lines; not a whole Python obligation closure. Commit `4c6a75d9117c19bf4f55716209897f2e87eb8bf0`. |
+
+## Implementation checkpoint 80156a478 of October 9, 2026
+
+Original records and quotations remain above. These records are complete at `80156a478f3286427a507b33a7d03cd3f48f6813`.
+
+| ID                                      | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-commands/039` | complete | The shared inspectionContext(root) returns the same root and a new inspection map. All 29 real callers in the three tool-inspection files use it; repeated constructions are removed. Pushed implementation 80156a478: main CLI 79 tests and 231 assertions in six files; secrets tools 3 tests and 22 assertions. Types pass; normal staged, commit and push checks report zero findings. Exact implementation blobs verified in /tmp/gspot-five-behavior-closure-owner-proof.json. Commit `80156a478f3286427a507b33a7d03cd3f48f6813`. |
