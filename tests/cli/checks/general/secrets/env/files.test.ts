@@ -104,21 +104,22 @@ test.each(['recommended', 'all'] as const)(
     '%s tracked-file patterns follow root, child, and sibling selections without exempting nested templates',
     async (level) => {
         await using sandbox = await testdir();
-        const { refused, allowed, scopes } = TRACKED_PATTERNS;
+        const { refused, allowed, scopes, indexOnly } = TRACKED_PATTERNS;
         const policy = buildPolicy(['javascript'], { level, tables: scopes });
         await createFileTree(sandbox.path, {
             'gspot.toml': policy,
             ...Object.fromEntries([...refused, ...allowed].map((path) => [path, 'PUBLIC_EXAMPLE=value\n'])),
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
-        expect(git(sandbox.path, ['add', '-f', '.']).code).toBe(0);
+        const staged = git(sandbox.path, ['add', '-f', '.']);
+        expect(staged.code, staged.stderr).toBe(0);
         const input = buildCheckInput(await openSession(sandbox.path), 'repository/tracked-files', { paths: [] });
         const found = BUILT_IN_CHECKS['repository/tracked-files'].input({
             ...input,
-            index: [...input.index, ...input.index],
+            index: [...input.index, ...input.index, ...indexOnly.map((path) => ({ ...input.index[0]!, path }))],
         });
         expect(found.map(({ file }) => file).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
-            refused.toSorted((left, right) => left.localeCompare(right)),
+            [...refused, ...indexOnly].toSorted((left, right) => left.localeCompare(right)),
         );
         expect(found.every(({ rule, line }) => rule === 'tracked-file' && line === 1)).toBe(true);
         expect(

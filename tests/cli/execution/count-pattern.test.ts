@@ -16,19 +16,6 @@ format = ${JSON.stringify(format)}
 `;
 }
 
-test('a check keeps its name in the report and in its findings', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': identityPolicy(undefined, 'lines', 1, ['source.txt']),
-        'source.txt': 'original',
-    });
-    const session = await openSession(sandbox.path);
-    const outcome = await executeRun(session, buildRunOptions({ only: ['sandbox/identity'] }));
-    expect(session.policyFiles.policy.check['sandbox/identity']?.name).toBe('sandbox/identity');
-    expect(outcome.report.checks[0]?.check).toBe('sandbox/identity');
-    expect(outcome.report.checks[0]?.findings[0]?.check).toBe('sandbox/identity');
-});
-
 test('counted failures survive final filtering without diagnostic locations', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

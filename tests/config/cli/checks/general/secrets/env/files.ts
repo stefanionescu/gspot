@@ -44,9 +44,9 @@ export const STAGED_CASES = [
 
 /** Selected and unselected paths for the native repository index contract. */
 export const TRACKED_PATTERNS = {
+    indexOnly: ['.env.'],
     refused: [
         '.env',
-        '.env.',
         '.env.local',
         '.env.example.local',
         'nested/.dev.vars.production',

@@ -22,3 +22,15 @@ export const OUTPUTS: NonNullable<CheckDeclaration['output']>[] = [
 export const JSON_FORMATS = new Set(['json', 'sarif', 'knip', 'semgrep', 'typos', 'trufflehog-json', 'markdownlint']);
 
 export const FOREIGN = 'not the output of any tool {\n';
+
+export const EMPTY_ERRORS = new Set(['json', 'sarif', 'knip', 'semgrep', 'markdownlint']);
+
+export const LINE_FINDINGS = [
+    {
+        check: 'sandbox/output',
+        file: '',
+        message: 'not the output of any tool {',
+        help: 'Correct the sandbox file.',
+        fixable: false,
+    },
+];

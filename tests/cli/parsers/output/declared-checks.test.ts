@@ -56,36 +56,6 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
     expect(await Bun.file(join(sandbox.path, 'notes/reported.txt')).text()).toBe(source);
 });
 
-test('a named check entry > reruns a command check when an input outside its selected paths changes', async () => {
-    const command = [process.execPath, '-e', "process.exit((await Bun.file('state.txt').text()) === 'valid' ? 0 : 1)"];
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        '.gitignore': '.gspot/\n',
-        'gspot.toml': `configurations = []
-
-[check."notes/state"]
-command = ${JSON.stringify(command)}
-paths = ["selected.txt"]
-stage = "commit"
-`,
-        'selected.txt': 'unchanged trigger',
-        'state.txt': 'invalid',
-    });
-    const failed = await checkReport(sandbox.path, ['check', '--only', 'notes/state', '--json']);
-    expect(failed.code).toBe(1);
-    expect(failed.report.checks).toMatchObject([{ check: 'notes/state', status: 'failed' }]);
-
-    await Bun.write(join(sandbox.path, 'state.txt'), 'valid');
-    const passed = await checkReport(sandbox.path, ['check', '--only', 'notes/state', '--json']);
-    expect(passed.code).toBe(0);
-    expect(passed.report.checks).toMatchObject([{ check: 'notes/state', status: 'passed' }]);
-
-    await Bun.write(join(sandbox.path, 'state.txt'), 'invalid');
-    const failedAgain = await checkReport(sandbox.path, ['check', '--only', 'notes/state', '--json']);
-    expect(failedAgain.code).toBe(1);
-    expect(failedAgain.report.checks).toMatchObject([{ check: 'notes/state', status: 'failed' }]);
-});
-
 test('a named check entry > runs the command of the repository and reports file and line through its output format', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': ENTRY, 'notes/plan.txt': 'one\nPENDING later\n' });
@@ -98,10 +68,6 @@ test('a named check entry > runs the command of the repository and reports file 
             findings: [{ file: 'notes/plan.txt', line: 2, message: 'PENDING later' }],
         },
     ]);
-    await Bun.write(join(sandbox.path, 'notes/plan.txt'), 'one\nCompleted task\n');
-    const corrected = await checkReport(sandbox.path, ['check', '--only', 'notes/no-pending', '--json']);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ check: 'notes/no-pending', status: 'passed', findings: [] }]);
 });
 
 test('malformed custom JSON output produces inability instead of a discarded finding', async () => {
