@@ -2,6 +2,7 @@
 import { FEATURES } from '../config/home.ts';
 import HomeHero from '../components/home/Hero.astro';
 import Features from '../components/home/Features.astro';
+import { description } from '#cli-package' with { type: 'json' };
 import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 ---
@@ -9,7 +10,7 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 <StarlightPage
     frontmatter={{
         title: 'Check code before it ships',
-        description: 'gspot sets up linters and checks for your repository and installs rules for coding agents.',
+        description,
         template: 'splash',
         editUrl: false,
         lastUpdated: false,

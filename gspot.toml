@@ -322,12 +322,6 @@ rule = "n/no-sync"
 
 [[ignore]]
 check = "javascript/eslint"
-paths = ["packages/cli/package.json"]
-reason = "The gspot package exposes a command through bin and has no importable module API. Remove this exception if the package gains a module API."
-rule = "package-json/require-exports"
-
-[[ignore]]
-check = "javascript/eslint"
 paths = ["packages/eslint-plugin/package.json"]
 reason = "A published library keeps ranges for runtime dependencies and peers."
 rule = "package-json/restrict-dependency-ranges"

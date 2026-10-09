@@ -1,7 +1,7 @@
 import plugin from '#plugin/rules/public.ts';
+import { isRecord } from '#cli/platform/contracts.ts';
 import { cell, table, referencePage } from './page.ts';
 import type { ReferencePage } from '../../types/reference.ts';
-import { isRecord } from '@gspothq/cli/src/platform/contracts.ts';
 
 function pluginOptions(schemas: unknown, defaults: unknown): string {
     const entries: unknown[] = Array.isArray(schemas) ? schemas : [schemas];

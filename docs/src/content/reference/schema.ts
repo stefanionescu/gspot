@@ -1,6 +1,6 @@
-import { policySchema } from '@gspothq/cli/src/policy/schema/public.ts';
-import { JSON_SCHEMA_URL } from '@gspothq/cli/src/config/commands/init.ts';
-import { policyJsonSchema } from '@gspothq/cli/src/policy/schema/contracts.ts';
+import { policySchema } from '#cli/policy/schema/public.ts';
+import { JSON_SCHEMA_URL } from '#cli/config/commands/init.ts';
+import { policyJsonSchema } from '#cli/policy/schema/contracts.ts';
 
 /**
  * Project the runtime policy validator into the editor's JSON representation.

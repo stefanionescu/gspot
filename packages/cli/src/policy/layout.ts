@@ -35,7 +35,7 @@ function noncontiguous(syntax: TomlSyntax): boolean {
 }
 
 function nativeAssignment(key: string, value: unknown): { text: string; pair: KeyValue } {
-    const text = stringify({ [key]: value }, POLICY_EMIT_FORMAT);
+    const text = stringify({ [key]: value }, { ...POLICY_EMIT_FORMAT, inlineTableStart: 0 });
     const pair = parseDocument(text).cst.find(isKeyValue);
     if (pair === undefined) throw new Error('The native writer omitted an assignment value.');
     return { text, pair };
@@ -58,11 +58,21 @@ function encodeValue(node: Value, text: string, path: KeyPath, comments: TomlCom
     if (isInlineArray(node)) {
         const items = node.items.map(({ item }, index) => {
             if (!isValue(item)) throw new Error('The native writer emitted a non-value array item.');
+            const keys = [...path, index];
+            const notes = [...comments.values()]
+                .filter(({ path: note }) => path.toReversed()[1] === 'rules' && keys.every((key, i) => note[i] === key))
+                .map(({ path: field }) => emitTomlComments(comments, 'key', field, ''))
+                .filter(Boolean);
             return emitTomlComments(
                 comments,
                 'item',
-                [...path, index],
-                encodeValue(item, text, [...path, index], comments, indent),
+                keys,
+                emitTomlComments(
+                    comments,
+                    'header',
+                    keys,
+                    [...notes, encodeValue(item, text, keys, comments, indent)].join('\n'),
+                ),
             );
         });
         return items.some((item) => item.includes('\n'))
@@ -89,7 +99,7 @@ function sectionEntries(
     const children: PolicySection[] = [];
     for (const [key, child] of Object.entries(value)) {
         if (isRecord(child)) children.push({ path: [...path, key], table: child });
-        else if (isRecordArray(child))
+        else if (isRecordArray(child) && !((path[0] === 'tools' || path[2] === 'tools') && path.at(-1) === 'rules'))
             children.push(...child.map((table, index) => ({ path: [...path, key, index], table })));
         else assignments.push([key, child]);
     }

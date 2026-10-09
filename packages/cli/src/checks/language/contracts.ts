@@ -14,7 +14,6 @@ import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
-import { compilerHost } from '#cli/parsers/packages/contracts.ts';
 import type { ScratchSource } from '#cli/types/execution/copy.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
 import { isToolProjectPath } from '#cli/repository/paths/public.ts';
@@ -27,7 +26,7 @@ import type { ScriptFile, ScriptIndex } from '#cli/types/checks/language/bash.ts
 import { buildTsconfig, requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import { openRoot, readSource, createReadCache } from '#cli/platform/root/public.ts';
 import { projectCopyInputs, workspaceSourceFiles } from '#cli/execution/copy/public.ts';
-import { getTsconfig, tsconfigProjects, getTsconfigProject } from '#cli/parsers/packages/public.ts';
+import { getTsconfig, projectSources, tsconfigProjects, getTsconfigProject } from '#cli/parsers/packages/public.ts';
 
 const TYPESCRIPT_CHECKS = { create: () => new Map<string, string>() };
 
@@ -235,29 +234,17 @@ export function compilerFiles(
                 (path) => scopeOf(toPosix(relative(session.root, path)), session.repository.scopes).path,
             ),
         );
-        const program = ts.createProgram({
-            rootNames: config.fileNames,
-            options: config.options,
-            projectReferences: config.projectReferences ?? [],
-            host: compilerHost(session.root, planned.scope.scope.path, session.reads, config.options),
-        });
-        const inputs = program
-            .getSourceFiles()
-            .filter(
-                (source) =>
-                    !program.isSourceFileDefaultLibrary(source) && !program.isSourceFileFromExternalLibrary(source),
+        const inputs = projectSources(session.root, planned.scope.scope.path, session.reads, config).map((source) => {
+            const local = toPosix(relative(session.root, source.fileName));
+            files.assertInside(local);
+            if (
+                !source.isDeclarationFile &&
+                !owners.has(scopeOf(local, session.repository.scopes).path) &&
+                !workspace.has(local)
             )
-            .map((source) => {
-                const local = toPosix(relative(session.root, source.fileName));
-                files.assertInside(local);
-                if (
-                    !source.isDeclarationFile &&
-                    !owners.has(scopeOf(local, session.repository.scopes).path) &&
-                    !workspace.has(local)
-                )
-                    throw new Error(`TypeScript project ${target} imports source outside its scope: ${local}`);
-                return local;
-            });
+                throw new Error(`TypeScript project ${target} imports source outside its scope: ${local}`);
+            return local;
+        });
         const configurations = config.configurationFiles
             .map((path) => toPosix(relative(session.root, path)))
             .filter((path) => !path.split('/').includes('node_modules'));

@@ -6,11 +6,16 @@ import { defineConfig } from 'astro/config';
 import starlightLlmsTxt from 'starlight-llms-txt';
 import { SIDEBAR } from './src/config/navigation.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
+import { description } from '#cli-package' with { type: 'json' };
 
 export default defineConfig({
     site: 'https://generativespotting.com',
     // Lower CLI syntax for Vite and keep the Markdown native loader at its installed package origin.
-    vite: { oxc: { target: 'es2022' }, environments: { prerender: { resolve: { external: ['satteri'] } } } },
+    vite: {
+        resolve: { tsconfigPaths: true },
+        oxc: { target: 'es2022' },
+        environments: { prerender: { resolve: { external: ['satteri'] } } },
+    },
     integrations: [
         {
             name: 'font-licenses',
@@ -57,8 +62,7 @@ export default defineConfig({
             },
             expressiveCode: { defaultProps: { frame: 'code' } },
             editLink: { baseUrl: 'https://github.com/stefanionescu/gspot/edit/main/docs/' },
-            description:
-                'gspot sets up linters and checks for the languages in your repository and installs rules for coding agents',
+            description,
             customCss: ['./src/theme.css'],
             social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/stefanionescu/gspot' }],
             plugins: [starlightLlmsTxt()],

@@ -26,6 +26,9 @@
     "bin": {
         "gspot": "dist/gspot.js"
     },
+    "exports": {
+        "./package.json": "./package.json"
+    },
     "files": [
         "dist",
         "configurations",

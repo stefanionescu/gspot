@@ -1,6 +1,6 @@
 # Test Layout and Wiring
 
-12 unresolved review records remain.
+9 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -347,3 +347,20 @@ Original records and quotations remain above. These records are complete at `49c
 | ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/tests-layout/035` | complete | The approved test-owner consolidation is fully integrated; original stale paths and imports are absent. Parser/source/Git controls and shared preparation remain. Xcode test ownership completes the former dependency through tests-cli/092. /tmp/gspot-five-owner-035036-current/receipt.json: 36 current owner hashes, exact parser and push assertions, empty remaining projection. Original five-record +1,182 bytes is expressly approved; no unrelated SQL cost is assigned. Historical 110 tests/309 assertions and Xcode 89/283 receipts are retained; Main staged check passes. Commit `49c37336491469e783b82b9e6ff545d1ed17af11`. |
 | `review/tests-layout/036` | complete | The approved test-owner consolidation is fully integrated; original stale paths and imports are absent. Parser/source/Git controls and shared preparation remain. Xcode test ownership completes the former dependency through tests-cli/092. /tmp/gspot-five-owner-035036-current/receipt.json: 36 current owner hashes, exact parser and push assertions, empty remaining projection. Original five-record +1,182 bytes is expressly approved; no unrelated SQL cost is assigned. Historical 110 tests/309 assertions and Xcode 89/283 receipts are retained; Main staged check passes. Commit `49c37336491469e783b82b9e6ff545d1ed17af11`. |
+
+## Implementation checkpoint 2c4c5586f of October 9, 2026 for vocabulary-and-test-cleanup
+
+Original records and quotations remain above. These records are complete at `2c4c5586f`.
+
+| ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                         |
+| ------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/tests-layout/019` | complete | Delete all five obsolete lone-file allowances and retain the related live configuration and type allowances. Existing moves and the final canonical policy are verified by the staged structure checks. Commit `2c4c5586f`.                                                                      |
+| `review/tests-layout/020` | complete | Finish the prescribed naming/parser, policy and type owner moves; flatten the remaining tutorial test into tests/cli/docs.test.ts in the separate mechanical commit 8f9399d1a. Delete the five original obsolete lone-file allowances; current strict structure checks pass. Commit `2c4c5586f`. |
+
+## Implementation checkpoint f0ab8b668 of October 10, 2026 for policy-contracts-and-reducing-owner-audits
+
+Original records and quotations remain above. These records are complete at `f0ab8b668d398269494c4a7ec130d97b0bc63092`.
+
+| ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-layout/023` | complete | Complete original type partitions/consumer mappings and native picks. Final same-record two-owner consolidation−271B; preserved31 assertions/17 callbacks. Native29/241; deliberate missing-map control fails and restored control passes. Final staged/push types, lint, naming and structure pass. Commit `f0ab8b668d398269494c4a7ec130d97b0bc63092`. |

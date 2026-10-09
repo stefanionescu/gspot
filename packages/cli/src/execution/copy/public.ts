@@ -1,5 +1,6 @@
 import { memo } from '#cli/platform/memo.ts';
 import { setImmediate } from 'node:timers/promises';
+import { toPosix } from '#cli/platform/contracts.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import { gitText } from '#cli/platform/git/public.ts';
 import { openRoot } from '#cli/platform/root/public.ts';
@@ -20,6 +21,7 @@ import { packageWorkspaces } from '#cli/repository/paths/contracts.ts';
 import { fileMode, nativeSegments } from '#cli/platform/root/contracts.ts';
 import { DIRECTORY_MODE, PERMISSION_BITS } from '#cli/config/platform/modes.ts';
 import { getEntries, visitGitBlobs } from '#cli/repository/revisions/public.ts';
+import { projectSources, getTsconfigProject } from '#cli/parsers/packages/public.ts';
 import { ENTRY_MODES, GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { copyDependencies, copyValePackages, revisionDependencies } from '#cli/execution/copy/contracts.ts';
 import type { ScratchCopy, ScratchFile, ScratchSource, DependencyCopy } from '#cli/types/execution/copy.ts';
@@ -242,27 +244,25 @@ export async function checkOutRevision<Result>(
 export function workspaceSourceFiles(root: string, scope: string, files: TrackedFile[], reads: ReadCache): string[] {
     const cache = memo(reads, WORKSPACE_SOURCE_MEMO);
     const project = files
+        .map((file) => file.path)
         .filter(
-            (file) =>
-                basename(file.path) === 'package.json' &&
-                isInScope(scope, file.path === 'package.json' ? '' : posix.dirname(file.path)),
+            (path) => basename(path) === 'package.json' && isInScope(scope, posix.relative('.', posix.dirname(path))),
         )
-        .toSorted((left, right) => right.path.length - left.path.length)[0];
+        .toSorted((left, right) => right.length - left.length)[0];
     if (project === undefined) return [];
-    const key = JSON.stringify([root, project.path]);
+    const key = JSON.stringify([root, project]);
     const held = cache.get(key);
     if (held !== undefined) return held;
-    const projectFolder = project.path === 'package.json' ? '' : posix.dirname(project.path);
-    const packages = packageWorkspaces(root).map((path) => ({
-        path,
-        manifest: readPackageManifest(root, posix.join(path, 'package.json')),
-    }));
+    const projectFolder = posix.relative('.', posix.dirname(project));
+    const ordered = [...new Set([projectFolder, ...packageWorkspaces(root)])].toSorted(
+        (left, right) => right.length - left.length,
+    );
+    const packages = new Map(
+        ordered.map((path) => [path, readPackageManifest(root, posix.join(path, 'package.json'))]),
+    );
     const pending = [projectFolder];
-    const visited = new Set<string>();
     for (const folder of pending) {
-        if (visited.has(folder)) continue;
-        visited.add(folder);
-        const manifest = readPackageManifest(root, posix.join(folder, 'package.json'));
+        const manifest = packages.get(folder);
         if (manifest === undefined)
             throw new Error(`Workspace manifest is missing: ${posix.join(folder, 'package.json')}`);
         const names = Object.keys({
@@ -271,18 +271,29 @@ export function workspaceSourceFiles(root: string, scope: string, files: Tracked
             ...manifest.peerDependencies,
             ...manifest.optionalDependencies,
         });
-        pending.push(
-            ...packages
-                .filter((entry) => entry.manifest?.name !== undefined && names.includes(entry.manifest.name))
-                .map((entry) => entry.path),
-        );
+        const project = getTsconfigProject(root, folder, [], reads);
+        const sources =
+            project === undefined
+                ? []
+                : projectSources(root, folder, reads, {
+                      ...project.config,
+                      fileNames: project.config.fileNames.filter((file) =>
+                          isInScope(toPosix(relative(root, file)), folder),
+                      ),
+                  })
+                      .map((file) => ordered.find((path) => isInScope(toPosix(relative(root, file.fileName)), path)))
+                      .filter((path) => path !== undefined);
+        const dependencies = [...packages]
+            .filter(([, dependency]) => dependency?.name !== undefined && names.includes(dependency.name))
+            .map(([path]) => path);
+        pending.push(...[...new Set([...sources, ...dependencies])].filter((path) => !pending.includes(path)));
     }
+    const visited = new Set(pending);
     visited.delete(projectFolder);
-    const ordered = packages.toSorted((left, right) => right.path.length - left.path.length);
     const selected = files
         .filter((file) => {
-            const owner = ordered.find((entry) => isInScope(file.path, entry.path));
-            return owner !== undefined && visited.has(owner.path);
+            const owner = ordered.find((entry) => isInScope(file.path, entry));
+            return owner !== undefined && visited.has(owner);
         })
         .map((file) => file.path);
     cache.set(key, selected);

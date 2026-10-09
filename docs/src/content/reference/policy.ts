@@ -1,11 +1,11 @@
 import { buildJsonSchema } from './schema.ts';
 import { isDeepStrictEqual } from 'node:util';
 import type { JSONSchema } from 'zod/v4/core';
+import { isRecord } from '#cli/platform/contracts.ts';
+import { emitPolicy } from '#cli/policy/document/public.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import { knownSettings } from '#cli/policy/settings/public.ts';
 import { cell, table, section, referencePage } from './page.ts';
-import { isRecord } from '@gspothq/cli/src/platform/contracts.ts';
-import { emitPolicy } from '@gspothq/cli/src/policy/document/public.ts';
-import type { Manifest } from '@gspothq/cli/src/types/configurations.ts';
-import { knownSettings } from '@gspothq/cli/src/policy/settings/public.ts';
 import type { ReferencePage, SettingVariant } from '../../types/reference.ts';
 import { SETTINGS_INTRO, SCHEMA_TYPE_LABELS } from '../../config/reference.ts';
 

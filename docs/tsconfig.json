@@ -1,6 +1,7 @@
 {
     "extends": "../tsconfig.json",
     "compilerOptions": {
+        "baseUrl": "..",
         "jsx": "preserve",
         "module": "ESNext",
         "moduleResolution": "Bundler",

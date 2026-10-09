@@ -1,6 +1,6 @@
 # Commands, Lifecycle, Policy, Generation, Rules, Output, Configurations: Code Review
 
-9 unresolved review records remain.
+8 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -291,3 +291,11 @@ Original records and quotations remain above. These records are complete at `a1b
 | ID                         | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | -------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/code-commands/029` | complete | Plugin metadata owns its `configs.all`; duplicated CLI rule gating is deleted. Both levels and Next.js Pages applicability retain their required on/off expectations. Exact generated-preset capture size exception was expressly approved. Normal plugin build, preset refresh and apply produce the integrated output; native level and template tests pass. Evidence: `/tmp/gspot-cc029030045-final/freeze.json` and `/tmp/gspot-cc029-template015-main-native.log`. Commit `a1be5898f8fdc324c526779bb745861b91917055`. |
+
+## Implementation checkpoint f0ab8b668 of October 10, 2026 for policy-contracts-and-reducing-owner-audits
+
+Original records and quotations remain above. These records are complete at `f0ab8b668d398269494c4a7ec130d97b0bc63092`.
+
+| ID                         | Status   | Evidence                                                                                                                                                                                                                                                                                                                       |
+| -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/code-commands/006` | complete | Eight-record audit accounts for each enumerated guard; retain inline pre-generated-policy check and native CAS. Same-contract reductions1173B and1123B; pre-existing retirement guard is outside prescribed replacement. Current70/201 source/test bridge8/8 exact at c846. Commit `f0ab8b668d398269494c4a7ec130d97b0bc63092`. |

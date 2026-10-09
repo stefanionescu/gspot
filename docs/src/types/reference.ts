@@ -1,5 +1,5 @@
 // The types of the generated reference pages.
-import type { SettingDeclaration } from '@gspothq/cli/src/types/configurations.ts';
+import type { SettingDeclaration } from '#cli/types/configurations.ts';
 
 /** A generated reference page: its frontmatter fields and Markdown body. */
 export type ReferencePage = {

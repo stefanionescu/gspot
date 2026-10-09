@@ -5,12 +5,12 @@ import { pluginReferencePages } from './plugin.ts';
 import { configurationPage } from './configurations.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import { settingsPage, policyReference } from './policy.ts';
+import { allChecks } from '#cli/configurations/contracts.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
 import { CONFIGURATION_GROUPS } from '../../config/reference.ts';
-import { allChecks } from '@gspothq/cli/src/configurations/contracts.ts';
-import type { Manifest } from '@gspothq/cli/src/types/configurations.ts';
-import { configurationManifests } from '@gspothq/cli/src/configurations/public.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 
 function configurationSections(manifests: Manifest[]): string {
     const sections: string[] = [];

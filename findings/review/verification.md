@@ -1,6 +1,6 @@
 # Found While Verifying the Open Records
 
-2 unresolved review records remain.
+0 unresolved review records remain.
 
 Six read-only verifiers checked every open record against commit `3e1445a2d` on October 6, 2026. These are the new problems they found on the way. The status of each older record is in the "Status on October 6, 2026" section of its own file.
 
@@ -56,3 +56,12 @@ Original records and quotations remain above. These records are complete at `443
 | `review/verification/006` | complete | Delete duplicate Semgrep eval rule and retain sonarjs/code-eval as the native in-process owner at both levels. Generated root and child packs omit the retired rule and retain other security rules. Commit `4436ff3bd36e99fd2d4922b780dc64813651e34a`.                             |
 | `review/verification/007` | complete | Docker diagnostics prescribe the missing file and entries; paired package diagnostics prescribe matching versions. Existing native message cases, coordinates and cleanup remain. Root-held broader Docker changes are excluded. Commit `4436ff3bd36e99fd2d4922b780dc64813651e34a`. |
 | `review/verification/015` | complete | Gate NEXT-INTL.md by next-intl in the translations manifest. Native root/child, both-level and five-library acceptance preserve TALKING and omit the rule for unrelated translation libraries. Commit `4436ff3bd36e99fd2d4922b780dc64813651e34a`.                                   |
+
+## Implementation checkpoint f0ab8b668 of October 10, 2026 for policy-contracts-and-reducing-owner-audits
+
+Original records and quotations remain above. These records are complete at `f0ab8b668d398269494c4a7ec130d97b0bc63092`.
+
+| ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                                                     |
+| ------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/verification/029` | complete | Restore native Stylelint/import suppression controls while preserving mechanical c846 grouping. Approved2934B test exception recorded. Actual71 policy controls/286 assertions and final staged/push gates152/0; external platform acceptance remains final-release work. Commit `f0ab8b668d398269494c4a7ec130d97b0bc63092`. |
+| `review/verification/019` | complete | Committed c846 native groups in15 files; preserve registrations/assertion and callback ASTs, with other enumerated families already grouped. Approved2239B exception; main110/463 CLI and24/169 tools, prior native129/605. No new Windows-native credit. Commit `f0ab8b668d398269494c4a7ec130d97b0bc63092`.                 |

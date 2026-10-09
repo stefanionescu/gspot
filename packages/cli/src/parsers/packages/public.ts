@@ -12,6 +12,7 @@ import {
     REQUIREMENT_NAME_END,
 } from '#cli/config/parsers/packages.ts';
 import {
+    compilerHost,
     parseTsconfig,
     pipfileSchema,
     bunInstallSchema,
@@ -304,4 +305,31 @@ export function getTsconfigProject(
     );
     if (folder !== own && files.some((file) => !members.has(toPosix(join(root, file))))) return undefined;
     return { path, config, projects };
+}
+
+/**
+ * Resolve authored source inputs through the project's native compiler configuration.
+ * @param root the captured repository
+ * @param scope the importing project scope
+ * @param reads the run-owned metadata cache
+ * @param config the parsed native project
+ * @returns resolved source files without installed or compiler libraries
+ */
+export function projectSources(
+    root: string,
+    scope: string,
+    reads: ReadCache,
+    config: TypeScriptConfiguration,
+): ts.SourceFile[] {
+    const program = ts.createProgram({
+        rootNames: config.fileNames,
+        options: config.options,
+        ...(config.projectReferences === undefined ? {} : { projectReferences: config.projectReferences }),
+        host: compilerHost(root, scope, reads, config.options),
+    });
+    return program
+        .getSourceFiles()
+        .filter(
+            (source) => !program.isSourceFileDefaultLibrary(source) && !program.isSourceFileFromExternalLibrary(source),
+        );
 }

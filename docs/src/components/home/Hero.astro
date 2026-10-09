@@ -1,6 +1,6 @@
 ---
 import example from '../../config/example.json';
-import { version } from '@gspothq/cli/package.json';
+import { version } from '#cli-package' with { type: 'json' };
 import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
 
 const agentFile = example.agent.files.find((file) => file.path === 'src/utils.ts');

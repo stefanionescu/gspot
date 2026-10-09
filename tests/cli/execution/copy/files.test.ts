@@ -7,6 +7,7 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { WORKSPACE_SOURCE_FILES } from '#tests/config/cli/execution/copy.ts';
 import { prepareTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
 import { mkdir, readdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 import { copyIntoScratch, checkOutRevision, projectCopyInputs } from '#cli/execution/copy/public.ts';
@@ -192,20 +193,7 @@ test.each([false, true])(
             'gspot.toml': buildPolicy(['javascript'], {
                 tables: '[scope."apps/web"]\nconfigurations = ["javascript"]\n',
             }),
-            'package.json':
-                '{"private":true,"workspaces":["apps/*","packages/*"],"dependencies":{"unused":"workspace:*"}}',
-            'bun.lock': '{}',
-            '.gitignore': 'node_modules/\ndist/\n',
-            'apps/web/package.json': '{"name":"web","dependencies":{"core":"workspace:*"}}',
-            'apps/web/main.js': 'import {value} from "core"; console.log(value);',
-            'packages/core/package.json':
-                '{"name":"core","type":"module","main":"value.js","dependencies":{"utility":"workspace:*"}}',
-            'packages/core/value.js': 'import {suffix} from "utility"; export const value = "staged" + suffix;',
-            'packages/utility/package.json':
-                '{"name":"utility","type":"module","main":"value.js","dependencies":{"core":"workspace:*"}}',
-            'packages/utility/value.js': 'export const suffix = " dependency";',
-            'packages/unused/package.json': '{"name":"unused","type":"module"}',
-            'packages/unused/private.txt': 'Unselected workspace bytes',
+            ...WORKSPACE_SOURCE_FILES,
         });
         await mkdir(join(repository.path, 'node_modules'));
         for (const name of ['core', 'utility', 'unused'])
@@ -226,12 +214,17 @@ test.each([false, true])(
             expect(new Set(dependencyPaths).size).toBe(dependencyPaths.length);
             expect(dependencyPaths).toContain('packages/core/value.js');
             expect(dependencyPaths).toContain('packages/utility/value.js');
+            expect(dependencyPaths).toContain('packages/aliased/value.js');
             expect(dependencyPaths).not.toContain('packages/unused/private.txt');
+            expect(dependencyPaths).not.toContain('packages/unused/private.js');
             expect(input.files.map((file) => file.path)).toStrictEqual(['apps/web/main.js']);
             using copy = await copyIntoScratch(input);
             const output = runTestCommandBlocking([process.execPath, 'apps/web/main.js'], { cwd: copy.path });
             expect(output.code, output.stderr).toBe(0);
             expect(output.stdout.trim()).toBe('staged dependency');
+            expect(await readFile(join(copy.path, 'packages/aliased/value.js'), 'utf8')).toBe(
+                WORKSPACE_SOURCE_FILES['packages/aliased/value.js'],
+            );
             expect(await pathExists(join(copy.path, 'packages/unused/private.txt'))).toBe(false);
             expect(await pathExists(join(copy.path, 'packages/core/untracked.js'))).toBe(false);
             await writeFile(join(copy.path, 'packages/core/value.js'), 'private copy change');

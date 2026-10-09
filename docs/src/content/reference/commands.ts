@@ -1,10 +1,10 @@
 import { access } from 'node:fs/promises';
-import { buildProgram } from '@gspothq/cli/src/public.ts';
+import { buildProgram } from '#cli/public.ts';
 import { COMMAND_OWNERS } from '../../config/reference.ts';
+import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
 import type { CommandUnknownOpts } from '@commander-js/extra-typings';
-import { COMMAND_HELP } from '@gspothq/cli/src/config/commands/help.ts';
 
 async function commandPage(command: CommandUnknownOpts, name: string): Promise<ReferencePage> {
     const [rootCommand = name] = name.split(' ', 1);

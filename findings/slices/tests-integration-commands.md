@@ -1,6 +1,6 @@
 # Tests: Command, Policy, Platform, and Tools Integration Tests
 
-13 unresolved review records remain.
+11 unresolved review records remain.
 
 ## Open findings
 
@@ -92,3 +92,12 @@ Original records and quotations remain above. These records are complete at `49c
 | ID                                      | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | --------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-commands/037` | complete | Concurrent SQL results assert null/error-containing-typo/null instead of library prose; original concurrency and native result shapes remain. Delete the redundant forwarding callback and title-repeating header. /tmp/gspot-sql037-reduction-current/freeze.json: successor removes 98 bytes; original same-record +32 bytes becomes -66. Three native tests/six assertions, Node/Bun parity and 28 negative witnesses pass, followed by Main staged checks. Commit `49c37336491469e783b82b9e6ff545d1ed17af11`. |
+
+## Implementation checkpoint 2c4c5586f of October 9, 2026 for vocabulary-and-test-cleanup
+
+Original records and quotations remain above. These records are complete at `2c4c5586f`.
+
+| ID                                      | Status   | Evidence                                                                                                                                                                                                                                    |
+| --------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-commands/038` | complete | Keep the final agent-rules test owner and share its real openSession/selectRuleFiles/managedBlock calculation in one local blockFor(root), used by both existing tests. Preserve every assertion and resource lifetime. Commit `2c4c5586f`. |
+| `slices/tests-integration-commands/048` | complete | Apply the final status-table rename selected to plannedConfigurations at both callers. AUTHORED_POLICY and the adopted configuration vocabulary remain; historical kit renames are obsolete. Commit `2c4c5586f`.                            |

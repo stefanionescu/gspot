@@ -1,7 +1,7 @@
 import { section, referencePage } from './page.ts';
 import { CHECK_RUN_LABELS } from '../../config/reference.ts';
 import type { ReferencePage } from '../../types/reference.ts';
-import type { Manifest, CheckDeclaration } from '@gspothq/cli/src/types/configurations.ts';
+import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
 
 function checkEnvironment(check: CheckDeclaration): string[] {
     const tool =
