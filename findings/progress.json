@@ -1,5 +1,5 @@
 {
-    "openRecords": 419,
+    "openRecords": 408,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -319,7 +319,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 419,
+        "openRecords": 408,
         "records": 1092,
         "batches": [
             {
@@ -625,8 +625,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 170,
-                "unresolvedAssignments": 121
+                "completedAssignments": 175,
+                "unresolvedAssignments": 116
             },
             {
                 "id": "python",
@@ -672,8 +672,8 @@
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
                 ],
-                "completedAssignments": 23,
-                "unresolvedAssignments": 16
+                "completedAssignments": 24,
+                "unresolvedAssignments": 15
             },
             {
                 "id": "javascript-web",
@@ -779,8 +779,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 37,
-                "unresolvedAssignments": 62
+                "completedAssignments": 40,
+                "unresolvedAssignments": 59
             },
             {
                 "id": "swift-bash-sql",
@@ -1008,8 +1008,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 45,
-                "unresolvedAssignments": 86
+                "completedAssignments": 51,
+                "unresolvedAssignments": 80
             },
             {
                 "id": "test-quality",
@@ -1485,8 +1485,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 307,
-                "unresolvedAssignments": 162
+                "completedAssignments": 310,
+                "unresolvedAssignments": 159
             },
             {
                 "id": "scripts-repository",
@@ -1625,8 +1625,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 59,
-                "unresolvedAssignments": 73
+                "completedAssignments": 61,
+                "unresolvedAssignments": 71
             },
             {
                 "id": "installation-docs",
@@ -1770,8 +1770,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 73,
-                "unresolvedAssignments": 64
+                "completedAssignments": 74,
+                "unresolvedAssignments": 63
             },
             {
                 "id": "policy-file",
@@ -1966,8 +1966,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 53,
-                "unresolvedAssignments": 36
+                "completedAssignments": 55,
+                "unresolvedAssignments": 34
             },
             {
                 "id": "configurations",
@@ -2119,14 +2119,17 @@
             ]
         },
         "areas/checks/010": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence a623376e16463b6c."],
+            "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
+            "verification": [
+                "Evidence a623376e16463b6c.",
+                "Planner excludes children for scope checks, documents CheckInput.files and passes planned.files intact. All seven specified repeated filters are absent. Native68pass292assert11files retained; distinct repository-index/compiler-graph/once-only scope attribution stays."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-scope-input-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
                     "verification": ["Evidence a623376e16463b6c."]
                 }
             ]
@@ -2341,7 +2344,14 @@
                 }
             ]
         },
-        "areas/checks/046": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/checks/046": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
+            "verification": [
+                "One native headers reader returns path/header/value line data and diagnostics; both hosted header checks use it. Current named reader/security consumer match actual retained root-child/both-level receipts; unadopted Wrangler loader excluded."
+            ]
+        },
         "areas/checks/047": {
             "status": "complete",
             "owner": "main",
@@ -2747,9 +2757,30 @@
                 "Merged classification runners; all seven distinct authored exit/byte contracts preserved. Prescribed overlapping-row deletion not yet satisfied."
             ]
         },
-        "areas/integration-tests/037": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/integration-tests/039": { "status": "partial", "owner": null, "commit": null, "verification": [] },
-        "areas/integration-tests/040": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/integration-tests/037": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "b769de102bfaedf54c2bc962b15250c88714d781",
+            "verification": [
+                "Deleted redundant identity registration; counted-failure native case preserves both real helper calls, exact1pass3assert."
+            ]
+        },
+        "areas/integration-tests/039": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "b769de102bfaedf54c2bc962b15250c88714d781",
+            "verification": [
+                "One table fixes each empty/foreign parser outcome; all21 original vectors plus none/foreign retained. Native98pass155assert6files and22 final contract controls pass; two genuine expected-value swaps fail before exact restoration."
+            ]
+        },
+        "areas/integration-tests/040": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "b769de102bfaedf54c2bc962b15250c88714d781",
+            "verification": [
+                "Deleted the no-cache fresh named-command rerun registration; distinct same-session file attribution, source bytes, malformed JSON and both SARIF controls remain. Main5pass25assert."
+            ]
+        },
         "areas/integration-tests/041": {
             "status": "complete",
             "owner": "main",
@@ -3445,13 +3476,15 @@
             ]
         },
         "areas/kits/070": {
-            "status": "partial",
-            "owner": "root",
-            "commit": null,
-            "verification": [],
+            "status": "complete",
+            "owner": "main",
+            "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
+            "verification": [
+                "Cloudflare owns header checks/declarations; site dead-assets covers assets/public/static without a new setting. Scope installer supplies build default while authored empty/custom/npm argv survive. Exact current14-case callback/data and native receipt match."
+            ],
             "additionalChanges": [
                 {
-                    "commit": null,
+                    "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
                     "scope": "Derived site installer default plus authored empty/npm/custom argv canonical roundtrip: Main58 cases311 assertions, types0. Hosting moves integrated; static type fallback retained and writer does not erase a project-dependent authored command."
                 }
             ]
@@ -3644,14 +3677,17 @@
             ]
         },
         "areas/kits/108": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 9b3e70df41c7ce2f."],
+            "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
+            "verification": [
+                "Evidence 9b3e70df41c7ce2f.",
+                "All seven final identities are declared/registered once, with updated help/docs/tests and authored example. Main162pass545assert8files, types0, staged100pass13skip0findings; original native6pass35assert with one explicit Docker skip."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-native-names-final-freeze.json",
-                    "commit": null,
+                    "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
                     "verification": ["Evidence a8c63b4ca0316109."]
                 }
             ]
@@ -3863,14 +3899,17 @@
             ]
         },
         "areas/kits/134": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
+            "verification": [
+                "Evidence 99cedf9c066772ef.",
+                "OpenAPI generate_command and site build_command are typed argv lists. Native whole-setting multiword/empty/root-child/both-level command transport and14 installer cases match current callbacks; no shell serializer."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
                     "verification": ["Evidence b30ef09416624bd0."]
                 }
             ]
@@ -7940,14 +7979,17 @@
             "verification": ["Rename to `checks/general/prose.ts`.", "Evidence 17e0e9bcccb43434."]
         },
         "review/source-layout/019": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 27d0b04108bd5747."],
+            "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
+            "verification": [
+                "Evidence 27d0b04108bd5747.",
+                "Generic SARIF parsing/schema/locations have substantive structured-parser owners; flat security check keeps CodeQL database steps. Native parser137/288, command21/208, security30/65 and9 controls on each Bun/Node retained; public-owner override applied."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-output-contract-final-freeze.json",
-                    "commit": null,
+                    "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
                     "verification": ["Evidence 2cf47ac37a6ead69."]
                 }
             ]
@@ -7965,14 +8007,17 @@
             "verification": ["Evidence 9859c4c1c050d9c5."]
         },
         "review/source-layout/023": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence cc1e15952ed0d09a."],
+            "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
+            "verification": [
+                "Evidence cc1e15952ed0d09a.",
+                "JavaScript/TypeScript/Vue compiler callbacks share actual language public/contracts owners; former JavaScript tsc/rules-off folder is absent. Original five-owner merge removes496bytes; original6pass16assert retained. Later compiler behavior remains separately tracked."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-tsc-final-freeze.json",
-                    "commit": null,
+                    "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
                     "verification": ["Evidence cc1e15952ed0d09a."]
                 }
             ]
@@ -10772,14 +10817,17 @@
             "remaining": "Native Xcode parser prose is simplified; remaining Docker/XCTest aggregate owners still require evidence."
         },
         "slices/config/015": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7564541dd3190000."],
+            "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
+            "verification": [
+                "Evidence 7564541dd3190000.",
+                "Actual manifest-generated declarations own next-env.d.ts and worker-configuration.d.ts; generic reference banners deleted. Current selector/schema leaf match later native201pass474assert receipt containing all7 generated cases, not obsolete first selector."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-manifest-context-final-freeze.json",
-                    "commit": null,
+                    "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
                     "verification": ["Evidence 7564541dd3190000."]
                 }
             ]
@@ -16733,6 +16781,47 @@
             "limitations": [
                 "No cross-platform skip is represented as execution proof; current CI runs inspected separately.",
                 "Review/tests-tools/061 remains partial with +1233B/+192AST after same-contract deletion; repository-root004/005/006 setup policy conflict remains separate; main001 external release steps remain partial."
+            ]
+        },
+        {
+            "commit": "c0dab0da213458868371e8fb3a69fe88740bc3ed",
+            "completedRecords": [
+                "review/source-layout/019",
+                "review/source-layout/023",
+                "areas/checks/010",
+                "areas/checks/046",
+                "areas/kits/070",
+                "slices/config/015",
+                "areas/kits/134",
+                "areas/kits/108"
+            ],
+            "unresolvedRecords": 411,
+            "validation": [
+                "Read-only exact binding/source/receipt attribution: /tmp/gspot-layout-current-closure-spec-proposal.json, /tmp/gspot-hosting-readiness-final-closure-specifications.json, /tmp/gspot-kits108-seven-whole-readiness-final.json. Current named implementations and declaration/default/argv inputs are compared to actual accepted native receipt snapshots.",
+                "SARIF output original28-owner packet production1881bytes/357AST fewer; compiler original5-owner packet496bytes fewer; scope input original12-owner packet455bytes fewer. These costs are packet-specific; no unrelated offset or W3 aggregate shrink claimed.",
+                "Seven check names change only identity data/native formatter whitespace150bytes0executableAST; authored example update0bytes with all unrelated fields/bytes exact. Normal mechanical checkpoint and push passed."
+            ],
+            "limitations": [
+                "No new OS/tool execution claimed by receipt reconciliation. Docker-backed nginx case remains a platform skip, and later compiler/native-loader behavior remains separately open.",
+                "Historical webmanifest growth remains explicit; areas/checks/070 remains partial. Source-layout005/017/038 and whole naming012 are not closed by this narrower audit.",
+                "main001 remains partial for external publication and setup; no deployment/publication performed."
+            ]
+        },
+        {
+            "commit": "b769de102bfaedf54c2bc962b15250c88714d781",
+            "completedRecords": [
+                "areas/integration-tests/037",
+                "areas/integration-tests/039",
+                "areas/integration-tests/040"
+            ],
+            "unresolvedRecords": 408,
+            "validation": [
+                "Combined Main36pass100assert4files2.43s; Root types/native lint/format and actual staged50pass9skip0findings20.1s pass. Immutable packet hashes and genuine first failure/negative controls retained under /tmp/gspot-count-pattern037-final-freeze.json, /tmp/gspot-output-contract039-final-freeze.json and /tmp/gspot-declared-output040-final-freeze.json.",
+                "Three exact native packets remove2906bytes/477AST; portable fixture separately adds tested index-only coverage with no production change or Git protection override."
+            ],
+            "limitations": [
+                "Only the named-check correction subsite of integration-tests084 is deleted here; wider084 remains partial.",
+                "Windows tracked fixture correction is locally verified and awaits actual Windows CI; no platform pass inferred from this Main run."
             ]
         }
     ],

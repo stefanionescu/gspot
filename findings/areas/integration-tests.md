@@ -1,6 +1,6 @@
 # Integration Tests Outside the Checks Folder
 
-29 unresolved review records remain.
+26 unresolved review records remain.
 
 ## Findings
 
@@ -211,3 +211,13 @@ Original records and quotations remain above. These records are complete at `6e7
 | `areas/integration-tests/064` | complete | Deleted the impossible recovery absence assertion; substantive restoration observations remain. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`.                                                              |
 | `areas/integration-tests/067` | complete | Deleted duplicate regular-file interruption from links; batches retains multiple paths and verifies pending journal before recovery and clearance afterward. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |
 | `areas/integration-tests/071` | complete | Deleted duplicate missing-reason/kitz/syntax rows; retained both ignore-index positions, exact key diagnostics, corrections and scoped unknown-key controls. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |
+
+## Implementation checkpoint b769de102bfaedf54c2bc962b15250c88714d781 of October9,2026 for exact-output-and-count-contracts
+
+Original records and quotations remain above. These records are complete at `b769de102bfaedf54c2bc962b15250c88714d781`.
+
+| ID                            | Status   | Evidence                                                                                                                                                                                                                                                                                 |
+| ----------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/integration-tests/037` | complete | Deleted redundant identity registration; counted-failure native case preserves both real helper calls, exact1pass3assert. Commit `b769de102bfaedf54c2bc962b15250c88714d781`.                                                                                                             |
+| `areas/integration-tests/039` | complete | One table fixes each empty/foreign parser outcome; all21 original vectors plus none/foreign retained. Native98pass155assert6files and22 final contract controls pass; two genuine expected-value swaps fail before exact restoration. Commit `b769de102bfaedf54c2bc962b15250c88714d781`. |
+| `areas/integration-tests/040` | complete | Deleted the no-cache fresh named-command rerun registration; distinct same-session file attribution, source bytes, malformed JSON and both SARIF controls remain. Main5pass25assert. Commit `b769de102bfaedf54c2bc962b15250c88714d781`.                                                  |

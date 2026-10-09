@@ -1,6 +1,6 @@
 # Built-in Checks
 
-18 unresolved review records remain.
+16 unresolved review records remain.
 
 ## Findings
 
@@ -260,3 +260,12 @@ Original records and quotations remain above. These records are complete at `af9
 | ID                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | ------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `areas/checks/059` | complete | Moved all sixteen NestJS kinds and nine tool prefixes to selected manifests. The check reads one typed prefix_collisions field; hook directory facts stay shared. Preserved four original callback bodies and all existing parser assertions. Native45 tests95 assertions, types, producer freshness, normal apply and staged88/0 pass. Production including manifests decreases17 bytes after inlining a one-use source list. Commit `af979b415c6c13d5b1904b976234e406031d3104`. |
+
+## Implementation checkpoint c0dab0da2 of October9,2026 for verified-owner-and-configuration-contracts
+
+Original records and quotations remain above. These records are complete at `c0dab0da213458868371e8fb3a69fe88740bc3ed`.
+
+| ID                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                       |
+| ------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `areas/checks/010` | complete | Planner excludes children for scope checks, documents CheckInput.files and passes planned.files intact. All seven specified repeated filters are absent. Native68pass292assert11files retained; distinct repository-index/compiler-graph/once-only scope attribution stays. Commit `c0dab0da213458868371e8fb3a69fe88740bc3ed`. |
+| `areas/checks/046` | complete | One native headers reader returns path/header/value line data and diagnostics; both hosted header checks use it. Current named reader/security consumer match actual retained root-child/both-level receipts; unadopted Wrangler loader excluded. Commit `c0dab0da213458868371e8fb3a69fe88740bc3ed`.                           |

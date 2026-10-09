@@ -1,6 +1,6 @@
 # The Config Constants
 
-5 unresolved review records remain.
+4 unresolved review records remain.
 
 ## Open findings
 
@@ -33,3 +33,11 @@ Original records and quotations remain above. These records are complete at `087
 | ID                  | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/config/041` | complete | All duplicate directory/terminator constants are absent. Adopted strict-mode owner contract deletes both INHERITED_ERREXIT and BASH_FEATURES; no stale version alias or old setting is restored. Frozen mechanical f3b0306b8750e74fe64193f6b7840c3aa5785988ab81204707da5d11b6e35f6b integrated773ad6e; behavior d5138557d856c8683aeac0a712fc2f062134730b8d07fa9c2eb0f35d409b9de2 integrated here. Native CLI21/104, tools10/66 and exact Node/Bun retained values pass; Main68case332assert mechanical replay passes. No Windows Zsh/Bats proof is claimed. Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain. Commit `087e6d6d5eb739c6b4b44e6d1e3544442597e739`. |
+
+## Implementation checkpoint c0dab0da2 of October9,2026 for verified-owner-and-configuration-contracts
+
+Original records and quotations remain above. These records are complete at `c0dab0da213458868371e8fb3a69fe88740bc3ed`.
+
+| ID                  | Status   | Evidence                                                                                                                                                                                                                                                                                                            |
+| ------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/config/015` | complete | Actual manifest-generated declarations own next-env.d.ts and worker-configuration.d.ts; generic reference banners deleted. Current selector/schema leaf match later native201pass474assert receipt containing all7 generated cases, not obsolete first selector. Commit `c0dab0da213458868371e8fb3a69fe88740bc3ed`. |

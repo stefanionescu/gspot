@@ -1,6 +1,6 @@
 # Source Layout: `packages/cli/src` and `packages/eslint-plugin/src`
 
-8 unresolved review records remain.
+6 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -545,3 +545,12 @@ Original records and quotations remain above. These records are complete at `938
 | ID                         | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                         |
 | -------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/source-layout/041` | complete | All explain links use manifest rule_url; plugin prefixes belong to tool declarations. Ruff/Swift summaries and obsolete parser/schema are removed; shared ruleSettingsSchema retains its public parser owner. Commit 9384fcdf0: 247 tests and 855 assertions; types, schema generation and 98 staged checks pass. The public API owner override is preserved. Commit `9384fcdf0524f4ba4693c835dad809f7088c589b`. |
+
+## Implementation checkpoint c0dab0da2 of October9,2026 for verified-owner-and-configuration-contracts
+
+Original records and quotations remain above. These records are complete at `c0dab0da213458868371e8fb3a69fe88740bc3ed`.
+
+| ID                         | Status   | Evidence                                                                                                                                                                                                                                                                                                                        |
+| -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/source-layout/019` | complete | Generic SARIF parsing/schema/locations have substantive structured-parser owners; flat security check keeps CodeQL database steps. Native parser137/288, command21/208, security30/65 and9 controls on each Bun/Node retained; public-owner override applied. Commit `c0dab0da213458868371e8fb3a69fe88740bc3ed`.                |
+| `review/source-layout/023` | complete | JavaScript/TypeScript/Vue compiler callbacks share actual language public/contracts owners; former JavaScript tsc/rules-off folder is absent. Original five-owner merge removes496bytes; original6pass16assert retained. Later compiler behavior remains separately tracked. Commit `c0dab0da213458868371e8fb3a69fe88740bc3ed`. |

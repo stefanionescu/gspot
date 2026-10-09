@@ -1,6 +1,6 @@
 # Kits, Settings, and Names
 
-29 unresolved review records remain.
+26 unresolved review records remain.
 
 ## Findings
 
@@ -299,3 +299,13 @@ Original records and quotations remain above. These records are complete at `6e7
 | ID               | Status   | Evidence                                                                                                                                                                                                                                      |
 | ---------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `areas/kits/042` | complete | Supabase admin_key_files setting deleted; native service-role check excludes only function/test selections and honors reasoned ignores. Qualified summary/help agree; Main31pass216assert. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |
+
+## Implementation checkpoint c0dab0da2 of October9,2026 for verified-owner-and-configuration-contracts
+
+Original records and quotations remain above. These records are complete at `c0dab0da213458868371e8fb3a69fe88740bc3ed`.
+
+| ID               | Status   | Evidence                                                                                                                                                                                                                                                                                                             |
+| ---------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/kits/070` | complete | Cloudflare owns header checks/declarations; site dead-assets covers assets/public/static without a new setting. Scope installer supplies build default while authored empty/custom/npm argv survive. Exact current14-case callback/data and native receipt match. Commit `c0dab0da213458868371e8fb3a69fe88740bc3ed`. |
+| `areas/kits/134` | complete | OpenAPI generate_command and site build_command are typed argv lists. Native whole-setting multiword/empty/root-child/both-level command transport and14 installer cases match current callbacks; no shell serializer. Commit `c0dab0da213458868371e8fb3a69fe88740bc3ed`.                                            |
+| `areas/kits/108` | complete | All seven final identities are declared/registered once, with updated help/docs/tests and authored example. Main162pass545assert8files, types0, staged100pass13skip0findings; original native6pass35assert with one explicit Docker skip. Commit `c0dab0da213458868371e8fb3a69fe88740bc3ed`.                         |
