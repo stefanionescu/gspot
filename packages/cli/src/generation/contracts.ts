@@ -114,7 +114,7 @@ export function pythonProject(manifests: Manifest[]): GeneratedFile[] {
 export function pythonInputs(
     session: Session,
     selection: ScopeSelection,
-): Pick<EtaInputs, 'pythonVenv' | 'pythonScopePath' | 'pythonExcludes' | 'ruffRules'> {
+): Pick<EtaInputs, 'pythonVenv' | 'pythonScopePath' | 'pythonExcludes' | 'ruffRules' | 'basedpyrightOptions'> {
     const root = session.installedRoot ?? session.root;
     const { policy } = session.policyFiles;
     const base = posix.relative(posix.join(CONFIGURATION_DIRECTORY, selection.scope.path), '.');
@@ -123,6 +123,9 @@ export function pythonInputs(
         policy.exclude,
     );
     return {
+        basedpyrightOptions: Object.fromEntries(
+            selection.selected.flatMap((manifest) => Object.entries(manifest.basedpyright_options[policy.level])),
+        ),
         ruffRules: selection.selected.flatMap((manifest) => [
             ...manifest.ruff_rules.recommended,
             ...(policy.level === 'all' ? manifest.ruff_rules.all : []),

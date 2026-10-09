@@ -294,6 +294,12 @@ export const manifestSchema = z
             )
             .default({}),
         ruff_rules: z.strictObject({ recommended: stringList, all: stringList }).prefault({}),
+        basedpyright_options: z
+            .strictObject({
+                recommended: z.record(z.string(), z.json()).default({}),
+                all: z.record(z.string(), z.json()).default({}),
+            })
+            .prefault({}),
         required_eslint_rules: stringListTable.default({}),
         eslint_rules_off: z
             .array(

@@ -54,6 +54,8 @@ export type EtaInputs = Omit<ScopeView, 'options'> & {
     isAll: boolean;
     /** Stable Ruff rules declared by the scope's frameworks and tools at the selected level. */
     ruffRules: string[];
+    /** Native type-checker values declared by selected manifests for the policy level. */
+    basedpyrightOptions: Manifest['basedpyright_options']['recommended'];
     typescriptConfig: (targetPath: string) => Record<string, unknown>;
     prose: {
         packages: string[];

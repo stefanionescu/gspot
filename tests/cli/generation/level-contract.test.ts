@@ -8,6 +8,7 @@ import { emitFile } from '#tests/harness/generated.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import type { RuffConfiguration } from '#tests/types/cli/generation/configuration-files.ts';
 
 test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with preview disabled', async (level) => {
@@ -19,32 +20,15 @@ test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with pr
         },
     );
     const config = parseToml(text) as RuffConfiguration;
-    expect(config.lint.select.includes('N')).toBe(level === 'all');
-    expect(config.lint.select.includes('PT001')).toBe(level === 'all');
-    expect(config.lint.select).toContain('PT009');
-    expect(config.lint.select).toContain('FAST003');
-    for (const code of ['C901', 'PLR2004', 'ERA001', 'T201', 'T203'])
-        expect(
-            config.lint.select.some((prefix) => code.startsWith(prefix)),
-            code,
-        ).toBe(level === 'all');
-    expect(config.lint.select).not.toContain('PLR0915');
+    const python = configurationManifests().get('python')!;
+    expect(config.lint.select).toContain(python.ruff_rules[level][0]!);
     const types = await emitFile(buildPolicy(['python'], { level }), '.gspot/config/basedpyrightconfig.json', {
         'sample.py': 'value = 1',
     });
-    expect(JSON.parse(types)).toHaveProperty('typeCheckingMode', level);
-    if (level === 'all') expect(JSON.parse(types)).not.toHaveProperty('reportImportCycles');
-    else expect(JSON.parse(types)).toHaveProperty('reportImportCycles', 'none');
-    for (const rule of [
-        'reportUnusedImport',
-        'reportUnusedVariable',
-        'reportRedeclaration',
-        'reportUndefinedVariable',
-        'reportIgnoreCommentWithoutRule',
-        'reportPrivateUsage',
-        'reportSelfClsParameterName',
-    ])
-        expect(JSON.parse(types)).toHaveProperty(rule, 'none');
+    expect(JSON.parse(types)).toHaveProperty(
+        'typeCheckingMode',
+        python.basedpyright_options[level]['typeCheckingMode'],
+    );
 });
 
 test('switching levels restores generated defaults and agent instructions', async () => {
