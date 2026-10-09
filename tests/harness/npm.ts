@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
+import { git } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/public.ts';
@@ -14,8 +15,8 @@ import { open, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { packageLockfile } from '#cli/parsers/packages/contracts.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
-import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import { PACKAGE_REGISTRY_TOKEN } from '#tests/config/harness/registry.ts';
+import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import { RUNNER_POLICY, NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
 import type { PackageInputs, PackageProject, PackageProjectOptions } from '#tests/types/harness/npm.ts';
 import { AUTHORED_FILES, EDITORCONFIG_PACKAGE, EXCLUDED_PACKAGE_CHECKS } from '#tests/config/harness/npm.ts';
@@ -52,7 +53,7 @@ async function writePackageProject(
             ? `npmRegistryServer: "${registry.url}"\nnpmAuthToken: "${PACKAGE_REGISTRY_TOKEN}"\nnpmAlwaysAuth: true\nunsafeHttpWhitelist: ["127.0.0.1"]\n`
             : undefined;
     if (yarnConfiguration !== undefined) await writeFile(join(root, '.yarnrc.yml'), yarnConfiguration, { mode: 0o600 });
-    const initialized = await runTestCommand(['git', 'init', '--quiet'], { cwd: root });
+    const initialized = git(root, ['init', '--quiet']);
     if (initialized.code !== 0) throw new Error(`Package project Git setup failed: ${initialized.stderr}`);
     return { rootPackage, yarnConfiguration, version: version.stdout.trim() };
 }

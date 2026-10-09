@@ -1,13 +1,12 @@
 // The Python configuration reports lint, layout, and type errors and passes after the fixes.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { git, commitAll } from '#tests/harness/git.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { runTestCommand } from '#tests/harness/command.ts';
-import { buildInitArguments } from '#tests/harness/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
 import { MODULE_PATH, CLEAN_MODULE } from '#tests/config/samples/python.ts';
@@ -46,7 +45,7 @@ test('deptry excludes private tools without Git and preserves authored exclusion
         status: 'passed',
         findings: [],
     });
-    const initialized = await runTestCommand(['git', 'init', '-q'], { cwd: sandbox.path });
+    const initialized = git(sandbox.path, ['init', '-q']);
     expect(initialized.code, initialized.stderr).toBe(0);
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);

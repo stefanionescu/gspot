@@ -4,21 +4,21 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/public.ts';
-import { prepareToolProjects } from '#cli/tools/public.ts';
-import { rejection } from '#tests/harness/expectations.ts';
-import { runTestCommand } from '#tests/harness/command.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
+import { prepareToolProjects } from '#cli/tools/public.ts';
+import { runTestCommand } from '#tests/harness/command.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { installToolProject } from '#cli/tools/contracts.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { environmentVariables } from '#cli/platform/public.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
 import { installTools } from '#cli/lifecycle/install/public.ts';
 import { pythonToolProject } from '#cli/tools/python/public.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
-import { environmentExecutable } from '#cli/platform/contracts.ts';
+import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { environmentExecutable } from '#cli/platform/contracts.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { cp, chmod, readFile, realpath, writeFile } from 'node:fs/promises';
 import { PYTHON_PROJECTS, PYTHON_INSTALL_STEPS } from '#tests/config/tools/lifecycle/python-project.ts';
@@ -115,7 +115,7 @@ test.skipIf(!isPosix).each([
                 expect(installed.exitCode, installed.note).toBe(0);
                 expect(installed.note).toContain('installed locked Python tools');
             }
-            const status = await runTestCommand(['git', 'status', '--porcelain'], { cwd: clone });
+            const status = git(clone, ['status', '--porcelain']);
             expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
             expect({
                 manifest: await readFile(join(clone, '.gspot/pyproject.toml')),

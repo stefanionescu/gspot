@@ -3,12 +3,11 @@ import { join, basename } from 'node:path';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
-import { runTestCommand } from '#tests/harness/command.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
-import { commitAll, gitOutput } from '#tests/harness/git.ts';
-import { PACKAGE_PROJECTS } from '#tests/config/harness/npm.ts';
 import { installTools } from '#cli/lifecycle/install/public.ts';
+import { PACKAGE_PROJECTS } from '#tests/config/harness/npm.ts';
+import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { stat, readdir, readFile, writeFile } from 'node:fs/promises';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
@@ -45,7 +44,7 @@ async function expectCloneInstallation(
         const cloneInstall = await installTools(session, cloneLog, emitAll(session), { refreshLockfiles: false });
         expect(cloneInstall.exitCode, cloneInstall.note).toBe(0);
         expect(cloneInstall.note).toContain('.gspot/node_modules');
-        const status = await runTestCommand(['git', 'status', '--porcelain'], { cwd: clone });
+        const status = git(clone, ['status', '--porcelain']);
         expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
         // Git for Windows may change checkout line endings while preserving the committed lockfile.
         const clonedLockfile = await readFile(join(clone, '.gspot', basename(inputs.lockfilePath)), 'utf8');
