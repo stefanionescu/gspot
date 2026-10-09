@@ -1,6 +1,6 @@
 # Test Layout and Wiring
 
-28 unresolved review records remain.
+23 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -271,3 +271,19 @@ Original records and quotations remain above. These records are complete at `6e7
 | ID                        | Status   | Evidence                                                                                                                                                                                                    |
 | ------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/tests-layout/033` | complete | Pre-push/changed/cancellation owners and mirrored data use check command ownership; obsolete storage leaf deleted under integration-tests/020 final fix. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |
+
+## Implementation checkpoint b6c535bc1 of October 9, 2026 for test-source-and-literal-owners
+
+Original records and quotations remain above. These records are complete at `b6c535bc1bf5db9e7f61f375b549eb5c56922377`.
+
+| ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/tests-layout/012` | complete | Source-path calculation lives directly in the existing gspot harness. All real callers use its final owner, with no compatibility export. Root recovery bodies remain unchanged; CP excludes held future interruption imports. Commit `b6c535bc1bf5db9e7f61f375b549eb5c56922377`.                                                                                                                                  |
+| `review/tests-layout/016` | complete | One CLEAN_BASH_SCRIPT owns the three constant and nine actual identical inline occurrences. Native value parity preserves exact bytes, including the main comment; distinct suppression input remains separate. Historical fourteen-count wording stays quoted; actual census is twelve identical occurrences. Commit `b6c535bc1bf5db9e7f61f375b549eb5c56922377`.                                                  |
+| `review/tests-layout/030` | complete | All three original read-policy tests moved directly to policy/read at4137d1f5. Two original bodies are byte equal; recovery differs only in the adopted Bash check name, with original reason/key-path controls retained. Current policy ownership replay passes180tests879assertions. Commit `b6c535bc1bf5db9e7f61f375b549eb5c56922377`.                                                                          |
+| `review/tests-layout/037` | complete | Known/view tests retain their exact original move/body lineage, and the original template callbacks split between commands/export and policy/templates/export. Frozen mechanical AST controls and later public API/stronger-control changes are traced individually. Current full read/settings/export replay180pass879assert10files proves these final owners. Commit `b6c535bc1bf5db9e7f61f375b549eb5c56922377`. |
+| `review/tests-layout/038` | complete | Commitlint and Yamllint original test bodies moved byte equal to policy/read at4137d1f5. Current native policy owner replay180pass879assert10files includes both final owners. No absence-only closure or deleted behavior. Commit `b6c535bc1bf5db9e7f61f375b549eb5c56922377`.                                                                                                                                     |
+
+## Partial shared sample ownership at b6c535bc1
+
+`review/tests-layout/017` is partial. Shared Next.js messages, the Supabase source, and three native compiler-option objects are implemented with their original values. Remaining JSconfig duplication and the original library and native project mapping stay open. The original quotation and controls are preserved.

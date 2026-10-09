@@ -1,5 +1,5 @@
 {
-    "openRecords": 408,
+    "openRecords": 397,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -316,10 +316,37 @@
                 "Explicit user answer: Use the validated cached copy and public redirect.",
                 "/tmp/gspot-tests-tools024-reviewed-candidate.json"
             ]
+        },
+        {
+            "id": "retain-cli-side-effects-enforcement",
+            "date": "2026-10-09",
+            "scope": "review/repository-root/040",
+            "decision": "Retain the existing CLI sideEffects declaration and strict package-json/require-sideEffects enforcement. Leave /040 partial; the prescribed deletion is not adopted.",
+            "evidence": ["Explicit user answer: Keep strict enforcement; retain the field and leave /040 partial."]
+        },
+        {
+            "id": "setup-self-repository-actionlint-exception",
+            "date": "2026-10-09",
+            "scope": "Repository setup calls in CI, docs, release and database workflows",
+            "decision": "Retain ./.github/actions/setup while pinned Actionlint1.7.12 rejects GitHub dollar-slash self-repository references. Permit a narrow repository-only reasoned Zizmor1.30.1 self-repository ignore at these setup calls; retain every other audit and the validated command-injection fix.",
+            "evidence": [
+                "Explicit user answer: Keep ./ with the narrow repository exception.",
+                "Native Actionlint dollar-slash rejection and Zizmor conflict retained; official upstream issue711 remains open."
+            ]
+        },
+        {
+            "id": "init-formatter-inference-size-exception",
+            "date": "2026-10-09",
+            "scope": "slices/kits-general/015",
+            "decision": "Adopt the reviewed formatter-inference behavior and permit its4397-byte production increase as a narrow exception to the less-code contract. Retain native formatter validation/defaults, scoped/template precedence and Node/Bun consumer contracts.",
+            "evidence": [
+                "Explicit user answer: Allow this formatter-inference exception.",
+                "Reviewed patch /tmp/gspot-init-format015-final/combined.patch; native31pass138assert and fresh Node/Bun consumers."
+            ]
         }
     ],
     "implementationBatches": {
-        "openRecords": 408,
+        "openRecords": 397,
         "records": 1092,
         "batches": [
             {
@@ -625,8 +652,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 175,
-                "unresolvedAssignments": 116
+                "completedAssignments": 178,
+                "unresolvedAssignments": 113
             },
             {
                 "id": "python",
@@ -779,8 +806,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 40,
-                "unresolvedAssignments": 59
+                "completedAssignments": 42,
+                "unresolvedAssignments": 57
             },
             {
                 "id": "swift-bash-sql",
@@ -1485,8 +1512,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 310,
-                "unresolvedAssignments": 159
+                "completedAssignments": 311,
+                "unresolvedAssignments": 158
             },
             {
                 "id": "scripts-repository",
@@ -1625,8 +1652,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 61,
-                "unresolvedAssignments": 71
+                "completedAssignments": 65,
+                "unresolvedAssignments": 67
             },
             {
                 "id": "installation-docs",
@@ -1770,8 +1797,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 74,
-                "unresolvedAssignments": 63
+                "completedAssignments": 75,
+                "unresolvedAssignments": 62
             },
             {
                 "id": "policy-file",
@@ -1966,8 +1993,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 55,
-                "unresolvedAssignments": 34
+                "completedAssignments": 60,
+                "unresolvedAssignments": 29
             },
             {
                 "id": "configurations",
@@ -2242,9 +2269,7 @@
             "owner": "main",
             "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Evidence 7bd6261850b418f3.",
                 "Evidence 4f93bbab82bba503.",
                 "Duplicate Bash/Swift implementations and identical_function_lines are absent; shared Sonar rule template uses limits.duplication.min_lines."
@@ -2559,11 +2584,7 @@
             "commit": null,
             "verification": [
                 "One askQuestions provider-choice table lives in commands/init/ci with all five original signal/remote rows. Removed Jenkinsfile, GitLab application and README rows from commands/ci; retained three plan-note cases and one byte-preserving unsupported pipeline plan.retained case. Deleted old lifecycle guidance-only table.",
-                "Evidence 2c9442dcf25177ff.",
-                "Evidence 200056c172cddf65.",
-                "Evidence 1745789772fd098d.",
-                "Evidence 7efad1a20dddc343.",
-                "Evidence 999a19c9a211b7d7."
+                "Evidence 9b93c9e039ae6f80."
             ],
             "remaining": ["Evidence dc22ce9bdfea875a."]
         },
@@ -2713,8 +2734,7 @@
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Binding implemented: Delete native process call count; collect batches from actual file argv following the actual rule file (no fixed command.slice(5)). Keep every selected file/match and batching outcome.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "areas/integration-tests/028": {
@@ -2723,8 +2743,7 @@
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Binding implemented: Four exact refusal vectors remain registered; one separate clean control replaces four repeated clean reruns. Preserve fatal/JSON/range/unselected-path diagnostics.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "areas/integration-tests/029": {
@@ -2733,8 +2752,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Keep js/ts callback and distinct JSX controls; remove only duplicate mts/cts/tsx rows. Exact native AST extension-array proof preserves body; Main comments tests pass.",
-                "Evidence 9a21b7f0befa52e7.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 3723a258f74e6d04."
             ]
         },
         "areas/integration-tests/030": { "status": "pending", "owner": null, "commit": null, "verification": [] },
@@ -2744,8 +2762,7 @@
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Binding implemented: Own a temporary child scratch folder through existing testdir; spy native os.tmpdir and assert empty after failed preview, retaining original bytes/partial diff/changed list.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "areas/integration-tests/036": {
@@ -2787,8 +2804,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Three complete pinact/typos/ESLint callbacks moved mechanically into actual execution/command/findings owner in9a3851a9a. Root26case102assert replay and original callback AST proof pass; custom declared command cases remain.",
-                "Evidence 9a21b7f0befa52e7.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 3723a258f74e6d04."
             ]
         },
         "areas/integration-tests/043": {
@@ -2797,8 +2813,7 @@
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Binding implemented: Delete policy-findings test and sole dead static mirror after actual consumer search. Map other-check-runs, exact key diagnostic, strict write refusal to retained check/policy-errors and policy/read/recovery controls; report a prerequisite if any distinct assertion is absent.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "areas/integration-tests/044": {
@@ -2807,8 +2822,7 @@
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Binding implemented: Waiting child polls actual callback marker without attempt cap; retain Promise.race cleanup/order and existing shared TEST_TIMEOUT_MS/production child enforcement. No timer additions.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "areas/integration-tests/046": {
@@ -2830,8 +2844,7 @@
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Binding implemented: Only truthful exact title an adapter reports a version below the floor as missing; preserve real before/below/unsupported/correction controls.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "areas/integration-tests/051": {
@@ -2877,8 +2890,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Remove only duplicate Jest all-level valid-expect native case; preserve recommended defect/correction and both-level applicability matrix. Main native Jest generation tests pass.",
-                "Evidence 9a21b7f0befa52e7.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 3723a258f74e6d04."
             ]
         },
         "areas/integration-tests/058": {
@@ -2947,20 +2959,13 @@
         "areas/integration-tests/078": { "status": "pending", "owner": null, "commit": null, "verification": [] },
         "areas/integration-tests/080": { "status": "pending", "owner": null, "commit": null, "verification": [] },
         "areas/integration-tests/084": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "7818e8ca1d860e93272223a9e73f8aba06340cd1",
             "verification": [
                 "Deleted init pin and unsafe-scope correction runs that the current row lists; preserves actual failure/pin/outside-byte contracts. Wider recorded correction sites remain outstanding.",
-                "Evidence 2c9442dcf25177ff.",
-                "Evidence 200056c172cddf65.",
-                "Evidence 1745789772fd098d.",
-                "Evidence 7efad1a20dddc343.",
-                "Evidence 999a19c9a211b7d7."
-            ],
-            "remaining": [
-                "Remaining correction-run sites enumerated in current finding; reused-session/cache exceptions need per-case review.",
-                "Evidence dc22ce9bdfea875a."
+                "Evidence 9b93c9e039ae6f80.",
+                "All original and final cited correction sites are traced through actual moves/deletions in /tmp/gspot-correction084-whole-ancestry-amendment.json (SHA256 1545c28f8631caa41947365a97a9445a56abe13d0622a8d7e3a1fd1a19077de8). Supplemental /tmp/gspot-correction084-cp-refusals-audit-amendment.json (SHA256 e7c9b430e0c0dfa9dd0867efa4838854ba638ab4064eb2b50907eaf144b8746c) preserves the checkpoint stronger fetch-count assertion while proving exact unsafe-scope callback bytes. Pushed6087e614 removes12 safe-owner tails; pushed7818e8ca1 finishes template, publication and moved Bash residuals. Unique obsolete tool-file pruning and first .gitattributes publication controls move to the first positive callback; original refusal/no-write controls stay. Only genuine same Session/cache corrections remain. Native135pass367assert11files, supplemental40pass250assert4files and21pass106assert3files; types0, staged46pass8skip0findings. Safe12 deletes5717bytes, template source98 and Bash378; meaningful customization assertions remain."
             ]
         },
         "areas/integration-tests/085": { "status": "partial", "owner": null, "commit": null, "verification": [] },
@@ -3404,9 +3409,7 @@
             "owner": "main",
             "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Evidence 0247a3dd7864c686.",
                 "Evidence 22f91979c2b117aa.",
                 "Default [] and direct native Eta delivery verified at both levels/root-child. Authored child [] currently unions inherited Foundation; this is existing list semantics, not an empty-list clearing claim.",
@@ -3430,9 +3433,7 @@
             "owner": "main",
             "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Evidence 7b3e61487ad87e53.",
                 "readSwiftVersion reads Package.swift header or chosen pbxproj metadata at generation. Init computes SDK destination after template merge, and old swiftformat.swift_version is absent. Fixed manifest destination remains static initial default overridden by actual init inference."
             ],
@@ -3585,9 +3586,7 @@
             "owner": "main",
             "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Already implemented: no singleton allowance declaration/schema. Explicit python/singletons path ignores retain other files in root and child.",
                 "Native evidence: /tmp/gspot-python-leaf-contracts-cli-corrected.log, /tmp/gspot-python-leaf-contracts-schema-values.json."
             ],
@@ -3617,9 +3616,7 @@
             "owner": "main",
             "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "No secrets/gitleaks-baseline check, baseline filename or baseline_reasons setting remains. Reviewed historical secrets use reasoned ignore rule fingerprints on secrets/gitleaks-pushed. Actual native exact fingerprint, nonmatching, expiry, child/no-Git and redaction controls pass. No old-findings recording added."
             ],
             "additionalChanges": [
@@ -3724,9 +3721,7 @@
             "owner": "main",
             "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Two-owner packet removes Bash/SQL language metadata from generic leaf and documents140/400/300; dedicated language settings remain.",
                 "Evidence 4734bb584bd0a989."
             ],
@@ -3840,9 +3835,7 @@
             "owner": "main",
             "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Evidence 99e4e22d5228c959.",
                 "bash.doc_style absent; colon-comment contract and SSH help retained; existing native CLI doc-comment cases pass.",
                 "Evidence 4734bb584bd0a989."
@@ -3865,9 +3858,7 @@
             "owner": "main",
             "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Evidence 0dadb915410423f7.",
                 "config_owners/defaults_allowed/boundary_roots/platforms/remote_functions/entry_functions/boundaries are absent. guards uses architecture.roles.env. safety_owners remains because034 replacement is not equivalent."
             ],
@@ -4108,8 +4099,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Delete duplicate spelling command case after preserving both fixable:false findings, repeated partial byte reads and manual correction in shared native fixer. Main spelling/typos passes; SQL/shfmt bodies remain unchanged.",
-                "Evidence 9a21b7f0befa52e7.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 3723a258f74e6d04."
             ]
         },
         "areas/tool-tests/021": { "status": "pending", "owner": null, "commit": null, "verification": [] },
@@ -4159,8 +4149,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Delete duplicate syntax/shfmt table vectors after dedicated native syntax Bash/Zsh/Bats and shfmt ordinary/space/tab/syntax/refusal/correction controls pass. ShellCheck and five genuine computed boundary vectors remain.",
-                "Evidence cd9a6f9a1da7c4a3.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 49025d8ed841fdc4."
             ]
         },
         "areas/tool-tests/032": {
@@ -4171,8 +4160,7 @@
                 "Evidence 7bd6261850b418f3.",
                 "Evidence 4f93bbab82bba503.",
                 "Delete duplicate Bash init/lifecycle case; only genuine missing-tool/available-tool native control remains. Distinct init/refusal/hook output/byte/ownership checks remain in CLI.",
-                "Evidence cd9a6f9a1da7c4a3.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 49025d8ed841fdc4."
             ],
             "additionalChanges": [
                 {
@@ -4190,8 +4178,7 @@
                 "Evidence 7b1e1ab655c0f702.",
                 "Evidence 9937a87a53a7ad1d.",
                 "ShellCheck missing message reads actual native manifest toolPin version; no hard-coded0.11.0 expected message remains.",
-                "Evidence cd9a6f9a1da7c4a3.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 49025d8ed841fdc4."
             ],
             "additionalChanges": [
                 {
@@ -4247,8 +4234,7 @@
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Binding implemented: Delete duplicate malformed-manifest table, preserving numeric5 input in existing stronger INVALID matrix.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "areas/unit-tests/007": {
@@ -4257,8 +4243,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Move three mocked build reports to site/output and remove only duplicate positive/corrected mocked halves. Fatal, absent and malformed controls remain; actual native site six correction cases pass20assertions248.23s.",
-                "Evidence 9a21b7f0befa52e7.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 3723a258f74e6d04."
             ]
         },
         "areas/unit-tests/008": {
@@ -4408,9 +4393,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "setCommand reads knownSettings(selectForScope(policy,...), policy.level) and calls native savePolicy; savePolicy has one post-preparePolicy openSession for a real edit. Existing set/refusal/preview/scoped controls pass. This is native source call-graph evidence; no runtime repository-read-count spy claim. No policy/writer change.",
                 "Evidence 160ed58bd91b6f75."
             ],
@@ -4440,11 +4423,9 @@
             "owner": "main",
             "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Hook outputs now prune; disabled installation unsets only exact own hooksPath; apply prints install note for removed hooks.",
-                "Root and app disable\u2192dry-run\u2192prune\u2192install controls, foreign path preservation; actual own root/app native install cases pass.",
+                "Root and app disable→dry-run→prune→install controls, foreign path preservation; actual own root/app native install cases pass.",
                 "Evidence 53a752e070462538."
             ],
             "additionalChanges": [
@@ -4460,9 +4441,7 @@
             "owner": "main",
             "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Single public isStray uses recorded installed identity, expected generated/move paths and retained paths; write pruning and drift call it; deleted isStrayCandidate/kind filter/dead Policy argument.",
                 "Native disabled agent-rule case asserts each recorded path appears in drift and is actually removed; generic CAS/pruning/source-preservation controls pass.",
                 "Evidence 53a752e070462538."
@@ -4537,9 +4516,7 @@
             "owner": "main",
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Every current binding obligation verified in pushed 9a: Native createTwoFilesPatch(before,after) in text and JSON for set/ignore/add/remove dry-run. Preserve no-write/refusal behavior.",
                 "Named native passing controls: a scalar setting previews without writing and then publishes the same policy; a scoped setting previews without writing and then publishes the same policy; a merged ignore path previews without writing and then publishes the same policy; a selected configuration previews and repeats without applying edited output; a policy preview leaves an active writer claim and existing files untouched.",
                 "Evidence 6404289292851698."
@@ -4556,12 +4533,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
-                "Evidence 01d012732cb9f101."
-            ],
+            "verification": ["Evidence a54f15598472523e.", "Evidence 01d012732cb9f101."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -4691,9 +4663,7 @@
             "owner": "main",
             "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "getHookPlan returns native path; existing hook preview and installation aggregate carry hooks metadata, install consumes it directly; deleted argv search.",
                 "Native root/app dry-run JSON paths unchanged in installed tool cases; disabling preview contains exact git unset command without modifying setting.",
                 "Evidence 53a752e070462538."
@@ -4808,9 +4778,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "one unknownCheckDiagnostic in existing configurations/errors/public owner; existing setting/configuration diagnostics called from explain with genuine union-selected manifests and level; check/ignore/explain unknown-check errors all selection. Scratch acceptance checks same suggested check message, unselected valid check still refuses, nested-only setting surface and native configuration suggestions. Existing native tool-rule explanation unchanged.",
                 "Evidence 160ed58bd91b6f75."
             ],
@@ -4827,9 +4795,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "one native commandRoot calculation, all12 registrations use it; GlobalCommand is the existing native optsWithGlobals capability. Redundant one-use cwd locals removed. Doctor source change registration/import only; actual doctor body and reserved tests unchanged.",
                 "Evidence 160ed58bd91b6f75."
             ],
@@ -4846,9 +4812,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "one noteLines with four real original callers; exact55 original/final byte/JSON/report comparisons cover empty notes, empty messages, multiline/unicode, written/updated/removed combinations and final-newline/fallback behavior.",
                 "Evidence 160ed58bd91b6f75."
             ],
@@ -4865,10 +4829,8 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
-                "dry-run JSON configurations\u2192reconciled only; actual CLI has reconciled and refuses old alias by absence. Native policy/configuration arrays, drift, pin and notes preserved. One allowed JSON field mapping explicitly normalized in extracted-function proof.",
+                "Evidence a54f15598472523e.",
+                "dry-run JSON configurations→reconciled only; actual CLI has reconciled and refuses old alias by absence. Native policy/configuration arrays, drift, pin and notes preserved. One allowed JSON field mapping explicitly normalized in extracted-function proof.",
                 "Evidence 160ed58bd91b6f75."
             ],
             "additionalChanges": [
@@ -4907,11 +4869,9 @@
             "owner": "main",
             "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Native foreign hook descriptors preserve files and provider paths; readiness reads their regular-file bytes and requires gspot check --hook; absent registration reports not installed plus native instructions. Native Git hooksDirectory preserves below-Git-root coordinates.",
-                "All4 existing foreign provider vectors now verify absent\u2192actual line\u2192ready and original bytes before mutation; extra nested-core.hooksPath positive/negative case passes.",
+                "All4 existing foreign provider vectors now verify absent→actual line→ready and original bytes before mutation; extra nested-core.hooksPath positive/negative case passes.",
                 "Evidence 53a752e070462538."
             ],
             "additionalChanges": [
@@ -5475,9 +5435,7 @@
             "owner": "main",
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Every current binding obligation verified in pushed 9a: Optional template defaults to filename; selection defaults exact. Any native gspot.toml without scopes can be a template. Delete Template.source.",
                 "Named native passing controls: an empty exact template controls root detection without writing; template export retains authored empty tables without writing schema defaults into them; an absolute template loads from a different working directory; template validation retains authored prototype keys and absent defaults through export; initialization carries authored prototype check keys without adding omitted table defaults.",
                 "Evidence 6404289292851698."
@@ -5508,9 +5466,7 @@
             "owner": "main",
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Every current binding obligation verified in pushed 9a: Rewrite guide and remove installed dependencies/reconcile-export section. Carries every authored entry except scopes, including command checks; unmatched-paths reports stale carried selectors. Copy once/provenance, choices survive no files, remove drops choice. github sources use GITHUB_TOKEN; worked A-ignore/export B-init example.",
                 "Named native passing controls: a manual removal survives loss and return of detection evidence; template export preserves advisory reasons and expiry and path-specific rows; private GitHub templates receive environment credentials without sending them to other hosts; an exact template preserves its full root policy despite new general detection at recommended; an exact template preserves its full root policy despite new general detection at all; a manual removal survives loss and return of detection evidence; exported templates > init installs the source root policy with provenance and no source scopes; exported templates > re-export retains the customizations and native Taplo reports no formatting findings; exported templates > a pathless ignore covers unused variables while a path ignore excludes its neighbor.",
                 "Evidence 6404289292851698."
@@ -5528,9 +5484,7 @@
             "owner": "main",
             "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Native roundtrip source has path ignore, pathless ignore, named check and agent_rules.instruction_files. Destination parsed authored policy equals source minus only scope; exact SHA256 provenance comment verified. Actual install, instruction output, custom-check execution, re-export semantic equality, native Taplo zero findings and saved policy bytes preserved.",
                 "Evidence 20017899171406af."
             ],
@@ -5560,9 +5514,7 @@
             "owner": "main",
             "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "The two prescribed linked destinations and drive-relative C: path are refused; real absolute/external destinations remain permitted.",
                 "Export tests retained atomic publication, exact diagnostics and original external bytes in Main210/492."
             ],
@@ -5597,9 +5549,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "native remove, ignore --remove and set --remove all exit0 on no-op and preserve full canonical repository tree. remove/set exact text nothing to remove; ignore retains existing explanation nothing to remove: no matching ignore entry. No historical string churn or universal exact-text assertion.",
                 "Evidence 160ed58bd91b6f75."
             ],
@@ -5616,9 +5566,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Commander variadic names and typed configurations array; all requested removals excluded from surviving selections before each requireChain check; one native mutation publishes only after all refusals validated. Root/reversed-order/scoped positive cases, dependency refusal after a removable first name, automatic-general refusal, exact removed_configurations, preview/final policy equality and absence of npm installation artifacts all pass.",
                 "Evidence 160ed58bd91b6f75."
             ],
@@ -5635,9 +5583,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Actual --runner choices and --no-runner registration replaces --no-task. Full caller strings migrated. Native labels name hook commands; prompt/manual/default/cancel controls preserved. Native old flag refusal preserved. none remains --no-runner, not --runner none.",
                 "Evidence 160ed58bd91b6f75."
             ],
@@ -5654,9 +5600,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Hooks pass explicit --hook; remove obsolete GSPOT_HOOK environment prefix/reader/preload clearing. Inherited environment has no selection effect.",
                 "Evidence 160ed58bd91b6f75."
             ],
@@ -5673,9 +5617,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Check hook choices derive from authoritative HOOK_ARGS keys; delete duplicated HOOKS list.",
                 "Evidence 160ed58bd91b6f75."
             ],
@@ -5692,9 +5634,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Delete list duplicate detected calculation/text/JSON field + detected-only filtering of available; list selected+available. Preserve former SQL detection assertion through actual doctor getSuggestions call in same CLI test, with new SQL available assertion; doctor production untouched.",
                 "Evidence 160ed58bd91b6f75."
             ],
@@ -5730,8 +5670,7 @@
             "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
             "verification": [
                 "config/commands/help.ts owns all twelve exit-code/example entries; commands build help from it and docs read structured data directly. set levels remain authoritative per this record and share the policy level summaries. Shared help/schema tests pass 174 tests and 491 assertions across three files.",
-                "Evidence 1b11ef5cb99c9ecf.",
-                "Evidence f78ff75105842f8c."
+                "Evidence a97c9d50ad4fd770."
             ]
         },
         "review/commands-templates/033": {
@@ -5748,9 +5687,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "existing export --dry-run prints template and report and preserves destination/source; all export publication/provenance/outside/native mode/link/refusal/correction cases pass. No export guard/body changed.",
                 "Evidence 160ed58bd91b6f75."
             ],
@@ -5767,9 +5704,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Only add help description sentence corrected to required selections, authored names unchanged.",
                 "Evidence 160ed58bd91b6f75."
             ],
@@ -5804,9 +5739,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Only init --from help path/ref grammar corrected; actual token/fetch behavior remains current Root.",
                 "Evidence 160ed58bd91b6f75."
             ],
@@ -5965,11 +5898,7 @@
             "status": "complete",
             "owner": "main",
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
-            "verification": [
-                "Binding implemented: Delete the field and the 25 values.",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
-            ]
+            "verification": ["Binding implemented: Delete the field and the 25 values.", "Evidence c7ec0890eb460bd6."]
         },
         "review/configurations-plugin/018": {
             "status": "complete",
@@ -5977,8 +5906,7 @@
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
                 "Binding implemented: Set `off_values` on the five `tools.<tool>.rules` settings, so a rule turned off there is refused and pointed to `[[ignore]]`: ESLint `\"off\"` and `0` (javascript), markdownlint `false` (markdown), yamllint `\"disable\"` (files), and commitlint level `0` (commits). stylelint turns a rule off with `null`, which TOML cannot write, so it needs none.",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
+                "Evidence c7ec0890eb460bd6."
             ]
         },
         "review/configurations-plugin/019": {
@@ -5987,8 +5915,7 @@
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
                 "Binding implemented: Delete the field and the borrowing code paths.",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
+                "Evidence c7ec0890eb460bd6."
             ]
         },
         "review/configurations-plugin/020": {
@@ -5997,19 +5924,14 @@
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
                 "Binding implemented: Delete the 56 default-equal lines and make `title` required.",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
+                "Evidence c7ec0890eb460bd6."
             ]
         },
         "review/configurations-plugin/021": {
             "status": "complete",
             "owner": "main",
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
-            "verification": [
-                "Binding implemented: Delete them.",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
-            ]
+            "verification": ["Binding implemented: Delete them.", "Evidence c7ec0890eb460bd6."]
         },
         "review/configurations-plugin/022": {
             "status": "complete",
@@ -6017,8 +5939,7 @@
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
                 "Binding implemented: Let `[detect]` default to the `[files]` matchers, and keep `[detect]` only where it differs.",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
+                "Evidence c7ec0890eb460bd6."
             ]
         },
         "review/configurations-plugin/023": {
@@ -6027,8 +5948,7 @@
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
                 "Binding implemented: Move `project_files = [\"package.json\"]` to `language/javascript/manifest.toml` and delete `[detect]` from dependencies.",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
+                "Evidence c7ec0890eb460bd6."
             ]
         },
         "review/configurations-plugin/024": {
@@ -6055,8 +5975,7 @@
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
                 "Binding implemented: Derive the globs from `tool.eslint.extensions`, and delete `component_globs` from the schema (`manifest.ts:89`).",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
+                "Evidence c7ec0890eb460bd6."
             ]
         },
         "review/configurations-plugin/027": {
@@ -6064,9 +5983,8 @@
             "owner": "main",
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
-                "Binding implemented: Use a list, `replaces = [\".prettierrc\", \".prettierrc.json\", \u2026]`, and keep tables only for the 11 `shared` key and table rows.",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
+                "Binding implemented: Use a list, `replaces = [\".prettierrc\", \".prettierrc.json\", …]`, and keep tables only for the 11 `shared` key and table rows.",
+                "Evidence c7ec0890eb460bd6."
             ]
         },
         "review/configurations-plugin/028": {
@@ -6075,8 +5993,7 @@
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
                 "Binding implemented: Use one table order in every manifest: top-level keys, `[configuration]`, `[detect]`, `[files]`, `[set]`, `[[tool]]` with its `[[tool.replace]]` rows, `[[tool_file]]`, `[[check]]`, `[[setting]]`, `[required_eslint_rules]`, `[[eslint_rules_off]]`, `[ruff_rules]`, `[[naming.overrides]]`, `[agent_rules]`. Write nested values as inline tables: `validation = {...}`, `pointer = {...}`, and `selectors = [...]`. Add a manifest error in `configurations/errors.ts` that refuses any other order.",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
+                "Evidence c7ec0890eb460bd6."
             ]
         },
         "review/configurations-plugin/029": {
@@ -6092,9 +6009,8 @@
             "owner": "main",
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
-                "Binding implemented: Add `validation = {enum = [\u2026]}` to each.",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
+                "Binding implemented: Add `validation = {enum = […]}` to each.",
+                "Evidence c7ec0890eb460bd6."
             ]
         },
         "review/configurations-plugin/031": {
@@ -6103,8 +6019,7 @@
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
                 "Binding implemented: Rename the manifest key `scoped` to `per_scope` in the schema, in `generation/configurations.ts`, and in the 33 manifest lines.",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
+                "Evidence c7ec0890eb460bd6."
             ]
         },
         "review/configurations-plugin/033": {
@@ -6123,8 +6038,7 @@
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
                 "Binding implemented: Write it from the installed `globals` in `scripts/eslint-presets.ts`.",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
+                "Evidence c7ec0890eb460bd6."
             ]
         },
         "review/configurations-plugin/036": {
@@ -6176,8 +6090,7 @@
             "verification": [
                 "Owner authorizes native HTML5 built-output valid-id error/relaxed true, retaining invalid empty/whitespace checks. Common base consolidation and final emitted/native acceptance remain pending.",
                 "Binding implemented: Share one base and let the built-site config add its five overrides.",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
+                "Evidence c7ec0890eb460bd6."
             ]
         },
         "review/configurations-plugin/043": {
@@ -6539,9 +6452,7 @@
             "owner": "main",
             "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Build one zod schema (policy plus manifest settings) in `packages/cli/src/policy/schema/`. Use it for parsing and for `z.toJSONSchema`. The docs only serialize it. Most agreement data then goes away.",
                 "Evidence ae35bea958d134bd."
             ],
@@ -6586,8 +6497,7 @@
             "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
             "verification": [
                 "Native Markdown code-block extraction compares TypeScript quickstart blocks with the recorded example; README contains finding lines only. Native executable acceptance verifies complete normalized rejected and passed human reports, homepage summary, and five structured findings. Root repeated native capture matched all finding fields; focused Markdown/example tests pass seven tests and 42 assertions in two files, and native recorded acceptance passes nine assertions. Immutable evidence /tmp/gspot-docs-example-actual-naming-replay.json and /tmp/gspot-example-main-native-blocks-and-fences.log.",
-                "Evidence 1b11ef5cb99c9ecf.",
-                "Evidence f78ff75105842f8c."
+                "Evidence a97c9d50ad4fd770."
             ]
         },
         "review/docs-site/027": {
@@ -6605,8 +6515,7 @@
             "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
             "verification": [
                 "Policy settings own both level summaries, reused by schema, agent-rule index, set help and command-reference data. Overview keeps one sentence per level and links to level reference. The later current commands-templates/031 instruction retains the set levels data. Native schema/help tests and generated agent rules pass.",
-                "Evidence 1b11ef5cb99c9ecf.",
-                "Evidence f78ff75105842f8c."
+                "Evidence a97c9d50ad4fd770."
             ]
         },
         "review/docs-site/029": {
@@ -6630,8 +6539,7 @@
             "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
             "verification": [
                 "Configuration notes live in manifest-owned notes and the generated configuration page prints them. Policy examples live in runtime schema metadata; every documented example is parsed, and the published schema is generated from that owner. Native notes/schema/declarations checks pass 204 tests and 460 assertions across three files.",
-                "Evidence 1b11ef5cb99c9ecf.",
-                "Evidence f78ff75105842f8c."
+                "Evidence a97c9d50ad4fd770."
             ]
         },
         "review/docs-site/032": {
@@ -6640,8 +6548,7 @@
             "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
             "verification": [
                 "JavaScript, React Native, Next.js, Markdown, CSS and TypeScript details moved into their configuration-owned notes; policy and requirements guides retain their own concerns. Native 204-test notes/schema validation and 309-page docs build pass.",
-                "Evidence 1b11ef5cb99c9ecf.",
-                "Evidence f78ff75105842f8c."
+                "Evidence a97c9d50ad4fd770."
             ]
         },
         "review/docs-site/033": {
@@ -6758,8 +6665,7 @@
                 "Evidence d46319e4935c1707.",
                 "Evidence aaa450b84f7aba90.",
                 "Mechanical owner moves at ee8d1579f plus the strict tool_file behavior at this commit replace all prescribed tables, placeholders, types, owned kinds, Eta sources and pointers. Native 158-entry ownership publication moved 147 config entries to tool_file before the strict parser change; no migration alias remains. Native contract tests: 48 passes, 183 assertions, six files.",
-                "Evidence 1b11ef5cb99c9ecf.",
-                "Evidence f78ff75105842f8c."
+                "Evidence a97c9d50ad4fd770."
             ],
             "additionalChanges": [
                 {
@@ -6799,9 +6705,7 @@
             "owner": "main",
             "commit": null,
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Evidence 9d47f2907c7f8519.",
                 "Evidence f197f61756c1f848.",
                 "Evidence 15b7e23ff87ec367.",
@@ -6832,8 +6736,7 @@
             "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
             "verification": [
                 "The check is gspot/unmatched-paths with policy-owned schema path metadata and scoped command keys; old settings and PathAllowance are deleted. Ignore headings, anchor, reference and four manifest summaries agree. Native unmatched-root check passes with zero findings; integrated path/help/schema tests pass 228 tests and 614 assertions across six files.",
-                "Evidence 1b11ef5cb99c9ecf.",
-                "Evidence f78ff75105842f8c."
+                "Evidence a97c9d50ad4fd770."
             ]
         },
         "review/glossary/010": {
@@ -6903,12 +6806,9 @@
             "owner": "main",
             "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Private choice operations and ConfigurationChange.manualChoices replace deleted override helpers and types; the source/test names, init help and policy guide use manual choice. Manual-choice tests pass 10 tests and 50 assertions. Path-selected overrides retain their separate meaning.",
-                "Evidence 1b11ef5cb99c9ecf.",
-                "Evidence f78ff75105842f8c."
+                "Evidence a97c9d50ad4fd770."
             ],
             "additionalChanges": [
                 {
@@ -6936,12 +6836,9 @@
             "owner": "main",
             "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "All prescribed plan symbols and JSON types replace the retired names, InstallationPreview is merged into InstallationPlan, and editPolicy replaces proposePolicy. Shared help says dry run for the six exit messages; guides use dry run. No compatibility aliases remain. Integrated command/schema tests pass 228 tests and 614 assertions in six files.",
-                "Evidence 1b11ef5cb99c9ecf.",
-                "Evidence f78ff75105842f8c."
+                "Evidence a97c9d50ad4fd770."
             ],
             "additionalChanges": [
                 {
@@ -6986,12 +6883,9 @@
             "owner": "main",
             "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Manifest help and generation variables call an architecture component a module. Native eslint-plugin-boundaries element API fields retain their external names. Native generated ESLint rules and integrated contract tests pass.",
-                "Evidence 1b11ef5cb99c9ecf.",
-                "Evidence f78ff75105842f8c."
+                "Evidence a97c9d50ad4fd770."
             ],
             "additionalChanges": [
                 {
@@ -7016,8 +6910,7 @@
             "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
             "verification": [
                 "Authored in-memory generation identifiers and prose use emit, terminal descriptions use print, and Vale package state uses installed. The external eta.renderString API and vale sync command keep their native names. Tool-file consumers and readers retain one final vocabulary.",
-                "Evidence 1b11ef5cb99c9ecf.",
-                "Evidence f78ff75105842f8c."
+                "Evidence a97c9d50ad4fd770."
             ]
         },
         "review/glossary/028": {
@@ -7201,13 +7094,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
-                "Evidence 0953ca59ba40b930.",
-                "Evidence e069593980822e50."
-            ],
+            "verification": ["Evidence a54f15598472523e.", "Evidence 0953ca59ba40b930.", "Evidence e069593980822e50."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7257,9 +7144,7 @@
             "owner": "main",
             "commit": "87f259625fb984e205751e39e33e7944679129ea",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "All 36 retained list settings declare item metadata: 34 typed declarations and two approved native references. Owned native validators retain defaults, diagnostics and the published schema; unowned native arrays are refused. Actual Node 24 and Bun probes each cover two positive and ten negative cases. Main integration passes 366 tests and 1429 assertions in 11 files, with one existing platform skip. Types and normal schema producer checks pass; staged and push checks pass 69 checks with zero findings. Exact six-owner payload /tmp/gspot-pf010-current-final-freeze.json and Source009 preservation proof retained."
             ],
             "additionalChanges": [
@@ -7339,12 +7224,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
-                "Evidence b446624cdd0d1446."
-            ],
+            "verification": ["Evidence a54f15598472523e.", "Evidence b446624cdd0d1446."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -7376,9 +7256,7 @@
             "owner": "main",
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Every current binding obligation verified in pushed 9a: Scope and check keyed maps replace arrays in schema, emitter, init and export. Delete historical [[scope]] editing branch. Rewrite monorepos and command-check examples and delete subtable warnings.",
                 "Named native passing controls: the authored policy refuses superseded scope input; scope and command maps retain literal identities through parsing, editing, and canonical writing; scope validation reports the literal map key and its authored value position; first-command-check-map keeps canonical values and comments through repeated writes; writePolicyFile > a scope setting written into a sub-table loads with the ones already there.",
                 "Evidence 6404289292851698."
@@ -7396,9 +7274,7 @@
             "owner": "main",
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Evidence 237559206f4880d0.",
                 "Every current binding obligation verified in pushed 9a: Delete reasoned wrapper and retain plain authored values. Root and scoped reasons tables key the setting authored in their own table. Require reason for loosening; refuse orphan reasons; set --reason writes table. Published schema lists leaf once.",
                 "Named native passing controls: root and scoped reasons must name a setting authored in their own table; native options named reason retain their values separately from the policy explanation; runtime and published schemas agree on a namespace value with a substantive reason; runtime and published schemas agree on a namespace value with no required reason; a missing loosening reason has the same preview and publication refusal without writes; a placeholder reason has the same preview and publication refusal without writes.",
@@ -7422,9 +7298,7 @@
             "owner": "main",
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Evidence fe2933e3b0ee6679.",
                 "Evidence 237559206f4880d0.",
                 "Every current binding obligation verified in pushed 9a: Delete require_reasons public setting and suppression toggle. Always require reason on every ignore and every loosened setting.",
@@ -7454,9 +7328,7 @@
             "owner": "main",
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Every current binding obligation verified in pushed 9a: Native strict six-role object: tests/types/config/test_harness/runtime/env. Add scripts/stores only when selected configuration declares them; reject unknown keys.",
                 "Named native passing controls: architecture roles refuse misspellings and retain the declared harness name; configuration-declared roles use the owning defaults and preserve raw authored absence; a configuration role follows selected ancestor configurations and refuses an unrelated sibling owner.",
                 "Evidence 6404289292851698."
@@ -7474,9 +7346,7 @@
             "owner": "main",
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Evidence ffe97c8974227e1b.",
                 "Evidence 3461dbd46d80df40.",
                 "Evidence ae6c796d4abd7101.",
@@ -7520,9 +7390,7 @@
             "owner": "main",
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Every current binding obligation verified in pushed 9a: Key licenses.exceptions by exact package@version with license and reason. Strict license object only allowed and exceptions.",
                 "Named native passing controls: runtime and published schemas agree on a pinned license exception; runtime and published schemas agree on a license exception with a version range; templates round-trip license allowances and exact-version exceptions.",
                 "Evidence 6404289292851698."
@@ -7553,9 +7421,7 @@
             "owner": "main",
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Every current binding obligation verified in pushed 9a: Accept native TOML local dates and emit unquoted. Retain native dates through edits, comments and canonical re-emission.",
                 "Named native passing controls: merged-ignores-date-array-comments keeps canonical values and comments through repeated writes; same-date-rows keeps canonical values and comments through repeated writes; an in-place native expiry mutation changes the captured policy and retains its comment; the policy-layout command corrects native expiry and compact paths without installation.",
                 "Evidence 6404289292851698."
@@ -7573,9 +7439,7 @@
             "owner": "main",
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Evidence ffe97c8974227e1b.",
                 "Evidence 3461dbd46d80df40.",
                 "Every current binding obligation verified in pushed 9a: Rename root tests to test_files. Default roles.tests to effective test_files unless explicitly authored.",
@@ -7613,9 +7477,7 @@
             "owner": "main",
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Every current binding obligation verified in pushed 9a: naming.paths -> naming.overrides and names/skip -> allowed; no category skipped. run_with -> runner; docs.license -> docs.require_license; agent_rules.project_folder -> own_rules_folder. Delete groups_off; full shipped banned groups all-only.",
                 "Named native passing controls: runtime and published schemas agree on allowed exact names with reasons; runtime and published schemas agree on a path-selected allowed name; published and runtime schemas reject an escaping agent-rule project folder \"../outside\"; published and runtime schemas reject an escaping agent-rule project folder \"/outside\"; published and runtime schemas reject an escaping agent-rule project folder \"C:outside\"; published and runtime schemas reject an escaping agent-rule project folder \"..\\\\outside\"; published and runtime schemas reject an escaping agent-rule project folder \"\\\\\\\\host\\\\share\"; published and runtime schemas reject an escaping agent-rule project folder \"bad\\u0000path\"; published and runtime schemas reject an escaping agent-rule project folder \"api\\n/../../outside\"; published and runtime schemas reject an escaping agent-rule project folder \"\"; the authored policy refuses superseded scope input.",
                 "Evidence 6404289292851698."
@@ -7646,9 +7508,7 @@
             "owner": "main",
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "verification": [
-                "Evidence ab56c1858ce26473.",
-                "Evidence 249c0b15a5538cd5.",
-                "Evidence f706f04fbb49307e.",
+                "Evidence a54f15598472523e.",
                 "Every current binding obligation verified in pushed 9a: Delete exact unrelated product comment. Emitter exactly one blank line before each subsequent header.",
                 "Named native passing controls: first-command-check-map keeps canonical values and comments through repeated writes; noncontiguous-tool-descendants keeps canonical values and comments through repeated writes; maps-dotted-and-blank-lines keeps canonical values and comments through repeated writes.",
                 "Evidence 6404289292851698."
@@ -7683,9 +7543,33 @@
                 }
             ]
         },
-        "review/repository-root/004": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/repository-root/005": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/repository-root/006": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/repository-root/004": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "2c65d42f63e5a907e39b9bd6be634202a527c486",
+            "verification": [
+                "Install:checks now installs committed Bun/UV tool locks. CI explicitly refreshes through bun scripts/plugin.ts install --refresh-lockfiles and rejects git diff in both locks. Normal default install and explicit refresh pass. Main refresh adopts native smol-toml1.9.1 metadata; repeat resolution exposes two optional WASI keys that alternate, preserved in repeat/third logs. The guard remains strict and detects actual drift; no idempotence claim or manual managed-file normalization. Main staged156pass14skip0findings and normal commit117pass3skip0findings; push156pass14skip0findings."
+            ]
+        },
+        "review/repository-root/005": {
+            "status": "partial",
+            "owner": "main",
+            "commit": "2c65d42f63e5a907e39b9bd6be634202a527c486",
+            "verification": [
+                "Duplicate check:types task and CI step removed. Native gspot types acceptance and main staged gates pass; strict-flag deletion probe /tmp/gspot-repository004005006-strict-conflict-fixed.json reports exactly seven required authored-option findings, so strict repository enforcement retains those flags."
+            ],
+            "remaining": [
+                "Resolve prescribed deletion of seven authored tsconfig flags while retaining strict native tsconfig enforcement; no policy exception or closed-record claim."
+            ]
+        },
+        "review/repository-root/006": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "2c65d42f63e5a907e39b9bd6be634202a527c486",
+            "verification": [
+                "One composite setup owns the single mise2026.8.8 pin, tools default all, and authored setup input across all ten jobs. Docs/build/deploy use only @gspothq/docs; version/publisher use their exact workspace filters. Native filtered installs, docs build, pinned Wrangler version, version script, cold publisher grammar/plugin/CLI builds, Node24/Bun consumers, and database default setup/selector pass. Archive jobs remain absent. Native Actionlint and composite Zizmor pass. Approved repository-only ./ self-repository exception preserves Actionlint1.7.12 compatibility; setup input enters Bash via environment, resolving command injection without weakening other audits."
+            ]
+        },
         "review/repository-root/010": { "status": "pending", "owner": null, "commit": null, "verification": [] },
         "review/repository-root/012": { "status": "pending", "owner": null, "commit": null, "verification": [] },
         "review/repository-root/015": {
@@ -7783,7 +7667,17 @@
                 "Grammar copy function is private and executes unconditionally. Native cold, cached, corrupt-cache and EISDIR checks pass."
             ]
         },
-        "review/repository-root/040": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/repository-root/040": {
+            "status": "partial",
+            "owner": "main",
+            "commit": null,
+            "verification": [
+                "Owner retains existing sideEffects declaration under strict package-json/require-sideEffects. No deletion or rule exception adopted."
+            ],
+            "remaining": [
+                "Prescribed sideEffects deletion remains unimplemented under the recorded owner override; leave this record partial."
+            ]
+        },
         "review/repository-root/041": { "status": "pending", "owner": null, "commit": null, "verification": [] },
         "review/repository-root/042": {
             "status": "complete",
@@ -8339,8 +8233,7 @@
             "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "LEFTHOOK_FILES retains root lefthook.yml, nested .config/lefthook.yml and lefthook-local.yml; original real hook detection/preservation runner stays.",
-                "Evidence ac10fd02ab2f83a0.",
-                "Evidence 5fad9abc71677bae."
+                "Evidence e88fd77ec3308d00."
             ]
         },
         "review/tests-cli/008": {
@@ -8349,8 +8242,7 @@
             "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "Mise cases retain mise.toml and .config/mise/config.toml precedence; other package/Python/no-runner cases unchanged.",
-                "Evidence ac10fd02ab2f83a0.",
-                "Evidence 5fad9abc71677bae."
+                "Evidence e88fd77ec3308d00."
             ]
         },
         "review/tests-cli/009": {
@@ -8645,8 +8537,7 @@
             "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "Deleted repeated current-attributes reread test; unreadable attributes recovery and nested/Git precedence rereads retain behavior.",
-                "Evidence ac10fd02ab2f83a0.",
-                "Evidence 5fad9abc71677bae."
+                "Evidence e88fd77ec3308d00."
             ]
         },
         "review/tests-cli/038": {
@@ -8655,8 +8546,7 @@
             "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "Deleted duplicate linked .husky test; existing parameterized LINKED_HOOK_FOLDERS keeps both native kinds, external-byte protection and correction. Transferred newer unique internal linked-directory correction into surviving cases rather than discarding it.",
-                "Evidence ac10fd02ab2f83a0.",
-                "Evidence 5fad9abc71677bae."
+                "Evidence e88fd77ec3308d00."
             ]
         },
         "review/tests-cli/039": {
@@ -8665,8 +8555,7 @@
             "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "Deleted repeated prefix/ENOENT case and unused import. Actual source-read suite retains prefix bytes and native missing required source path; containment/correction remains.",
-                "Evidence ac10fd02ab2f83a0.",
-                "Evidence 5fad9abc71677bae."
+                "Evidence e88fd77ec3308d00."
             ]
         },
         "review/tests-cli/040": {
@@ -8687,8 +8576,7 @@
             "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "Deleted repeated remove/reread runner reset step and unused import; empty repository no-runner case and original file-byte preservation remain.",
-                "Evidence ac10fd02ab2f83a0.",
-                "Evidence 5fad9abc71677bae."
+                "Evidence e88fd77ec3308d00."
             ]
         },
         "review/tests-cli/042": {
@@ -8741,11 +8629,7 @@
             "commit": "19d8a01c773bbb2b89c393cb691e6d197ead6621",
             "verification": [
                 "Deleted duplicated singleton and both trivial-function CASES rows; dedicated singleton and function tests retain direct behavior, allowance, nested flow and invalid input coverage. Four remaining Python CASES finding/correction runs pass.",
-                "Evidence a2b94c9da4051e5f.",
-                "Evidence 0ee814fd08e510fb.",
-                "Evidence 4d3c9be91dfeb09c.",
-                "Evidence d078a7c577f57e77.",
-                "Evidence 999a19c9a211b7d7.",
+                "Evidence cde7352de5243559.",
                 "Remove singleton and two trivial-function duplicate rows; retain four distinct structure rows and dedicated singleton/function coverage.",
                 "Evidence c87bd9c042cc5ac3."
             ]
@@ -8810,11 +8694,7 @@
             "commit": "9384fcdf0524f4ba4693c835dad809f7088c589b",
             "verification": [
                 "Deleted the repeated inherited limits.file_lines assertion from nested-scopes; list.test.ts retains its exact value/source assertion. Nested format/function limits and deepest-scope checks remain.",
-                "Evidence a2b94c9da4051e5f.",
-                "Evidence 0ee814fd08e510fb.",
-                "Evidence 4d3c9be91dfeb09c.",
-                "Evidence d078a7c577f57e77.",
-                "Evidence 999a19c9a211b7d7.",
+                "Evidence cde7352de5243559.",
                 "Removed duplicate nested-scope limit assertion; list retains the inherited value and authored source.",
                 "Evidence 15a0500738b7438c."
             ]
@@ -8934,11 +8814,7 @@
             "commit": "9384fcdf0524f4ba4693c835dad809f7088c589b",
             "verification": [
                 "Moved the complete ordinary-unused/disposal-binding case from jsdoc-types to typescript-eslint; renamed lint results to typescriptResults. Both JSDoc levels and all TypeScript import/reexport/unused outcomes pass.",
-                "Evidence a2b94c9da4051e5f.",
-                "Evidence 0ee814fd08e510fb.",
-                "Evidence 4d3c9be91dfeb09c.",
-                "Evidence d078a7c577f57e77.",
-                "Evidence 999a19c9a211b7d7.",
+                "Evidence cde7352de5243559.",
                 "Moved unused-local coverage to typescript-eslint and renamed its result variable.",
                 "Evidence 15a0500738b7438c."
             ]
@@ -8949,11 +8825,7 @@
             "commit": "9384fcdf0524f4ba4693c835dad809f7088c589b",
             "verification": [
                 "Deleted duplicate apply policy/pin preview case. Retained command pin/no-write/refusal tests and lifecycle failed-pin publication, prune and unsafe-output tests pass.",
-                "Evidence a2b94c9da4051e5f.",
-                "Evidence 0ee814fd08e510fb.",
-                "Evidence 4d3c9be91dfeb09c.",
-                "Evidence d078a7c577f57e77.",
-                "Evidence 999a19c9a211b7d7.",
+                "Evidence cde7352de5243559.",
                 "Removed the duplicate case; retained coverage verifies the original contract.",
                 "Evidence 15a0500738b7438c."
             ]
@@ -8964,11 +8836,7 @@
             "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
             "verification": [
                 "Kept one edited ESLint configuration byte-preview case in rule-preview with explicit no installed modules, preserved authored bytes and unchanged ownership baseline. Deleted duplicate offline preview and repeated manual JavaScript setup; native scoped rule preview remains in final ESLint dry-run owner.",
-                "Evidence a2b94c9da4051e5f.",
-                "Evidence 0ee814fd08e510fb.",
-                "Evidence 4d3c9be91dfeb09c.",
-                "Evidence d078a7c577f57e77.",
-                "Evidence 999a19c9a211b7d7.",
+                "Evidence cde7352de5243559.",
                 "Retains the drift controls and both restored newline-path observations; the owner is byte-identical at 0aba and current pushed HEAD.",
                 "Named Linux/macOS/Windows cases pass. Windows audit /tmp/gspot-tests-cli064-ci0aba-windows-completed-audit.json proves the new observations ran without skips."
             ]
@@ -8979,11 +8847,7 @@
             "commit": "a60ad120fe604d418f9c27439e9eacb7eeb5597e",
             "verification": [
                 "Deleted repeated fresh-clone case and sole-use CLONE_RULE_FILES data. Actual Git clone byte/mode preservation and repeated clean apply assertions remain in cloned-output.test.ts and pass.",
-                "Evidence a2b94c9da4051e5f.",
-                "Evidence 0ee814fd08e510fb.",
-                "Evidence 4d3c9be91dfeb09c.",
-                "Evidence d078a7c577f57e77.",
-                "Evidence 999a19c9a211b7d7.",
+                "Evidence cde7352de5243559.",
                 "After deleting ownership state, dry-run comparison reports the authored JavaScript drift without execution, writes or a new ownership log.",
                 "Evidence e656d88028e1b7d5.",
                 "Deletes the fresh-clone duplicate while the surviving manual-edit case removes ownership state, shows actual drift, runs no edited configuration and writes no new state. Restored observations pass on Linux, macOS and Windows."
@@ -8995,11 +8859,7 @@
             "commit": "a60ad120fe604d418f9c27439e9eacb7eeb5597e",
             "verification": [
                 "Deleted only duplicate failed-Git-status init case. Retained distinct nested typos preview/deletion, no external-Git .gitignore and no en-gb policy assertions in final replacement owner; existing CLI human/JSON Git-refusal tests pass.",
-                "Evidence 2c9442dcf25177ff.",
-                "Evidence 200056c172cddf65.",
-                "Evidence 1745789772fd098d.",
-                "Evidence 7efad1a20dddc343.",
-                "Evidence 999a19c9a211b7d7.",
+                "Evidence 9b93c9e039ae6f80.",
                 "After the mocked Git refusal, the same sandbox and arguments recover successfully. Original fetched-once and nested-typos controls remain.",
                 "Evidence e656d88028e1b7d5.",
                 "Deletes the duplicate failed-Git case while the surviving refusal restores Git and successfully initializes the same directory with the same argv. The restored recovery passes on Linux, macOS and Windows."
@@ -9011,11 +8871,7 @@
             "commit": "9384fcdf0524f4ba4693c835dad809f7088c589b",
             "verification": [
                 "Merged both terminal progress scenarios into the reporter tests, preserving interactive/redirected passed/skipped/failed/missing/error output and quiet execution-error assertions. Flattened resulting single-file terminal folder to tests/cli/terminal.test.ts under explicit AGENTS.md rule, matching existing config/types terminal.ts owners.",
-                "Evidence a2b94c9da4051e5f.",
-                "Evidence 0ee814fd08e510fb.",
-                "Evidence 4d3c9be91dfeb09c.",
-                "Evidence d078a7c577f57e77.",
-                "Evidence 999a19c9a211b7d7.",
+                "Evidence cde7352de5243559.",
                 "Merged reporter coverage into its single behavior owner.",
                 "Evidence 15a0500738b7438c."
             ]
@@ -9557,8 +9413,7 @@
             "verification": [
                 "Evidence 881bacd5c843e8d5.",
                 "Evidence 936ebc6f86b82657.",
-                "Evidence be543f29d0974793.",
-                "Evidence 1289292efe621fa2.",
+                "Evidence ab26062d5c84366d.",
                 "Move Swift body checks to the final shared structure owner and parser observation to parsers/swift/source. Preserve seven parser names, thresholds and accessor/trivial source cases.",
                 "Evidence 708faf7b5a6e2894."
             ]
@@ -9570,8 +9425,7 @@
             "verification": [
                 "Evidence 881bacd5c843e8d5.",
                 "Evidence 936ebc6f86b82657.",
-                "Evidence be543f29d0974793.",
-                "Evidence 1289292efe621fa2.",
+                "Evidence ab26062d5c84366d.",
                 "Generated framework TypeScript assertions now run at both levels under generation/typescript; checker still tests exact root/scoped findings and corrections."
             ]
         },
@@ -9582,8 +9436,7 @@
             "verification": [
                 "Evidence 881bacd5c843e8d5.",
                 "Evidence 936ebc6f86b82657.",
-                "Evidence be543f29d0974793.",
-                "Evidence 1289292efe621fa2.",
+                "Evidence ab26062d5c84366d.",
                 "Evidence d173e021e9592986.",
                 "All assertManifests cases reside in configurations/errors; parser declarations retain parser contracts. Native errors corpus passes."
             ],
@@ -9610,8 +9463,7 @@
             "verification": [
                 "Evidence 881bacd5c843e8d5.",
                 "Evidence 936ebc6f86b82657.",
-                "Evidence be543f29d0974793.",
-                "Evidence 1289292efe621fa2.",
+                "Evidence ab26062d5c84366d.",
                 "SQL cases reside in parsers/sql/pg, and tree-sitter retains only its native reader/lifetime cases. Both native parser corpora pass."
             ]
         },
@@ -9622,8 +9474,7 @@
             "verification": [
                 "Evidence 881bacd5c843e8d5.",
                 "Evidence 936ebc6f86b82657.",
-                "Evidence be543f29d0974793.",
-                "Evidence 1289292efe621fa2.",
+                "Evidence ab26062d5c84366d.",
                 "COMMITLINT_PACKAGE has one config/samples owner, with all generation and tools consumers updated. Native generation corpus passes."
             ]
         },
@@ -9632,14 +9483,8 @@
             "owner": "main",
             "commit": "9384fcdf0524f4ba4693c835dad809f7088c589b",
             "verification": [
-                "Evidence e63365ac8e885ff7.",
-                "Evidence eaaf8a14991b5073.",
-                "Evidence 861f2b9227e53387.",
-                "Evidence 26cd4003a02296e2.",
-                "Evidence f1cf0427dfb8608e.",
-                "Evidence a85ef2a0a6686bbc.",
-                "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208.",
+                "Evidence 519bc1988bcd380b.",
+                "Evidence 8de20943a0dca2b8.",
                 "Native error matchers verify the relevant messages; discovery uses toThrow.",
                 "Evidence 15a0500738b7438c."
             ]
@@ -9653,8 +9498,7 @@
                 "Evidence 6cb769bee27585bd.",
                 "Evidence 5e393fd7269d9443.",
                 "Evidence 20c2f89725488b8a.",
-                "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208.",
+                "Evidence d13d23ef753740dc.",
                 "Unowned README and settings files are explicitly absent from drift.",
                 "Evidence 15a0500738b7438c."
             ],
@@ -9676,8 +9520,7 @@
                 "Evidence 6cb769bee27585bd.",
                 "Evidence 5e393fd7269d9443.",
                 "Evidence 20c2f89725488b8a.",
-                "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208.",
+                "Evidence d13d23ef753740dc.",
                 "Starts the PID child only for cases that require it.",
                 "Evidence 15a0500738b7438c."
             ],
@@ -9707,14 +9550,8 @@
             "owner": "main",
             "commit": "9384fcdf0524f4ba4693c835dad809f7088c589b",
             "verification": [
-                "Evidence e63365ac8e885ff7.",
-                "Evidence eaaf8a14991b5073.",
-                "Evidence 861f2b9227e53387.",
-                "Evidence 26cd4003a02296e2.",
-                "Evidence f1cf0427dfb8608e.",
-                "Evidence a85ef2a0a6686bbc.",
-                "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208.",
+                "Evidence 519bc1988bcd380b.",
+                "Evidence 8de20943a0dca2b8.",
                 "Uses the authored string directly.",
                 "Evidence 15a0500738b7438c."
             ]
@@ -9726,8 +9563,7 @@
             "verification": [
                 "Evidence 881bacd5c843e8d5.",
                 "Evidence 936ebc6f86b82657.",
-                "Evidence be543f29d0974793.",
-                "Evidence 1289292efe621fa2.",
+                "Evidence ab26062d5c84366d.",
                 "Spreads BASE_CHECK rather than recreating its fields.",
                 "Evidence 15a0500738b7438c."
             ]
@@ -9737,14 +9573,8 @@
             "owner": "main",
             "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
             "verification": [
-                "Evidence e63365ac8e885ff7.",
-                "Evidence eaaf8a14991b5073.",
-                "Evidence 861f2b9227e53387.",
-                "Evidence 26cd4003a02296e2.",
-                "Evidence f1cf0427dfb8608e.",
-                "Evidence a85ef2a0a6686bbc.",
-                "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208.",
+                "Evidence 519bc1988bcd380b.",
+                "Evidence 8de20943a0dca2b8.",
                 "Evidence-only: TOOL_FAILURES_POLICY already selects files, not actions.",
                 "Evidence 87117501966f8517."
             ]
@@ -9754,14 +9584,8 @@
             "owner": "main",
             "commit": "9384fcdf0524f4ba4693c835dad809f7088c589b",
             "verification": [
-                "Evidence e63365ac8e885ff7.",
-                "Evidence eaaf8a14991b5073.",
-                "Evidence 861f2b9227e53387.",
-                "Evidence 26cd4003a02296e2.",
-                "Evidence f1cf0427dfb8608e.",
-                "Evidence a85ef2a0a6686bbc.",
-                "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208.",
+                "Evidence 519bc1988bcd380b.",
+                "Evidence 8de20943a0dca2b8.",
                 "Builds the test input from its string.",
                 "Evidence 15a0500738b7438c."
             ]
@@ -9771,14 +9595,8 @@
             "owner": "main",
             "commit": "3a3448c32fc0cee4badd20eeca54a22e32c31e6d",
             "verification": [
-                "Evidence e63365ac8e885ff7.",
-                "Evidence eaaf8a14991b5073.",
-                "Evidence 861f2b9227e53387.",
-                "Evidence 26cd4003a02296e2.",
-                "Evidence f1cf0427dfb8608e.",
-                "Evidence a85ef2a0a6686bbc.",
-                "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208.",
+                "Evidence 519bc1988bcd380b.",
+                "Evidence 8de20943a0dca2b8.",
                 "Superseded by the final areas/kits/101 fix and D-165: the obsolete Gitleaks baseline parser, its test file and all 13 unnamed cases are deleted in ca2975ca5552d3276e78bbd6d897c44cfdf70a09. No obsolete baseline contract is restored.",
                 "Reviewed the complete areas/kits/101 contract at 74fcf06452f0a0b0293130e5cff69d42e5ddd620: reviewed historical secrets use reasoned fingerprint ignores. Original test quotation remains. Read-only supersession proof: /tmp/gspot-cli-next-six-whole-closure.json."
             ]
@@ -9788,14 +9606,8 @@
             "owner": "main",
             "commit": "9384fcdf0524f4ba4693c835dad809f7088c589b",
             "verification": [
-                "Evidence e63365ac8e885ff7.",
-                "Evidence eaaf8a14991b5073.",
-                "Evidence 861f2b9227e53387.",
-                "Evidence 26cd4003a02296e2.",
-                "Evidence f1cf0427dfb8608e.",
-                "Evidence a85ef2a0a6686bbc.",
-                "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208.",
+                "Evidence 519bc1988bcd380b.",
+                "Evidence 8de20943a0dca2b8.",
                 "Imports the shared constant.",
                 "Evidence 15a0500738b7438c."
             ]
@@ -9809,8 +9621,7 @@
                 "Evidence 6cb769bee27585bd.",
                 "Evidence 5e393fd7269d9443.",
                 "Evidence 20c2f89725488b8a.",
-                "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208.",
+                "Evidence d13d23ef753740dc.",
                 "Deletes the redundant assertion.",
                 "Evidence 15a0500738b7438c."
             ]
@@ -9824,8 +9635,7 @@
                 "Evidence 6cb769bee27585bd.",
                 "Evidence 5e393fd7269d9443.",
                 "Evidence 20c2f89725488b8a.",
-                "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208.",
+                "Evidence d13d23ef753740dc.",
                 "Evidence fe2933e3b0ee6679.",
                 "Uses valueAt for the shared value lookup.",
                 "Evidence 15a0500738b7438c."
@@ -9853,14 +9663,8 @@
             "owner": "main",
             "commit": "9384fcdf0524f4ba4693c835dad809f7088c589b",
             "verification": [
-                "Evidence e63365ac8e885ff7.",
-                "Evidence eaaf8a14991b5073.",
-                "Evidence 861f2b9227e53387.",
-                "Evidence 26cd4003a02296e2.",
-                "Evidence f1cf0427dfb8608e.",
-                "Evidence a85ef2a0a6686bbc.",
-                "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208.",
+                "Evidence 519bc1988bcd380b.",
+                "Evidence 8de20943a0dca2b8.",
                 "Uses toThrow for native failure assertions.",
                 "Evidence 15a0500738b7438c."
             ]
@@ -9874,8 +9678,7 @@
                 "Evidence 6cb769bee27585bd.",
                 "Evidence 5e393fd7269d9443.",
                 "Evidence 20c2f89725488b8a.",
-                "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208.",
+                "Evidence d13d23ef753740dc.",
                 "Evidence c820f6cbc49fdb28.",
                 "Evidence dcf5932419985b4a."
             ]
@@ -9931,7 +9734,14 @@
                 "Evidence 6948add951949df5."
             ]
         },
-        "review/tests-layout/012": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-layout/012": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "b6c535bc1bf5db9e7f61f375b549eb5c56922377",
+            "verification": [
+                "Source-path calculation lives directly in the existing gspot harness. All real callers use its final owner, with no compatibility export. Root recovery bodies remain unchanged; CP excludes held future interruption imports."
+            ]
+        },
         "review/tests-layout/013": {
             "status": "complete",
             "owner": "main",
@@ -9946,12 +9756,29 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Separate CLI19 and tools3literal case ownership in exact mirrored config owners, remove TOOL_CHECKS/filter, then remove duplicate syntax/shfmt native rows. Later user AGENTS shared-text directive retains one MAIN literal with two real test callers; HEAD/CLEAN/MAIN bytes stay identical.",
-                "Evidence cd9a6f9a1da7c4a3.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 49025d8ed841fdc4."
             ]
         },
-        "review/tests-layout/016": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/tests-layout/017": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-layout/016": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "b6c535bc1bf5db9e7f61f375b549eb5c56922377",
+            "verification": [
+                "One CLEAN_BASH_SCRIPT owns the three constant and nine actual identical inline occurrences. Native value parity preserves exact bytes, including the main comment; distinct suppression input remains separate. Historical fourteen-count wording stays quoted; actual census is twelve identical occurrences."
+            ]
+        },
+        "review/tests-layout/017": {
+            "status": "partial",
+            "owner": "main",
+            "commit": "b6c535bc1bf5db9e7f61f375b549eb5c56922377",
+            "verification": [
+                "Shared Next en/de messages, Supabase GREET, and three native tsconfig objects with original strict/decorator/include/allowJs controls are implemented. Native declared values and all existing assertions/resources are preserved in /tmp/gspot-layout-support-six-final-v2-freeze.json; main types/staged gates pass."
+            ],
+            "remaining": [
+                "Finish original JSconfig duplicate compiler options while preserving checkJs/noEmit/include.",
+                "Account for separate native project references/outdir controls and original deleted library-test final consumers before whole closure."
+            ]
+        },
         "review/tests-layout/018": {
             "status": "partial",
             "owner": "main",
@@ -10026,7 +9853,14 @@
             "commit": null,
             "verification": ["Evidence 465ecfb7ffcbe2c5."]
         },
-        "review/tests-layout/030": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-layout/030": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "b6c535bc1bf5db9e7f61f375b549eb5c56922377",
+            "verification": [
+                "All three original read-policy tests moved directly to policy/read at4137d1f5. Two original bodies are byte equal; recovery differs only in the adopted Bash check name, with original reason/key-path controls retained. Current policy ownership replay passes180tests879assertions."
+            ]
+        },
         "review/tests-layout/031": {
             "status": "complete",
             "owner": "main",
@@ -10079,24 +9913,31 @@
             "commit": null,
             "verification": ["Evidence 27caa63cc7c0697e."]
         },
-        "review/tests-layout/037": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/tests-layout/038": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/tests-layout/037": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "b6c535bc1bf5db9e7f61f375b549eb5c56922377",
+            "verification": [
+                "Known/view tests retain their exact original move/body lineage, and the original template callbacks split between commands/export and policy/templates/export. Frozen mechanical AST controls and later public API/stronger-control changes are traced individually. Current full read/settings/export replay180pass879assert10files proves these final owners."
+            ]
+        },
+        "review/tests-layout/038": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "b6c535bc1bf5db9e7f61f375b549eb5c56922377",
+            "verification": [
+                "Commitlint and Yamllint original test bodies moved byte equal to policy/read at4137d1f5. Current native policy owner replay180pass879assert10files includes both final owners. No absence-only closure or deleted behavior."
+            ]
+        },
         "review/tests-layout/039": {
             "status": "partial",
             "owner": "main",
             "commit": null,
             "verification": [
                 "Moved remaining ESLint dry-run test directly from lifecycle/eslint-preview.test.ts to lifecycle/apply/eslint-dry-run.test.ts. CI preference/retention and init source/test moves remain outstanding.",
-                "Evidence a2b94c9da4051e5f.",
-                "Evidence 0ee814fd08e510fb.",
-                "Evidence 4d3c9be91dfeb09c.",
-                "Evidence d078a7c577f57e77.",
+                "Evidence ea6a4e5999646044.",
                 "Completed remaining direct CI/init moves: CI preference and retained pipeline assertions now commands/init/ci; nested spelling replacement, unread submodule and failed pin preservation now commands/init/replace; unsafe/missing scopes now commands/init/refusals. Deleted lifecycle/ci.test.ts and lifecycle/init.test.ts. Prior ESLint move to lifecycle/apply/eslint-dry-run remains intact.",
-                "Evidence 2c9442dcf25177ff.",
-                "Evidence 200056c172cddf65.",
-                "Evidence 1745789772fd098d.",
-                "Evidence 7efad1a20dddc343.",
-                "Evidence 999a19c9a211b7d7.",
+                "Evidence 9b93c9e039ae6f80.",
                 "Evidence ecbf881ca887786a.",
                 "Evidence 8206f3687b468bb8.",
                 "Evidence c633e7516e283f7b.",
@@ -10197,8 +10038,7 @@
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Binding implemented: One actual test.each over four native scenario descriptors and both levels replaces four copied runners. Required configuration callbacks remain test-owned; literal names/patterns/severities and matching descriptor type remain correct mirrors. One shared exact report projection/correction/preservation body.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "review/tests-tools/009": {
@@ -10215,8 +10055,7 @@
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Binding implemented: Delete Expo/bare native descriptors, dead mirrors and standalone bare install. Retain exact ordinary React repository/case. Exact Counter moves to shared samples for native + CLI consumers; exact ExpoBox and Label native text migrate to CLI. Add hooks/no-inline controls and all four bare emitted-dependency assertions. Two actual native SDK correction rows retain original COMPONENT_SOURCE correction, exact rule/line/file, authored source/policy bytes.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "review/tests-tools/011": {
@@ -10225,19 +10064,14 @@
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Binding implemented: Delete only duplicate library Zod case.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "review/tests-tools/012": {
             "status": "complete",
             "owner": "main",
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
-            "verification": [
-                "Binding implemented: Delete only TS no-debugger case.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
-            ]
+            "verification": ["Binding implemented: Delete only TS no-debugger case.", "Evidence d1d9a164ba9ea8e6."]
         },
         "review/tests-tools/013": {
             "status": "complete",
@@ -10561,8 +10395,7 @@
             "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "Header states exact prescribed minimal manifest behavior; discovery constant remains in config owner and all harness body bytes unchanged.",
-                "Evidence ac10fd02ab2f83a0.",
-                "Evidence 5fad9abc71677bae."
+                "Evidence e88fd77ec3308d00."
             ]
         },
         "review/tests-tools/047": {
@@ -10854,8 +10687,7 @@
             "verification": [
                 "INHERITED_ERREXIT and BASH_FEATURES are both absent after adopted shipped strict-mode contract. Reintroducing BASH_FEATURES solely to follow stale final row would reverse that contract.",
                 "All duplicate directory/terminator constants are absent. Adopted strict-mode owner contract deletes both INHERITED_ERREXIT and BASH_FEATURES; no stale version alias or old setting is restored.",
-                "Evidence cd9a6f9a1da7c4a3.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 49025d8ed841fdc4."
             ]
         },
         "slices/config/043": { "status": "partial", "owner": null, "commit": null, "verification": [] },
@@ -11132,7 +10964,14 @@
                 "Native editorconfig-checker uses -disable-indentation; original flag reproduced failures, corrected indentation controls pass. Main focused tool packet42pass389assert."
             ]
         },
-        "slices/kits-general/015": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "slices/kits-general/015": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "cccfbf9870c634f36246e69f32871e4678480ed6",
+            "verification": [
+                "Pushedcccfbf987 reads native Prettier tabWidth/printWidth/singleQuote, native defaults when Prettier applies, otherwise EditorConfig indent_size/max_line_length. With neither, shipped4/120/single stay; authored template fields take precedence at root and nested/sibling scopes. Policy drafting moves body-exact to its assembly owner; no tool installation is added. Owner explicitly approved4397-byte required formatter behavior, and native naming/comment fixes reduce final production growth to4322bytes. Meaningful tests/data add7030bytes. Main33pass172assert2files in each checkout; whole types0, staged59pass9skip0findings. Fresh npm pack/install Node24.20 and Bun1.4.2 consumers have3934-byte identical full JSON, zero stderr, and3/95/double inferred formatting. Frozen evidence /tmp/gspot-init-format015-final/final-freeze.json, main amendments /tmp/gspot-init-format015-main-native-amendment-final/proof.json; original failures preserved."
+            ]
+        },
         "slices/kits-general/016": {
             "status": "complete",
             "owner": "main",
@@ -11142,8 +10981,22 @@
                 "Evidence db827208d873baeb."
             ]
         },
-        "slices/kits-general/027": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "slices/kits-general/036": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "slices/kits-general/027": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "5a4b25e1add91b920534a749f592ec373b9e4a13",
+            "verification": [
+                "Pushed669aba0dc declares the exact temporary-copy summary, network need and all eight trigger names. Shared planner intersects declared owners with changed inputs before retaining full project inputs, including deleted triggers and policy/config changes. Main124pass449assert5files in both checkouts; types0, staged49pass8skip0findings. Production26bytes fewer after native prose fixes; new root/child/ignored-project/scratch tests are necessary coverage growth."
+            ]
+        },
+        "slices/kits-general/036": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "5a4b25e1add91b920534a749f592ec373b9e4a13",
+            "verification": [
+                "Pushed5a4b25e1a deletes the unused licenses.json producer, tool_file declaration and generated-file comparison/schema. Native scanners read selected scope policy through the existing allowlist schema. CLI21pass92assert and actual installed scanner3pass14assert preserve npm/Python isolation, descendant exceptions and refusal behavior. gspot apply prunes five tracked copies; staged156pass14skip0findings. Production1897bytes fewer."
+            ]
+        },
         "slices/kits-general/040": {
             "status": "complete",
             "owner": "main",
@@ -11169,8 +11022,7 @@
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
                 "Binding implemented: Say \"reports a missing icon when no such file sits beside the manifest.\" Replace the `site/webmanifest` example at `packages/cli/configurations/general/site/manifest.toml:170` with: \"reports a missing icon when no such file sits beside the manifest.\"",
-                "Evidence 4ec2666e0df80b38.",
-                "Evidence a6f1ff5977c15e80."
+                "Evidence c7ec0890eb460bd6."
             ]
         },
         "slices/kits-general/056": {
@@ -11516,8 +11368,7 @@
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Binding implemented: Retained Zustand and tRPC cases require distinct actual configuration message fragments.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "slices/tests-acceptance/027": {
@@ -11625,8 +11476,7 @@
                 "Evidence 7b1e1ab655c0f702.",
                 "Evidence 9937a87a53a7ad1d.",
                 "Bash lifecycle header accurately describes missing-tool readiness and native availability, without claiming finding counts.",
-                "Evidence cd9a6f9a1da7c4a3.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 49025d8ed841fdc4."
             ],
             "additionalChanges": [
                 {
@@ -11662,8 +11512,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Remove16redundant CSS skip spreads and6XCTest check spreads/import. Default built-ins/skips, source inputs and callbacks remain equal by exact substitution proof; Main CSS/XCTest cases pass.",
-                "Evidence 9a21b7f0befa52e7.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 3723a258f74e6d04."
             ]
         },
         "slices/tests-integration-checks/005": {
@@ -11848,8 +11697,7 @@
                 "Evidence 7b1e1ab655c0f702.",
                 "Evidence 9937a87a53a7ad1d.",
                 "Commit script and mark executable; compare complete convention findings and correction. RULES filter and interpreter-check comment are deleted.",
-                "Evidence cd9a6f9a1da7c4a3.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 49025d8ed841fdc4."
             ],
             "additionalChanges": [
                 {
@@ -11976,8 +11824,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Replace manual generated writes with public applyCommand and exact exit0 assertion. Preserve generated jsconfig path and empty-child compiler result. Main TypeScript cases pass.",
-                "Evidence 9a21b7f0befa52e7.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 3723a258f74e6d04."
             ]
         },
         "slices/tests-integration-checks/041": {
@@ -12003,8 +11850,7 @@
                 "Evidence 7b1e1ab655c0f702.",
                 "Evidence 9937a87a53a7ad1d.",
                 "Strict-mode version rows have clean and broken controls only; redundant identical fixed rerun is absent.",
-                "Evidence cd9a6f9a1da7c4a3.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 49025d8ed841fdc4."
             ],
             "additionalChanges": [
                 {
@@ -12242,8 +12088,7 @@
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Binding implemented: Replace broad caught Error assertion with rejection text per actual copy/read failure; native host code/path boundary, no guessed message.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "slices/tests-integration-execution/007": {
@@ -12252,8 +12097,7 @@
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Binding implemented: Replace boolean note/content assertions with direct row expectations; copy row asserts a directory, read row original bytes; Actionlint exit rows preserve note/findings/mode/workspace cleanup. Ansible note rows already correct and remain unchanged.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "slices/tests-integration-execution/010": {
@@ -12268,8 +12112,7 @@
                 "Evidence 872d36bbc394edf8.",
                 "Evidence 999a19c9a211b7d7.",
                 "Binding implemented: Unavailable fixer note must name absent-tool, alongside failed vs selected-skip distinction and unchanged authored bytes.",
-                "Evidence aa91b5f69972c69b.",
-                "Evidence 557fd3b3e8d65ca6."
+                "Evidence d1d9a164ba9ea8e6."
             ]
         },
         "slices/tests-integration-execution/015": {
@@ -12398,8 +12241,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Unsafe output ancestor asserts Unsafe lifecycle refusal and a disposed processes.run spy verifies no mise call; all outside/authored-byte/no-publication controls survive.",
-                "Evidence 4d2ac8d51b2e53aa.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 988176c65cc0d4c1."
             ]
         },
         "slices/tests-integration-lifecycle/002": {
@@ -12422,11 +12264,7 @@
             "commit": null,
             "verification": [
                 "Deleted third apply in obsolete-output parent test, whose sole assertion was exit zero. Preserved unsafe-parent refusal, outside bytes, actual corrected deletion and output publication assertions.",
-                "Evidence a2b94c9da4051e5f.",
-                "Evidence 0ee814fd08e510fb.",
-                "Evidence 4d3c9be91dfeb09c.",
-                "Evidence d078a7c577f57e77.",
-                "Evidence 999a19c9a211b7d7."
+                "Evidence cde7352de5243559."
             ],
             "remaining": [
                 "Mandatory staged verification, coherent mechanical/behavior commits, push and cross-platform CI evidence."
@@ -12438,11 +12276,7 @@
             "commit": null,
             "verification": [
                 "Deleted scoped-ignore lint and settling dry run from native ESLint preview. No newline-containing lint paths remain there; generation/eslint/eslint-ignores.test.ts retains scoped-ignore behavior. Moved remaining native rule preview to lifecycle/apply/eslint-dry-run.test.ts.",
-                "Evidence a2b94c9da4051e5f.",
-                "Evidence 0ee814fd08e510fb.",
-                "Evidence 4d3c9be91dfeb09c.",
-                "Evidence d078a7c577f57e77.",
-                "Evidence 999a19c9a211b7d7."
+                "Evidence cde7352de5243559."
             ],
             "remaining": [
                 "Mandatory staged verification, coherent mechanical/behavior commits, push and cross-platform CI evidence."
@@ -12469,11 +12303,7 @@
             "commit": null,
             "verification": [
                 "Unsafe/missing scope rows now carry exact distinct diagnostic text: Unsafe lifecycle path for ../outside, Unsafe lifecycle destination for linked, and Scope directory does not exist for missing. Each row asserts no policy or generated publication and unchanged outside bytes. All three pass.",
-                "Evidence 2c9442dcf25177ff.",
-                "Evidence 200056c172cddf65.",
-                "Evidence 1745789772fd098d.",
-                "Evidence 7efad1a20dddc343.",
-                "Evidence 999a19c9a211b7d7."
+                "Evidence 9b93c9e039ae6f80."
             ],
             "remaining": ["Evidence dc22ce9bdfea875a."]
         },
@@ -12599,8 +12429,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Native malformed YAML is wrapped with CI filename, original diagnostic and cause. Actual earlier JSON parse boundary wraps SyntaxError with package filename, cause and message; non-SyntaxError identity propagates and native valid JSON values are unrestricted.",
-                "Evidence 4d2ac8d51b2e53aa.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 988176c65cc0d4c1."
             ]
         },
         "slices/tests-integration-lifecycle/026": {
@@ -12633,8 +12462,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Absent-upstream first commit is compared exactly; a distinct second commit supplies the upstream and is compared exactly; absent upstream object still rejects.",
-                "Evidence 4d2ac8d51b2e53aa.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 988176c65cc0d4c1."
             ]
         },
         "slices/tests-integration-lifecycle/031": {
@@ -12643,8 +12471,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Retain remote-default/unpublished identity test. Separate registered upstream-at-HEAD test asserts exact commit; corrected comment says commit id.",
-                "Evidence 4d2ac8d51b2e53aa.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 988176c65cc0d4c1."
             ]
         },
         "slices/tests-integration-lifecycle/032": {
@@ -12653,8 +12480,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Explicitly assert extension JavaScript tag; remove redundant chmod/comment; complete shebang, binary and filename controls remain.",
-                "Evidence 4d2ac8d51b2e53aa.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 988176c65cc0d4c1."
             ]
         },
         "slices/tests-integration-lifecycle/033": {
@@ -12663,8 +12489,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "One native project(name) calculation has three real callers; all three Xcode input texts are byte-identical. Module-scope calculation passes native policy.",
-                "Evidence 4d2ac8d51b2e53aa.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 988176c65cc0d4c1."
             ]
         },
         "slices/tests-integration-lifecycle/034": {
@@ -12685,8 +12510,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Delete stale cached-result assertion only. Initial staged symlink finding plus both fresh correction/recovery inputs and actual index preservation remain.",
-                "Evidence 4d2ac8d51b2e53aa.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 988176c65cc0d4c1."
             ]
         },
         "slices/tests-integration-lifecycle/037": {
@@ -12695,8 +12519,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Assert exact Unsafe lifecycle path refusal in existing source-reader test; reader implementation unchanged.",
-                "Evidence 4d2ac8d51b2e53aa.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 988176c65cc0d4c1."
             ]
         },
         "slices/tests-integration-lifecycle/038": {
@@ -12723,11 +12546,7 @@
             "commit": null,
             "verification": [
                 "Removed quiet choices already supplied by buildInitOptions from moved init tests and existing replacement callers. Wider installer-failures/apply-installation callers remain outstanding.",
-                "Evidence 2c9442dcf25177ff.",
-                "Evidence 200056c172cddf65.",
-                "Evidence 1745789772fd098d.",
-                "Evidence 7efad1a20dddc343.",
-                "Evidence 999a19c9a211b7d7.",
+                "Evidence 9b93c9e039ae6f80.",
                 "Evidence ecbf881ca887786a.",
                 "Evidence 8206f3687b468bb8.",
                 "Evidence c633e7516e283f7b.",
@@ -12747,11 +12566,7 @@
             "commit": null,
             "verification": [
                 "CI and moved submodule setup use harness gitOutput/commitAll; deleted local execute and explicit identity flags. Existing replacement Git setup also reuses commitAll. Wider recorded Git setup sites remain outstanding.",
-                "Evidence 2c9442dcf25177ff.",
-                "Evidence 200056c172cddf65.",
-                "Evidence 1745789772fd098d.",
-                "Evidence 7efad1a20dddc343.",
-                "Evidence 999a19c9a211b7d7.",
+                "Evidence 9b93c9e039ae6f80.",
                 "Evidence ecbf881ca887786a.",
                 "Evidence 8206f3687b468bb8.",
                 "Evidence c633e7516e283f7b.",
@@ -12768,11 +12583,7 @@
             "commit": null,
             "verification": [
                 "Moved scope promises use harness rejection with exact row diagnostics; deleted node:assert/strict rejects import with old init module. Wider kinds/gitlinks/Xcode/Markdown/database sites remain outstanding.",
-                "Evidence 2c9442dcf25177ff.",
-                "Evidence 200056c172cddf65.",
-                "Evidence 1745789772fd098d.",
-                "Evidence 7efad1a20dddc343.",
-                "Evidence 999a19c9a211b7d7.",
+                "Evidence 9b93c9e039ae6f80.",
                 "Evidence ecbf881ca887786a.",
                 "Evidence 8206f3687b468bb8.",
                 "Evidence c633e7516e283f7b.",
@@ -12836,8 +12647,7 @@
             "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Three literal titles use at level all. Native Node/Bun callback ASTs and full sample bytes are equal apart from titles. Main native JavaScript projects and shared spelling controls pass.",
-                "Evidence 9a21b7f0befa52e7.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 3723a258f74e6d04."
             ]
         },
         "slices/tests-tools-samples/009": {
@@ -12871,8 +12681,7 @@
                 "Evidence 7bd6261850b418f3.",
                 "Evidence 4f93bbab82bba503.",
                 "Native Bash/Zsh/Bats syntax cases compare exact file list/count and line/message; root/script.sh/launcher, script.zsh/zlauncher and script.bats inputs retained.",
-                "Evidence cd9a6f9a1da7c4a3.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 49025d8ed841fdc4."
             ],
             "additionalChanges": [
                 {
@@ -12890,8 +12699,7 @@
                 "Evidence 7bd6261850b418f3.",
                 "Evidence 4f93bbab82bba503.",
                 "Native syntax rows carry expected line/message; Zsh end-of-input comment explains interpreter-reported position. Finding paths and original bytes restoration are asserted.",
-                "Evidence cd9a6f9a1da7c4a3.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 49025d8ed841fdc4."
             ],
             "additionalChanges": [
                 {
@@ -12909,8 +12717,7 @@
                 "Evidence 7bd6261850b418f3.",
                 "Evidence 4f93bbab82bba503.",
                 "One clean and one failed native syntax run remain; identical third fixed run is deleted, all file/list/message/readiness controls remain.",
-                "Evidence cd9a6f9a1da7c4a3.",
-                "Evidence a6858ccfea9e46c9."
+                "Evidence 49025d8ed841fdc4."
             ],
             "additionalChanges": [
                 {
@@ -14336,7 +14143,7 @@
             ],
             "unresolvedRecords": 951,
             "status": "local implementation; protected Git metadata prevents checkpoint completion",
-            "validation": ["Evidence a2b94c9da4051e5f.", "Evidence 0ee814fd08e510fb.", "Evidence 4d3c9be91dfeb09c."],
+            "validation": ["Evidence 738469f04e12ad05."],
             "evidence": "/tmp/gspot-preview-tests-main-freeze.json",
             "limitations": [
                 "Main staging, commit and push unavailable under current read-only Git metadata.",
@@ -14371,12 +14178,7 @@
             ],
             "unresolvedRecords": 951,
             "status": "local implementation; protected main Git metadata prevents checkpoint completion",
-            "validation": [
-                "Evidence 2c9442dcf25177ff.",
-                "Evidence 200056c172cddf65.",
-                "Evidence 1745789772fd098d.",
-                "Evidence 7efad1a20dddc343."
-            ],
+            "validation": ["Evidence 9e751c2322c7d97c."],
             "evidence": "/tmp/gspot-init-tests-main-freeze.json",
             "limitations": [
                 "Main staging, commits and push unavailable.",
@@ -14481,13 +14283,7 @@
             ],
             "unresolvedRecords": 951,
             "status": "local implementation; protected main Git metadata prevents checkpoint completion",
-            "validation": [
-                "Evidence e63365ac8e885ff7.",
-                "Evidence eaaf8a14991b5073.",
-                "Evidence 861f2b9227e53387.",
-                "Evidence 26cd4003a02296e2.",
-                "Evidence f1cf0427dfb8608e."
-            ],
+            "validation": ["Evidence 519bc1988bcd380b."],
             "evidence": "/tmp/gspot-parser-diagnostics-main-freeze.json",
             "limitations": ["Evidence d48254c173842b29.", "Evidence 5f7f88ecb50555f5."]
         },
@@ -14851,12 +14647,7 @@
             "unresolvedRecords": 951,
             "status": "Integrated and focused validation passes; final source prerequisite/commit/platform acceptance pending",
             "evidence": "/tmp/gspot-six-test-owner-freeze.json",
-            "validation": [
-                "Evidence 881bacd5c843e8d5.",
-                "Evidence 936ebc6f86b82657.",
-                "Evidence be543f29d0974793.",
-                "Evidence 1289292efe621fa2."
-            ]
+            "validation": ["Evidence 881bacd5c843e8d5.", "Evidence 936ebc6f86b82657.", "Evidence ab26062d5c84366d."]
         },
         {
             "commit": null,
@@ -15509,7 +15300,7 @@
                 "review/docs-site/032"
             ],
             "unresolvedRecords": 898,
-            "validation": ["Evidence 1b11ef5cb99c9ecf.", "Evidence f78ff75105842f8c."],
+            "validation": ["Evidence a97c9d50ad4fd770."],
             "limitations": [
                 "No cross-platform result inferred from local native tests. The obsolete ee8 run was cancelled after preserving its status. Prior f3 Windows failures include native defects and Bun file-default timeout resets; these remain open.",
                 "glossary/012 retains a remaining source comment correction for the next checkpoint; docs-site/011 and /027 retain scoped-build, simplification, native prerequisite and CI obligations. main/001 external publication and account setup remain partial."
@@ -16823,6 +16614,77 @@
                 "Only the named-check correction subsite of integration-tests084 is deleted here; wider084 remains partial.",
                 "Windows tracked fixture correction is locally verified and awaits actual Windows CI; no platform pass inferred from this Main run."
             ]
+        },
+        {
+            "commit": "5a4b25e1add91b920534a749f592ec373b9e4a13",
+            "completedRecords": ["slices/kits-general/027", "slices/kits-general/036"],
+            "unresolvedRecords": 406,
+            "validation": [
+                "Immutable packet hashes and exact hunk composition preserve held owners. Main native CLI replays match124/449 and21/92; native scanner receipt3/14 matches identical production source. Normal commits and pushes pass without policy exceptions or hook bypass.",
+                "All1092 records,1648 assignments,2259 original ID rows and490 original closed rows retained.24 repeated evidence pairs share exact reversible references, saving12674bytes without removing quotations, decisions or memberships."
+            ],
+            "limitations": [
+                "No new platform execution is claimed from local macOS receipts. Current CI is inspected separately; Windows tool acquisition delay and PurgeCSS drive-path failure remain unresolved.",
+                "main/001 remains partial for external publication/setup. No npm publication, release tag or deployment performed."
+            ]
+        },
+        {
+            "commit": "7818e8ca1d860e93272223a9e73f8aba06340cd1",
+            "completedRecords": ["areas/integration-tests/084"],
+            "unresolvedRecords": 405,
+            "validation": [
+                "All cited original/current obligations are mapped with zero residuals. Five exact whole-owner hashes plus the exact relevant refusal callback match integrated files. Existing native-linter partial-fix contracts remain under areas/tool-tests/004."
+            ],
+            "limitations": [
+                "Local Darwin/Bun results do not establish all-platform success. CI is inspected separately. main/001 remains partial; no publication/tag/deployment."
+            ],
+            "ci": "https://github.com/stefanionescu/gspot/actions/runs/37919381053 (pending when inspected)"
+        },
+        {
+            "commit": "cccfbf9870c634f36246e69f32871e4678480ed6",
+            "completedRecords": ["slices/kits-general/015"],
+            "unresolvedRecords": 404,
+            "validation": [
+                "Exact six authored owners plus normal regenerated workspace lock integrated, preserving CLI sideEffects and original brand. Other native parser bodies and existing SDK/template controls remain unchanged. Normal commit/push hooks pass; narrow production growth exception recorded as init-formatter-inference-size-exception."
+            ],
+            "limitations": [
+                "Packed formatter acceptance does not prove complete grammar delivery; that separate packaging obligation remains. Native local evidence is Darwin only; current CI is pending, with no platform skip treated as a pass. main/001 external publication/setup remains partial."
+            ],
+            "ci": "https://github.com/stefanionescu/gspot/actions/runs/37920336673 (pending when inspected)"
+        },
+        {
+            "commit": "2c65d42f63e5a907e39b9bd6be634202a527c486",
+            "completedRecords": ["review/repository-root/004", "review/repository-root/006"],
+            "unresolvedRecords": 402,
+            "validation": [
+                "Frozen native setup proposal /tmp/gspot-repository004005006-final-freeze.json and main /tmp/gspot-setup-and-fixture-main-cp-staged-authenticated.log retain exact bodies and errors. Nine-owner checkpoint includes generated normal tool lock and Ruff shared Python setup; Ruff8pass122assert and all25 original expectation ASTs/resources preserved. Original authored automation proposal removes785bytes; main security/policy amendments are explicit in the committed diff."
+            ],
+            "limitations": [
+                "Local Darwin acceptance only. CI37922939897 pending; no platform skip counts as proof. Native optional-WASI lock variation remains recorded and fails the required drift gate when present.",
+                "No live publication/deployment/database invocation; release and docs workflow preparation tested locally. Repository-root005 stays partial: duplicate check:types task/step deleted but seven required authored compiler flags retained after exact seven-finding native probe.",
+                "The Ruff fixture checkpoint supplements shared Python acquisition; broader tools-cache and Windows timing obligations remain. main/001 remains partial."
+            ],
+            "ci": "https://github.com/stefanionescu/gspot/actions/runs/37922939897 (pending when inspected)"
+        },
+        {
+            "commit": "b6c535bc1bf5db9e7f61f375b549eb5c56922377",
+            "completedRecords": [
+                "review/tests-layout/012",
+                "review/tests-layout/016",
+                "review/tests-layout/030",
+                "review/tests-layout/037",
+                "review/tests-layout/038"
+            ],
+            "unresolvedRecords": 397,
+            "validation": [
+                "Main22-owner integration removes4337bytes; frozen original delta4270 with AST+37/functions0/expect0 explicitly retained. Main recovery23pass129assert4files, Root/CP types0, staged31pass7skip0findings; normal commit25pass2skip0findings and push31pass7skip0findings. Original matrix35/175 and direct57/376 plus native22tools cases/replay retain all controls.",
+                "Proofs: /tmp/gspot-layout-support-six-final-v2-freeze.json, /tmp/gspot-layout-support-six-main-resolution-proof.json, /tmp/gspot-layout-six-main-staged-amendment/proof.json, /tmp/gspot-layout-six-evidence-only-lineage.json, /tmp/gspot-layout-six-main-current-policy-ownership-native.log."
+            ],
+            "limitations": [
+                "Tests-layout017 is partial: shared Next/Supabase and three native tsconfig objects implemented; remaining JSconfig duplication and original library/native project mapping stay explicit.",
+                "Darwin local receipts only. CI37923594912 pending; platform skips and prior unrelated failures are not credited as platform passes. main/001 stays partial."
+            ],
+            "ci": "https://github.com/stefanionescu/gspot/actions/runs/37923594912 (pending when inspected)"
         }
     ],
     "verificationEvidence": {
@@ -17311,6 +17173,30 @@
         "12974cfdd3b07fae": ["Evidence 7c5aca460a4e1ded.", "Evidence d87aa0948588fc99."],
         "fa7b782915ad5599": ["Evidence fa93dc536518f1f8.", "Evidence 2e8673f1d4aedece.", "Evidence 51a1096cba7a4cfb."],
         "ea59f549346e3eb3": ["Evidence fa93dc536518f1f8.", "Evidence 2e8673f1d4aedece."],
-        "2cb1760f59d208dc": ["Evidence 12dad70f52583c5c.", "Evidence 9f680f212e94e96d."]
+        "2cb1760f59d208dc": ["Evidence 12dad70f52583c5c.", "Evidence 9f680f212e94e96d."],
+        "cd8013f6ff349a6d": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5."],
+        "a54f15598472523e": ["Evidence cd8013f6ff349a6d.", "Evidence f706f04fbb49307e."],
+        "d1d9a164ba9ea8e6": ["Evidence aa91b5f69972c69b.", "Evidence 557fd3b3e8d65ca6."],
+        "c7ec0890eb460bd6": ["Evidence 4ec2666e0df80b38.", "Evidence a6f1ff5977c15e80."],
+        "d13d23ef753740dc": ["Evidence e21341d2b84cbd16.", "Evidence 0a4a426cd56e8208."],
+        "a97c9d50ad4fd770": ["Evidence 1b11ef5cb99c9ecf.", "Evidence f78ff75105842f8c."],
+        "49025d8ed841fdc4": ["Evidence cd9a6f9a1da7c4a3.", "Evidence a6858ccfea9e46c9."],
+        "ab21c6fb11d54e35": ["Evidence a2b94c9da4051e5f.", "Evidence 0ee814fd08e510fb."],
+        "738469f04e12ad05": ["Evidence ab21c6fb11d54e35.", "Evidence 4d3c9be91dfeb09c."],
+        "ea6a4e5999646044": ["Evidence 738469f04e12ad05.", "Evidence d078a7c577f57e77."],
+        "cde7352de5243559": ["Evidence ea6a4e5999646044.", "Evidence 999a19c9a211b7d7."],
+        "e02ce9101bf594ab": ["Evidence 2c9442dcf25177ff.", "Evidence 200056c172cddf65."],
+        "0d5792f16a63078e": ["Evidence e02ce9101bf594ab.", "Evidence 1745789772fd098d."],
+        "9e751c2322c7d97c": ["Evidence 0d5792f16a63078e.", "Evidence 7efad1a20dddc343."],
+        "21df1bcd5c1c9554": ["Evidence eaaf8a14991b5073.", "Evidence 861f2b9227e53387."],
+        "5266e8df6905c757": ["Evidence e63365ac8e885ff7.", "Evidence 21df1bcd5c1c9554."],
+        "9b93c9e039ae6f80": ["Evidence 9e751c2322c7d97c.", "Evidence 999a19c9a211b7d7."],
+        "3723a258f74e6d04": ["Evidence 9a21b7f0befa52e7.", "Evidence a6858ccfea9e46c9."],
+        "dc8d7575fb7d1c18": ["Evidence 5266e8df6905c757.", "Evidence 26cd4003a02296e2."],
+        "519bc1988bcd380b": ["Evidence dc8d7575fb7d1c18.", "Evidence f1cf0427dfb8608e."],
+        "988176c65cc0d4c1": ["Evidence 4d2ac8d51b2e53aa.", "Evidence a6858ccfea9e46c9."],
+        "ab26062d5c84366d": ["Evidence be543f29d0974793.", "Evidence 1289292efe621fa2."],
+        "e88fd77ec3308d00": ["Evidence ac10fd02ab2f83a0.", "Evidence 5fad9abc71677bae."],
+        "8de20943a0dca2b8": ["Evidence a85ef2a0a6686bbc.", "Evidence d13d23ef753740dc."]
     }
 }

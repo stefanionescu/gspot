@@ -1,6 +1,6 @@
 # Repository Root, Scripts, Workflows, and Package Wiring
 
-15 unresolved review records remain.
+13 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -301,3 +301,20 @@ Original records and quotations remain above. These records are complete at `6e7
 | ID                           | Status   | Evidence                                                                                                                                                                                                                                  |
 | ---------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/repository-root/033` | complete | ARGUMENT_START owner is arguments.ts; preset capture takes no argument and resolves test packages; obsolete constant owner deleted. Native capture leaves all15 preset data unchanged. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |
+
+## Owner decision of October 9, 2026 for CLI side effects
+
+The owner retains strict `package-json/require-sideEffects` enforcement and the CLI `sideEffects` field. `review/repository-root/040` remains partial. The CLI retains `["./dist/gspot.js"]`; this decision does not close the record or weaken the rule. Original IDs and quotations remain above.
+
+## Implementation checkpoint 2c65d42f6 of October 9, 2026 for committed-locks-and-shared-ci-setup
+
+Original records and quotations remain above. These records are complete at `2c65d42f63e5a907e39b9bd6be634202a527c486`.
+
+| ID                           | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/repository-root/004` | complete | Install:checks now installs committed Bun/UV tool locks. CI explicitly refreshes through bun scripts/plugin.ts install --refresh-lockfiles and rejects git diff in both locks. Normal default install and explicit refresh pass. Main refresh adopts native smol-toml1.9.1 metadata; repeat resolution exposes two optional WASI keys that alternate, preserved in repeat/third logs. The guard remains strict and detects actual drift; no idempotence claim or manual managed-file normalization. Main staged156pass14skip0findings and normal commit117pass3skip0findings; push156pass14skip0findings. Commit `2c65d42f63e5a907e39b9bd6be634202a527c486`.                                                                                    |
+| `review/repository-root/006` | complete | One composite setup owns the single mise2026.8.8 pin, tools default all, and authored setup input across all ten jobs. Docs/build/deploy use only @gspothq/docs; version/publisher use their exact workspace filters. Native filtered installs, docs build, pinned Wrangler version, version script, cold publisher grammar/plugin/CLI builds, Node24/Bun consumers, and database default setup/selector pass. Archive jobs remain absent. Native Actionlint and composite Zizmor pass. Approved repository-only ./ self-repository exception preserves Actionlint1.7.12 compatibility; setup input enters Bash via environment, resolving command injection without weakening other audits. Commit `2c65d42f63e5a907e39b9bd6be634202a527c486`. |
+
+## Partial compiler-task cleanup at 2c65d42f6
+
+`review/repository-root/005` remains partial. The duplicate task and CI step are deleted. The native strict-flag probe reports seven findings when its seven authored options are deleted, so the flags remain and strict enforcement stays. The original record and quotation are unchanged.
