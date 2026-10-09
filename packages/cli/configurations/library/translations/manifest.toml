@@ -40,3 +40,6 @@ name = "translations.base_locale"
 type = "string"
 default = "en"
 summary = "The locale whose message keys every other locale must contain."
+
+[agent_rules]
+"NEXT-INTL.md" = { dependencies = ["next-intl"] }

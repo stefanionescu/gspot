@@ -27,7 +27,7 @@ export function versionPairs(input: CheckInput, pairs: [string, string][]): Find
                         input,
                         { file: path, line: 1 },
                         'version-pair',
-                        `${left} is ${leftVersion} and ${right} is ${rightVersion}. Install the same version of both packages.`,
+                        `${left} is ${leftVersion} and ${right} is ${rightVersion}. Move ${left} and ${right} to the same version.`,
                     ),
                 ];
             });

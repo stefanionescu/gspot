@@ -309,7 +309,7 @@ name = "architecture.roles"
 type = "table"
 direction = "tightening"
 default = {}
-summary = "Which elements or paths play the types, tests, harness, config, env, and runtime roles for the import direction rules. No role has a default."
+summary = "Which modules or paths play the types, tests, test_harness, config, env, and runtime roles for the import direction rules, plus roles declared by selected configurations, such as scripts and stores. Those configurations provide their role defaults."
 
 [[setting]]
 name = "architecture.modules"

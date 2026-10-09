@@ -140,7 +140,6 @@ export const settingNamespaceSchemas = {
     postgres: z.strictObject({
         client_schemas: z.array(z.string()).optional(),
         doc_sections: z.array(z.string()).optional(),
-        docs: z.boolean().optional(),
         frozen_through: z.string().optional(),
         migrations_folder: z.string().optional(),
     }),

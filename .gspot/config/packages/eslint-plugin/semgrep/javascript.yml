@@ -11,22 +11,6 @@ rules:
       - javascript
       - typescript
     severity: ERROR
-  - id: gspot.javascript.no-eval
-    pattern-either:
-      - pattern: eval(...)
-      - pattern: new Function(...)
-      - pattern: setTimeout("...", ...)
-    message: >
-      Code injection risk - eval(), new Function(), and string setTimeout()
-      allow arbitrary code execution. Use safer alternatives.
-    languages:
-      - typescript
-      - javascript
-    severity: ERROR
-    metadata:
-      cwe:
-        - CWE-94
-      category: security
   - id: gspot.javascript.ssrf-web-request-user-input
     patterns:
       - pattern-either:

@@ -25,6 +25,7 @@ test('manual language choices include security output without selecting security
     const securityOutput = emitAll(securitySession);
     const generated = securityOutput.files.find((file) => file.path === target);
     expect(generated?.content).toBe(plainOutput.files.find((file) => file.path === target)?.content);
+    expect(generated?.content).not.toContain('gspot.javascript.no-eval');
 });
 
 for (const level of ['recommended', 'all'] as const) {

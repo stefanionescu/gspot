@@ -79,6 +79,10 @@ async function scanImage(input: CheckInput, image: string, path: string): Promis
  * @returns the findings
  */
 export function dockerignore(input: CheckInput): Finding[] {
+    const required = [
+        ...DOCKERIGNORE_ENTRIES,
+        ...input.selection.selected.flatMap((manifest) => manifest.dockerignore),
+    ];
     const dockerfiles = input.files.filter((file) => {
         const name = posix.basename(file.path);
         return name === 'Dockerfile' || name.startsWith('Dockerfile.') || name.endsWith('.dockerfile');
@@ -92,22 +96,21 @@ export function dockerignore(input: CheckInput): Finding[] {
                     input,
                     { file: dockerfile, line: 1 },
                     'missing-file',
-                    `No ${path} sits beside this Dockerfile.`,
+                    `Add a ${path} beside this Dockerfile that lists ${required.join(', ')}.`,
                 ),
             ];
         const text = readSource(input.root, path, input.reads).toString('utf8');
         const lines = new Set(text.split('\n').map((line) => line.trim().replaceAll(/^\/|\/$/gu, '')));
-        const missing = [
-            ...DOCKERIGNORE_ENTRIES,
-            ...input.selection.selected.flatMap((manifest) => manifest.dockerignore),
-        ].filter((entry) => [entry, `**/${entry}`, `${entry}*`, `**/${entry}*`].every((form) => !lines.has(form)));
+        const missing = required.filter((entry) =>
+            [entry, `**/${entry}`, `${entry}*`, `**/${entry}*`].every((form) => !lines.has(form)),
+        );
         if (missing.length === 0) return [];
         return [
             findingAt(
                 input,
                 { file: path, line: 1 },
                 'missing-entry',
-                `The ignore file lets through: ${missing.join(', ')}.`,
+                `Add these entries to ${path}: ${missing.join(', ')}.`,
             ),
         ];
     });

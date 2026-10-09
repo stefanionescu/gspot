@@ -162,7 +162,10 @@ describe.each(['recommended', 'all'] as const)('%s Docker language ignores', (le
             const input = buildCheckInput(await openSession(sandbox.path), 'docker/dockerignore', { scope });
             const findings = BUILT_IN_CHECKS['docker/dockerignore'].input(input);
             expect(findings.map(({ rule }) => rule)).toStrictEqual(missing === '' ? [] : ['missing-entry']);
-            if (missing !== '') expect(findings[0]!.message).toBe(`The ignore file lets through: ${missing}.`);
+            if (missing !== '')
+                expect(findings[0]!.message).toBe(
+                    `Add these entries to ${scope === '' ? '' : scope + '/'}.dockerignore: ${missing}.`,
+                );
         },
     );
 });

@@ -56,8 +56,9 @@ for (const configuration of ['react', 'nextjs'])
                     line: 1,
                     rule: 'version-pair',
                 });
-                expect(found[0]!.message).toContain(row.installedLeft);
-                expect(found[0]!.message).toContain(row.installedRight);
+                expect(found[0]!.message).toBe(
+                    `${left} is ${row.installedLeft} and ${right} is ${row.installedRight}. Move ${left} and ${right} to the same version.`,
+                );
             }
             expect(
                 session.scopes
