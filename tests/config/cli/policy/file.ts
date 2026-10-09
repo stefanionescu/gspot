@@ -171,10 +171,6 @@ export const POLICY_FILE_CASES: PolicyFileCase[] = [
     },
 ];
 
-/** Authored comments, table layout, and a schema directive kept across policy edits. */
-export const AUTHORED_POLICY =
-    '#:schema x\n\n# Comment on configurations.\nconfigurations = ["bash"]\n\n[hooks]\n# gspot checks the changed paths of a push.\npush_files = "changed"\n';
-
 /** An explicit empty project path keeps repository inference disabled. */
 export const EMPTY_PROJECT_POLICY = 'configurations = ["swift", "xcode"]\n[swift]\nxcode_project = ""\n';
 

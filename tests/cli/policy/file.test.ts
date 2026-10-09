@@ -5,18 +5,14 @@ import { valueAt } from '#cli/platform/contracts.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { hasPolicy, readPolicy } from '#cli/policy/public.ts';
 import { localDateSchema } from '#cli/policy/schema/contracts.ts';
+import { AUTHORED_POLICY } from '#tests/config/samples/policy.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import type { PreparedPolicy } from '#cli/types/policy/settings.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
-import { setKey, editPolicy, preparePolicy } from '#cli/policy/document/contracts.ts';
 import { link, open, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { setKey, editPolicy, getScopeTable, preparePolicy } from '#cli/policy/document/contracts.ts';
+import { POLICY_FILE_CASES, NATIVE_EDIT_POLICY, EMPTY_PROJECT_POLICY } from '#tests/config/cli/policy/file.ts';
 
-import {
-    AUTHORED_POLICY,
-    POLICY_FILE_CASES,
-    NATIVE_EDIT_POLICY,
-    EMPTY_PROJECT_POLICY,
-} from '#tests/config/cli/policy/file.ts';
 import {
     emitPolicy,
     parseTomlText,
@@ -95,6 +91,37 @@ const refusesMode = async () => {
 describe('writePolicyFile', () => {
     test('policy edits retain invalid UTF-8 bytes', refusesBytes);
     test('policy edits refuse a mode change after read', refusesMode);
+
+    test.each([
+        ['a sub-table', '[scope."api"]\n[scope."api".limits]\nfile_lines = 100\n'],
+        ['an inline table', '[scope."api"]\nlimits = { file_lines = 100 }\n'],
+    ])('a scope setting written into %s loads with the ones already there', async (_form, scope) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': `${AUTHORED_POLICY}\n${scope}`, 'api/run.sh': '' });
+        const resultInput = preparePolicy(sandbox.path);
+        const result = editPolicy(sandbox.path, resultInput, (raw) => {
+            setKey(getScopeTable(raw, 'api'), 'limits.function_lines', 20);
+        });
+        {
+            using log = openOwnership(sandbox.path);
+            writePolicyFile({
+                text: result.text,
+                original: resultInput.original,
+                publish: (next, expected) => {
+                    log.files.write('gspot.toml', next, expected);
+                },
+            });
+        }
+        expect(result.policy.scopeTables['api']?.limits?.root).toStrictEqual({
+            file_lines: 100,
+            function_lines: 20,
+        });
+        expect(
+            editPolicy(sandbox.path, preparePolicy(sandbox.path), () => {}).policy.scopeTables['api']?.limits?.root,
+        ).toMatchObject({
+            function_lines: 20,
+        });
+    });
 });
 
 test('a prepared policy edit refuses stale bytes and accepts a fresh plan', async () => {
