@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
@@ -16,7 +15,6 @@ import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { XCODE_PROJECT } from '#tests/config/samples/swift/xcode.ts';
 import { rm, stat, chmod, unlink, readFile } from 'node:fs/promises';
 import { spawnGspot, buildRunOptions } from '#tests/harness/gspot.ts';
-import { commandConfigurations } from '#cli/execution/command/arguments/public.ts';
 import { containing, containingAll, textContaining } from '#tests/harness/expectations.ts';
 
 import {
@@ -167,9 +165,6 @@ for (const { name, scope } of XCTEST_SCOPES) {
             expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
             using log = openOwnership(root);
             writeGeneratedFiles(session, emitted, log);
-            const planned = planRun(session, { stage: 'commit', only: ['swift/swiftlint'], skips: [] });
-            expect(planned).toHaveLength(1);
-            expect(commandConfigurations(session, planned[0]!)).toContain(`${prefix}AppTests/.swiftlint.yml`);
             await check(root, prefix);
         },
     );

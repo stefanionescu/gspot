@@ -2,10 +2,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { spawnGspot } from '#tests/harness/gspot.ts';
 import { git, commitAll } from '#tests/harness/git.ts';
 import { buildSandboxPath } from '#tests/harness/install.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
+import { spawnGspot, checkReport } from '#tests/harness/gspot.ts';
 
 // A fresh clone installs immutable tools and rejects then accepts a real staged commit.
 async function expectCloneHooks(source: string, environment: Record<string, string>): Promise<void> {
@@ -13,9 +13,13 @@ async function expectCloneHooks(source: string, environment: Record<string, stri
     const clone = join(cloneRoot.path, 'clone');
     const cloned = git(source, ['clone', '--quiet', '--no-local', source, clone]);
     expect(cloned.code, cloned.stdout + cloned.stderr).toBe(0);
-    const uninstalled = await spawnGspot(clone, ['check', '--only', 'bash/shellcheck']);
+    const uninstalled = await checkReport(clone, ['check', '--only', 'bash/shellcheck', '--json']);
     expect(uninstalled.code, uninstalled.stdout + uninstalled.stderr).toBe(0);
-    expect((uninstalled.stdout + uninstalled.stderr).match(/gspot install/gu)).toHaveLength(1);
+    expect(uninstalled.report).toMatchObject({
+        stage: 'all',
+        checks: [{ check: 'bash/shellcheck', scope: '', status: 'passed', fileCount: 2, findings: [] }],
+        exitCode: 0,
+    });
     for (let attempt = 0; attempt < 2; attempt++) {
         const installation = await spawnGspot(clone, ['install']);
         expect(installation.code, installation.stdout + installation.stderr).toBe(0);

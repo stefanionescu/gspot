@@ -13,6 +13,7 @@ import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
+import { SPELLING_EXCLUSIONS } from '#tests/config/tools/configurations/general/spelling.ts';
 
 test('native spelling file-type allowances preserve unrelated findings and neighboring files at level all', async () => {
     await using sandbox = await testdir();
@@ -117,55 +118,54 @@ test('spelling locales and word allowances remain scoped in generated configurat
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-test.each([
-    [['nested/src/**']],
-    [['**/src/**']],
-    [['*.txt', '!**/keep.txt']],
-    [['{nested/src,other/lib}/**']],
-    [['nested/[st]rc/**']],
-    [['/nested/src/']],
-    [['nested']],
-    [['**/nested/**/src/*']],
-])('spelling exclusions %j report the same files in a scope configuration', async (patterns) => {
-    await using sandbox = await testdir();
-    const paths = ['src/bad.txt', 'src/keep.txt', 'trc/bad.txt', 'child/src/bad.txt', 'child/bad.txt', 'bad.txt'];
-    await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
-            configurations: ['spelling'],
-            ignore: [{ check: 'spelling/typos', paths: patterns, reason: 'Generated input is checked by its owner.' }],
-            scope: { nested: {}, 'nested/child': {} },
-        }),
-        ...Object.fromEntries(paths.map((path) => [`nested/${path}`, `${TYPO.the}\n`])),
-    });
-    const session = await openSession(sandbox.path);
-    using log = openOwnership(sandbox.path);
-    writeGeneratedFiles(session, emitAll(session), log);
-    const selected = patterns.includes('nested')
-        ? ['.gspot/config/typos.toml']
-        : ['.gspot/config/typos.toml', '.gspot/config/nested/typos.toml'];
-    const [root, scope] = selected.map((config) => {
-        const result = runTestCommandBlocking(
-            [
-                'typos',
-                '--isolated',
-                '--config',
-                config,
-                '--force-exclude',
-                '--format',
-                'json',
-                ...paths.map((path) => `nested/${path}`),
-            ],
-            { cwd: sandbox.path, env: { PATH: buildToolsPath(['typos']) } },
-        );
-        expect([0, 2], result.stdout + result.stderr).toContain(result.code);
-        return result.stdout
-            .split('\n')
-            .filter((line) => line.trim() !== '')
-            .map((line) => (JSON.parse(line) as Pick<TypoEntry, 'path'>).path)
-            .toSorted((left, right) => left.localeCompare(right));
-    });
-    if (patterns.includes('nested')) {
-        expect(root).toStrictEqual([]);
-        expect(await pathExists(join(sandbox.path, '.gspot/config/nested/typos.toml'))).toBe(false);
-    } else expect(scope).toStrictEqual(root);
-});
+test.each(SPELLING_EXCLUSIONS)(
+    'spelling exclusions $patterns report the same files in a scope configuration',
+    async ({ patterns, expected }) => {
+        await using sandbox = await testdir();
+        const paths = ['src/bad.txt', 'src/keep.txt', 'trc/bad.txt', 'child/src/bad.txt', 'child/bad.txt', 'bad.txt'];
+        await createFileTree(sandbox.path, {
+            'gspot.toml': stringify({
+                configurations: ['spelling'],
+                ignore: [
+                    { check: 'spelling/typos', paths: patterns, reason: 'Generated input is checked by its owner.' },
+                ],
+                scope: { nested: {}, 'nested/child': {} },
+            }),
+            ...Object.fromEntries(paths.map((path) => [`nested/${path}`, `${TYPO.the}\n`])),
+        });
+        const session = await openSession(sandbox.path);
+        using log = openOwnership(sandbox.path);
+        writeGeneratedFiles(session, emitAll(session), log);
+        const selected = patterns.includes('nested')
+            ? ['.gspot/config/typos.toml']
+            : ['.gspot/config/typos.toml', '.gspot/config/nested/typos.toml'];
+        const [root, scope] = selected.map((config) => {
+            const result = runTestCommandBlocking(
+                [
+                    'typos',
+                    '--isolated',
+                    '--config',
+                    config,
+                    '--force-exclude',
+                    '--format',
+                    'json',
+                    ...paths.map((path) => `nested/${path}`),
+                ],
+                { cwd: sandbox.path, env: { PATH: buildToolsPath(['typos']) } },
+            );
+            expect([0, 2], result.stdout + result.stderr).toContain(result.code);
+            return result.stdout
+                .split('\n')
+                .filter((line) => line.trim() !== '')
+                .map((line) => (JSON.parse(line) as Pick<TypoEntry, 'path'>).path)
+                .toSorted((left, right) => left.localeCompare(right));
+        });
+        expect(root).toStrictEqual(expected);
+        if (patterns.includes('nested')) {
+            expect(await pathExists(join(sandbox.path, '.gspot/config/nested/typos.toml'))).toBe(false);
+        } else {
+            expect(scope).toStrictEqual(expected);
+            expect(scope).toStrictEqual(root);
+        }
+    },
+);

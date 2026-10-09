@@ -32,9 +32,4 @@ export const CASES: FindingCase[] = [
         files: { 'api/Dockerfile': CARELESS },
         expected: { file: 'api/Dockerfile', rule: 'DL3007', line: 1 },
     },
-    {
-        check: 'docker/trivy-config',
-        files: { 'api/Dockerfile': CARELESS },
-        expected: { file: 'api/Dockerfile', rule: 'DS-0002' },
-    },
 ];

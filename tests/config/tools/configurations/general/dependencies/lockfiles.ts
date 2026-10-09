@@ -1,4 +1,3 @@
-import { QUIET_INIT } from '#tests/config/harness/init.ts';
 /** Native lock checks use local dependency projects and retain their exact authored manifests. */
 const JAVASCRIPT_PROJECT = {
     manifestPath: 'package.json',
@@ -21,9 +20,6 @@ const PYTHON_PROJECT = {
     },
 };
 
-export const CLEAN = `{\n    "name": "example",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}"\n}\n`;
-
-export const DEPENDENCIES_INIT = ['init', '--yes', '--configurations', 'dependencies', ...QUIET_INIT];
 export const NATIVE_LOCKFILES = [
     {
         ...JAVASCRIPT_PROJECT,
