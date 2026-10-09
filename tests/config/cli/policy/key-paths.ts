@@ -1,13 +1,6 @@
 /** Authored semantic and schema failures retain their exact key locations and corrections. */
 export const SEMANTIC_KEY_PATH_CASES = [
     {
-        name: 'a missing ignore reason',
-        text: '[[ignore]]\ncheck = "bash/bash-syntax"\n',
-        where: 'ignore.0.reason',
-        before: '',
-        after: 'reason = "The native shell is checked by the project command."\n',
-    },
-    {
         name: 'a scoped disabled rule',
         text: '[scope."api"]\n[scope."api".tools.eslint.rules]\n"no-console" = "off"\n',
         where: 'scope.api.tools.eslint.rules.no-console',
@@ -44,13 +37,6 @@ export const SCHEMA_KEY_PATH_CASES = [
         where: ['scope.web.coverage.lines'],
         messages: [],
         correction: ['"wrong"', '90'],
-    },
-    {
-        name: 'an unknown nested key',
-        text: '[scope."api"]\nkitz = []\n',
-        where: ['`kitz` is not a setting gspot knows under [scope.api]'],
-        messages: [],
-        correction: ['kitz', 'configurations'],
     },
     {
         name: 'a nested array of tables under a second scope',

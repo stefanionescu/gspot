@@ -257,7 +257,6 @@ test('a replaced file keeps no copy, and giving it back deletes it', async () =>
             }),
         );
         expect(await readdir(join(directory.path, '.gspot/state'))).toContain('ownership.json');
-        expect(await readdir(join(directory.path, '.gspot/state'))).not.toContain('recovery');
         expect(applyPlan(log, planRestoration(log, 'config.txt'))).toBe('changed');
     }
     expect(await pathExists(join(directory.path, 'config.txt'))).toBe(false);

@@ -5,8 +5,8 @@ import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
-import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { planReplacement, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
+import { applyPlans, getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
 const implementation = getCliSourcePath('lifecycle/ownership/public.ts');
 const boundary = getCliSourcePath('platform/root/public.ts');
@@ -53,6 +53,7 @@ test.each(['before', 'after'] as const)(
             point,
             String.raw`applyPlans(log, ${JSON.stringify(paths)}.map(path=>planReplacement(log,{path: path, next: {bytes:Buffer.from('installed '+path+'\n'),mode:0o444}, kind: 'tool_file', canReplace: true})));`,
         );
+        expect(getOwnership(directory.path).pending?.map(({ path }) => path)).toStrictEqual(paths);
         expect(await readFile(join(directory.path, 'first.txt'), 'utf8')).toBe('installed first.txt\n');
         expect(await readFile(join(directory.path, 'middle.txt'), 'utf8')).toBe(
             `${point === 'before' ? 'authored' : 'installed'} middle.txt\n`,
@@ -61,6 +62,7 @@ test.each(['before', 'after'] as const)(
         {
             using log = openOwnership(directory.path);
 
+            expect(getOwnership(directory.path).pending).toBeUndefined();
             expect(
                 log.state.files.map((entry) => entry.path).toSorted((left, right) => left.localeCompare(right)),
             ).toStrictEqual(point === 'before' ? ['first.txt'] : ['first.txt', 'middle.txt']);

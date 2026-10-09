@@ -104,7 +104,8 @@ test.each(['recommended', 'all'] as const)(
             .object({ lint: z.object({ select: z.array(z.string()) }) })
             .parse(parse(await Bun.file(join(sandbox.path, '.gspot/config/ruff.toml')).text()));
         expect(config.lint.select.filter((code) => previewCodes.includes(code))).toStrictEqual([]);
-        const result = runTestCommandBlocking(command, { cwd: sandbox.path, env: { PATH: buildToolsPath(['ruff']) } });
+        const options = { cwd: sandbox.path, env: { PATH: buildToolsPath(['ruff']) } };
+        const result = runTestCommandBlocking(command, options);
         expect(result.code, result.stdout + result.stderr).toBe(1);
         const findings = JSON.parse(result.stdout) as RuffFinding[];
         expect(
@@ -120,10 +121,7 @@ test.each(['recommended', 'all'] as const)(
                 : [['F821', 1]],
         );
         await Bun.write(join(sandbox.path, 'sample.py'), '"""An arithmetic example."""\n\nanswer = 42\n');
-        const corrected = runTestCommandBlocking(command, {
-            cwd: sandbox.path,
-            env: { PATH: buildToolsPath(['ruff']) },
-        });
+        const corrected = runTestCommandBlocking(command, options);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(JSON.parse(corrected.stdout)).toStrictEqual([]);
     },

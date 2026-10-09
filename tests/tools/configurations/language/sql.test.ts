@@ -80,25 +80,17 @@ test.each(['recommended', 'all'] as const)(
         const configuration = emitted.files.find(({ path }) => path === '.gspot/config/sqlfluff.cfg')!;
         using ownership = openOwnership(sandbox.path);
         writeGeneratedFiles(session, emitted, ownership);
+        const options = { cwd: sandbox.path, env: { PATH: buildToolsPath(['sqlfluff']) } };
         const parseArguments = ['parse', '--config', configuration.path, '--ignore-local-config', 'query.sql'];
-        const accepted = await runTestCommand(['sqlfluff', ...parseArguments], {
-            cwd: sandbox.path,
-            env: { PATH: buildToolsPath(['sqlfluff']) },
-        });
+        const accepted = await runTestCommand(['sqlfluff', ...parseArguments], options);
         expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, 'query.sql')).text()).toBe(source);
         await Bun.write(join(sandbox.path, 'query.sql'), '/* Explains the query. */\nSELECT FROM;\n');
-        const failed = await runTestCommand(['sqlfluff', ...parseArguments], {
-            cwd: sandbox.path,
-            env: { PATH: buildToolsPath(['sqlfluff']) },
-        });
+        const failed = await runTestCommand(['sqlfluff', ...parseArguments], options);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(failed.stdout).toContain('PRS');
         await Bun.write(join(sandbox.path, 'query.sql'), source);
-        const corrected = await runTestCommand(['sqlfluff', ...parseArguments], {
-            cwd: sandbox.path,
-            env: { PATH: buildToolsPath(['sqlfluff']) },
-        });
+        const corrected = await runTestCommand(['sqlfluff', ...parseArguments], options);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
 );

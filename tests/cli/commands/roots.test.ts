@@ -9,40 +9,36 @@ import { pathExists } from '#tests/harness/preservation.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
+import { STORAGE_COMMAND, LINKED_STORAGE_CASES } from '#tests/config/cli/commands/roots.ts';
 
 const INIT = buildInitArguments(['bash']);
 
-test('init refuses a symlinked managed directory without writing outside the configuration root', async () => {
+test.each(LINKED_STORAGE_CASES)('$name', async ({ command, path, source, sentinel, message, hasPolicy }) => {
     await using directory = await testdir();
-    await createFileTree(directory.path, { 'project/entry.sh': 'echo example\n', 'outside/sentinel': 'authored\n' });
     const project = join(directory.path, 'project');
     const outside = join(directory.path, 'outside');
-    await symlink(outside, join(project, '.gspot'));
-    const refused = await runGspot(project, INIT);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stdout + refused.stderr).toContain('.gspot');
-    expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
-    expect(await pathExists(join(outside, 'mutation.lock'))).toBe(false);
-    expect(await pathExists(join(outside, 'ownership.json'))).toBe(false);
-    expect(await pathExists(join(project, 'gspot.toml'))).toBe(false);
-});
-
-test('a linked .gspot folder is refused without changing outside bytes', async () => {
-    await using sandbox = await testdir();
-    await using outside = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], {
-            tables: `[check."project/storage"]\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'console.log("Exact finding"); process.exitCode=1'])}\n[check.output]\nformat = "lines"\n`,
-        }),
-        'source.txt': 'input\n',
+    await createFileTree(directory.path, {
+        [`project/${path}`]: source,
+        'outside/sentinel': sentinel,
     });
-    await writeFile(join(outside.path, 'sentinel'), 'authored outside\n');
-    await symlink(outside.path, join(sandbox.path, '.gspot'));
-    const result = await runGspot(sandbox.path, ['check', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect((JSON.parse(result.stdout) as CommandFailureJson).message).toContain('Unsafe lifecycle parent');
-    expect(await readFile(join(outside.path, 'sentinel'), 'utf8')).toBe('authored outside\n');
-    expect(await readdir(outside.path)).toStrictEqual(['sentinel']);
+    if (command === 'check') {
+        await createFileTree(project, {
+            'gspot.toml': buildPolicy([], {
+                tables: `[check."project/storage"]\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', STORAGE_COMMAND])}\n[check.output]\nformat = "lines"\n`,
+            }),
+        });
+    }
+    await symlink(outside, join(project, '.gspot'));
+    const refused = await runGspot(project, command === 'init' ? INIT : ['check', '--json']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(
+        command === 'check'
+            ? (JSON.parse(refused.stdout) as CommandFailureJson).message
+            : refused.stdout + refused.stderr,
+    ).toContain(message);
+    expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe(sentinel);
+    expect(await readdir(outside)).toStrictEqual(['sentinel']);
+    expect(await pathExists(join(project, 'gspot.toml'))).toBe(hasPolicy);
 });
 
 test('a configuration below the Git root owns only its own project writes and changed paths', async () => {

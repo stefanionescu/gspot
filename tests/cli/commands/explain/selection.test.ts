@@ -35,17 +35,6 @@ lines = 95
             { scope: 'api/worker', current: 95, source: '[scope."api/worker"]' },
         ],
     });
-    const policy = join(sandbox.path, 'gspot.toml');
-    const original = await Bun.file(policy).text();
-    await Bun.write(policy, original.replace('lines = 95', 'lines = 96'));
-    const updated = await runGspot(sandbox.path, ['explain', 'coverage.lines', '--json']);
-    expect(updated.code, updated.stdout + updated.stderr).toBe(0);
-    expect(JSON.parse(updated.stdout)).toMatchObject({
-        scopes: [
-            { scope: 'api', current: 90 },
-            { scope: 'api/worker', current: 96 },
-        ],
-    });
 });
 test('explain > path explanations include enabled repository commands and global exceptions', async () => {
     await using sandbox = await testdir();

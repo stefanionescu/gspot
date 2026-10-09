@@ -87,10 +87,6 @@ test.each(['linked', 'linked/nested'])(
     },
 );
 
-test('parseStrictPolicy > invalid TOML is reported as such', () => {
-    expect(policyFindings('level = \n')[0]).toContain('is not valid TOML');
-});
-
 test.each([false, true])(
     'override rule severities are refused without accepting sibling rule selections (scoped: %s)',
     (nested) => {

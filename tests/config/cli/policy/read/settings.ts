@@ -45,3 +45,19 @@ export const PATH_SETTINGS = [
     { configuration: 'cloudflare', table: 'cloudflare', setting: 'types_file', list: false, empty: false },
     { configuration: 'openapi', table: 'openapi', setting: 'document', list: false, empty: true },
 ];
+
+/** Unknown authored keys name their exact table before their corrected input is accepted. */
+export const UNKNOWN_KEY_CASES = [
+    {
+        name: 'an unknown key names its table',
+        text: 'configurations = ["bash"]\n[hooks]\npush_files = "all"\npsh = "all"\n',
+        message: '`psh` is not a setting gspot knows under [hooks]',
+        correction: ['psh = "all"\n', ''] as const,
+    },
+    {
+        name: 'an unknown nested key',
+        text: '[scope."api"]\nkitz = []\n',
+        message: '`kitz` is not a setting gspot knows under [scope.api]',
+        correction: ['kitz', 'configurations'] as const,
+    },
+];

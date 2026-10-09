@@ -57,16 +57,11 @@ test('Ruff editor discovery and explicit formatting agree on root and nested pol
     using log = openOwnership(sandbox.path);
     writeGeneratedFiles(session, emitAll(session), log);
     for (const { file, config, formatted } of FORMAT_CASES) {
-        const fixed = runTestCommandBlocking(['ruff', 'format', '--config', config, '--no-cache', file], {
-            cwd: sandbox.path,
-            env: { PATH: buildToolsPath(['ruff']) },
-        });
+        const options = { cwd: sandbox.path, env: { PATH: buildToolsPath(['ruff']) } };
+        const fixed = runTestCommandBlocking(['ruff', 'format', '--config', config, '--no-cache', file], options);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, file)).text()).toBe(formatted);
-        const editor = runTestCommandBlocking(['ruff', 'format', '--check', '--no-cache', file], {
-            cwd: sandbox.path,
-            env: { PATH: buildToolsPath(['ruff']) },
-        });
+        const editor = runTestCommandBlocking(['ruff', 'format', '--check', '--no-cache', file], options);
         expect(editor.code, editor.stdout + editor.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, file)).text()).toBe(formatted);
     }

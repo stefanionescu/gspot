@@ -11,6 +11,7 @@ import { readPolicy, readPolicyTable, parseStrictPolicy } from '#cli/policy/publ
 import {
     PATH_SETTINGS,
     DISABLED_RULES,
+    UNKNOWN_KEY_CASES,
     MALFORMED_REASON_CASES,
     REMOVED_STRUCTURE_SETTINGS,
     INVALID_ENVIRONMENT_SETTINGS,
@@ -65,10 +66,11 @@ describe('policy value normalization', () => {
 });
 
 describe('policy setting refusals', () => {
-    test('an unknown key names its table', () => {
-        const found = policyFindings(`${buildPolicy(['bash'])}[hooks]\npush_files = "all"\npsh = "all"\n`);
+    test.each(UNKNOWN_KEY_CASES)('$name', ({ text, message, correction }) => {
+        const found = policyFindings(text);
         expect(found).toHaveLength(1);
-        expect(found[0]).toContain('`psh` is not a setting gspot knows under [hooks]');
+        expect(found[0]).toContain(message);
+        expect(policyFindings(text.replace(correction[0], correction[1]))).toStrictEqual([]);
     });
 
     test('a scoped disabled ESLint rule names the accepted-finding command and rule', () => {

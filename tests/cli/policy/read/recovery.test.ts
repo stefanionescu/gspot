@@ -5,10 +5,10 @@ import { textContaining } from '#tests/harness/expectations.ts';
 import { selectForScope } from '#cli/repository/selection/public.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
-import { GOOD_IGNORE } from '#tests/config/cli/policy/read/recovery.ts';
 import { scopeView, knownSettings } from '#cli/policy/settings/public.ts';
 import { readPolicyTable, parseStrictPolicy } from '#cli/policy/public.ts';
 import { policyValues, parseTomlText } from '#cli/policy/document/public.ts';
+import { MISSING_REASON_CASES } from '#tests/config/cli/policy/read/recovery.ts';
 
 test('forbidden ShellCheck settings in a scope are reported and removed at the scoped key', async () => {
     await using sandbox = await testdir();
@@ -20,20 +20,18 @@ test('forbidden ShellCheck settings in a scope are reported and removed at the s
     expect(result.policy.scopeTables['api']?.tools?.['shellcheck']?.verbatim).toBeUndefined();
     expect(result.policy.configurations).toStrictEqual(['bash']);
 });
-test('an ignore without a reason is a finding at its key path, and the other ignore stands', () => {
-    const text = `${buildPolicy(['bash'])}${GOOD_IGNORE}[[ignore]]\ncheck = "bash/bash-syntax"\n`;
+test.each(MISSING_REASON_CASES)('$name', ({ validIgnore, index, checks, reason }) => {
+    const text = `${buildPolicy(['bash'])}${validIgnore}[[ignore]]\ncheck = "bash/bash-syntax"\n`;
     const authored = parseTomlText(text, 'gspot.toml', 'policy');
     const original = policyValues(authored);
     const { policy, errors } = readPolicyTable(authored);
     expect(policyValues(authored)).toBe(original);
-    expect(errors).toMatchObject([{ path: ['ignore', 1, 'reason'], message: textContaining('needs a reason') }]);
-    expect(policy.ignore.map((entry) => entry.check)).toStrictEqual(['bash/shellcheck']);
-    expect(() => parseStrictPolicy(text)).toThrow('gspot.toml: ignore.1.reason:');
-    const corrected = readPolicyTable(
-        parseTomlText(`${text}reason = "The syntax check reads the shebang alone."\n`, 'gspot.toml', 'policy'),
-    );
+    expect(errors).toMatchObject([{ path: ['ignore', index, 'reason'], message: textContaining('needs a reason') }]);
+    expect(policy.ignore.map((entry) => entry.check)).toStrictEqual(checks);
+    expect(() => parseStrictPolicy(text)).toThrow(`gspot.toml: ignore.${String(index)}.reason:`);
+    const corrected = readPolicyTable(parseTomlText(`${text}reason = "${reason}"\n`, 'gspot.toml', 'policy'));
     expect(corrected.errors).toStrictEqual([]);
-    expect(corrected.policy.ignore).toHaveLength(2);
+    expect(corrected.policy.ignore).toHaveLength(index + 1);
 });
 
 test('a limit with a placeholder reason is dropped with its value, and the tightened limit stays', () => {
