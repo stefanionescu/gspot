@@ -7,7 +7,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { parseExpiryDate } from '#cli/policy/document/public.ts';
-import { IGNORE_FEEDBACK_CASES } from '#tests/config/cli/commands/ignores.ts';
+import { IGNORE_FEEDBACK_CASES } from '#tests/config/cli/commands/ignore.ts';
 
 test.each(IGNORE_FEEDBACK_CASES)(
     'ignore removal from %s keeps apply notes and reports an unchanged repeat',

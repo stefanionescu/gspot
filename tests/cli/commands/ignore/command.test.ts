@@ -7,7 +7,7 @@ import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
-import { TWO_RULES, QUALITY_FIX, IGNORE_CASES, QUALITY_COMMAND } from '#tests/config/cli/commands/ignores.ts';
+import { TWO_RULES, QUALITY_FIX, IGNORE_CASES, QUALITY_COMMAND } from '#tests/config/cli/commands/ignore.ts';
 
 test('a global ignore stops a command check and its correction command until removed', async () => {
     await using directory = await testdir();
