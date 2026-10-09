@@ -7,7 +7,6 @@ import { embeds } from '#cli/checks/language/bash/embeds.ts';
 import { safety } from '#cli/checks/language/bash/safety.ts';
 import { sshBlocks } from '#cli/checks/language/bash/ssh.ts';
 import { locales } from '#cli/checks/library/translations.ts';
-import { largeFiles } from '#cli/checks/general/repository.ts';
 import { svelteCheck } from '#cli/checks/framework/contracts.ts';
 import { contract } from '#cli/checks/language/bash/contract.ts';
 import { wrappers } from '#cli/checks/language/bash/wrappers.ts';
@@ -30,6 +29,7 @@ import { privatePrefix } from '#cli/checks/language/bash/visibility.ts';
 import { manifests } from '#cli/checks/general/dependencies/manifests.ts';
 import { versionPairs } from '#cli/checks/general/dependencies/public.ts';
 import { folderNames } from '#cli/checks/general/structure/folder-names.ts';
+import { largeFiles, trackedFiles } from '#cli/checks/general/repository.ts';
 import { relations as drizzleRelations } from '#cli/checks/library/drizzle.ts';
 import { testPlacement } from '#cli/checks/general/structure/test-placement.ts';
 import { unreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
@@ -50,9 +50,9 @@ import { trivialFunctions as sqlTrivialFunctions } from '#cli/checks/language/sq
 import { recording, references } from '#cli/checks/library/swift-snapshot-testing.ts';
 import { symlinks, testPlans, orphanSources } from '#cli/checks/tool/xcode/project.ts';
 import { rls, grants, definerSearchPath } from '#cli/checks/database/postgres/access.ts';
+import { trufflehog, envTemplate, gitleaksPushed } from '#cli/checks/general/secrets.ts';
 import { singletons as pythonSingletons } from '#cli/checks/language/python/singletons.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/database/postgres/history.ts';
-import { trackedDependencies } from '#cli/checks/general/structure/tracked-dependencies.ts';
 import { importLinter as pythonImportLinter } from '#cli/checks/language/python/imports.ts';
 import { privateBeforePublic } from '#cli/checks/general/structure/private-before-public.ts';
 import { functionSize as bashFunctionSize } from '#cli/checks/language/bash/function-size.ts';
@@ -62,7 +62,6 @@ import { scripts as htmlScripts, literals as htmlLiterals } from '#cli/checks/la
 import { xcstrings, orphanAssets, contentsFindings } from '#cli/checks/tool/xcode/resources.ts';
 import { deptry, pipInstalls as pythonPipInstalls } from '#cli/checks/language/python/deptry.ts';
 import { functionSize as pythonFunctionSize } from '#cli/checks/language/python/function-size.ts';
-import { envFiles, trufflehog, envTemplate, gitleaksPushed } from '#cli/checks/general/secrets.ts';
 import { NEXT_VERSION_PAIRS, REACT_VERSION_PAIRS } from '#cli/config/checks/general/dependencies.ts';
 import { swiftBuild, swiftPeriphery, swiftlintAnalyze } from '#cli/checks/language/swift/contracts.ts';
 import { nextBuild, nextjsTsc, routeSegments, nextConfiguration } from '#cli/checks/framework/public.ts';
@@ -113,7 +112,6 @@ export const BUILT_IN_CHECKS = {
     'gspot/suppressions': { input: suppressions },
     'gspot/unmatched-paths': { input: unmatchedPaths },
     'repository/large-files': { input: largeFiles },
-    'structure/tracked-dependencies': { input: trackedDependencies },
     'typescript/tsconfig': { input: tsconfig },
     'docs/headings': { input: headings },
     'docs/stale-paths': { input: stalePaths },
@@ -122,7 +120,7 @@ export const BUILT_IN_CHECKS = {
     'markdown/fences': { input: fences },
     'duplication/jscpd': { input: jscpd },
     'secrets/env-template': { input: envTemplate },
-    'secrets/env-files': { input: envFiles },
+    'repository/tracked-files': { input: trackedFiles },
     'security/codeql': { input: codeql },
     'security/semgrep': { run: semgrep },
     'dependencies/manifests': { input: manifests },

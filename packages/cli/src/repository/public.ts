@@ -32,11 +32,9 @@ import {
     LICENSE_FILE,
     LICENSE_TAGS,
     EXTENSION_TAGS,
-    ENV_FILE_PATTERNS,
     FILE_PREFIX_BYTES,
     GENERATED_BANNERS,
     VALE_OWN_PREFIXES,
-    ENV_TEMPLATE_NAMES,
     VENDORED_DIRECTORIES,
     GENERATED_BUILD_WRAPPERS,
 } from '#cli/config/repository/inventory.ts';
@@ -56,8 +54,6 @@ function trackedFile(entry: RawEntry, prefix: Buffer, tagged: Tagged, verdict: V
     return file;
 }
 // Every tracked path has one kind: source, generated, vendored, binary.
-
-const matchesEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
 
 function declaredKind(path: string, rules: FileClassificationRules): Verdict | undefined {
     const matched = rules.declarations.filter((entry) => pathMatcher(entry.paths)(path));
@@ -259,13 +255,4 @@ export function readAttributes(root: string, paths: string[], hasGit: boolean): 
         attributes.set(path, effective);
     }
     return attributes;
-}
-
-/**
- * Identify environment files that contain machine values rather than templates.
- * @param path the repository-relative path.
- * @returns whether the file contains environment values.
- */
-export function isEnvironmentFile(path: string): boolean {
-    return matchesEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(posix.basename(path));
 }

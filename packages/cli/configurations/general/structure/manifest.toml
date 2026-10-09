@@ -72,17 +72,6 @@ help = "Move the logic into a module under src and keep the literal in the confi
 
 
 [[check]]
-name = "tracked-dependencies"
-title = "Keep installed dependencies out of git"
-example = "A tracked `node_modules` directory reports committed dependency output. Add `node_modules/` to `.gitignore` and run `git rm -r --cached node_modules` to remove it from the index while preserving local installed files."
-level = "recommended"
-stage = "commit"
-runs = "once"
-summary = "Checks that git tracks no file inside a folder a package manager fills, such as node_modules."
-why = "An installed dependency in git is copied into every clone, goes stale the day it lands, and hides from every check because it looks vendored."
-help = "Run git rm -r --cached `<folder>`, and write the folder name with no leading slash in .gitignore so it matches at every depth."
-
-[[check]]
 name = "file-lines"
 title = "Limit source file lines"
 example = "A Python, Bash, or SQL source file above its language's code-line ceiling reports its count. Split independent responsibilities into their owners and rerun the check."

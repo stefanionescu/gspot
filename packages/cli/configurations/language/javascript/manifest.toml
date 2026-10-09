@@ -1,4 +1,5 @@
 products = ["JavaScript", "ESLint", "knip"]
+untracked_files = ["**/{node_modules,bower_components}/**"]
 
 eslint_presets = { eslint = { package = "@eslint/js", source = "configs.recommended" }, sonar = { package = "eslint-plugin-sonarjs", source = "configs.recommended" }, unicorn = { package = "eslint-plugin-unicorn", source = "configs.recommended" }, packageJson = { package = "eslint-plugin-package-json", source = "configs.recommended" }, prettier = { package = "eslint-config-prettier", source = "" }, gspot = { package = "@gspothq/eslint-plugin", source = "configs.recommended" } }
 eslint_all_rules = [

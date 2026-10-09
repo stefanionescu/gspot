@@ -21,9 +21,9 @@ afterAll(async () => {
 });
 
 describe('the structure configuration', () => {
-    test('structure/tracked-dependencies reports a dependency folder that git tracks', async () => {
+    test('repository/tracked-files reports a dependency folder that git tracks', async () => {
         const { root, environment } = testRepository;
-        const command = ['check', '--only', 'structure/tracked-dependencies', '--json'];
+        const command = ['check', '--only', 'repository/tracked-files', '--json'];
         const clean = await runGspot(root, command, environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         await mkdir(join(root, 'web', 'node_modules', 'left-pad'), { recursive: true });
@@ -33,16 +33,16 @@ describe('the structure configuration', () => {
         expect(tracked.code).toBe(1);
         expect(tracked.report.checks).toMatchObject([
             {
-                check: 'structure/tracked-dependencies',
+                check: 'repository/tracked-files',
                 status: 'failed',
-                findings: [{ file: 'web/node_modules', rule: 'tracked-folder', line: 1 }],
+                findings: [{ file: 'web/node_modules/left-pad/index.js', rule: 'tracked-file', line: 1 }],
             },
         ]);
         expect(git(root, ['rm', '-r', '--cached', '--quiet', 'web/node_modules']).code).toBe(0);
         const corrected = await checkReport(root, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.report.checks).toMatchObject([
-            { check: 'structure/tracked-dependencies', status: 'passed', findings: [] },
+            { check: 'repository/tracked-files', status: 'passed', findings: [] },
         ]);
     });
 });

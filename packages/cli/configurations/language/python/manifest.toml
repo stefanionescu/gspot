@@ -1,4 +1,5 @@
 products = ["Python", "Ruff", "basedpyright"]
+untracked_files = ["**/{.venv,venv}/**"]
 
 ignored_folders = [".venv/"]
 

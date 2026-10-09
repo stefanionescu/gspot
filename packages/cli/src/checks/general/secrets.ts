@@ -10,7 +10,6 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { isInScope } from '#cli/repository/paths/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
-import { isEnvironmentFile } from '#cli/repository/public.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
 import { runGit, runGitBinary } from '#cli/platform/git/public.ts';
@@ -145,25 +144,6 @@ export async function gitleaksPushed(session: ToolSession, planned: PlannedCheck
         if (current.status === 'failed') result.status = 'failed';
     }
     return { ...result, duration: performance.now() - started };
-}
-
-/**
- * One finding for each tracked environment file that is not a template.
- * @param input the check input
- * @returns the findings
- */
-export function envFiles(input: CheckInput): Finding[] {
-    const tracked = [...new Set(input.index.map((entry) => entry.path))];
-    return tracked
-        .filter(isEnvironmentFile)
-        .map((path) =>
-            findingAt(
-                input,
-                { file: path, line: 1 },
-                'tracked-env',
-                `${path} is tracked; an environment file holds the values of one machine.`,
-            ),
-        );
 }
 
 /**

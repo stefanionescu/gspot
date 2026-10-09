@@ -3,20 +3,20 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { getStaged } from '#cli/repository/revisions/public.ts';
 
-test.each(['secrets/env-files', 'structure/tracked-dependencies'])(
+test.each(['.env', 'node_modules/example/source.js'])(
     '%s reports a failed index read instead of a clean verdict',
-    async (check) => {
+    async (file) => {
+        const check = 'repository/tracked-files';
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['secrets', 'structure']),
-            '.env': 'TOKEN=example\n',
-            'node_modules/example/source.js': 'export {};\n',
+            'gspot.toml': buildPolicy(['secrets', 'javascript']),
+            [file]: file === '.env' ? 'TOKEN=example\n' : 'export {};\n',
             'source.ts': 'export {};\n',
         });
         gitOutput(sandbox.path, ['init', '-q']);
@@ -26,9 +26,7 @@ test.each(['secrets/env-files', 'structure/tracked-dependencies'])(
         const found = await executeRun(session, options);
         expect(found.report.exitCode).toBe(1);
         expect(found.report.checks[0]!.status).toBe('failed');
-        expect(found.report.checks[0]!.findings).toMatchObject([
-            { file: check === 'secrets/env-files' ? '.env' : 'node_modules' },
-        ]);
+        expect(found.report.checks[0]!.findings).toMatchObject([{ file }]);
         await writeFile(join(sandbox.path, '.git/index'), 'corrupt index');
         const failed = await executeRun(session, options);
         expect(failed.report.exitCode).toBe(2);
@@ -49,7 +47,7 @@ test('execution reports the unstaged selection count before command rendering', 
     await writeFile(join(sandbox.path, 'source.ts'), 'export const value = 1;\n');
     const selection = await getStaged(sandbox.path);
     const options = buildRunOptions({
-        only: ['secrets/env-files'],
+        only: ['repository/tracked-files'],
         staged: selection.staged,
         unstagedChanges: selection.unstaged,
     });

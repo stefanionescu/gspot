@@ -16,6 +16,13 @@ import {
 test('the folder gives a configuration its name and kind, and the [configuration] table cannot repeat them', () => {
     const { configuration } = parseConfigurationManifest('example', { kind: 'infra' });
     expect([configuration.name, configuration.kind]).toStrictEqual(['example', 'infra']);
+    expect(parseConfigurationManifest('example', { kind: 'test' }).configuration.kind).toBe('test');
+    expect(() =>
+        parseManifest(
+            '[configuration]\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n',
+            'configurations/tool/example',
+        ),
+    ).toThrow('configuration.kind');
     expect(() =>
         parseConfigurationManifest('example', {
             kind: 'infra',

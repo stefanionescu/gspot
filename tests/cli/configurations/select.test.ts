@@ -1,8 +1,14 @@
 import { test, expect, describe } from 'bun:test';
 import { selectForScope } from '#cli/repository/selection/public.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
-import { selectConfigurations, configurationManifests } from '#cli/configurations/public.ts';
-import { PROJECT_CHOICES, OPENAPI_FRAMEWORKS, PROJECT_SELECTIONS } from '#tests/config/cli/configurations/select.ts';
+import { selectConfigurations, sourceConfigurations, configurationManifests } from '#cli/configurations/public.ts';
+
+import {
+    PROJECT_CHOICES,
+    OPENAPI_FRAMEWORKS,
+    PROJECT_SELECTIONS,
+    CONFIGURATION_CATEGORIES,
+} from '#tests/config/cli/configurations/select.ts';
 
 describe('selectConfigurations', () => {
     test('pulls required configurations in, dependencies first, in order of first mention', () => {
@@ -53,3 +59,29 @@ test.each(OPENAPI_FRAMEWORKS)('%s keeps %s required and OpenAPI suggested', (fra
         expect(chosen.map(({ configuration }) => configuration.name)).toContain('openapi');
     }
 });
+
+test.each(CONFIGURATION_CATEGORIES)(
+    '%s retains its %s category in root, inherited and manual child selections',
+    (name, kind) => {
+        const manifests = configurationManifests();
+        const policy = {
+            configurations: [name, 'site'],
+            removed_configurations: [],
+            scope: {
+                app: { configurations: [], removed_configurations: [] },
+                manual: { configurations: [name, 'site'], removed_configurations: [] },
+                sibling: { configurations: [], removed_configurations: [name] },
+            },
+        };
+        for (const scope of ['', 'app', 'app/deep', 'manual']) {
+            const selected = selectForScope(policy, scope, manifests);
+            expect(selected.find(({ configuration }) => configuration.name === name)?.configuration.kind).toBe(kind);
+            const sources = sourceConfigurations(selected).map(({ configuration }) => configuration.name);
+            expect(sources).not.toContain(name);
+            expect(sources).toContain('site');
+        }
+        expect(
+            selectForScope(policy, 'sibling', manifests).map(({ configuration }) => configuration.name),
+        ).not.toContain(name);
+    },
+);

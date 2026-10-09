@@ -14,6 +14,17 @@ summary = "Checks that every tracked file over the size limit is stored through 
 why = "A large file in plain git history stays in every clone for good."
 help = "Track the file with git lfs, classify it with gspot set generated `<path>` or gspot set vendored `<path>`, or raise limits.file_kb with a reason."
 
+[[check]]
+name = "tracked-files"
+title = "Keep local and installed files out of Git"
+example = "A tracked .env or node_modules/example/index.js reports tracked-file. Add its path to .gitignore and run git rm --cached on that file, preserving its local contents."
+level = "recommended"
+stage = "commit"
+runs = "once"
+summary = "Checks tracked files against the paths that selected configurations declare untracked."
+why = "Machine-local values and installed packages belong outside shared Git history."
+help = "Add the reported file or folder to .gitignore and remove it from the index with git rm --cached."
+
 [[setting]]
 name = "limits.file_kb"
 type = "number"

@@ -24,3 +24,17 @@ export const OPENAPI_FRAMEWORKS = [
     ['express', 'javascript'],
     ['fastapi', 'python'],
 ] as const;
+
+/** Test runners and infrastructure have distinct shipped categories and remain non-source configurations. */
+export const CONFIGURATION_CATEGORIES = [
+    ['jest', 'test'],
+    ['vitest', 'test'],
+    ['pytest', 'test'],
+    ['swift-tests', 'test'],
+    ['docker', 'infra'],
+    ['nginx', 'infra'],
+    ['ansible', 'infra'],
+    ['github-actions', 'infra'],
+    ['openapi', 'infra'],
+    ['xcode', 'infra'],
+] as const;

@@ -54,10 +54,6 @@ export const VALE_OWN_PREFIXES = [`${STYLES_DIRECTORY}/gspot/`, `${STYLES_DIRECT
 
 export const BANNER_BYTES = 1024;
 
-export const ENV_FILE_PATTERNS = ['.env', '.env.*', '.dev.vars', '.dev.vars.*'];
-
-export const ENV_TEMPLATE_NAMES = ['.env.example', '.env.template', '.env.sample', '.dev.vars.example'];
-
 export const EXTENSION_TAGS: Record<string, string[]> = {
     '.sh': ['shell', 'bash', 'text'],
     '.bash': ['shell', 'bash', 'text'],

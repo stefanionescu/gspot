@@ -1,9 +1,12 @@
 import which from 'which';
-import { testdir } from 'testdirs';
 import * as clack from '@clack/prompts';
+import { commitAll } from '#tests/harness/git.ts';
+import { runGspot } from '#tests/harness/gspot.ts';
+import { testdir, createFileTree } from 'testdirs';
 import * as environment from '#cli/platform/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildInitOptions } from '#tests/harness/init.ts';
+import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { EMPTY_TOOLING } from '#tests/config/harness/tooling.ts';
 import { askQuestions, askConfirmation } from '#cli/commands/init/contracts.ts';
@@ -70,4 +73,18 @@ test.each([...RUNNER_FAILURES])('initialization $name', async ({ terminal, answe
     const options = buildInitOptions(directory.path, { yes: false });
     delete options.runner;
     expect(await rejection(askQuestions(directory.path, options, EMPTY_TOOLING))).toContain(error);
+});
+
+test('initialization groups detected test runners and infrastructure under their native categories', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'package.json': '{"name":"example","private":true,"dependencies":{"jest":"30.2.0"}}',
+        Dockerfile: 'FROM node:24\n',
+    });
+    commitAll(sandbox.path);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', ...QUIET_INIT]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toMatch(/^test runners\s+jest\b/mu);
+    expect(result.stdout).toMatch(/^infrastructure\s+docker\b/mu);
+    expect(result.stdout).not.toMatch(/^tools\s/mu);
 });
