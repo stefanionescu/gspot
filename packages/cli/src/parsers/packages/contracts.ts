@@ -2,11 +2,11 @@ import { z } from 'zod';
 import semver from 'semver';
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
-import { dirname, relative } from 'node:path';
-import { toPosix } from '#cli/platform/contracts.ts';
+import { join, dirname, relative } from 'node:path';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
+import { toPosix, isInside } from '#cli/platform/contracts.ts';
 import { openRoot, readText } from '#cli/platform/root/public.ts';
 import { portableSegments } from '#cli/platform/root/contracts.ts';
 import { typeScriptConfigSchema } from '#cli/parsers/schema/public.ts';
@@ -234,6 +234,53 @@ export function parseTsconfig(path: string, text: string, host: ts.ParseConfigHo
     if (errors.length > 0)
         throw new Error(errors.map((error) => ts.flattenDiagnosticMessageText(error.messageText, '\n')).join('\n'));
     return { ...parsed, raw: authored, configurationFiles };
+}
+
+/**
+ * Read compiler libraries through their observed installed package tree.
+ * @param root the captured repository
+ * @param scope the compiler scope
+ * @param reads the captured read cache
+ * @param options the native compiler options
+ * @returns the guarded native compiler host
+ */
+export function compilerHost(
+    root: string,
+    scope: string,
+    reads: ReadCache,
+    options: ts.CompilerOptions,
+): ts.CompilerHost {
+    const host = ts.createCompilerHost(options);
+    const libraries = new Set([dirname(dirname(ts.getDefaultLibFilePath(options)))]);
+    const nativeRealpath = host.realpath?.bind(host);
+    const nativeSourceFile = host.getSourceFile.bind(host);
+    host.getSourceFile = (path, languageVersion, _onError, createSource) =>
+        nativeSourceFile(
+            path,
+            languageVersion,
+            (message) => {
+                throw new Error(message);
+            },
+            createSource,
+        );
+    host.getCurrentDirectory = () => join(root, scope);
+    host.realpath = (path) => {
+        const resolved = nativeRealpath?.(path) ?? path;
+        const local = toPosix(relative(root, path));
+        if (
+            (isInside(local) && local.split('/').includes('node_modules')) ||
+            [...libraries].some((library) => isInside(relative(library, path)))
+        ) {
+            const marker = toPosix(resolved).indexOf('/node_modules/');
+            if (marker !== -1) libraries.add(resolved.slice(0, marker + '/node_modules'.length));
+        }
+        return resolved;
+    };
+    host.readFile = (path) =>
+        [...libraries].some((library) => isInside(relative(library, path)))
+            ? ts.sys.readFile(path)
+            : configurationText(root, path, reads);
+    return host;
 }
 
 /**

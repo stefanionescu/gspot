@@ -14,7 +14,7 @@ import { COMPILER_OPTIONS, RECOMMENDED_OPTIONS, TYPESCRIPT_DEFAULTS } from '#cli
  * @returns the native compiler configuration
  */
 export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
-    const { root, reads, target, scope, files, scopeEntries, options } = input;
+    const { root, installedRoot, reads, target, scope, files, scopeEntries, options } = input;
     const authored = getTsconfigProject(
         root,
         scope,
@@ -27,9 +27,28 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
             .map((file) => file.path),
         reads,
     );
+    const projectRoots =
+        ts.getEffectiveTypeRoots(
+            {},
+            {
+                getCurrentDirectory: () =>
+                    join(
+                        installedRoot ?? root,
+                        authored === undefined ? scope : relative(root, dirname(authored.path)),
+                    ),
+            },
+        ) ?? [];
+    const typeRoots = projectRoots.map((path) => toPosix(relative(join(root, dirname(target)), path)));
     if (authored !== undefined)
-        return { extends: toPosix(relative(dirname(join(root, target)), authored.path)), compilerOptions: options };
-    const projectRoots = ts.getEffectiveTypeRoots({}, { getCurrentDirectory: () => join(root, scope) }) ?? [];
+        return {
+            extends: toPosix(relative(dirname(join(root, target)), authored.path)),
+            compilerOptions: {
+                ...options,
+                ...(installedRoot === undefined || authored.config.options.typeRoots !== undefined
+                    ? {}
+                    : { typeRoots }),
+            },
+        };
     const sources = files.filter(
         (file) =>
             file.kind === 'source' &&
@@ -40,9 +59,9 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
         compilerOptions: {
             ...TYPESCRIPT_DEFAULTS,
             ...options,
-            typeRoots: projectRoots.map((path) => toPosix(relative(join(root, dirname(target)), path))),
+            typeRoots,
         },
-        files: sources.map((file) => toPosix(relative(dirname(target), file.path))),
+        files: sources.map((file) => toPosix(relative(join(root, dirname(target)), join(root, file.path)))),
     };
 }
 

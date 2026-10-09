@@ -1,6 +1,5 @@
 import ts from 'typescript';
 import { memo } from '#cli/platform/memo.ts';
-import { chmodSync, writeFileSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { ownedInputs } from '#cli/planning/public.ts';
 import { emptyResult } from '#cli/execution/report.ts';
@@ -11,22 +10,23 @@ import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { parseBashScript } from '#cli/parsers/bash/public.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
+import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
+import { compilerHost } from '#cli/parsers/packages/contracts.ts';
 import type { ScratchSource } from '#cli/types/execution/copy.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
 import { isToolProjectPath } from '#cli/repository/paths/public.ts';
-import { requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { configurationText } from '#cli/parsers/packages/contracts.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
 import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/packages.ts';
+import { toPosix, expandPaths, extensionOf } from '#cli/platform/contracts.ts';
 import type { ScriptFile, ScriptIndex } from '#cli/types/checks/language/bash.ts';
+import { buildTsconfig, requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import { openRoot, readSource, createReadCache } from '#cli/platform/root/public.ts';
 import { projectCopyInputs, workspaceSourceFiles } from '#cli/execution/copy/public.ts';
-import { toPosix, isInside, expandPaths, extensionOf } from '#cli/platform/contracts.ts';
 import { getTsconfig, tsconfigProjects, getTsconfigProject } from '#cli/parsers/packages/public.ts';
 
 const TYPESCRIPT_CHECKS = { create: () => new Map<string, string>() };
@@ -79,41 +79,6 @@ function assertOutputsInside(root: string, config: ts.ParsedCommandLine, files: 
 function assertBuildInside(root: string, path: string, reads: ReadCache): void {
     using files = openRoot(root, 'native');
     for (const config of tsconfigProjects(root, path, reads).values()) assertOutputsInside(root, config, files);
-}
-
-// The compiler may follow installed package links; every later native library read stays beneath an observed owner.
-function compilerHost(session: ToolSession, scope: string, options: ts.CompilerOptions): ts.CompilerHost {
-    const host = ts.createCompilerHost(options);
-    const libraries = new Set([dirname(dirname(ts.getDefaultLibFilePath(options)))]);
-    const nativeRealpath = host.realpath?.bind(host);
-    const nativeSourceFile = host.getSourceFile.bind(host);
-    host.getSourceFile = (path, languageVersion, _onError, createSource) =>
-        nativeSourceFile(
-            path,
-            languageVersion,
-            (message) => {
-                throw new Error(message);
-            },
-            createSource,
-        );
-    host.getCurrentDirectory = () => join(session.root, scope);
-    host.realpath = (path) => {
-        const resolved = nativeRealpath?.(path) ?? path;
-        const local = toPosix(relative(session.root, path));
-        if (
-            (isInside(local) && local.split('/').includes('node_modules')) ||
-            [...libraries].some((library) => isInside(relative(library, path)))
-        ) {
-            const marker = toPosix(resolved).lastIndexOf('/node_modules/');
-            if (marker !== -1) libraries.add(resolved.slice(0, marker + '/node_modules'.length));
-        }
-        return resolved;
-    };
-    host.readFile = (path) =>
-        [...libraries].some((library) => isInside(relative(library, path)))
-            ? ts.sys.readFile(path)
-            : configurationText(session.root, path, session.reads);
-    return host;
 }
 
 /**
@@ -274,7 +239,7 @@ export function compilerFiles(
             rootNames: config.fileNames,
             options: config.options,
             projectReferences: config.projectReferences ?? [],
-            host: compilerHost(session, planned.scope.scope.path, config.options),
+            host: compilerHost(session.root, planned.scope.scope.path, session.reads, config.options),
         });
         const inputs = program
             .getSourceFiles()
@@ -376,7 +341,7 @@ export async function runTsc(session: ToolSession, planned: PlannedCheck, metada
             ([name]) => !planned.scope.view.rulesOff('typescript/tsconfig').includes(name),
         ),
     );
-    const target = project?.path ?? join(session.root, planned.scope.scope.path, 'tsconfig.json');
+    const target = project === undefined ? join(session.root, planned.scope.scope.path, 'tsconfig.json') : project.path;
     if (projectChecked(session.reads, planned.check.name, target, planned.scope.scope.path, required))
         return { ...emptyResult(planned), status: 'skipped', note: 'An ancestor compiler check covers this project.' };
     const command = ['tsc'];
@@ -384,7 +349,24 @@ export async function runTsc(session: ToolSession, planned: PlannedCheck, metada
         command.push('-b', project.path);
         assertBuildInside(session.root, project.path, session.reads);
     } else {
-        command.push('--noEmit', '-p', '{tool_file:tsconfig}');
+        const generatedPath = join(metadataRoot, '.gspot/config', planned.scope.scope.path, 'tsconfig.json');
+        mkdirSync(dirname(generatedPath), { recursive: true });
+        writeFileSync(
+            generatedPath,
+            JSON.stringify(
+                buildTsconfig({
+                    root: session.root,
+                    installedRoot: session.installedRoot ?? session.root,
+                    reads: session.reads,
+                    target: toPosix(relative(session.root, generatedPath)),
+                    scope: planned.scope.scope.path,
+                    files: session.repository.files,
+                    scopeEntries: session.repository.scopes,
+                    options: required,
+                }),
+            ),
+        );
+        command.push('--noEmit', '-p', generatedPath);
         appendBuildMetadata(command, project?.config.options, metadataRoot, 'tsconfig.tsbuildinfo');
     }
     command.push('--pretty', 'false');

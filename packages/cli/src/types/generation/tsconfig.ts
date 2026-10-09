@@ -4,6 +4,8 @@ import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts
 /** Project inputs and required options owned by one generated TypeScript configuration. */
 export type TsconfigInput = {
     root: string;
+    /** The verified working installation when root contains captured source. */
+    installedRoot?: string;
     reads: ReadCache;
     target: string;
     scope: string;
