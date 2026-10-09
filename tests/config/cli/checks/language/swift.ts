@@ -37,5 +37,5 @@ export const SWIFT_BUILD_PURPOSES = [
     { purpose: 'compile', check: 'swift/build' },
     { purpose: 'analyze', check: 'swift/swiftlint-analyze' },
     { purpose: 'periphery', check: 'swift/periphery' },
-    { purpose: 'coverage', check: 'xctest/coverage' },
+    { purpose: 'coverage', check: 'swift-tests/coverage' },
 ] as const;

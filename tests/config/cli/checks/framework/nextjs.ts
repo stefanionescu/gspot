@@ -4,7 +4,7 @@ import { ROUTE, MANIFEST, NEXT_TRANSLATIONS } from '#tests/config/cli/checks/nex
 import { NEXT_PAGE, NEXT_LAYOUT, NEXT_CONFIG_FILE } from '#tests/config/samples/nextjs.ts';
 
 export const REPOSITORY: InProcessScenario = {
-    configurations: ['nextjs', 'i18n'],
+    configurations: ['nextjs', 'translations'],
 
     files: {
         'package.json': MANIFEST,
@@ -42,13 +42,13 @@ export const CASES: FindingCase[] = [
         expected: { file: 'package.json', rule: 'version-pair', line: 1 },
     },
     {
-        check: 'i18n/locales',
+        check: 'translations/locales',
         files: { 'messages/de.json': '{\n    "home": { "title": "Start" }\n}\n' },
         policy: NEXT_TRANSLATIONS,
         expected: { file: 'messages/de.json', rule: 'missing-key', line: 1 },
     },
     {
-        check: 'i18n/locales',
+        check: 'translations/locales',
         files: { 'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name" }\n}\n' },
         policy: NEXT_TRANSLATIONS,
         expected: { file: 'messages/de.json', rule: 'message', line: 1 },

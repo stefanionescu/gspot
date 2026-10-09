@@ -38,16 +38,16 @@ indent_width = 2
 [scope."app/worker"]
 `;
 
-export const NATIVE_PATH_POLICY = `configurations = ["supabase", "i18n"]
+export const NATIVE_PATH_POLICY = `configurations = ["supabase", "translations"]
 [supabase]
 types_file = "root.ts"
 functions_folder = "edge"
-[i18n]
+[translations]
 messages_folder = "messages"
 [scope.app.supabase]
 types_file = "database.ts"
 functions_folder = "functions"
-[scope.app.i18n]
+[scope.app.translations]
 messages_folder = "translations"
 [scope.worker]
 [scope.disabled.supabase]

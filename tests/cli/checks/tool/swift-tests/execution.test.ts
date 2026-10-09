@@ -10,9 +10,14 @@ import { isMacos } from '#tests/config/harness/platforms.ts';
 import { useCacheDirectory } from '#tests/harness/environment.ts';
 import { buildFolder } from '#cli/checks/language/swift/public.ts';
 import { rm, chmod, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { SHEBANG, XCTEST_FAILURES, XCTEST_EXECUTION_POLICY } from '#tests/config/cli/checks/tool/xctest/execution.ts';
 
-const XCTEST_EXECUTION_OPTIONS = buildRunOptions({ stage: 'push', only: ['xctest/coverage'] });
+import {
+    SHEBANG,
+    XCTEST_FAILURES,
+    XCTEST_EXECUTION_POLICY,
+} from '#tests/config/cli/checks/tool/swift-tests/execution.ts';
+
+const XCTEST_EXECUTION_OPTIONS = buildRunOptions({ stage: 'push', only: ['swift-tests/coverage'] });
 
 test.skipIf(!isMacos)('XCTest reports a timed-out native command as an error and accepts a later run', async () => {
     await using sandbox = await testdir();
@@ -37,7 +42,7 @@ test.skipIf(!isMacos)('XCTest reports a timed-out native command as an error and
     try {
         const failed = await executeRun(session, XCTEST_EXECUTION_OPTIONS);
         expect(failed.report.exitCode).toBe(2);
-        expect(failed.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'error' }]);
+        expect(failed.report.checks).toMatchObject([{ check: 'swift-tests/coverage', status: 'error' }]);
         expect(failed.report.checks[0]?.note).toContain('xcodebuild ran past');
         expect(await pathExists(join(buildFolder(sandbox.path), 'swift/root/coverage/source/viewed.txt'))).toBe(false);
     } finally {
@@ -45,7 +50,7 @@ test.skipIf(!isMacos)('XCTest reports a timed-out native command as an error and
     }
     const corrected = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
     expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ check: 'swift-tests/coverage', status: 'passed', findings: [] }]);
 });
 test.skipIf(!isMacos).each([...XCTEST_FAILURES])(
     'XCTest coverage classifies $failure and passes after the fix',
@@ -78,7 +83,9 @@ test.skipIf(!isMacos).each([...XCTEST_FAILURES])(
         );
         const corrected = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
-        expect(corrected.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'passed', findings: [] }]);
+        expect(corrected.report.checks).toMatchObject([
+            { check: 'swift-tests/coverage', status: 'passed', findings: [] },
+        ]);
     },
 );
 

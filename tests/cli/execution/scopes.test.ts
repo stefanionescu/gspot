@@ -12,9 +12,9 @@ describe('scoped readers preserve their owned inputs', () => {
     beforeAll(async () => {
         sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['site', 'supabase', 'i18n', 'cloudflare'], {
+            'gspot.toml': buildPolicy(['site', 'supabase', 'translations', 'cloudflare'], {
                 level: 'all',
-                tables: '[i18n]\nmessages_folder = "messages"\nbase_locale = "en"\n[scope."apps/backend"]\n[scope."apps/backend".i18n]\nmessages_folder = "messages"\n',
+                tables: '[translations]\nmessages_folder = "messages"\nbase_locale = "en"\n[scope."apps/backend"]\n[scope."apps/backend".translations]\nmessages_folder = "messages"\n',
             }),
             'package.json': '{"private":true,"dependencies":{"next-intl":"4.8.3"}}',
             _headers: READERS_HEADERS,

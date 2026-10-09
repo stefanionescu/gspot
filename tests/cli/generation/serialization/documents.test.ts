@@ -123,14 +123,14 @@ test.each(
     const prefix = scope === '' ? '' : `${scope}/`;
     const directory = scope.startsWith('AppTests') ? scope : `${prefix}AppTests`;
     const child = `${prefix}ChildTests`;
-    const scopeTable = scope === '' ? '' : `[scope.${JSON.stringify(scope)}]\nconfigurations = ["xctest"]\n`;
+    const scopeTable = scope === '' ? '' : `[scope.${JSON.stringify(scope)}]\nconfigurations = ["swift-tests"]\n`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(scope === '' ? ['xctest'] : [], {
+        'gspot.toml': buildPolicy(scope === '' ? ['swift-tests'] : [], {
             level,
             tables:
                 scopeTable +
-                `[scope.${JSON.stringify(child)}]\nremoved_configurations = ["xctest"]\nconfigurations = ["swift"]\n` +
-                '[scope."omitted"]\nremoved_configurations = ["xctest"]\nconfigurations = ["swift"]\n',
+                `[scope.${JSON.stringify(child)}]\nremoved_configurations = ["swift-tests"]\nconfigurations = ["swift"]\n` +
+                '[scope."omitted"]\nremoved_configurations = ["swift-tests"]\nconfigurations = ["swift"]\n',
         }),
         [`${directory}/Value.swift`]: 'import XCTest\n',
         [`${directory}/Deep/Value.swift`]: 'import XCTest\n',

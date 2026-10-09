@@ -87,16 +87,16 @@ test('the default snapshot layout accepts a matching source and reference', asyn
 test('disabled tests and snapshot recording report through the CLI and pass after the fixes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['xctest', 'swift-snapshot-testing'], { level: 'all' }),
+        'gspot.toml': buildPolicy(['swift-tests', 'swift-snapshot-testing'], { level: 'all' }),
         'Examples/Checks.swift':
             'import Testing\n@Test func checks() throws {\n    try XCTSkip("")\n    SnapshotTesting.isRecording = true\n}\n',
     });
-    const command = ['check', '--only', 'xctest/skip-reasons', 'swift-snapshot-testing/recording', '--json'];
+    const command = ['check', '--only', 'swift-tests/skip-reasons', 'swift-snapshot-testing/recording', '--json'];
     const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([
         {
-            check: 'xctest/skip-reasons',
+            check: 'swift-tests/skip-reasons',
             status: 'failed',
             findings: [{ file: 'Examples/Checks.swift', rule: 'disabled', line: 3 }],
         },
@@ -113,7 +113,7 @@ test('disabled tests and snapshot recording report through the CLI and pass afte
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'xctest/skip-reasons', status: 'passed', findings: [] },
+        { check: 'swift-tests/skip-reasons', status: 'passed', findings: [] },
         { check: 'swift-snapshot-testing/recording', status: 'passed', findings: [] },
     ]);
 });
@@ -141,8 +141,8 @@ test.each(PACKAGE_PROJECTS)(
         expect(planned).toStrictEqual([]);
         expect(
             session.manifests
-                .get('xctest')
-                ?.checks.some(({ name }) => name === 'xctest/recording' || name === 'xctest/references'),
+                .get('swift-tests')
+                ?.checks.some(({ name }) => name === 'swift-tests/recording' || name === 'swift-tests/references'),
         ).toBe(false);
         expect(await Bun.file(join(sandbox.path, 'Package.swift')).text()).toBe(source);
     },

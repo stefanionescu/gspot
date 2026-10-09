@@ -37,7 +37,6 @@ Repository:
 - `.gspot/rules/general/prose/WRITING.md`
 - `.gspot/rules/general/secrets/SECRETS.md`
 - `.gspot/rules/general/security/SECURITY.md`
-- `.gspot/rules/general/site/SITE.md`
 
 Languages:
 
@@ -61,12 +60,13 @@ Languages:
 
 Tools:
 
-- `.gspot/rules/tool/actions/GITHUB-ACTIONS.md`
+- `.gspot/rules/tool/github-actions/GITHUB-ACTIONS.md`
 - `.gspot/rules/tool/vitest/VITEST.md`
 
 Frameworks:
 
 - `.gspot/rules/framework/astro/ASTRO.md`
+- `.gspot/rules/framework/site/SITE.md`
 - `.gspot/rules/framework/nestjs/NESTJS.md`
 - `.gspot/rules/framework/react/REACT.md`
 - `.gspot/rules/framework/nextjs/NEXTJS.md`

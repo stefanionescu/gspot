@@ -91,7 +91,7 @@ test.each(
 
 test('renamed library guidance retains its native contents and removes the former filenames', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildPolicy(['react-hook-form', 'tanstack-query', 'i18n']),
+        'gspot.toml': buildPolicy(['react-hook-form', 'tanstack-query', 'translations']),
         'package.json': '{"dependencies":{"next-intl":"*"}}',
     });
     const session = await openSession(sandbox.path);
@@ -105,7 +105,7 @@ test('renamed library guidance retains its native contents and removes the forme
     const paths = files.map((file) => file.path);
     expect(paths).toContain('library/react-hook-form/REACT-HOOK-FORM.md');
     expect(paths).toContain('library/tanstack-query/TANSTACK-QUERY.md');
-    expect(paths).toContain('library/i18n/NEXT-INTL.md');
+    expect(paths).toContain('library/translations/NEXT-INTL.md');
     expect(paths.some((path) => /REACTHOOKFORM|TANSTACKQUERY|NEXTINTL/u.test(path))).toBe(false);
 });
 

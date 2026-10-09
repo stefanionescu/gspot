@@ -7,13 +7,13 @@ import * as toolPytest from '#tests/config/tools/configurations/tool/pytest.ts';
 import * as toolVitest from '#tests/config/tools/configurations/tool/vitest.ts';
 import * as generalSite from '#tests/config/tools/configurations/general/site.ts';
 import * as languageSql from '#tests/config/tools/configurations/language/sql.ts';
-import * as toolActions from '#tests/config/tools/configurations/tool/actions.ts';
 import * as toolAnsible from '#tests/config/tools/configurations/tool/ansible.ts';
 import * as toolOpenapi from '#tests/config/tools/configurations/tool/openapi.ts';
 import * as frameworkVue from '#tests/config/tools/configurations/framework/vue.ts';
 import * as generalFiles from '#tests/config/tools/configurations/general/files.ts';
 import * as languageHtml from '#tests/config/tools/configurations/language/html.ts';
 import type { BashBoundary, ConfigurationScenario } from '#tests/types/tools/cases.ts';
+import * as toolActions from '#tests/config/tools/configurations/tool/github-actions.ts';
 import * as frameworkNestjs from '#tests/config/tools/configurations/framework/nestjs.ts';
 import * as frameworkNextjs from '#tests/config/tools/configurations/framework/nextjs.ts';
 import * as frameworkSvelte from '#tests/config/tools/configurations/framework/svelte.ts';
@@ -33,7 +33,7 @@ export const SCENARIOS: ConfigurationScenario[] = [
     { name: 'the library configurations', repository: libraries.REPOSITORY, cases: libraries.CASES },
     { name: 'the postgres configuration', repository: postgres.REPOSITORY, cases: postgres.CASES },
     { name: 'the supabase configuration', repository: supabase.REPOSITORY, cases: supabase.CASES },
-    { name: 'the actions configuration', repository: toolActions.REPOSITORY, cases: toolActions.CASES },
+    { name: 'the github-actions configuration', repository: toolActions.REPOSITORY, cases: toolActions.CASES },
     { name: 'the docker configuration', repository: toolDocker.REPOSITORY, cases: toolDocker.CASES },
     { name: 'the openapi configuration', repository: toolOpenapi.REPOSITORY, cases: toolOpenapi.CASES },
     { name: 'the vitest configuration', repository: toolVitest.REPOSITORY, cases: toolVitest.CASES },

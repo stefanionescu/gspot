@@ -230,21 +230,22 @@ test.each(PATH_SCOPE_CASES)(
             schemas: ['public'],
             types_file: types,
         });
-        expect(view.options('i18n')).toStrictEqual({ base_locale: 'en', messages_folder: messages });
+        expect(view.options('translations')).toStrictEqual({ base_locale: 'en', messages_folder: messages });
         expect(policy.authored).toMatchObject({
-            scope: { app: { supabase: { types_file: 'database.ts' }, i18n: { messages_folder: 'translations' } } },
+            scope: {
+                app: { supabase: { types_file: 'database.ts' }, translations: { messages_folder: 'translations' } },
+            },
         });
     },
 );
 
 test('omitting defaults preserves path origins in every selected descendant', () => {
     const manifests = configurationManifests();
-    const sources = [
+    for (const source of [
         'configurations = ["supabase"]\n[supabase]\nfunctions_folder = "supabase/functions"\n[scope."apps/api"]\n',
         'configurations = ["supabase"]\n[scope.app.supabase]\nfunctions_folder = "supabase/functions"\n[scope."app/child"]\n',
         'configurations = ["supabase"]\n[supabase]\ntypes_file = ""\n[scope.app.supabase]\ntypes_file = ""\n[scope."app/child"]\n',
-    ];
-    for (const source of sources) {
+    ]) {
         const before = parseStrictPolicy(source);
         const written = emitPolicy(source, parseTomlText(source, 'gspot.toml', 'policy'));
         const after = parseStrictPolicy(written);

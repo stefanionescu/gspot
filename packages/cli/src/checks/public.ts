@@ -1,4 +1,3 @@
-import { locales } from '#cli/checks/library/i18n.ts';
 import { ansibleLint } from '#cli/checks/tool/ansible.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
 import { expoDoctor } from '#cli/checks/framework/expo.ts';
@@ -7,6 +6,7 @@ import { vale, jscpd } from '#cli/checks/general/public.ts';
 import { embeds } from '#cli/checks/language/bash/embeds.ts';
 import { safety } from '#cli/checks/language/bash/safety.ts';
 import { sshBlocks } from '#cli/checks/language/bash/ssh.ts';
+import { locales } from '#cli/checks/library/translations.ts';
 import { contract } from '#cli/checks/language/bash/contract.ts';
 import { svelteCheck } from '#cli/checks/framework/contracts.ts';
 import { wrappers } from '#cli/checks/language/bash/wrappers.ts';
@@ -36,7 +36,6 @@ import { testPlacement } from '#cli/checks/general/structure/test-placement.ts';
 import { unreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
 import { unusedFunctions } from '#cli/checks/language/bash/unused-functions.ts';
 import { ats, xcconfig, entitlements } from '#cli/checks/tool/xcode/settings.ts';
-import { sleeps, disabled, xctestCoverage } from '#cli/checks/tool/contracts.ts';
 import { foreignKeyIndexes } from '#cli/checks/database/postgres/foreign-keys.ts';
 import { importComments } from '#cli/checks/general/structure/import-comments.ts';
 import { stemCollisions } from '#cli/checks/general/structure/stem-collisions.ts';
@@ -69,6 +68,7 @@ import { swiftBuild, swiftPeriphery, swiftlintAnalyze } from '#cli/checks/langua
 import { namingPaths, namingPolicy, namingIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 import { nextBuild, nextjsTsc, routeSegments, nextConfiguration } from '#cli/checks/framework/public.ts';
 import { sitemap, purgecss, siteSize, linkinator, htmlValidate } from '#cli/checks/general/site/public.ts';
+import { swiftTestsSleep, swiftTestsCoverage, swiftTestsSkipReasons } from '#cli/checks/tool/contracts.ts';
 import { placeholderDocstrings as pythonPlaceholderDocstrings } from '#cli/checks/language/python/functions.ts';
 import { gspotDrift, unmatchedPaths, fixPolicyLayout, gspotPolicyLayout } from '#cli/checks/general/contracts.ts';
 import { svgo, siteBuild, deadAssets, webManifest, buildReproducible } from '#cli/checks/general/site/contracts.ts';
@@ -98,7 +98,7 @@ import {
 export const BUILT_IN_CHECKS = {
     'expo/doctor': { input: expoDoctor },
     'svelte/svelte-check': { input: svelteCheck },
-    'i18n/locales': { input: locales },
+    'translations/locales': { input: locales },
     'css/module-classes': { input: moduleClasses },
     'ansible/lint': { input: ansibleLint },
     'nginx/test': { input: nginxTest },
@@ -166,11 +166,11 @@ export const BUILT_IN_CHECKS = {
     'python/singletons': { input: pythonSingletons },
     'python/import-linter': { input: pythonImportLinter },
     'python/pip-installs': { input: pythonPipInstalls },
-    'xctest/skip-reasons': { input: disabled },
-    'xctest/sleep': { input: sleeps },
+    'swift-tests/skip-reasons': { input: swiftTestsSkipReasons },
+    'swift-tests/sleep': { input: swiftTestsSleep },
     'swift-snapshot-testing/recording': { input: recording },
     'swift-snapshot-testing/references': { input: references },
-    'xctest/coverage': { input: xctestCoverage },
+    'swift-tests/coverage': { input: swiftTestsCoverage },
     'xcode/xcconfig': { input: xcconfig },
     'xcode/entitlements': { input: entitlements },
     'xcode/ats': { input: ats },
@@ -232,5 +232,5 @@ export const BUILT_IN_CHECKS = {
     'bash/shellcheck': { run: shellcheck },
     'python/pydoclint': { run: pydoclint },
     'python/deptry': { run: deptry },
-    'actions/actionlint': { run: actionlint },
+    'github-actions/actionlint': { run: actionlint },
 } satisfies BuiltInChecks;

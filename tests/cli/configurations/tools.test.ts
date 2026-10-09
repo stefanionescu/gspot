@@ -9,7 +9,7 @@ import { assertManifests } from '#cli/configurations/errors/contracts.ts';
 import { parseManifest, linkManifestTools, configurationManifests } from '#cli/configurations/public.ts';
 
 test.each([
-    ['actions', 'bash', 'shellcheck'],
+    ['github-actions', 'bash', 'shellcheck'],
     ['nginx', 'docker', 'docker'],
     ['openapi', 'files', 'ajv'],
     ['astro', 'react-dom', 'eslint-plugin-jsx-a11y'],
@@ -83,7 +83,10 @@ test.each(['recommended', 'all'] as const)(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['actions'], { level, tables: '[scope.app]\nconfigurations = ["actions"]\n' }),
+            'gspot.toml': buildPolicy(['github-actions'], {
+                level,
+                tables: '[scope.app]\nconfigurations = ["github-actions"]\n',
+            }),
             '.github/workflows/check.yml': 'name: Check\non: push\njobs: {}\n',
             'app/.github/workflows/check.yml': 'name: Check\non: push\njobs: {}\n',
         });

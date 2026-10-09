@@ -34,7 +34,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
         using _host = usePlatform('darwin');
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['swift', 'xctest'], { tables: '[swift]\nxcode_project = ""\n' }),
+            'gspot.toml': buildPolicy(['swift', 'swift-tests'], { tables: '[swift]\nxcode_project = ""\n' }),
             'App.xcodeproj/project.pbxproj': '',
             'ExampleTests/Example.swift': 'import XCTest\n',
         });

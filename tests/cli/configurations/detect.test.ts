@@ -196,7 +196,7 @@ test.each(SWIFT_TEST_CASES)('Swift test detection identifies $name', async ({ so
     expect(repository.files[0]!.tags.includes('swift-test')).toBe(selected);
     expect(
         detectConfigurations(sandbox.path, repository.files, configurationManifests(), []).some(
-            ({ configuration }) => configuration === 'xctest',
+            ({ configuration }) => configuration === 'swift-tests',
         ),
     ).toBe(selected);
 });
@@ -207,7 +207,7 @@ test.each(SWIFT_TARGET_CASES)('Swift package test detection recognizes $name', a
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(
         detectConfigurations(sandbox.path, repository.files, configurationManifests(), []).some(
-            ({ configuration }) => configuration === 'xctest',
+            ({ configuration }) => configuration === 'swift-tests',
         ),
     ).toBe(declared);
 });

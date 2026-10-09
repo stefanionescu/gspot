@@ -24,19 +24,19 @@ level = "recommended"
 stage = "push"
 runs = "scope"
 when = { dependencies = ["next-intl"] }
-summary = "Checks next-intl JSON/ICU message files under i18n.messages_folder: each message parses, none is empty, no key holds a dot, and every locale holds every key of the base."
+summary = "Checks next-intl JSON/ICU message files under translations.messages_folder: each message parses, none is empty, no key holds a dot, and every locale holds every key of the base."
 why = "A key missing in one locale shows the key itself, or another language, in the middle of a translated screen."
 help = "Correct the message, or add the missing key to the locale."
 
 [[setting]]
-name = "i18n.messages_folder"
+name = "translations.messages_folder"
 type = "path"
 direction = "neutral"
 default = ""
 summary = "The folder of `<locale>`.json message files, relative to its scope."
 
 [[setting]]
-name = "i18n.base_locale"
+name = "translations.base_locale"
 type = "string"
 direction = "neutral"
 default = "en"

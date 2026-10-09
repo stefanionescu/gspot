@@ -1,4 +1,4 @@
-export const XCTEST_EXECUTION_POLICY = `configurations = ["xctest", "xcode"]
+export const XCTEST_EXECUTION_POLICY = `configurations = ["swift-tests", "xcode"]
 [swift]
 xcode_project = "Example.xcodeproj"
 xcode_scheme = "Example"
@@ -12,7 +12,7 @@ export const XCTEST_FAILURES = [
     {
         failure: 'no-project',
         note: undefined,
-        policy: 'configurations = ["xctest", "xcode"]\n[swift]\nxcode_project = ""\nxcode_scheme = "Example"\n[coverage]\noverrides = [{ target = "Example", percent = 80 }]\n',
+        policy: 'configurations = ["swift-tests", "xcode"]\n[swift]\nxcode_project = ""\nxcode_scheme = "Example"\n[coverage]\noverrides = [{ target = "Example", percent = 80 }]\n',
         build: '',
         coverage: 1,
         code: 0,

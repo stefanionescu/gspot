@@ -7,7 +7,7 @@ import { visitParsedSources } from '#cli/parsers/source/public.ts';
 import { measureCoverage } from '#cli/checks/language/swift/coverage.ts';
 import type { SettingOptions } from '#cli/types/policy/setting-values.ts';
 import type { CoverageReport } from '#cli/types/parsers/swift/coverage.ts';
-import { SLEEP_CALLS, COMMENT_LINE, SKIP_REASON_ARGUMENT } from '#cli/config/checks/tool/xctest.ts';
+import { SLEEP_CALLS, COMMENT_LINE, SKIP_REASON_ARGUMENT } from '#cli/config/checks/tool/swift-tests.ts';
 
 function hasReason(value: Node | undefined): boolean {
     if (value === undefined || value.text === 'nil') return false;
@@ -54,7 +54,7 @@ function disabledNodes(root: Node, lines: string[]): Node[] {
  * @param input the check input
  * @returns the findings
  */
-export async function disabled(input: CheckInput): Promise<Finding[]> {
+export async function swiftTestsSkipReasons(input: CheckInput): Promise<Finding[]> {
     const files = input.files
         .filter((file) => file.kind === 'source' && file.tags.includes('swift-test'))
         .map((file) => ({ path: file.path, grammar: 'swift' as const }));
@@ -78,7 +78,7 @@ export async function disabled(input: CheckInput): Promise<Finding[]> {
  * @param input the check input
  * @returns the findings
  */
-export async function sleeps(input: CheckInput): Promise<Finding[]> {
+export async function swiftTestsSleep(input: CheckInput): Promise<Finding[]> {
     const files = input.files
         .filter((file) => file.kind === 'source' && file.tags.includes('swift-test'))
         .map((file) => ({ path: file.path, grammar: 'swift' as const }));
@@ -140,7 +140,7 @@ export function coverageShortfalls(
  * @param input the check input
  * @returns the findings
  */
-export async function xctestCoverage(input: CheckInput): Promise<Finding[]> {
+export async function swiftTestsCoverage(input: CheckInput): Promise<Finding[]> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
     const settings = input.view.options('coverage');
     const report = await measureCoverage(input);

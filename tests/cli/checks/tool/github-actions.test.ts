@@ -15,9 +15,9 @@ import { actionlintSource } from '#cli/checks/tool/public.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
 import { WORKFLOW_HEAD } from '#tests/config/samples/actions.ts';
-import { PATH, PINACT_STUB } from '#tests/config/cli/checks/tool/actions.ts';
+import { PATH, PINACT_STUB } from '#tests/config/cli/checks/tool/github-actions.ts';
 
-const TOOL_FAILURES_POLICY = buildPolicy(['files', 'actions'], {
+const TOOL_FAILURES_POLICY = buildPolicy(['files', 'github-actions'], {
     tables: 'runner = "mise"\n[agent_rules]\nenabled = false\n',
     level: 'all',
 });
@@ -38,15 +38,15 @@ test('the pin verification adapter reports a rejected commit and preserves the w
     const path = join(sandbox.path, '.github/workflows/broken.yml');
     const workflow = `${WORKFLOW_HEAD}            - uses: actions/checkout@0000000000000000000000000000000000000000\n`;
     await Bun.write(path, workflow);
-    const result = await runGspot(sandbox.path, ['check', '--only', 'actions/pinact'], environment);
+    const result = await runGspot(sandbox.path, ['check', '--only', 'github-actions/pinact'], environment);
     expect(result.code, result.stderr + result.stdout).toBe(1);
     expect(result.stdout).toContain('invalid action pin: broken.yml');
     expect(await Bun.file(path).text()).toBe(workflow);
     await Bun.write(path, workflow.replace('0'.repeat(40), 'a'.repeat(40)));
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'actions/pinact', '--json'], environment);
+    const corrected = await runGspot(sandbox.path, ['check', '--only', 'github-actions/pinact', '--json'], environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'actions/pinact', status: 'passed', findings: [] },
+        { check: 'github-actions/pinact', status: 'passed', findings: [] },
     ]);
 });
 
@@ -97,14 +97,14 @@ test.each([
         const executable = join(sandbox.path, 'actionlint');
         const workflow = 'on: workflow_dispatch\njobs:\n  caller:\n    uses: $/.github/workflows/called.yml\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['actions']),
+            'gspot.toml': buildPolicy(['github-actions']),
             '.github/workflows/caller.yml': workflow,
             actionlint: `#!${process.execPath}\nif (process.argv.includes('--version')) console.log('1.7.12'); else { await Bun.write(${JSON.stringify(record)}, process.cwd()); if (${String(code)} !== 0) console.log('.github/workflows/caller.yml:4:11: located defect [workflow-call]'); process.exitCode = ${String(code)}; }\n`,
         });
         await chmod(executable, 0o755);
         await chmod(join(sandbox.path, '.github/workflows/caller.yml'), 0o444);
         const session = await openSession(sandbox.path);
-        const plans = planRun(session, { stage: 'commit', skips: [], only: ['actions/actionlint'] });
+        const plans = planRun(session, { stage: 'commit', skips: [], only: ['github-actions/actionlint'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };
         const result = await checkRun(planned.check, BUILT_IN_CHECKS)(session, planned);

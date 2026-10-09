@@ -70,10 +70,6 @@ export const settingNamespaceSchemas = {
         trailing_commas: formatSchema.shape['trailing_commas'].unwrap().optional(),
     }),
     html: z.strictObject({ templates: z.array(relativePath).optional() }),
-    i18n: z.strictObject({
-        base_locale: z.string().optional(),
-        messages_folder: z.union([z.literal(''), relativePath]).optional(),
-    }),
     licenses: z.strictObject({
         allowed: allowlistSchema.shape['allowed'].optional(),
         exceptions: allowlistSchema.shape['exceptions'].optional(),
@@ -244,6 +240,10 @@ export const settingNamespaceSchemas = {
     'tools.yamllint': z.strictObject({
         rules: toolsSchema.shape['yamllint'].unwrap().shape['rules'].unwrap().optional(),
     }),
+    translations: z.strictObject({
+        base_locale: z.string().optional(),
+        messages_folder: z.union([z.literal(''), relativePath]).optional(),
+    }),
     xcode: z.strictObject({ entitlements_allowed: z.array(z.string()).optional() }),
 };
 export const publicToolsSchema = z.strictObject({
@@ -280,7 +280,6 @@ export const configurationSettingSchemas = {
     docs: settingNamespaceSchemas['docs'].optional(),
     drizzle: settingNamespaceSchemas['drizzle'].optional(),
     html: settingNamespaceSchemas['html'].optional(),
-    i18n: settingNamespaceSchemas['i18n'].optional(),
     licenses: settingNamespaceSchemas['licenses'].optional(),
     links: settingNamespaceSchemas['links'].optional(),
     openapi: settingNamespaceSchemas['openapi'].optional(),
@@ -290,5 +289,6 @@ export const configurationSettingSchemas = {
     site: settingNamespaceSchemas['site'].optional(),
     supabase: settingNamespaceSchemas['supabase'].optional(),
     swift: settingNamespaceSchemas['swift'].optional(),
+    translations: settingNamespaceSchemas['translations'].optional(),
     xcode: settingNamespaceSchemas['xcode'].optional(),
 };

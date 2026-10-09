@@ -15,7 +15,7 @@ export const EXPECTED_READERS: ScopeReaderFindings[] = [
         nested: [{ file: 'apps/backend/client.ts', rule: 'admin-key' }],
     },
     {
-        check: 'i18n/locales',
+        check: 'translations/locales',
         root: [],
         nested: [{ file: 'apps/backend/messages/de.json' }],
     },

@@ -49,7 +49,7 @@ test('Next.js server-only rules use the retained explicit server paths', async (
         ({ configuration }) => configuration,
     );
     expect(suggestions).toContain('css');
-    expect(suggestions).not.toContain('i18n');
+    expect(suggestions).not.toContain('translations');
     const results = await eslint.lintFiles([
         'app/lib/widget/server.js',
         'app/lib/widget/data.server.js',
@@ -191,9 +191,9 @@ test.each(['recommended', 'all'] as const)(
         const tested = ['qa/entry.jsx', 'app/qa/entry.jsx', 'app/verification/entry.jsx', 'app/deep/qa/entry.jsx'];
         const ordinary = new Set(['source.jsx', 'app/source.jsx', 'app/deep/source.jsx']);
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['i18n', 'react'], {
+            'gspot.toml': buildPolicy(['translations', 'react'], {
                 level,
-                tables: 'test_files = ["**/qa/**"]\n[scope.app]\ntest_files = ["verification/**"]\n[scope."app/deep"]\n[scope.sibling]\nremoved_configurations = ["i18n"]\n',
+                tables: 'test_files = ["**/qa/**"]\n[scope.app]\ntest_files = ["verification/**"]\n[scope."app/deep"]\n[scope.sibling]\nremoved_configurations = ["translations"]\n',
             }),
             'package.json': '{"private":true,"type":"module"}\n',
             ...Object.fromEntries([...tested, ...ordinary, 'sibling/source.jsx'].map((path) => [path, I18N_SOURCE])),

@@ -14,7 +14,7 @@ for (const level of ['recommended', 'all'] as const)
         async ({ scope, files, selected }) => {
             await using sandbox = await testdir({
                 ...files,
-                'gspot.toml': buildPolicy(['i18n'], {
+                'gspot.toml': buildPolicy(['translations'], {
                     level,
                     tables: '[scope.app]\n[scope."app/deep"]\n[scope.sibling]\n',
                 }),
@@ -24,7 +24,7 @@ for (const level of ['recommended', 'all'] as const)
                 'sibling/source.ts': 'export {};\n',
             });
             const session = await openSession(sandbox.path);
-            const planned = planRun(session, { stage: 'push', skips: [], only: ['i18n/locales'] });
+            const planned = planRun(session, { stage: 'push', skips: [], only: ['translations/locales'] });
             const check = planned.find((entry) => entry.scope.scope.path === scope)!;
             expect(check.skip).toStrictEqual(
                 selected ? undefined : { cause: 'condition', note: 'Needs a project dependency: next-intl.' },
@@ -45,7 +45,7 @@ test('checks without dependency conditions do not inspect unused malformed manif
 });
 
 test.each(['next-intl', 'react-i18next'])(
-    'i18n detection finds %s without a Next.js suggestion',
+    'translations detection finds %s without a Next.js suggestion',
     async (dependency) => {
         await using sandbox = await testdir({
             'gspot.toml': buildPolicy([]),
@@ -59,7 +59,7 @@ test.each(['next-intl', 'react-i18next'])(
             session.manifests,
             readPackageManifests(session.root, session.repository.files),
         );
-        expect(detected.some((entry) => entry.configuration === 'i18n')).toBe(true);
+        expect(detected.some((entry) => entry.configuration === 'translations')).toBe(true);
         expect(detected.some((entry) => entry.configuration === 'nextjs')).toBe(false);
     },
 );

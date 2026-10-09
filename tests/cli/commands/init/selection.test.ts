@@ -130,11 +130,11 @@ test.each([
         }),
         'app/page.tsx': 'export default function Page() { return "home"; }\n',
     });
-    const configurations = ['--configurations', 'nextjs', ...(named ? ['i18n'] : [])];
+    const configurations = ['--configurations', 'nextjs', ...(named ? ['translations'] : [])];
     const result = await runGspot(sandbox.path, [...SELECTION_INIT, ...configurations, ...QUIET_INIT]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
-    expect(plan.configurations.some(({ configuration }) => configuration === 'i18n')).toBe(isSelected);
+    expect(plan.configurations.some(({ configuration }) => configuration === 'translations')).toBe(isSelected);
 });
 
 test('init proposes workspace scopes without a lockfile and preserves files after resolver failure', async () => {

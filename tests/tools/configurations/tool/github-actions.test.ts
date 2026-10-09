@@ -15,10 +15,10 @@ import { spawnGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import { sharePythonTools } from '#tests/harness/python-installation.ts';
 import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { ACTIONS_INIT } from '#tests/config/tools/configurations/tool/actions.ts';
-// Sandbox for the actions configuration: a workflow with an unknown expression context and one open to template injection.
+import { ACTIONS_INIT } from '#tests/config/tools/configurations/tool/github-actions.ts';
+// Sandbox for the github-actions configuration: a workflow with an unknown expression context and one open to template injection.
 
-test('the actions configuration: GitHub initialization writes a workflow accepted by actionlint', async () => {
+test('the github-actions configuration: GitHub initialization writes a workflow accepted by actionlint', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'README.md': '# Workflow test\n' });
     commitAll(sandbox.path);
@@ -38,18 +38,22 @@ test('the actions configuration: GitHub initialization writes a workflow accepte
     expect(session.repository.files.find((file) => file.path === '.github/workflows/accepted.yml')).toMatchObject({
         kind: 'source',
     });
-    const result = await spawnGspot(sandbox.path, ['check', '--only', 'actions/actionlint', '--json'], environment);
+    const result = await spawnGspot(
+        sandbox.path,
+        ['check', '--only', 'github-actions/actionlint', '--json'],
+        environment,
+    );
     expect(result.code, result.stderr + result.stdout).toBe(0);
     expect(await readFile(workflow)).toEqual(emitted);
     expect((JSON.parse(result.stdout) as RunReport).checks).toMatchObject([
-        { check: 'actions/actionlint', status: 'passed', findings: [] },
+        { check: 'github-actions/actionlint', status: 'passed', findings: [] },
     ]);
 });
 
 // Runs the pinned Actionlint check over the repository's current authored workflows.
 async function runActionlint(root: string) {
     const session = await openSession(root);
-    const planned = planRun(session, { stage: 'commit', skips: [], only: ['actions/actionlint'] })[0]!;
+    const planned = planRun(session, { stage: 'commit', skips: [], only: ['github-actions/actionlint'] })[0]!;
     return checkRun(planned.check, BUILT_IN_CHECKS)(session, planned);
 }
 
@@ -60,7 +64,7 @@ test('Actionlint validates required reusable inputs in self-repository workflows
     const called =
         'on:\n  workflow_call:\n    inputs:\n      greeting:\n        type: string\n        required: true\njobs:\n  greet:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo hello\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['actions']),
+        'gspot.toml': buildPolicy(['github-actions']),
         '.github/workflows/caller.yml': workflow,
         '.github/workflows/called.yml': called,
     });
@@ -90,7 +94,7 @@ test('Actionlint resolves a self-repository alias and reports a missing workflow
     const workflow =
         'on: workflow_dispatch\nenv:\n  WORKFLOW: &workflow $/.github/workflows/called.yml\njobs:\n  caller:\n    uses: *workflow\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['actions']),
+        'gspot.toml': buildPolicy(['github-actions']),
         '.github/workflows/caller.yml': workflow,
     });
     const failed = await runActionlint(sandbox.path);
@@ -131,9 +135,9 @@ runs:
         const workflow =
             'on: workflow_dispatch\npermissions: {}\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          persist-credentials: false\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['actions'], {
+            'gspot.toml': buildPolicy(['github-actions'], {
                 level,
-                tables: 'runner = "mise"\n[scope.app]\nconfigurations = ["actions"]\n',
+                tables: 'runner = "mise"\n[scope.app]\nconfigurations = ["github-actions"]\n',
             }),
             '.github/workflows/build.yml': workflow,
             '.github/actions/greet/action.yml': composite,
@@ -142,12 +146,12 @@ runs:
         });
         await sharePythonTools(sandbox.path);
         const session = await openSession(sandbox.path);
-        const actionlint = planRun(session, { stage: 'commit', skips: [], only: ['actions/actionlint'] });
+        const actionlint = planRun(session, { stage: 'commit', skips: [], only: ['github-actions/actionlint'] });
         expect(actionlint.flatMap(({ files }) => files.map(({ path }) => path))).toStrictEqual([
             '.github/workflows/build.yml',
             'app/.github/workflows/build.yml',
         ]);
-        const failed = await executeRun(session, buildRunOptions({ stage: 'commit', only: ['actions/zizmor'] }));
+        const failed = await executeRun(session, buildRunOptions({ stage: 'commit', only: ['github-actions/zizmor'] }));
         expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
         expect(
             failed.report.checks.flatMap(({ findings }) => findings).map(({ file, rule }) => ({ file, rule })),
@@ -165,7 +169,7 @@ runs:
             );
         const corrected = await executeRun(
             await openSession(sandbox.path),
-            buildRunOptions({ stage: 'commit', only: ['actions/zizmor'] }),
+            buildRunOptions({ stage: 'commit', only: ['github-actions/zizmor'] }),
         );
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
         expect(await Bun.file(join(sandbox.path, '.github/workflows/build.yml')).text()).toBe(workflow);

@@ -32,7 +32,6 @@ export const activeSettingNamespaceSchemas = {
         overrides: true,
     }),
     html: settingNamespaceSchemas['html'].required({ templates: true }),
-    i18n: settingNamespaceSchemas['i18n'].required({ messages_folder: true, base_locale: true }),
     licenses: settingNamespaceSchemas['licenses'].required({ allowed: true, exceptions: true }),
     limits: settingNamespaceSchemas['limits']
         .required({
@@ -130,6 +129,7 @@ export const activeSettingNamespaceSchemas = {
     'tools.trivy': settingNamespaceSchemas['tools.trivy'].required({ severity: true }),
     'tools.v8r': settingNamespaceSchemas['tools.v8r'].required({ schemas: true }),
     'tools.yamllint': settingNamespaceSchemas['tools.yamllint'].required({ rules: true }),
+    translations: settingNamespaceSchemas['translations'].required({ messages_folder: true, base_locale: true }),
     xcode: settingNamespaceSchemas['xcode'].required({ entitlements_allowed: true }),
 };
 export const activeSettingNamespacesSchema = z.strictObject(activeSettingNamespaceSchemas).partial();
@@ -169,8 +169,6 @@ export const settingValueSchemas = {
     'format.semicolons': settingNamespaceSchemas['format'].shape['semicolons'].unwrap(),
     'format.trailing_commas': settingNamespaceSchemas['format'].shape['trailing_commas'].unwrap(),
     'html.templates': settingNamespaceSchemas['html'].shape['templates'].unwrap(),
-    'i18n.base_locale': settingNamespaceSchemas['i18n'].shape['base_locale'].unwrap(),
-    'i18n.messages_folder': settingNamespaceSchemas['i18n'].shape['messages_folder'].unwrap(),
     'licenses.allowed': settingNamespaceSchemas['licenses'].shape['allowed'].unwrap(),
     'licenses.exceptions': settingNamespaceSchemas['licenses'].shape['exceptions'].unwrap(),
     'limits.bash.assignments': settingNamespaceSchemas['limits'].shape['bash'].unwrap().shape['assignments'].unwrap(),
@@ -281,5 +279,7 @@ export const settingValueSchemas = {
     'tools.trivy.severity': settingNamespaceSchemas['tools.trivy'].shape['severity'].unwrap(),
     'tools.v8r.schemas': settingNamespaceSchemas['tools.v8r'].shape['schemas'].unwrap(),
     'tools.yamllint.rules': settingNamespaceSchemas['tools.yamllint'].shape['rules'].unwrap(),
+    'translations.base_locale': settingNamespaceSchemas['translations'].shape['base_locale'].unwrap(),
+    'translations.messages_folder': settingNamespaceSchemas['translations'].shape['messages_folder'].unwrap(),
     'xcode.entitlements_allowed': settingNamespaceSchemas['xcode'].shape['entitlements_allowed'].unwrap(),
 };

@@ -7,7 +7,7 @@ export const ACTIONS_INIT = [
     'init',
     '--yes',
     '--configurations',
-    'actions',
+    'github-actions',
     '--no-runner',
     '--no-ci',
     '--no-agent-rules',
@@ -15,7 +15,7 @@ export const ACTIONS_INIT = [
 ];
 
 export const REPOSITORY: InstalledScenario = {
-    configurations: ['actions'],
+    configurations: ['github-actions'],
 
     init: [...QUIET_INIT],
     tools: ['actionlint', 'zizmor'],
@@ -24,7 +24,7 @@ export const REPOSITORY: InstalledScenario = {
 
 export const CASES: FindingCase[] = [
     {
-        check: 'actions/actionlint',
+        check: 'github-actions/actionlint',
         files: {
             '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo "\${{ nothing.here }}"\n`,
         },
@@ -34,7 +34,7 @@ export const CASES: FindingCase[] = [
         },
     },
     {
-        check: 'actions/zizmor',
+        check: 'github-actions/zizmor',
         files: {
             '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - uses: actions/checkout@v4\n            - run: echo "\${{ github.event.pull_request.title }}"\n`,
         },

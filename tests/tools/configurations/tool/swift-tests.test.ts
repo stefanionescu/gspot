@@ -26,14 +26,14 @@ import {
     XCTEST_COMMAND,
     XCTEST_COVERAGE_TESTS,
     XCTEST_COVERAGE_SOURCE,
-} from '#tests/config/tools/configurations/tool/xctest.ts';
+} from '#tests/config/tools/configurations/tool/swift-tests.ts';
 
 test.skipIf(!isMacos)(
     'XCTest and xccov report a below-floor target and pass after testing its uncovered function',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['xctest', 'xcode'], {
+            'gspot.toml': buildPolicy(['swift-tests', 'xcode'], {
                 tables: '[swift]\nxcode_project = "Inspection.xcodeproj"\nxcode_scheme = "Inspection"\nxcode_destination = "platform=macOS"\n[coverage]\noverrides = [{ target = "Inspection.xctest", percent = 100 }]\n',
                 level: 'all',
             }),
@@ -46,12 +46,12 @@ test.skipIf(!isMacos)(
         try {
             const failed = await executeRun(
                 await openSession(sandbox.path),
-                buildRunOptions({ stage: 'push', only: ['xctest/coverage'] }),
+                buildRunOptions({ stage: 'push', only: ['swift-tests/coverage'] }),
             );
             expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
             expect(failed.report.checks).toMatchObject([
                 {
-                    check: 'xctest/coverage',
+                    check: 'swift-tests/coverage',
                     status: 'failed',
                     findings: [{ rule: 'coverage', line: 1, message: textContaining('under the floor of 100') }],
                 },
@@ -65,11 +65,11 @@ test.skipIf(!isMacos)(
             );
             const corrected = await executeRun(
                 await openSession(sandbox.path),
-                buildRunOptions({ stage: 'push', only: ['xctest/coverage'] }),
+                buildRunOptions({ stage: 'push', only: ['swift-tests/coverage'] }),
             );
             expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
             expect(corrected.report.checks).toMatchObject([
-                { check: 'xctest/coverage', status: 'passed', findings: [] },
+                { check: 'swift-tests/coverage', status: 'passed', findings: [] },
             ]);
             expect(await readFile(join(sandbox.path, 'Value.swift'), 'utf8')).toBe(XCTEST_COVERAGE_SOURCE);
             expect(await readFile(join(sandbox.path, 'Inspection.xcodeproj/project.pbxproj'), 'utf8')).toBe(
@@ -151,11 +151,11 @@ for (const { name, scope } of XCTEST_SCOPES) {
             const root = sandbox.path;
             const prefix = scope === '' ? '' : `${scope}/`;
             await createFileTree(root, {
-                'gspot.toml': buildPolicy(scope === '' ? ['xctest'] : [], {
+                'gspot.toml': buildPolicy(scope === '' ? ['swift-tests'] : [], {
                     level: 'all',
                     tables:
                         '[agent_rules]\nenabled = false\n' +
-                        (scope === '' ? '' : `[scope.${JSON.stringify(scope)}]\nconfigurations = ["xctest"]\n`),
+                        (scope === '' ? '' : `[scope.${JSON.stringify(scope)}]\nconfigurations = ["swift-tests"]\n`),
                 }),
                 [`${prefix}Sources/Value.swift`]: CORRECT,
                 [`${prefix}AppTests/Value.swift`]: SAMPLE,
@@ -181,7 +181,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy([], {
-                tables: `[scope."${scope}"]\nconfigurations = ["xctest"]\n`,
+                tables: `[scope."${scope}"]\nconfigurations = ["swift-tests"]\n`,
                 level: 'all',
             }),
             [`${scope}/Value.swift`]: SAMPLE,

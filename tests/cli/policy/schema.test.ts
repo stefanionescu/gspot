@@ -124,13 +124,13 @@ test.each([
 test.each(LOCALE_SCHEMA_CASES)(
     'manifest settings validate $name',
     ({ scoped: nested, settings: translationSettings, key: setting, valid }) => {
-        const settings = { i18n: translationSettings };
+        const settings = { translations: translationSettings };
         const document = {
-            configurations: ['i18n'],
+            configurations: ['translations'],
             ...(nested ? { scope: { app: settings } } : settings),
         };
         const text = stringify(document);
-        const table = `${nested ? 'scope.app.' : ''}i18n`;
+        const table = `${nested ? 'scope.app.' : ''}translations`;
         const key =
             setting === 'locales' ? `\`locales\` is not a setting gspot knows under [${table}]` : `${table}.${setting}`;
         if (valid) expect(() => parseStrictPolicy(text)).not.toThrow();
@@ -140,17 +140,24 @@ test.each(LOCALE_SCHEMA_CASES)(
 );
 
 test('manifest settings preserve typed values and reject unknown siblings', () => {
-    const source = buildPolicy(['i18n'], { tables: '[i18n]\nmessages_folder = "messages"\nbase_locale = "fr"\n' });
-    expect(parseStrictPolicy(source).configurationSettings?.['i18n']).toMatchObject({
+    const source = buildPolicy(['translations'], {
+        tables: '[translations]\nmessages_folder = "messages"\nbase_locale = "fr"\n',
+    });
+    expect(parseStrictPolicy(source).configurationSettings?.['translations']).toMatchObject({
         messages_folder: 'messages',
         base_locale: 'fr',
     });
     const invalid = source + 'unknown = true\n';
     expect(() => {
         parseStrictPolicy(invalid);
-    }).toThrow('`unknown` is not a setting gspot knows under [i18n]');
-    expect(validate({ configurations: ['i18n'], i18n: { messages_folder: 'messages', base_locale: 'fr' } })).toBe(true);
-    expect(validate({ configurations: ['i18n'], i18n: { unknown: true } })).toBe(false);
+    }).toThrow('`unknown` is not a setting gspot knows under [translations]');
+    expect(
+        validate({
+            configurations: ['translations'],
+            translations: { messages_folder: 'messages', base_locale: 'fr' },
+        }),
+    ).toBe(true);
+    expect(validate({ configurations: ['translations'], translations: { unknown: true } })).toBe(false);
 });
 
 test.each(UNSAFE_DIRECTORIES)(

@@ -6,7 +6,7 @@ description: Run your test suite with a coverage floor, and check Swift tests.
 gspot runs your test suite as a check at the push stage and fails it when coverage falls below
 the floor you set. Keep the test runner and its dependencies in your own project.
 
-The default floors for Jest, Vitest, and pytest are 0% at `recommended` and 80% at `all`. Swift coverage stays off until you name a target in `tools.xctest.coverage`. A floor you set applies at both
+The default floors for Jest, Vitest, and pytest are 0% at `recommended` and 80% at `all`. Swift coverage stays off until you name a target in `tools.swift-tests.coverage`. A floor you set applies at both
 levels. For a test runner without a configuration, write a [command check](/guides/command-checks/).
 
 ## Jest
@@ -60,20 +60,20 @@ app code keeps its own rules.
 
 ## Swift tests
 
-Run `gspot add xctest`. gspot writes a `.swiftlint.yml` into each `Tests` or `*Tests` folder
+Run `gspot add swift-tests`. gspot writes a `.swiftlint.yml` into each `Tests` or `*Tests` folder
 that turns off `force_unwrapping`, `missing_docs`, and `no_magic_numbers` in tests, while your
 source files keep those rules. `gspot check --only swift/swiftlint` reads these nested files. When configuring an editor directly, omit `--config` from SwiftLint because that option disables nested configuration.
 
 The swift-snapshot-testing dependency selects its own configuration. It checks snapshot recording
 and the library's `__Snapshots__/{file}/{test}.*` references beside each test source. The
 [SnapshotTesting configuration](/reference/configurations/swift-snapshot-testing/) owns these checks.
-[xctest](/reference/configurations/xctest/) owns test reasons, sleeps, and coverage.
+[swift-tests](/reference/configurations/swift-tests/) owns test reasons, sleeps, and coverage.
 
 To enable Swift coverage for a configured Xcode project and scheme:
 
 ```shell
-gspot set tools.xctest.coverage '{"target":"Orders","percent":80}'
-gspot check --only xctest/coverage
+gspot set tools.swift-tests.coverage '{"target":"Orders","percent":80}'
+gspot check --only swift-tests/coverage
 ```
 
 Replace `Orders` with the target named in your Xcode coverage report. The check requires macOS and selected `xcode` configuration with `swift.xcode_project` and `swift.xcode_scheme`.
