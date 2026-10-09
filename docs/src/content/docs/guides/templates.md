@@ -24,7 +24,7 @@ configurations = ["typescript", "markdown"]
 ```
 
 `exact` keeps the template's language and framework choices during initialization. Change
-`selection` to `detect` to add project configurations detected in the destination. Both
+`selection` to `detect` to add configurations detected in the destination. Both
 selections include automatic general checks at the chosen level. An empty exact list omits
 language and framework choices. It still includes general checks.
 

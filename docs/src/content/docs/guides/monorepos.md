@@ -3,7 +3,7 @@ title: Monorepos
 description: Give each scope its own configurations and settings in gspot.toml.
 ---
 
-A scope is one project inside your repository. It has its own configurations and settings. `gspot init`
+A scope is a folder with its own configurations and settings. `gspot init`
 proposes a scope for each folder with a tracked project file, such as `package.json`,
 `pyproject.toml`, or `Package.swift`. Check their paths and configurations in the plan before you accept.
 
@@ -11,7 +11,7 @@ proposes a scope for each folder with a tracked project file, such as `package.j
 
 This policy has a root with no configurations and two scopes:
 
-```toml title="Two project scopes"
+```toml title="Two scopes"
 configurations = []
 
 [scope.api]
@@ -27,7 +27,7 @@ function_lines = 80
 configurations = ["swift", "xcode"]
 ```
 
-Use the project path as the key under `[scope]`. Nested tables belong to that project.
+Use the scope path as the key under `[scope]`. Nested tables belong to that scope.
 `[scope.api.limits]` changes the API limit only. Quote a key that contains slashes.
 
 After you change the scopes, apply the policy, install the tools, and check one scope:

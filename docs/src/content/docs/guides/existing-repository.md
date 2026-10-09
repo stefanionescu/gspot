@@ -3,8 +3,8 @@ title: Add gspot to an existing repository
 description: What init replaces in a repository that already has linters, and where the originals stay.
 ---
 
-When your repository already has linter configuration, `gspot init` replaces it with the
-configuration it generates. Git keeps every file it replaces.
+`gspot init` replaces existing tool files with its generated tool files. Git keeps every
+file it replaces.
 
 ## Preview the plan
 
@@ -21,10 +21,10 @@ accept it.
 ## What init replaces
 
 Each configuration knows its tool files, such as `.eslintrc.json`, `.prettierrc`,
-`ruff.toml`, `.stylelintrc.json`, `typos.toml`, and `.shellcheckrc`. Init replaces these files: it deletes them and writes its own configuration instead. It does not read settings out of them. Move the
+`ruff.toml`, `.stylelintrc.json`, `typos.toml`, and `.shellcheckrc`. Init replaces these files: it deletes them and writes its own tool files instead. It does not read settings out of them. Move the
 settings you still need into `gspot.toml` with `gspot set` and `gspot ignore`.
 
-For Python, init writes a root `ruff.toml` that extends the generated Ruff configuration.
+For Python, init writes a root `ruff.toml` that extends the generated Ruff tool file.
 Editor formatting follows the same settings as `gspot check --fix`.
 Ruff reads each project's `requires-python` before offering syntax changes.
 See [Python-version inference in Ruff](https://docs.astral.sh/ruff/configuration/#inferring-the-python-version).
@@ -39,15 +39,15 @@ before it writes anything. Fix the file and run `gspot init` again.
 
 - **Tool sections in shared files.** `[tool.ruff]` in `pyproject.toml` or the `prettier` key
   in `package.json` stays where it is. The plan names the section, and the generated
-  configuration takes over. Delete the section when you are ready.
+  tool files take over. Delete the section when you are ready.
 - **Your Git hooks.** If Husky, Lefthook, or an authored hook folder owns them, gspot installs none of its own and prints three integration lines. Add the lines, or checks will not run on commit or push. See [Git hooks](/guides/hooks/).
 - **Your scripts and dependencies.** The `no longer runs` plan section names lint folders and manifests that hold only lint tools. Review your scripts and dependencies before removing them.
 
-A tool without a configuration can run as a [command check](/guides/command-checks/).
+A tool without a tool file can run as a [command check](/guides/command-checks/).
 
 ## Run the checks
 
-After you accept the plan, init writes the configuration and installs the tools. With
+After you accept the plan, init writes the generated files and installs the tools. With
 `--no-install`, it prints the install command instead. Init runs no check, so run one yourself:
 
 ```bash

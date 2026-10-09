@@ -37,7 +37,7 @@ configuration list. To make a manual language or framework choice, run `gspot ad
 dependencies change. It keeps manual language and framework additions and removals at the root
 and in scopes, including choices from `init --configurations`, `--scope-configurations`, and
 edits to authored configuration lists. A manual removal stays removed when its detection
-source disappears and returns. Removed choices are visible in `removed_configurations`. These manual choices select project configurations. `recommended`
+source disappears and returns. Removed choices are visible in `removed_configurations`. These manual choices select configurations. `recommended`
 and `all` are the levels.
 
 The [level descriptions](/guides/overview/#levels) define `recommended` and `all`. Neither enables experimental or preview rules. To change the level:
@@ -137,4 +137,4 @@ See [Upgrade gspot](/guides/upgrade/) to install a new version and update the re
 - [Tests and coverage](/guides/testing/): Jest, Vitest, pytest, and Swift tests.
 - [Dependency licenses](/guides/dependency-licenses/): allowed licenses and exceptions.
 - [Security](/guides/security/): Semgrep, Swift security rules, and CodeQL.
-- [Monorepos](/guides/monorepos/): settings for one project in the repository.
+- [Monorepos](/guides/monorepos/): settings for one scope in the repository.
