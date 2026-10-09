@@ -30,7 +30,7 @@ function sourceFiles(input: CheckInput): NamingSource[] {
 }
 
 function findingsFor(input: CheckInput, policy: EffectivePolicy, identifiers: Identifier[]): Finding[] {
-    const isTestFile = pathMatcher(input.view.settings['test_files'] as string[]);
+    const isTestFile = pathMatcher(input.view.test_files);
     return identifiers.flatMap((identifier) =>
         nameFindings(identifier, {
             check: input.check,

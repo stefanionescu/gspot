@@ -142,5 +142,6 @@ summary = "Whether JavaScript and TypeScript statements end with semicolons."
 [[setting]]
 name = "format.overrides"
 type = "list"
+items = "native"
 default = []
 summary = "Formatting options for selected paths, in order. A scope's overrides apply inside that scope only."

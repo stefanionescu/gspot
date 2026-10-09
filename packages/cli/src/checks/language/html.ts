@@ -175,8 +175,7 @@ export async function scripts(input: CheckInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function literals(input: CheckInput): Promise<Finding[]> {
-    const tool = input.view.options('html');
-    const templates = (tool['templates'] as string[] | undefined) ?? [];
+    const { templates } = input.view.options('html');
     if (templates.length === 0) return [];
     const isTemplate = pathMatcher(templates);
     const files = input.files

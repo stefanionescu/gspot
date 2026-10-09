@@ -58,9 +58,7 @@ export function bunReleaseAge(input: CheckInput): Finding[] {
             !file.path.split('/').includes(DOT_GSPOT) && lockfileEntry(posix.basename(file.path))?.client === 'bun',
     );
     if (!isBun) return [];
-    const { settings } = input.view;
-    const days = settings['dependencies.min_release_age_days'] as number;
-    const scanner = settings['dependencies.scanner'] as string;
+    const { min_release_age_days: days, scanner } = input.view.options('dependencies');
     const table = installTable(input.scopeRoot);
     if (table === undefined)
         return [

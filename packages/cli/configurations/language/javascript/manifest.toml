@@ -524,6 +524,7 @@ summary = "Native option arrays by ESLint rule ID, without a severity. Options a
 [[setting]]
 name = "tools.eslint.overrides"
 type = "list"
+items = "native"
 direction = "rule-options"
 default = []
 summary = "Rule options for selected paths, in order. A scope's overrides apply inside that scope only. Explicit ignores apply last."

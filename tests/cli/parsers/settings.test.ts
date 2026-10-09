@@ -3,7 +3,14 @@ import { test, expect } from 'bun:test';
 import { compileSettingValue } from '#cli/policy/schema/contracts.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
 import { settingSchemaSources } from '#cli/generation/compilation/public.ts';
-import { NUMBER_SETTING_DECLARATION, RECORD_SETTING_DECLARATION } from '#tests/config/cli/parsers/settings.ts';
+
+import {
+    NATIVE_ITEM_DECLARATION,
+    NATIVE_ITEM_DECLARATIONS,
+    INVALID_NATIVE_ITEM_OWNERS,
+    NUMBER_SETTING_DECLARATION,
+    RECORD_SETTING_DECLARATION,
+} from '#tests/config/cli/parsers/settings.ts';
 
 test('typed record items validate fields, nested paths and bounds without reader casts', () => {
     const manifest = parseConfigurationManifest('example', { tables: RECORD_SETTING_DECLARATION });
@@ -146,5 +153,36 @@ summary = "Script paths."
     );
     expect(() => settingSchemaSources([{ ...manifest, settings: invalid }])).toThrow(
         'architecture.roles.default.scripts.0',
+    );
+});
+
+test.each(NATIVE_ITEM_DECLARATIONS)('$name retains its native item validation at both levels', (row) => {
+    const declaration = NATIVE_ITEM_DECLARATION.replace('format.overrides', row.name);
+    const tables = `${declaration}default = ${row.value}\ndefault_all = ${row.value}\n`;
+    const manifest = parseConfigurationManifest('example', { tables });
+    expect(manifest.settings[0]).toMatchObject({ name: row.name, items: 'native' });
+    expect(settingSchemaSources([manifest]).size).toBe(2);
+    expect(() =>
+        settingSchemaSources([
+            parseConfigurationManifest('example', {
+                tables: tables.replace(`default = ${row.value}`, `default = ${row.invalid}`),
+            }),
+        ]),
+    ).toThrow(row.diagnostic);
+    expect(() =>
+        settingSchemaSources([
+            parseConfigurationManifest('example', {
+                tables: tables.replace(`default_all = ${row.value}`, `default_all = ${row.invalid}`),
+            }),
+        ]),
+    ).toThrow(row.diagnostic.replace('.default.', '.default_all.'));
+});
+
+test.each(INVALID_NATIVE_ITEM_OWNERS)('%s refuses a native item reference without an owned array', (name) => {
+    const manifest = parseConfigurationManifest('example', {
+        tables: NATIVE_ITEM_DECLARATION.replace('format.overrides', name),
+    });
+    expect(() => settingSchemaSources([manifest])).toThrow(
+        `The native list item declaration for ${name} has no owned array schema.`,
     );
 });

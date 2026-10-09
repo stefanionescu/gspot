@@ -32,7 +32,7 @@ function isSkipped(directory: string, scope: string): boolean {
  */
 export const prefixCollisions: BuiltInCheck = (input) => {
     const files = structureSources(input);
-    const threshold = input.view.limit('prefix_collisions') as number;
+    const threshold = input.view.options('limits').prefix_collisions;
     const isNest = input.selection.selected.some((manifest) => manifest.configuration.name === 'nestjs');
     const tree = directoryTree(input.files);
     const seen = new Set<string>();

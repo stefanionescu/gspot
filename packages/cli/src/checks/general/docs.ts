@@ -204,7 +204,7 @@ export function requiredFiles(input: CheckInput): Finding[] {
  * @returns the findings
  */
 export function readmeShape(input: CheckInput): Finding[] {
-    const threshold = input.view.settings['limits.docs.headings_before_contents'] as number;
+    const threshold = input.view.options('limits').docs.headings_before_contents;
     const roots = new Set(['README.md', ...input.scopeEntries.map((scope) => `${scope.path}/README.md`)]);
     return input.files
         .filter(

@@ -207,7 +207,7 @@ export async function jscpd(input: CheckInput): Promise<Finding[]> {
         throw new Error(
             `The jscpd command wrote no report: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
         );
-    const ceiling = input.view.settings['limits.duplication.percent'] as number;
+    const ceiling = input.view.options('limits').duplication.percent;
     return cloneFindings(cloneReportSchema.parse(JSON.parse(readSource(work, 'jscpd-report.json').toString('utf8'))), {
         check: input.check.name,
         root: input.root,

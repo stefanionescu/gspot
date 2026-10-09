@@ -236,22 +236,24 @@ export function emitTarget(
 export function settingSchemaSources(declarations: Iterable<Manifest>): Map<string, string> {
     const manifests = [...declarations];
     const authored = manifests.flatMap((manifest) => manifest.settings);
-    const entries = new Map<string, CompiledSetting>();
-    for (const declaration of authored)
-        entries.set(declaration.name, nativeSetting(declaration.name) ?? compileSettingValue(declaration));
+    const entries = new Map<string, CompiledSetting>(
+        authored.map((declaration) => {
+            const native = nativeSetting(declaration.name);
+            if (declaration.items === 'native' && !(native?.schema instanceof z.ZodArray))
+                throw new Error(`The native list item declaration for ${declaration.name} has no owned array schema.`);
+            return [declaration.name, native ?? compileSettingValue(declaration)];
+        }),
+    );
     const values: string[] = [];
     const namespaces = new Map<string, [string, CompiledSetting][]>();
     for (const [name, value] of [...entries].toSorted(([left], [right]) => left.localeCompare(right))) {
         const segments = name.split('.');
         const prefixLength = segments[0] === 'tools' ? TOOL_KEY_DEPTH : 1;
-        const namespace = segments.slice(0, prefixLength).join('.');
+        const namespace = segments.splice(0, prefixLength).join('.');
         const children = namespaces.get(namespace) ?? [];
-        children.push([segments.slice(prefixLength).join('.'), value]);
+        children.push([segments.join('.'), value]);
         namespaces.set(namespace, children);
-        const fields = segments
-            .slice(prefixLength)
-            .map((field) => `.shape[${JSON.stringify(field)}].unwrap()`)
-            .join('');
+        const fields = segments.map((field) => `.shape[${JSON.stringify(field)}].unwrap()`).join('');
         values.push(`${JSON.stringify(name)}:settingNamespaceSchemas[${JSON.stringify(namespace)}]${fields}`);
     }
     const compiled = new Map([...namespaces].map(([name, children]) => [name, compileNamespace(children)]));

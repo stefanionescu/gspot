@@ -55,9 +55,7 @@ async function analyzeLanguage(
  * @returns the findings
  */
 export async function codeql(input: CheckInput): Promise<Finding[]> {
-    const tool = input.view.options(`tools.${CODEQL}`);
-    const languages = (tool['languages'] as string[] | undefined) ?? [];
-    const suite = tool['suite'];
+    const { languages, suite } = input.view.options(`tools.${CODEQL}`);
     if (languages.length === 0) return [];
     const metadata = codeqlLanguagesSchema.parse(
         JSON.parse(
