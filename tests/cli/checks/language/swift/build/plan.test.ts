@@ -1,11 +1,11 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/public.ts';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { usePlatform } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';

@@ -1,7 +1,7 @@
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { CHILD_MIGRATIONS, CHILD_POSTGRES_POLICY } from '#tests/config/cli/generation/squawk.ts';
 
 test.each([

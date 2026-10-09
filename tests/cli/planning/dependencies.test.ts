@@ -5,8 +5,8 @@ import { planRun } from '#cli/planning/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readPackageManifests } from '#cli/repository/contracts.ts';
-import { DEPENDENCY_CASES } from '#tests/config/cli/planning/dependencies.ts';
 import { detectConfigurations } from '#cli/repository/selection/contracts.ts';
+import { DEPENDENCY_CASES } from '#tests/config/cli/planning/dependencies.ts';
 
 for (const level of ['recommended', 'all'] as const)
     test.each(DEPENDENCY_CASES)(

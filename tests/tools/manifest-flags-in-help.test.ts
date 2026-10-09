@@ -2,13 +2,13 @@
 import { join } from 'node:path';
 import { readPolicy } from '#cli/policy/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { buildPolicy } from '#tests/harness/policy.ts';
 import { npmProject } from '#cli/generation/public.ts';
-import { hasToolBuild } from '#tests/harness/platforms.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { hasToolBuild } from '#tests/harness/platforms.ts';
+import { pythonProject } from '#cli/generation/contracts.ts';
 import { installToolProject } from '#cli/tools/contracts.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { pythonProject } from '#cli/generation/contracts.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { packageToolProject } from '#cli/tools/npm/public.ts';
 import { pythonToolProject } from '#cli/tools/python/public.ts';

@@ -1,6 +1,6 @@
 import { join, dirname } from 'node:path';
-import * as promises from 'node:fs/promises';
 import { rejects } from 'node:assert/strict';
+import * as promises from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';

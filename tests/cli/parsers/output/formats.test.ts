@@ -1,5 +1,5 @@
-import { join, win32 } from 'node:path';
 import { test, expect } from 'bun:test';
+import { join, win32 } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/public.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';

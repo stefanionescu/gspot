@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/public.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { unlink, symlink } from 'node:fs/promises';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { rejection } from '#tests/harness/expectations.ts';

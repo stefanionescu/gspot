@@ -8,15 +8,15 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
-import type { InitJson } from '#cli/types/commands/init.ts';
 import { policySchema } from '#cli/policy/schema/public.ts';
+import type { InitJson } from '#cli/types/commands/init.ts';
 import { applicableManifests } from '#cli/planning/public.ts';
 import { parseTomlText } from '#cli/policy/document/public.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { parseToolProject } from '#cli/parsers/packages/contracts.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
-import { configurationManifests } from '#cli/configurations/public.ts';
 import { npmPins, pythonPins } from '#cli/configurations/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { readPolicyTable, parseStrictPolicy } from '#cli/policy/public.ts';
 import { COMPONENT, SELECTION_INIT } from '#tests/config/cli/commands/init/selection.ts';
 

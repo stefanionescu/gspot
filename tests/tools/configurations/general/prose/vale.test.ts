@@ -11,13 +11,13 @@ import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { TOKEN_IGNORES } from '#cli/config/generation/eta.ts';
 import { runBuiltInCheck } from '#cli/execution/contracts.ts';
-import { parseAlerts } from '#cli/parsers/output/contracts.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { parseAlerts } from '#cli/parsers/output/contracts.ts';
 import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { eta, etaInputs } from '#cli/generation/compilation/public.ts';
-import { STYLE_CASES, CURRENCY_CASES } from '#tests/config/tools/configurations/general/prose/vale.ts';
 import { VALE_INI, CONCRETE_RULE } from '#tests/config/tools/configurations/general/prose/emission.ts';
+import { STYLE_CASES, CURRENCY_CASES } from '#tests/config/tools/configurations/general/prose/vale.ts';
 
 for (const extension of ['md', 'sh']) {
     test(`native Vale reports its ${extension} finding and passes after the fix`, async () => {

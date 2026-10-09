@@ -3,8 +3,8 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
 

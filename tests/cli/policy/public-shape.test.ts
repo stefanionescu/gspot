@@ -5,9 +5,9 @@ import { policySchema } from '#cli/policy/schema/public.ts';
 import { hookStatus } from '#cli/lifecycle/install/contracts.ts';
 import { selectForScope } from '#cli/repository/selection/public.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
+import { setKey, getScopeTable } from '#cli/policy/document/contracts.ts';
 import { declaredArchitectures } from '#cli/policy/settings/contracts.ts';
 import { scopeView, knownSettings } from '#cli/policy/settings/public.ts';
-import { setKey, getScopeTable } from '#cli/policy/document/contracts.ts';
 import { emitPolicy, parseTomlText } from '#cli/policy/document/public.ts';
 
 import {

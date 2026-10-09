@@ -8,8 +8,8 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { TypoEntry } from '#cli/types/parsers/output.ts';
-import { containingAll } from '#tests/harness/expectations.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { containingAll } from '#tests/harness/expectations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 

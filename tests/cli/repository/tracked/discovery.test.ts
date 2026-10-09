@@ -10,8 +10,8 @@ import { isPosix } from '#tests/config/harness/platforms.ts';
 import { getEntries } from '#cli/repository/revisions/public.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { rm, chmod, unlink, symlink, writeFile } from 'node:fs/promises';
-import { REPLACED_PARENT_PATHS } from '#tests/config/cli/repository/tracked.ts';
 import { trackedEntries, readIndexEntries } from '#cli/repository/contracts.ts';
+import { REPLACED_PARENT_PATHS } from '#tests/config/cli/repository/tracked.ts';
 import { findRoot, isGitRepository } from '#cli/repository/discovery/contracts.ts';
 
 test('repository file discovery > keeps tracked deletions out of readable entries', async () => {

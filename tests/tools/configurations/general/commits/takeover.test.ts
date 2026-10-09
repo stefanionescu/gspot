@@ -1,5 +1,5 @@
-import { join, posix } from 'node:path';
 import { test, expect } from 'bun:test';
+import { join, posix } from 'node:path';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';

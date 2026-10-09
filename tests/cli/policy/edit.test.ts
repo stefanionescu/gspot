@@ -4,8 +4,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { Mutation } from '#cli/types/policy/settings.ts';
-import { AUTHORED_POLICY } from '#tests/config/cli/policy/file.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { AUTHORED_POLICY } from '#tests/config/cli/policy/file.ts';
 import { parsePolicyEdit, writePolicyFile } from '#cli/policy/document/public.ts';
 
 import {

@@ -10,18 +10,18 @@ import { fakeCommand, prepareTestCommand } from '#tests/harness/command.ts';
 import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/public.ts';
 
 import {
-    PACKAGE_FAILURES,
-    OTHER_DOWNLOAD_OUTPUT,
-    PACKAGE_VERSION_CASES,
-    GITHUB_DOWNLOAD_FAILURES,
-} from '#tests/config/cli/tools/npm/install.ts';
-import {
     installArgv,
     lockfileArgv,
     githubRefusalNote,
     installPackageLockfile,
     preparePackageLockfile,
 } from '#cli/tools/npm/contracts.ts';
+import {
+    PACKAGE_FAILURES,
+    OTHER_DOWNLOAD_OUTPUT,
+    PACKAGE_VERSION_CASES,
+    GITHUB_DOWNLOAD_FAILURES,
+} from '#tests/config/cli/tools/npm/install.ts';
 
 test.each(GITHUB_DOWNLOAD_FAILURES)('a refused GitHub download names the token to set: %s', (line) => {
     expect(githubRefusalNote(`postinstall failed\n${line}\n`)).toContain('GITHUB_TOKEN');

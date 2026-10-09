@@ -1,8 +1,8 @@
 import { testdir } from 'testdirs';
 import { join, dirname } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { buildSandboxPath } from '#tests/harness/install.ts';
 import { createPackageRegistry } from '#tests/harness/registry.ts';
 import type { Quickstart } from '#tests/types/harness/quickstart.ts';

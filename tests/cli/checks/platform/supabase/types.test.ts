@@ -4,8 +4,8 @@ import { test, spyOn, expect } from 'bun:test';
 import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { checkInput } from '#cli/execution/contracts.ts';
@@ -14,8 +14,8 @@ import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
-import type { SupabaseProject, SupabaseInvocation } from '#tests/types/cli/checks/platform/supabase.ts';
 import { GENERATED_TYPES, DATABASE_SCHEMAS } from '#tests/config/cli/checks/platform/supabase/types.ts';
+import type { SupabaseProject, SupabaseInvocation } from '#tests/types/cli/checks/platform/supabase.ts';
 
 async function prepareSupabaseCheck(
     root: string,

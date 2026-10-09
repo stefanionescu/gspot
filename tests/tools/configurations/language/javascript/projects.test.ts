@@ -9,8 +9,8 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import stylelint from 'stylelint';
-import type { Config } from 'stylelint';
 import { test, expect } from 'bun:test';
+import type { Config } from 'stylelint';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';

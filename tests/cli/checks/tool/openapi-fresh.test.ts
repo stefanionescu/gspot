@@ -1,7 +1,7 @@
 import { join, posix } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { commitAll } from '#tests/harness/git.ts';
 import { planRun } from '#cli/planning/public.ts';
+import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';

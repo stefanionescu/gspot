@@ -2,8 +2,8 @@
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createFileTree } from 'testdirs';
-import { join, dirname, delimiter } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { join, dirname, delimiter } from 'node:path';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { missingBuild } from '#cli/planning/contracts.ts';

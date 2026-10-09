@@ -1,8 +1,8 @@
 import { join, delimiter } from 'node:path';
 import { readPolicy } from '#cli/policy/public.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { createInstallationRegistry } from '#tests/harness/registry.ts';

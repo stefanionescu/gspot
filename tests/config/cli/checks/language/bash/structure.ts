@@ -1,5 +1,5 @@
-import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import { HEAD, BASH_CASES_MAIN } from '#tests/config/samples/bash.ts';
+import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { InProcessScenario } from '#tests/types/harness/repository.ts';
 
 export const CLEAN =

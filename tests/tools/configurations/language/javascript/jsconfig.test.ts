@@ -3,12 +3,12 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { cp, mkdir, symlink } from 'node:fs/promises';
 import { openSession } from '#cli/commands/public.ts';
+import { cp, mkdir, symlink } from 'node:fs/promises';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { installedModules } from '#tests/harness/environment.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 

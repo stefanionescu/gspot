@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
-import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { linkInstalledModules } from '#tests/harness/platforms.ts';
 // What a sandbox policy generates: the files its selected configurations write, and the ESLint instance its
 // configuration produces.
 

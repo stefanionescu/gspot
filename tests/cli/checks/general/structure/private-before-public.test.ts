@@ -1,11 +1,11 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
-import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { PYTHON_MODULE_HEADER } from '#tests/config/samples/python.ts';
 
 test('a private Swift setter leaves its getter visible to other files', async () => {

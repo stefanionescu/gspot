@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { dirname, relative } from 'node:path/posix';
 import { emitAll } from '#cli/generation/public.ts';
+import { dirname, relative } from 'node:path/posix';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';

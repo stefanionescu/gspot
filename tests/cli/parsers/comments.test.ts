@@ -2,8 +2,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { COMMENT_BOUNDARIES } from '#tests/config/cli/parsers/comments.ts';
 import { commentText, parseComments } from '#cli/parsers/source/public.ts';
+import { COMMENT_BOUNDARIES } from '#tests/config/cli/parsers/comments.ts';
 import { suppressionComments } from '#cli/checks/general/structure/public.ts';
 
 // The lines of the comments in a source that open with the marker; a marker inside a string or a block value is no comment.

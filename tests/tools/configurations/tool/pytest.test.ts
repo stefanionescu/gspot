@@ -1,7 +1,7 @@
 // Sandbox for the pytest configuration: coverage under the floor.
 import { join } from 'node:path';
-import { commitAll } from '#tests/harness/git.ts';
 import { planRun } from '#cli/planning/public.ts';
+import { commitAll } from '#tests/harness/git.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';

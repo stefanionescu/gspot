@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
-import { excludeErrors } from '#cli/policy/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { excludeErrors } from '#cli/policy/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readAsset } from '#cli/platform/root/public.ts';
 import { FIRST_READ } from '#cli/config/policy/settings.ts';

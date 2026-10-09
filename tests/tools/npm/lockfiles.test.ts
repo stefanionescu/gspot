@@ -10,8 +10,8 @@ import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { packageLockfile } from '#cli/parsers/packages/contracts.ts';
-import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import { PACKAGE_REGISTRY_TOKEN } from '#tests/config/harness/registry.ts';
+import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import { computeDrift, writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { readPackageInputs, createPackageProject } from '#tests/harness/npm.ts';
 

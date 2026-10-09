@@ -2,8 +2,8 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';

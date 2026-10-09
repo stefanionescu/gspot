@@ -6,8 +6,8 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { aliasesFor } from '#cli/repository/contracts.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
-import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { getTsconfig } from '#cli/parsers/packages/public.ts';
+import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { ALIAS_INPUTS, ALIAS_PROJECT } from '#tests/config/cli/repository/aliases.ts';
 
 test.each(ALIAS_INPUTS)('alias reads report malformed $path', async ({ path, diagnostic }) => {

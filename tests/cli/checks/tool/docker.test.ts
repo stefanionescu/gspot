@@ -5,8 +5,8 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { rejection } from '#tests/harness/expectations.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 
 import {

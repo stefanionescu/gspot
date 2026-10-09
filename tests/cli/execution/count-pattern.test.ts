@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 
 function identityPolicy(pattern: string | undefined, format: string, exitCode: number, paths: string[]): string {

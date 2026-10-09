@@ -4,8 +4,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/public.ts';
-import { emitAll, generatedPaths } from '#cli/generation/public.ts';
 import { openSession, applyCommand } from '#cli/commands/public.ts';
+import { emitAll, generatedPaths } from '#cli/generation/public.ts';
 import { collectRules } from '#cli/generation/documents/contracts.ts';
 import { isStray, compareRules, computeDrift } from '#cli/lifecycle/public.ts';
 

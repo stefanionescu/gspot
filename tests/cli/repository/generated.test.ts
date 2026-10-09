@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { exportTemplate } from '#cli/policy/document/contracts.ts';

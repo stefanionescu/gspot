@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { parse, stringify } from 'smol-toml';
 import { writeFile } from 'node:fs/promises';
+import { parse, stringify } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
-import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { initCommand } from '#cli/commands/init/public.ts';
 import { GSPOT_MISE_TOOL } from '#cli/config/configurations.ts';

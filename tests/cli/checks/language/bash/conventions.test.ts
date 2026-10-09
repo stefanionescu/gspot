@@ -2,8 +2,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { commitAll, markExecutable } from '#tests/harness/git.ts';

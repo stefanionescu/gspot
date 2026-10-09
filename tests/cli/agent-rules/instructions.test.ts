@@ -3,9 +3,9 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { allChecks } from '#cli/configurations/contracts.ts';
 import { managedBlock } from '#cli/agent-rules/contracts.ts';
 import { selectRuleFiles } from '#cli/agent-rules/public.ts';
+import { allChecks } from '#cli/configurations/contracts.ts';
 import { everyManifest } from '#cli/configurations/public.ts';
 
 describe('the managed block', () => {

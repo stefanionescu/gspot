@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
-import { createFileTree } from 'testdirs';
 import { join, dirname } from 'node:path';
+import { createFileTree } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import * as processes from '#cli/platform/public.ts';
@@ -10,11 +10,11 @@ import { pathExists } from '#tests/harness/preservation.ts';
 import { installToolProject } from '#cli/tools/contracts.ts';
 import { packageToolProject } from '#cli/tools/npm/public.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
-import { createPackageRegistry } from '#tests/harness/registry.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { createPackageRegistry } from '#tests/harness/registry.ts';
 import { rejection, containingAll } from '#tests/harness/expectations.ts';
-import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import { PACKAGE_REGISTRY_TOKEN } from '#tests/config/harness/registry.ts';
+import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import { readPackageInputs, createPackageProject } from '#tests/harness/npm.ts';
 import { cp, chmod, mkdir, unlink, readFile, writeFile } from 'node:fs/promises';
 

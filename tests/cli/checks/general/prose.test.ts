@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
-import { buildCheckInput } from '#tests/harness/input.ts';
-import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { readSource } from '#cli/platform/root/public.ts';
+import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { buildTrackedFile } from '#tests/harness/tracked.ts';

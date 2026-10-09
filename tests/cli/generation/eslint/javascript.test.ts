@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { createEslint } from '#tests/harness/generated.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { createEslint } from '#tests/harness/generated.ts';
 
 test.each(['recommended', 'all'] as const)(
     '%s native import fixes preserve executable Node ESM paths',

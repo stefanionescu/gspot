@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { getCliSourcePath } from '#tests/harness/process.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { getCliSourcePath } from '#tests/harness/process.ts';
 import { symlink, readFile, readlink } from 'node:fs/promises';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';

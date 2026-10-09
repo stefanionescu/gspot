@@ -1,12 +1,12 @@
 import executables from 'which';
 import { join, basename } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { commitAll } from '#tests/harness/git.ts';
 import { planRun } from '#cli/planning/public.ts';
+import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/public.ts';
 import { toPosix } from '#cli/platform/contracts.ts';
+import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
