@@ -2,10 +2,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 
 const policy = `configurations = []
@@ -32,14 +31,21 @@ test('changed selection uses a merge base, labels its source, and keeps a follow
     await Bun.write(join(sandbox.path, 'api/source.txt'), 'committed change');
     commitAll(sandbox.path);
     await Bun.write(join(sandbox.path, 'web/source.txt'), 'working change');
-    const selected = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', 'api', '--json']);
+    const selected = await checkReport(sandbox.path, [
+        'check',
+        '--only',
+        'sandbox/paths',
+        '--changed',
+        'api',
+        '--json',
+    ]);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
-    const report = JSON.parse(selected.stdout) as RunReport;
+    const report = selected.report;
     expect(report.comparison).toStrictEqual({ content: 'working-tree', reference: 'refs/heads/base' });
     expect(report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'api/source.txt',
     ]);
-    const explicit = await runGspot(sandbox.path, [
+    const explicit = await checkReport(sandbox.path, [
         'check',
         '--only',
         'sandbox/paths',
@@ -49,7 +55,7 @@ test('changed selection uses a merge base, labels its source, and keeps a follow
         '--json',
     ]);
     expect(explicit.code, explicit.stdout + explicit.stderr).toBe(1);
-    const all = JSON.parse(explicit.stdout) as RunReport;
+    const all = explicit.report;
     expect(
         all.checks
             .flatMap((check) => check.findings.map((finding) => finding.message))

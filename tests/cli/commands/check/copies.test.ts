@@ -1,16 +1,15 @@
 // Bun check sandboxes read indexed snapshots and preserve working-tree bytes and outputs.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
-import { buildPolicy } from '#tests/harness/policy.ts';
 import { git, gitOutput } from '#tests/harness/git.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
@@ -28,9 +27,9 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     await writeFile(join(directory.path, 'script with spaces.sh'), 'echo repaired only in the working tree\n');
     await writeFile(join(directory.path, 'gspot.toml'), 'invalid working policy');
     const args = ['check', '--staged', '--only', 'bash/bash-syntax', '--json'];
-    const failed = await runGspot(directory.path, args);
+    const failed = await checkReport(directory.path, args);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const failedReport = JSON.parse(failed.stdout) as RunReport;
+    const failedReport = failed.report;
     expect(failedReport.comparison?.content).toBe('index');
     expect(failedReport.checks[0]?.reproduce).toContain('--staged');
     expect(new Set(failedReport.checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(
@@ -44,9 +43,9 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     await writeFile(join(directory.path, 'gspot.toml'), policy);
     expect(git(directory.path, ['add', 'gspot.toml', 'script with spaces.sh']).code).toBe(0);
     await writeFile(join(directory.path, 'script with spaces.sh'), 'if then\n');
-    const passed = await runGspot(directory.path, args);
+    const passed = await checkReport(directory.path, args);
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-    const passedReport = JSON.parse(passed.stdout) as RunReport;
+    const passedReport = passed.report;
     expect(passedReport.checks[0]?.status).toBe('passed');
     expect(passedReport.comparison?.reference).not.toBe(failedReport.comparison?.reference);
     expect(await readFile(join(directory.path, 'script with spaces.sh'), 'utf8')).toBe('if then\n');
@@ -62,9 +61,9 @@ test('staged checks read an indexed file when its working file is missing', asyn
     gitOutput(directory.path, ['add', '-A']);
     const args = ['check', '--staged', '--only', 'bash/bash-syntax', '--json'];
     await unlink(join(directory.path, 'script with spaces.sh'));
-    const ran = await runGspot(directory.path, args);
+    const ran = await checkReport(directory.path, args);
     expect(ran.code, ran.stdout + ran.stderr).toBe(0);
-    expect((JSON.parse(ran.stdout) as RunReport).checks[0]).toMatchObject({ status: 'passed', fileCount: 1 });
+    expect(ran.report.checks[0]).toMatchObject({ status: 'passed', fileCount: 1 });
     expect(await pathExists(join(directory.path, 'script with spaces.sh'))).toBe(false);
 });
 
@@ -119,9 +118,9 @@ stage = "commit"
     expect(git(directory.path, ['add', '-A']).code).toBe(0);
     await writeFile(join(directory.path, 'payload.dat'), Buffer.from([0, 1, 2]));
     await chmod(join(directory.path, 'task.sh'), 0o644);
-    const result = await runGspot(directory.path, ['check', '--staged', '--only', 'project/index-bytes', '--json']);
+    const result = await checkReport(directory.path, ['check', '--staged', '--only', 'project/index-bytes', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect((JSON.parse(result.stdout) as RunReport).checks[0]?.status).toBe('passed');
+    expect(result.report.checks[0]?.status).toBe('passed');
     expect(await readFile(join(directory.path, 'payload.dat'))).toStrictEqual(Buffer.from([0, 1, 2]));
     const attributes = await stat(join(directory.path, 'task.sh'));
     expect(attributes.mode & 0o777).toBe(getKeptMode(0o644));
@@ -207,10 +206,10 @@ test.each(['recommended', 'all'] as const)(
         gitOutput(sandbox.path, ['add', '-A']);
         const original = await readFile(join(sandbox.path, '.gspot/config/basedpyrightconfig.json'));
         const args = ['check', '--staged', '--only', 'gspot/drift', '--json'];
-        const checked = await runGspot(sandbox.path, args);
+        const checked = await checkReport(sandbox.path, args);
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         expect(
-            (JSON.parse(checked.stdout) as RunReport).checks
+            checked.report.checks
                 .flatMap((check) => check.findings)
                 .filter((finding) => finding.file.endsWith('/basedpyrightconfig.json')),
         ).toStrictEqual([]);

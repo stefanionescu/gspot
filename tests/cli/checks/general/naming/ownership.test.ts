@@ -2,10 +2,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rename } from 'node:fs/promises';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 
 import {
     BASH_NAMES,
@@ -39,10 +38,10 @@ test.each(FRAMEWORK_CONTRACTS)(
             'sibling/entry.ts': source,
         });
         const command = ['check', '--only', 'naming/identifiers', '--json'];
-        const failed = await runGspot(sandbox.path, command);
+        const failed = await checkReport(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(
-            (JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) =>
+            failed.report.checks.flatMap(({ findings }) =>
                 findings.map(({ file, line, rule }) => ({ file, line, rule })),
             ),
         ).toStrictEqual([
@@ -57,11 +56,9 @@ test.each(FRAMEWORK_CONTRACTS)(
             join(sandbox.path, 'app/parameters.ts'),
             'export function readValue(value: string) { return null; }\n',
         );
-        const corrected = await runGspot(sandbox.path, command);
+        const corrected = await checkReport(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks.every(({ findings }) => findings.length === 0)).toBe(
-            true,
-        );
+        expect(corrected.report.checks.every(({ findings }) => findings.length === 0)).toBe(true);
         expect(await Bun.file(join(sandbox.path, 'app/entry.ts')).text()).toBe(source);
         expect(await Bun.file(join(sandbox.path, 'app/bindings.ts')).text()).toBe(bindings);
         expect(await Bun.file(join(sandbox.path, 'app/reader.ts')).text()).toBe(methods);
@@ -79,17 +76,17 @@ test('foreign native names and repository API picks receive ordinary TypeScript 
         'entry.ts': source,
     });
     const command = ['check', '--only', 'naming/identifiers', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
-        (JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) =>
+        failed.report.checks.flatMap(({ findings }) =>
             findings.filter(({ rule }) => rule === 'banned-term').map(({ line }) => line),
         ),
     ).toStrictEqual(FOREIGN_NAMES.map((_, index) => index + 1));
     await Bun.write(join(sandbox.path, 'entry.ts'), 'export function readValue() { return null; }\n');
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
 test('shell variables preserve findings on functions and neighboring local bindings', async () => {
@@ -103,21 +100,19 @@ test('shell variables preserve findings on functions and neighboring local bindi
         'entry.sh': native + 'USER_HELPER=example\nIFS() { echo example; }\n',
     });
     const command = ['check', '--only', 'naming/identifiers', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
-        (JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) =>
-            findings.map(({ line, rule }) => ({ line, rule })),
-        ),
+        failed.report.checks.flatMap(({ findings }) => findings.map(({ line, rule }) => ({ line, rule }))),
     ).toStrictEqual([
         { line: BASH_NAMES.length + 1, rule: 'banned-term' },
         { line: BASH_NAMES.length + 2, rule: 'case' },
         { line: BASH_NAMES.length + 2, rule: 'banned-term' },
     ]);
     await Bun.write(join(sandbox.path, 'entry.sh'), native + 'USER_COUNT=example\nread_value() { echo example; }\n');
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
 test('Swift native case and length rules preserve banned terms in types and parameters', async () => {
@@ -131,12 +126,10 @@ test('Swift native case and length rules preserve banned terms in types and para
         'Entry.swift': native + 'let helperCount = 1\nfunc readValue(URLSession: String) {}\n',
     });
     const command = ['check', '--only', 'naming/identifiers', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
-        (JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) =>
-            findings.map(({ line, rule }) => ({ line, rule })),
-        ),
+        failed.report.checks.flatMap(({ findings }) => findings.map(({ line, rule }) => ({ line, rule }))),
     ).toStrictEqual([
         { line: 1, rule: 'banned-term' },
         { line: 2, rule: 'banned-term' },
@@ -146,9 +139,9 @@ test('Swift native case and length rules preserve banned terms in types and para
         join(sandbox.path, 'Entry.swift'),
         'typealias URL = String\nlet entryCount = 1\nfunc readValue(client: String) {}\n',
     );
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
 test('Python native declarations reach their owning rules while invented dunders and parameters fail', async () => {
@@ -167,12 +160,10 @@ test('Python native declarations reach their owning rules while invented dunders
             native + '    def __helper__(self):\n        pass\n    def read_value(self, setUp):\n        pass\n',
     });
     const command = ['check', '--only', 'naming/identifiers', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
-        (JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) =>
-            findings.map(({ line, rule }) => ({ line, rule })),
-        ),
+        failed.report.checks.flatMap(({ findings }) => findings.map(({ line, rule }) => ({ line, rule }))),
     ).toStrictEqual([
         { line: inventedLine, rule: 'banned-term' },
         { line: inventedLine + 2, rule: 'banned-term' },
@@ -181,9 +172,9 @@ test('Python native declarations reach their owning rules while invented dunders
         join(sandbox.path, 'entry.py'),
         native + '    def read_record(self):\n        pass\n    def read_value(self, entry):\n        pass\n',
     );
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
 test('pytest owns test-prefix counting without changing sibling Python contracts', async () => {
@@ -199,12 +190,10 @@ test('pytest owns test-prefix counting without changing sibling Python contracts
         'sibling/test_entry.py': source,
     });
     const command = ['check', '--only', 'naming/identifiers', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
-        (JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) =>
-            findings.map(({ file, line, rule }) => ({ file, line, rule })),
-        ),
+        failed.report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule }))),
     ).toStrictEqual([
         { file: 'test_entry.py', line: 1, rule: 'words' },
         { file: 'sibling/test_entry.py', line: 1, rule: 'words' },
@@ -212,11 +201,9 @@ test('pytest owns test-prefix counting without changing sibling Python contracts
     for (const file of ['test_entry.py', 'sibling/test_entry.py']) {
         await Bun.write(join(sandbox.path, file), 'def read_account_summary_columns():\n    pass\n');
     }
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks.every(({ findings }) => findings.length === 0)).toBe(
-        true,
-    );
+    expect(corrected.report.checks.every(({ findings }) => findings.length === 0)).toBe(true);
     expect(await Bun.file(join(sandbox.path, 'app/test_entry.py')).text()).toBe(source);
 });
 
@@ -229,15 +216,15 @@ test('Python module filenames preserve the neighboring TypeScript filename contr
         'javascript/__init__.ts': 'export const entry = 1;\n',
     });
     const command = ['check', '--only', 'naming/paths', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: 'javascript/__init__.ts', line: 1, column: 1, rule: 'case' },
     ]);
     await rename(join(sandbox.path, 'javascript/__init__.ts'), join(sandbox.path, 'javascript/entry.ts'));
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
     expect(await Bun.file(join(sandbox.path, 'python/__init__.py')).text()).toBe('"""Package entry."""\n');
     expect(await Bun.file(join(sandbox.path, 'python/__main__.py')).text()).toBe('"""Program entry."""\n');
 });

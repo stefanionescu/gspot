@@ -4,10 +4,9 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { rm, writeFile } from 'node:fs/promises';
 import { gitOutput } from '#tests/harness/git.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { checkReport } from '#tests/harness/gspot.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 
 test('staged paths preserve each spelling and its bytes, or refuse a case-folding file system', async () => {
@@ -45,10 +44,10 @@ test('staged paths preserve each spelling and its bytes, or refuse a case-foldin
         const hash = gitOutput(sandbox.path, ['hash-object', '-w', '.git/staged-blob']);
         gitOutput(sandbox.path, ['update-index', '--add', '--cacheinfo', `100644,${hash},${path!}`]);
     }
-    const result = await runGspot(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']);
+    const result = await checkReport(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']);
     if (!caseFolding) {
         expect(result.code, result.stdout + result.stderr).toBe(1);
-        const report = JSON.parse(result.stdout) as RunReport;
+        const report = result.report;
         expect(report.checks.map((entry) => [entry.check, entry.status, entry.fileCount])).toStrictEqual([
             ['sandbox/report', 'failed', 2],
         ]);

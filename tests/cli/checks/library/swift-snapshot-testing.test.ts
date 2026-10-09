@@ -1,14 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/public.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { detectUnselected } from '#cli/repository/selection/contracts.ts';
 import { PACKAGE_PROJECTS, DOCUMENTATION_LEVELS } from '#tests/config/cli/checks/library/swift-snapshot-testing.ts';
 
@@ -49,10 +48,10 @@ test('snapshot references name semantic test owners and respect nested scopes', 
         'custom/__Snapshots__/Missing/title.png': 'png',
     });
     const command = ['check', '--only', 'swift-snapshot-testing/references', '--json'];
-    const broken = await runGspot(sandbox.path, command);
+    const broken = await checkReport(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(
-        (JSON.parse(broken.stdout) as RunReport).checks.map((check) => ({
+        broken.report.checks.map((check) => ({
             scope: check.scope,
             findings: check.findings,
         })),
@@ -73,9 +72,14 @@ test('the default snapshot layout accepts a matching source and reference', asyn
         'Checks.swift': 'import Testing\n',
         '__Snapshots__/Checks/example.png': new Uint8Array([0, 1, 2]),
     });
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'swift-snapshot-testing/references', '--json']);
+    const corrected = await checkReport(sandbox.path, [
+        'check',
+        '--only',
+        'swift-snapshot-testing/references',
+        '--json',
+    ]);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+    expect(corrected.report.checks).toMatchObject([
         { check: 'swift-snapshot-testing/references', status: 'passed', findings: [] },
     ]);
     expect(
@@ -92,9 +96,9 @@ test('disabled tests and snapshot recording report through the CLI and pass afte
             'import Testing\n@Test func checks() throws {\n    try XCTSkip("")\n    SnapshotTesting.isRecording = true\n}\n',
     });
     const command = ['check', '--only', 'swift-tests/skip-reasons', 'swift-snapshot-testing/recording', '--json'];
-    const broken = await runGspot(sandbox.path, command);
+    const broken = await checkReport(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([
+    expect(broken.report.checks).toMatchObject([
         {
             check: 'swift-tests/skip-reasons',
             status: 'failed',
@@ -110,9 +114,9 @@ test('disabled tests and snapshot recording report through the CLI and pass afte
         join(sandbox.path, 'Examples/Checks.swift'),
         'import Testing\n@Test func checks() throws {\n    try XCTSkip("Requires simulator")\n    SnapshotTesting.isRecording = false\n}\n',
     );
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+    expect(corrected.report.checks).toMatchObject([
         { check: 'swift-tests/skip-reasons', status: 'passed', findings: [] },
         { check: 'swift-snapshot-testing/recording', status: 'passed', findings: [] },
     ]);

@@ -2,13 +2,13 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import * as spawn from '#cli/platform/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
-import { useCacheDirectory } from '#tests/harness/environment.ts';
 import { buildFolder } from '#cli/checks/language/swift/public.ts';
+import { isolateCompilerCache } from '#tests/harness/environment.ts';
 import { rm, chmod, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 
 import {
@@ -21,7 +21,7 @@ const XCTEST_EXECUTION_OPTIONS = buildRunOptions({ stage: 'push', only: ['swift-
 
 test.skipIf(!isMacos)('XCTest reports a timed-out native command as an error and accepts a later run', async () => {
     await using sandbox = await testdir();
-    await using _cache = await useCacheDirectory();
+    await using _cache = await isolateCompilerCache();
     await createFileTree(sandbox.path, {
         'gspot.toml': XCTEST_EXECUTION_POLICY,
         'ExampleTests.swift': 'import XCTest\n',
@@ -56,7 +56,7 @@ test.skipIf(!isMacos).each([...XCTEST_FAILURES])(
     'XCTest coverage classifies $failure and passes after the fix',
     async ({ policy, build, coverage, code, status, produced, note }) => {
         await using sandbox = await testdir();
-        await using _cache = await useCacheDirectory();
+        await using _cache = await isolateCompilerCache();
         await createFileTree(sandbox.path, {
             'gspot.toml': policy,
             'ExampleTests.swift': 'import XCTest\n',
@@ -94,7 +94,7 @@ test.skipIf(!isMacos)(
     async () => {
         await using sandbox = await testdir();
         await using outside = await testdir();
-        await using _cache = await useCacheDirectory();
+        await using _cache = await isolateCompilerCache();
         const cache = join(buildFolder(sandbox.path), 'swift/root/coverage');
         await createFileTree(sandbox.path, {
             'gspot.toml': XCTEST_EXECUTION_POLICY,

@@ -1,10 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { valueAt } from '#cli/platform/contracts.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 
 test('ignores and loosened settings always require reasons and refusals preserve the policy', async () => {
@@ -24,9 +23,9 @@ test('ignores and loosened settings always require reasons and refusals preserve
         'Reviewed independently.',
     ]);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    const checked = await runGspot(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
+    const checked = await checkReport(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    const report = JSON.parse(checked.stdout) as RunReport;
+    const report = checked.report;
     expect(report.ignores[0]?.check).toBe('bash/bash-syntax');
     expect(report.ignores[0]?.matched).toBe(0);
     expect(report.ignores[0]?.reason).toBe('Reviewed independently.');
@@ -52,9 +51,9 @@ test('named allowances always require a reason and removal restores enforcement'
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const removed = await runGspot(directory.path, ['set', 'naming.allowed', '{}']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    const restored = await runGspot(directory.path, command);
+    const restored = await checkReport(directory.path, command);
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-    const report = JSON.parse(restored.stdout) as RunReport;
+    const report = restored.report;
     expect(report.checks[0]?.findings).toStrictEqual([containing({ file: 'entry.sh', line: 1, rule: 'banned-term' })]);
 });
 
@@ -74,9 +73,9 @@ test('placeholder reasons and omitted tool-option reasons are refused without a 
     const policyPath = join(directory.path, 'gspot.toml');
     const written = await readFile(policyPath, 'utf8');
     await Bun.write(policyPath, written + '\n[tools.shellcheck.verbatim]\nexternal_sources = true\n');
-    const checked = await runGspot(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
+    const checked = await checkReport(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const findings = (JSON.parse(checked.stdout) as RunReport).checks
+    const findings = checked.report.checks
         .filter((check) => check.check === 'gspot/policy')
         .flatMap((check) => check.findings);
     const aboutExtra = {

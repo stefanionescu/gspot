@@ -1,12 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/public.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { checkedFindings } from '#cli/execution/command/contracts.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { PENDING } from '#tests/config/cli/parsers/output/declared-checks.ts';
@@ -72,29 +71,27 @@ stage = "commit"
         'selected.txt': 'unchanged trigger',
         'state.txt': 'invalid',
     });
-    const failed = await runGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
+    const failed = await checkReport(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(failed.code).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'failed' }]);
+    expect(failed.report.checks).toMatchObject([{ check: 'notes/state', status: 'failed' }]);
 
     await Bun.write(join(sandbox.path, 'state.txt'), 'valid');
-    const passed = await runGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
+    const passed = await checkReport(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(passed.code).toBe(0);
-    expect((JSON.parse(passed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'passed' }]);
+    expect(passed.report.checks).toMatchObject([{ check: 'notes/state', status: 'passed' }]);
 
     await Bun.write(join(sandbox.path, 'state.txt'), 'invalid');
-    const failedAgain = await runGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
+    const failedAgain = await checkReport(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(failedAgain.code).toBe(1);
-    expect((JSON.parse(failedAgain.stdout) as RunReport).checks).toMatchObject([
-        { check: 'notes/state', status: 'failed' },
-    ]);
+    expect(failedAgain.report.checks).toMatchObject([{ check: 'notes/state', status: 'failed' }]);
 });
 
 test('a named check entry > runs the command of the repository and reports file and line through its output format', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': ENTRY, 'notes/plan.txt': 'one\nPENDING later\n' });
-    const check = await runGspot(sandbox.path, ['check', '--only', 'notes/no-pending', '--json']);
+    const check = await checkReport(sandbox.path, ['check', '--only', 'notes/no-pending', '--json']);
     expect(check.code, check.stdout + check.stderr).toBe(1);
-    expect((JSON.parse(check.stdout) as RunReport).checks).toMatchObject([
+    expect(check.report.checks).toMatchObject([
         {
             check: 'notes/no-pending',
             status: 'failed',
@@ -102,11 +99,9 @@ test('a named check entry > runs the command of the repository and reports file 
         },
     ]);
     await Bun.write(join(sandbox.path, 'notes/plan.txt'), 'one\nCompleted task\n');
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'notes/no-pending', '--json']);
+    const corrected = await checkReport(sandbox.path, ['check', '--only', 'notes/no-pending', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'notes/no-pending', status: 'passed', findings: [] },
-    ]);
+    expect(corrected.report.checks).toMatchObject([{ check: 'notes/no-pending', status: 'passed', findings: [] }]);
 });
 
 test('malformed custom JSON output produces inability instead of a discarded finding', async () => {
@@ -119,9 +114,9 @@ test('malformed custom JSON output produces inability instead of a discarded fin
         }),
         'source.txt': 'original',
     });
-    const cli = await runGspot(sandbox.path, ['check', '--only', 'sandbox/json', '--json']);
+    const cli = await checkReport(sandbox.path, ['check', '--only', 'sandbox/json', '--json']);
     expect(cli.code, cli.stdout + cli.stderr).toBe(2);
-    expect((JSON.parse(cli.stdout) as RunReport).checks[0]!.status).toBe('error');
+    expect(cli.report.checks[0]!.status).toBe('error');
 });
 
 test.each([
@@ -152,11 +147,9 @@ test.each([
             }),
             'source.txt': source,
         });
-        const checked = await runGspot(sandbox.path, ['check', '--only', 'notes/sarif', '--json']);
+        const checked = await checkReport(sandbox.path, ['check', '--only', 'notes/sarif', '--json']);
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-        const outcome = (JSON.parse(checked.stdout) as RunReport).checks.find(
-            (entry) => entry.check === 'notes/sarif',
-        )!;
+        const outcome = checked.report.checks.find((entry) => entry.check === 'notes/sarif')!;
         expect(outcome.status).toBe('failed');
         expect(outcome.findings).toHaveLength(1);
         expect(outcome.findings[0]).toMatchObject({

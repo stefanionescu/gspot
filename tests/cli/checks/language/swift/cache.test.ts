@@ -3,14 +3,14 @@ import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { cacheDirectory } from '#cli/platform/public.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { useCacheDirectory } from '#tests/harness/environment.ts';
+import { isolateCompilerCache } from '#tests/harness/environment.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { buildFolder, openBuildCache } from '#cli/checks/language/swift/public.ts';
 
 test('build cache rejects external output links and concurrent writers', async () => {
     await using sandbox = await testdir();
     await using outside = await testdir();
-    await using _cache = await useCacheDirectory();
+    await using _cache = await isolateCompilerCache();
     const folder = join(buildFolder(sandbox.path), 'swift', 'compile');
     {
         using owner = openBuildCache(folder);
@@ -35,7 +35,7 @@ test('build cache rejects external output links and concurrent writers', async (
 test('build state lives in the gspot cache, stable for one repository and distinct between repositories', async () => {
     await using first = await testdir();
     await using second = await testdir();
-    await using _cache = await useCacheDirectory();
+    await using _cache = await isolateCompilerCache();
     const folder = buildFolder(first.path);
     expect(folder).toBe(buildFolder(first.path));
     expect(folder).not.toBe(buildFolder(second.path));

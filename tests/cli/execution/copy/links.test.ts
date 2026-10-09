@@ -4,11 +4,10 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { gitOutput } from '#tests/harness/git.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LINKS } from '#tests/config/cli/execution/copy.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 
 // Adds each link to the index as Git stores it, so the test needs no link support from the file system.
 async function stageLinks(root: string): Promise<void> {
@@ -51,9 +50,9 @@ test('a staged check with tracked links of every kind exits by its findings alon
     await stageLinks(sandbox.path);
     await Bun.write(`${sandbox.path}/src/source.ts`, 'export const changed = 1;\n');
     gitOutput(sandbox.path, ['add', 'src/source.ts']);
-    const result = await runGspot(sandbox.path, ['check', '--only', 'sandbox/report', '--staged', '--json']);
+    const result = await checkReport(sandbox.path, ['check', '--only', 'sandbox/report', '--staged', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    const report = JSON.parse(result.stdout) as RunReport;
+    const report = result.report;
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([['sandbox/report', 'failed']]);
 });
 

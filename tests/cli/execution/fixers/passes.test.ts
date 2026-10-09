@@ -2,11 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
-import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
+import { checkReport, buildRunOptions } from '#tests/harness/gspot.ts';
 import { TEXT_FIX, TEXT_CHECK } from '#tests/config/cli/execution/fixers/passes.ts';
 
 test('fix verification replaces read source bytes and preserves unrelated authored files', async () => {
@@ -86,7 +85,7 @@ test('a fixer that fails midway leaves the later fixers to run in order and keep
         'second.txt': 'original\n',
         'third.txt': 'original\n',
     });
-    const fixed = await runGspot(sandbox.path, [
+    const fixed = await checkReport(sandbox.path, [
         'check',
         '--only',
         'sandbox/first',
@@ -96,7 +95,7 @@ test('a fixer that fails midway leaves the later fixers to run in order and keep
         '--json',
     ]);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(2);
-    expect((JSON.parse(fixed.stdout) as RunReport).failed).toStrictEqual(['sandbox/first']);
+    expect(fixed.report.failed).toStrictEqual(['sandbox/first']);
     // A second pass reruns the fixers whose files the first pass changed; the failed fixer does not run again.
     expect(await readFile(join(sandbox.path, 'order.log'), 'utf8')).toBe('first\nsecond\nthird\nsecond\nthird\n');
     for (const name of ['first', 'second', 'third'])

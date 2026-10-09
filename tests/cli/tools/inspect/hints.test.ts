@@ -1,8 +1,7 @@
 import { test, expect } from 'bun:test';
 import { mkdir, symlink } from 'node:fs/promises';
-import { inspectTool } from '#cli/tools/public.ts';
 import { readPolicy } from '#cli/policy/public.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
+import { inspectTool } from '#cli/tools/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -10,8 +9,8 @@ import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { usePlatform } from '#tests/harness/platforms.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { useEnvironment } from '#tests/harness/environment.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
@@ -81,9 +80,13 @@ test('doctor and a missing XML check report the host installation prerequisite',
     expect((JSON.parse(doctor.stdout) as DoctorReport).tools).toContainEqual(
         containing({ name: 'xmllint', state: 'missing', hint }),
     );
-    const checked = await runGspot(root, ['check', 'document.xml', '--only', 'files/xmllint', '--json'], environment);
+    const checked = await checkReport(
+        root,
+        ['check', 'document.xml', '--only', 'files/xmllint', '--json'],
+        environment,
+    );
     expect(checked.code, checked.stdout + checked.stderr).toBe(2);
-    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+    expect(checked.report.checks).toMatchObject([
         { check: 'files/xmllint', status: 'missing', findings: [], note: `xmllint is not installed. ${hint}` },
     ]);
 });

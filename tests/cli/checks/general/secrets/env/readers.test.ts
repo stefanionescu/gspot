@@ -1,13 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
+import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 
 import {
@@ -25,18 +24,16 @@ test('checks Bun and multiple declared readers without an enabling flag', async 
     const policy = buildPolicy([], { tables: READER_TABLES });
     await createFileTree(sandbox.path, { ...READER_FILES, 'gspot.toml': policy });
     const command = ['check', '--only', 'secrets/env-template', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const report = JSON.parse(failed.stdout) as RunReport;
+    const report = failed.report;
     expect(report.checks).toMatchObject([
         { check: 'secrets/env-template', status: 'failed', findings: READER_FINDINGS },
     ]);
     await Bun.write(join(sandbox.path, 'config/example.env'), READER_TEMPLATE);
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'secrets/env-template', status: 'passed', findings: [] },
-    ]);
+    expect(corrected.report.checks).toMatchObject([{ check: 'secrets/env-template', status: 'passed', findings: [] }]);
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
 });
 
@@ -47,9 +44,9 @@ test('checks each scope against its own templates and declared readers', async (
         'gspot.toml': buildPolicy([], { tables: PROJECT_READER_TABLES }),
     });
     const command = ['check', '--only', 'secrets/env-template', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const report = JSON.parse(failed.stdout) as RunReport;
+    const report = failed.report;
     expect(report.checks).toMatchObject([
         { scope: '', status: 'failed', findings: [{ file: 'source.ts', line: 1, rule: 'missing-key' }] },
         { scope: 'app', status: 'failed', findings: [{ file: 'app/source.ts', line: 1, rule: 'missing-key' }] },
@@ -60,13 +57,9 @@ test('checks each scope against its own templates and declared readers', async (
         },
     ]);
     await createFileTree(sandbox.path, PROJECT_READER_CORRECTIONS);
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks.map((check) => check.status)).toEqual([
-        'passed',
-        'passed',
-        'passed',
-    ]);
+    expect(corrected.report.checks.map((check) => check.status)).toEqual(['passed', 'passed', 'passed']);
 });
 
 test('keeps Bun reads active with no custom reader declarations', async () => {
@@ -76,9 +69,9 @@ test('keeps Bun reads active with no custom reader declarations', async () => {
         '.env.example': 'KNOWN=example\n',
         'source.ts': 'Bun.env.KNOWN; Bun.env["MISSING"];\nconfig.$env("UNDECLARED");\n',
     });
-    const checked = await runGspot(sandbox.path, ['check', '--only', 'secrets/env-template', '--json']);
+    const checked = await checkReport(sandbox.path, ['check', '--only', 'secrets/env-template', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+    expect(checked.report.checks).toMatchObject([
         {
             check: 'secrets/env-template',
             status: 'failed',
@@ -105,7 +98,7 @@ test('environment reads without a template in their scope report the unmet prere
         paths: ['.env.example', 'app/source.ts'],
     });
     expect(() => BUILT_IN_CHECKS['secrets/env-template'].input(input)).toThrow('secrets.env_examples');
-    const checked = await runGspot(sandbox.path, [
+    const checked = await checkReport(sandbox.path, [
         'check',
         'app/source.ts',
         '--only',
@@ -113,7 +106,7 @@ test('environment reads without a template in their scope report the unmet prere
         '--json',
     ]);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+    expect(checked.report.checks).toMatchObject([
         {
             check: 'secrets/env-template',
             scope: 'app',

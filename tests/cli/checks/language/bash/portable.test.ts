@@ -1,11 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
+import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readRepository } from '#cli/repository/public.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { commitAll, markExecutable } from '#tests/harness/git.ts';
 import { detectConfigurations } from '#cli/repository/selection/contracts.ts';
 
@@ -20,9 +19,9 @@ test.each(NODE_EMBEDS)('inline Node has one diagnostic owner for %s', async (sou
         'gspot.toml': buildPolicy(['bash'], { level: 'all' }),
         'source.sh': source,
     });
-    const result = await runGspot(sandbox.path, ['check', '--only', 'bash/wrappers', 'bash/embeds', '--json']);
+    const result = await checkReport(sandbox.path, ['check', '--only', 'bash/wrappers', 'bash/embeds', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    const checks = (JSON.parse(result.stdout) as RunReport).checks;
+    const checks = result.report.checks;
     expect(checks.find(({ check }) => check === 'bash/wrappers')).toMatchObject({ status: 'passed', findings: [] });
     expect(checks.find(({ check }) => check === 'bash/embeds')?.findings).toMatchObject([
         { file: 'source.sh', line: 1, rule: 'runtime-embed' },
@@ -40,20 +39,20 @@ test.each(['recommended', 'all'] as const)(
         commitAll(sandbox.path);
         await markExecutable(sandbox.path, 'source.sh');
         const command = ['check', '--only', 'bash/contract', '--json'];
-        const clean = await runGspot(sandbox.path, command);
+        const clean = await checkReport(sandbox.path, command);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         if (level === 'recommended') {
-            expect((JSON.parse(clean.stdout) as RunReport).checks).toStrictEqual([]);
+            expect(clean.report.checks).toStrictEqual([]);
             return;
         }
-        expect((JSON.parse(clean.stdout) as RunReport).checks[0]).toMatchObject({ status: 'passed', findings: [] });
+        expect(clean.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });
         await Bun.write(
             join(sandbox.path, 'source.sh'),
             SIMPLE_EXECUTABLE + 'greet() { printf "%s\\n" "$1"; }\ngreet "$@"\n',
         );
-        const structured = await runGspot(sandbox.path, command);
+        const structured = await checkReport(sandbox.path, command);
         expect(structured.code, structured.stdout + structured.stderr).toBe(1);
-        expect((JSON.parse(structured.stdout) as RunReport).checks[0]?.findings.map(({ rule }) => rule)).toStrictEqual([
+        expect(structured.report.checks[0]?.findings.map(({ rule }) => rule)).toStrictEqual([
             'main-function',
             'main-call',
         ]);
@@ -84,7 +83,7 @@ test('generated Gradle and Maven launchers do not select Bash or receive source 
         kindSource: 'vendored',
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['bash']));
-    const checked = await runGspot(sandbox.path, [
+    const checked = await checkReport(sandbox.path, [
         'check',
         '--only',
         'bash/bash-syntax',
@@ -93,5 +92,5 @@ test('generated Gradle and Maven launchers do not select Bash or receive source 
         '--json',
     ]);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect((JSON.parse(checked.stdout) as RunReport).checks).toStrictEqual([]);
+    expect(checked.report.checks).toStrictEqual([]);
 });

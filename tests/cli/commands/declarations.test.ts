@@ -1,10 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { DECLARATION_CASES } from '#tests/config/cli/commands/declarations.ts';
 
 test.each(DECLARATION_CASES)(
@@ -20,16 +19,16 @@ test.each(DECLARATION_CASES)(
             const changed = await runGspot(sandbox.path, command);
             expect(changed.code, changed.stdout + changed.stderr).toBe(0);
         }
-        const before = await runGspot(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json']);
+        const before = await checkReport(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json']);
         expect(before.code, before.stdout + before.stderr).toBe(0);
-        expect((JSON.parse(before.stdout) as RunReport).checks).toMatchObject([
+        expect(before.report.checks).toMatchObject([
             { check: 'bash/bash-syntax', status: 'passed', fileCount: 1, findings: [] },
         ]);
         const removed = await runGspot(sandbox.path, ['set', kind, directory, '--remove']);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-        const after = await runGspot(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json']);
+        const after = await checkReport(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json']);
         expect(after.code, after.stdout + after.stderr).toBe(1);
-        const checked = (JSON.parse(after.stdout) as RunReport).checks[0];
+        const checked = after.report.checks[0];
         expect(checked).toMatchObject({ check: 'bash/bash-syntax', status: 'failed', fileCount: 2 });
         expect(new Set(checked?.findings.map((finding) => finding.file))).toStrictEqual(
             new Set([`${directory}/broken.sh`]),

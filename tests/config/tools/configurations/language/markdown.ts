@@ -4,7 +4,7 @@ export const FILES = {
     'app/guide.md': '# Guide\n\n## Notes\n\nNested label.\n',
     'title.md': 'A document without a title.\n',
     'long.md':
-        '# Long\n\nLong prose stays with the formatter. Long prose stays with the formatter. Long prose stays with the formatter. Long prose stays with the formatter. Long prose stays with the formatter. Long prose stays with the formatter. Long prose stays with the formatter. Long prose stays with the formatter.\n\n<span>Inline HTML stays permitted.</span>\n\n| Name | Value |\n| --- | --- |\n| A | B |\n',
+        '# Long\n\nLong prose stays with the formatter. Long prose stays with the formatter. Long prose stays with the formatter. Long prose stays with the formatter. Long prose stays with the formatter. Long prose stays with the formatter. Long prose stays with the formatter. Long prose stays with the formatter.\n\n<span>Inline HTML stays permitted.</span>\n\n| Name | Value |\n| ---- | ----- |\n| A    | B     |\n',
 };
 
 /** Options for inactive rules must not enable them; scope options replace their own rule's values only. */
@@ -24,3 +24,6 @@ configurations = []
 [scope."app".tools.markdownlint.rules]
 MD044 = { names = ["Nested label"] }
 `;
+
+/** A table with columns that match none of the native Markdown styles. */
+export const TABLE_COLUMN_SAMPLE = '# Table\n\n| Name | Value |\n| --- | --- |\n| A  | B |\n';

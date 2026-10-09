@@ -6,7 +6,7 @@ import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
+import { spawnGspot, checkReport } from '#tests/harness/gspot.ts';
 import { PYTHON_MODULE_HEADER } from '#tests/config/samples/python.ts';
 
 test('a module-level instance is a singleton until its composition file has a policy ignore', async () => {
@@ -27,9 +27,9 @@ test('a module-level instance is a singleton until its composition file has a po
             tables: '[[ignore]]\ncheck = "python/singletons"\npaths = ["example/shared.py"]\nreason = "The framework requires one application object."\n',
         }),
     );
-    const ignored = await runGspot(sandbox.path, ['check', '--only', 'python/singletons', '--json']);
+    const ignored = await checkReport(sandbox.path, ['check', '--only', 'python/singletons', '--json']);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    expect((JSON.parse(ignored.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+    expect(ignored.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });
 
 test('FastAPI composition objects use the same explicit file ignores as other Python singletons', async () => {
@@ -54,9 +54,9 @@ test('FastAPI composition objects use the same explicit file ignores as other Py
             tables: '[[ignore]]\ncheck = "python/singletons"\npaths = ["api.py"]\nreason = "FastAPI composes its application and routers in this module."\n',
         }),
     );
-    const result = await runGspot(sandbox.path, ['check', '--only', 'python/singletons', '--json']);
+    const result = await checkReport(sandbox.path, ['check', '--only', 'python/singletons', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect((JSON.parse(result.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+    expect(result.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: 'outside.py', line: 1, rule: 'singleton' },
     ]);
 });

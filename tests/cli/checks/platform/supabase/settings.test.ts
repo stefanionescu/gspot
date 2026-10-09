@@ -2,10 +2,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 
 import {
     TEST_PATH_FILES,
@@ -16,9 +15,9 @@ import {
 test('service role keys use effective test paths while adjacent client files still fail', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': TEST_PATH_POLICY, ...TEST_PATH_FILES });
-    const result = await runGspot(sandbox.path, ['check', '--only', 'supabase/service-role-key', '--json']);
+    const result = await checkReport(sandbox.path, ['check', '--only', 'supabase/service-role-key', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    const report = JSON.parse(result.stdout) as RunReport;
+    const report = result.report;
     expect(report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule })))).toStrictEqual([
         { file: 'client.ts', rule: 'admin-key' },
         { file: 'apps/web/client.ts', rule: 'admin-key' },
@@ -39,9 +38,9 @@ test('service role keys are refused in component and module clients while allowe
         'notes.txt': 'SUPABASE_SERVICE_ROLE_KEY\n',
     };
     await createFileTree(sandbox.path, { 'gspot.toml': policy, ...sources });
-    const result = await runGspot(sandbox.path, ['check', '--only', 'supabase/service-role-key', '--json']);
+    const result = await checkReport(sandbox.path, ['check', '--only', 'supabase/service-role-key', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    const report = JSON.parse(result.stdout) as RunReport;
+    const report = result.report;
     expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toStrictEqual([
         'client.astro',
         'client.cjs',
@@ -58,9 +57,9 @@ test('service role keys are refused in component and module clients while allowe
                 text.replaceAll('SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY'),
             );
     }
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'supabase/service-role-key', '--json']);
+    const corrected = await checkReport(sandbox.path, ['check', '--only', 'supabase/service-role-key', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks[0]?.findings).toStrictEqual([]);
+    expect(corrected.report.checks[0]?.findings).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
     expect(await readFile(join(sandbox.path, 'server/allowed.ts'), 'utf8')).toBe(sources['server/allowed.ts']);
 });
@@ -86,10 +85,10 @@ test.each(SECRET_KEY_READS)(
             ...Object.fromEntries(clients.map((path) => [path, source])),
         });
         const command = ['check', '--only', 'supabase/service-role-key', '--json'];
-        const failed = await runGspot(sandbox.path, command);
+        const failed = await checkReport(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(
-            (JSON.parse(failed.stdout) as RunReport).checks
+            failed.report.checks
                 .flatMap((check) => check.findings)
                 .map(({ file, line, rule }) => ({ file, line, rule })),
         ).toStrictEqual(clients.map((file) => ({ file, line: 1, rule: 'admin-key' })));

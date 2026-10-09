@@ -1,8 +1,7 @@
 import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { INVALID_XCODE_DOCUMENTS } from '#tests/config/cli/checks/tool/xcode/scopes.ts';
 
 test.each([
@@ -32,9 +31,9 @@ test.each([
             [`sibling/${path}`]: rootContent,
         });
         const command = ['check', '--only', check, '--json'];
-        const result = await runGspot(sandbox.path, command);
+        const result = await checkReport(sandbox.path, command);
         expect(result.code, result.stdout + result.stderr).toBe(1);
-        const report = JSON.parse(result.stdout) as RunReport;
+        const report = result.report;
         expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
             { scope: '', status: 'passed' },
             { scope: 'app', status: 'passed' },
@@ -61,9 +60,9 @@ test.each(['recommended', 'all'] as const)('orphan assets follow %s and tracked 
         'Sibling.swift': 'let image = Image("Logo")\n',
     });
     const command = ['check', '--only', 'xcode/assets', 'xcode/orphan-assets', '--json'];
-    const result = await runGspot(sandbox.path, command);
+    const result = await checkReport(sandbox.path, command);
     expect(result.code, result.stdout + result.stderr).toBe(level === 'all' ? 1 : 0);
-    const report = JSON.parse(result.stdout) as RunReport;
+    const report = result.report;
     expect(new Set(report.checks.map(({ check }) => check))).toStrictEqual(
         new Set(level === 'all' ? ['xcode/assets', 'xcode/orphan-assets'] : ['xcode/assets']),
     );
@@ -91,9 +90,9 @@ test.each(INVALID_XCODE_DOCUMENTS)('%s reports malformed %s as a source finding'
         'Source.swift': 'let image = Image("Logo")\n',
         [path]: text,
     });
-    const result = await runGspot(sandbox.path, ['check', '--only', check, '--json']);
+    const result = await checkReport(sandbox.path, ['check', '--only', check, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    const report = JSON.parse(result.stdout) as RunReport;
+    const report = result.report;
     expect(report.checks.map(({ status }) => status)).toStrictEqual(['failed']);
     expect(
         report.checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),

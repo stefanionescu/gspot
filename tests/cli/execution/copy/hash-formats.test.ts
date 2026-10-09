@@ -4,10 +4,9 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { gitOutput } from '#tests/harness/git.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { PushReport } from '#cli/types/commands/check.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 
 // The files a check reports and the status it ends with, for a staged run and for a push of the same change.
 async function verdicts(format: 'sha1' | 'sha256'): Promise<unknown> {
@@ -37,8 +36,8 @@ async function verdicts(format: 'sha1' | 'sha256'): Promise<unknown> {
     const base = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     await writeFile(join(sandbox.path, 'src/changed.ts'), 'export const changed = 1;\n');
     gitOutput(sandbox.path, ['add', 'src/changed.ts']);
-    const staged = await runGspot(sandbox.path, ['check', '--only', 'sandbox/report', '--staged', '--json']);
-    const stagedReport = JSON.parse(staged.stdout) as RunReport;
+    const staged = await checkReport(sandbox.path, ['check', '--only', 'sandbox/report', '--staged', '--json']);
+    const stagedReport = staged.report;
     gitOutput(sandbox.path, ['commit', '-qm', 'change']);
     const head = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     gitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);

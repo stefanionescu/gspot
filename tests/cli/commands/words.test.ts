@@ -10,7 +10,7 @@ test('accepted words reach the generated Vale word file', async () => {
     await using sandbox = await testdir();
     const [first, second] = PROSE_WORDS;
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], {
+        'gspot.toml': buildPolicy(['typescript'], {
             tables: `[words]\n${second} = ${JSON.stringify(EXCEPTION_REASON)}\n[agent_rules]\nenabled = false\n`,
         }),
         'guide.md': '# Guide\n',

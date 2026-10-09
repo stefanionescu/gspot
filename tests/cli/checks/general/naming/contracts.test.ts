@@ -1,14 +1,13 @@
 // Language ceilings, ordinary domain terms and technical digit words retain adjacent naming checks.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { allChecks } from '#cli/configurations/contracts.ts';
-import type { Identifier } from '#cli/types/parsers/naming.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { knownSettings } from '#cli/policy/settings/public.ts';
+import type { Identifier } from '#cli/types/parsers/naming.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { KnownSettings } from '#cli/types/policy/settings.ts';
 import { nameFindings } from '#cli/checks/general/naming/public.ts';
 import { effectivePolicy } from '#cli/checks/general/naming/contracts.ts';
@@ -164,15 +163,15 @@ test('public checks accept ordinary domain terms and numeric words in JavaScript
         'entry.ts': 'export const user2 = 1;\n',
     });
     const command = ['check', '--only', 'naming/identifiers', 'naming/paths', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: 'entry.ts', line: 1, column: 14, rule: 'digits' },
     ]);
     await Bun.write(join(sandbox.path, 'entry.ts'), 'export const userCount = 1;\n');
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+    expect(corrected.report.checks).toMatchObject([
         { check: 'naming/identifiers', status: 'passed', findings: [] },
         { check: 'naming/paths', status: 'passed', findings: [] },
     ]);
@@ -254,14 +253,14 @@ test.each(['nextjs', 'svelte', 'astro'])(
                 'app/[...slug].ts': 'export function handleClick() {}\n',
                 'root.js': 'export const handleCancel = 1;\n',
             });
-            const result = await runGspot(sandbox.path, [
+            const result = await checkReport(sandbox.path, [
                 'check',
                 '--only',
                 'naming/identifiers',
                 'naming/paths',
                 '--json',
             ]);
-            const report = JSON.parse(result.stdout) as RunReport;
+            const report = result.report;
             expect(result.code, result.stdout + result.stderr).toBe(level === 'all' ? 1 : 0);
             const findings = report.checks.flatMap(({ findings }) => findings);
             if (level === 'recommended') expect(findings).toStrictEqual([]);
@@ -293,7 +292,7 @@ test.each(['nextjs', 'svelte', 'astro'])(
                 '(group)/[id]/@slot/_private/page.ts': 'export function handleSubmit() {}\n',
                 'app/(group)/[id]/@slot/_private/page.ts': 'export class Form { handleSubmit() {} }\n',
             });
-            const result = await runGspot(sandbox.path, [
+            const result = await checkReport(sandbox.path, [
                 'check',
                 '--only',
                 'naming/identifiers',
@@ -301,9 +300,7 @@ test.each(['nextjs', 'svelte', 'astro'])(
                 '--json',
             ]);
             expect(result.code, result.stdout + result.stderr).toBe(0);
-            expect((JSON.parse(result.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual(
-                [],
-            );
+            expect(result.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
         }
     },
 );

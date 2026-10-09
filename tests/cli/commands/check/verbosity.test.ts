@@ -3,10 +3,9 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { FINDINGS_SHOWN } from '#cli/config/terminal.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { VERBOSITY_ARGS, VERBOSITY_CASES } from '#tests/config/cli/commands/verbosity.ts';
 
 test.each([...VERBOSITY_CASES])(
@@ -38,9 +37,9 @@ test.each([...VERBOSITY_CASES])(
         expect(result.stdout.includes(`finding ${String(FINDINGS_SHOWN + 1)}.`)).toBe(verbosity === 'verbose');
         expect(result.stdout.includes('and 1 more')).toBe(verbosity !== 'verbose');
         expect(result.stdout.includes('$ ')).toBe(verbosity === 'verbose');
-        const json = await runGspot(sandbox.path, ['--json', ...flags, ...VERBOSITY_ARGS]);
+        const json = await checkReport(sandbox.path, ['--json', ...flags, ...VERBOSITY_ARGS]);
         expect(json.code, json.stdout + json.stderr).toBe(1);
-        const report = JSON.parse(json.stdout) as RunReport;
+        const report = json.report;
         expect(report.checks.find((check) => check.check === 'example/findings')?.findings).toHaveLength(
             FINDINGS_SHOWN + 1,
         );

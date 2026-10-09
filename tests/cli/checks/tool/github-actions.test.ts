@@ -1,19 +1,18 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { stat, chmod } from 'node:fs/promises';
-import { commitAll } from '#tests/harness/git.ts';
 import { planRun } from '#cli/planning/public.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
+import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
-import { buildPolicy } from '#tests/harness/policy.ts';
 import { checkRun } from '#cli/execution/contracts.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { actionlintSource } from '#cli/checks/tool/public.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { WORKFLOW_HEAD } from '#tests/config/samples/actions.ts';
 import { PATH, PINACT_STUB } from '#tests/config/cli/checks/tool/github-actions.ts';
 
@@ -43,11 +42,13 @@ test('the pin verification adapter reports a rejected commit and preserves the w
     expect(result.stdout).toContain('invalid action pin: broken.yml');
     expect(await Bun.file(path).text()).toBe(workflow);
     await Bun.write(path, workflow.replace('0'.repeat(40), 'a'.repeat(40)));
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'github-actions/pinact', '--json'], environment);
+    const corrected = await checkReport(
+        sandbox.path,
+        ['check', '--only', 'github-actions/pinact', '--json'],
+        environment,
+    );
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'github-actions/pinact', status: 'passed', findings: [] },
-    ]);
+    expect(corrected.report.checks).toMatchObject([{ check: 'github-actions/pinact', status: 'passed', findings: [] }]);
 });
 
 // The workflow text actionlint reads: each self-repository marker of a reference becomes a local path at the same

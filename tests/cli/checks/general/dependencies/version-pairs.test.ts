@@ -1,11 +1,10 @@
-import { join, posix } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
+import { join, posix } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
+import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { versionPairs } from '#cli/checks/general/dependencies/public.ts';
 import { VERSION_PAIR_CASES } from '#tests/config/cli/checks/general/dependencies/version-pairs.ts';
 import { NEXT_VERSION_PAIRS, REACT_VERSION_PAIRS } from '#cli/config/checks/general/dependencies.ts';
@@ -99,9 +98,9 @@ test.each(['react', 'nextjs'])(
             [join('node_modules', left, 'package.json')]: JSON.stringify({ name: left, version: '19.1.1' }),
             [join('node_modules', right, 'package.json')]: JSON.stringify({ name: right, version: '19.1.0' }),
         });
-        const result = await runGspot(sandbox.path, ['check', '--only', `${configuration}/version-pairs`, '--json']);
+        const result = await checkReport(sandbox.path, ['check', '--only', `${configuration}/version-pairs`, '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(1);
-        const report = JSON.parse(result.stdout) as RunReport;
+        const report = result.report;
         expect(report.checks.flatMap(({ findings }) => findings)).toMatchObject([
             { check: `${configuration}/version-pairs`, file: 'package.json', line: 1, rule: 'version-pair' },
         ]);

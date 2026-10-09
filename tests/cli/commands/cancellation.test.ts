@@ -2,20 +2,20 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
-import { buildPolicy } from '#tests/harness/policy.ts';
 import { git, gitOutput } from '#tests/harness/git.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { environmentVariables } from '#cli/platform/public.ts';
 import { READY_POLL_MS } from '#tests/config/harness/process.ts';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import type { FakeGitOptions } from '#tests/types/cli/commands/cancellation.ts';
-import { gspot, runGspot, spawnGspot, startGspot } from '#tests/harness/gspot.ts';
 import { remainingTestTime, prepareTestCommand } from '#tests/harness/command.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
 import type { CopyMarker, DirectoryCopyMarker } from '#tests/types/harness/process.ts';
+import { gspot, runGspot, spawnGspot, startGspot, checkReport } from '#tests/harness/gspot.ts';
 import { SLOW_CHECK, CHILD_OPTIONS, SLOW_TOOL_PROGRAM } from '#tests/config/cli/commands/cancellation.ts';
 
 // A readiness file can become visible before the child has finished writing its JSON.
@@ -125,9 +125,9 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'] as const)(
         expect(await readdir(scratch)).toStrictEqual([]);
         expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
         expect(await readFile(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
-        const retry = await runGspot(sandbox.path, ['check', '--staged', '--only', 'bash/bash-syntax', '--json']);
+        const retry = await checkReport(sandbox.path, ['check', '--staged', '--only', 'bash/bash-syntax', '--json']);
         expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-        expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('passed');
+        expect(retry.report.checks[0]!.status).toBe('passed');
     },
 );
 

@@ -1,17 +1,17 @@
 // Running gspot from a test: in-process for command behavior, or as a child process end to end.
-import { join } from 'node:path';
 import { spyOn } from 'bun:test';
+import { join } from 'node:path';
 import { main } from '#cli/public.ts';
 import { Readable } from 'node:stream';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
-import type { RunOptions } from '#cli/types/execution/check.ts';
 import { SOURCE_CLI_PATH } from '#tests/config/harness/gspot.ts';
-import type { CapturedProcess } from '#tests/types/harness/process.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
+import type { CapturedProcess } from '#tests/types/harness/process.ts';
+import type { RunReport, RunOptions } from '#cli/types/execution/check.ts';
 import { runTestCommand, prepareTestCommand } from '#tests/harness/command.ts';
-import type { SpawnOutcome, GspotChildOptions, GspotSpawnOptions } from '#tests/types/harness/command.ts';
+import type { CheckReport, SpawnOutcome, GspotChildOptions, GspotSpawnOptions } from '#tests/types/harness/command.ts';
 
 /** Resolve the source executable once for this checkout's test processes. */
 export const gspot = join(workspaceRoot, SOURCE_CLI_PATH);
@@ -62,6 +62,24 @@ export async function runGspot(
         // Bun keeps the last code when undefined is assigned, so an unset code comes back as 0.
         process.exitCode = exitCode ?? 0;
     }
+}
+
+/**
+ * Capture a JSON check report while retaining the command's exit code and both streams.
+ * @param cwd the sandbox
+ * @param argv the test's complete check command, including JSON output
+ * @param environment the command's native environment
+ * @param options byte input for hook commands
+ * @returns the command evidence and its parsed report
+ */
+export async function checkReport(
+    cwd: string,
+    argv: string[],
+    environment: Record<string, string> = {},
+    options: GspotChildOptions = {},
+): Promise<CheckReport> {
+    const result = await runGspot(cwd, argv, environment, options);
+    return { ...result, report: JSON.parse(result.stdout) as RunReport };
 }
 
 /**

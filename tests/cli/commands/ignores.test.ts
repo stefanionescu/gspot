@@ -1,13 +1,12 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { TWO_RULES, QUALITY_FIX, IGNORE_CASES, QUALITY_COMMAND } from '#tests/config/cli/commands/ignores.ts';
 
 test('a global ignore stops a command check and its correction command until removed', async () => {
@@ -26,9 +25,9 @@ test('a global ignore stops a command check and its correction command until rem
     const reason = 'The fixture preserves the command failure.';
     const ignored = await runGspot(directory.path, ['ignore', 'project/quality', '--reason', reason]);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const skipped = await runGspot(directory.path, [...args, '--fix']);
+    const skipped = await checkReport(directory.path, [...args, '--fix']);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
-    const report = JSON.parse(skipped.stdout) as RunReport;
+    const report = skipped.report;
     expect(report.checks[0]).toMatchObject({ check: 'project/quality', status: 'skipped', findings: [] });
     expect(report.skips).toStrictEqual([{ check: 'project/quality', cause: 'ignore' }]);
     expect(report.ignores).toStrictEqual([{ check: 'project/quality', reason, matched: 0 }]);
@@ -53,9 +52,9 @@ test('path-specific ignores prevent checker and fixer execution and report an en
         'inputs/skip-keep.txt': 'defect\n',
     });
     const args = ['check', '--only', 'project/quality', '--fix', '--json'];
-    const corrected = await runGspot(directory.path, args);
+    const corrected = await checkReport(directory.path, args);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const report = JSON.parse(corrected.stdout) as RunReport;
+    const report = corrected.report;
     expect(report.checks[0]).toMatchObject({ status: 'passed', fileCount: 2, findings: [] });
     // A second correction pass reruns the fixer over the files the first pass changed.
     for (const log of ['checked.txt', 'fixed.txt']) {
@@ -69,9 +68,9 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     expect(await readFile(join(directory.path, 'inputs/skip café.txt'), 'utf8')).toBe('defect\n');
     const checked = await readFile(join(directory.path, 'checked.txt'), 'utf8');
     const fixed = await readFile(join(directory.path, 'fixed.txt'), 'utf8');
-    const skipped = await runGspot(directory.path, [...args, '--', 'inputs/skip café.txt']);
+    const skipped = await checkReport(directory.path, [...args, '--', 'inputs/skip café.txt']);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
-    const skippedReport = JSON.parse(skipped.stdout) as RunReport;
+    const skippedReport = skipped.report;
     expect(skippedReport.skips).toStrictEqual([{ check: 'project/quality', cause: 'ignore' }]);
     expect(skippedReport.checks[0]).toMatchObject({ status: 'skipped', findings: [] });
     expect(await readFile(join(directory.path, 'checked.txt'), 'utf8')).toBe(checked);
@@ -280,9 +279,9 @@ test('an ignored folder includes descendants while a negated file remains enforc
     ]);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
     const command = ['check', '--only', 'bash/bash-syntax', '--json'];
-    const checked = await runGspot(directory.path, command);
+    const checked = await checkReport(directory.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const report = JSON.parse(checked.stdout) as RunReport;
+    const report = checked.report;
     expect(new Set(report.checks[0]?.findings.map(({ file }) => file))).toStrictEqual(
         new Set(['legacy scripts/required.sh']),
     );
@@ -301,9 +300,9 @@ test('an ignored folder includes descendants while a negated file remains enforc
         '--remove',
     ]);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    const restored = await runGspot(directory.path, command);
+    const restored = await checkReport(directory.path, command);
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-    expect(
-        new Set((JSON.parse(restored.stdout) as RunReport).checks[0]?.findings.map(({ file }) => file)),
-    ).toStrictEqual(new Set(['legacy scripts/nested/example.sh']));
+    expect(new Set(restored.report.checks[0]?.findings.map(({ file }) => file))).toStrictEqual(
+        new Set(['legacy scripts/nested/example.sh']),
+    );
 });

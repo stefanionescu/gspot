@@ -2,10 +2,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rename } from 'node:fs/promises';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 
 import {
     GROUP_SOURCE,
@@ -26,17 +25,15 @@ test('ordinary response and domain words pass while an adjacent banned name stil
         'entry.ts': source + 'export const userHelper = 1;\n',
     });
     const command = ['check', '--only', 'naming/identifiers', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: 'entry.ts', line: ORDINARY_WORDS.length + 1, rule: 'banned-term' },
     ]);
     await Bun.write(join(sandbox.path, 'entry.ts'), source + 'export const userCount = 1;\n');
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'naming/identifiers', status: 'passed', findings: [] },
-    ]);
+    expect(corrected.report.checks).toMatchObject([{ check: 'naming/identifiers', status: 'passed', findings: [] }]);
 });
 
 test('reserved categories apply literally and child declarations leave sibling contracts intact', async () => {
@@ -46,9 +43,9 @@ test('reserved categories apply literally and child declarations leave sibling c
         ...RESERVED_FILES,
     });
     const command = ['check', '--only', 'naming/identifiers', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: 'entry.ts', line: 1, column: 14, rule: 'reserved-term' },
         { file: 'app/entry.ts', line: 2, column: 21, rule: 'reserved-term' },
         { file: 'sibling/entry.ts', line: 1, column: 14, rule: 'reserved-term' },
@@ -59,13 +56,11 @@ test('reserved categories apply literally and child declarations leave sibling c
             : source.replace('const record', 'const entry');
         await Bun.write(join(sandbox.path, path), corrected);
     }
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(
-        (JSON.parse(corrected.stdout) as RunReport).checks.every(
-            ({ status, findings }) => status === 'passed' && findings.length === 0,
-        ),
-    ).toBe(true);
+    expect(corrected.report.checks.every(({ status, findings }) => status === 'passed' && findings.length === 0)).toBe(
+        true,
+    );
 });
 
 test('all shipped groups apply and exact allowances leave adjacent banned names active', async () => {
@@ -73,12 +68,10 @@ test('all shipped groups apply and exact allowances leave adjacent banned names 
     const policy = buildPolicy(['typescript', 'naming'], { level: 'all' });
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'entry.ts': GROUP_SOURCE });
     const command = ['check', '--only', 'naming/identifiers', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
-        (JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) =>
-            findings.map(({ line, rule }) => ({ line, rule })),
-        ),
+        failed.report.checks.flatMap(({ findings }) => findings.map(({ line, rule }) => ({ line, rule }))),
     ).toStrictEqual([
         { line: 1, rule: 'banned-term' },
         { line: 2, rule: 'banned-term' },
@@ -92,12 +85,10 @@ test('all shipped groups apply and exact allowances leave adjacent banned names 
         join(sandbox.path, 'gspot.toml'),
         policy + '[naming]\nallowed = {oldValue = "The public interface fixes this exact name."}\n',
     );
-    const narrowed = await runGspot(sandbox.path, command);
+    const narrowed = await checkReport(sandbox.path, command);
     expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(1);
     expect(
-        (JSON.parse(narrowed.stdout) as RunReport).checks.flatMap(({ findings }) =>
-            findings.map(({ line, rule }) => ({ line, rule })),
-        ),
+        narrowed.report.checks.flatMap(({ findings }) => findings.map(({ line, rule }) => ({ line, rule }))),
     ).toStrictEqual([
         { line: 2, rule: 'banned-term' },
         { line: 3, rule: 'banned-term' },
@@ -115,9 +106,9 @@ test('all shipped groups apply and exact allowances leave adjacent banned names 
             .replace('custom', 'authored')
             .replace('combined', 'merged'),
     );
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
 test('hidden folders preserve filename checks without needing a list of tool directory names', async () => {
@@ -129,15 +120,15 @@ test('hidden folders preserve filename checks without needing a list of tool dir
         '.vscode/entry.ts': 'export const entry = 1;\n',
     });
     const command = ['check', '--only', 'naming/paths', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: '.archive/bad_name.ts', line: 1, column: 1, rule: 'case' },
     ]);
     await rename(join(sandbox.path, '.archive/bad_name.ts'), join(sandbox.path, '.archive/bad-name.ts'));
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
 test('numbered task paths require their authored prefix contract', async () => {
@@ -145,12 +136,10 @@ test('numbered task paths require their authored prefix contract', async () => {
     const policy = buildPolicy(['bash', 'naming'], { level: 'all' });
     await createFileTree(sandbox.path, { 'gspot.toml': policy, ...NUMBERED_FILES });
     const command = ['check', '--only', 'naming/paths', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
-        (JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) =>
-            findings.map(({ file, rule }) => ({ file, rule })),
-        ),
+        failed.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),
     ).toStrictEqual([
         { file: '.mise/tasks/01-build.sh', rule: 'case' },
         { file: '.mise/tasks/01-build.sh', rule: 'digits' },
@@ -158,9 +147,9 @@ test('numbered task paths require their authored prefix contract', async () => {
         { file: 'scripts/steps/01-build.sh', rule: 'digits' },
     ]);
     await Bun.write(join(sandbox.path, 'gspot.toml'), policy + PREFIX_EXCEPTION);
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
 test('an advanced guide receives the ordinary vocabulary rule', async () => {
@@ -170,15 +159,15 @@ test('an advanced guide receives the ordinary vocabulary rule', async () => {
         'ADVANCED.md': '# Guide\n',
     });
     const command = ['check', '--only', 'naming/paths', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: 'ADVANCED.md', line: 1, column: 1, rule: 'banned-term' },
     ]);
     await rename(join(sandbox.path, 'ADVANCED.md'), join(sandbox.path, 'guide.md'));
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
 test('an exact repeated-word exception preserves the neighboring duplicate-word diagnostic', async () => {
@@ -188,15 +177,15 @@ test('an exact repeated-word exception preserves the neighboring duplicate-word 
         'entry.ts': 'export const userUser = 1;\nexport const accountAccount = 1;\n',
     });
     const command = ['check', '--only', 'naming/identifiers', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: 'entry.ts', line: 2, column: 14, rule: 'duplicate-words' },
     ]);
     await Bun.write(join(sandbox.path, 'entry.ts'), 'export const userUser = 1;\nexport const account = 1;\n');
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
 test('restored terms fail in identifiers and paths at all and neither check runs at recommended', async () => {
@@ -206,9 +195,9 @@ test('restored terms fail in identifiers and paths at all and neither check runs
         ...Object.fromEntries(RESTORED_TERMS.map((term) => [`${term}.js`, `export const ${term}Count = 1;\n`])),
     });
     const command = ['check', '--only', 'naming/identifiers', 'naming/paths', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const checks = (JSON.parse(failed.stdout) as RunReport).checks;
+    const checks = failed.report.checks;
     expect(checks.map(({ check, status }) => [check, status])).toStrictEqual([
         ['naming/identifiers', 'failed'],
         ['naming/paths', 'failed'],
@@ -222,7 +211,7 @@ test('restored terms fail in identifiers and paths at all and neither check runs
         );
     }
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['javascript', 'naming'], { level: 'recommended' }));
-    const recommended = await runGspot(sandbox.path, command);
+    const recommended = await checkReport(sandbox.path, command);
     expect(recommended.code, recommended.stdout + recommended.stderr).toBe(0);
-    expect((JSON.parse(recommended.stdout) as RunReport).checks).toStrictEqual([]);
+    expect(recommended.report.checks).toStrictEqual([]);
 });

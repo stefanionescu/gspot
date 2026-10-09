@@ -2,16 +2,15 @@ import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { planRun } from '#cli/planning/public.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { toPosix } from '#cli/platform/contracts.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { checkInput } from '#cli/execution/contracts.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { getStaged } from '#cli/repository/revisions/public.ts';
 import { rejection, containing } from '#tests/harness/expectations.ts';
 import type { MigrationProject } from '#tests/types/cli/checks/library/drizzle.ts';
@@ -157,17 +156,15 @@ test.each(DRIZZLE_RELATIONS_CASES)('Drizzle relations reports its finding and pa
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { ...entry.files, 'gspot.toml': buildPolicy(['drizzle'], { level: 'all' }) });
     const command = ['check', '--only', entry.check, '--json'];
-    const failed = await runGspot(sandbox.path, command);
-    const report = JSON.parse(failed.stdout) as RunReport;
+    const failed = await checkReport(sandbox.path, command);
+    const report = failed.report;
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
     expect(report.checks[0]?.findings).toContainEqual(containing({ check: entry.check, ...entry.expected }));
     await createFileTree(sandbox.path, entry.corrected!.files);
-    const passed = await runGspot(sandbox.path, command);
+    const passed = await checkReport(sandbox.path, command);
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-    expect((JSON.parse(passed.stdout) as RunReport).checks).toMatchObject([
-        { check: entry.check, status: 'passed', findings: [] },
-    ]);
+    expect(passed.report.checks).toMatchObject([{ check: entry.check, status: 'passed', findings: [] }]);
 });
 
 test.each(['', 'packages/db'])('staged Drizzle tables retain unstaged scope relations in %s', async (scope) => {

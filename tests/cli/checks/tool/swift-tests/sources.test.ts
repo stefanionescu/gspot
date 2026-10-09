@@ -1,9 +1,8 @@
 import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
 import { test, expect } from 'bun:test';
-import { gitOutput } from '#tests/harness/git.ts';
 import { planRun } from '#cli/planning/public.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
+import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -11,7 +10,7 @@ import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { checkInput } from '#cli/execution/contracts.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { XCTEST_FILES } from '#tests/config/cli/checks/tool/swift-tests/sources.ts';
 import { createTestRepository, prepareCliRepository } from '#tests/harness/repository.ts';
 
@@ -24,20 +23,18 @@ test('Swift Testing outside test folders reports a sleep and passes after the fi
         'AppTests/Helper.swift': 'func waits() { sleep(1) }\n',
     });
     const command = ['check', '--only', 'swift-tests/sleep', '--json'];
-    const broken = await runGspot(sandbox.path, command);
+    const broken = await checkReport(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
+    expect(broken.report.checks[0]!.findings).toStrictEqual([
         containing({ file: 'Examples/Checks.swift', rule: 'sleep', line: 3 }),
     ]);
     await Bun.write(
         `${sandbox.path}/Examples/Checks.swift`,
         source.replace('try await Task.sleep(for: .seconds(1))', '#expect(true)'),
     );
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'swift-tests/sleep', status: 'passed', findings: [] },
-    ]);
+    expect(corrected.report.checks).toMatchObject([{ check: 'swift-tests/sleep', status: 'passed', findings: [] }]);
 });
 
 test.each([
@@ -81,10 +78,10 @@ test('Swift test checks apply sleep allowances in their declared scope', async (
         'Examples/Checks.swift': source,
         'integration/Checks.swift': source,
     });
-    const result = await runGspot(sandbox.path, ['check', '--only', 'swift-tests/sleep', '--json']);
+    const result = await checkReport(sandbox.path, ['check', '--only', 'swift-tests/sleep', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(
-        (JSON.parse(result.stdout) as RunReport).checks.map((check) => ({
+        result.report.checks.map((check) => ({
             scope: check.scope,
             findings: check.findings,
         })),
@@ -139,13 +136,13 @@ test('the commit stage leaves the coverage run to its own stage', async () => {
     const { root, environment } = repository;
     gitOutput(root, ['add', '--all']);
     const selected = ['swift-tests/skip-reasons', 'swift-tests/coverage'];
-    const checked = await runGspot(
+    const checked = await checkReport(
         root,
         ['check', '--hook', 'pre-commit', '--only', ...selected, '--json'],
         environment,
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
+    const ids = checked.report.checks.map((check) => check.check);
     expect(ids).toStrictEqual(['swift-tests/skip-reasons']);
     const pushed = planRun(await openSession(root), { stage: 'push', skips: [], only: selected });
     expect(pushed.map(({ check }) => check.name)).toStrictEqual(['swift-tests/coverage']);
@@ -158,10 +155,10 @@ test('Swift checks report each scope independently and file-list inputs omit sib
         'Tests/RootTests.swift': 'import XCTest\nfunc testRoot() throws { throw XCTSkip() }\n',
         'apps/second/Tests/SecondTests.swift': 'import XCTest\nfunc testSecond() throws { throw XCTSkip() }\n',
     });
-    const failed = await runGspot(sandbox.path, ['check', '--only', 'swift-tests/skip-reasons', '--json']);
+    const failed = await checkReport(sandbox.path, ['check', '--only', 'swift-tests/skip-reasons', '--json']);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
-        (JSON.parse(failed.stdout) as RunReport).checks.map((check) => ({
+        failed.report.checks.map((check) => ({
             scope: check.scope,
             files: check.findings.map((finding) => finding.file),
         })),

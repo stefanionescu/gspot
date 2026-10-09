@@ -5,29 +5,25 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
-import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { buildPlan } from '#cli/checks/language/swift/public.ts';
-import { useCacheDirectory } from '#tests/harness/environment.ts';
+import { isolateCompilerCache } from '#tests/harness/environment.ts';
 import { SWIFT_PACKAGE } from '#tests/config/samples/swift/source.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
+import { buildCheckInput, swiftBuildInput } from '#tests/harness/input.ts';
 import { stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 
 test('Swift build side effects stay in the source copy and do not become later inputs', async () => {
     await using sandbox = await testdir();
-    using _executables = mockPinnedExecutables(
-        [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
-    );
-    await using _cache = await useCacheDirectory();
-    await createFileTree(sandbox.path, {
-        'Package.swift': SWIFT_PACKAGE,
-        'gspot.toml': buildPolicy(['swift']),
+
+    const prepared = await swiftBuildInput(sandbox, 'swift/build', {
         'Sources/Value.swift': 'let value = 1\n',
     });
+    await using _preparation = prepared.resources;
     const original = join(sandbox.path, 'Sources/Value.swift');
-    const initial = buildCheckInput(await openSession(sandbox.path), 'swift/build');
+    const initial = prepared.input;
     const next = buildCheckInput(await openSession(sandbox.path), 'swift/build');
     const { mode } = await stat(original);
     const sources: string[] = [];
@@ -60,16 +56,12 @@ test('Swift build side effects stay in the source copy and do not become later i
 
 test('Periphery build side effects stay in its source copy and findings name original source paths', async () => {
     await using sandbox = await testdir();
-    using _executables = mockPinnedExecutables(
-        [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
-    );
-    await using _cache = await useCacheDirectory();
-    await createFileTree(sandbox.path, {
-        'Package.swift': SWIFT_PACKAGE,
-        'gspot.toml': buildPolicy(['swift']),
+
+    const prepared = await swiftBuildInput(sandbox, 'swift/periphery', {
         'Main.swift': 'let unused = 1\n',
     });
-    const input = buildCheckInput(await openSession(sandbox.path), 'swift/periphery');
+    await using _preparation = prepared.resources;
+    const input = prepared.input;
     const sources: string[] = [];
     using run = spyOn(spawn, 'run').mockImplementation(async (_argv, options) => {
         const { cwd } = options;
@@ -94,12 +86,10 @@ test('Periphery build side effects stay in its source copy and findings name ori
 
 test('concurrent Swift compilation and Periphery retain separate source and artifact directories', async () => {
     await using sandbox = await testdir();
-    using _executables = mockPinnedExecutables(
-        [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
-    );
-    await using _cache = await useCacheDirectory();
-    await createFileTree(sandbox.path, { 'Package.swift': SWIFT_PACKAGE, 'gspot.toml': buildPolicy(['swift']) });
-    const compile = buildCheckInput(await openSession(sandbox.path), 'swift/build');
+
+    const prepared = await swiftBuildInput(sandbox, 'swift/build');
+    await using _preparation = prepared.resources;
+    const compile = prepared.input;
     const periphery = buildCheckInput(await openSession(sandbox.path), 'swift/periphery');
     const started = Promise.withResolvers<undefined>();
     const directories: string[] = [];
@@ -139,7 +129,7 @@ test.each(['../External.xcodeproj', 'C:External.xcodeproj'])(
         using _executables = mockPinnedExecutables(
             [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
         );
-        await using _cache = await useCacheDirectory();
+        await using _cache = await isolateCompilerCache();
         await createFileTree(sandbox.path, {
             'Package.swift': SWIFT_PACKAGE,
             'gspot.toml': buildPolicy(['swift', 'xcode'], {

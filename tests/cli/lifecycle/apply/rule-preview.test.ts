@@ -7,9 +7,9 @@ import { applyCommand } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { chmod, readFile, writeFile } from 'node:fs/promises';
-import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/public.ts';
+import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
+import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import { RULE_PREVIEW_CASES } from '#tests/config/cli/lifecycle/rule-preview.ts';
 
 test.each(RULE_PREVIEW_CASES)('apply compares rules with its last successful write: $name', async (entry) => {
@@ -100,6 +100,12 @@ test('manual JavaScript edits produce a byte diff without running the edited con
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(authored);
     expect(await readFile(join(sandbox.path, '.gspot/state/ownership.json'))).toStrictEqual(before);
     expect(await pathExists(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
+    await unlink(join(sandbox.path, '.gspot/state/ownership.json'));
+    const unrecorded = await applyCommand({ cwd: sandbox.path, isDryRun: true });
+    expect(unrecorded.exitCode, unrecorded.text).toBe(0);
+    expect((unrecorded.json as ApplyPlanJson).drift.find((entry) => entry.path === path)).toStrictEqual(changed);
+    expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(authored);
+    expect(await pathExists(join(sandbox.path, '.gspot/state/ownership.json'))).toBe(false);
 });
 
 test('a scoped rule preview changes only the matching project configuration', async () => {

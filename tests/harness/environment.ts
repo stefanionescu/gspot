@@ -59,7 +59,7 @@ export function useEnvironment(variables: Record<string, string | undefined>): D
  * Keep compiler state in a test-owned folder and restore the cache boundary when the test ends.
  * @returns the disposable temporary directory and boundary spy
  */
-export async function useCacheDirectory(): Promise<AsyncDisposableStack> {
+export async function isolateCompilerCache(): Promise<AsyncDisposableStack> {
     await using resources = new AsyncDisposableStack();
     const cache = resources.use(await testdir());
     resources.use(spyOn(environment, 'cacheDirectory').mockReturnValue(cache.path));

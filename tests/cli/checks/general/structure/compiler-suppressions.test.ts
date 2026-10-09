@@ -1,10 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { COMPILER_SOURCE } from '#tests/config/samples/typescript.ts';
 import { suppressionComments } from '#cli/checks/general/structure/public.ts';
 
@@ -44,10 +43,10 @@ test.each(['javascript', 'typescript'])(
                 .toSorted((left, right) => left.localeCompare(right))
                 .map((file) => ({ file, line: 1, form: 'tsc', reason: undefined, forbidden: false })),
         );
-        const missing = await runGspot(sandbox.path, ['check', '--only', 'structure/suppressions', '--json']);
+        const missing = await checkReport(sandbox.path, ['check', '--only', 'structure/suppressions', '--json']);
         expect(missing.code, missing.stdout + missing.stderr).toBe(1);
         expect(
-            (JSON.parse(missing.stdout) as RunReport).checks.flatMap(({ findings }) =>
+            missing.report.checks.flatMap(({ findings }) =>
                 findings.map(({ file, line, rule }) => ({ file, line, rule })),
             ),
         ).toStrictEqual(

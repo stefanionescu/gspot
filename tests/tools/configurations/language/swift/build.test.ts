@@ -9,15 +9,15 @@ import { pathExists } from '#tests/harness/preservation.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
 import { buildPlan } from '#cli/checks/language/swift/public.ts';
-import { useCacheDirectory } from '#tests/harness/environment.ts';
 import { XCODE_PROJECT } from '#tests/config/samples/swift/xcode.ts';
+import { isolateCompilerCache } from '#tests/harness/environment.ts';
 
 // The manifest assigns compiler-backed Swift checks to macOS.
 test.skipIf(!isMacos)(
     'incremental Swift builds preserve compiler state and still detect a changed source',
     async () => {
         await using sandbox = await testdir();
-        await using _cache = await useCacheDirectory();
+        await using _cache = await isolateCompilerCache();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['swift']),
             'Package.swift':
@@ -48,7 +48,7 @@ test.skipIf(!isMacos)(
     'Xcode reuses compiled objects and reports source errors without changing the project',
     async () => {
         await using sandbox = await testdir();
-        await using _cache = await useCacheDirectory();
+        await using _cache = await isolateCompilerCache();
         const project = XCODE_PROJECT.replaceAll('Inspection', 'Example')
             .replace('path = Example.xctest;', 'path = Example;')
             .replaceAll('Value.swift', 'main.swift')

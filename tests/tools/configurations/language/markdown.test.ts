@@ -6,7 +6,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { FILES, TABLES } from '#tests/config/tools/configurations/language/markdown.ts';
+import { FILES, TABLES, TABLE_COLUMN_SAMPLE } from '#tests/config/tools/configurations/language/markdown.ts';
 
 test('Markdown coverage switches by level while scoped native options remain effective', async () => {
     await using sandbox = await testdir();
@@ -24,7 +24,7 @@ test('Markdown coverage switches by level while scoped native options remain eff
             level === 'all' ? ['title.md'] : [],
         );
         expect(findings.filter(({ rule }) => rule === 'MD044')).toStrictEqual([]);
-        expect(findings.filter(({ rule }) => ['MD013', 'MD033', 'MD060'].includes(rule ?? ''))).toStrictEqual([]);
+        expect(findings.filter(({ rule }) => ['MD013', 'MD033'].includes(rule ?? ''))).toStrictEqual([]);
         await Bun.write(join(sandbox.path, 'root.md'), FILES['root.md'].replace('![]', '![Request flow]'));
         await Bun.write(
             join(sandbox.path, 'app/guide.md'),
@@ -97,5 +97,64 @@ test.each(['recommended', 'all'] as const)(
             { check: 'markdown/markdownlint', scope: '', status: 'passed', findings: [] },
             { check: 'markdown/markdownlint', scope: 'app', status: 'passed', findings: [] },
         ]);
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s enforces native table alignment by default and applies the selected table style',
+    async (level) => {
+        await using sandbox = await testdir();
+        const policy = buildPolicy(['markdown'], {
+            level,
+            tables: TABLES.replace('MD060 = { style = "aligned" }\n', ''),
+        });
+        await createFileTree(sandbox.path, { 'gspot.toml': policy, 'table.md': TABLE_COLUMN_SAMPLE });
+        const applied = await spawnGspot(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const failed = await spawnGspot(sandbox.path, ['check', '--only', 'markdown/markdownlint', '--json']);
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        const report = JSON.parse(failed.stdout) as RunReport;
+        expect(report.checks).toMatchObject([
+            {
+                check: 'markdown/markdownlint',
+                scope: '',
+                status: 'failed',
+                findings: [{ file: 'table.md', rule: 'MD060' }],
+            },
+        ]);
+        await Bun.write(join(sandbox.path, 'table.md'), FILES['long.md']);
+        const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'markdown/markdownlint', '--json']);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+            { check: 'markdown/markdownlint', scope: '', status: 'passed', findings: [] },
+        ]);
+        await Bun.write(
+            join(sandbox.path, 'gspot.toml'),
+            buildPolicy(['markdown'], { level, tables: TABLES.replace('style = "aligned"', 'style = "tight"') }),
+        );
+        const changed = await spawnGspot(sandbox.path, ['apply']);
+        expect(changed.code, changed.stdout + changed.stderr).toBe(0);
+        const selected = await spawnGspot(sandbox.path, ['check', '--only', 'markdown/markdownlint', '--json']);
+        expect(selected.code, selected.stdout + selected.stderr).toBe(1);
+        expect((JSON.parse(selected.stdout) as RunReport).checks[0]!.findings).toContainEqual(
+            containing({ file: 'table.md', rule: 'MD060' }),
+        );
+        const tight = FILES['long.md']
+            .split('\n')
+            .map((line) =>
+                line.startsWith('|')
+                    ? line
+                          .split('|')
+                          .map((cell) => cell.trim())
+                          .join('|')
+                    : line,
+            )
+            .join('\n');
+        const passed = await spawnGspot(sandbox.path, ['check', '--only', 'markdown/markdownlint', '--fix', '--json']);
+        expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+        expect((JSON.parse(passed.stdout) as RunReport).checks).toMatchObject([
+            { check: 'markdown/markdownlint', scope: '', status: 'passed', findings: [] },
+        ]);
+        expect(await Bun.file(join(sandbox.path, 'table.md')).text()).toBe(tight);
     },
 );

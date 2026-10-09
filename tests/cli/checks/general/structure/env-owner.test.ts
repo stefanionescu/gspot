@@ -1,11 +1,10 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { ENVIRONMENT_SOURCE, PYTHON_ENVIRONMENT_SOURCE } from '#tests/config/cli/checks/general/structure/env-owner.ts';
 
 test('Swift environment reads require an owner and ignore comments and string literals', async () => {
@@ -51,8 +50,8 @@ test.each(['recommended', 'all'] as const)(
             'environment.py': 'import os\nVALUE = os.environ["KEY"]\n',
             'main.py': PYTHON_ENVIRONMENT_SOURCE,
         });
-        const initial = await runGspot(sandbox.path, ['check', '--only', 'structure/env-owner', '--json']);
-        const checks = (JSON.parse(initial.stdout) as RunReport).checks;
+        const initial = await checkReport(sandbox.path, ['check', '--only', 'structure/env-owner', '--json']);
+        const checks = initial.report.checks;
         expect(
             checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),
         ).toStrictEqual(
@@ -65,11 +64,9 @@ test.each(['recommended', 'all'] as const)(
             `${sandbox.path}/main.py`,
             'from unrelated import environ, getenv\nfirst = environ["KEY"]\nsecond = getenv("KEY")\n',
         );
-        const corrected = await runGspot(sandbox.path, ['check', '--only', 'structure/env-owner', '--json']);
+        const corrected = await checkReport(sandbox.path, ['check', '--only', 'structure/env-owner', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual(
-            [],
-        );
+        expect(corrected.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
     },
 );
 
@@ -84,11 +81,9 @@ test.each(['recommended', 'all'] as const)('Python scoped environment owners app
         'app/environment.py': 'import os\nVALUE = os.getenv("KEY")\n',
         'app/main.py': 'from os import getenv as read\nVALUE = read("KEY")\n',
     });
-    const result = await runGspot(sandbox.path, ['check', '--only', 'structure/env-owner', '--json']);
+    const result = await checkReport(sandbox.path, ['check', '--only', 'structure/env-owner', '--json']);
     expect(
-        (JSON.parse(result.stdout) as RunReport).checks
-            .flatMap(({ findings }) => findings)
-            .map(({ file, line }) => ({ file, line })),
+        result.report.checks.flatMap(({ findings }) => findings).map(({ file, line }) => ({ file, line })),
     ).toStrictEqual(
         level === 'recommended'
             ? []

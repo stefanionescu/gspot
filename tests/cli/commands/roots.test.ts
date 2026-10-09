@@ -2,12 +2,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { symlink, readFile, writeFile } from 'node:fs/promises';
 
 const INIT = buildInitArguments(['bash']);
@@ -56,7 +55,7 @@ test('a configuration below the Git root owns only its own project writes and ch
     expect(await readFile(join(app, 'gspot.toml'), 'utf8')).toContain('level = "all"');
     await writeFile(join(app, 'src/query.sql'), 'SELECT 2;\n');
     await writeFile(join(directory.path, 'outside.sql'), 'SELECT FROM;\n');
-    const checked = await runGspot(source, [
+    const checked = await checkReport(source, [
         'check',
         '--changed',
         '--base',
@@ -66,7 +65,7 @@ test('a configuration below the Git root owns only its own project writes and ch
         '--json',
     ]);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    const checks = (JSON.parse(checked.stdout) as RunReport).checks;
+    const checks = checked.report.checks;
     expect(checks.map(({ check, fileCount }) => ({ check, fileCount }))).toStrictEqual([
         { check: 'sql/trivial-functions', fileCount: 1 },
     ]);

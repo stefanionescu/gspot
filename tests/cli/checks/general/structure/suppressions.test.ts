@@ -1,11 +1,10 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
-import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
+import { checkReport, buildRunOptions } from '#tests/harness/gspot.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { suppressionComments } from '#cli/checks/general/structure/public.ts';
@@ -114,9 +113,9 @@ test.each(['recommended', 'all'] as const)('Vale directives fail at %s', async (
     });
     const command = ['check', '--only', 'structure/suppressions', '--json'];
     await Bun.write(join(sandbox.path, 'guide.mdx'), Bun.file(join(sandbox.path, 'guide.md')));
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([
+    expect(failed.report.checks).toMatchObject([
         {
             check: 'structure/suppressions',
             status: 'failed',
@@ -131,9 +130,9 @@ test.each(['recommended', 'all'] as const)('Vale directives fail at %s', async (
         '# A page\n\nText remains visible to the prose check.\n\n```markdown\n<!-- vale off -->\n```\n\n`<!-- vale off -->`\n\n<!-- Example vale off -->\n',
     );
     await Bun.write(join(sandbox.path, 'guide.mdx'), Bun.file(join(sandbox.path, 'guide.md')));
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+    expect(corrected.report.checks).toMatchObject([
         { check: 'structure/suppressions', status: 'passed', findings: [] },
     ]);
     expect(await Bun.file(join(sandbox.path, 'query.sql')).text()).toBe('/* Explains the query. */\nSELECT 1;\n');
@@ -217,9 +216,9 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
         'query.sql': 'SELECT 1; -- noqa: LT01\n',
         'entry.py': 'answer = 1  # noqa: F841\n',
     });
-    const result = await runGspot(directory.path, ['check', '--only', 'structure/suppressions', '--json']);
+    const result = await checkReport(directory.path, ['check', '--only', 'structure/suppressions', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    const report = JSON.parse(result.stdout) as RunReport;
+    const report = result.report;
     expect(report.checks[0]!.findings).toStrictEqual(
         containingAll([
             containing({ file: 'query.sql', rule: 'sqlfluff-no-reason' }),

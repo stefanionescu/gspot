@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
@@ -10,8 +9,9 @@ import { buildCheckInput } from '#tests/harness/input.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { environmentBin } from '#cli/platform/contracts.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
+import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { toolPin, pythonPins } from '#cli/configurations/contracts.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 
@@ -32,9 +32,9 @@ test.each(LOCKFILES.filter(({ client }) => ['uv', 'poetry', 'pdm'].includes(clie
             'other/main.py': 'value = 2\n',
         });
         const command = ['check', '--only', 'python/pip-installs', '--json'];
-        const checked = await runGspot(sandbox.path, command);
+        const checked = await checkReport(sandbox.path, command);
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-        const report = JSON.parse(checked.stdout) as RunReport;
+        const report = checked.report;
         expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
             { file: 'locked/requirements.txt', rule: 'requirements-file' },
         ]);
@@ -42,9 +42,9 @@ test.each(LOCKFILES.filter(({ client }) => ['uv', 'poetry', 'pdm'].includes(clie
             'locked',
         ]);
         await rm(join(sandbox.path, 'locked/requirements.txt'));
-        const corrected = await runGspot(sandbox.path, command);
+        const corrected = await checkReport(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
+        expect(corrected.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
     },
 );
 
@@ -56,17 +56,21 @@ test('absent Python import contracts are explicit skips and malformed project fi
         'pyproject.toml': '# [tool.importlinter] is only a comment\n',
     });
     const command = ['check', '--only', 'python/import-linter', '--json'];
-    const absent = await runGspot(sandbox.path, command);
+    const absent = await checkReport(sandbox.path, command);
     expect(absent.code, absent.stdout + absent.stderr).toBe(0);
-    const report = JSON.parse(absent.stdout) as RunReport;
+    const report = absent.report;
     expect(report.checks).toMatchObject([{ check: 'python/import-linter', status: 'skipped' }]);
     expect(report.checks[0]!.note).toEqual(textContaining('import-linter'));
     await writeFile(join(sandbox.path, 'pyproject.toml'), '[broken');
     const malformed = await runGspot(sandbox.path, command);
     expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
-    expect((JSON.parse(malformed.stdout) as RunReport).checks).toMatchObject([
-        { check: 'python/import-linter', status: 'error' },
-    ]);
+    const failure = JSON.parse(malformed.stdout) as CommandFailureJson;
+    expect(failure).toStrictEqual({
+        error: 'failure',
+        message:
+            'Cannot inspect manifest pyproject.toml: Invalid TOML document: incomplete key-value: cannot find end of key\n\n1:  [broken\n     ^\n',
+    });
+    expect(failure).not.toHaveProperty('checks');
 });
 
 test.each(['stdout', 'stderr'])(
@@ -168,17 +172,21 @@ test('deptry skips a standalone script without a project and rejects malformed p
         'main.py': 'value = 1\n',
     });
     const command = ['check', '--only', 'python/deptry', '--json'];
-    const absent = await runGspot(sandbox.path, command);
+    const absent = await checkReport(sandbox.path, command);
     expect(absent.code, absent.stdout + absent.stderr).toBe(0);
-    expect((JSON.parse(absent.stdout) as RunReport).checks).toMatchObject([
+    expect(absent.report.checks).toMatchObject([
         { check: 'python/deptry', status: 'skipped', note: 'This scope has no pyproject.toml for deptry to read.' },
     ]);
     await writeFile(join(sandbox.path, 'pyproject.toml'), '[broken');
     const malformed = await runGspot(sandbox.path, command);
     expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
-    expect((JSON.parse(malformed.stdout) as RunReport).checks).toMatchObject([
-        { check: 'python/deptry', status: 'error' },
-    ]);
+    const failure = JSON.parse(malformed.stdout) as CommandFailureJson;
+    expect(failure).toStrictEqual({
+        error: 'failure',
+        message:
+            'Cannot inspect manifest pyproject.toml: Invalid TOML document: incomplete key-value: cannot find end of key\n\n1:  [broken\n     ^\n',
+    });
+    expect(failure).not.toHaveProperty('checks');
 });
 
 test('Python install path ignores accept only the selected script and keep unmanaged dependencies visible', async () => {
@@ -194,9 +202,9 @@ test('Python install path ignores accept only the selected script and keep unman
         'unmanaged.sh': 'pip install unmanaged-module\n',
         'requirements.txt': 'unmanaged-module\n',
     });
-    const result = await runGspot(sandbox.path, ['check', '--only', 'python/pip-installs', '--json']);
+    const result = await checkReport(sandbox.path, ['check', '--only', 'python/pip-installs', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    const findings = (JSON.parse(result.stdout) as RunReport).checks.flatMap((check) => check.findings);
+    const findings = result.report.checks.flatMap((check) => check.findings);
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'requirements.txt', rule: 'requirements-file' },
         { file: 'unmanaged.sh', rule: 'pip-install' },

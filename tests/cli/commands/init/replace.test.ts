@@ -4,7 +4,6 @@ import * as fs from 'node:fs';
 import { join, posix } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { readPolicy } from '#cli/policy/public.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
@@ -13,7 +12,7 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { PYPROJECT } from '#tests/config/samples/python.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { writeSetup } from '#cli/commands/init/contracts.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { prepare, initCommand } from '#cli/commands/init/public.ts';
@@ -117,9 +116,9 @@ test('an ignore file inside a scope is replaced at init, and the scoped check ru
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const dialect = await runGspot(sandbox.path, ['set', 'tools.sqlfluff.dialect', 'postgres', '--scope', 'db']);
     expect(dialect.code, dialect.stdout + dialect.stderr).toBe(0);
-    const checked = await runGspot(sandbox.path, ['check', '--only', 'sql/trivial-functions', '--json']);
+    const checked = await checkReport(sandbox.path, ['check', '--only', 'sql/trivial-functions', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+    expect(checked.report.checks).toMatchObject([
         { check: 'sql/trivial-functions', scope: 'db', status: 'passed', fileCount: 1 },
     ]);
 });

@@ -2,12 +2,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { valueAt } from '#cli/platform/contracts.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readTree } from '#tests/harness/preservation.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { SettingsListJson } from '#cli/types/commands/list.ts';
 import type { PolicyPlanJson } from '#cli/types/commands/save-policy.ts';
 
@@ -173,9 +172,9 @@ test('license presence needs a reason only when its declared requirement is weak
     expect(relaxed.code, relaxed.stdout + relaxed.stderr).toBe(0);
     const tightened = await runGspot(sandbox.path, ['set', 'docs.require_license', 'true']);
     expect(tightened.code, tightened.stdout + tightened.stderr).toBe(0);
-    const missing = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
+    const missing = await checkReport(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
-    expect((JSON.parse(missing.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+    expect(missing.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: 'LICENSE', rule: 'missing-license' },
     ]);
 });
@@ -191,9 +190,9 @@ test('Git download hosts require a reviewed allowance while HTTPS remains mandat
         'package-lock.json': JSON.stringify(lockfile, null, 2),
     });
     const command = ['check', '--only', 'dependencies/lockfile-hosts', '--json'];
-    const failed = await runGspot(sandbox.path, command);
+    const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toHaveLength(3);
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toHaveLength(3);
     const allowed = await runGspot(sandbox.path, [
         'set',
         'dependencies.registry_hosts',
@@ -203,9 +202,9 @@ test('Git download hosts require a reviewed allowance while HTTPS remains mandat
         EXCEPTION_REASON,
     ]);
     expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
-    const insecure = await runGspot(sandbox.path, command);
+    const insecure = await checkReport(sandbox.path, command);
     expect(insecure.code, insecure.stdout + insecure.stderr).toBe(1);
-    expect((JSON.parse(insecure.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+    expect(insecure.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         {
             file: 'package-lock.json',
             rule: 'host',
@@ -213,9 +212,9 @@ test('Git download hosts require a reviewed allowance while HTTPS remains mandat
         },
     ]);
     await Bun.write(join(sandbox.path, 'package-lock.json'), JSON.stringify(HOST_LOCKFILE));
-    const corrected = await runGspot(sandbox.path, command);
+    const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
 test('registry allowances stay inside their project scope and reset to inherited defaults', async () => {
@@ -239,10 +238,10 @@ test('registry allowances stay inside their project scope and reset to inherited
     ]);
     expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
     const command = ['check', '--only', 'dependencies/lockfile-hosts', '--json'];
-    const isolated = await runGspot(sandbox.path, command);
+    const isolated = await checkReport(sandbox.path, command);
     expect(isolated.code, isolated.stdout + isolated.stderr).toBe(1);
     expect(
-        (JSON.parse(isolated.stdout) as RunReport).checks.map(({ scope, status, findings }) => ({
+        isolated.report.checks.map(({ scope, status, findings }) => ({
             scope,
             status,
             files: findings.map(({ file }) => file),
@@ -256,17 +255,15 @@ test('registry allowances stay inside their project scope and reset to inherited
             files: ['sibling/package-lock.json', 'sibling/package-lock.json', 'sibling/package-lock.json'],
         },
     ]);
-    const narrowed = await runGspot(sandbox.path, [...command, '--', 'app/package-lock.json']);
+    const narrowed = await checkReport(sandbox.path, [...command, '--', 'app/package-lock.json']);
     expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(0);
-    expect((JSON.parse(narrowed.stdout) as RunReport).checks).toMatchObject([
-        { scope: 'app', status: 'passed', findings: [] },
-    ]);
+    expect(narrowed.report.checks).toMatchObject([{ scope: 'app', status: 'passed', findings: [] }]);
     const reset = await runGspot(sandbox.path, ['set', 'dependencies.registry_hosts', '--default', '--scope', 'app']);
     expect(reset.code, reset.stdout + reset.stderr).toBe(0);
-    const restored = await runGspot(sandbox.path, command);
+    const restored = await checkReport(sandbox.path, command);
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
     expect(
-        (JSON.parse(restored.stdout) as RunReport).checks.map(({ scope, findings }) => ({
+        restored.report.checks.map(({ scope, findings }) => ({
             scope,
             count: findings.length,
         })),

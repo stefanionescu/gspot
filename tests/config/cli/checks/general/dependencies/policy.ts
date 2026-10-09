@@ -6,17 +6,17 @@ export const INVALID: (CaseChanges & Record<'expected', string>)[] = [
     {
         check: 'dependencies/manifests',
         files: { 'package.json': '{' },
-        expected: 'Cannot read package manifest package.json',
+        expected: 'Cannot inspect manifest package.json',
     },
     {
         check: 'dependencies/manifests',
         files: { 'package.json': '{"dependencies":{"example":false}}' },
-        expected: 'Cannot read package manifest package.json',
+        expected: 'Cannot inspect manifest package.json',
     },
     {
         check: 'dependencies/manifests',
         files: { 'package.json': '{"dependencies":{"example":5}}' },
-        expected: 'Cannot read package manifest package.json',
+        expected: 'Cannot inspect manifest package.json',
     },
 ];
 

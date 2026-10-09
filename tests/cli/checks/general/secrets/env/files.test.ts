@@ -2,14 +2,13 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
-import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
-import { buildPolicy } from '#tests/harness/policy.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { git, commitAll } from '#tests/harness/git.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
-import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
+import { checkReport, buildRunOptions } from '#tests/harness/gspot.ts';
 import { STAGED_CASES } from '#tests/config/cli/checks/general/secrets/env/files.ts';
 
 test('tracked-file checks distinguish environment files from templates in nested folders', async () => {
@@ -46,9 +45,16 @@ ${entry.ignore}`,
         'source.txt': 'changed\n',
     });
     expect(git(sandbox.path, ['add', '-f', '.env', '.env.example', 'source.txt']).code).toBe(0);
-    const result = await runGspot(sandbox.path, ['check', '--staged', '--only', entry.check, ...entry.flags, '--json']);
+    const result = await checkReport(sandbox.path, [
+        'check',
+        '--staged',
+        '--only',
+        entry.check,
+        ...entry.flags,
+        '--json',
+    ]);
     expect(result.code, result.stdout + result.stderr).toBe(entry.code);
-    const report = JSON.parse(result.stdout) as RunReport;
+    const report = result.report;
     expect(report.checks).toMatchObject([
         {
             check: entry.check,

@@ -1,9 +1,8 @@
 import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { PBXPROJ_PROJECT } from '#tests/config/samples/xcode.ts';
 
 const project = (name: string) =>
@@ -23,9 +22,9 @@ test('Xcode sources follow group paths and target membership instead of duplicat
         'Synced/Excluded.swift': 'let excluded = 1\n',
     });
     const command = ['check', '--only', 'xcode/orphan-sources', '--json'];
-    const broken = await runGspot(sandbox.path, command);
+    const broken = await checkReport(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
+    expect(broken.report.checks[0]!.findings).toStrictEqual([
         containing({ file: 'Second/Shared.swift', rule: 'untargeted' }),
         containing({ file: 'Synced/Excluded.swift', rule: 'untargeted' }),
     ]);
@@ -36,9 +35,9 @@ test('Xcode sources follow group paths and target membership instead of duplicat
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     await Bun.file(`${sandbox.path}/Second/Shared.swift`).delete();
-    const missing = await runGspot(sandbox.path, command);
+    const missing = await checkReport(sandbox.path, command);
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
-    expect((JSON.parse(missing.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
+    expect(missing.report.checks[0]!.findings).toStrictEqual([
         containing({
             rule: 'missing-file',
             message: 'The project names Second/Shared.swift, and the tree holds no such file.',
@@ -59,10 +58,10 @@ test('membership combines projects in a scope and checks nested scopes independe
         'nested/Extra.swift': 'let verbatim = 1\n',
     });
     const command = ['check', '--only', 'xcode/orphan-sources', '--json'];
-    const broken = await runGspot(sandbox.path, command);
+    const broken = await checkReport(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(
-        (JSON.parse(broken.stdout) as RunReport).checks.map((check) => ({
+        broken.report.checks.map((check) => ({
             scope: check.scope,
             findings: check.findings,
         })),

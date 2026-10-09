@@ -1,13 +1,12 @@
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { README, LICENSE, SETEXT_README, MISSING_SECTIONS_README } from '#tests/config/samples/docs.ts';
@@ -59,9 +58,9 @@ describe('readme shape', () => {
 
 test('required repository documents identify a missing license and accept its restoration', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildPolicy(['docs'], { level: 'all' }), 'README.md': README });
-    const failed = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
+    const failed = await checkReport(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([
+    expect(failed.report.checks).toMatchObject([
         {
             check: 'docs/required-files',
             status: 'failed',
@@ -69,9 +68,9 @@ test('required repository documents identify a missing license and accept its re
         },
     ]);
     await Bun.write(join(sandbox.path, 'LICENSE'), LICENSE);
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
+    const corrected = await checkReport(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
 test.each(['COPYING', 'LICENCE', 'LICENSE-MIT', 'LICENSE-APACHE', 'LICENSE.rst'])(
@@ -106,9 +105,9 @@ test('a NOTICE file does not supply the repository license', async () => {
 test('README shape diagnostics give a valid reasoned exception command without changing policy on preview', async () => {
     const policy = buildPolicy([], { level: 'all', tables: NO_AGENT_RULES });
     await using sandbox = await testdir({ 'gspot.toml': policy, 'README.md': '# Tool\n\n## Install\n' });
-    const checked = await runGspot(sandbox.path, ['check', '--only', 'docs/readme-shape', '--json']);
+    const checked = await checkReport(sandbox.path, ['check', '--only', 'docs/readme-shape', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+    expect(checked.report.checks).toMatchObject([
         {
             check: 'docs/readme-shape',
             status: 'failed',

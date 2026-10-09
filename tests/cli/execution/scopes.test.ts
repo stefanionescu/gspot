@@ -1,9 +1,8 @@
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { READERS_HEADERS, EXPECTED_READERS } from '#tests/config/cli/execution/scopes.ts';
 
@@ -35,10 +34,10 @@ describe('scoped readers preserve their owned inputs', () => {
         await sandbox[Symbol.asyncDispose]();
     });
     test.each(EXPECTED_READERS)('$check receives its own files and binary assets', async (entry) => {
-        const result = await runGspot(sandbox.path, ['check', '--only', entry.check, '--json']);
+        const result = await checkReport(sandbox.path, ['check', '--only', entry.check, '--json']);
         expect(result.code, `${entry.check}: ${result.stdout}${result.stderr}`).toBe(1);
         expect(
-            (JSON.parse(result.stdout) as RunReport).checks.map((check) => ({
+            result.report.checks.map((check) => ({
                 scope: check.scope,
                 findings: check.findings,
             })),
@@ -64,9 +63,9 @@ test('nested Bash safety settings merge root and scoped owners without leaking t
         'sibling/cleanup.sh': source,
     });
     const command = ['check', '--only', 'bash/safety', '--json'];
-    const broken = await runGspot(sandbox.path, command);
+    const broken = await checkReport(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect((JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
+    expect(broken.report.checks.flatMap((check) => check.findings)).toStrictEqual([
         containing({ file: 'app/child/cleanup.sh', line: 2, rule: 'recursive-remove' }),
         containing({ file: 'sibling/cleanup.sh', line: 2, rule: 'recursive-remove' }),
     ]);
@@ -106,9 +105,9 @@ test.each([
         const untrusted = path.replace('trusted/', 'public/');
         await createFileTree(sandbox.path, { 'gspot.toml': policy, [path]: source, [untrusted]: source });
         const command = ['check', '--only', check, '--json'];
-        const failed = await runGspot(sandbox.path, command);
+        const failed = await checkReport(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((entry) => entry.findings)).toMatchObject([
+        expect(failed.report.checks.flatMap((entry) => entry.findings)).toMatchObject([
             { file: untrusted, line: 1, rule },
         ]);
         await Bun.write(`${sandbox.path}/${untrusted}`, correction);

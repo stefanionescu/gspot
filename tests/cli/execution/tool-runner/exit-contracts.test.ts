@@ -3,12 +3,11 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { planRun } from '#cli/planning/public.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
+import { checkReport } from '#tests/harness/gspot.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
 import { TYPO_REPORT, MARKDOWN_REPORT } from '#tests/config/cli/parsers/output/formats.ts';
 
@@ -87,30 +86,30 @@ test.each(['typos', 'markdownlint'] as const)(
             'checker.cjs': `const fs = require("node:fs"); const code = !process.argv.includes("--fix") && fs.existsSync("check-passes") ? 0 : Number(fs.readFileSync("status.txt", "utf8")); if (code !== 0) console.log(${JSON.stringify(JSON.stringify(output))}); else if (${JSON.stringify(format)} === "markdownlint") console.log("[]"); process.exitCode = code;`,
         });
         const checkArguments = ['check', '--only', 'project/native-exit', '--fix', '--json'];
-        const partial = await runGspot(sandbox.path, checkArguments);
+        const partial = await checkReport(sandbox.path, checkArguments);
         expect(partial.code, partial.stdout + partial.stderr).toBe(1);
-        expect(JSON.parse(partial.stdout) as RunReport).toMatchObject({
+        expect(partial.report).toMatchObject({
             failed: ['project/native-exit'],
             checks: [{ check: 'project/native-exit', status: 'failed', findings: [{ file: path, line: 1 }] }],
         });
         await writeFile(join(sandbox.path, 'status.txt'), String(native));
-        const fatal = await runGspot(sandbox.path, checkArguments);
+        const fatal = await checkReport(sandbox.path, checkArguments);
         expect(fatal.code, fatal.stdout + fatal.stderr).toBe(2);
-        expect(JSON.parse(fatal.stdout) as RunReport).toMatchObject({
+        expect(fatal.report).toMatchObject({
             failed: ['project/native-exit'],
             checks: [{ status: 'error', findings: [] }],
         });
         await Bun.write(join(sandbox.path, 'check-passes'), '');
-        const failedFix = await runGspot(sandbox.path, checkArguments);
+        const failedFix = await checkReport(sandbox.path, checkArguments);
         expect(failedFix.code, failedFix.stdout + failedFix.stderr).toBe(2);
-        expect(JSON.parse(failedFix.stdout) as RunReport).toMatchObject({
+        expect(failedFix.report).toMatchObject({
             failed: ['project/native-exit'],
             checks: [{ status: 'passed', findings: [] }],
         });
         await writeFile(join(sandbox.path, 'status.txt'), '0');
-        const corrected = await runGspot(sandbox.path, checkArguments);
+        const corrected = await checkReport(sandbox.path, checkArguments);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+        expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
         expect(
             await Promise.all(
                 [path, 'gspot.toml', 'neighbor.txt'].map((file) => Bun.file(join(sandbox.path, file)).text()),

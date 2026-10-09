@@ -2,14 +2,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { commitAll, markExecutable } from '#tests/harness/git.ts';
 import { getScriptIndex } from '#cli/checks/language/contracts.ts';
 import { BASH_CASES_MAIN as MAIN } from '#tests/config/samples/bash.ts';
@@ -29,14 +28,10 @@ test('an executable requires strict mode before its first command', async () => 
     const clean = await runGspot(sandbox.path, command);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     await writeFile(path, base + MAIN);
-    const broken = await runGspot(sandbox.path, command);
+    const broken = await checkReport(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([
-        { check: 'bash/contract', status: 'failed' },
-    ]);
-    expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toContainEqual(
-        containing({ file: 'greet.sh', rule: 'strict-mode' }),
-    );
+    expect(broken.report.checks).toMatchObject([{ check: 'bash/contract', status: 'failed' }]);
+    expect(broken.report.checks[0]!.findings).toContainEqual(containing({ file: 'greet.sh', rule: 'strict-mode' }));
 });
 
 // Windows file names cannot hold a newline.

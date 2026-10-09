@@ -1,9 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { SettingsListJson } from '#cli/types/commands/list.ts';
 import { NESTED_SCOPES_POLICY } from '#tests/config/cli/commands/nested-scopes.ts';
 
@@ -22,9 +21,9 @@ test('nested scopes inherit parent configurations and settings and check each fi
     const rows = (JSON.parse(settings.stdout) as SettingsListJson).settings;
     expect(rows.find((row) => row.scope === 'api/worker' && row.key === 'format.indent_width')?.value).toBe(2);
     expect(rows.find((row) => row.scope === 'api/worker' && row.key === 'limits.function_lines')?.value).toBe(30);
-    const checked = await runGspot(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
+    const checked = await checkReport(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const checks = (JSON.parse(checked.stdout) as RunReport).checks;
+    const checks = checked.report.checks;
     expect(
         checks.map((check) => ({ check: check.check, scope: check.scope, fileCount: check.fileCount })),
     ).toStrictEqual([
@@ -35,7 +34,7 @@ test('nested scopes inherit parent configurations and settings and check each fi
     expect(new Set(checks[1]?.findings.map((finding) => finding.file))).toStrictEqual(new Set(['api/worker/entry.sh']));
     await writeFile(join(directory.path, 'api/entry.sh'), 'echo example\n');
     await writeFile(join(directory.path, 'api/worker/entry.sh'), 'echo example\n');
-    const corrected = await runGspot(directory.path, [
+    const corrected = await checkReport(directory.path, [
         'check',
         '--only',
         'bash/bash-syntax',
@@ -43,7 +42,7 @@ test('nested scopes inherit parent configurations and settings and check each fi
         '--json',
     ]);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+    expect(corrected.report.checks).toMatchObject([
         { check: 'bash/bash-syntax', scope: 'api', status: 'passed', findings: [] },
         { check: 'bash/bash-syntax', scope: 'api/worker', status: 'passed', findings: [] },
         { check: 'sql/trivial-functions', scope: 'api/worker', status: 'passed', findings: [] },
