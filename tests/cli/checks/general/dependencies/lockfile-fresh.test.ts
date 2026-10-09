@@ -101,3 +101,43 @@ test('Yarn Berry validates metadata locks with install --immutable and preserves
         expect(await readFile(join(directory.path, path), 'utf8')).toBe(text);
     expect(await Promise.all(copies.map((path) => pathExists(path)))).toStrictEqual([false]);
 });
+
+test.each(['recommended', 'all'] as const)(
+    '%s frozen installs retain complete inputs only after a manifest changes',
+    async (level) => {
+        await using directory = await testdir({
+            'gspot.toml': buildPolicy(['dependencies'], {
+                level,
+                tables: '[scope.app]\nconfigurations = ["dependencies"]\n',
+            }),
+            'package.json': '{"name":"root","private":true}\n',
+            'bun.lock': 'Original lock.\n',
+            'source.txt': 'Root source.\n',
+            'app/package.json': '{"name":"child","private":true}\n',
+            'app/source.txt': 'Child source.\n',
+        });
+        const commands: string[][] = [];
+        const inputs: string[][] = [];
+        using _process = spyOn(processes, 'run').mockImplementation(async (command, options) => {
+            commands.push([...command]);
+            inputs.push(
+                await Promise.all(
+                    ['source.txt', 'app/source.txt'].map((path) => readFile(join(options.cwd, path), 'utf8')),
+                ),
+            );
+            return { code: 0, stdout: '', stderr: '', missing: false, duration: 1 };
+        });
+        const session = await openSession(directory.path);
+        const options = { stage: 'push' as const, skips: [], only: ['dependencies/stale-lockfile'] };
+        const untouched = await executeRun(session, buildRunOptions({ ...options, staged: ['app/source.txt'] }));
+        expect(untouched.report.checks).toStrictEqual([]);
+        expect(commands).toStrictEqual([]);
+        const triggered = await executeRun(session, buildRunOptions({ ...options, staged: ['app/package.json'] }));
+        expect(triggered.report.checks).toMatchObject([{ check: 'dependencies/stale-lockfile', status: 'passed' }]);
+        expect(commands.map(([executable, ...argv]) => [basename(executable!), ...argv])).toStrictEqual([
+            ['bun', 'install', '--frozen-lockfile', '--dry-run'],
+        ]);
+        expect(inputs).toStrictEqual([['Root source.\n', 'Child source.\n']]);
+        expect(await readFile(join(directory.path, 'bun.lock'), 'utf8')).toBe('Original lock.\n');
+    },
+);

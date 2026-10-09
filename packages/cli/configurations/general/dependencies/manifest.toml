@@ -87,7 +87,9 @@ example = "Adding a dependency to a package manifest without updating its lockfi
 level = "recommended"
 stage = "push"
 runs = "once"
-summary = "Checks npm, Bun, pnpm, Yarn, and uv lockfiles with isolated native frozen installs."
+needs = ["network"]
+files = { filenames = ["package.json", "bun.lock", "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "pyproject.toml", "uv.lock"] }
+summary = "Runs each package manager's frozen install in a temporary copy."
 why = "A lockfile that lags its manifest installs versions nobody reviewed the moment someone runs a plain install."
 help = "Run the install of the package manager once and commit the lockfile it writes."
 

@@ -26,27 +26,27 @@ function projectOwned(context: PlanInputs, entry: PlanEntry, scopePath: string):
     const candidates = projectFiles(context, scopePath, check.runs);
     const applicationInputs =
         manifest === undefined ? candidates : candidates.filter((file) => !isToolProjectPath(file.path));
-    if (
-        owners !== undefined &&
-        ownedBy(owners, scope.selected, applicationInputs, scopePath, scope.view.test_files).length === 0
-    )
-        return [];
+    const matches =
+        owners === undefined
+            ? applicationInputs
+            : ownedBy(owners, scope.selected, applicationInputs, scopePath, scope.view.test_files);
+    if (narrowed(context, entry, withoutIgnored(matches, check, scope).files).length === 0) return [];
     return check.runs === 'scope' ? candidates : candidates.filter((file) => file.kind !== 'binary');
 }
 
-// The files a per-file check runs over: its own files, its manifest's, or the paths a policy check IDs.
-function listOwned(context: PlanInputs, entry: PlanEntry, scopePath: string): TrackedFile[] {
+// Per-file checks select their owners. Project checks keep all inputs after a declared trigger matches.
+function ownedFor(context: PlanInputs, entry: PlanEntry, scopePath: string): TrackedFile[] {
     const { session, scope } = context;
     const { check, manifest } = entry;
+    if (check.runs !== 'files') return projectOwned(context, entry, scopePath);
     if (!manifest) return session.repository.files.filter((file) => pathMatcher(check.files?.paths ?? [])(file.path));
-    const owners = check.files ?? manifest.files;
-    return ownedBy(owners, scope.selected, session.repository.files, scopePath, scope.view.test_files);
-}
-
-// The files the check owns in the scope.
-function ownedFor(context: PlanInputs, entry: PlanEntry, scopePath: string): TrackedFile[] {
-    if (entry.check.runs !== 'files') return projectOwned(context, entry, scopePath);
-    return listOwned(context, entry, scopePath);
+    return ownedBy(
+        check.files ?? manifest.files,
+        scope.selected,
+        session.repository.files,
+        scopePath,
+        scope.view.test_files,
+    );
 }
 
 // Check-specific policy ignores apply to live files and deleted project triggers alike.
@@ -166,9 +166,5 @@ export function filesFor(
     if (check.runs === 'files' && triggerPaths.length === 0)
         return { ...withoutIgnored(narrowed(context, entry, files), check, scope), triggerPaths };
     const selected = withoutIgnored(files, check, scope);
-    return {
-        ...selected,
-        files: triggerPaths.length === 0 ? narrowed(context, entry, selected.files) : selected.files,
-        triggerPaths,
-    };
+    return { ...selected, triggerPaths };
 }
