@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2800" height="1910" viewBox="0 0 2800 1910">
+<title>Source ownership target</title>
+<desc>The source-layout target reconciled with the strict public API owner decision. CLI runtime layers run from platform through commands and the main entry point. Each package retains static config and type owners. Parser format schemas, policy table schemas and the ownership log schema have separate homes. Shipped assets live in packages/cli/configurations. Runtime paths and plugin declarations are checked against committed 214e4bb2; this diagram makes no file-count or complete-migration claim.</desc>
+<rect width="2800" height="1910" fill="#ffffff"/>
+<style>text{font-family:"Helvetica Neue",Arial,sans-serif;fill:#202a34}.title{font-size:54px;font-weight:700}.subtitle{font-size:28px;fill:#506071}.heading{font-size:32px;font-weight:700}.label{font-size:25px;font-weight:600}.mono{font-family:Menlo,monospace;font-size:23px}.note{font-size:24px;fill:#506071}.small{font-size:21px;fill:#506071}</style>
+<text x="55" y="87" class="title">The source ownership target</text>
+<text x="55" y="138" class="subtitle">Source-layout review · strict public API owner decision · committed paths at 214e4bb2</text>
+<text x="55" y="183" class="subtitle">config/ and types/ stay. Shipped assets use configurations/. Historical private paths yield to substantive public owners.</text>
+<rect x="55" y="230" width="885" height="1395" rx="16" fill="#f7f9fc" stroke="#d6dfe8" stroke-width="2"/>
+<text x="83" y="285" class="heading">CLI runtime layers · bottom to top</text>
+<text x="88" y="343" class="label">platform/</text>
+<text x="88" y="375" class="note">root/ and git/ own native boundaries</text>
+<text x="88" y="421" class="label">parsers/</text>
+<text x="88" y="453" class="note">source/, packages/, output/, SQL and TOML</text>
+<text x="88" y="499" class="label">configurations/</text>
+<text x="88" y="531" class="note">public.ts + contracts.ts; errors/</text>
+<text x="88" y="577" class="label">repository/</text>
+<text x="88" y="609" class="note">paths/, discovery/, selection/, revisions/</text>
+<text x="88" y="655" class="label">policy/</text>
+<text x="88" y="687" class="note">document/, errors/, settings/, schema/</text>
+<text x="88" y="733" class="label">agent-rules/</text>
+<text x="88" y="765" class="note">public.ts + contracts.ts</text>
+<text x="88" y="811" class="label">planning/</text>
+<text x="88" y="843" class="note">public.ts + contracts.ts; files.ts</text>
+<text x="88" y="889" class="label">generation/</text>
+<text x="88" y="921" class="note">compilation/, documents/, eslint/</text>
+<text x="88" y="967" class="label">tools/</text>
+<text x="88" y="999" class="note">npm/ and python/ share real tool contracts</text>
+<text x="88" y="1045" class="label">lifecycle/</text>
+<text x="88" y="1077" class="note">install/, merge/, selection/, ownership/</text>
+<text x="88" y="1123" class="label">execution/</text>
+<text x="88" y="1155" class="note">command/, command/arguments/, copy/</text>
+<text x="88" y="1201" class="label">checks/</text>
+<text x="88" y="1233" class="note">public registry and behavioral owners</text>
+<text x="88" y="1279" class="label">terminal/</text>
+<text x="88" y="1311" class="note">public.ts + contracts.ts</text>
+<text x="88" y="1357" class="label">commands/</text>
+<text x="88" y="1389" class="note">init/, doctor/, explain/; public/contracts</text>
+<text x="88" y="1435" class="label">public.ts + main.ts</text>
+<text x="88" y="1467" class="note">Program implementation and process entry</text>
+<text x="88" y="1555" class="small">Order is the target direction, not a new import audit.</text>
+<rect x="970" y="230" width="840" height="1395" rx="16" fill="#f7f9fc" stroke="#d6dfe8" stroke-width="2"/>
+<text x="998" y="285" class="heading">CLI behavioral folders and schemas</text>
+<text x="997" y="343" class="label">checks/</text>
+<text x="997" y="374" class="mono">database/postgres/</text>
+<text x="997" y="417" class="mono">framework/; platform/; tool/</text>
+<text x="997" y="460" class="mono">general/dependencies/; naming/; site/</text>
+<text x="997" y="503" class="mono">general/structure/</text>
+<text x="997" y="546" class="mono">language/bash/; python/; swift/</text>
+<text x="997" y="589" class="mono">library/; tool/xcode/</text>
+<text x="997" y="632" class="label">parsers/</text>
+<text x="997" y="663" class="mono">bash/; swift/; naming/; tool/</text>
+<text x="997" y="706" class="mono">packages/; source/; toml/; sql/</text>
+<text x="997" y="749" class="mono">output/; output/structured/</text>
+<text x="997" y="792" class="mono">schema/; schema/python/</text>
+<text x="997" y="835" class="label">policy/</text>
+<text x="997" y="866" class="mono">document/; errors/; settings/</text>
+<text x="997" y="909" class="mono">schema/; schema/native/</text>
+<text x="997" y="952" class="label">lifecycle/ownership/</text>
+<text x="997" y="983" class="mono">public.ts + contracts.ts</text>
+<text x="997" y="1026" class="mono">state/public.ts + contracts.ts</text>
+<text x="997" y="1069" class="label">Runtime boundary</text>
+<text x="997" y="1100" class="mono">public.ts holds substantive implementations</text>
+<text x="997" y="1143" class="label">Related implementation</text>
+<text x="997" y="1174" class="mono">contracts.ts; no forwarding barrels</text>
+<text x="997" y="1217" class="label">File-format schemas</text>
+<text x="997" y="1248" class="mono">parsers/ and parsers/schema/</text>
+<text x="997" y="1291" class="label">Policy table schemas</text>
+<text x="997" y="1322" class="mono">policy/schema/ (including agent_rules)</text>
+<text x="997" y="1365" class="label">Ownership log schema</text>
+<text x="997" y="1396" class="mono">lifecycle/ownership/state/contracts.ts</text>
+<text x="997" y="1560" class="small">config/ and types/ mirror these behavioral owners.</text>
+<rect x="1840" y="230" width="905" height="1395" rx="16" fill="#f7f9fc" stroke="#d6dfe8" stroke-width="2"/>
+<text x="1868" y="285" class="heading">Package and asset ownership</text>
+<text x="1867" y="343" class="label">packages/cli/src/config/</text>
+<text x="1867" y="376" class="mono">Static declarations grouped by behavior</text>
+<text x="1867" y="425" class="label">packages/cli/src/types/</text>
+<text x="1867" y="458" class="mono">Types grouped by their actual owners</text>
+<text x="1867" y="507" class="label">packages/cli/configurations/</text>
+<text x="1867" y="540" class="mono">Shipped assets, not source parsers</text>
+<text x="1867" y="589" class="label">Asset categories</text>
+<text x="1867" y="622" class="mono">database/ · framework/ · general/ · infra/</text>
+<text x="1867" y="671" class="mono">language/ · library/ · platform/ · test/</text>
+<text x="1867" y="720" class="label">packages/eslint-plugin/src/</text>
+<text x="1867" y="753" class="mono">public.ts · create-rule.ts · comments.ts</text>
+<text x="1867" y="802" class="mono">environment.ts · imports.ts · layout.ts</text>
+<text x="1867" y="851" class="mono">syntax.ts · rules/public.ts</text>
+<text x="1867" y="900" class="label">Plugin config/</text>
+<text x="1867" y="933" class="mono">Native rule constants and static declarations</text>
+<text x="1867" y="982" class="label">Plugin types/</text>
+<text x="1867" y="1015" class="mono">Native rule contracts and inferred types</text>
+<text x="1867" y="1064" class="label">Parser and writer ownership</text>
+<text x="1867" y="1097" class="mono">Preserve native parsing and serialization</text>
+<text x="1867" y="1146" class="label">Commands</text>
+<text x="1867" y="1179" class="mono">Keep every CLI command</text>
+<text x="1867" y="1228" class="label">Static ownership</text>
+<text x="1867" y="1261" class="mono">Flatten one-file mirrors into their parent</text>
+<text x="1867" y="1310" class="label">Public ownership</text>
+<text x="1867" y="1343" class="mono">No aliases, re-exports or compatibility paths</text>
+<text x="1867" y="1557" class="small">Folder names follow the final glossary and decisions.</text>
+<line x1="55" y1="1680" x2="2745" y2="1680" stroke="#d6dfe8" stroke-width="2"/>
+<text x="55" y="1732" class="note">Decision: config/ and types/ remain in every package; each concern retains one owner.</text>
+<text x="55" y="1778" class="note">Source: findings/review/source-layout.md, “Proposed target tree”; findings/progress.json, strict-repository-public-api-owners.</text>
+<text x="55" y="1824" class="note">The full historical tree and rationale remain in the source-layout review. This view applies the higher-priority public API paths.</text>
+<text x="55" y="1870" class="small">Reproduce: rsvg-convert --output findings/images/source.png findings/images/source.svg</text>
+</svg>

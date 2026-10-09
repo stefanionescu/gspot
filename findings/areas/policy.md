@@ -31,6 +31,11 @@ packages/cli/src/
 └── rules/                  3 files
     └── assemble.ts  instructions.ts  sections.ts
 
+```
+
+Superseded on October 4, 2026: `config/` and `types/` stay, and the folder is `configurations/`, not `kits/`.
+
+```text
 After
 packages/cli/src/
 ├── (config/ deleted)       each constant moves, unexported, into the one module that reads it.

@@ -80,6 +80,11 @@ packages/cli/src/
 ├── config/checks/                       37 files, 1,030 lines: the same tree again, constants only
 └── types/checks/                        25 files, 402 lines: the same tree a third time, types only
 
+```
+
+Superseded on October 4, 2026: `config/` and `types/` stay, and the folder is `configurations/`, not `kits/`.
+
+```text
 After
 packages/cli/src/
 ├── checks/
@@ -94,6 +99,11 @@ packages/cli/src/
 │   └── shell.ts                         bash/scripts.ts + code lines taken from the tree-sitter tree (code-lines.ts deleted)
 └── repository/scopes.ts, platform/paths.ts   + inScope()/fromScope(); + directoryOf/stemOf/prefixOf/directoryTree
 
+```
+
+Superseded on October 4, 2026: `config/` and `types/` stay, and the folder is `configurations/`, not `kits/`.
+
+```text
 Deleted (a tool, a manifest command, or another check already does the job)
   config/checks/**, types/checks/**                  -> into the files that use them
   checks/general/structure/context.ts                -> bash checks take EngineInput like every other check
