@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { gitOutput } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { unlink, symlink } from 'node:fs/promises';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { prepare } from '#cli/commands/init/public.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
@@ -39,6 +39,7 @@ test.each(MANUAL_SELECTIONS)(
         await createFileTree(sandbox.path, {
             'package.json': '{"name":"example","private":true,"type":"module"}\n',
             'source.js': 'export const port = 8080;\n',
+            'site.webmanifest': '{}',
             'app/package.json': '{"name":"app","private":true,"type":"module"}\n',
             'app/source.js': 'export const port = 3000;\n',
         });
@@ -59,6 +60,7 @@ test.each(MANUAL_SELECTIONS)(
             const changed = await runGspot(sandbox.path, ['set', 'level', level]);
             expect(changed.code, changed.stdout + changed.stderr).toBe(0);
             const session = await openSession(sandbox.path);
+            expect(session.scopes[0]!.selected.some(({ configuration }) => configuration.name === 'site')).toBe(false);
             const checks = planRun(session, {
                 stage: 'all',
                 skips: [],

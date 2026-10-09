@@ -6,7 +6,7 @@ description: Run your test suite with a coverage floor, and check Swift tests.
 gspot runs your test suite as a check at the push stage and fails it when coverage falls below
 the floor you set. Keep the test runner and its dependencies in your own project.
 
-The default floors for Jest, Vitest, and pytest are 0% at `recommended` and 80% at `all`. Swift coverage stays off until you name a target in `tools.swift-tests.coverage`. A floor you set applies at both
+The default floors for Jest, Vitest, and pytest are 0% at `recommended` and 80% at `all`. Swift uses `coverage.lines` and named `coverage.overrides`. A floor you set applies at both
 levels. For a test runner without a configuration, write a [command check](/guides/command-checks/).
 
 ## Coverage with `jest`
@@ -69,11 +69,11 @@ and the library's `__Snapshots__/{file}/{test}.*` references beside each test so
 [SnapshotTesting configuration](/reference/configurations/swift-snapshot-testing/) owns these checks.
 [swift-tests](/reference/configurations/swift-tests/) owns test reasons, sleeps, and coverage.
 
-To enable Swift coverage for a configured Xcode project and scheme:
+To set a line coverage floor for a Swift target:
 
 ```shell
-gspot set tools.swift-tests.coverage '{"target":"Orders","percent":80}'
+gspot set coverage.overrides '{"target":"Orders","percent":80}'
 gspot check --only swift-tests/coverage
 ```
 
-Replace `Orders` with the target named in your Xcode coverage report. The check requires macOS and selected `xcode` configuration with `swift.xcode_project` and `swift.xcode_scheme`.
+Replace `Orders` with the target named in the coverage report. Swift packages run on macOS and Linux. Xcode coverage requires macOS and a selected `xcode` configuration with `swift.xcode_project` and `swift.xcode_scheme`.
