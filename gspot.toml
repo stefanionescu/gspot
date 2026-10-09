@@ -3,7 +3,7 @@
 # Run gspot apply after changing policy. Use gspot explain <name> to inspect a setting.
 
 level = "all"
-configurations = ["spelling", "typescript", "prose", "commits", "github-actions", "naming", "docs", "secrets", "dependencies", "licenses", "duplication", "security", "engineering", "files", "markdown", "format", "gspot", "structure", "javascript", "repository"]
+configurations = ["spelling", "typescript", "prose", "commits", "github-actions", "naming", "docs", "secrets", "dependencies", "licenses", "duplication", "security", "engineering", "files", "markdown", "format", "gspot", "structure", "javascript", "repository", "python"]
 runner = "mise"
 
 [scope.docs]
@@ -19,7 +19,8 @@ configurations = ["javascript", "zod"]
 configurations = ["javascript"]
 
 [scope.tests]
-configurations = ["astro", "javascript", "jest", "nestjs", "nextjs", "react", "svelte", "vitest", "react-dom", "python", "vue"]
+configurations = ["javascript", "python"]
+removed_configurations = ["astro", "jest", "nestjs", "nextjs", "react", "react-dom", "svelte", "vitest", "vue"]
 
 [hooks]
 enabled = true
@@ -480,16 +481,6 @@ reason = "A published library keeps ranges for runtime dependencies and peers."
 rule = "package-json/restrict-dependency-ranges"
 
 [[ignore]]
-check = "jest/coverage"
-paths = ["tests/**"]
-reason = "The suite uses bun:test. Jest is installed only to exercise the supported Jest adapter and plugin in test repositories."
-
-[[ignore]]
-check = "nextjs/tsc"
-paths = ["tests/**"]
-reason = "The test workspace installs Next.js for test application tests; its own sources contain no Next.js app or pages. The TypeScript check owns these sources."
-
-[[ignore]]
 check = "prose/vale"
 paths = ["FINDINGS.md", "findings/**"]
 reason = "The findings ledger preserves original quotations and stable record text. Its technical audit terms and historical wording must remain verbatim."
@@ -642,8 +633,3 @@ reason = "The root compiler includes tests/**/*.ts. Running a second compiler fo
 check = "typescript/tsconfig"
 paths = ["tests/**"]
 reason = "The root tsconfig.json owns every test source and its required compiler options. The root check verifies that configuration."
-
-[[ignore]]
-check = "vitest/coverage"
-paths = ["tests/**"]
-reason = "The suite uses bun:test. Vitest is installed only to exercise its adapter and plugin in test repositories."

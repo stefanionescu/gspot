@@ -47,16 +47,16 @@ Languages:
 - `.gspot/rules/language/javascript/NODE.md`
 - `.gspot/rules/language/typescript/NAMING.md`
 - `.gspot/rules/language/typescript/TYPESCRIPT.md`
-- `.gspot/rules/language/css/CSS.md`
-- `.gspot/rules/language/css/NAMING.md`
-- `.gspot/rules/language/html/HTML.md`
-- `.gspot/rules/language/html/NAMING.md`
 - `.gspot/rules/language/python/DESIGN.md`
 - `.gspot/rules/language/python/FLOW.md`
 - `.gspot/rules/language/python/NAMING.md`
 - `.gspot/rules/language/python/PACKAGING.md`
 - `.gspot/rules/language/python/PYTHON.md`
 - `.gspot/rules/language/python/TYPING.md`
+- `.gspot/rules/language/css/CSS.md`
+- `.gspot/rules/language/css/NAMING.md`
+- `.gspot/rules/language/html/HTML.md`
+- `.gspot/rules/language/html/NAMING.md`
 
 Infrastructure:
 
@@ -66,11 +66,6 @@ Frameworks:
 
 - `.gspot/rules/framework/astro/ASTRO.md`
 - `.gspot/rules/framework/site/SITE.md`
-- `.gspot/rules/framework/nestjs/NESTJS.md`
-- `.gspot/rules/framework/react/REACT.md`
-- `.gspot/rules/framework/nextjs/NEXTJS.md`
-- `.gspot/rules/framework/svelte/SVELTE.md`
-- `.gspot/rules/framework/vue/VUE.md`
 
 Libraries:
 
@@ -79,10 +74,6 @@ Libraries:
 Platforms:
 
 - `.gspot/rules/platform/cloudflare/WORKERS.md`
-
-Test runners:
-
-- `.gspot/rules/test/vitest/VITEST.md`
 
 Run `gspot check --staged` before committing. Change policy with `gspot set` or `gspot ignore`. After a hand edit of `gspot.toml`, run `gspot apply`. Never edit files under `.gspot/`.
 

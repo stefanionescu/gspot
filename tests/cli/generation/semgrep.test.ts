@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { IGNORE_CASES, SWIFT_IGNORE_FOLDERS } from '#tests/config/cli/generation/semgrep.ts';
 
 test('manual language choices include security output without selecting security separately', async () => {
     await using sandbox = await testdir();
@@ -98,3 +99,20 @@ test.each(['recommended', 'all'] as const)(
         }
     },
 );
+
+for (const level of ['recommended', 'all'] as const) {
+    test.each(IGNORE_CASES)(`${level} $name`, async ({ configurations, tables, sources, paths, swift, patterns }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            ...sources,
+            'gspot.toml': buildPolicy(configurations, { level, tables }),
+        });
+        const output = emitAll(await openSession(sandbox.path));
+        const ignores = output.files.filter(({ path }) => path.endsWith('.semgrepignore'));
+        expect(ignores.map(({ path }) => path)).toStrictEqual(paths);
+        const root = ignores.find(({ path }) => path === '.semgrepignore')!;
+        for (const folder of SWIFT_IGNORE_FOLDERS) expect(root.content.includes(folder)).toBe(swift);
+        for (const pattern of patterns)
+            expect(ignores.find(({ path }) => path === pattern.path)?.content).toContain(pattern.text);
+    });
+}

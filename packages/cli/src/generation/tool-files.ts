@@ -82,6 +82,11 @@ function emitToolFile(
     };
     if (paths !== undefined && !capture.recorded)
         throw new Error(`The Eta source for ${target} did not provide its declared rule data.`);
+    if (
+        target.endsWith('/.semgrepignore') &&
+        generated.files.some((entry) => entry.path === '.semgrepignore' && entry.content === file.content)
+    )
+        return;
     generated.files.push(
         file,
         ...pointerFiles({ ...context, inputs }, toolFile, target).filter(

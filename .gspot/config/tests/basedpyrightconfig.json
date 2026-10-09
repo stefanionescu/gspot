@@ -21,7 +21,6 @@
         "../../../docs/worker-configuration.d.ts",
         "../../../packages/cli/prettier.config.mjs",
         "../../../packages/eslint-plugin/prettier.config.mjs",
-        "../../../tests/prettier.config.mjs",
-        "../../../tests/next-env.d.ts"
+        "../../../tests/prettier.config.mjs"
     ]
 }

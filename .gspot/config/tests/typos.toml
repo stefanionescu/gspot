@@ -334,7 +334,7 @@ WSL = "WSL"
 XML = "XML"
 
 [files]
-extend-exclude = [ "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/config/vale/", "packages/cli/configurations/general/prose/styles/gspot/no-gerunds-in-titles.tengo.eta", "packages/cli/configurations/general/prose/styles/gspot/slash-alternatives.yml.eta", "packages/cli/configurations/general/prose/styles/gspot/us-english.yml.eta", "tests/config/samples/spelling.ts", "tests/config/cli/parsers/output/formats.ts", "tests/config/cli/generation/eslint/runtimes.ts", "tests/config/samples/spelling.ts", "prettier.config.mjs", "docs/prettier.config.mjs", "docs/worker-configuration.d.ts", "packages/cli/prettier.config.mjs", "packages/eslint-plugin/prettier.config.mjs", "tests/prettier.config.mjs", "tests/next-env.d.ts" ]
+extend-exclude = [ "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/config/vale/", "packages/cli/configurations/general/prose/styles/gspot/no-gerunds-in-titles.tengo.eta", "packages/cli/configurations/general/prose/styles/gspot/slash-alternatives.yml.eta", "packages/cli/configurations/general/prose/styles/gspot/us-english.yml.eta", "tests/config/samples/spelling.ts", "tests/config/cli/parsers/output/formats.ts", "tests/config/cli/generation/eslint/runtimes.ts", "tests/config/samples/spelling.ts", "prettier.config.mjs", "docs/prettier.config.mjs", "docs/worker-configuration.d.ts", "packages/cli/prettier.config.mjs", "packages/eslint-plugin/prettier.config.mjs", "tests/prettier.config.mjs" ]
 
 [type.gspot-policy]
 extend-glob = [ "gspot.toml" ]

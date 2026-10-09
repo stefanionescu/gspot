@@ -1,10 +1,6 @@
-@darraghor/eslint-plugin-nestjs-typed
 @eslint-community/eslint-plugin-eslint-comments
 @eslint/js
 @gspothq/eslint-plugin
-@next/eslint-plugin-next
-@vitest/coverage-v8
-@vitest/eslint-plugin
 ABC
 ACME
 actionlint
@@ -72,22 +68,15 @@ eslint-plugin-astro
 eslint-plugin-barrel-files
 eslint-plugin-boundaries
 eslint-plugin-import-x
-eslint-plugin-jest
 eslint-plugin-jsdoc
 eslint-plugin-jsx-a11y
 eslint-plugin-n
 eslint-plugin-package-json
 eslint-plugin-perfectionist
-eslint-plugin-react
-eslint-plugin-react-hooks
-eslint-plugin-react-refresh
 eslint-plugin-regexp
 eslint-plugin-security
 eslint-plugin-sonarjs
-eslint-plugin-svelte
 eslint-plugin-unicorn
-eslint-plugin-vue
-eslint-plugin-vuejs-accessibility
 eslint-plugin-zod
 ESM
 Facter
@@ -121,7 +110,6 @@ INT
 ISC
 ISO
 JavaScript
-jest
 JIT
 JPEG
 jscpd
@@ -155,9 +143,7 @@ MVC
 MVP
 MVVM
 NAME
-next
 next-intl
-Next.js
 node
 Node
 NOTE
@@ -189,7 +175,6 @@ postcss-html
 prettier
 Prettier
 prettier-plugin-astro
-prettier-plugin-svelte
 purgecss
 PUT
 PWA
@@ -198,7 +183,6 @@ pydoclint
 PYPI
 Python
 RAM
-React
 README
 RETURN
 RFC
@@ -233,8 +217,6 @@ stylelint
 stylelint-config-recommended
 stylelint-config-standard
 SUID
-svelte-check
-svelte-eslint-parser
 SVG
 svgo
 SWC
@@ -270,10 +252,6 @@ Vale
 validate-pyproject
 VIP
 VIPER
-vitest
-Vitest
-vue-eslint-parser
-vue-tsc
 WASM
 WCAG
 Windows
