@@ -1,6 +1,7 @@
 import { test, spyOn, expect } from 'bun:test';
 import * as assets from '#cli/platform/root/public.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
+import { CONFIGURATION_TABLE } from '#tests/config/samples/configurations.ts';
 import { parseManifest, configurationManifests } from '#cli/configurations/public.ts';
 
 import {
@@ -196,3 +197,19 @@ test('configuration product names validate once as native manifest words', () =>
         parseManifest(source.replace('["SwiftLint", "Swift"]', '"Swift"'), 'configurations/language/example'),
     ).toThrow('products');
 });
+
+// One path per refusal: outside .gspot, a parent segment, a current segment, and a character no name holds.
+test.each(['source/', '.gspot/../source/', '.gspot/./downloads/', '.gspot/downloads/\nsource/'])(
+    'a manifest cannot hide authored paths through %s',
+    (path) => {
+        expect(() =>
+            parseManifest(
+                `ignored = [${JSON.stringify(path)}]\n` + CONFIGURATION_TABLE,
+                'configurations/general/local',
+            ),
+        ).toThrow();
+        expect(() =>
+            parseManifest('ignored = [".gspot/downloads/"]\n' + CONFIGURATION_TABLE, 'configurations/general/local'),
+        ).not.toThrow();
+    },
+);

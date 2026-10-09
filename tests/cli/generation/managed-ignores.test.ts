@@ -10,7 +10,7 @@ import { applyBlock } from '#cli/platform/root/contracts.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { emitAll, gitignoreBlock } from '#cli/generation/public.ts';
-import { CONFIGURATION_TABLE } from '#tests/config/cli/generation/managed-ignores.ts';
+import { CONFIGURATION_TABLE } from '#tests/config/samples/configurations.ts';
 import { parseManifest, linkManifestTools, configurationManifests } from '#cli/configurations/public.ts';
 
 test.each([true, false])(
@@ -87,19 +87,3 @@ test('manifest-owned tool directories are ignored while generated rules and auth
     expect(checked.code, checked.stderr).toBe(0);
     expect(checked.stdout.split('\0').filter(Boolean)).toStrictEqual(ignored);
 });
-
-// One path per refusal: outside .gspot, a parent segment, a current segment, and a character no name holds.
-test.each(['source/', '.gspot/../source/', '.gspot/./downloads/', '.gspot/downloads/\nsource/'])(
-    'a manifest cannot hide authored paths through %s',
-    (path) => {
-        expect(() =>
-            parseManifest(
-                `ignored = [${JSON.stringify(path)}]\n` + CONFIGURATION_TABLE,
-                'configurations/general/local',
-            ),
-        ).toThrow();
-        expect(() =>
-            parseManifest('ignored = [".gspot/downloads/"]\n' + CONFIGURATION_TABLE, 'configurations/general/local'),
-        ).not.toThrow();
-    },
-);
