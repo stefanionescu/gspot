@@ -11,8 +11,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { environmentBin } from '#cli/platform/contracts.ts';
 import { applicableManifests } from '#cli/planning/public.ts';
 import { doctorCommand } from '#cli/commands/doctor/public.ts';
-import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
@@ -150,7 +150,6 @@ test.each(['ok', 'newer', 'outdated'] as const)(
             ),
         );
         using resources = new DisposableStack();
-        resources.use(spyOn(process, 'cwd').mockReturnValue(sandbox.path));
         resources.use(mockPinnedExecutables(tools));
         const result = await doctorCommand(sandbox.path);
         const report = result.json as DoctorReport;

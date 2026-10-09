@@ -12,6 +12,3 @@ export type PackageArchiveMarker = { pid: number; work: string };
 
 /** A stalled Git boundary and the copy path it started. */
 export type CopyMarker = { pid: number; checkout?: string };
-
-/** A directory copy started by a copy installation. */
-export type DirectoryCopyMarker = { destination: string };

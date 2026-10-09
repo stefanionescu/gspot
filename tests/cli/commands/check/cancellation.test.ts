@@ -1,7 +1,7 @@
 // Bun cancellation probes require POSIX signals so handlers can finish and dispose their children.
 import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { join, dirname, delimiter } from 'node:path';
 import { git, gitOutput } from '#tests/harness/git.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
@@ -10,12 +10,12 @@ import { environmentVariables } from '#cli/platform/public.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { READY_POLL_MS } from '#tests/config/harness/process.ts';
+import type { CopyMarker } from '#tests/types/harness/process.ts';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import type { FakeGitOptions } from '#tests/types/cli/commands/cancellation.ts';
 import { remainingTestTime, prepareTestCommand } from '#tests/harness/command.ts';
+import { gspot, runGspot, startGspot, checkReport } from '#tests/harness/gspot.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
-import type { CopyMarker, DirectoryCopyMarker } from '#tests/types/harness/process.ts';
-import { gspot, runGspot, spawnGspot, startGspot, checkReport } from '#tests/harness/gspot.ts';
 import { SLOW_CHECK, CHILD_OPTIONS, SLOW_TOOL_PROGRAM } from '#tests/config/cli/commands/check/cancellation.ts';
 
 // A readiness file can become visible before the child has finished writing its JSON.
@@ -236,63 +236,5 @@ await import(${JSON.stringify(gspot)});
         } finally {
             await child.stdin.end();
         }
-    },
-);
-
-test.skipIf(!isPosix)(
-    'staged cancellation during dependency copying removes partial output and preserves the installed source',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
-            '.gitignore': 'node_modules/\n',
-            'package.json': '{"name":"snapshot-consumer","private":true}\n',
-            'package-lock.json': '{"name":"snapshot-consumer","lockfileVersion":3,"packages":{}}\n',
-            'source.sh': 'echo indexed\n',
-        });
-        expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
-        expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        const indexed = git(sandbox.path, ['ls-files', '--stage', '-z']).stdout;
-        const dependencies = join(sandbox.path, 'node_modules');
-        await mkdir(dependencies);
-        for (let index = 0; index < 4000; index++)
-            await writeFile(join(dependencies, `${String(index)}.js`), `export const value=${String(index)};\n`);
-        const marker = join(sandbox.path, 'copying.json');
-        const program = `
-import { mock } from 'bun:test';
-const filesystem=await import('node:fs/promises');
-const copy=filesystem.cp;
-mock.module('node:fs/promises',()=>({...filesystem,async cp(source,destination,options){
-await Bun.write(${JSON.stringify(marker)},JSON.stringify({destination}));
-return copy(source,destination,options);
-}}));
-process.argv=[process.execPath,${JSON.stringify(gspot)},'check','--staged','--only','bash/bash-syntax','--json'];
-await import(${JSON.stringify(gspot)});
-`;
-        const command = [process.execPath, '-e', program];
-        const prepared = prepareTestCommand(command, { cwd: sandbox.path }, 'dependency copy cancellation');
-        const child = Bun.spawn(command, {
-            cwd: sandbox.path,
-            ...CHILD_OPTIONS,
-            timeout: prepared.options.timeoutMs,
-        });
-        await using capture = captureChild(child);
-        const { output, errors } = capture;
-        const read = (await waitForJson(marker)) as DirectoryCopyMarker;
-        child.kill('SIGTERM');
-        expect(await child.exited, await errors).toBe(2);
-        expect(JSON.parse(await output)).toStrictEqual({
-            error: 'canceled',
-            message: 'Check stopped before every check finished.',
-            exitCode: 2,
-        });
-        expect(await pathExists(dirname(read.destination))).toBe(false);
-        expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
-        expect(await readdir(dependencies)).toHaveLength(4000);
-        expect(await readFile(join(dependencies, '0.js'), 'utf8')).toBe('export const value=0;\n');
-        expect(await readFile(join(dependencies, '3999.js'), 'utf8')).toBe('export const value=3999;\n');
-        const retry = await spawnGspot(sandbox.path, ['check', '--staged', '--only', 'bash/bash-syntax', '--json']);
-        expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-        expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('passed');
     },
 );

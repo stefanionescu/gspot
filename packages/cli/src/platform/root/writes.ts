@@ -89,25 +89,31 @@ function tryClaim(target: string, token: string): boolean {
     }
 }
 
-// The process id a claim file records, refusing a claim that records none.
-function claimHolder(current: FileCopy | undefined, path: string): number {
-    const pid = Number(current?.bytes.toString('utf8').split(':', 1)[0]);
-    if (!Number.isSafeInteger(pid) || pid <= 0)
-        throw new Error(`Incomplete lifecycle claim: ${path}. Remove it after checking that no writer is running.`);
-    return pid;
+// Reads a stable claim identity; a concurrent initialization leaves it for the next bounded poll.
+function readClaim(bounds: Bounds, path: string): FileCopy | undefined {
+    try {
+        return readEntry(bounds, path, false);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EAGAIN') throw error;
+        return undefined;
+    }
 }
 
-// Whether a process is still running. A process of another user refuses the signal, and runs too.
-function isAlive(pid: number): boolean {
+// Refuses an incomplete claim or one whose process still runs; only an abandoned claim can be retired.
+function assertAbandonedClaim(current: FileCopy, path: string): void {
+    const pid = Number(current.bytes.toString('utf8').split(':', 1)[0]);
+    if (!Number.isSafeInteger(pid) || pid <= 0)
+        throw new Error(`Incomplete lifecycle claim: ${path}. Remove it after checking that no writer is running.`);
     try {
         process.kill(pid, 0);
-        return true;
     } catch (error) {
         const { code } = error as NodeJS.ErrnoException;
-        if (code === 'EPERM') return true;
-        if (code !== 'ESRCH') throw error;
-        return false;
+        if (code === 'ESRCH') return;
+        if (code !== 'EPERM') throw error;
     }
+    throw new Error(
+        `Another lifecycle writer, process ${String(pid)}, holds ${path}. Retry after it finishes, or delete ${path} when no gspot command is running.`,
+    );
 }
 
 // An empty exclusive file can be a writer between creation and its first write; wait only within its initialization budget.
@@ -130,8 +136,11 @@ function retireStaleClaim(bounds: Bounds, path: string, target: string): void {
         );
     }
     try {
-        const stale = readEntry(bounds, path, false);
-        if (stale !== undefined && stale.bytes.length > 0 && !isAlive(claimHolder(stale, path))) unlinkSync(target);
+        const stale = readClaim(bounds, path);
+        if (stale !== undefined && stale.bytes.length > 0) {
+            assertAbandonedClaim(stale, path);
+            unlinkSync(target);
+        }
     } finally {
         rmdirSync(reclaim);
     }
@@ -194,17 +203,12 @@ export function claimPath(bounds: Bounds, path: string): void {
     const deadline = Date.now() + CLAIM_INITIALIZATION_MS;
     const pause = new Int32Array(new SharedArrayBuffer(CLAIM_WAIT_BYTES));
     while (!tryClaim(target, token)) {
-        const current = readEntry(bounds, path, false);
-        if (current === undefined) continue;
-        if (current.bytes.length === 0) {
+        const current = readClaim(bounds, path);
+        if (current === undefined || current.bytes.length === 0) {
             pauseUntilClaimed(path, deadline, pause);
             continue;
         }
-        const pid = claimHolder(current, path);
-        if (isAlive(pid))
-            throw new Error(
-                `Another lifecycle writer, process ${String(pid)}, holds ${path}. Retry after it finishes, or delete ${path} when no gspot command is running.`,
-            );
+        assertAbandonedClaim(current, path);
         retireStaleClaim(bounds, path, target);
     }
     bounds.claims.set(path, token);

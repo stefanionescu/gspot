@@ -123,6 +123,30 @@ await Bun.stdin.text();`;
     expect(await readFile(join(sandbox.path, 'source'), 'utf8')).toBe('authored');
 });
 
+test('a claim published during its snapshot read is checked again without replacing its live owner', async () => {
+    await using sandbox = await testdir({ '.gspot/mutation.lock': '', source: 'authored' });
+    const target = join(sandbox.path, '.gspot/mutation.lock');
+    const holder = `${String(process.pid)}:initialized`;
+    const read = fs.readFileSync;
+    using boundaries = new DisposableStack();
+    boundaries.use(
+        spyOn(fs, 'readFileSync').mockImplementationOnce(((path, options) => {
+            const bytes = read(path, options);
+            // eslint-disable-next-line n/no-sync -- reason: Publish the native claim between its synchronous snapshot read and metadata check to verify the existing initialization wait.
+            fs.writeFileSync(target, holder);
+            return bytes;
+        }) as typeof fs.readFileSync),
+    );
+    {
+        using files = openRoot(sandbox.path);
+        expect(() => {
+            files.claim('.gspot/mutation.lock');
+        }).toThrow('Another lifecycle writer');
+    }
+    expect(await readFile(target, 'utf8')).toBe(holder);
+    expect(await readFile(join(sandbox.path, 'source'), 'utf8')).toBe('authored');
+});
+
 test('a recovery lease refuses a competing reclaimer until recovery finishes', async () => {
     await using sandbox = await testdir();
     const child = runTestCommandBlocking([process.execPath, '-e', 'console.log(process.pid)'], { cwd: sandbox.path });

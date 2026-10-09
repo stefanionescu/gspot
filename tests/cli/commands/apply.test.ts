@@ -48,9 +48,8 @@ test('apply preserves a policy replaced after session opening and publishes no g
         observer.mockRestore();
     }
     expect(replaced).toBe(true);
-    await using updatedPolicy = await open(policyPath, 'r');
-    expect(await updatedPolicy.readFile('utf8')).toBe(replacement);
-    const policyAttributes = await updatedPolicy.stat();
+    expect(await originalPolicy.readFile('utf8')).toBe(replacement);
+    const policyAttributes = await originalPolicy.stat();
     expect(policyAttributes.mode).toBe(originalPolicyAttributes.mode);
     expect(await pathExists(join(directory.path, '.gspot/version'))).toBe(false);
     expect(await pathExists(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(false);

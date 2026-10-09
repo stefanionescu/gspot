@@ -38,7 +38,7 @@ function fileRead(target: string, stat: Stats, path: string): FileCopy {
     const bytes = readFileSync(target);
     const after = lstatSync(target);
     if (stat.size !== bytes.length || stat.mtimeMs !== after.mtimeMs || stat.ctimeMs !== after.ctimeMs)
-        throw new Error(`Lifecycle destination changed while being read: ${path}`);
+        throw Object.assign(new Error(`Lifecycle destination changed while being read: ${path}`), { code: 'EAGAIN' });
     return { bytes, mode: fileMode({ mode: stat.mode & MODE_BITS }) };
 }
 
