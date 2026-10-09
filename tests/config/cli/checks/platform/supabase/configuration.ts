@@ -5,8 +5,6 @@ export const MIGRATION = `-- The avatars bucket and who reads it.
 CREATE POLICY avatars_read ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
 `;
 
-export const GREET = 'Deno.serve(() => new Response("hello"));\n';
-
 /** Policy statements that distinguish native bucket literals from unrelated source text. */
 export const STORAGE_POLICIES = [
     {

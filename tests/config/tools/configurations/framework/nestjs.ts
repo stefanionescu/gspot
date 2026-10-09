@@ -1,12 +1,9 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { InstalledScenario } from '#tests/types/harness/repository.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/samples/typescript.ts';
 
 /** Declared Swagger use selects its lint contracts without importing the SDK in this source. */
 export const SWAGGER_DEPENDENCY = '11.2.3';
-
-export const NESTJS_TSCONFIG =
-    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "noImplicitReturns": true,\n        "noPropertyAccessFromIndexSignature": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true,\n        "experimentalDecorators": true,\n        "emitDecoratorMetadata": true\n    },\n    "include": [\n        "src"\n    ]\n}' +
-    '\n';
 
 export const GREETER =
     "// The greetings the service knows.\nimport { Injectable } from '@nestjs/common';\n\n/** Builds greetings. */\n@Injectable()\nexport class GreetingService {\n    /**\n     * Greets one person.\n     * @param name the person\n     * @returns the greeting\n     */\n    greet(name: string): string {\n        if (name.trim() === '') {\n            throw new Error('A greeting requires a name.');\n        }\n        return `hello ${name.trim()}`;\n    }\n}\n";
@@ -19,8 +16,11 @@ export const NESTJS_MODULE =
 
 export const REPOSITORY: InstalledScenario = {
     configurations: ['typescript', 'nestjs'],
+    tsconfig: {
+        compilerOptions: { ...STRICT_COMPILER_OPTIONS, experimentalDecorators: true, emitDecoratorMetadata: true },
+        include: ['src'],
+    },
     files: {
-        'tsconfig.json': NESTJS_TSCONFIG,
         'src/greeting.service.ts': GREETER,
         'src/greeting.controller.ts': CONTROLLER,
         'src/greeting.module.ts': NESTJS_MODULE,

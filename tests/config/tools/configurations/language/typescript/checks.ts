@@ -1,7 +1,7 @@
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import { TYPESCRIPT_PACKAGE } from '#tests/config/samples/typescript.ts';
 import type { InstalledScenario } from '#tests/types/harness/repository.ts';
+import { TYPESCRIPT_PACKAGE, STRICT_COMPILER_OPTIONS } from '#tests/config/samples/typescript.ts';
 
 import {
     TOTAL,
@@ -17,11 +17,12 @@ import {
 export const REPOSITORY: InstalledScenario = {
     configurations: ['typescript'],
 
+    tsconfig: {
+        compilerOptions: { ...STRICT_COMPILER_OPTIONS, allowJs: true },
+        include: ['src', 'types'],
+    },
     files: {
         'package.json': TYPESCRIPT_PACKAGE,
-        'tsconfig.json':
-            '{\n    "compilerOptions": {\n        "strict": true,\n        "allowJs": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "noImplicitReturns": true,\n        "noPropertyAccessFromIndexSignature": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": [\n        "src",\n        "types"\n    ]\n}' +
-            '\n',
         'jsconfig.json':
             '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "noImplicitReturns": true,\n        "noPropertyAccessFromIndexSignature": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true,\n        "checkJs": true,\n        "noEmit": true\n    },\n    "include": [\n        "src/**/*.js"\n    ]\n}' +
             '\n',

@@ -1,8 +1,6 @@
 // Child processes of the tests: waiting for one to leave, and the source paths a child imports beside its mocks.
-import { join } from 'node:path';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { remainingTestTime } from '#tests/harness/command.ts';
-import { workspaceRoot as root } from '#automation/workspace.ts';
 import { EXIT_POLL_MS, READY_POLL_MS } from '#tests/config/harness/process.ts';
 import type { CapturedChild, CapturedProcess } from '#tests/types/harness/process.ts';
 
@@ -24,16 +22,6 @@ export async function waitForExit(pid: number): Promise<void> {
     }
     process.kill(pid, 'SIGKILL');
     throw new Error(`Owned child ${String(pid)} remained alive after supervision ended.`);
-}
-
-/**
- * The absolute path of a module under packages/cli/src.
- * @param path the module path below packages/cli/src
- * @returns the absolute path
- */
-
-export function getCliSourcePath(path: string): string {
-    return join(root, 'packages/cli/src', path);
 }
 
 /** Polls a child-written readiness marker until its bounded startup deadline. */

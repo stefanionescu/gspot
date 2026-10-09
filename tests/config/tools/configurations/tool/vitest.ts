@@ -1,5 +1,6 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { InstalledScenario } from '#tests/types/harness/repository.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/samples/typescript.ts';
 
 export const VITEST_SOURCE =
     '// Arithmetic the test tests call.\n\n/**\n * Adds positive values.\n * @param values the values to total\n * @returns the positive total\n */\nexport function positiveTotal(values: number[]): number {\n    let total = 0;\n    for (const value of values) {\n        if (value > 0) total += value;\n    }\n    return total;\n}\n';
@@ -13,11 +14,12 @@ export const TEST =
 
 export const REPOSITORY: InstalledScenario = {
     configurations: ['typescript', 'vitest'],
+    tsconfig: {
+        compilerOptions: STRICT_COMPILER_OPTIONS,
+        include: ['src'],
+    },
     files: {
         '.gitignore': 'node_modules\ncoverage\n',
-        'tsconfig.json':
-            '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "noImplicitReturns": true,\n        "noPropertyAccessFromIndexSignature": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": [\n        "src"\n    ]\n}' +
-            '\n',
         'vitest.config.mjs': "export default { test: { include: ['src/*.test.ts'] } };\n",
         'src/public.ts': VITEST_SOURCE,
         'src/math.test.ts': TEST,

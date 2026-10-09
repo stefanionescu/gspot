@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { getCliSourcePath } from '#tests/harness/process.ts';
+import { getCliSourcePath } from '#tests/harness/gspot.ts';
 import { planReplacement, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 import { applyPlans, getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 

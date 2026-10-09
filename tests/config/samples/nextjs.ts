@@ -10,3 +10,9 @@ export const NEXT_PAGE =
 /** The root layout. */
 export const NEXT_LAYOUT =
     '// The root layout.\nimport type { ReactNode } from \'react\';\n\n/**\n * Wraps every page.\n * @param props the children\n * @param props.children the page\n * @returns the document\n */\nexport default function Layout({ children }: Readonly<{ children: ReactNode }>): ReactNode {\n    return (\n        <html lang="en">\n            <body>{children}</body>\n        </html>\n    );\n}\n';
+
+/** Locale messages shared by native Next.js configuration scenarios. */
+export const NEXT_MESSAGES = {
+    'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',
+    'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
+};

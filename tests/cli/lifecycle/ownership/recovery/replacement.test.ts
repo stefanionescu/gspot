@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
-import { getCliSourcePath } from '#tests/harness/process.ts';
+import { getCliSourcePath } from '#tests/harness/gspot.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
 import { OWNERSHIP_BYTES } from '#tests/config/samples/ownership.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';

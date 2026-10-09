@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { commitAll } from '#tests/harness/git.ts';
-import { HEAD } from '#tests/config/samples/bash.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { chmod, appendFile } from 'node:fs/promises';
 import { GUIDE } from '#tests/config/samples/docs.ts';
@@ -20,6 +19,7 @@ import { configurationManifests } from '#cli/configurations/public.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import svelteManifest from 'svelte/package.json' with { type: 'json' };
 import vitestManifest from 'vitest/package.json' with { type: 'json' };
+import { HEAD, CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import coreManifest from '@nestjs/core/package.json' with { type: 'json' };
 import * as postgres from '#tests/config/tools/configurations/database.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
@@ -222,7 +222,7 @@ const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
                 await chmod(join(root, 'scripts/build.sh'), 0o755);
             },
             corrected: (entry) => ({
-                files: Object.fromEntries(Object.keys(entry.files).map((path) => [path, languageBashChecks.CLEAN])),
+                files: Object.fromEntries(Object.keys(entry.files).map((path) => [path, CLEAN_BASH_SCRIPT])),
             }),
             cases: [
                 ...languageBashChecks.CASES,

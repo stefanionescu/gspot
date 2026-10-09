@@ -1,9 +1,8 @@
+import { GREET } from '#tests/config/samples/supabase.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
 export const SUPABASE_CONFIG = 'project_id = "example"\n\n[functions.greet]\nverify_jwt = true\n';
-
-export const GREET = 'Deno.serve(() => new Response("hello"));\n';
 
 export const REPOSITORY: InstalledScenario = {
     configurations: ['supabase'],

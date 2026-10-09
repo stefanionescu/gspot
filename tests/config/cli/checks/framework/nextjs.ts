@@ -1,7 +1,7 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { InProcessScenario } from '#tests/types/harness/repository.ts';
 import { ROUTE, MANIFEST, NEXT_TRANSLATIONS } from '#tests/config/cli/checks/nextjs.ts';
-import { NEXT_PAGE, NEXT_LAYOUT, NEXT_CONFIG_FILE } from '#tests/config/samples/nextjs.ts';
+import { NEXT_PAGE, NEXT_LAYOUT, NEXT_MESSAGES, NEXT_CONFIG_FILE } from '#tests/config/samples/nextjs.ts';
 
 export const REPOSITORY: InProcessScenario = {
     configurations: ['nextjs', 'translations'],
@@ -11,8 +11,7 @@ export const REPOSITORY: InProcessScenario = {
         'next.config.mjs': NEXT_CONFIG_FILE,
         'app/page.tsx': NEXT_PAGE,
         'app/layout.tsx': NEXT_LAYOUT,
-        'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',
-        'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
+        ...NEXT_MESSAGES,
     },
 };
 

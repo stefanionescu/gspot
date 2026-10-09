@@ -17,6 +17,16 @@ import type { CheckReport, SpawnOutcome, GspotChildOptions, GspotSpawnOptions } 
 export const gspot = join(workspaceRoot, SOURCE_CLI_PATH);
 
 /**
+ * The absolute path of a CLI source module.
+ * @param path the module path below the CLI source folder
+ * @returns the absolute path
+ */
+
+export function getCliSourcePath(path: string): string {
+    return join(workspaceRoot, 'packages/cli/src', path);
+}
+
+/**
  * Runs gspot in this process over a directory with color off and CI set, capturing what it writes.
  * @param cwd the sandbox
  * @param argv the command line after gspot

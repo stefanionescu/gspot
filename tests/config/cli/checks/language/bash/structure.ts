@@ -1,14 +1,11 @@
-import { HEAD, BASH_CASES_MAIN } from '#tests/config/samples/bash.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { InProcessScenario } from '#tests/types/harness/repository.ts';
-
-export const CLEAN =
-    '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# main: runs the script.\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    echo "${greeting}"\n}\n\nmain "$@"\n';
+import { HEAD, BASH_CASES_MAIN, CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 
 export const REPOSITORY: InProcessScenario = {
     configurations: ['bash'],
 
-    files: { 'scripts/build.sh': CLEAN },
+    files: { 'scripts/build.sh': CLEAN_BASH_SCRIPT },
 };
 
 export const CASES: FindingCase[] = [

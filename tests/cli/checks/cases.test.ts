@@ -2,6 +2,7 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { markExecutable } from '#tests/harness/git.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import * as nextjs from '#tests/config/cli/checks/framework/nextjs.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { FindingScenario } from '#tests/types/cli/checks/cases.ts';
@@ -61,7 +62,7 @@ for (const scenario of [
             },
             corrected: (entry) => ({
                 files: {
-                    ...Object.fromEntries(Object.keys(entry.files).map((path) => [path, bashStructure.CLEAN])),
+                    ...Object.fromEntries(Object.keys(entry.files).map((path) => [path, CLEAN_BASH_SCRIPT])),
                     ...CORRECTIONS[entry.check]?.(entry),
                 },
             }),

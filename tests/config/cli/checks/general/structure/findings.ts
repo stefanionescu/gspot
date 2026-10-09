@@ -1,15 +1,13 @@
+import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { InProcessScenario } from '#tests/types/harness/repository.ts';
-
-export const CLEAN =
-    '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# main: runs the script.\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    echo "${greeting}"\n}\n\nmain "$@"\n';
 
 export const REPOSITORY: InProcessScenario = {
     configurations: ['bash', 'javascript'],
 
     files: {
-        'scripts/a.sh': CLEAN,
-        'scripts/b.sh': CLEAN,
+        'scripts/a.sh': CLEAN_BASH_SCRIPT,
+        'scripts/b.sh': CLEAN_BASH_SCRIPT,
         'package.json': '{"private":true}\n',
     },
 };
@@ -18,8 +16,7 @@ export const CASES: FindingCase[] = [
     {
         check: 'structure/lone-files',
         files: {
-            'tools/only/one.sh':
-                '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# main: runs the script.\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    echo "${greeting}"\n}\n\nmain "$@"\n',
+            'tools/only/one.sh': CLEAN_BASH_SCRIPT,
         },
         expected: {
             file: 'tools/only/one.sh',
@@ -30,12 +27,9 @@ export const CASES: FindingCase[] = [
     {
         check: 'structure/prefix-collisions',
         files: {
-            'jobs/asset-card.sh':
-                '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# main: runs the script.\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    echo "${greeting}"\n}\n\nmain "$@"\n',
-            'jobs/asset-list.sh':
-                '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# main: runs the script.\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    echo "${greeting}"\n}\n\nmain "$@"\n',
-            'jobs/asset-row.sh':
-                '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# main: runs the script.\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    echo "${greeting}"\n}\n\nmain "$@"\n',
+            'jobs/asset-card.sh': CLEAN_BASH_SCRIPT,
+            'jobs/asset-list.sh': CLEAN_BASH_SCRIPT,
+            'jobs/asset-row.sh': CLEAN_BASH_SCRIPT,
         },
         expected: {
             file: 'jobs/asset-card.sh',
@@ -47,12 +41,9 @@ export const CASES: FindingCase[] = [
     {
         check: 'structure/stem-collisions',
         files: {
-            'jobs/turn.sh':
-                '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# main: runs the script.\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    echo "${greeting}"\n}\n\nmain "$@"\n',
-            'jobs/turn/first.sh':
-                '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# main: runs the script.\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    echo "${greeting}"\n}\n\nmain "$@"\n',
-            'jobs/turn/second.sh':
-                '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# main: runs the script.\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    echo "${greeting}"\n}\n\nmain "$@"\n',
+            'jobs/turn.sh': CLEAN_BASH_SCRIPT,
+            'jobs/turn/first.sh': CLEAN_BASH_SCRIPT,
+            'jobs/turn/second.sh': CLEAN_BASH_SCRIPT,
         },
         expected: {
             file: 'jobs/turn.sh',
@@ -63,10 +54,8 @@ export const CASES: FindingCase[] = [
     {
         check: 'structure/folder-names',
         files: {
-            'helpers/first.sh':
-                '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# main: runs the script.\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    echo "${greeting}"\n}\n\nmain "$@"\n',
-            'helpers/second.sh':
-                '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# main: runs the script.\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    echo "${greeting}"\n}\n\nmain "$@"\n',
+            'helpers/first.sh': CLEAN_BASH_SCRIPT,
+            'helpers/second.sh': CLEAN_BASH_SCRIPT,
         },
         expected: {
             file: 'helpers/first.sh',

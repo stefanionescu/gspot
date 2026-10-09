@@ -1,7 +1,7 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/samples/typescript.ts';
-import { NEXT_PAGE, NEXT_LAYOUT, NEXT_CONFIG_FILE } from '#tests/config/samples/nextjs.ts';
+import { NEXT_PAGE, NEXT_LAYOUT, NEXT_MESSAGES, NEXT_CONFIG_FILE } from '#tests/config/samples/nextjs.ts';
 
 export const COUNT = '// A test file.\n\n/** A number that holds text. */\nexport const count: number = "three";\n';
 
@@ -43,8 +43,7 @@ export const REPOSITORY: InstalledScenario = {
         'next.config.mjs': NEXT_CONFIG_FILE,
         'app/page.tsx': NEXT_PAGE,
         'app/layout.tsx': NEXT_LAYOUT,
-        'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',
-        'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
+        ...NEXT_MESSAGES,
     },
 };
 

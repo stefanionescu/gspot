@@ -1,6 +1,7 @@
+import { GREET } from '#tests/config/samples/supabase.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { InProcessScenario } from '#tests/types/harness/repository.ts';
-import { GREET, MIGRATION, SUPABASE_CONFIG } from '#tests/config/cli/checks/platform/supabase/configuration.ts';
+import { MIGRATION, SUPABASE_CONFIG } from '#tests/config/cli/checks/platform/supabase/configuration.ts';
 
 export const REPOSITORY: InProcessScenario = {
     configurations: ['supabase'],
