@@ -1,5 +1,5 @@
 {
-    "openRecords": 355,
+    "openRecords": 334,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -361,7 +361,9 @@
             "decision": "Allow the reviewed shared-installation cache14036-byte increase (support6489, types221, constants1238, tests6088; production unchanged) as a narrow exception to the less-code contract. Preserve real credential and installer tests, source confinement and once-per-suite installations.",
             "evidence": [
                 "Explicit user answer: Allow this shared-installation exception.",
-                "Reviewed patch /tmp/gspot-ordinary-tool-cache-full-final.patch."
+                "Reviewed patch /tmp/gspot-ordinary-tool-cache-full-final.patch.",
+                "Same native binary contract correction at872e0b82cb4feb103b82adcd836781bed7049506 derives readFile return types in four mirrors instead of narrowing them to NonSharedBuffer. Type-only increase220 bytes; runtime/assertions unchanged. Native Node24.20/Bun1.4.2 seven assignments pass under Node22.18.6 and26.6.4 declarations; actual staged945-file compiler and29-check gate pass. /tmp/gspot-native-fs-types-final-freeze.json preserves the patch and exact cost; no runtime fallback, cast or public setting.",
+                "Same approved suite-installation contract corrections committed ata56647e4badba8ac7afe3347131d77d1beeb1990: managed private npm bin paths, actual all-level package inputs for Syncpack/Commitlint, disposed publication logs before shared installs, Bash native environment and reducing shared TypeScript hooks. Exact10-owner staged delta1304 bytes (production0/support121); no public option or additional installer. Original14,036-byte approval and all failed receipts remain; the additional implementation cost is disclosed rather than described as a reduction. /tmp/gspot-shared-native-cache-main-index-freeze.json; staged29/2/0, normal commit22/1/0 and push29/2/0."
             ]
         },
         {
@@ -426,10 +428,61 @@
                 "Explicit user answer: Allow these two verified fixes.",
                 "Reviewed immutable candidate /tmp/gspot-release-DX023-DX026-final-freeze.json."
             ]
+        },
+        {
+            "id": "framework-literal-level-branches-size-exception",
+            "date": "2026-10-09",
+            "scope": "slices/kits-frameworks-tools/001",
+            "decision": "Allow the verified literal IS_ALL branches: 1,807 production bytes and 5,635 total bytes. Preserve emitted required-rule on/off contracts at both levels.",
+            "evidence": [
+                "Explicit user answer: Allow the verified level-branch fix.",
+                "/tmp/gspot-framework-level001-literal-final-freeze.json"
+            ]
+        },
+        {
+            "id": "runner-pin-hints-priority-size-exception",
+            "date": "2026-10-09",
+            "scope": "areas/developer-experience/033",
+            "decision": "Allow verified runner-specific pin installation hints and malformed or missing policy diagnostic priority: 1,338 production bytes and 2,427 total bytes.",
+            "evidence": [
+                "Explicit user answer: Allow the verified hints and priorities.",
+                "/tmp/gspot-release-DX033-final-draft-freeze.json"
+            ]
+        },
+        {
+            "id": "nonterminal-dry-run-prompts-size-exception",
+            "date": "2026-10-09",
+            "scope": "areas/developer-experience/032",
+            "decision": "Allow verified init --dry-run defaults for all four nonterminal prompts while preserving explicit choices and CI behavior: 179 production bytes and 5,397 total bytes.",
+            "evidence": [
+                "Explicit user answer: Allow the verified dry-run fix.",
+                "/tmp/gspot-dx032-native-final-freeze.json"
+            ]
+        },
+        {
+            "id": "repository-task-consolidation-size-exception",
+            "date": "2026-10-09",
+            "scope": "review/repository-root/047",
+            "decision": "Allow verified check:release, test:database, and deploy:docs tasks and workflow calls, with the exact database test excluded from ordinary tool runs: 303 script bytes and 256 total bytes. Release publication and deployment remain prohibited.",
+            "evidence": [
+                "Explicit user answer: Allow the verified task consolidation.",
+                "/tmp/gspot-release-RR047-final-draft-freeze.json"
+            ]
+        },
+        {
+            "id": "single-plan-deletion-size-exception",
+            "date": "2026-10-09",
+            "scope": "review/code-commands/021 applyPlan removal and caller updates",
+            "decision": "Permit the reviewed code-commands/021 patch to add 1,002 bytes overall while deleting 305 production bytes. Delete applyPlan and update every caller, preserving every assertion and refusal diagnostic. This is a narrow exception to the repository size requirement, not a general growth waiver.",
+            "evidence": [
+                "User reply: Allow this verified size exception.",
+                "/tmp/gspot-cc021-main-final-review/combined.patch",
+                "/tmp/gspot-cc021-main-final-review/freeze.json"
+            ]
         }
     ],
     "implementationBatches": {
-        "openRecords": 355,
+        "openRecords": 334,
         "records": 1092,
         "batches": [
             {
@@ -735,8 +788,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 190,
-                "unresolvedAssignments": 101
+                "completedAssignments": 198,
+                "unresolvedAssignments": 93
             },
             {
                 "id": "python",
@@ -889,8 +942,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 52,
-                "unresolvedAssignments": 47
+                "completedAssignments": 54,
+                "unresolvedAssignments": 45
             },
             {
                 "id": "swift-bash-sql",
@@ -1118,8 +1171,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 64,
-                "unresolvedAssignments": 67
+                "completedAssignments": 66,
+                "unresolvedAssignments": 65
             },
             {
                 "id": "test-quality",
@@ -1595,8 +1648,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 330,
-                "unresolvedAssignments": 139
+                "completedAssignments": 342,
+                "unresolvedAssignments": 127
             },
             {
                 "id": "scripts-repository",
@@ -1735,8 +1788,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 75,
-                "unresolvedAssignments": 57
+                "completedAssignments": 85,
+                "unresolvedAssignments": 47
             },
             {
                 "id": "installation-docs",
@@ -1880,8 +1933,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 84,
-                "unresolvedAssignments": 53
+                "completedAssignments": 92,
+                "unresolvedAssignments": 45
             },
             {
                 "id": "policy-file",
@@ -2076,8 +2129,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 64,
-                "unresolvedAssignments": 25
+                "completedAssignments": 66,
+                "unresolvedAssignments": 23
             },
             {
                 "id": "configurations",
@@ -2447,7 +2500,8 @@
                 "Evidence dd1d38818d82452e.",
                 "Next type generation and the shared native compiler use one disposable project and restored source paths. Original typegen failures, reference roots, source edits, cancellation and cleanup controls remain. The owner approved the required compiler production-size exception.",
                 "Evidence 43086d237ef6ffa2.",
-                "Evidence 7a592c7d7a65e4fd."
+                "Evidence 7a592c7d7a65e4fd.",
+                "Evidence d0cd3edf8eb2e89f."
             ],
             "additionalChanges": [
                 {
@@ -2706,16 +2760,20 @@
             ]
         },
         "areas/developer-experience/032": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "039328af6394b7d345ce0dac6c52698ccb1a13b5",
+            "verification": [
+                "Nonterminal init --dry-run uses all four default answers, keeps explicit answers and interactive cancellation, bypasses unchanged existing CI jobs, prints its plan and writes nothing. Main 25 tests/91 assertions and original installed Node/Bun no-write probes pass. Exact three-owner approved patch: /tmp/gspot-dx032-native-final-freeze.json; Main receipt /tmp/gspot-dx032-approved-main-cli.log. Owner approved 179 production bytes/5397 overall."
+            ]
         },
         "areas/developer-experience/033": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "039328af6394b7d345ce0dac6c52698ccb1a13b5",
+            "verification": [
+                "Pin mismatch names the captured runner-specific mise/npm/bun/pnpm/yarn install first; missing runner names the global npm command. gspot apply is a separate upgrade line. Policy validation precedes pin mismatch as explicitly approved. Main 32 tests/164 assertions plus original 104 tests/392 Node24/Bun child probes pass without policy or pin writes. Exact ten-owner approved patch /tmp/gspot-release-DX033-final-draft-freeze.json and Main /tmp/gspot-dx033-approved-main-cli.log. Owner approved 1338 production bytes/2427 overall."
+            ]
         },
         "areas/developer-experience/037": {
             "status": "complete",
@@ -2739,10 +2797,13 @@
             "verification": []
         },
         "areas/integration-tests/004": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "verification": [
+                "Deleted duplicated initial/fixed runs, retaining actual invalid/corrected neighbor coverage. Missing base commit asserts observed exit 2 and stderr; malformed/injection and real 404 controls remain. Four native CI cases pass with 42 assertions.",
+                "Evidence 8a7ebb2a35749819."
+            ]
         },
         "areas/integration-tests/006": {
             "status": "partial",
@@ -3034,10 +3095,13 @@
             ]
         },
         "areas/integration-tests/052": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "verification": [
+                "Hook scripts execute against fake gspot, npm and mise; tests assert actual argv, cwd and GSPOT_HOOK rather than script text. PATH comes from the public environment owner; original reasoned sync directives are retained.",
+                "Evidence 8a7ebb2a35749819."
+            ]
         },
         "areas/integration-tests/053": {
             "status": "complete",
@@ -3084,22 +3148,31 @@
             ]
         },
         "areas/integration-tests/059": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "verification": [
+                "Expected Ruff per-file ignores use the authored literal **/test_*.py with S101, merged with D103. The adopted plain-setting and reasoned-ignore contract at ca2975ca5 supersedes the obsolete implicit rules_off_in_tests default; no default is restored. Exact supersession and native rendered values are recorded in the frozen interpretation.",
+                "Evidence 8a7ebb2a35749819."
+            ]
         },
         "areas/integration-tests/061": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "verification": [
+                "The Bun-runner test now states that authored scripts are preserved and no task is added; its body is unchanged.",
+                "Evidence 8a7ebb2a35749819."
+            ]
         },
         "areas/integration-tests/062": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "verification": [
+                "The mise install observation moved into the actual another-hooks-folder row; the duplicated installer test is deleted. Other npm hook rows and distinct native assertions remain.",
+                "Evidence 8a7ebb2a35749819."
+            ]
         },
         "areas/integration-tests/063": {
             "status": "pending",
@@ -3139,10 +3212,13 @@
             ]
         },
         "areas/integration-tests/068": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "verification": [
+                "Both permission scenarios share the write, replacement and refused-removal steps; stale-write refusal remains. POSIX read-only and cross-platform writable modes both remain distinct rows.",
+                "Evidence 8a7ebb2a35749819."
+            ]
         },
         "areas/integration-tests/071": {
             "status": "complete",
@@ -3166,10 +3242,13 @@
             ]
         },
         "areas/integration-tests/076": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "verification": [
+                "Deleted both one-rule non-Git walk duplicates; the nested ignore-rule coverage remains and passes.",
+                "Evidence 8a7ebb2a35749819."
+            ]
         },
         "areas/integration-tests/077": {
             "status": "pending",
@@ -3178,16 +3257,22 @@
             "verification": []
         },
         "areas/integration-tests/078": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "verification": [
+                "Submodule reporting is asserted through doctor JSON in the doctor owner; copy tests no longer inspect doctor text layout.",
+                "Evidence 8a7ebb2a35749819."
+            ]
         },
         "areas/integration-tests/080": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "verification": [
+                "Deleted the API-spy byte-bound test that could not observe all filesystem reads; genuine source-copy boundary and behavior tests remain.",
+                "Evidence 8a7ebb2a35749819."
+            ]
         },
         "areas/integration-tests/084": {
             "status": "complete",
@@ -5001,10 +5086,13 @@
             ]
         },
         "review/code-commands/021": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "verification": [
+                "Deleted applyPlan and replaced all production and executable test callers with applyPlans, retaining preserved-plan refusal, scalar observations and exact diagnostics. Owner approved the 1,002-byte overall increase and 305-byte production reduction; the current combined intake preserves later runner/dry-run changes.",
+                "Main native ownership replay: 112 tests and 521 assertions; caller diagnostic/body parity proof and staged verification retained at /tmp/gspot-cc021-main-final-review and /tmp/gspot-ownership-cleanup-45-final-main/freeze.json."
+            ]
         },
         "review/code-commands/022": {
             "status": "complete",
@@ -5343,7 +5431,8 @@
                 "Evidence a4bf43154222d468.",
                 "Evidence 9e83fc5d87a6c87b.",
                 "Approved native compiler candidate/amendment integrated at6fd79235; shared reference/checkjs/imported-declaration closure, source noEmit and Next workspace implementation are complete. Actual staged152pass11skip0findings54.9s, native configured types0, grouped CLI22pass138assertions and preserved typing controls pass. No supported-platform CI outcome inferred.",
-                "Evidence 7a592c7d7a65e4fd."
+                "Evidence 7a592c7d7a65e4fd.",
+                "Evidence d0cd3edf8eb2e89f."
             ],
             "remaining": [
                 "Explicit full-platform and final-suite compiler acceptance is pending. CI for the combined implementation must verify Linux, macOS and Windows; actual native Node/Bun proof is macOS only."
@@ -7438,7 +7527,8 @@
             "verification": [
                 "The nearest authored tsconfig and referenced projects determine coverage. Child checks skip only an ancestor checked with the same compiler requirements; standalone scopes remain checked. Both tests-scope authored ignores are deleted and gspot apply generated its configuration.",
                 "Evidence 43086d237ef6ffa2.",
-                "Evidence 7a592c7d7a65e4fd."
+                "Evidence 7a592c7d7a65e4fd.",
+                "Evidence d0cd3edf8eb2e89f."
             ],
             "additionalChanges": [
                 {
@@ -8195,10 +8285,13 @@
             ]
         },
         "review/repository-root/010": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
+            "verification": [
+                "Deleted the dead runtime role src/** in the committed policy; remaining runtime role packages/*/src/** has real members. Exact ten-byte deletion is verified in /tmp/gspot-repository-policy010012032-readiness.json.",
+                "Other dead lines in the historical observation belong to separately named records, as the binding fix states."
+            ]
         },
         "review/repository-root/012": {
             "status": "pending",
@@ -8216,10 +8309,13 @@
             ]
         },
         "review/repository-root/016": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7ac2a998a555ed454e044446e8b1dfa5f5aaa8f3",
+            "verification": [
+                "Original five-owner move4137d1f54 relocates DOWNLOAD_TIMEOUT_MS and SWIFT_GRAMMAR beside asset paths and PinnedDownload to package types/platform/assets.ts, removes both root grammar mirrors, and preserves every nonimport runtime statement and the raw type. Exact move reduces118 bytes/12 AST nodes. Subsequent773ad and7ac consolidate unchanged Swift pin fields in the single shared CLI_PINS.swiftGrammar owner; timeout stays30000. No backward duplicate constant restored.",
+                "Root grammar script no longer imports automation; archives/binaries/ESLint worker remain deleted under owner001. Immutable original values, ancestor proofs, current owner hashes and six-owner types/lint/format native acceptance: /tmp/gspot-repository-root016-readiness/readiness.json. Native cached grammar producer validates WASM/license checksums; Main asset tests2pass/4assertions verify missing asset refusal, copied Unicode/spaces/percent paths and undeclared grammar refusal. No new source edits needed for this audit."
+            ]
         },
         "review/repository-root/019": {
             "status": "complete",
@@ -8377,12 +8473,14 @@
             ]
         },
         "review/repository-root/047": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
-            "verification": ["Release source/test/constants use the owner-approved flat paths."],
-            "remaining": [
-                "Mise tasks, database workflow/test move and gate removal remain; timeout depends on measured carve-outs/001."
+            "commit": "26117cf44c8545c3d4a0f41be1d18d9f044b658c",
+            "verification": [
+                "Release source/test/constants use the owner-approved flat paths.",
+                "Release, database, and documentation workflows now call the single check:release, test:database, and deploy:docs tasks. Ordinary tools enumerate97 actual native test files and omit exactly the Supabase database test (96 remain); explicit database selection and all four shard calculations retain it correctly. GSPOT_SUPABASE_TEST and the per-CI gate are removed, leaving the actual Linux Docker gate and the single TEST_TIMEOUT_MS runner argument. Every database callback/assertion is preserved.",
+                "Exact approved seven-owner packet /tmp/gspot-RR047-a566-review/freeze.json. Main native task dry runs pass without executing publication, deployment or database commands. Native configured types/lint/format/Taplo/YAML/Actionlint/ShellCheck pass; Zizmor uses only the existing reasoned self-repository override. Staged49/5/0 and push49/5/0 pass. Owner approved303 script bytes/256 overall.",
+                "Evidence 643ae7eae5b901bd."
             ]
         },
         "review/source-layout/001": {
@@ -8539,10 +8637,14 @@
             ]
         },
         "review/source-layout/017": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": [
+                "Selection implementations have their two strict public API owners, with one-way imports and repository config/type ownership retained. Mechanical grouping adds 59 import-path bytes and zero AST nodes; non-import bodies are identical.",
+                "The explicitly linked obsolete configuration-overrides implementation was deleted at ca2975ca5552d3276e78bbd6d897c44cfdf70a09, removing 4,112 bytes and 573 AST nodes. The same-obligation combined change removes 4,053 bytes.",
+                "Native Main replay passes 30 tests and 144 assertions across reconciliation, init selection, and manual choices. Full authority and cost proof: /tmp/gspot-source-layout017-readiness/combined-cost-native-supplement.json."
+            ]
         },
         "review/source-layout/018": {
             "status": "complete",
@@ -8811,10 +8913,12 @@
             ]
         },
         "review/source-layout/052": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "8518651b2b9212a86270483ac7b9665c4a835232",
+            "verification": [
+                "Add the three required supersession notes outside historical quotations. Replace source.png with the final public-owner/config/types/configurations target, and keep the editable source.svg with native title/description and reproduction command. rsvg-convert2.63.2 repeated rendering is byte-identical (PNG SHA256a7693d0ec4a2341320af22c2b6224a49f632f0b70c022d5047b9d6fcc886f066); Main visually inspected every panel and caption. Original historical record/table bytes restore by exact inverse of the three notes."
+            ]
         },
         "review/source-layout/053": {
             "status": "complete",
@@ -10419,8 +10523,11 @@
         "review/tests-layout/005": {
             "status": "pending",
             "owner": null,
-            "commit": null,
-            "verification": []
+            "commit": "a56647e4badba8ac7afe3347131d77d1beeb1990",
+            "verification": [
+                "Reducing final shared TypeScript repository leaf is frozen at /tmp/gspot-layout005-final-freeze.json:297 test bytes and43 AST nodes removed; exact2 affected native callbacks pass3 assertions. Root projection preserves extra held compiler callbacks and argv; current quoted32-family lineage has23 genuine createTestRepository owners plus distinct custom-contract suites, documented without forcing them into one abstraction. Actual Root/CP integration complete; normal shared-test checkpoint pending.",
+                "Evidence d9dc9489c7f6948a."
+            ]
         },
         "review/tests-layout/007": {
             "status": "complete",
@@ -10988,7 +11095,8 @@
                 "Evidence bc40e9ab1be2ffdb.",
                 "Evidence 163423ce2c7d418f.",
                 "Removed the helper-only registration; current public Taplo/schema cases survive. The helper retains real public callers.",
-                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. -1638 bytes / -36 lines / -243 AST nodes in exact deletion freeze."
+                "Exact pushed owner hashes and native evidence: /tmp/gspot-test-leaf-thirteen-closure-spec.json. -1638 bytes / -36 lines / -243 AST nodes in exact deletion freeze.",
+                "Evidence d9dc9489c7f6948a."
             ]
         },
         "review/tests-tools/031": {
@@ -11513,10 +11621,13 @@
             "verification": []
         },
         "slices/kits-frameworks-tools/001": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "52404404f1bf4041e49f4097e572d41c1648f510",
+            "verification": [
+                "All-only rule literals in the base Eta source now belong to explicit IS_ALL branches; fragments retain their existing level ownership, including the Next Pages-only HTML-link guard. Required HTML injection rules remain on at both levels. Native authored literal/AST regressions fail the old unguarded source and pass the final source. All original test registrations and complete emitted rule/options documents are preserved at root/app/deep scopes. Main56 tests/590 assertions pass; independent Node24.20/Bun1.4.2 before/after parity covers1179 recommended and1196 all rules.",
+                "Exact approved authored packet /tmp/gspot-level001-current-final-freeze.json, Main native transcript and staged152/11/0 receipt /tmp/gspot-level001-main-staged.log. Generated ESLint output produced by gspot apply; only ordering changed. Explicit owner exception permits1807 production/5635 total authored bytes. Root held preset removal changes preserved by separate projection."
+            ]
         },
         "slices/kits-frameworks-tools/004": {
             "status": "partial",
@@ -12480,14 +12591,20 @@
         "slices/tests-integration-checks/013": {
             "status": "partial",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence e071d5036af2be81."],
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "verification": [
+                "Evidence e071d5036af2be81.",
+                "Committed exact SQL and Swift ineffective read-spy assertion leaves at c0dafc5ea; five deletions remove 519 bytes/95 AST nodes. Main focused native replay passes 22 tests and 102 assertions. Full remaining cross-language sites are not claimed complete."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-naming-test-partial-freeze.json",
                     "commit": null,
                     "verification": ["Evidence 5f39028a0dba6dcb."]
                 }
+            ],
+            "remaining": [
+                "Finish and verify every other original/current final-table read-spy obligation before whole-record closure."
             ]
         },
         "slices/tests-integration-checks/015": {
@@ -12740,14 +12857,14 @@
             ]
         },
         "slices/tests-integration-checks/041": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "872e0b82cb4feb103b82adcd836781bed7049506",
             "verification": [
                 "Draft selects jest/coverage by name and uses run spies without weakening native dead-store or callback checks. Original30 cases136 assertions pass; subsequent enforcement correction is preserved and requires final replay before integration. /tmp/gspot-jest041-local-consolidation/receipt.json retains initial passing execution and native lint rejection; no checkpoint claimed.",
-                "Corrected final draft uses Bun.file native UTF-8 reads to remove the sole fs import, names actual copy paths, and preserves all117 Jest assertions across27 passed cases. Configured ESLint and Prettier pass with no suppressions; final source−5 bytes. Frozen /tmp/gspot-jest041-local-consolidation/final-receipt.json."
-            ],
-            "remaining": ["Run normal staged checks and commit the reviewed draft separately."]
+                "Corrected final draft uses Bun.file native UTF-8 reads to remove the sole fs import, names actual copy paths, and preserves all117 Jest assertions across27 passed cases. Configured ESLint and Prettier pass with no suppressions; final source−5 bytes. Frozen /tmp/gspot-jest041-local-consolidation/final-receipt.json.",
+                "Select jest/coverage by name and name the used process spies run. All117 assertions across27 Jest cases pass; final test source removes5 bytes. Normal Main staged gate29 passed,2 skipped,zero findings; normal commit/push hooks passed. /tmp/gspot-jest041-native-fs-main-staged-final.log and /tmp/gspot-jest041-native-fs-main-push.log retain actual results."
+            ]
         },
         "slices/tests-integration-checks/042": {
             "status": "complete",
@@ -13314,10 +13431,13 @@
             ]
         },
         "slices/tests-integration-lifecycle/021": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "verification": [
+                "Shared interruptOwner owns only matching native before/after exit-73 operations; the exit code is named and modes are octal. Distinct ENOSPC and Windows permission children retain their separate behavior and byte-equivalence evidence. Current vector API projection removes obsolete scalar imports.",
+                "Main final native replay: 23 tests, 129 assertions, four files, 2.82 seconds. Canonical helper consolidation removes 50 bytes; reviewed overlap projection preserves all later scalar/refusal assertion bodies."
+            ]
         },
         "slices/tests-integration-lifecycle/022": {
             "status": "complete",
@@ -13415,10 +13535,13 @@
             ]
         },
         "slices/tests-integration-lifecycle/034": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
+            "verification": [
+                "The prescribed oversubscription fixture depended on COPY_CONCURRENCY and individual dependency-package copy targets. Committed816df72 replaces that engine with native whole-tree copies and removes COPY_CONCURRENCY;9a5937 deletes the obsolete24-package construction and explains the actual one-level target depth. Every cancellation observation remains: no pending copies, no callback, removed scratch directory, exact abort diagnostic and unchanged installed bytes.",
+                "Immutable current owner/ancestry and original quotations: /tmp/gspot-lifecycle034035-a566-review/freeze.json. Main affected native19 tests/93 assertions pass, including the unchanged cancellation callback. No retired concurrency constant or unnecessary24-package fixture restored; no new source/test delta claimed for this record."
+            ]
         },
         "slices/tests-integration-lifecycle/035": {
             "status": "pending",
@@ -18109,6 +18232,196 @@
                 "Current pinned replay on the integrated e889 sources:30 cases passed,136 assertions,two files,zero failures; includes both LFS controls. Existing source callback and final path verified directly from committed4ea and HEAD. Receipt /tmp/gspot-jest041-local-consolidation/receipt.json."
             ],
             "limitations": ["Final full release and cross-platform acceptance remain separately tracked."]
+        },
+        {
+            "commit": "872e0b82cb4feb103b82adcd836781bed7049506",
+            "completedRecords": ["slices/tests-integration-checks/041"],
+            "unresolvedRecords": 354,
+            "validation": [
+                "Final Jest27 pass/117 assertions; configured lint/format zero findings.",
+                "Four fs type mirrors derive exact native readFile binary return; pinned Node/Bun assignments pass under Node22 and26 declarations. Actual staged945-test-file compiler passes. Type-only increase220 bytes; no runtime or assertion changes.",
+                "Integrated CLI/plugin replay4098 passed,3 existing skips,0 failures,17503 assertions,4101 tests378 files464.32 seconds. /tmp/gspot-post-e889-compiler-full-cli-final.log."
+            ],
+            "limitations": [
+                "This Darwin replay is not final Linux/macOS/Windows release acceptance; cache tool-suite integration remains separate."
+            ]
+        },
+        {
+            "commit": "8518651b2b9212a86270483ac7b9665c4a835232",
+            "completedRecords": ["review/source-layout/052"],
+            "unresolvedRecords": 353,
+            "validation": [
+                "Native XML/render and Markdown formatting pass. Main staged29 passed,3 skipped,zero findings6.6s; normal commit24/2/0 and push29/3/0. /tmp/gspot-source052-main-staged-final2.log and /tmp/gspot-source052-main-push.log."
+            ],
+            "limitations": ["Static documentation only; main/127 was already closed and remains unchanged."]
+        },
+        {
+            "commit": "a56647e4badba8ac7afe3347131d77d1beeb1990",
+            "completedRecords": [],
+            "unresolvedRecords": 353,
+            "validation": [
+                "Actual staged29/2/0; normal commit22/1/0 and push29/2/0. Exact indexed10 owners preserve all original fixture assertions, CLI arguments and pre-init subjects.",
+                "CI9f5dd012 run37957260858: Linux/macOS CLI/plugin jobs, docs and package jobs success. Old tool2/3 failures match corrected fixture-delivery cases; tools4 failure is duplicate agent_rules input, not compiler failure."
+            ],
+            "limitations": [
+                "New main CI pending; old Windows jobs not credited. External18 documentation links and normal lock refresh remain pending."
+            ]
+        },
+        {
+            "commit": "039328af6394b7d345ce0dac6c52698ccb1a13b5",
+            "completedRecords": ["areas/developer-experience/032", "areas/developer-experience/033"],
+            "unresolvedRecords": 351,
+            "validation": [
+                "Main combined staged13:44 passed/3 skipped/0 findings in12.0s; commit hook33 passed/1 skipped/0 findings. Exact approved frozen index excluded the unrelated unapproved applyPlan draft."
+            ],
+            "limitations": [
+                "First push was rejected by drift in generated ESLint output after integrating the pending level001 source. Main regenerates this through gspot apply for the next coherent level checkpoint before retrying normal push. No hook bypass, live publication, deployment, or platform success inferred."
+            ]
+        },
+        {
+            "commit": "52404404f1bf4041e49f4097e572d41c1648f510",
+            "completedRecords": ["slices/kits-frameworks-tools/001"],
+            "unresolvedRecords": 350,
+            "validation": [
+                "Main focused five-family56/590 passes. gspot apply writes only .gspot/config/eslint.config.mjs. Combined staged152 checks passed/11 skipped/0 findings in67.8s. Native types/lint/format and exact rule-document parity are recorded in immutable freeze."
+            ],
+            "limitations": [
+                "Normal push retry is running after regeneration; no platform CI success for this successor commit is inferred. No package publication or deployment."
+            ]
+        },
+        {
+            "commit": "9f5dd012bea84a1b3ca70684306288ff17ea6f27",
+            "completedRecords": [],
+            "unresolvedRecords": 350,
+            "validation": [
+                "GitHub run37957260858 completed successful CLI jobs on Linux113912217540, macOS113912217387, and Windows113912217344; docs113912217161 and package113912217539 also succeeded. These are actual jobs on pushed9f5, not proofs for later drafts.",
+                "Tools1 jobs on Linux113912217655 and macOS113912217606 each failed exactly8 Commitlint executable discovery cases. Actual logs: /tmp/gspot-ci9f5-job-113912217655-actual-plain.log and /tmp/gspot-ci9f5-job-113912217606-actual-plain.log. The suite-owned executable repair is pushed at a566 and Main8/72 native receipt passes; successor platform CI remains required."
+            ],
+            "limitations": [
+                "All four Windows tool shards were cancelled; no Windows tool success inferred. Earlier Linux/macOS tool failures and repository lockfile drift remain recorded. No release, deployment, or database execution."
+            ],
+            "ci": {
+                "runId": 37957260858,
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37957260858",
+                "successfulJobs": [113912217540, 113912217387, 113912217344, 113912217161, 113912217539],
+                "cancelledWindowsTools": [113912217597, 113912217679, 113912217719, 113912217920]
+            }
+        },
+        {
+            "commit": "7ac2a998a555ed454e044446e8b1dfa5f5aaa8f3",
+            "completedRecords": ["review/repository-root/016"],
+            "unresolvedRecords": 349,
+            "validation": [
+                "Current committed a566 grammar owner hashes and pin/type values match full ancestry. Main pinned Bun assets2/4 pass at52404404. Independent configured types/native six-owner lint/format pass. Original118-byte reduction proven per file without attributing later shared-pins packet costs."
+            ],
+            "limitations": [
+                "Only local macOS assets evidence; broader Windows/Linux and release package acceptance remain separate. Root held import-order-only change excluded. No archive builds or live publication."
+            ]
+        },
+        {
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
+            "completedRecords": ["slices/tests-integration-lifecycle/034"],
+            "unresolvedRecords": 348,
+            "validation": [
+                "Exact original callback and native-copy ancestor bridge in frozen proof; focused dependencies/copy19/93 passes on pinned macOS Bun. This closes the applicable cancellation/depth obligations after the mandated native engine replacement."
+            ],
+            "limitations": [
+                "Related035 movement remains a separate unapproved positive-size draft. Windows/native-copy CI acceptance is still separate."
+            ]
+        },
+        {
+            "commit": "26117cf44c8545c3d4a0f41be1d18d9f044b658c",
+            "completedRecords": ["review/repository-root/047"],
+            "unresolvedRecords": 347,
+            "validation": [
+                "Main staged49 passed/5 skipped/0 findings in10.7s; normal push49 passed/5 skipped/0 findings in13.4s. Native97/96 file inventory and four-shard exclusions are exact. Every existing task, npm-only/source-launcher contract,900000ms timeout, workflow permission and60-minute boundary remains."
+            ],
+            "limitations": [
+                "Designated actual Linux database workflow37965939028 dispatched after normal push; pending result, no database success inferred. No live release tag, package publication or documentation deployment. Successor Linux/macOS/Windows CI remains separate."
+            ],
+            "ci": {
+                "databaseRunId": 37965939028,
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37965939028",
+                "status": "dispatched"
+            }
+        },
+        {
+            "commit": "26117cf44c8545c3d4a0f41be1d18d9f044b658c",
+            "completedRecords": [],
+            "unresolvedRecords": 347,
+            "validation": ["Evidence 643ae7eae5b901bd."],
+            "limitations": [
+                "This is genuine Linux/Docker/Supabase execution, not a macOS skip. Cross-platform broader tool suites and final release verification still remain."
+            ],
+            "ci": {
+                "runId": 37965939028,
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37965939028",
+                "status": "completed",
+                "conclusion": "success",
+                "jobId": 113940178605,
+                "tests": 2,
+                "assertions": 19,
+                "skipped": 0
+            }
+        },
+        {
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
+            "completedRecords": ["review/repository-root/010"],
+            "unresolvedRecords": 346,
+            "validation": ["Exact committed before/after TOML and current role membership checked."],
+            "limitations": ["No platform behavior claim is made for a dead policy leaf."]
+        },
+        {
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "completedRecords": ["review/source-layout/017"],
+            "unresolvedRecords": 345,
+            "validation": [
+                "Main focused native CLI tests: 30 pass, 144 assertions, three files, 14.44 seconds.",
+                "Exact non-import bodies, linked deletion, types and native lint/format evidence retained."
+            ],
+            "limitations": [
+                "Historical private paths are superseded by the owner decision strict-repository-public-api-owners; original finding text remains."
+            ]
+        },
+        {
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "completedRecords": [
+                "review/code-commands/021",
+                "slices/tests-integration-lifecycle/021",
+                "areas/integration-tests/004",
+                "areas/integration-tests/052",
+                "areas/integration-tests/059",
+                "areas/integration-tests/061",
+                "areas/integration-tests/062",
+                "areas/integration-tests/068",
+                "areas/integration-tests/076",
+                "areas/integration-tests/078",
+                "areas/integration-tests/080"
+            ],
+            "unresolvedRecords": 334,
+            "validation": [
+                "Combined Main staged checkpoint: 44 checks passed, three skipped, zero findings, 15.9 seconds.",
+                "Normal commit hooks: 33 checks passed, one skipped, zero findings; commitlint passed.",
+                "Main SQL/Swift focused replay: 22 tests and 102 assertions; only the prescribed ineffective read-spy leaves of checks/013 are implemented.",
+                "The duplicate agent_rules ancestor fixture tables are removed; actual ancestor coverage replay passes two tests with 14 assertions."
+            ],
+            "limitations": [
+                "Local native results are macOS; simulated Windows error branches do not prove an actual Windows run.",
+                "Integration/077 and the unrelated remaining checks/013 sites stay partial; no unapproved growth is allocated to them."
+            ]
+        },
+        {
+            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
+            "completedRecords": [],
+            "unresolvedRecords": 334,
+            "validation": [
+                "CI a566 Linux tools shard4: 96 pass, two skipped, two fail, 776 assertions, 24 files, 1477.27 seconds. The failures are the duplicated agent_rules ancestor tables; the reducing fixture fix is committed in c0dafc5ea and local two-case native replay passes.",
+                "CI a566 Linux tools shards2 and3, macOS tools shard2, docs, package, Linux and macOS CLI/plugin jobs have success status from actual API."
+            ],
+            "limitations": [
+                "Windows and other matrix jobs remain running at this observation; no platform skip is counted as proof.",
+                "Manual public documentation URLs and normal managed-lock freshness failures remain separately unresolved."
+            ]
         }
     ],
     "verificationEvidenceFile": "verification.json"
