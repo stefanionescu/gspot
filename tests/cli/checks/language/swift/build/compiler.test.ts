@@ -144,7 +144,7 @@ test('Swift response files stay inside the compiler cache before log publication
         duration: 1,
     });
     try {
-        await rejection(BUILT_IN_CHECKS['swift/build'].input(input));
+        expect(await rejection(BUILT_IN_CHECKS['swift/build'].input(input))).toContain('Unsafe lifecycle path:');
         expect(await pathExists(plan.log)).toBe(false);
         const response = join(plan.folder, 'sources');
         await writeFile(response, 'Sources/Main.swift\nSources/Owner.swift\n');

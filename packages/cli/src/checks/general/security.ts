@@ -8,7 +8,6 @@ import { CODEQL } from '#cli/config/checks/general/security.ts';
 import { copyIntoScratch } from '#cli/execution/copy/public.ts';
 import { codeqlLanguagesSchema } from '#cli/parsers/schema/codeql.ts';
 import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
-import { assertMutationTarget } from '#cli/platform/root/contracts.ts';
 import { sarifFindings } from '#cli/parsers/output/structured/public.ts';
 import { toolPin, semgrepRuleFiles } from '#cli/configurations/contracts.ts';
 import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
@@ -59,10 +58,6 @@ export async function codeql(input: CheckInput): Promise<Finding[]> {
     const tool = input.view.options(`tools.${CODEQL}`);
     const languages = (tool['languages'] as string[] | undefined) ?? [];
     const suite = tool['suite'];
-    for (const language of languages) {
-        assertMutationTarget(language);
-        assertMutationTarget(`${language}.sarif`);
-    }
     if (languages.length === 0) return [];
     const metadata = codeqlLanguagesSchema.parse(
         JSON.parse(

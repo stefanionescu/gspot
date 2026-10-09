@@ -87,6 +87,8 @@ items = "string"
 direction = "tightening"
 default = []
 summary = "The CodeQL languages to scan, such as javascript-typescript, python, or swift."
+validation = { path = true }
+
 
 [[setting]]
 name = "tools.codeql.suite"

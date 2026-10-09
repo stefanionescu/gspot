@@ -1,6 +1,7 @@
-import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
+import { readSource } from '#cli/platform/root/public.ts';
+import { globPaths } from '#cli/platform/root/contracts.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { pathMatcher } from '#cli/repository/paths/public.ts';
@@ -8,9 +9,7 @@ import { runCheckTool } from '#cli/execution/command/public.ts';
 import { copyIntoScratch } from '#cli/execution/copy/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { SCRATCH_DIRECTORIES } from '#cli/config/execution/copy.ts';
-import { openRoot, readSource } from '#cli/platform/root/public.ts';
 import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
-import { globPaths, nativeSegments } from '#cli/platform/root/contracts.ts';
 import type { GeneratedPath } from '#cli/types/checks/general/generated-code.ts';
 import type { CommandPart, CommandCheck, Substitutions } from '#cli/types/execution/command.ts';
 import { substitute, perFileCommands, substituteValue } from '#cli/execution/command/arguments/public.ts';
@@ -24,25 +23,27 @@ function outputPaths(input: CheckInput, planned: CommandCheck, values: Substitut
 }
 
 function missingOutputs(input: CheckInput, targets: GeneratedPath[], command: CommandPart[]): Finding[] {
-    using sources = openRoot(input.root, 'native');
-    for (const entry of targets) {
-        nativeSegments(entry.path);
-        if (statSync(join(input.root, entry.path), { throwIfNoEntry: false }) === undefined) {
-            if (entry.kind === 'stdout')
-                return [
-                    findingAt(
-                        input,
-                        { file: entry.path, line: 1 },
-                        'missing',
-                        `Run ${command.filter((part) => typeof part === 'string').join(' ')} and write its output to ${entry.path}.`,
-                    ),
-                ];
-            const setting = entry.original.slice('{setting:'.length, -1);
-            throw new Error(`The ${setting} setting names ${entry.path}, which does not exist.`);
+    const entry = targets.find((target) => {
+        try {
+            readSource(input.root, target.path, input.reads);
+            return false;
+        } catch (error) {
+            if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return true;
+            throw error;
         }
-        sources.assertInside(entry.path);
-    }
-    return [];
+    });
+    if (entry === undefined) return [];
+    if (entry.kind === 'stdout')
+        return [
+            findingAt(
+                input,
+                { file: entry.path, line: 1 },
+                'missing',
+                `Run ${command.filter((part) => typeof part === 'string').join(' ')} and write its output to ${entry.path}.`,
+            ),
+        ];
+    const setting = entry.original.slice('{setting:'.length, -1);
+    throw new Error(`The ${setting} setting names ${entry.path}, which does not exist.`);
 }
 
 // Both snapshots use the same native traversal and source containment boundary.

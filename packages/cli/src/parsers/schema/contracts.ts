@@ -192,6 +192,7 @@ export const settingValidationSchema = z.strictObject({
     minimum: z.number().optional(),
     maximum: z.number().optional(),
     integer: z.boolean().optional(),
+    path: z.boolean().optional(),
     message: z.string().min(1).optional(),
 });
 

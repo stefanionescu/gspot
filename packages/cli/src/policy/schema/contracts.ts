@@ -29,7 +29,7 @@ function compileSettingField(field: SettingField): CompiledSetting {
         case 'list': {
             const item =
                 typeof field.items === 'string'
-                    ? compileSettingField({ type: field.items })
+                    ? compileSettingPrimitive(field.items, field.validation)
                     : compileSettingFields(field.items);
             value = { schema: z.array(item.schema), expression: `z.array(${item.expression})` };
             break;
@@ -60,25 +60,22 @@ function compileSettingPrimitive(
             expression: `${base.expression}.and(z.literal(${JSON.stringify(choices)},${JSON.stringify({ error: diagnostic })}))`,
         };
     }
-    switch (type) {
-        case 'number': {
-            return compileNumberSetting(validation);
-        }
-        case 'string': {
-            if (validation.pattern === undefined) return { schema: z.string(), expression: 'z.string()' };
-            const pattern = new RegExp(validation.pattern, 'u');
-            return {
-                schema: z.string().regex(pattern, diagnostic),
-                expression: `z.string().regex(${String(pattern)},${JSON.stringify(diagnostic)})`,
-            };
-        }
-        case 'path': {
-            return { schema: relativePath, expression: 'relativePath' };
-        }
-        case 'boolean': {
-            return { schema: z.boolean(), expression: 'z.boolean()' };
-        }
-    }
+    if (type === 'number') return compileNumberSetting(validation);
+    if (type === 'path') return { schema: relativePath, expression: 'relativePath' };
+    if (type === 'boolean') return { schema: z.boolean(), expression: 'z.boolean()' };
+    return compileStringSetting(validation);
+}
+
+function compileStringSetting(validation: SettingValueDeclaration['validation']): CompiledSetting<z.ZodString> {
+    const diagnostic = validation.message;
+    const schema = validation.path === true ? relativePath.meta({ pathRole: undefined }) : z.string();
+    const expression = validation.path === true ? 'relativePath.meta({ pathRole: undefined })' : 'z.string()';
+    if (validation.pattern === undefined) return { schema, expression };
+    const pattern = new RegExp(validation.pattern, 'u');
+    return {
+        schema: schema.regex(pattern, diagnostic),
+        expression: `${expression}.regex(${String(pattern)},${JSON.stringify(diagnostic)})`,
+    };
 }
 
 function compileNumberSetting(validation: SettingValueDeclaration['validation']): CompiledSetting<z.ZodNumber> {
@@ -230,7 +227,11 @@ export function compileSettingValue(declaration: SettingValueDeclaration): Compi
                 : path;
         }
         case 'list': {
-            return compileSettingField({ type: 'list', items: settingItemsSchema.parse(declaration.items) });
+            return compileSettingField({
+                ...declaration,
+                type: 'list',
+                items: settingItemsSchema.parse(declaration.items),
+            });
         }
         case 'table': {
             return { schema: z.record(z.string(), z.unknown()), expression: 'z.record(z.string(),z.unknown())' };

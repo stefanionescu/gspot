@@ -13,10 +13,10 @@ import { webManifestSchema } from '#cli/parsers/schema/site.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { FULL_PERCENTAGE } from '#cli/config/platform/runtime.ts';
 import { visitParsedSources } from '#cli/parsers/source/public.ts';
+import { portableSegments } from '#cli/platform/root/contracts.ts';
 import type { SiteBuild } from '#cli/types/checks/general/site.ts';
 import { statSync, lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { openRoot, readText, readSource } from '#cli/platform/root/public.ts';
-import { portableSegments, assertMutationTarget } from '#cli/platform/root/contracts.ts';
 import { toPosix, isInside, directoryOf, contentDigest } from '#cli/platform/contracts.ts';
 import { ASSET_FOLDER, TEXT_SUFFIXES, OUTPUT_TAIL_LINES, SHOWN_DIFFERENCES } from '#cli/config/checks/general/site.ts';
 
@@ -25,7 +25,6 @@ const BUILD_MEMO = { create: () => new Map<string, Promise<SiteBuild>>() };
 async function runBuild(input: CheckInput, scratch: string): Promise<SiteBuild> {
     const site = input.view.options('site');
     const outputPath = site['build_folder'];
-    assertMutationTarget(outputPath);
     const cwd = join(scratch, input.scope);
     const command = site['build_command'];
     const result = await runCheckTool(input, command, { cwd });
@@ -169,7 +168,6 @@ export async function buildReproducible(input: CheckInput): Promise<Finding[]> {
     using folder = await copyIntoScratch(input);
     using files = openRoot(folder.path, 'native');
     const output = input.view.options('site').build_folder;
-    assertMutationTarget(output);
     files.removeTree(output);
     const first = await runBuild(input, folder.path);
     if (!first.isBuilt) throw new GspotError('skip', 'The site did not build.');

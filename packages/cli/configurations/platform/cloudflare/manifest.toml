@@ -86,6 +86,8 @@ name = "cloudflare.types_file"
 type = "string"
 default = "worker-configuration.d.ts"
 summary = "Tracked Worker environment types file, relative to the project scope."
+validation = { path = true }
+
 
 [[setting]]
 name = "cloudflare.types_interface"

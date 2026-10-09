@@ -4,7 +4,6 @@ import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { Root, FileCopy } from '#cli/types/platform/root.ts';
 import { toPosix, contentDigest } from '#cli/platform/contracts.ts';
 import { GspotError, cacheDirectory } from '#cli/platform/public.ts';
-import { assertMutationTarget } from '#cli/platform/root/contracts.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform/modes.ts';
 import { openRoot, walkRoot, readSource } from '#cli/platform/root/public.ts';
@@ -110,7 +109,6 @@ export function buildPlan(input: CheckInput, purpose: SwiftBuildPurpose = 'compi
             argv: ['swift', ...PACKAGE_COMMANDS[purpose], '--scratch-path', scratch],
         };
     }
-    assertMutationTarget(project);
     const container = project.endsWith(WORKSPACE_SUFFIX) ? '-workspace' : '-project';
     const argv = [
         'xcodebuild',

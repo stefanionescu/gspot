@@ -164,6 +164,8 @@ name = "swift.xcode_project"
 type = "path"
 default = ""
 summary = "The Xcode project or workspace, relative to the scope; defaults to the detected project, otherwise the Swift package."
+validation = { path = true }
+
 
 [[setting]]
 name = "swift.xcode_scheme"

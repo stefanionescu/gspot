@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -9,8 +9,8 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { GENERATED_SCOPES } from '#tests/config/cli/checks/general/generated-code.ts';
 import { prepareCommand, commandEnvironment } from '#cli/execution/command/public.ts';
+import { GENERATED_SCOPES } from '#tests/config/cli/checks/general/generated-code.ts';
 
 test.each(GENERATED_SCOPES)('unmatched generated patterns at %s in %s do not start a tool', async (level, scope) => {
     await using sandbox = await testdir();
@@ -81,5 +81,37 @@ test.each(GENERATED_SCOPES)(
         expect(await rejection(BUILT_IN_CHECKS['supabase/stale-types'].input(input))).toContain('leaves');
         expect(run).not.toHaveBeenCalled();
         expect(await readFile(join(external.path, 'outside.json'), 'utf8')).toBe('{}\n');
+    },
+);
+
+test.each(GENERATED_SCOPES)(
+    'generated binary source links at %s in %s remain contained, cached, and unchanged',
+    async (level, scope) => {
+        await using sandbox = await testdir();
+        const table =
+            scope === '' ? '[openapi]' : `[scope."${scope}"]\nconfigurations = ["openapi"]\n[scope."${scope}".openapi]`;
+        const bytes = Buffer.from([0, 255, 127]);
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(scope === '' ? ['openapi'] : [], {
+                level,
+                tables: `${table}\ndocument = "openapi.json"\ngenerate_command = ["bun", "generate.ts"]\n`,
+            }),
+            [join(scope, 'body.bin')]: bytes,
+            [join(scope, 'generate.ts')]: 'export {};\n',
+        });
+        await symlink('body.bin', join(sandbox.path, scope, 'openapi.json'), 'file');
+        const input = buildCheckInput(await openSession(sandbox.path), 'openapi/stale-document', { scope });
+        using run = spyOn(processes, 'run').mockResolvedValue({
+            code: 0,
+            missing: false,
+            stdout: '',
+            stderr: '',
+            duration: 1,
+        });
+        expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(input)).toStrictEqual([]);
+        expect(run).toHaveBeenCalledTimes(1);
+        expect(input.reads.sources.get(posix.join(scope, 'openapi.json'))).toStrictEqual(bytes);
+        expect(await readFile(join(sandbox.path, scope, 'body.bin'))).toStrictEqual(bytes);
+        expect(await readFile(join(sandbox.path, scope, 'openapi.json'))).toStrictEqual(bytes);
     },
 );

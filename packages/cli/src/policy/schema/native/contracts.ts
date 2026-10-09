@@ -36,7 +36,10 @@ export const settingNamespaceSchemas = {
             .optional(),
     }),
     bash: z.strictObject({ safety_owners: z.array(relativePath).optional() }),
-    cloudflare: z.strictObject({ types_file: z.string().optional(), types_interface: z.string().optional() }),
+    cloudflare: z.strictObject({
+        types_file: relativePath.meta({ pathRole: undefined }).optional(),
+        types_interface: z.string().optional(),
+    }),
     coverage: z.strictObject({
         branches: z.number().min(0, undefined).max(FULL_PERCENTAGE, undefined).optional(),
         functions: z.number().min(0, undefined).max(FULL_PERCENTAGE, undefined).optional(),
@@ -178,7 +181,7 @@ export const settingNamespaceSchemas = {
         xcode_scheme: z.string().optional(),
     }),
     'tools.codeql': z.strictObject({
-        languages: z.array(z.string()).optional(),
+        languages: z.array(relativePath.meta({ pathRole: undefined })).optional(),
         suite: z
             .string()
             .and(z.literal(['security-extended', 'security-and-quality'], {}))

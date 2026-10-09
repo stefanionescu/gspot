@@ -1,6 +1,6 @@
 import { pathToFileURL } from 'node:url';
-import { sep, join, resolve } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { sep, join, resolve } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
@@ -9,8 +9,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { applyIgnores } from '#cli/execution/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { sarifFindings } from '#cli/parsers/output/structured/public.ts';
 import type { CapturedInvocation } from '#tests/types/harness/command.ts';
@@ -183,8 +183,7 @@ test.if(hasToolBuild('codeql')).each(['../outside', 'C:outside'])(
             }),
             'source.py': 'value = 1\n',
         });
-        const session = await openSession(directory.path);
-        const input = buildCheckInput(session, 'security/codeql');
+        expect(await rejection(openSession(directory.path))).toContain('Use a relative path');
         const copies: string[] = [];
         // What the database creation saw in its copy of the repository.
         const sources: string[] = [];
@@ -208,7 +207,6 @@ test.if(hasToolBuild('codeql')).each(['../outside', 'C:outside'])(
                 await Bun.write(output.slice('--output='.length), '{"version":"2.1.0","runs":[{"results":[]}]}');
             return { code: 0, missing: false, stdout: '', stderr: '', duration: 1 };
         });
-        await rejection(BUILT_IN_CHECKS['security/codeql'].input(input));
         expect(run).not.toHaveBeenCalled();
         await Bun.write(
             join(directory.path, 'gspot.toml'),

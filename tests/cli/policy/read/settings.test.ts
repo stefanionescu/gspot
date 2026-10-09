@@ -9,6 +9,7 @@ import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
 import { readPolicy, readPolicyTable, parseStrictPolicy } from '#cli/policy/public.ts';
 
 import {
+    PATH_SETTINGS,
     DISABLED_RULES,
     MALFORMED_REASON_CASES,
     REMOVED_STRUCTURE_SETTINGS,
@@ -178,5 +179,41 @@ test.each(REMOVED_STRUCTURE_SETTINGS)('removed structure setting %s is refused i
         const table = scope === '' ? 'structure' : 'scope.app.structure';
         const source = buildPolicy(['typescript'], { tables: `${scope}[${table}]\n${name} = []\n` });
         expect(() => parseStrictPolicy(source)).toThrow(name);
+    }
+});
+
+test.each(
+    PATH_SETTINGS.flatMap((entry) =>
+        (['recommended', 'all'] as const).flatMap((level) => ['', 'app'].map((scope) => ({ ...entry, level, scope }))),
+    ),
+)('$configuration $level paths in $scope are refused at the policy boundary and retain scope origins', (entry) => {
+    const { level, scope } = entry;
+    const settingValue = (path: string) => JSON.stringify(entry.list ? [path] : path);
+    const prefix = scope === '' ? '' : 'scope.app.';
+    const table = `${scope === '' ? '' : '[scope.app]\n'}[${prefix}${entry.table}]\n`;
+    for (const path of [
+        '../outside',
+        '/absolute',
+        'C:outside',
+        'nested/../../outside',
+        String.raw`unsafe\path`,
+        'unsafe\u0000path',
+    ]) {
+        const source = buildPolicy([entry.configuration], {
+            level,
+            tables: `${table}${entry.setting} = ${settingValue(path)}\n`,
+        });
+        const diagnostics = policyFindings(source);
+        expect(diagnostics).toHaveLength(1);
+        expect(diagnostics[0]).toContain(`${prefix}${entry.table}.${entry.setting}`);
+        expect(diagnostics[0]).toContain('Use a relative path');
+    }
+    const paths = ['project/native-file', 'équipe 50%.txt', ...(entry.empty ? [''] : [])];
+    for (const path of paths) {
+        const source = buildPolicy([entry.configuration], {
+            level,
+            tables: `${table}${entry.setting} = ${settingValue(path)}\n`,
+        });
+        expect(policyFindings(source)).toStrictEqual([]);
     }
 });

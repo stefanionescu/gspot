@@ -1,12 +1,3 @@
-import type { Finding } from '#cli/types/parsers/output.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
-
-export type SiteReportCase = {
-    name: string;
-    check: string;
-    analyze: (input: CheckInput) => Promise<Finding[]>;
-};
-
 /** SVG byte savings at the effective default or an authored percentage. */
 export type SvgSavingCase = {
     name: string;

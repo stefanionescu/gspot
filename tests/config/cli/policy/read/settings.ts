@@ -36,3 +36,12 @@ export const MALFORMED_REASON_CASES = [
 
 /** Former path allowances replaced by check-specific ignore records. */
 export const REMOVED_STRUCTURE_SETTINGS = ['lone_files_allowed', 'prefix_collisions_allowed', 'folder_names_allowed'];
+
+/** Settings whose declared paths are validated before checks use them. */
+export const PATH_SETTINGS = [
+    { configuration: 'security', table: 'tools.codeql', setting: 'languages', list: true, empty: false },
+    { configuration: 'site', table: 'site', setting: 'build_folder', list: false, empty: false },
+    { configuration: 'swift', table: 'swift', setting: 'xcode_project', list: false, empty: true },
+    { configuration: 'cloudflare', table: 'cloudflare', setting: 'types_file', list: false, empty: false },
+    { configuration: 'openapi', table: 'openapi', setting: 'document', list: false, empty: true },
+];

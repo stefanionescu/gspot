@@ -25,3 +25,37 @@ export const REPOSITORY: InProcessScenario = {
     configurations: ['site'],
     files: STATIC_SITE_FILES,
 };
+
+/** Native analyzer diagnostics for fatal, absent, and malformed reports. */
+export const SITE_REPORTS = [
+    {
+        name: 'links',
+        check: 'site/linkinator',
+        fatal: 'Linkinator failed: Test tool diagnostic',
+        reports: [
+            { output: '', reason: 'Linkinator returned no JSON report.' },
+            { output: '{ broken', reason: 'JSON Parse error' },
+            { output: '{}', reason: 'Invalid input: expected array, received undefined' },
+        ],
+    },
+    {
+        name: 'markup',
+        check: 'site/html-validate',
+        fatal: 'HTML validation failed: Test tool diagnostic',
+        reports: [
+            { output: '', reason: 'JSON Parse error: Unexpected EOF' },
+            { output: '{ broken', reason: 'JSON Parse error' },
+            { output: '{}', reason: 'Invalid input: expected array, received object' },
+        ],
+    },
+    {
+        name: 'selectors',
+        check: 'site/purgecss',
+        fatal: 'Unused CSS analysis failed: Test tool diagnostic',
+        reports: [
+            { output: '', reason: 'JSON Parse error: Unexpected EOF' },
+            { output: '{ broken', reason: 'JSON Parse error' },
+            { output: '{}', reason: 'Invalid input: expected array, received object' },
+        ],
+    },
+] as const;

@@ -100,3 +100,25 @@ test('effective namespaces require only defaults guaranteed by their real provid
         activeSettingNamespaceSchemas['tools.eslint'].safeParse({ import_extensions: { '**/*': false } }).success,
     ).toBe(false);
 });
+
+test('declared string path validation compiles the shared runtime and JSON schema constraint', () => {
+    const path = compileSettingValue({ type: 'string', validation: { path: true } });
+    expect(path.schema.meta()?.pathRole).toBeUndefined();
+    expect(path.expression).toBe('relativePath.meta({ pathRole: undefined })');
+    expect(z.toJSONSchema(path.schema)).toMatchObject({
+        type: 'string',
+        minLength: 1,
+        pattern: z.toJSONSchema(relativePath).pattern,
+    });
+    for (const value of ['../outside', '/absolute', 'C:outside', String.raw`unsafe\path`, '', undefined, 12]) {
+        expect(path.schema.safeParse(value).success).toBe(false);
+    }
+    expect(path.schema.parse('project/native-file')).toBe('project/native-file');
+    const constrained = compileSettingValue({
+        type: 'string',
+        validation: { path: true, pattern: String.raw`\.d\.ts$` },
+    });
+    expect(constrained.schema.safeParse('worker.d.ts').success).toBe(true);
+    expect(constrained.schema.safeParse('../worker.d.ts').success).toBe(false);
+    expect(constrained.schema.safeParse('worker.js').success).toBe(false);
+});

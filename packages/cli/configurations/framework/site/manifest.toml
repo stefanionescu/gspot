@@ -202,6 +202,8 @@ type = "path"
 path_role = "destination"
 default = "dist"
 summary = "The folder the build writes."
+validation = { path = true }
+
 
 [[setting]]
 name = "site.max_kilobytes"
