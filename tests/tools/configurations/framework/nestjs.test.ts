@@ -1,18 +1,18 @@
 // NestJS checks compiler settings and type safety; declared Swagger use selects its API lint contracts.
 import { join } from 'node:path';
+import { test, expect, describe } from 'bun:test';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { testModules } from '#tests/harness/environment.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { shareRepository } from '#tests/harness/repository.ts';
 import { installedPackage } from '#cli/repository/contracts.ts';
 import type { PackageJson } from '#cli/types/parsers/packages.ts';
 import rxjsManifest from 'rxjs/package.json' with { type: 'json' };
-import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import coreManifest from '@nestjs/core/package.json' with { type: 'json' };
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import commonManifest from '@nestjs/common/package.json' with { type: 'json' };
-import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 import { REPOSITORY, SWAGGER_DEPENDENCY } from '#tests/config/tools/configurations/framework/nestjs.ts';
 
 // Declaring an API documentation dependency makes its native lint contract applicable.
@@ -61,40 +61,27 @@ async function swaggerContracts(repository: OwnedTestRepository, level: Level): 
 }
 
 describe('the nestjs configuration', () => {
-    const resources = new AsyncDisposableStack();
-    let testRepository: OwnedTestRepository;
-    beforeAll(async () => {
-        testRepository = resources.use(
-            await createTestRepository(
-                {
-                    ...REPOSITORY,
-                    dependencies: {
-                        '@nestjs/common': commonManifest.version,
-                        '@nestjs/core': coreManifest.version,
-                        'reflect-metadata': installedPackage(
-                            undefined,
-                            testModules,
-                            join(testModules, 'reflect-metadata/package.json'),
-                        )!.version!,
-                        rxjs: rxjsManifest.version,
-                    },
-                },
-                spawnGspot,
-                prepareTestRepository,
-            ),
-        );
-    });
-    afterAll(async () => {
-        await resources.disposeAsync();
-    });
+    const testRepository = shareRepository(() => ({
+        ...REPOSITORY,
+        dependencies: {
+            '@nestjs/common': commonManifest.version,
+            '@nestjs/core': coreManifest.version,
+            'reflect-metadata': installedPackage(
+                undefined,
+                testModules,
+                join(testModules, 'reflect-metadata/package.json'),
+            )!.version!,
+            rxjs: rxjsManifest.version,
+        },
+    }));
 
     test.each(['recommended', 'all'] as const)(
         '%s enforces Swagger contracts only when the project declares Swagger',
-        (level) => swaggerContracts(testRepository, level),
+        (level) => swaggerContracts(testRepository(), level),
     );
 
     test('the type and compiler option checks accept the clean Nest module', async () => {
-        const { root, environment } = testRepository;
+        const { root, environment } = testRepository();
         for (const id of ['typescript/tsc', 'typescript/tsconfig']) {
             const clean = await spawnGspot(root, ['check', '--only', id], environment);
             expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);

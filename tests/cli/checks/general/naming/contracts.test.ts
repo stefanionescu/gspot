@@ -22,7 +22,7 @@ import {
     NAMING_LANGUAGES,
     NAMING_CATEGORIES,
     NATIVE_NAME_CATEGORIES,
-} from '#tests/config/cli/checks/naming.ts';
+} from '#tests/config/cli/checks/general/naming/contracts.ts';
 
 const owned = allChecks(configurationManifests().values()).get('naming/identifiers');
 if (owned === undefined) throw new Error('The naming/identifiers declaration is missing.');

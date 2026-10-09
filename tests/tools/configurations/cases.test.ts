@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { commitAll } from '#tests/harness/git.ts';
+import { test, expect, describe } from 'bun:test';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { chmod, appendFile } from 'node:fs/promises';
 import { GUIDE } from '#tests/config/samples/docs.ts';
@@ -9,20 +9,20 @@ import { runTestCommand } from '#tests/harness/command.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { testModules } from '#tests/harness/environment.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
+import { shareRepository } from '#tests/harness/repository.ts';
 import { installedPackage } from '#cli/repository/contracts.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import rxjsManifest from 'rxjs/package.json' with { type: 'json' };
 import { CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
-import { prepareTestRepository } from '#tests/harness/repository.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import svelteManifest from 'svelte/package.json' with { type: 'json' };
 import vitestManifest from 'vitest/package.json' with { type: 'json' };
 import { HEAD, CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import coreManifest from '@nestjs/core/package.json' with { type: 'json' };
 import * as postgres from '#tests/config/tools/configurations/database.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 import commonManifest from '@nestjs/common/package.json' with { type: 'json' };
 import * as toolPytest from '#tests/config/tools/configurations/tool/pytest.ts';
 import * as toolVitest from '#tests/config/tools/configurations/tool/vitest.ts';
@@ -33,7 +33,6 @@ import * as frameworkVue from '#tests/config/tools/configurations/framework/vue.
 import type { BashBoundary, ConfigurationCallbacks } from '#tests/types/tools/cases.ts';
 import * as frameworkNestjs from '#tests/config/tools/configurations/framework/nestjs.ts';
 import * as frameworkSvelte from '#tests/config/tools/configurations/framework/svelte.ts';
-import type { TestRepository, InstalledScenario } from '#tests/types/harness/repository.ts';
 import { MODULE_PATH, CLEAN_MODULE, ARITHMETIC_TESTS } from '#tests/config/samples/python.ts';
 import * as languagePython from '#tests/config/tools/configurations/language/python/checks.ts';
 import * as languageBashChecks from '#tests/config/tools/configurations/language/bash/checks.ts';
@@ -278,22 +277,15 @@ for (const declared of SCENARIOS) {
         (declared.repository === toolAnsible.REPOSITORY && !hasToolBuild('ansible-lint')) ||
             (declared.platforms !== undefined && !declared.platforms.includes(process.platform)),
     )(declared.name, () => {
-        const resources = new AsyncDisposableStack();
-        let repository: TestRepository;
-        beforeAll(async () => {
-            const sandbox = resources.use(await testdir());
-            const environment = await prepareTestRepository(sandbox.path, scenario.repository);
-            await scenario.repository.prepare?.(sandbox.path, environment);
-            repository = { root: sandbox.path, environment, run: spawnGspot };
-        });
-        afterAll(() => resources.disposeAsync());
+        const repository = shareRepository(() => scenario.repository);
+
         for (const entry of entries) {
             const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
             const isElsewhere = entry.platforms !== undefined && !entry.platforms.includes(process.platform);
             test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
                 `${entry.check} reports ${where} and passes after the fix`,
                 async () => {
-                    const { failed, passed } = await runFindingCase(repository, entry, scenario.repository);
+                    const { failed, passed } = await runFindingCase(repository(), entry, scenario.repository);
                     const { message, ...position } = entry.expected;
                     expect(failed.code, `${entry.check}: ${failed.stdout}${failed.stderr}`).toBe(1);
                     expect(failed.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);

@@ -1,26 +1,18 @@
 // Native Swift lint and formatting checks preserve source headers and pass after explicit fixes.
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
-import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { applyChanges } from '#tests/harness/preservation.ts';
+import { shareRepository } from '#tests/harness/repository.ts';
 import { CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
-import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { REPOSITORY } from '#tests/config/tools/configurations/language/swift/checks.ts';
-import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 
-const resources = new AsyncDisposableStack();
-let testRepository: OwnedTestRepository;
-beforeAll(async () => {
-    testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot, prepareTestRepository));
-});
-afterAll(async () => {
-    await resources.disposeAsync();
-});
+const testRepository = shareRepository(() => REPOSITORY);
 
 test.skipIf(!hasToolBuild('swiftformat'))('swiftformat keeps the source header when it fixes spacing', async () => {
-    const { root, environment } = testRepository;
+    const { root, environment } = testRepository();
     const header = '// Greeting.swift\n// Created by Alex Garcia.\n// Copyright 2026 Example Contributors.\n\n';
     const path = join(root, 'Sources/App/Greeting.swift');
     const restore = await applyChanges(root, {

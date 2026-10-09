@@ -1,25 +1,17 @@
 // Public CLI journeys for document findings and tool failure recovery.
 import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
+import { test, expect, describe } from 'bun:test';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
-import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
+import { shareRepository } from '#tests/harness/repository.ts';
 import { REPOSITORY } from '#tests/config/tools/configurations/general/markdown-docs-prose.ts';
 
-const resources = new AsyncDisposableStack();
-let testRepository: OwnedTestRepository;
-beforeAll(async () => {
-    testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot, prepareTestRepository));
-});
-afterAll(async () => {
-    await resources.disposeAsync();
-});
+const testRepository = shareRepository(() => REPOSITORY);
 
 describe('the markdown, docs and prose configurations', () => {
     test('installation restores missing Vale dictionaries and the check accepts the restored styles', async () => {
-        const { root: sandbox, environment } = testRepository;
+        const { root: sandbox, environment } = testRepository();
         await rm(join(sandbox, '.gspot', 'vale', 'config', 'dictionaries'), {
             recursive: true,
         });

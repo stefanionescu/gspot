@@ -15,7 +15,7 @@ import {
     RESERVED_POLICY,
     PREFIX_EXCEPTION,
     REPEATED_EXCEPTION,
-} from '#tests/config/cli/checks/naming.ts';
+} from '#tests/config/cli/checks/general/naming/vocabulary.ts';
 
 test('ordinary response and domain words pass while an adjacent banned name still fails', async () => {
     await using sandbox = await testdir();

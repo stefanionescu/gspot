@@ -7,7 +7,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import { MIGRATION_NAMING_FILES } from '#tests/config/cli/checks/naming.ts';
+import { MIGRATION_NAMING_FILES } from '#tests/config/cli/checks/general/naming/paths.ts';
 import { fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/contracts.ts';
 
 describe('path identifiers', () => {

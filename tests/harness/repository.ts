@@ -1,6 +1,8 @@
 // Sandbox for framework checks with installed tool projects, selected configurations, and the initial level.
 import { join } from 'node:path';
+import { afterAll, beforeAll } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
@@ -187,4 +189,19 @@ export function runtimeEvidenceCases(): RuntimeEvidenceCase[] {
             detected: false,
         },
     ];
+}
+
+/**
+ * Share one installed sandbox for the tests registered by its caller.
+ * @param scenario the authored inputs calculated when suite preparation starts
+ * @returns the prepared sandbox, available after beforeAll
+ */
+export function shareRepository(scenario: () => InstalledScenario): () => OwnedTestRepository {
+    const resources = new AsyncDisposableStack();
+    let repository: OwnedTestRepository;
+    beforeAll(async () => {
+        repository = resources.use(await createTestRepository(scenario(), spawnGspot, prepareTestRepository));
+    });
+    afterAll(() => resources.disposeAsync());
+    return () => repository;
 }

@@ -6,7 +6,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { SCOPE_POLICY, TEST_PATH_FILES, TEST_PATH_POLICY } from '#tests/config/cli/checks/naming.ts';
+import { SCOPE_POLICY, TEST_PATH_FILES, TEST_PATH_POLICY } from '#tests/config/cli/checks/general/naming/policy.ts';
 
 const MISMATCHED_POLICY = SCOPE_POLICY.replace('remote_record =', 'remoteRecord =');
 

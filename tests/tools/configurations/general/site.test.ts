@@ -1,6 +1,7 @@
 // Sandbox for the site configuration: a small site with a build script, broken one way for each check.
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
+import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
@@ -11,13 +12,11 @@ import { containing } from '#tests/harness/expectations.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
+import { shareRepository } from '#tests/harness/repository.ts';
 import { linkinator } from '#cli/checks/general/site/public.ts';
 import { cachedBuild } from '#cli/checks/general/site/contracts.ts';
-import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { SITE_POLICY, SITE_BUILD_SCRIPT } from '#tests/config/samples/site.ts';
 import type { SiteOutputCase } from '#tests/types/tools/configurations/general/site.ts';
-import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 
 import {
     COMMAND,
@@ -29,18 +28,11 @@ import {
     REVIEWED_SELECTOR_POLICY,
 } from '#tests/config/tools/configurations/general/site.ts';
 
-const resources = new AsyncDisposableStack();
-let testRepository: OwnedTestRepository;
-beforeAll(async () => {
-    testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot, prepareTestRepository));
-});
-afterAll(async () => {
-    await resources.disposeAsync();
-});
+const testRepository = shareRepository(() => REPOSITORY);
 
 describe('the site configuration', () => {
     test('the default check inspects the built site without selecting external links', async () => {
-        const { root, environment } = testRepository;
+        const { root, environment } = testRepository();
         const checked = await spawnGspot(root, ['check', '--json'], environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         const report = JSON.parse(checked.stdout) as RunReport;
@@ -55,7 +47,7 @@ async function inspectSiteOutput(scenario: SiteOutputCase): Promise<void> {
         'site/html-validate': BUILT_IN_CHECKS['site/html-validate'].input,
         'site/purgecss': BUILT_IN_CHECKS['site/purgecss'].input,
     }[check];
-    const { root, environment } = testRepository;
+    const { root, environment } = testRepository();
     using resources = new DisposableStack();
     const policy =
         scenario.level === undefined

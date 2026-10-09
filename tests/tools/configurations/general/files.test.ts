@@ -1,27 +1,20 @@
 // Native file readers report positioned findings and pass after independent fixes.
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { git } from '#tests/harness/git.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { test, expect, afterAll, beforeAll } from 'bun:test';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { REPOSITORY } from '#tests/config/tools/configurations/general/files.ts';
-import { createTestRepository, prepareTestRepository, preserveRepositoryChanges } from '#tests/harness/repository.ts';
+import { shareRepository, preserveRepositoryChanges } from '#tests/harness/repository.ts';
 
-const resources = new AsyncDisposableStack();
-let testRepository: OwnedTestRepository;
-beforeAll(async () => {
-    testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot, prepareTestRepository));
-});
-afterAll(async () => {
-    await resources.disposeAsync();
-});
+const testRepository = shareRepository(() => REPOSITORY);
+
 test('Taplo preserves default spacing across levels and accepts authored inline formatting', async () => {
-    const { root, environment } = testRepository;
+    const { root, environment } = testRepository();
     await using state = new AsyncDisposableStack();
     state.use(
-        await preserveRepositoryChanges(testRepository, {
+        await preserveRepositoryChanges(testRepository(), {
             check: 'files/taplo-format',
             files: { 'settings/inline.toml': '' },
         }),
@@ -44,10 +37,10 @@ test('Taplo preserves default spacing across levels and accepts authored inline 
 });
 
 test('Taplo applies authored native inline formatting and returns to its default', async () => {
-    const { root, environment } = testRepository;
+    const { root, environment } = testRepository();
     await using state = new AsyncDisposableStack();
     state.use(
-        await preserveRepositoryChanges(testRepository, {
+        await preserveRepositoryChanges(testRepository(), {
             check: 'files/taplo-format',
             files: { 'settings/inline.toml': 'entry = { key = true }\n' },
         }),
@@ -78,10 +71,10 @@ test('Taplo applies authored native inline formatting and returns to its default
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
 });
 test('Schema validation finds nested Unicode paths through the real tool', async () => {
-    const { root, environment } = testRepository;
+    const { root, environment } = testRepository();
     await using state = new AsyncDisposableStack();
     state.use(
-        await preserveRepositoryChanges(testRepository, {
+        await preserveRepositoryChanges(testRepository(), {
             check: 'files/v8r',
             files: { 'settings/café.json': '', '.v8rrc.yml': '' },
         }),
@@ -131,8 +124,9 @@ test('Schema validation finds nested Unicode paths through the real tool', async
 });
 
 test('TOML parsing stays offline for explicit schema directives at both levels', async () => {
-    const { root, environment } = testRepository;
+    const { root, environment } = testRepository();
     await using resources = new AsyncDisposableStack();
+
     let requests = 0;
     const server = Bun.serve({
         hostname: '127.0.0.1',
@@ -147,7 +141,7 @@ test('TOML parsing stays offline for explicit schema directives at both levels',
     });
     const directive = `#:schema ${server.url.toString()}schema.json\n`;
     resources.use(
-        await preserveRepositoryChanges(testRepository, {
+        await preserveRepositoryChanges(testRepository(), {
             check: 'files/taplo',
             files: { 'settings/schema.toml': directive + 'value =\n' },
         }),
