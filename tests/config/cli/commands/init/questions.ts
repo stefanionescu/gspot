@@ -29,3 +29,6 @@ export const RUNNER_OPTIONS = [
     { value: 'yarn', label: 'yarn (yarn exec gspot)' },
     { value: 'none', label: 'none' },
 ] as const;
+
+/** Integration defaults when an unanswered dry-run has no terminal. */
+export const DEFAULT_ANSWERS = { hooks: true, ci: 'none', agentRules: true, runner: 'mise' } as const;

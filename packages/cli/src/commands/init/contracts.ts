@@ -110,14 +110,17 @@ function detectCi(root: string, tooling: Tooling): InitAnswers['ci'] | undefined
     return undefined;
 }
 
-function planCi(root: string, tooling: Tooling): InitAnswers['ci'] {
+async function planCi(root: string, tooling: Tooling, useDefaults: boolean): Promise<InitAnswers['ci']> {
+    if (getLintJobs(root, tooling.ci).length > 0) return 'none';
     const existing = detectCi(root, tooling);
-    if (existing !== undefined) return existing;
-    if (tooling.ci.length > 0) return 'none';
-    const remote = readGitSetting(root, 'remote.origin.url') ?? '';
+    const remote =
+        existing === undefined && tooling.ci.length === 0 ? (readGitSetting(root, 'remote.origin.url') ?? '') : '';
     const host = remote.replace(/^(?:https?|ssh):\/\//u, '').replace(/^[^@/]+@/u, '');
-    if (/^github\.com[:/]/u.test(host)) return 'github';
-    return /^gitlab\.com[:/]/u.test(host) ? 'gitlab' : 'none';
+    const provider = CI_CHOICES.find(
+        ({ value }) => host.startsWith(`${value}.com:`) || host.startsWith(`${value}.com/`),
+    );
+    const proposed = existing ?? provider?.value ?? 'none';
+    return await askChoice('Write a CI workflow?', '--ci', CI_CHOICES, proposed, useDefaults);
 }
 
 function headTables(
@@ -254,14 +257,11 @@ export async function writeSetup(
  * @returns the answers
  */
 export async function askQuestions(root: string, options: InitOptions, tooling: Tooling): Promise<InitAnswers> {
-    const hooks = options.hooks ?? (await askConfirmation('Install Git hooks?', '--no-hooks', true, options.yes));
-    const ci =
-        options.ci ??
-        (getLintJobs(root, tooling.ci).length > 0
-            ? 'none'
-            : await askChoice('Write a CI workflow?', '--ci', CI_CHOICES, planCi(root, tooling), options.yes));
+    const useDefaults = options.yes || (options.isDryRun && !isInteractive());
+    const hooks = options.hooks ?? (await askConfirmation('Install Git hooks?', '--no-hooks', true, useDefaults));
+    const ci = options.ci ?? (await planCi(root, tooling, useDefaults));
     const agentRules =
-        options.agentRules ?? (await askConfirmation('Write agent rules?', '--no-agent-rules', true, options.yes));
+        options.agentRules ?? (await askConfirmation('Write agent rules?', '--no-agent-rules', true, useDefaults));
     const runner =
         options.runner ??
         (await askChoice(
@@ -273,7 +273,7 @@ export async function askQuestions(root: string, options: InitOptions, tooling: 
                     : { ...choice, label: `${choice.label} (${HOOK_RUNNERS[choice.value].command})` },
             ),
             which.sync('mise', { nothrow: true }) === null ? tooling.runner : 'mise',
-            options.yes,
+            useDefaults,
         ));
     return { hooks, ci, agentRules, runner };
 }

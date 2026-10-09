@@ -4,7 +4,6 @@ import { isDeepStrictEqual } from 'node:util';
 import { toPosix } from '#cli/platform/contracts.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { assertNoErrors } from '#cli/policy/public.ts';
 import { openRoot } from '#cli/platform/root/public.ts';
 import { toolProjectDrift } from '#cli/tools/public.ts';
 import { generatedPaths } from '#cli/generation/public.ts';
@@ -12,14 +11,17 @@ import type { FileCopy } from '#cli/types/platform/root.ts';
 import { CONFLICT_MARKERS } from '#cli/config/parsers/git.ts';
 import { hasFields } from '#cli/lifecycle/merge/contracts.ts';
 import { currentBlock } from '#cli/platform/root/contracts.ts';
+import { runnerSchema } from '#cli/parsers/schema/contracts.ts';
 import { readPolicyFile } from '#cli/policy/document/public.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
+import { errorText, assertNoErrors } from '#cli/policy/public.ts';
 import { DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/drift.ts';
 import { RETAINED_PATHS } from '#cli/config/lifecycle/ownership.ts';
 import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import type { Log, Ownership } from '#cli/types/lifecycle/ownership.ts';
 import { planClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
+import { PIN_INSTALL_COMMANDS } from '#cli/config/lifecycle/version-pin.ts';
 import { deleteInstallation } from '#cli/lifecycle/ownership/state/public.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import type { Drift, ApplyReport, WriteRequest } from '#cli/types/lifecycle/apply.ts';
@@ -28,6 +30,7 @@ import { planBlock, planMerge, planReplacement, planRestoration } from '#cli/lif
 
 import {
     VALE_CONFIG,
+    POLICY_FILE,
     VERSION_FILE,
     HOOKS_DIRECTORY,
     TOOL_PYTHON_PROJECT,
@@ -288,18 +291,30 @@ export function writeVersionPin(log: Log): void {
 /**
  * Throws when the repository pins another version than the running binary.
  * @param root the repository root
+ * @param runner the captured root runner value
  */
-export function assertVersionPin(root: string): void {
+export function assertVersionPin(root: string, runner: unknown): void {
     const pinned = readVersionPin(root);
-    if (pinned !== undefined && pinned !== RUNNING_VERSION)
+    if (pinned !== undefined && pinned !== RUNNING_VERSION) {
+        const selected = runnerSchema.optional().safeParse(runner);
+        if (!selected.success)
+            throw new GspotError(
+                'policy',
+                selected.error.issues.map((issue) =>
+                    errorText({ path: ['runner'], message: issue.message }, POLICY_FILE),
+                ),
+            );
+        const install = selected.data === undefined ? 'npm install --global' : PIN_INSTALL_COMMANDS[selected.data];
+        const command = selected.data === 'mise' ? install : `${install} @gspothq/cli@${pinned}`;
         throw new GspotError(
             'pin',
             [
                 `This repository pins gspot ${pinned} and this binary is ${RUNNING_VERSION}.`,
-                "Two ways forward: install the pinned version (mise install, or your package manager's install),",
-                `or move the pin to this version: gspot apply`,
+                `Install the pinned version: ${command}`,
+                'To upgrade the repository pin to this version: gspot apply',
             ].join('\n'),
         );
+    }
 }
 
 /**

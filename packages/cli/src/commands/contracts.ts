@@ -85,8 +85,9 @@ export function registerInstall(program: Program): void {
  */
 export async function installCommand(options: InstallOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
-    assertVersionPin(root);
-    const session = await openSession(root);
+    const policyFiles = readPolicy(root);
+    assertVersionPin(root, policyFiles.policy.runner);
+    const session = await openSession(root, policyFiles);
     const generated = emitAll(session);
     const { steps, notes, hooks } = installationPlan(session, generated, options.refreshLockfiles === true);
     if (options.isDryRun) {

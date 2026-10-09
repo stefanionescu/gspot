@@ -92,8 +92,8 @@ async function deleteIgnore(root: string, options: IgnoreOptions, input: Capture
  */
 async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
-    assertVersionPin(root);
     const input = preparePolicy(root);
+    assertVersionPin(root, input.table['runner']);
     const { policy } = readPolicyTable(input.table, root);
     assertKnownCheck(options.check, policy);
     if (!options.remove) {

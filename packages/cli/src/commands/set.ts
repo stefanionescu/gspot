@@ -156,8 +156,8 @@ async function changeSetting(
  */
 async function setCommand(options: SetOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
-    assertVersionPin(root);
     const input = preparePolicy(root);
+    assertVersionPin(root, input.table['runner']);
     const { policy } = readPolicyTable(input.table, root);
     if (options.scope !== undefined && !Object.hasOwn(policy.scope, options.scope))
         throw new GspotError('policy', [

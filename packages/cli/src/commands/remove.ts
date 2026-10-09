@@ -22,14 +22,14 @@ import { requireChain, configurationManifests } from '#cli/configurations/public
  */
 async function removeCommand(options: RemoveOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
-    assertVersionPin(root);
+    const input = preparePolicy(root);
+    assertVersionPin(root, input.table['runner']);
     const manifests = configurationManifests();
     const general = options.configurations.find((id) => manifests.get(id)?.configuration.kind === 'general');
     if (general !== undefined)
         throw new GspotError('policy', [
             `The ${general} configuration follows repository inputs and the selected level. Change coverage with gspot set level, or record a check exception with gspot ignore and a reason.`,
         ]);
-    const input = preparePolicy(root);
     const mutation: Mutation = (raw) => {
         const holder = getScopeTable(raw, options.scope);
         const list = policySchema.shape.configurations.unwrap().parse(holder['configurations'] ?? []);

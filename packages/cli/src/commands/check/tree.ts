@@ -1,4 +1,5 @@
 // Checking one tree: the working tree, or a copy of the index or of a pushed commit.
+import { readPolicy } from '#cli/policy/public.ts';
 import { runText } from '#cli/terminal/contracts.ts';
 import { note, warn } from '#cli/terminal/public.ts';
 import { openSession } from '#cli/commands/public.ts';
@@ -148,8 +149,9 @@ export async function checkTree(
     signal: AbortSignal,
     revision?: RevisionSource,
 ): Promise<CheckCommandResult> {
-    assertVersionPin(root);
-    const session = await openSession(root);
+    const policyFiles = readPolicy(root);
+    assertVersionPin(root, policyFiles.policy.runner);
+    const session = await openSession(root, policyFiles);
     try {
         const stale = reconcileConfigurations(session).notes;
         if (stale.length > 0) warn(`The saved setup is stale: ${stale.join('; ')}. Run: gspot apply`);

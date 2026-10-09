@@ -8,6 +8,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { PIN_INSTALLATIONS } from '#tests/config/cli/lifecycle/version-pin.ts';
 import { readVersionPin, writeVersionPin, assertVersionPin } from '#cli/lifecycle/public.ts';
 
 const { version: RUNNING_VERSION } = packageManifest;
@@ -21,12 +22,12 @@ test('the version pin is written, read, and refused when it differs', async () =
     }
     expect(readVersionPin(sandbox.path)).toBe(RUNNING_VERSION);
     expect(() => {
-        assertVersionPin(sandbox.path);
+        assertVersionPin(sandbox.path, undefined);
     }).not.toThrow();
     await writeFile(join(sandbox.path, '.gspot/version'), '9.9.9\n');
     let refused: unknown;
     try {
-        assertVersionPin(sandbox.path);
+        assertVersionPin(sandbox.path, undefined);
     } catch (error) {
         refused = error;
     }
@@ -35,8 +36,8 @@ test('the version pin is written, read, and refused when it differs', async () =
         code: 'pin',
         message: [
             `This repository pins gspot 9.9.9 and this binary is ${RUNNING_VERSION}.`,
-            "Two ways forward: install the pinned version (mise install, or your package manager's install),",
-            'or move the pin to this version: gspot apply',
+            'Install the pinned version: npm install --global @gspothq/cli@9.9.9',
+            'To upgrade the repository pin to this version: gspot apply',
         ].join('\n'),
     });
 });
@@ -48,7 +49,7 @@ test('a different saved version refuses check and doctor reports both remedies u
     await Bun.write(join(sandbox.path, '.gspot/version'), '9.9.9\n');
     const check = await runGspot(sandbox.path, ['check', '--json']);
     expect(check.code, check.stdout + check.stderr).toBe(2);
-    expect(check.stdout).toContain('mise install');
+    expect(check.stdout).toContain('npm install --global @gspothq/cli@9.9.9');
     expect(check.stdout).toContain('gspot apply');
     const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(doctor.code, doctor.stdout + doctor.stderr).toBe(1);
@@ -60,3 +61,16 @@ test('a different saved version refuses check and doctor reports both remedies u
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(readVersionPin(sandbox.path)).toBe(RUNNING_VERSION);
 });
+
+test.each(PIN_INSTALLATIONS)(
+    'a different pin names the %s install before the explicit upgrade',
+    async (runner, command) => {
+        await using sandbox = await testdir({ '.gspot/version': '9.9.9\n' });
+        expect(() => {
+            assertVersionPin(sandbox.path, runner);
+        }).toThrow(
+            `Install the pinned version: ${command}\nTo upgrade the repository pin to this version: gspot apply`,
+        );
+        expect(await Bun.file(join(sandbox.path, '.gspot/version')).text()).toBe('9.9.9\n');
+    },
+);

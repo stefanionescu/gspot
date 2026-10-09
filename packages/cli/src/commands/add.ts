@@ -23,7 +23,8 @@ import { getScopeTable, preparePolicy } from '#cli/policy/document/contracts.ts'
  */
 async function addCommand(options: AddOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
-    assertVersionPin(root);
+    const input = preparePolicy(root);
+    assertVersionPin(root, input.table['runner']);
     const manifests = configurationManifests();
     const [unavailable] = unknownConfigurations(
         options.configurations.map((name) => ({ name })),
@@ -35,7 +36,6 @@ async function addCommand(options: AddOptions): Promise<CommandResult> {
         throw new GspotError('policy', [
             `The ${general} configuration follows repository inputs and the selected level. Change coverage with gspot set level, or record a check exception with gspot ignore and a reason.`,
         ]);
-    const input = preparePolicy(root);
     const mutation: Mutation = (raw) => {
         const holder = getScopeTable(raw, options.scope);
         const list = policySchema.shape.configurations.unwrap().parse(holder['configurations'] ?? []);
