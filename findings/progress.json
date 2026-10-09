@@ -1,5 +1,5 @@
 {
-    "openRecords": 290,
+    "openRecords": 281,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -560,7 +560,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 290,
+        "openRecords": 281,
         "records": 1092,
         "batches": [
             {
@@ -866,8 +866,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 209,
-                "unresolvedAssignments": 82
+                "completedAssignments": 210,
+                "unresolvedAssignments": 81
             },
             {
                 "id": "python",
@@ -2110,8 +2110,8 @@
                     "review/policy-exceptions/061",
                     "review/carve-outs/001"
                 ],
-                "completedAssignments": 45,
-                "unresolvedAssignments": 46
+                "completedAssignments": 53,
+                "unresolvedAssignments": 38
             },
             {
                 "id": "layout",
@@ -5280,10 +5280,13 @@
             ]
         },
         "review/code-commands/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "a1be5898f8fdc324c526779bb745861b91917055",
+            "verification": [
+                "Plugin metadata owns its `configs.all`; duplicated CLI rule gating is deleted. Both levels and Next.js Pages applicability retain their required on/off expectations.",
+                "Exact generated-preset capture size exception was expressly approved. Normal plugin build, preset refresh and apply produce the integrated output; native level and template tests pass. Evidence: `/tmp/gspot-cc029030045-final/freeze.json` and `/tmp/gspot-cc029-template015-main-native.log`."
+            ]
         },
         "review/code-commands/030": {
             "status": "complete",
@@ -5987,56 +5990,79 @@
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
                 }
+            ],
+            "remaining": [
+                "`review/policy-exceptions/007` must also report undeclared naming overrides and in-process structure ignores that match no finding; current unmatched-path detection alone does not meet those obligations."
             ]
         },
         "review/commands-templates/002": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "a1be5898f8fdc324c526779bb745861b91917055",
+            "verification": [
+                "Evidence 99cedf9c066772ef.",
+                "All six exclusion helpers/constants/refusal deleted; no replacement filtering.",
+                "Reviewed exact fix and current committed owners; current focused template tests pass. Evidence: `/tmp/gspot-policy-template-current-audit/readiness-supplement.json` and `/tmp/gspot-template-eight-current-native-receipt.json`.",
+                "Template-only source/type/static and acceptance/doc footprint reduces 565 bytes in identified declarations and sole-owned files; shared imports are inventoried by binding. This is a bounded concern measurement, not a full tracked-patch or per-record allocation."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "a1be5898f8fdc324c526779bb745861b91917055",
                     "verification": ["Evidence b30ef09416624bd0."]
                 }
             ]
         },
         "review/commands-templates/003": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "a1be5898f8fdc324c526779bb745861b91917055",
+            "verification": [
+                "Evidence 99cedf9c066772ef.",
+                "parseTemplate validates raw TOML then returns raw tables; init merges authored raw values without schema default infusion.",
+                "Reviewed exact fix and current committed owners; current focused template tests pass. Evidence: `/tmp/gspot-policy-template-current-audit/readiness-supplement.json` and `/tmp/gspot-template-eight-current-native-receipt.json`.",
+                "Template-only source/type/static and acceptance/doc footprint reduces 565 bytes in identified declarations and sole-owned files; shared imports are inventoried by binding. This is a bounded concern measurement, not a full tracked-patch or per-record allocation."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "a1be5898f8fdc324c526779bb745861b91917055",
                     "verification": ["Evidence b30ef09416624bd0."]
                 }
             ]
         },
         "review/commands-templates/004": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "a1be5898f8fdc324c526779bb745861b91917055",
+            "verification": [
+                "Evidence 99cedf9c066772ef.",
+                "Template schema omits only scope; obsolete REPOSITORY_TABLES removed; export warns once per local/tracked executable command.",
+                "Reviewed exact fix and current committed owners; current focused template tests pass. Evidence: `/tmp/gspot-policy-template-current-audit/readiness-supplement.json` and `/tmp/gspot-template-eight-current-native-receipt.json`.",
+                "Template-only source/type/static and acceptance/doc footprint reduces 565 bytes in identified declarations and sole-owned files; shared imports are inventoried by binding. This is a bounded concern measurement, not a full tracked-patch or per-record allocation."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "a1be5898f8fdc324c526779bb745861b91917055",
                     "verification": ["Evidence b30ef09416624bd0."]
                 }
             ]
         },
         "review/commands-templates/005": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "a1be5898f8fdc324c526779bb745861b91917055",
+            "verification": [
+                "Evidence 99cedf9c066772ef.",
+                "Atomic named destination supports outside-root paths; managed policy/log paths refused; export kind/recovery contract removed; approved linked/drive safety retained.",
+                "Reviewed exact fix and current committed owners; current focused template tests pass. Evidence: `/tmp/gspot-policy-template-current-audit/readiness-supplement.json` and `/tmp/gspot-template-eight-current-native-receipt.json`.",
+                "Template-only source/type/static and acceptance/doc footprint reduces 565 bytes in identified declarations and sole-owned files; shared imports are inventoried by binding. This is a bounded concern measurement, not a full tracked-patch or per-record allocation."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "a1be5898f8fdc324c526779bb745861b91917055",
                     "verification": ["Evidence b30ef09416624bd0."]
                 }
             ]
@@ -6060,14 +6086,19 @@
             ]
         },
         "review/commands-templates/009": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "a1be5898f8fdc324c526779bb745861b91917055",
+            "verification": [
+                "Evidence 99cedf9c066772ef.",
+                "Copy-once refuses existing policy; canonical writer preserves copied-template comment after schema; guide documents both.",
+                "Reviewed exact fix and current committed owners; current focused template tests pass. Evidence: `/tmp/gspot-policy-template-current-audit/readiness-supplement.json` and `/tmp/gspot-template-eight-current-native-receipt.json`.",
+                "Template-only source/type/static and acceptance/doc footprint reduces 565 bytes in identified declarations and sole-owned files; shared imports are inventoried by binding. This is a bounded concern measurement, not a full tracked-patch or per-record allocation."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "a1be5898f8fdc324c526779bb745861b91917055",
                     "verification": ["Evidence b30ef09416624bd0."]
                 }
             ]
@@ -6108,31 +6139,38 @@
             ]
         },
         "review/commands-templates/015": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "a1be5898f8fdc324c526779bb745861b91917055",
+            "verification": [
+                "Evidence 99cedf9c066772ef.",
+                "Delete template fetch-count and init-specific HTTP-status assertions; retain exact exit and unchanged repository checks. Source HTTP-status coverage remains in its proper template-source tests.",
+                "The integrated test owner removes 114 bytes from the checkpoint baseline. Native focused tests: 38 passed, 523 assertions. Evidence: `/tmp/gspot-template015-current/freeze.json`."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "a1be5898f8fdc324c526779bb745861b91917055",
                     "verification": ["Evidence b30ef09416624bd0."]
                 }
             ]
         },
         "review/commands-templates/016": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+            "commit": "a1be5898f8fdc324c526779bb745861b91917055",
             "verification": [
                 "Evidence a54f15598472523e.",
                 "The two prescribed linked destinations and drive-relative C: path are refused; real absolute/external destinations remain permitted.",
-                "Export tests retained atomic publication, exact diagnostics and original external bytes in Main210/492."
+                "Export tests retained atomic publication, exact diagnostics and original external bytes in Main210/492.",
+                "Exact managed-path human/JSON diagnostics, outside-root success and two linked-path cases survive; approved drive-relative diagnostic retained.",
+                "Reviewed exact fix and current committed owners; current focused template tests pass. Evidence: `/tmp/gspot-policy-template-current-audit/readiness-supplement.json` and `/tmp/gspot-template-eight-current-native-receipt.json`.",
+                "Template-only source/type/static and acceptance/doc footprint reduces 565 bytes in identified declarations and sole-owned files; shared imports are inventoried by binding. This is a bounded concern measurement, not a full tracked-patch or per-record allocation."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "a1be5898f8fdc324c526779bb745861b91917055",
                     "verification": ["Evidence b30ef09416624bd0."]
                 },
                 {
@@ -6143,14 +6181,19 @@
             ]
         },
         "review/commands-templates/019": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "a1be5898f8fdc324c526779bb745861b91917055",
+            "verification": [
+                "Evidence 99cedf9c066772ef.",
+                "Policy edits use savePolicy/apply generated outputs without installation; changed tool needs produce installation note; removal persists removed_configurations.",
+                "Reviewed exact fix and current committed owners; current focused template tests pass. Evidence: `/tmp/gspot-policy-template-current-audit/readiness-supplement.json` and `/tmp/gspot-template-eight-current-native-receipt.json`.",
+                "Template-only source/type/static and acceptance/doc footprint reduces 565 bytes in identified declarations and sole-owned files; shared imports are inventoried by binding. This is a bounded concern measurement, not a full tracked-patch or per-record allocation."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "a1be5898f8fdc324c526779bb745861b91917055",
                     "verification": ["Evidence b30ef09416624bd0."]
                 }
             ]
@@ -18840,6 +18883,31 @@
             ],
             "limitations": [
                 "Cross-platform CI is pending; local YAML and shell checks do not establish native Windows execution. Public npm first-publication prerequisites and live setup remain in partial main/001."
+            ]
+        },
+        {
+            "commit": "a1be5898f8fdc324c526779bb745861b91917055",
+            "completedRecords": [
+                "review/code-commands/029",
+                "review/commands-templates/015",
+                "review/commands-templates/002",
+                "review/commands-templates/003",
+                "review/commands-templates/004",
+                "review/commands-templates/005",
+                "review/commands-templates/009",
+                "review/commands-templates/016",
+                "review/commands-templates/019"
+            ],
+            "unresolvedRecords": 281,
+            "validation": [
+                "Current focused export/init/remove tests: 36 passed, zero failed, 376 assertions across four files; macOS Bun 1.4.2. Saved policy native suite: 65 passed, 218 assertions.",
+                "Integrated plugin/template checkpoint native tests: 38 passed, 523 assertions. Required rule applicability retained at both levels, including prescribed all-only and Pages branches.",
+                "Checkpoint staged check: 151 passed, zero failed, 12 skipped, zero findings. Commit hook: 112 passed, zero failed, four skipped. Push check: 151 passed, zero failed, 12 skipped, zero findings."
+            ],
+            "limitations": [
+                "`review/commands-templates/001` stays partial for the additional unused-name and unused-ignore obligations of `review/policy-exceptions/007`.",
+                "Shared canonical-writer/schema work and cross-platform final verification retain their own unresolved records; no unrelated byte reduction or platform inference is claimed.",
+                "Public first-publication and live setup remain in partial `main/001`; generated CI npm installation returns 404 for the unpublished plugin."
             ]
         }
     ],
