@@ -205,10 +205,10 @@ export async function installToolProjects(cwd: string): Promise<void> {
 /**
  * Prepare selected native tool projects from this suite's managed installations.
  * @param root the initialized native-check fixture
- * @returns the actual Python environment, or no additional environment without Python tools
+ * @returns the managed native command environment for the sandbox
  */
 export async function shareToolProjects(root: string): Promise<Record<string, string>> {
-    let environment: Record<string, string> = {};
+    let environment: Record<string, string> = { PATH: buildToolsPath([]) };
     {
         using files = openRoot(root);
         if (files.read(TOOL_PYTHON_PROJECT) !== undefined) environment = await sharePythonTools(root);
@@ -238,8 +238,10 @@ export async function shareToolProjects(root: string): Promise<Record<string, st
     if (npm !== undefined)
         generated.files.push({ ...npm.lockfile, ...compact({ read: log.files.read(npm.lockfile.path) }) });
     writeGeneratedFiles(session, generated, log);
-    if (npm !== undefined)
+    if (npm !== undefined) {
         installTree(log, 'npm', readInstalledTree(join(npm.directory, '.gspot/node_modules'), 'npm'));
+        environment['PATH'] = [join(root, NODE_MODULES_DIRECTORY, '.bin'), environment['PATH']].join(delimiter);
+    }
     if (generated.files.some(({ path }) => path === VALE_CONFIG) && session.policyFiles.policy.level === 'all') {
         const vale = await prepareValeProject(session);
         installTree(log, 'vale', readInstalledTree(join(vale, VALE_PACKAGE_DIRECTORY), 'vale'));

@@ -7,9 +7,16 @@ import { prepare } from '#cli/commands/init/public.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { writeSetup } from '#cli/commands/init/contracts.ts';
+import { shareRepository } from '#tests/harness/repository.ts';
 import { parseTemplate } from '#cli/policy/document/contracts.ts';
 import { COMMITLINT_PACKAGE } from '#tests/config/samples/commitlint.ts';
-import { COMMITLINT_TAKEOVERS } from '#tests/config/tools/configurations/general/commits/takeover.ts';
+
+import {
+    COMMITLINT_TAKEOVERS,
+    COMMITLINT_REPOSITORY,
+} from '#tests/config/tools/configurations/general/commits/takeover.ts';
+
+const repository = shareRepository(() => COMMITLINT_REPOSITORY);
 
 test.each(COMMITLINT_TAKEOVERS)(
     'initialization retires the native Commitlint configuration $file',
@@ -17,7 +24,8 @@ test.each(COMMITLINT_TAKEOVERS)(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { [file]: source, 'message.txt': 'special: authored contract\n' });
         commitAll(sandbox.path);
-        const before = await runTestCommand(['commitlint', '--edit', 'message.txt'], { cwd: sandbox.path });
+        const execution = { cwd: sandbox.path, env: repository().environment };
+        const before = await runTestCommand(['commitlint', '--edit', 'message.txt'], execution);
         expect(before.code, before.stdout + before.stderr).toBe(0);
         const options = buildInitOptions(sandbox.path, {
             configurations: ['none'],
@@ -32,11 +40,11 @@ test.each(COMMITLINT_TAKEOVERS)(
         expect(initialized.exitCode).toBe(0);
         expect(await Bun.file(join(sandbox.path, file)).exists()).toBe(false);
         const command = ['commitlint', '--config', '.gspot/config/commitlint.config.cjs', '--edit', 'message.txt'];
-        const after = await runTestCommand(command, { cwd: sandbox.path });
+        const after = await runTestCommand(command, execution);
         expect(after.code, after.stdout + after.stderr).toBe(1);
         expect(after.stdout.match(/\[type-enum\]/gu)).toStrictEqual(['[type-enum]']);
         await Bun.write(join(sandbox.path, 'message.txt'), 'fix: generated contract\n');
-        const corrected = await runTestCommand(command, { cwd: sandbox.path });
+        const corrected = await runTestCommand(command, execution);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
 );
@@ -53,8 +61,9 @@ test.each(['', 'app'])('native Commitlint discovery follows only the managed pac
         [messageFile]: 'special: authored contract\n',
     });
     commitAll(sandbox.path);
+    const execution = { cwd, env: repository().environment };
     const command = ['commitlint', '--edit', join(sandbox.path, messageFile)];
-    const before = await runTestCommand(command, { cwd });
+    const before = await runTestCommand(command, execution);
     expect(before.code, before.stdout + before.stderr).toBe(0);
     const options = buildInitOptions(sandbox.path, {
         configurations: ['none'],
@@ -75,13 +84,13 @@ test.each(['', 'app'])('native Commitlint discovery follows only the managed pac
             JSON.stringify({ extends: target }),
         ),
     );
-    const after = await runTestCommand(command, { cwd });
+    const after = await runTestCommand(command, execution);
     expect(after.code, after.stdout + after.stderr).toBe(1);
     expect(after.stdout.match(/\[type-enum\]/gu)).toStrictEqual(['[type-enum]']);
     for (const level of ['recommended', 'all']) {
         const changed = await runGspot(sandbox.path, ['set', 'level', level]);
         expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-        const native = await runTestCommand(command, { cwd });
+        const native = await runTestCommand(command, execution);
         expect(native.code, native.stdout + native.stderr).toBe(level === 'all' ? 1 : 0);
         if (level === 'all') expect(native.stdout.match(/\[type-enum\]/gu)).toStrictEqual(['[type-enum]']);
         else {
@@ -90,6 +99,6 @@ test.each(['', 'app'])('native Commitlint discovery follows only the managed pac
         }
     }
     await Bun.write(join(sandbox.path, messageFile), 'fix: generated contract\n');
-    const corrected = await runTestCommand(command, { cwd });
+    const corrected = await runTestCommand(command, execution);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });

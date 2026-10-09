@@ -8,7 +8,6 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { buildToolsPath } from '#tests/harness/install.ts';
 import { parseOutput } from '#cli/parsers/output/public.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
@@ -16,13 +15,17 @@ import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { checkedFindings } from '#cli/execution/command/contracts.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
+import { buildToolsPath, shareToolProjects } from '#tests/harness/install.ts';
 
 // Uses the installed Markdown tool and emitted native configuration for both output contracts.
 async function runMarkdown(root: string, paths: string[]) {
     const session = await openSession(root);
     const generated = emitAll(session);
-    using log = openOwnership(root);
-    writeGeneratedFiles(session, generated, log);
+    {
+        using log = openOwnership(root);
+        writeGeneratedFiles(session, generated, log);
+    }
+    const environment = await shareToolProjects(root);
     const configuration = generated.files.find(({ path }) => path === '.gspot/config/markdownlint-cli2.mjs')!;
     const plans = planRun(session, { stage: 'all', only: ['markdown/markdownlint'], skips: [] });
     const planned = plans[0]!;
@@ -33,8 +36,8 @@ async function runMarkdown(root: string, paths: string[]) {
         configuration.path,
         ...paths.map((path) => `:${path}`),
     ];
-    const failed = await runTestCommand(command, { cwd: root, env: { PATH: buildToolsPath(['markdownlint-cli2']) } });
-    return { planned, command, failed };
+    const failed = await runTestCommand(command, { cwd: root, env: environment });
+    return { planned, command, failed, environment };
 }
 
 test('native Markdown JSON preserves filename delimiters, positions, and fixability', async () => {
@@ -46,7 +49,7 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
         }),
         ...Object.fromEntries(paths.map((path) => [path, 'café <img src="example.png">   \n'])),
     });
-    const { planned, command, failed } = await runMarkdown(sandbox.path, paths);
+    const { planned, command, failed, environment } = await runMarkdown(sandbox.path, paths);
     expect(failed.code, failed.stderr).toBe(1);
     const findings = parseOutput(planned.check, failed.stdout, failed.stderr, {
         root: sandbox.path,
@@ -60,7 +63,7 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
     for (const path of paths) await Bun.write(join(sandbox.path, path), '# Title\n');
     const corrected = await runTestCommand(command, {
         cwd: sandbox.path,
-        env: { PATH: buildToolsPath(['markdownlint-cli2']) },
+        env: environment,
     });
     expect(corrected.code, corrected.stderr).toBe(0);
     expect(parseOutput(planned.check, corrected.stdout, '', { root: sandbox.path, cwd: sandbox.path })).toStrictEqual(

@@ -1,3 +1,8 @@
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
+
+/** Native installation is separate from the authored pre-init configuration under test. */
+export const REPOSITORY: InstalledScenario = { configurations: ['dependencies'], dependencies: {}, files: {} };
+
 /** Native Syncpack filenames that were absent from the takeover declarations. */
 export const SYNCPACK_TAKEOVERS = [
     { file: '.syncpackrc.yaml', source: 'versionGroups:\n  - dependencies: [fixture]\n    isIgnored: true\n' },

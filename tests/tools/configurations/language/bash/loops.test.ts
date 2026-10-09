@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { buildToolsPath } from '#tests/harness/install.ts';
+import { shareToolProjects } from '#tests/harness/install.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { LOOP_COUNTS, COUNTED_LOOPS, CORRECTED_LOOPS } from '#tests/config/tools/configurations/language/bash/loops.ts';
 
@@ -17,9 +17,9 @@ test('native Bash counts include C-style branches and nesting while omitting loo
         'source.sh': COUNTED_LOOPS,
         'api/source.sh': COUNTED_LOOPS,
     });
-    const environment = { PATH: buildToolsPath(['ast-grep']) };
-    const applied = await spawnGspot(sandbox.path, ['apply'], environment);
+    const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const environment = await shareToolProjects(sandbox.path);
     const command = ['check', '--only', 'bash/function-size', '--json'];
     const broken = await spawnGspot(sandbox.path, command, environment);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);

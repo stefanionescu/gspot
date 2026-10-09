@@ -6,8 +6,11 @@ import { prepare } from '#cli/commands/init/public.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { writeSetup } from '#cli/commands/init/contracts.ts';
+import { shareRepository } from '#tests/harness/repository.ts';
 import { parseTemplate } from '#cli/policy/document/contracts.ts';
-import { SYNCPACK_TAKEOVERS } from '#tests/config/tools/configurations/general/dependencies/syncpack.ts';
+import { REPOSITORY, SYNCPACK_TAKEOVERS } from '#tests/config/tools/configurations/general/dependencies/syncpack.ts';
+
+const tools = shareRepository(() => REPOSITORY);
 
 test.each(SYNCPACK_TAKEOVERS)(
     'initialization retires native Syncpack configuration $file',
@@ -22,7 +25,8 @@ test.each(SYNCPACK_TAKEOVERS)(
             'syncpack.config.mts': 'export default {};\n',
         });
         commitAll(sandbox.path);
-        const before = await runTestCommand(['syncpack', 'lint', '--no-ansi'], { cwd: sandbox.path });
+        const execution = { cwd: sandbox.path, env: tools().environment };
+        const before = await runTestCommand(['syncpack', 'lint', '--no-ansi'], execution);
         expect(before.code, before.stdout + before.stderr).toBe(0);
         const options = buildInitOptions(sandbox.path, {
             configurations: ['none'],
@@ -42,12 +46,12 @@ test.each(SYNCPACK_TAKEOVERS)(
         expect(await Bun.file(join(sandbox.path, 'syncpack.config.cts')).text()).toBe('module.exports = {};\n');
         expect(await Bun.file(join(sandbox.path, 'syncpack.config.mts')).text()).toBe('export default {};\n');
         const command = ['syncpack', 'lint', '--config', '.gspot/config/syncpack.json', '--no-ansi'];
-        const after = await runTestCommand(command, { cwd: sandbox.path });
+        const after = await runTestCommand(command, execution);
         expect(after.code, after.stdout + after.stderr).toBe(1);
         expect(after.stderr).toContain('fixture');
         expect(after.stderr).toContain('SameRangeMismatch');
         await Bun.write(join(sandbox.path, 'packages/app/package.json'), rootPackage.replace('"root"', '"app"'));
-        const corrected = await runTestCommand(command, { cwd: sandbox.path });
+        const corrected = await runTestCommand(command, execution);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
 );

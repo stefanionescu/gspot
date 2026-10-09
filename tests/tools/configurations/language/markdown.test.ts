@@ -4,8 +4,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { buildToolsPath } from '#tests/harness/install.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { shareToolProjects } from '#tests/harness/install.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { FILES, TABLES, TABLE_COLUMN_SAMPLE } from '#tests/config/tools/configurations/language/markdown.ts';
 
@@ -16,6 +16,7 @@ test('Markdown coverage switches by level while scoped native options remain eff
         await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['markdown'], { level, tables: TABLES }));
         const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await shareToolProjects(sandbox.path);
         const failed = await spawnGspot(sandbox.path, ['check', '--only', 'markdown/markdownlint', '--json']);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
@@ -64,6 +65,7 @@ test('native Markdown discovery reads shipped defaults and scoped options throug
     });
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const environment = await shareToolProjects(sandbox.path);
     for (const folder of ['', 'app']) {
         const native = await runTestCommand(
             [
@@ -71,7 +73,7 @@ test('native Markdown discovery reads shipped defaults and scoped options throug
                 '--no-globs',
                 ...(folder === '' ? [':root.md', ':title.md', ':long.md'] : [':guide.md']),
             ],
-            { cwd: join(sandbox.path, folder), env: { PATH: buildToolsPath(['markdownlint-cli2']) } },
+            { cwd: join(sandbox.path, folder), env: environment },
         );
         expect(native.code, native.stdout + native.stderr).toBe(0);
     }
@@ -91,6 +93,7 @@ test.each(['recommended', 'all'] as const)(
         });
         const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await shareToolProjects(sandbox.path);
         const ignored = await spawnGspot(sandbox.path, ['check', '--only', 'markdown/markdownlint', '--json']);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
         const ignoredReport = JSON.parse(ignored.stdout) as RunReport;
@@ -112,6 +115,7 @@ test.each(['recommended', 'all'] as const)(
         await createFileTree(sandbox.path, { 'gspot.toml': policy, 'table.md': TABLE_COLUMN_SAMPLE });
         const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await shareToolProjects(sandbox.path);
         const failed = await spawnGspot(sandbox.path, ['check', '--only', 'markdown/markdownlint', '--json']);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;

@@ -1,6 +1,7 @@
 // Checks used by a TypeScript repository report their expected findings and pass after the fixes.
 import { join } from 'node:path';
 import { commitAll } from '#tests/harness/git.ts';
+import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -8,14 +9,13 @@ import { TYPO } from '#tests/config/samples/spelling.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { applyChanges } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { shareRepository } from '#tests/harness/repository.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
 import { installedModules } from '#tests/harness/environment.ts';
-import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 import type { TypecheckOutcome } from '#tests/types/tools/configurations/typescript.ts';
-import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 import { REPOSITORY } from '#tests/config/tools/configurations/language/typescript/checks.ts';
 import { stat, chmod, mkdir, readdir, symlink, writeFile, appendFile } from 'node:fs/promises';
-import type { InstalledScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
 
 import {
     ARCHITECTURE,
@@ -35,25 +35,18 @@ const repository: InstalledScenario = {
         expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     },
 };
-const resources = new AsyncDisposableStack();
-let testRepository: OwnedTestRepository;
-beforeAll(async () => {
-    testRepository = resources.use(await createTestRepository(repository, spawnGspot, prepareTestRepository));
-});
-afterAll(async () => {
-    await resources.disposeAsync();
-});
+const testRepository = shareRepository(() => repository);
 
 describe('the typescript configuration', () => {
     test('every check passes on the clean repository', async () => {
-        const { root, environment } = testRepository;
+        const { root, environment } = testRepository();
         const whole = await spawnGspot(root, ['check'], environment);
         expect(whole.code, whole.stdout).toBe(0);
     });
 
     // typos forgets its exclude list for a file named on the command line unless it is told to keep it.
     test('spelling/typos keeps its exclusions for a file named on the command line', async () => {
-        const { root, environment } = testRepository;
+        const { root, environment } = testRepository();
         const restore = await applyChanges(root, {
             check: 'spelling/typos',
             files: { 'assets/mark.svg': `<svg><title>${TYPO.the}</title></svg>\n` },
