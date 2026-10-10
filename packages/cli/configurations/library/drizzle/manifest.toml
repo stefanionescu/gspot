@@ -17,7 +17,8 @@ npm = "eslint-plugin-drizzle"
 [[tool]]
 name = "drizzle-kit"
 system = true
-min_version = "0.20.0"
+version_command = ["--version"]
+min_version = "0.21.0"
 npm = "drizzle-kit"
 
 [[tool_file]]

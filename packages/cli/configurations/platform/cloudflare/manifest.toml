@@ -19,7 +19,8 @@ filenames = ["wrangler.toml", "wrangler.json", "wrangler.jsonc", "_headers", "_r
 [[tool]]
 name = "wrangler"
 system = true
-min_version = "3.0.0"
+version_command = ["--version"]
+min_version = "3.78.3"
 npm = "wrangler"
 
 [[tool]]
