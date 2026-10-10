@@ -2,9 +2,9 @@ import type { Policy } from '#cli/types/policy/settings.ts';
 import type { ActionPin } from '#cli/types/generation/ci.ts';
 import { SWIFT_GRAMMAR_FILE } from '#cli/config/platform/assets.ts';
 
-/** Release pins shared by generation, installation, downloads, and maintenance validation. */
+/** Shared pins for generation, installation, downloads, and maintenance checks. */
 export const CLI_PINS = {
-    mise: { name: 'jdx/mise', version: '2026.8.8' },
+    mise: { name: 'jdx/mise', version: '2026.10.7' },
     node: '24',
     actions: {
         checkout: {
