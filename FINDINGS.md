@@ -1,6 +1,6 @@
 # Unresolved Findings
 
-101 unresolved review records remain. 21 come from the review of October 6, 2026 and the owner decisions of that day. 80 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
+78 unresolved review records remain. 19 come from the review of October 6, 2026 and the owner decisions of that day. 59 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
 
 On October 6, 2026, a read-only verification checked all 802 older records against commit `3e1445a2d` and closed 203. The owner decisions of October 6 and 7, 2026 closed 15 more. A coherence check then compared every open record with the decisions and with every other record, and closed 272 duplicates, superseded records, and wrong records. [The closed list](findings/review/closed.md) gives the evidence for each. Each older findings file ends with a "Status on October 6, 2026" table that gives the current file and what remains; the original rows above it are history.
 
@@ -15,12 +15,12 @@ On October 6, 2026, a read-only verification checked all 802 older records again
 3. [Vocabulary](findings/review/glossary.md): one name for each concept. Every record uses these names; where an older record says otherwise, the vocabulary wins.
 4. Nothing can be installed yet. `@gspothq/cli` returns 404 on npm, and no tag or release exists (`main/001`).
 5. The working tree exports authored template customization except scopes and keeps raw values through import and re-export. Full tutorial, native-tool, and platform acceptance remains pending ([commands and templates](findings/review/commands-templates.md)).
-6. The working tree has a shared canonical policy writer and adopted TOML format. Comment preservation, omitted defaults, visible manual choices, and explicit empty paths have focused acceptance evidence. Native Taplo and full release validation remain pending ([format review](findings/review/policy-format.md)).
+6. The working tree has a shared canonical policy writer and adopted TOML format. Comment preservation, omitted defaults, visible manual choices, and explicit empty paths have focused acceptance evidence. Native Taplo formatting and focused writer cases pass. Full release validation remains pending ([format review](findings/review/policy-format.md)).
 7. This repository's gspot.toml hides problems instead of fixing them. The `tests` scope selects framework configurations for plain test files. Many exceptions are dead, and the architecture layers allow two-way imports ([exceptions](findings/review/policy-exceptions.md)).
-8. Carve-outs: test time limits sit in at least six places. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
+8. Carve-outs: one TEST_TIMEOUT_MS serves every suite through the runner and preload. Final platform measurement remains pending. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
 9. File and folder names: `commands/policy-edit.ts`, `tools/installed-files.ts`, and `tools/installation.ts` are explained, with a target tree and a move table, in [the source layout review](findings/review/source-layout.md). [The test layout review](findings/review/tests-layout.md) has the same for `tests/`.
 
-991 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
+1014 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
 
 ## Review of October 6, 2026
 
@@ -32,8 +32,8 @@ Read-only reviewers read every folder of the repository. Each file below holds a
 | [Owner questions and their answers](findings/review/owner-questions.md)                               |              |
 | [Vocabulary: one name for each concept](findings/review/glossary.md)                                  |            3 |
 | [Commands and templates](findings/review/commands-templates.md)                                       |            0 |
-| [The gspot.toml format](findings/review/policy-format.md)                                             |            1 |
-| [This repository's own gspot.toml exceptions](findings/review/policy-exceptions.md)                   |            3 |
+| [The gspot.toml format](findings/review/policy-format.md)                                             |            0 |
+| [This repository's own gspot.toml exceptions](findings/review/policy-exceptions.md)                   |            2 |
 | [Carve-outs](findings/review/carve-outs.md)                                                           |            1 |
 | [Source layout, names, and import graph](findings/review/source-layout.md)                            |            0 |
 | [Code: commands, lifecycle, policy, generation](findings/review/code-commands.md)                     |            0 |
@@ -54,26 +54,26 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | -------------------------------------------------------------------------------------------------------------- | -----------: |
 | Pending summary records (below)                                                                                |            5 |
 | [Findings From Implementation Verification](findings/additional.md)                                            |            1 |
-| [Built-in Checks](findings/areas/checks.md)                                                                    |            8 |
-| [Developer Experience in Non-JavaScript and Mixed Projects](findings/areas/developer-experience.md)            |            1 |
-| [Integration Tests Outside the Checks Folder](findings/areas/integration-tests.md)                             |            4 |
+| [Built-in Checks](findings/areas/checks.md)                                                                    |            7 |
+| [Developer Experience in Non-JavaScript and Mixed Projects](findings/areas/developer-experience.md)            |            0 |
+| [Integration Tests Outside the Checks Folder](findings/areas/integration-tests.md)                             |            2 |
 | [Kits, Settings, and Names](findings/areas/kits.md)                                                            |            7 |
 | [Repository Setup and Ceremony](findings/areas/repository.md)                                                  |            1 |
 | [Native-Tool, Acceptance, and Package Tests](findings/areas/tool-tests.md)                                     |            2 |
 | [Unit Tests and Check Integration Tests](findings/areas/unit-tests.md)                                         |            0 |
-| [Checks: Database, Framework, Library, Platform, Tool, and the Registry](findings/slices/checks-other.md)      |            3 |
-| [The Config Constants](findings/slices/config.md)                                                              |            1 |
+| [Checks: Database, Framework, Library, Platform, Tool, and the Registry](findings/slices/checks-other.md)      |            2 |
+| [The Config Constants](findings/slices/config.md)                                                              |            0 |
 | [Kits: Frameworks, Libraries, Platforms, Tools, and Postgres](findings/slices/kits-frameworks-tools.md)        |            6 |
 | [Kits: General](findings/slices/kits-general.md)                                                               |            1 |
 | [Kits: Python, Swift, Bash, and SQL](findings/slices/kits-other-languages.md)                                  |            3 |
 | [Kits: JavaScript, TypeScript, CSS, HTML, and Markdown](findings/slices/kits-web-languages.md)                 |            5 |
-| [Tests: Acceptance](findings/slices/tests-acceptance.md)                                                       |            3 |
-| [Tests: Check Integration Tests](findings/slices/tests-integration-checks.md)                                  |            7 |
+| [Tests: Acceptance](findings/slices/tests-acceptance.md)                                                       |            0 |
+| [Tests: Check Integration Tests](findings/slices/tests-integration-checks.md)                                  |            6 |
 | [Tests: Command, Policy, Platform, and Tools Integration Tests](findings/slices/tests-integration-commands.md) |            6 |
-| [Tests: Execution Integration Tests](findings/slices/tests-integration-execution.md)                           |            1 |
+| [Tests: Execution Integration Tests](findings/slices/tests-integration-execution.md)                           |            0 |
 | [Tests: Generation Integration Tests](findings/slices/tests-integration-generation.md)                         |            0 |
-| [Tests: Lifecycle and Repository Integration Tests](findings/slices/tests-integration-lifecycle.md)            |            3 |
-| [Tests: Native-Tool Tests and Samples](findings/slices/tests-tools-samples.md)                                 |           15 |
+| [Tests: Lifecycle and Repository Integration Tests](findings/slices/tests-integration-lifecycle.md)            |            2 |
+| [Tests: Native-Tool Tests and Samples](findings/slices/tests-tools-samples.md)                                 |            7 |
 
 ## Pending summary records
 
@@ -150,3 +150,11 @@ The original record and quotation remain above.
 ## Owner clarification for the catalogue naming ban on October 10, 2026
 
 The owner now requires the `catalogue` ban to remain. This supersedes the prescribed deletion in `diagram/repository/015`; its original quotation and completed status remain. Pinned Typos accepts that spelling. Evidence 2d8ed87ad81322c6.
+
+## Implementation checkpoint e895a73c3 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `e895a73c3e4a53572e0272f499501ad240f88f38`.
+
+| ID         | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `main/064` | complete | Original c6aa merge exact; current DOCS-REVIEW absent; later complete configurations-plugin067 deliberately shortens whole prose corpus with upstream links, superseding retention of obsolete full review text. Original casing section including every table row is exact substring of committed current naming/NAMING.md; ownership section in WORKING; retained NAMING-FILES intro names only its actual two sections. c6aa byte-identical move files→engineering/agent; closed configurations-plugin054 records normal apply/staged drift. Current asset and generated selection proof retained. Owner decision002 complete; original standalone asset remains, current unconditional guide selection asserts TALKING. Current JavaScript Playwright dependency filter and Node runtime/absent-RN/Expo filter; translations NextIntl dependency-only filter. Native current-byte callback proofs:48 Playwright both levels/root-child/runners×deps,19 Node evidence rows,14 NextIntl root/inheritance/unrelated rows. No unrelated runner/package causes rule install. Full binding, source hashes, governing decisions and native evidence: /tmp/gspot-pf007-summary-637-evidence/closure-specifications.json. Costs are allocated once; no unrelated waiver or final full-platform pass is inferred. Commit `e895a73c3e4a53572e0272f499501ad240f88f38`. |

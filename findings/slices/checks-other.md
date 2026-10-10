@@ -1,6 +1,6 @@
 # Checks: Database, Framework, Library, Platform, Tool, and the Registry
 
-3 unresolved review records remain.
+2 unresolved review records remain.
 
 ## Open findings
 
@@ -68,3 +68,11 @@ Original records and quotations remain above. These records are complete at `aec
 | ID                        | Status   | Evidence                                                                      |
 | ------------------------- | -------- | ----------------------------------------------------------------------------- |
 | `slices/checks-other/046` | complete | Evidence 75faadf0368bb55e. Commit `aec223e2efbc38d27a4dc731e2ddb09fd4d8420a`. |
+
+## Implementation checkpoint e895a73c3 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `e895a73c3e4a53572e0272f499501ad240f88f38`.
+
+| ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `slices/checks-other/015` | complete | drizzle/relations runs=scope and owns .ts; stagedschema retains unstagedrelations throughout root/child scope; replacing realrelations withcomment reportsschema again. Keep check; defineRelations/why obligation handled by approvedframework021, not duplicated. Full binding, source hashes, governing decisions and native evidence: /tmp/gspot-pf007-summary-637-evidence/closure-specifications.json. Costs are allocated once; no unrelated waiver or final full-platform pass is inferred. Commit `e895a73c3e4a53572e0272f499501ad240f88f38`. |

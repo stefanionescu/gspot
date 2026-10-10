@@ -1,6 +1,6 @@
 # Tests: Execution Integration Tests
 
-1 unresolved review record remains.
+0 unresolved review records remain.
 
 ## Open findings
 
@@ -115,3 +115,11 @@ Original records and quotations remain above. These records are complete at `c84
 | ---------------------------------------- | -------- | ----------------------------------------------------------------------------- |
 | `slices/tests-integration-execution/015` | complete | Evidence 8bde2701223f5f90. Commit `c8468157370eac2727e626e6c23155423f459ebc`. |
 | `slices/tests-integration-execution/028` | complete | Evidence bf1fe9d7ca8f7db1. Commit `c8468157370eac2727e626e6c23155423f459ebc`. |
+
+## Implementation checkpoint e895a73c3 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `e895a73c3e4a53572e0272f499501ad240f88f38`.
+
+| ID                                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-execution/026` | complete | Exit contracts now contain only declared native output-format semantics; Actionlint adapter is beside its check and comment syntax beside its parser. Exact native body and independent cost bridge: /tmp/gspot-approved-native-test-packets-b503/readiness.json, group execution02643. Already adopted shared increases are counted once; original closed records remain closed. Current committed-owner hashes match the frozen native packet; the separate layout026/027 move remains pending and is not claimed complete. Commit `e895a73c3e4a53572e0272f499501ad240f88f38`. |

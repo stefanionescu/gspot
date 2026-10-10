@@ -1,6 +1,6 @@
 # This Repository's Own gspot Policy: Entries and Customizations
 
-3 unresolved review records remain.
+2 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -307,3 +307,11 @@ Original records and quotations remain above. These records are complete at `0fe
 | ID                             | Status   | Evidence                                                                      |
 | ------------------------------ | -------- | ----------------------------------------------------------------------------- |
 | `review/policy-exceptions/006` | complete | Evidence 294fe54aa9ab761a. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |
+
+## Implementation checkpoint e895a73c3 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `e895a73c3e4a53572e0272f499501ad240f88f38`.
+
+| ID                             | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/policy-exceptions/035` | complete | Prose path extraction reads only prose and sh/bash/console bodies and ignores fence metadata. The six obsolete exception paths are absent. The already-complete docs-site046 title exclusion is a cumulative, more specific filter; no closed finding is reopened. Exact three-owner concern reduces4 bytes, separately from earlier policy deletion. Existing native23 tests/39 assertions and full1988-file documentation path scan pass. Current owner/hash reconciliation: /tmp/gspot-contract-conflicts-six-1a3b/freeze.json. Commit `e895a73c3e4a53572e0272f499501ad240f88f38`. |

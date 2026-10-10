@@ -1,6 +1,6 @@
 # Tests: Check Integration Tests
 
-7 unresolved review records remain.
+6 unresolved review records remain.
 
 ## Open findings
 
@@ -209,3 +209,11 @@ Original records and quotations remain above. These records are complete at `e29
 | ------------------------------------- | -------- | ----------------------------------------------------------------------------- |
 | `slices/tests-integration-checks/013` | complete | Evidence 2cb5bbcddaf75b2a. Commit `e2972c91c3760bc25974a69180ac4d3869c658d5`. |
 | `slices/tests-integration-checks/018` | complete | Evidence 46f166b6dc7a6f46. Commit `e2972c91c3760bc25974a69180ac4d3869c658d5`. |
+
+## Implementation checkpoint e895a73c3 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `e895a73c3e4a53572e0272f499501ad240f88f38`.
+
+| ID                                    | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `slices/tests-integration-checks/002` | complete | Both identical native locale rows, message files and translations selection moved to library/translations; original base-locale transition and all3 retained Next rows exact AST; Home page comment retained. Exact native body and independent cost bridge: /tmp/gspot-approved-native-test-packets-b503/readiness.json, group translations1489. Already adopted shared increases are counted once; original closed records remain closed. Current committed-owner hashes match the frozen native packet; the separate layout026/027 move remains pending and is not claimed complete. Commit `e895a73c3e4a53572e0272f499501ad240f88f38`. |

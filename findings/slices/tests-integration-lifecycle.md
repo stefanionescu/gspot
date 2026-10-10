@@ -1,6 +1,6 @@
 # Tests: Lifecycle and Repository Integration Tests
 
-3 unresolved review records remain.
+2 unresolved review records remain.
 
 ## Open findings
 
@@ -237,3 +237,11 @@ Original records and quotations remain above. These records are complete at `0fe
 | ID                                       | Status   | Evidence                                                                      |
 | ---------------------------------------- | -------- | ----------------------------------------------------------------------------- |
 | `slices/tests-integration-lifecycle/006` | complete | Evidence 931763d6917936b4. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |
+
+## Implementation checkpoint e895a73c3 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `e895a73c3e4a53572e0272f499501ad240f88f38`.
+
+| ID                                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-lifecycle/028` | complete | The handwritten refspec test was explicitly deleted by the adopted, complete code-execution020 native Git replacement. Its proposed expected-value renames therefore have no retained caller; restoring the deleted parser/test would reopen that closed record. The existing native remote namespace, batch object peeling and shallow repository evidence of code-execution020 remains applicable. Original1988-byte deletion is credited once there, with no new growth. Exact original/current bindings and source hashes: /tmp/gspot-contract-conflicts-six-1a3b/freeze.json. Commit `e895a73c3e4a53572e0272f499501ad240f88f38`. |
