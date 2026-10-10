@@ -15266,7 +15266,7 @@
                 "84 focused source tests/193 assertions; 14 parser/case tests/19 assertions; 9 init tests/48 assertions",
                 "34 integrated native tests/264 assertions; 8 packaged consumers/124 assertions",
                 "6 package-manager preservation tests/107 assertions; 3 native lockfile tests/24 assertions",
-                "Supabase 2.118 version/init/gen/start/stop help smoke; pnpm 10.34.6 and Supabase 2.118 pass OSV and seven-day release age",
+                "Evidence 73e8738030f1f69d.",
                 "gspot apply refreshed owned ESLint configuration; staged:147 passed/13 skipped/zero findings",
                 "Commit hooks:106 passed/3 skipped/zero findings; commit message check passed after wrapping body",
                 "Pre-push:147 passed/13 skipped/zero findings; main pushed without force"
@@ -15276,8 +15276,8 @@
                 "Single test timeout awaits fixes and measurements of all four suites on all CI platforms",
                 "Manual check/doctor acceptance defects and cross-platform conclusions remain pending",
                 "No publication, release tag, live account setup or deployment",
-                "Later full native run exposes pnpm 10 credential rejection in three tests. Owner decision 005 remains partial pending trusted npm configuration acceptance.",
-                "Shared startup config lacked the already-declared npmmanager setting; all12CItools shards and package failed before tests. Database directBun invocation lacked Supabase PATH. Both have working-tree repairs; CI verification pending."
+                "Evidence 8146b7bb1df4bcef.",
+                "Evidence b85b645145e4b03f."
             ],
             "ci": {
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37571363798",
@@ -15303,12 +15303,12 @@
                 "Brace-expansion5.0.12 splits exactclass; retained11tests/13assertions pass",
                 "Staged95pass/11skip/zero findings57.96s; commit69pass/3skip/zero findings; messagecheckpassed",
                 "Pre-push95pass/11skip/zero findings84.1s; main pushed without force",
-                "CI 37573321908 partial evidence: package 8 pass, zero fail, 124 assertions; Linux tools1 105 pass/two skip, tools2 83 pass/eight skip; macOS tools1 106 pass/one skip, tools2 86 pass/three skip. Shared Spectral acquisition passed. Linux tools3/4 and macOS4 remain failed for fixtures including scoped registry routing to unpublished public plugin; Linux CLI 3038 pass/12 skip/four fail, macOS CLI 3047 pass/three skip/four fail. Windows and macOS3 still active; skips do not prove behavior."
+                "Evidence dff9f57951f22189."
             ],
             "limitations": [
                 "Owner005 remains partial: CLI installation fixtures still start registries and tools; pending prescribed test moves",
                 "No publication, release tag, live account setup or deployment",
-                "Interim full tools run terminated intentionally with SIGTERM/143 before source moves: observed 422 pass, 15 fail, 5 skip; no final suite summary. Started 8d7 and later npm user configuration repair. Log /tmp/gspot-tools-shared-installation-ready.log is diagnostic only; full tools acceptance remains pending."
+                "Evidence 7f686e5f0d086563."
             ],
             "ci": {
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37573321908",
@@ -15380,14 +15380,14 @@
             "unresolvedRecords": 1045,
             "validation": [
                 "Evidence 17e0e9bcccb43434.",
-                "gspot apply regenerated ESLint architecture paths/labels; old source owners and aliases removed; authored implementation seven lines smaller.",
-                "Ledger commit a7f52291230775a7f356a8aac8d8150b7e3f4d2f: staged47pass2skipzero findings30.26s; commit34pass1skipzero; message1pass.",
+                "Evidence 3e020938e3647388.",
+                "Evidence a08554b205ce6c60.",
                 "Pushed b0a6b494a..a7f522912 without force; prepush147pass13skipzero findings109.3s; remote main exacta7f522912."
             ],
             "limitations": [
-                "Full CLI/plugin task before integration: 3042 pass, 3 skip, 9 fail; known baseline/fixture acceptance gaps remain. Mechanical focused tests and staged gates pass; no full-suite acceptance is claimed.",
+                "Evidence fa5dae6f091ffd58.",
                 "No publication, release tag, deployment or live account configuration.",
-                "Queued CI 37575581180 was superseded by newer main push and cancelled by workflow concurrency before jobs started; it supplies no platform acceptance."
+                "Evidence cb05f4a6659b7551."
             ],
             "ci": {
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37575581180",
@@ -15410,13 +15410,9 @@
                 "review/source-layout/040"
             ],
             "unresolvedRecords": 1036,
-            "validation": [
-                "Evidence da8f1bff842ebda0.",
-                "Removed three stale Python architecture/folder declarations and regenerated with gspot apply. Original owners and compatibility aliases are absent.",
-                "Evidence 61fbfe47b92cc3d6."
-            ],
+            "validation": ["Evidence da8f1bff842ebda0.", "Evidence ae745146cbbc1317.", "Evidence 61fbfe47b92cc3d6."],
             "limitations": [
-                "Platform skips do not prove platform behavior. Broader baseline CLI/tool fixture failures remain tracked; this checkpoint does not claim full-suite or cross-platform acceptance.",
+                "Evidence 0003ad1df9767400.",
                 "Release publication, tagging, live account setup and deployment remain unperformed.",
                 "Evidence d1e1c8d6d52eb677."
             ],
@@ -15435,7 +15431,7 @@
             "unresolvedRecords": 1035,
             "validation": ["Evidence 4568d9c2d94621d1.", "Evidence 61fbfe47b92cc3d6."],
             "limitations": [
-                "No cross-platform suite acceptance inferred from local tests or platform skips. Existing broader test and CI failures remain tracked.",
+                "Evidence 47ca3889872f7a17.",
                 "No release publication, tag, deployment or live account setup.",
                 "Evidence d1e1c8d6d52eb677."
             ],
@@ -15452,13 +15448,8 @@
             "commit": "bce72e26bbc55fc48e976aea29c466d0ce2e91b9",
             "completedRecords": [],
             "unresolvedRecords": 1035,
-            "validation": [
-                "Evidence eb28df4cf5df26d0.",
-                "Pushed main1285f9d5e..bce72e26b without force; pre-push89 pass, 11 skip, zero findings, 50.7s. Remote main verified at bce72e26bbc55fc48e976aea29c466d0ce2e91b9."
-            ],
-            "limitations": [
-                "Mechanical vocabulary and public terminology are not closed by callback preparation. Queued CI supplies no platform results."
-            ],
+            "validation": ["Evidence eb28df4cf5df26d0.", "Evidence 06e41c42a86492c1."],
+            "limitations": ["Evidence e870d6aa692618ad."],
             "ci": {
                 "run": 37578213962,
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37578213962",
@@ -15560,13 +15551,8 @@
                 "review/source-layout/056"
             ],
             "unresolvedRecords": 1030,
-            "validation": [
-                "Prepared snapshot deliberately defers four source moves conflicting with the shared-prefix policy; all later behavior is retained independently. Root/CLI types and478focused cases pass. Mandatory staged147checks pass with13skips, zero findings; both commit hooks and push hook pass. Main pushed without force at843c4d79.",
-                "Original IDs, quotations, decisions, ordered batch assignments and490original closed rows remain unchanged; unresolved counts derive from unique record statuses."
-            ],
-            "limitations": [
-                "Source-layout/035 awaits compiler cache behavior; source-layout/020 and021 await shared-prefix decision. Native APIs, plugin behavior, SQL changes, claim race, policy schema/writer, domain findings and cross-platform acceptance remain open. No publication, tag or deployment."
-            ],
+            "validation": ["Evidence 37e8f8c8e63445ae.", "Evidence ff21ea3079298ad3."],
+            "limitations": ["Evidence 50e463298a07eff2."],
             "ci": {
                 "run": 37588813240,
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37588813240",
@@ -15591,9 +15577,7 @@
                 "Original IDs, quotations, ordered assignment memberships and closed rows preserved; counts derive from unique statuses.",
                 "Evidence e6db9d06447d467d."
             ],
-            "limitations": [
-                "Local macOS/Bun focused acceptance and Node floor native corpus; no completed Linux/Windows CI or whole release verification claimed. Code-execution/037 remains partial until reserved URL_PACKAGE deletion with /014. No publication, release tag or deployment."
-            ]
+            "limitations": ["Evidence 30efb0a5acbe3691."]
         },
         {
             "commit": "062c6a171176c44b31556068b78fc3fd47f3b97f",
@@ -15651,9 +15635,7 @@
             ],
             "unresolvedRecords": 1008,
             "validation": ["Evidence b6a28f435b0da7ae."],
-            "limitations": [
-                "Focused acceptance ran on macOS. Full cross-platform verification remains pending; skips prove no platform behavior. main/001 remains partial; no publication or deployment occurred."
-            ],
+            "limitations": ["Evidence 08e96ad8c2560149."],
             "ci": {
                 "run": 37599188118,
                 "status": "pending",
@@ -15668,13 +15650,8 @@
                 "review/code-execution/033"
             ],
             "unresolvedRecords": 1005,
-            "validation": [
-                "Evidence 9d2d974f2b137013.",
-                "Normal push hooks passed 147 checks with 13 skips and zero findings in 57.2 seconds; remote main matches the implementation commit."
-            ],
-            "limitations": [
-                "CI status is recorded after the normal push; no cancelled or pending CI job proves platform behavior. The whole repository remains incomplete. main/001 remains partial and no live publication or deployment occurred."
-            ],
+            "validation": ["Evidence 9d2d974f2b137013.", "Evidence cceaca8855be58fd."],
+            "limitations": ["Evidence 34468bef983c4abd."],
             "ci": {
                 "conclusion": "",
                 "databaseId": 37601679985,
@@ -15694,13 +15671,8 @@
                 "review/code-execution/026"
             ],
             "unresolvedRecords": 999,
-            "validation": [
-                "Evidence 5192a5253361b847.",
-                "Normal push checks passed 67 with 10 skips and zero findings in 24.1 seconds; remote main matches the implementation commit."
-            ],
-            "limitations": [
-                "Focused execution ran on macOS; full cross-platform verification remains incomplete. Pending and cancelled CI jobs prove no platform behavior. All other starting findings and main/001 external publication requirements remain open; no publication or deployment occurred."
-            ],
+            "validation": ["Evidence 5192a5253361b847.", "Evidence 5d0005375745525a."],
+            "limitations": ["Evidence d92db7f4d626ffa8."],
             "ci": {
                 "databaseId": 37603700742,
                 "headSha": "d7062cffc1f4d4d0875574c73bb864e7e080c571",
@@ -15713,13 +15685,8 @@
             "commit": "e58770319c843e67da1f286bfb33f9f22f339fb6",
             "completedRecords": ["review/code-execution/035", "review/source-layout/020", "review/source-layout/021"],
             "unresolvedRecords": 996,
-            "validation": [
-                "Evidence f17fd58097004d12.",
-                "Remote main matches the implementation commit; normal hooks ran without bypass. The generated checks lock came only from the explicit install:checks command."
-            ],
-            "limitations": [
-                "Focused execution ran on macOS. The accidentally broader native invocation was stopped and supplies no completion proof. Cross-platform full verification remains open; pending or cancelled CI and skipped checks prove no platform behavior. Publication, release tags, account setup and deployment were not performed; main/001 stays partial."
-            ],
+            "validation": ["Evidence f17fd58097004d12.", "Evidence 9332ef20fadaa87c."],
+            "limitations": ["Evidence 4e241747aca93b4d."],
             "ci": {
                 "conclusion": "",
                 "databaseId": 37608413434,
@@ -15740,13 +15707,8 @@
                 "review/tests-layout/009"
             ],
             "unresolvedRecords": 989,
-            "validation": [
-                "Evidence 6948add951949df5.",
-                "Independent seven-record source and evidence audit found no remaining binding obligations; main corrected only integrated naming, prose, and formatting failures and reran the full staged gate. Remote main matches the implementation commit; hooks ran without bypass. Generated output came from normal setup, install:checks, and apply."
-            ],
-            "limitations": [
-                "Native execution evidence is local macOS. The latest CI run is pending and provides no platform proof. The completed older run37602069910 had six successful jobs, eight failures, and four Windows tool shards cancelled at the sixty-minute outer bound; none of those shards proves completion or a test timeout value. Cross-platform verification and carve-outs/001 timing remain open. The initial helper025 raw failure log was overwritten; its contemporaneous structured counts are retained without a raw-output claim. Policy-edit installation removal, preserveMode deletion, the remaining scratch readers, broader harness cleanup, publication, tagging, account setup, and deployment are not closed by this checkpoint; main/001 remains partial."
-            ],
+            "validation": ["Evidence 6948add951949df5.", "Evidence f6542ccab3ba3db9."],
+            "limitations": ["Evidence 70bd3b873f9ddfa1."],
             "ci": {
                 "databaseId": 37610590353,
                 "headSha": "1c00f603d3de88d6ac3a0ff606c6306e838aa51c",
@@ -15768,15 +15730,8 @@
                 "review/tests-tools/014"
             ],
             "unresolvedRecords": 981,
-            "validation": [
-                "Evidence 7b139defb72759ab.",
-                "Independent frozen source audit covers all8 IDs and retains broader overlap obligations; source final -144lines/-7278bytes/-1194AST and allauthored -43lines/-837bytes/-910AST. Original1092records1648assignments2259quotes490closed rows preserved.",
-                "Normal integration apply149unchanged and zero output changes on rerun. Main public apply initially exposed seven stale ownership identities despite HEAD/proposed/current matching bytes. The reviewed-ownership regression failed before the subsequent one-condition fix; all84 ownership tests then pass. Existing lifecycle writeOutputs refreshed exact7 reviewed identities with149unchanged and public apply149unchanged, zero generated bytes changed. No policy weakening."
-            ],
-            "limitations": [
-                "Linux/Windows behavior and final suite timing remain pending CI acceptance. Historical e587 CI failed; no platform skip/cancellation is treated as proof. Publication, account setup, tags and deployment remain outside authorization; main/001 remains partial.",
-                "The a6 CI run37618414364 was cancelled by GitHub before any job started. No Linux/macOS/Windows acceptance is inferred; the subsequent pushed main checkpoint is tracked separately."
-            ],
+            "validation": ["Evidence 7b139defb72759ab.", "Evidence 5fe90b162ec1001d.", "Evidence 5a48ffdcb2d7b08f."],
+            "limitations": ["Evidence cd4c6f6042247701.", "Evidence c518a7cf30e29032."],
             "ci": {
                 "runId": 37618414364,
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37618414364",
@@ -15796,7 +15751,7 @@
             "validation": ["Evidence 2be9aad35b5eff65."],
             "limitations": [
                 "Only the Bash move-table subset is implemented; broader026 and platform acceptance remain open.",
-                "Latest CI completed with failures in check, CLI, package and tools jobs; four Windows tools shards cancelled. Those results do not establish cross-platform acceptance. Saved actual run evidence /tmp/gspot-ci-bash-tests-move-current.json; diagnoses remain open."
+                "Evidence 036ba5c3cbb1d943."
             ],
             "ci": {
                 "run": 37622003191,
@@ -15928,15 +15883,15 @@
             ],
             "unresolvedRecords": 974,
             "validation": [
-                "24 CLI tests and 4 native parameter tests pass; original authored boundary cases remain correct before and after relocation under Bun and Node.",
+                "Evidence df340a08ca946d2d.",
                 "Root/CLI types, affected ESLint, structure and formatting pass. Staged, commit, message and push hooks pass.",
-                "Independent seven-ID audit corrected its false fatal-diagnostic concern by verifying unchanged current and baseline helper.",
+                "Evidence 6c9ab00bc0fd736f.",
                 "Original1092records1648assignments2259quotedIDrows490originalclosedrows preserved."
             ],
             "limitations": [
-                "Linux/macOS/Windows CI for this commit pending. Prior539CI has known failures and four Windows tools shards cancelled; those do not prove platform acceptance.",
+                "Evidence 882282d7f18bc60f.",
                 "Other overlapping test consolidation, common copier, policy-schema and release obligations remain open.",
-                "ActualCI37636380644 finishesfailure: macOSCLI3119pass3skip4fail; WindowsCLI2993pass65skip51fail; package7pass1fail. Windows4executabletoolshards cancelled, notproved. Docs and Linux4/macOS4tools pass, remaining6toolshardsfail. Index boundary fixed4daf; incidental consumerlist failures replaced9c. Other path/install/versionlookup/platform failures remain open; logs retained."
+                "Evidence 089f66693e283c2e."
             ],
             "ci": {
                 "run": 37636380644,
@@ -15950,12 +15905,12 @@
             "completedRecords": ["review/tests-cli/017", "review/tests-tools/001"],
             "unresolvedRecords": 972,
             "validation": [
-                "Combined141CLItests pass; original scoped and extra cases retained; root/CLItypes and all-policy affected lint/format pass.",
+                "Evidence 84ce8baff7b07a09.",
                 "Normal staged, commit, message and push hooks all pass; main and origin/main agree.",
                 "Ledger1092startingrecords1648assignments2259originalquotedrows490originalclosedrows preserved."
             ],
             "limitations": [
-                "Full cross-platformCI pending. Native Docker case unavailable on this macOS run; retained site minimum-Node fixture failure remains unresolved. Other overlap records and all remaining release work stay open.",
+                "Evidence 065288ba38f46206.",
                 "October7 GitHub metadata confirms this CI run was cancelled while queued; no platform verification credit."
             ],
             "ci": {
@@ -15976,13 +15931,13 @@
             ],
             "unresolvedRecords": 967,
             "validation": [
-                "134combinedCLItests pass with fresh index failure boundary and nativecopy/fixer/processtree contracts; root/CLItypes and affectedfull-policy lint/format pass.",
-                "Native original compiler4cases plus reproducible Bun1.4.2/Node24.2rawstream/cancellation probes pass. Normalstaged/commit/message/push gates pass; nativeapply149unchanged.",
+                "Evidence bf5b2940f4f19967.",
+                "Evidence 44886ed8b8e83043.",
                 "Independent five-ID review passes; original1092records1648assignments2259quotedrows490closedrows and decisions retained."
             ],
             "limitations": [
-                "PlatformCI37641963092pending; prior4dafCIcancelled whilequeued, no platform acceptance. NativeSQLFluff copied-interpreter126 failure remains separate and unresolved.",
-                "Scoped TypeScript007/Next044 working candidate remains open because production grows; no unrelated code offset or weakened guards. Other remaining findings and release external steps stay open.",
+                "Evidence 097d48d61d3b8498.",
+                "Evidence 1a13df6fbea6ac8a.",
                 "October7 GitHub metadata confirms this CI run was cancelled while queued; no platform verification credit."
             ],
             "ci": {
@@ -15996,13 +15951,9 @@
             "commit": "9c3c43618ec300b42e23097d9d245ac93ad28d0a",
             "completedRecords": ["review/tests-tools/047", "review/tests-tools/048", "review/tests-tools/050"],
             "unresolvedRecords": 964,
-            "validation": [
-                "Native3package-consumer tests29assertions pass; exact diagnosis/correction/authored bytes/cancellation/takeover/plugin type/export contracts retained.",
-                "Root/CLI types, affected real lint/format and normal staged/commit/message/push checks pass. Source reduction88lines4010bytes516AST.",
-                "ActualCI37642640679 Linux package7pass0fail5files177.82s; docs Astrobuild and allbuilt-site links/fragments pass. Other platform jobs stillrunning; no completeCIclaim."
-            ],
+            "validation": ["Evidence 8da734e50a87d380.", "Evidence aee89d1662818ae9.", "Evidence 9e2a49283e34d36c."],
             "limitations": [
-                "CI37642640679pending; core816 and runner4daf runs cancelled while queued; prior d5 platform failures remain separate unresolved obligations.",
+                "Evidence 221ee31c84bcd365.",
                 "Native consumer proof macOS only; all final suites/platform/release checks still required."
             ],
             "ci": {
@@ -16098,9 +16049,9 @@
             ],
             "unresolvedRecords": 957,
             "validation": [
-                "72 focused tests272assertions pass; root/CLItypes and affected actual lint/format pass. Original behavior retained in surviving native cases.",
+                "Evidence 0f00aab6e99469c9.",
                 "Normal publicapply149unchanged0writes; staged/commit/message hooks pass. Source112fewerlines4729fewerbytes.",
-                "Normal non-force push passes71checks10inputskips0findings48.5s and remote exact source commit verified. Original1092records1648assignments2259quote rows490closed rows retained."
+                "Evidence 25d855f9a8ff72cc."
             ],
             "limitations": [
                 "PlatformCI pending; no cross-platform claims from local macOS evidence.",
@@ -16145,8 +16096,8 @@
             "unresolvedRecords": 951,
             "validation": [
                 "95focused tests378assertions pass; root/CLItypes, affected all-policy lint/format, structure3check/nativeapply pass.",
-                "Native Gitleaks/Next version subprocess below/at actualfloors and allhint/style/guide distinctions preserved; independent exactID reviewpasses.",
-                "Normalstaged/commit/message/push gatespass; original1092records1648assignments2259quotedrows490originalclosedrows retained."
+                "Evidence 508fc54f72ab1a27.",
+                "Evidence 0908bd06056a8230."
             ],
             "limitations": [
                 "CurrentplatformCI pending; fakehost hints and localnative subprocess evidence do not prove allplatformsuite behavior.",
@@ -16163,11 +16114,7 @@
             "commit": "5252e4af0b2f9ecf3e9586240943d717a42ca057",
             "completedRecords": [],
             "unresolvedRecords": 951,
-            "validation": [
-                "Native CI regressions reproduced: history5pass1fail with stale binary spy; absent pnpm control reproduces formatter/workspace failures. Corrected streaming boundary and authored manager fixture declarations preserve all assertions. Main33pass0fail137assert3files5.73s and actual pnpm-absent2pass7assert870ms.",
-                "Root/CLItypes and actual3file all-policy lint/format pass. Nativeapply149unchanged0writes; staged71pass10skip0findings28.889s; normalcommit55pass3skip0findings13.0s plus message1pass; normalpush71pass10skip0findings29.9s.",
-                "Test source2fewerlines1fewerASTnode34morebytes; no productionvalidation weakened. Main ledger141complete951unresolved preserves starting1092records1648assignments2259quotes490originalclosedrows."
-            ],
+            "validation": ["Evidence add94626cc2cfd77.", "Evidence e706299c55b2e06e.", "Evidence 21e0a32691d66c2a."],
             "limitations": [
                 "Platform CI remains pending; native fix acceptance is local darwin and controlled process PATH only."
             ],
@@ -16196,13 +16143,13 @@
             "validation": [
                 "Main103pass0fail207assert8files4.18s; invalid runtime4pass0fail8assert344ms.",
                 "Root TypeScript exit0; actual five ESLint/spelling/structure checks pass with zero findings9.0s.",
-                "Exact output owners/root policy match independently verified temporary checkout; eight pending npm owner hashes unchanged.",
-                "Normal apply regenerates five typos files; mechanical moves/import changes and behavior patch remain separate immutable artifacts."
+                "Evidence ae85ae8782c58a9d.",
+                "Evidence 4c11230fddd48709."
             ],
             "evidence": "/tmp/gspot-output-main-freeze.json",
             "limitations": [
                 "Main Git metadata is read-only; no main staging, commit or push for this checkpoint.",
-                "Temporary full staged gate: 120passed13skipped6errors12missing and zero findings; restricted DNS, missing native data and denied home uv cache writes prevent a passing gate.",
+                "Evidence fd3471ff4ad950f0.",
                 "Linux/Windows integration and CI remain unverified.",
                 "review/tests-layout/018 remains partial until spelling owner move and native ignore migration are integrated."
             ]
@@ -16479,7 +16426,7 @@
             "limitations": [
                 "Main Git metadata protected; mandatory main staging/commits/push pending.",
                 "Full native staged and cross-platform CI acceptance pending.",
-                "Installer-failure family remains unproved because previously observed unrelated native initialization/tool-project setup stalls before its first result; no skip or extra budget introduced."
+                "Evidence 77c5aa16859a0214."
             ]
         },
         {
@@ -16497,7 +16444,7 @@
             "evidence": "/tmp/gspot-duplication-test-data-main-freeze.json",
             "limitations": [
                 "Main Git metadata protected; current mandatory main commits/push pending.",
-                "Nativetool assertion execution pending because designated suite workspacepack cannot write npmhomecache; no cacheoverride/homepermission change/extra budget/bypass introduced.",
+                "Evidence 8651a2a8a83e4809.",
                 "No newcross-platform CI acceptance."
             ]
         },
@@ -17046,9 +16993,7 @@
             ],
             "status": "119 authored owners integrated with focused native evidence; remaining obligations, full gate and Git metadata pending",
             "evidence": "/tmp/gspot-next-domain-main-checkpoint-freeze.json",
-            "validation": [
-                "Exact before/after inventories and archives; normal compiler regeneration and native apply; per-record growth/blocked native obligations remain explicit."
-            ]
+            "validation": ["Evidence 768dbd9e841c770a."]
         },
         {
             "commit": null,
@@ -17073,9 +17018,7 @@
             ],
             "status": "122 authored owners integrated; native focused evidence and normal apply passed; full gate, remaining obligations and Git metadata pending",
             "evidence": "/tmp/gspot-language-contracts-main-checkpoint-freeze.json",
-            "validation": [
-                "Exact before/after inventories and archives; compiler regeneration; native apply changed ESLint configuration through the normal writer. Latest pre-corrections full scratch staged gate111passed8failed6error12missing14skip; no passing full gate or platform proof claimed."
-            ]
+            "validation": ["Evidence ad855590f72c8dda."]
         },
         {
             "commit": null,
@@ -17096,9 +17039,7 @@
             ],
             "status": "24 exact authored owners projected; native focused tests and type/lint evidence recorded; remaining guard/framework/native/platform/Git obligations pending",
             "evidence": "/tmp/gspot-test-contracts-main-checkpoint-freeze.json",
-            "validation": [
-                "Frozen before/after source archives and hashes preserve every authored owner, deleted path and existing main ledger/generated file. Normal native apply invoked through public source launcher. No full passing gate or platform proof claimed."
-            ]
+            "validation": ["Evidence 6ca5f5dce978f3f8."]
         },
         {
             "commit": null,
@@ -17128,9 +17069,7 @@
             ],
             "status": "40 exact authored owners projected; native focused evidence and compiler freshness; full platform/staged/Git and remaining broad obligations pending",
             "evidence": "/tmp/gspot-framework-naming-isolation-main-checkpoint-freeze.json",
-            "validation": [
-                "Verified before/after archives and hashes; compiler-owned runtime setting outputs regenerated before passing combined native tests; normal public native apply passed. All stable quotations and starting batch memberships preserved."
-            ]
+            "validation": ["Evidence 8c52ca5f6fefe025."]
         },
         {
             "commit": null,
@@ -17180,9 +17119,7 @@
             ],
             "status": "72 authored/compiler owners projected; native apply and focused tests pass; staged/platform and broad obligations pending",
             "evidence": "/tmp/gspot-swift-manifest-test-main-checkpoint-freeze.json",
-            "validation": [
-                "All originals/candidates archived and hashes verified before mutation; native main apply exit0 unchanged149 preserved0. Original IDs, quotes and memberships remain intact."
-            ]
+            "validation": ["Evidence 74e53da67034b5fb."]
         },
         {
             "commit": null,
@@ -17241,9 +17178,7 @@
             ],
             "status": "Native source/shared-harness/test followups integrated; explicit pending gate/platform and growth obligations retained",
             "evidence": "/tmp/gspot-record-native-followups.py",
-            "validation": [
-                "All frozen packet originals/candidates verified before mutation; original IDs, quotations, owner decisions and original memberships preserved. No package publication, release tag or deployment."
-            ]
+            "validation": ["Evidence ba3ec19f021dcf91."]
         },
         {
             "commit": null,
@@ -17307,12 +17242,8 @@
                 "review/glossary/024"
             ],
             "unresolvedRecords": 947,
-            "validation": [
-                "Actual per-record native acceptance and previously passed integration staged/normal Git hooks; separate glossary mechanical commit2288458c1 identified per record."
-            ],
-            "limitations": [
-                "Whole repository CI has real failures being corrected; no cross-platform completion claim. main/001 external publication/setup stays partial."
-            ]
+            "validation": ["Evidence b168769bae2426c7."],
+            "limitations": ["Evidence 957cd75912932be6."]
         },
         {
             "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
@@ -17357,13 +17288,8 @@
                 "review/configurations-plugin/012"
             ],
             "unresolvedRecords": 909,
-            "validation": [
-                "ROOT focused155tests791assertions; ESLint197tests1347assertions; placement21tests41assertions; CSSDoctor31tests88assertions; schema5tests30assertions.",
-                "Root/CLI types0; normal plugin/CLI builds, install:checks and gspot apply; docs309pages/all local links and fragments pass; actual staged141passed50skips0findings."
-            ],
-            "limitations": [
-                "Whole repository CI has real failures being corrected. No cross-platform completion or tutorial027 claim. main/001 external publication/setup stays partial."
-            ]
+            "validation": ["Evidence 2d9a0ee3d9c5c43a.", "Evidence dbb029fb7162966f."],
+            "limitations": ["Evidence 76f6d283802cab1a."]
         },
         {
             "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
@@ -17382,10 +17308,7 @@
             ],
             "unresolvedRecords": 898,
             "validation": ["Evidence a97c9d50ad4fd770."],
-            "limitations": [
-                "No cross-platform result inferred from local native tests. The obsolete ee8 run was cancelled after preserving its status. Prior f3 Windows failures include native defects and Bun file-default timeout resets; these remain open.",
-                "glossary/012 retains a remaining source comment correction for the next checkpoint; docs-site/011 and /027 retain scoped-build, simplification, native prerequisite and CI obligations. main/001 external publication and account setup remain partial."
-            ],
+            "limitations": ["Evidence fa27f5fb331f4410.", "Evidence b319740049793503."],
             "ci": {
                 "run": 37731304381,
                 "status": "pending at inspection",
@@ -17441,9 +17364,9 @@
             ],
             "unresolvedRecords": 869,
             "validation": [
-                "Main focused: 135 pass, 543 assertions, 14 files; run options: 75 pass, 275 assertions, eight files; affected readers: seven pass, 20 assertions.",
+                "Evidence 7e6a7e63171f4120.",
                 "Root and CLI TypeScript pass. Normal schema producer, gspot apply, and CLI build pass.",
-                "Full staged check ran; seven diagnostics corrected. Affected staged checks pass. Commit hook: 52 pass, three skips, zero findings; message hook: one pass. Push hook: 68 pass, ten skips, zero findings."
+                "Evidence db2b9c06c49a0052."
             ],
             "limitations": [
                 "CI 37743608545 at prior4137 is incomplete and has actual failures; no cross-platform acceptance claimed.",
@@ -17466,11 +17389,9 @@
             "unresolvedRecords": 861,
             "validation": [
                 "Main CLI211pass822assert18files; native tools6pass48assert3files, one LinuxDocker skip on macOS.",
-                "Root/CLI types0; normal setting-values producer, apply and CLI build0. Full staged68pass10skip0findings32.124s; normal commit/message hooks pass."
+                "Evidence 53e82000264ce7e9."
             ],
-            "limitations": [
-                "No Linux/Windows proof claimed; Linux Docker nginx case skipped on macOS. Stage-area022 remains partial until its dependencies/secrets sites are resolved. No publication/tag/deployment."
-            ]
+            "limitations": ["Evidence 23ef1acaeca6193a."]
         },
         {
             "commit": "29585ba69df9b37b5e0bfcb9ac1a58f693533c19",
@@ -17487,11 +17408,11 @@
             "unresolvedRecords": 853,
             "validation": [
                 "Main107CLIpass694assert6files; roottypes0; normal producer/apply/CLIbuild0.",
-                "Full staged150pass14skip and two actual defects; fixed Oxford-comma sentence and four unescaped native help examples. Native affected Vale and builtHTML2pass0findings71.541s. Normal commit/message hooks pass."
+                "Evidence d186ae979151fcd1."
             ],
             "limitations": [
                 "Historical067 seventh prose owner is absent; all six current owners treated and no file invented.",
-                "CI327fc run pending after obsolete4137 cancellation; no Windows/runtime platform acceptance inferred. No publication/tag/deploy."
+                "Evidence b737a23f04de28ea."
             ]
         },
         {
@@ -17507,13 +17428,10 @@
                 "review/configurations-plugin/039"
             ],
             "unresolvedRecords": 845,
-            "validation": [
-                "Main167CLIpass741assert14files42.33s;366pluginpass21assert14files824ms; root/CLItypes0; normal plugin/CLI builds, metadata producer, apply and install pass.",
-                "Whole staged151pass14skip with one Oxford-comma comment finding; corrected comment and affected native Vale pass. Normal commit and push evidence retained in /tmp/gspot-native-presets-main-* logs."
-            ],
+            "validation": ["Evidence 30fa84b3e18cabe0.", "Evidence 8e5c8100fe94d5e4."],
             "limitations": [
-                "Core ESLint Linter.Config declaration consumer has an upstream RuleContext incompatibility; no cast/shim or universal public-type compatibility claim.",
-                "No Windows runtime acceptance inferred from native path probes. Current CI, final all-platform suite measurement, release preparation and main001 external publication/setup remain pending.",
+                "Evidence 0da23b56daf6ced5.",
+                "Evidence b911a6cb15e9ba0c.",
                 "Native site six cases and SVG pass; default-only corrected rerun passes. No final unexecuted whole8/0 claim."
             ]
         },
@@ -17534,15 +17452,12 @@
                 "review/tests-cli/145"
             ],
             "unresolvedRecords": 833,
-            "validation": [
-                "Mechanical121pass301assert6files570ms; mandatory staged72pass10skip0findings32.246s; commit56pass3skip0findings11.5s plus message pass.",
-                "Transport/current owner corpus286pass1hostskip867assert17files11.82s; extra native final credentials/inspect-installations/UV33pass109assert3files3.46s; final refusals119pass318assert6files603ms. Roottypes,11owner ESLint/Prettier0; combined staged51pass9skip0findings28.423s."
-            ],
+            "validation": ["Evidence ccff7c3349c6064b.", "Evidence 73f9d8e0b0e4155e."],
             "limitations": [
-                "review/tests-cli080 stays partial: duplicated transport and aliases removed, but the prescribed local helper is absent after only one homogeneous scoped publication remains; no helper delivery claimed.",
-                "Swift central runner followup preserves63cases/291assertions; original closed017 remains closed and receives no extra credit.",
-                "Initial combined-patch reapplication conflicted because Main already contained the mechanical phase; zero repository files changed. Correct exact behavior-phase before/after payload then integrated successfully.",
-                "Initial requested20 test paths matched17 current owners; actual3 moved credentials/inspection/UV owners were run separately, with exact files and results retained.",
+                "Evidence 14b771fcac651550.",
+                "Evidence f4c0c6dbc44a1cef.",
+                "Evidence 822c75a7636117a1.",
+                "Evidence 4c3e882ada815596.",
                 "No Windows execution, timeout measurement, full suite, current CI success or release publication claimed."
             ]
         },
@@ -17569,7 +17484,7 @@
             ],
             "limitations": [
                 "macOS native evidence; Windows CI filesystem acceptance remains outstanding.",
-                "Template deletion delta -1014 bytes/-22 lines/-131 AST; repository consolidation -878 bytes/-35 lines/-177 AST. Root adds explicit directory symlink kind for platform correctness."
+                "Evidence c13c79f86dd3cb34."
             ]
         },
         {
@@ -17582,7 +17497,7 @@
             "unresolvedRecords": 818,
             "validation": [
                 "CLI129/347/sevenfiles; native infrastructure13/72/fourfiles with one Docker hostskip; OpenAPI/Vale20/89/threefiles.",
-                "Root types, actual ESLint/Prettier, normal schema producer, buildCLI, apply passed. Staged152pass14skip0findings; commit113pass3skip0findings plus messagecheck; push hook passed."
+                "Evidence 74a3eec49cf46668."
             ],
             "limitations": [
                 "Other integrated infrastructure leaves remain partial where packet simplification or platform acceptance is outstanding.",
@@ -17601,11 +17516,11 @@
             "unresolvedRecords": 813,
             "validation": [
                 "CLI32/235; native16/106/ninefiles286.84s; types/lint/format0.",
-                "Firstfull staged gate failed only unused SecretEnvironment; deleted after consumer search. Affected staged Knip2 checks passed0findings; normal commit49 checks passed3skips0findings +message check."
+                "Evidence 643ce93c8d8e4354."
             ],
             "limitations": [
                 "macOS native tests; explicit planner Windows simulation is not native Windows proof.",
-                "Final all-platform suites and timeout measurement remain outstanding; baseline failure and cancelled overly broad filter logs preserved."
+                "Evidence 71594e6162e57c4d."
             ]
         },
         {
@@ -17620,9 +17535,7 @@
                 "slices/tests-integration-execution/037"
             ],
             "unresolvedRecords": 806,
-            "validation": [
-                "Main117 CLI tests/394 assertions; native Ruff2/10; types/lint/format0; staged gate corrected only the banned Ruff variable name."
-            ],
+            "validation": ["Evidence d05aee7f590b3193."],
             "limitations": [
                 "macOS native; final whole-suites and Linux/macOS/Windows CI outstanding. Original failures retained."
             ]
@@ -17640,11 +17553,7 @@
             ],
             "completedRecords": [],
             "unresolvedRecords": 806,
-            "validation": [
-                "Main CLI210/492/11files13.90s; native tools7/34/3files141.47s; native Swift response reader16/60 plus Bun/Node drive and UNC lexical controls.",
-                "Initial staged gate142 passed/19 skipped; docs callers and Vale parameter corrected. Affected staged12 passed; normal push152 passed/14 skipped/0findings82.5s.",
-                "Native Semgrep registry original unsafe SSH sample reports one upstream finding; the retained safe sample reports zero. Original startup failures preserved."
-            ],
+            "validation": ["Evidence 0f1050eba3a83391.", "Evidence c0b5db0fcce222e2.", "Evidence 35b284e1386926d5."],
             "limitations": [
                 "macOS native results; no Windows filesystem execution claim.",
                 "Release publication and deployment were not run. Growth and remaining consumer migrations remain explicit."
@@ -17676,9 +17585,7 @@
             "validation": [
                 "Main CLI111/529; native tools12/134; packaged consumers2/12; types/lint/format/staged gate0."
             ],
-            "limitations": [
-                "Host evidence only; whole-suite and current Linux/macOS/Windows CI remain outstanding. Template001 retains product export and refusal obligations."
-            ]
+            "limitations": ["Evidence c9abc4d927ee8bbd."]
         },
         {
             "commit": "989aafe5ba0d3794ab7928d050801d718b5f5813",
@@ -17698,20 +17605,14 @@
                 "slices/kits-general/016"
             ],
             "unresolvedRecords": 780,
-            "validation": [
-                "Source commit989aafe: Main37CLI/152assertions; native corrected controls; full prose1711/0; types/lint/format/full-staged and affected gates passed."
-            ],
-            "limitations": [
-                "Current CI and full-suite acceptance outstanding. areas/kits/142 retains gspot check-owner contracts beyond redundant requires deletion. Policy-exceptions031 remains partial: only three stale uppercase entries removed; remaining per-entry vocabulary audit pending."
-            ]
+            "validation": ["Evidence 769f0597c29929c2."],
+            "limitations": ["Evidence 75e016abcf4ae315."]
         },
         {
             "commit": "59d271c9ceedb7ec9b2dee75d44330a825fa1a1d",
             "completedRecords": ["main/017", "review/docs-site/046", "review/docs-site/027"],
             "unresolvedRecords": 777,
-            "validation": [
-                "Actual current Main269 CLI/786assertions;2native tutorial replays/35assertions;3moved native drift/Plutil cases21assertions;types and staged checks."
-            ],
+            "validation": ["Evidence db253c7b89e3e4f5."],
             "limitations": [
                 "Linux and Windows native tutorial/platform acceptance and final whole-suite/release acceptance remain outstanding."
             ]
@@ -17737,12 +17638,8 @@
                 "areas/integration-tests/066"
             ],
             "unresolvedRecords": 761,
-            "validation": [
-                "Current Main362pass1341assertions17files34.03s; native clean TypeScript V8r1pass; root typecheck, actual ESLint, generated freshness, format and staged checks."
-            ],
-            "limitations": [
-                "Tests-cli006 Python independent inventories and056 full scoped/license equivalence remain partial. Cross-platform and full-suite acceptance remain outstanding."
-            ]
+            "validation": ["Evidence 5bc6d346c94243ea."],
+            "limitations": ["Evidence ad116a2b563a6f17."]
         },
         {
             "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
@@ -17772,12 +17669,9 @@
                 "slices/kits-frameworks-tools/063"
             ],
             "unresolvedRecords": 738,
-            "validation": [
-                "Main101pass362assertions; native Squawk4 root/child bothlevels; types0/policy ESLint0/freshness0; staged full first85passes known failures retained, affected Vale/Taplo and OSV corrected.",
-                "Normal Main CLI bundle SHA09dbf94ab0a45e6c93eadfca602f419415b840123931ff5163f3b52d13ebe952 exactly matches isolated secure-delivery bundle tested by fresh Node24.20/Bun1.4.2 consumers."
-            ],
+            "validation": ["Evidence 0092549d4d490ed0.", "Evidence 3db0cfeed62eb9ca."],
             "limitations": [
-                "SDK duplicate/trailing text follows adopted native parser semantics. Aggregate other049/plugin066 and language064/032/034/128/framework059 remain partial with precise obligations.",
+                "Evidence 0559a8ea3dd0b958.",
                 "Final full suites/platforms/release boundary remain outstanding."
             ]
         },
@@ -17807,12 +17701,10 @@
             ],
             "unresolvedRecords": 718,
             "validation": [
-                "Main234 cases759assertions, types0, actual ESLint0, native HTML90 and Markdown equality controls, canonical manifest/catalog/generation equivalence; normal preset/schema producers and apply.",
+                "Evidence ac72bd34123c5b96.",
                 "113 commit hook checks0 and152 push hook checks0; source production including captured data\u2212419bytes."
             ],
-            "limitations": [
-                "Related production contract deletes more source than it adds; generated catalog and required regression test growth retained explicitly. Final suites/platforms and release-boundary work remain outstanding."
-            ]
+            "limitations": ["Evidence 50b360d3e290619d."]
         },
         {
             "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
@@ -17848,9 +17740,7 @@
             "validation": [
                 "227 distinct CLI cases; 46 native tool cases, 329 assertions; types/current-policy lint/staged/normal hooks pass."
             ],
-            "limitations": [
-                "Outcome-row deletion remains partial because distinct authored exit contracts were preserved. Broad command records, evidence-only retired owner and individual growth obligations remain open. Final suites/platforms/CI not claimed complete."
-            ]
+            "limitations": ["Evidence 11881ebf6165f4eb."]
         },
         {
             "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
@@ -17882,12 +17772,8 @@
                 "slices/kits-general/057"
             ],
             "unresolvedRecords": 679,
-            "validation": [
-                "Main223 CLI cases/734assertions; root TypeScript and current policy ESLint; native preset producer repeated16 artifacts byte-identically; normal CLI build/compiled policy schema freshness/apply/install:checks/staged check."
-            ],
-            "limitations": [
-                "Named tool references036 remain partial due production growth; broader053 topic moves and current full-platform CI/release acceptance remain outstanding."
-            ]
+            "validation": ["Evidence 945e5f81691a6e36."],
+            "limitations": ["Evidence 153d7641ce23ed6f."]
         },
         {
             "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
@@ -17964,11 +17850,11 @@
             "unresolvedRecords": 643,
             "validation": [
                 "Exact committed mechanical type moves preceded native coverage behavior.",
-                "31 focused tests, 144 assertions; native Jest five cases, 42 assertions; 78 staged checks and normal commit/push hooks passed."
+                "Evidence a53679e16cd6cf34."
             ],
             "limitations": [
                 "CI run 37837307511 is pending; no Linux, macOS or Windows result inferred.",
-                "Provider metadata and doctor obligations for slices/kits-frameworks-tools/051 remain separate until their implementation checkpoint."
+                "Evidence f74d50700b1db7a3."
             ],
             "ci": {
                 "run": 37837307511,
@@ -17980,7 +17866,7 @@
             "completedRecords": ["slices/kits-frameworks-tools/051"],
             "unresolvedRecords": 642,
             "validation": [
-                "Shared coverage implementation replaces the dedicated Jest engine and native provider calculation, a net reduction of 1987 production bytes across the same coverage contract.",
+                "Evidence dbeb006baad7c2dc.",
                 "Exact committed provider checkpoint staged checks passed, followed by normal commit and push hooks."
             ],
             "limitations": [
@@ -17997,7 +17883,7 @@
                 "Native source-owner and graph audits, affected code ceilings, focused tests and normal hooks passed."
             ],
             "limitations": [
-                "The first push reproduced an intermittent Pagefind asset mismatch; retained failure and two exact byte-capture probes each compared 319 assets equal, including concurrent site builds. The next normal push hook passed; no root-cause fix or CI/platform claim is inferred.",
+                "Evidence e58db0922a2b8832.",
                 "Source055 filename-prefix conflict remains separate pending owner disposition; no policy exception is introduced."
             ]
         },
@@ -18022,9 +17908,7 @@
                 "review/configurations-plugin/053: /tmp/gspot-code-execution053056-pushed-native.log",
                 "review/configurations-plugin/056: /tmp/gspot-code-execution053056-pushed-native.log"
             ],
-            "limitations": [
-                "Native evidence runs on Darwin; no Linux or Windows behavior is inferred. This audit adds evidence to existing implementations and makes no new implementation claim."
-            ]
+            "limitations": ["Evidence 8c81a7b7d7f45124."]
         },
         {
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
@@ -18063,12 +17947,12 @@
             "unresolvedRecords": 604,
             "validation": [
                 "Focused combined command/lifecycle run: 519 cases, 3744 assertions, 68 files, zero failures;112.03s.",
-                "Workspace types passed. Native staged gate151pass15skip0findings;52.6s. Normal corrected commit/push hooks passed; push54.1s.",
-                "Related production source and assets net decrease937bytes before documentation corrections. Native loader and packed-consumer receipts retained in the record audit."
+                "Evidence fe4e441bc1d9e89f.",
+                "Evidence a41c450f33dbff30."
             ],
             "limitations": [
                 "CI run37845019451 pending, no jobs/platform behavior proved.",
-                "Five lifecycle rows remain open until the canonical native hook fixture follow-up is committed; CC045 remaining message fixes are in a separate uncommitted packet."
+                "Evidence c32346b1483d15d2."
             ]
         },
         {
@@ -18086,9 +17970,7 @@
                 "review/verification/026"
             ],
             "unresolvedRecords": 594,
-            "validation": [
-                "48 CLI cases/366 assertions/3 files;18 actual tool cases/192 assertions/3 files; root types0. Staged gate68pass10skip0findings; normal commit and push pass."
-            ],
+            "validation": ["Evidence 6c8f036e60f1b980."],
             "limitations": ["CI37847867614 pending; native platform macOS. Skips do not prove platform behavior."]
         },
         {
@@ -18101,9 +17983,7 @@
                 "areas/kits/023"
             ],
             "unresolvedRecords": 589,
-            "validation": [
-                "CLI66/400/4files, native tools41/170/3files, workspace/docs types0, schema producer freshness0, focused prose/Taplo0, full staged170 checks exit0, normal commit/push hooks pass."
-            ],
+            "validation": ["Evidence 71b45bd7253983a3."],
             "limitations": ["CI run pending; no live publication or deployment."],
             "ci": "/tmp/gspot-prose-behavior-checkpoint-ci.json"
         },
@@ -18111,12 +17991,8 @@
             "commit": "0abcd119f0603a522953586168f68c45cfc767e6",
             "completedRecords": ["review/code-commands/023", "review/configurations-plugin/046"],
             "unresolvedRecords": 587,
-            "validation": [
-                "Checkpoint CLI68/706/6files, native Vale37/467/4files, workspace types and producer freshness pass. Staged gate156passed/14skipped/0findings/53.5s. Normal commit and push hooks pass; push gate156passed/14skipped/0findings/54.4s."
-            ],
-            "limitations": [
-                "Native executable proof covers macOS ARM64. Whole-repository Linux, macOS and Windows acceptance remains in the final verification wave. CI37855822748 is pending; no live publication or deployment."
-            ],
+            "validation": ["Evidence aac389c16498be08."],
+            "limitations": ["Evidence a3588cc78e0b2132."],
             "ci": "/tmp/gspot-vale-logged-replacement-ci.json"
         },
         {
@@ -18135,12 +18011,8 @@
                 "slices/tests-integration-lifecycle/013"
             ],
             "unresolvedRecords": 576,
-            "validation": [
-                "CLI103passed/350assertions/11files/9.97s; workspace types0. Staged51passed/9skipped/0findings/19.9s; normal commit and push hooks pass. Push51passed/9skipped/0findings/22.3s."
-            ],
-            "limitations": [
-                "slices/tests-integration-lifecycle/044 remains partial for its other pure-reader assertions. Whole-repository cross-platform verification remains pending; no live publication or deployment."
-            ],
+            "validation": ["Evidence c6ae202aa4075330."],
+            "limitations": ["Evidence 4b1f3c72551a878b."],
             "ci": "/tmp/gspot-quality-twelve-checkpoint-ci.json"
         },
         {
@@ -18157,32 +18029,23 @@
                 "review/tests-tools/022"
             ],
             "unresolvedRecords": 567,
-            "validation": [
-                "Integration checkout CLI179passed/794assertions/19files, native Markdown/plist4passed/38assertions/2files; workspace types0. Staged72passed/11skipped/0findings/21.8s. Normal hooks and push pass; push72passed/11skipped/0findings/21.7s."
-            ],
-            "limitations": [
-                "slices/tests-integration-execution/018 remains partial for meaningful same-session recovery and historical correspondence. Native executable proof covers macOS ARM64; whole-repository cross-platform verification remains pending. No live publication or deployment."
-            ],
+            "validation": ["Evidence 11bd6ea7bb72dc14."],
+            "limitations": ["Evidence 09a9eeae86529bae."],
             "ci": "/tmp/gspot-output-language-checkpoint-ci.json"
         },
         {
             "commit": "34853ef690cfbda449d53393e9c7a00d8455ae5c",
             "completedRecords": ["areas/kits/123", "areas/kits/124", "review/tests-cli/040"],
             "unresolvedRecords": 564,
-            "validation": [
-                "Normal producer and generated apply passed. CLI63 tests/256 assertions; native formatter1/22; TypeScript0; staged156pass14skip0. Source-read integration44pass161 assertions.",
-                "The first reproducibility push failure is preserved; three native probes and the unchanged normal push replay passed. No enforcement setting changed."
-            ],
-            "limitations": [
-                "GitHub Actions37860227794 remains pending with no jobs; earlier37858961107 was cancelled. Neither proves Linux/macOS/Windows completion."
-            ]
+            "validation": ["Evidence 43f0ee9dad17c29a.", "Evidence da3bae984c7f2503."],
+            "limitations": ["Evidence 371eb9934fbcbfe0."]
         },
         {
             "commit": "7d7af416eb58f62528dfb9396ebf12fe78dd0f3f",
             "completedRecords": ["areas/kits/031", "areas/kits/082", "review/source-layout/055"],
             "unresolvedRecords": 561,
             "validation": [
-                "Exact original/current binding and owner audit completed. Shared config171 cases/1134 assertions; mirror208 cases and normal staged/push gates passed.",
+                "Evidence 74c7a9a9bbd6a75f.",
                 "Original IDs, quotations, closed rows, memberships, and owner decisions preserved."
             ],
             "limitations": [
@@ -18212,19 +18075,19 @@
             "unresolvedRecords": 548,
             "validation": [
                 "Pushed policy/captured-input checkpoint: 352 passing tests, 1077 assertions, 18 files.",
-                "Immutable native body provenance attributes the prior 105/586 captured-policy, 22/100 path/default, and canonical-schema parity named controls to committed implementations; bounded vectors only.",
+                "Evidence ebd51437a52f8797.",
                 "Required 9a staged check, commit and push hooks passed without bypass; live publication not invoked."
             ],
             "limitations": [
                 "Recorded macOS/Bun runs and explicitly recorded Node probes are not native Windows proof.",
                 "Runtime/published schema parity vectors are bounded; no universal arbitrary-schema or all-platform claim.",
                 "Native package/custom-template successes apply to their recorded source snapshots; no live release/publish evidence.",
-                "213/686 canonical, 22/100 path/default, 105/586 CAS/preview and 352/1077 checkpoint are independent named recorded runs, not per-record blanket closure.",
-                "Rules/category/namespace/reference and canonical metadata may be held physically; exact owner hash matrix is authoritative provenance.",
+                "Evidence b58acc03a2472f8a.",
+                "Evidence d53714cda9c0bc4b.",
                 "Root owns full generated producer/integration/commit and ledger closure decisions.",
-                "No new tests ran in this readiness audit. Quoted existing native receipts are attributed by immutable declaration-token/body and owner hashes, not silently claimed as a new full9a run.",
-                "Canonical3 and Rules60 are held; optional metadata interface changes do not imply every historical policy behavior is unpushed. Exact obligation assessment follows native field/body ownership.",
-                "A pending ledger status is neither implementation absence nor proof of completion; only the exact binding/committed owner evidence determines this shortlist."
+                "Evidence 4a0792e58b6734c3.",
+                "Evidence 681c16aba655c396.",
+                "Evidence f94b88bf9cecd3d0."
             ],
             "ci": {
                 "run": "https://github.com/stefanionescu/gspot/actions/runs/37868403328",
@@ -18249,15 +18112,11 @@
                 "areas/kits/144"
             ],
             "unresolvedRecords": 536,
-            "validation": [
-                "Exact committed test audits:39pass/227assertions/5files and35pass/131assertions/9files on macOS/Bun1.4.2 at pushed0d1d; latest relevant test/config/type owner paths verified unchanged at19d8.",
-                "Tool ownership checkpoint CLI20pass/280assertions/3files and tools21pass/200assertions/5files; TypeScript and normal producer pass. Staged157pass/0fail/0findings and push157pass/0fail/0findings.",
-                "Category integration201pass/736assertions/8files, TypeScript/setting producer/normal CLI build/apply pass; pinned Node24.20/Bun1.4.2 list outputs identical. Native staged and push157pass/0fail/0findings."
-            ],
+            "validation": ["Evidence d728ad2e4f44967a.", "Evidence 84f9331315274086.", "Evidence 9379f3e4130ea31e."],
             "limitations": [
                 "Native results are bounded macOS evidence; queued or cancelled CI is not Linux/macOS/Windows acceptance.",
-                "Historical positive test-file costs for tests-cli113 and115 remain disclosed; this verification audit adds no executable implementation. No source-layout/glossary or language parent record is closed by overlap alone.",
-                "Current held stronger LFS, mode, report-helper, prefix or source assertions are excluded from original pushed test obligation proof.",
+                "Evidence 5eb69d734c66f9bb.",
+                "Evidence 64465cba91715919.",
                 "No publication, release tag, deployment or live account configuration. main/001 remains partial."
             ],
             "ci": {
@@ -18306,11 +18165,7 @@
                 "review/source-layout/041"
             ],
             "unresolvedRecords": 510,
-            "validation": [
-                "Native rule replacements: 125 CLI tests and 750 assertions; Node 24.20 and Bun 1.4.2 consumers; plugin build, types and staged gates pass.",
-                "Manifest rule links and canonical examples: 247 tests and 855 assertions; schema generation, types, apply and 98 staged checks pass.",
-                "20 test records: retained binding-specific controls and named Linux/macOS/Windows observations audited in /tmp/gspot-tests-cli24-cross-platform-ci-audit.json; normal staged hooks and pushes recorded."
-            ],
+            "validation": ["Evidence a5e54072912c1bfa.", "Evidence 6a9b5866eba423f8.", "Evidence f1e4f18cb91cef0c."],
             "limitations": [
                 "Whole CI jobs failed or remain pending; named passing cases do not prove whole jobs green.",
                 "Windows skips remain skips; no Node execution claim from Bun CI.",
@@ -18335,19 +18190,14 @@
                 "review/tests-cli/066"
             ],
             "unresolvedRecords": 510,
-            "validation": [
-                "Report capture and Swift preparation preserve the original controls; focused native checks, types, staged checks and normal hooks pass."
-            ],
+            "validation": ["Evidence 0464bd12c24b4dd1."],
             "limitations": ["CI run37881269281 is pending; no cross-platform closure."]
         },
         {
             "commit": "4c6a75d9117c19bf4f55716209897f2e87eb8bf0",
             "completedRecords": ["review/tests-cli/064"],
             "unresolvedRecords": 509,
-            "validation": [
-                "Actual Windows job113650616349 passes the restored callback; matching Linux/macOS evidence and owner hashes are preserved.",
-                "Original stable IDs, memberships and quotations remain."
-            ],
+            "validation": ["Evidence ea1e86ed4f58144a.", "Original stable IDs, memberships and quotations remain."],
             "limitations": [
                 "The whole Windows job has 26 failures and 94 skips; only the matched callback is credited.",
                 "Later 065 recovery assertions are outside this closure."
@@ -18376,22 +18226,17 @@
                 "Original IDs, quotations, decisions and overlapping memberships are preserved."
             ],
             "limitations": [
-                "This record audit establishes the prescribed leaf fixes only. Whole-suite and cross-platform acceptance remain separate obligations.",
+                "Evidence f73e410e799f1f8c.",
                 "The shared timeout still requires final CI measurements; this closes only the duplicate version limit deletion.",
-                "Mechanical identifier renames preserve bodies and add 11 bytes in their packet; no runtime growth or byte-reduction claim is made."
+                "Evidence 740b72f3d5fda5d3."
             ]
         },
         {
             "commit": "a60ad120fe604d418f9c27439e9eacb7eeb5597e",
             "completedRecords": ["review/tests-cli/054", "review/tests-cli/065", "review/tests-cli/066"],
             "unresolvedRecords": 493,
-            "validation": [
-                "Native cross-platform source and callback evidence: /tmp/gspot-ci054065066-windows-exact-callback-proof.json SHA21e96a7b763c1151a2d512a8c618a3bc1cd326cc43a9d4edb6b68d9ed1e73315; companion Linux/macOS audit records the same restored source."
-            ],
-            "limitations": [
-                "Windows whole CLI job113665195699 failed with3869 passes,94 skips,19 failures; these three credited callbacks passed without skips.",
-                "No aggregate018/103 closure or blanket CI pass is inferred."
-            ]
+            "validation": ["Evidence 0c06ca0321538987."],
+            "limitations": ["Evidence 632a13a3cf924034.", "No aggregate018/103 closure or blanket CI pass is inferred."]
         },
         {
             "commit": "b5c857be7c2e21bb09dfcc39e46ed90b8f6407a1",
@@ -18451,9 +18296,7 @@
                 "areas/unit-tests/040"
             ],
             "unresolvedRecords": 477,
-            "validation": [
-                "Whole current status-table fixes and original quotations read. Second-pass records reconciled before their area records. Original IDs, memberships and previously closed records are preserved."
-            ],
+            "validation": ["Evidence a05dc4b1f8d59d1c."],
             "limitations": [
                 "Actual cross-platform release acceptance remains pending. No publication, release tag, live setup or deployment."
             ]
@@ -18465,20 +18308,14 @@
             "validation": [
                 "Current final status-table obligations read; original IDs, quotations and batch memberships retained."
             ],
-            "limitations": [
-                "review/tests-cli/023 retains the integration-tests/025 deletion dependency. review/tests-cli/033 still needs its whole-family callback audit. Actual Windows CI remains required; no skip is credited as platform proof."
-            ]
+            "limitations": ["Evidence 1a56d0d9f7af8848."]
         },
         {
             "commit": "02fd3b662284c6cf57540f67001875fb1b459783",
             "completedRecords": ["review/tests-cli/023", "review/tests-cli/033", "areas/integration-tests/025"],
             "unresolvedRecords": 473,
-            "validation": [
-                "Reviewed all current fixes and original quotations. Pushed 02fd3b662 contains the deletion; d25d2e272 contains the singleton follow-up. Mechanical import checkpoint 3a3448c32 preserves all callback bodies and assertions."
-            ],
-            "limitations": [
-                "The one Windows-only native test was skipped on this macOS run. Cross-platform CI and final release acceptance remain pending. No publication, deployment or release tag."
-            ],
+            "validation": ["Evidence 9e9a8561a0f515f9."],
+            "limitations": ["Evidence 4d53ade1ec075747."],
             "ci": {
                 "run": "https://github.com/stefanionescu/gspot/actions/runs/37896608130",
                 "status": "pending"
@@ -18494,9 +18331,7 @@
                 "review/tests-cli/034"
             ],
             "unresolvedRecords": 468,
-            "validation": [
-                "All original/current fixes, exact pushed owner hashes and native body preservation checked. No source changes required. Original IDs, quotations and memberships remain."
-            ],
+            "validation": ["Evidence daf72cc551f8a6f4."],
             "limitations": [
                 "macOS native replay; final cross-platform acceptance remains pending. No publication or deployment."
             ]
@@ -18513,23 +18348,17 @@
             ],
             "unresolvedRecords": 462,
             "validation": [
-                "Every current prescription, original quotation, source/test move and config mirror checked against pushed blobs. Native Node is retained for consumer pointer imports.",
+                "Evidence 7cb3525ef2aa6c39.",
                 "The final deletion contract of areas/kits/101 supersedes the historical rename of removed baseline cases."
             ],
-            "limitations": [
-                "Native execution on macOS; Windows-specific filename eligibility is not Windows acceptance. Final cross-platform suites remain pending."
-            ]
+            "limitations": ["Evidence 1729a19e7c6dc8dd."]
         },
         {
             "commit": "d4dcdf960848ac04f11d08f58e09be8190bc3eac",
             "completedRecords": ["slices/tests-acceptance/012", "slices/tests-acceptance/013"],
             "unresolvedRecords": 460,
-            "validation": [
-                "Integrated mechanical cbb3bf0fd separately from behavior d4dcdf960. Normal apply is not needed for test-only changes; normal staged/commit/push gates passed with zero findings. The complete original/current obligations and all quotations remain."
-            ],
-            "limitations": [
-                "Native framework replay on macOS. Final Linux/macOS/Windows CI acceptance remains pending; no skipped platform is claimed as verified. No publication, deployment or release tag."
-            ],
+            "validation": ["Evidence 1a9015477f903597."],
+            "limitations": ["Evidence d0df9d5166ad2436."],
             "ci": {
                 "run": "https://github.com/stefanionescu/gspot/actions/runs/37897942132",
                 "status": "pending"
@@ -18547,12 +18376,8 @@
                 "review/tests-cli/103"
             ],
             "unresolvedRecords": 453,
-            "validation": [
-                "Original/current fixes and all exact pushed target hashes checked. Current Xcode/Bash10/21 and detector/selection294/656 pass; exact helper bodies retain original supported422/2254 and compiler21/87 evidence. Accepted d4 harness location/type changes are separate from unchanged target helpers."
-            ],
-            "limitations": [
-                "macOS native validation. POSIX/Windows filename controls are host conditional; no skipped platform or mocked executable is counted as native tool acceptance. Final suites remain pending."
-            ]
+            "validation": ["Evidence 196a687abdef86f5."],
+            "limitations": ["Evidence 2d2eb007327db9dc."]
         },
         {
             "commit": "4ea1e5c0038d3390e14327ab6555cacba7ff71a9",
@@ -18566,10 +18391,7 @@
                 "review/tests-cli/143"
             ],
             "unresolvedRecords": 446,
-            "validation": [
-                "/tmp/gspot-cli-last-seven-whole-readiness.json and /tmp/gspot-cli-four-main-provenance-proof.json preserve exact binding rows, artifacts and pushed-owner proof.",
-                "Repository checkpoint123 tests472 assertions; original README example1 test9 assertions; final staged110pass0fail14skip0findings; normal push same110/0."
-            ],
+            "validation": ["Evidence 49d45420c5071e74.", "Evidence 4f6a2c9fa1b44305."],
             "limitations": [
                 "Linux/macOS/Windows release acceptance remains separate. Current CI37900484161 pending; no platform skip is credited."
             ]
@@ -18578,21 +18400,15 @@
             "commit": "af979b415c6c13d5b1904b976234e406031d3104",
             "completedRecords": ["areas/checks/059"],
             "unresolvedRecords": 445,
-            "validation": [
-                "/tmp/gspot-checks059-current-final-freeze.json and /tmp/gspot-checks059-main-behavior-normalized.json preserve before/after hashes and exact fact/callback inventory; /tmp/gspot-checks059-behavior-cp-native.log records45/95; staged/push88pass0fail12skip0findings."
-            ],
+            "validation": ["Evidence ed5bfc04051f57b4."],
             "limitations": ["Native macOS execution; Linux/Windows release acceptance remains pending."]
         },
         {
             "commit": "f4c78a76c19be82cd5dcef54d7c09961a608ac1c",
             "completedRecords": ["review/code-execution/018", "review/tests-cli/031"],
             "unresolvedRecords": 443,
-            "validation": [
-                "153 CLI tests603 assertions; native tools17/176; normal producer/build/apply/types and staged gate pass. Authenticated normal push confirmed main at f4c78a76c."
-            ],
-            "limitations": [
-                "Darwin acceptance is not Linux/macOS/Windows CI completion. CI37903289520 in progress; no publication or deployment performed."
-            ],
+            "validation": ["Evidence ea71b70459b059d4."],
+            "limitations": ["Evidence 6fe0083dd8258131."],
             "ci": {
                 "run": 37903289520,
                 "status": "in_progress",
@@ -18603,12 +18419,8 @@
             "commit": "a39d0fdd0fa284e013d7e103ec27b0e3d50e02cd",
             "completedRecords": ["review/tests-cli/006"],
             "unresolvedRecords": 442,
-            "validation": [
-                "Frozen7owner /tmp/gspot-cli006-manifest-level-final-freeze.json and parity proof3d90fd7908a3b7d7aa3ae2d855d99066f25b7a93661266f34d1b9b3eca9e1539 preserve exact140/77 Ruff transfer and50/1 basedpyright options. Main corrective native format snapshot preserves original2-space failed staged probe; final4-space staged gate passes. Normal push confirms a39d0fdd0 on main."
-            ],
-            "limitations": [
-                "No Linux/Windows native acceptance inferred from Darwin tests; current CI will validate supported platforms. No publication/deployment."
-            ]
+            "validation": ["Evidence beec6e7651e769fc."],
+            "limitations": ["Evidence d46510128e43b8ed."]
         },
         {
             "commit": "35fca2bc08540fadb2402a3d8f28968c7b552ca8",
@@ -18621,25 +18433,15 @@
                 "review/repository-root/031"
             ],
             "unresolvedRecords": 436,
-            "validation": [
-                "Build: ten missing-asset failures preserve distribution; complete build/help/package contents pass. /tmp/gspot-build-grammar-native-results/proof.json and /tmp/gspot-build-ownership-native-package-proof.json.",
-                "Build checkpoint staged85/0/10; normal commit56/0/2 and commitlint0; normal push85/0/10. CI checkpoint native staged38/0/7, normal commit and push pass. /tmp/gspot-ci-four-main-cp-final-staged.log."
-            ],
-            "limitations": [
-                "New CI runs are pending or superseded; no Linux/macOS/Windows suite result is inferred from native workflow validation. CLI sideEffects deletion remains held for the outstanding owner decision."
-            ]
+            "validation": ["Evidence 40a5496e6797c439.", "Evidence ecfe974b7613f3b5."],
+            "limitations": ["Evidence 6eeda09118ef6281."]
         },
         {
             "commit": "38ccc4d35eb84863786d6e2d0f1a926774c8a48a",
             "completedRecords": ["review/tests-layout/013", "review/tests-tools/037"],
             "unresolvedRecords": 434,
-            "validation": [
-                "Main native103 CLI tests/285 assertions and root types pass. Staged67/0/10, normal commit and push passed. /tmp/gspot-owner-moves-main-cp-final-staged.log.",
-                "Agent native149 CLI/429 assertions,39 tools/319 assertions; original package7 survivors and unchanged plugin replay1/6 passed after the sole normal plugin build. Exact source/function/expect/argv/data/resource-body preservation and DAG proofs retained in /tmp/gspot-test-boundary-final-freeze.json."
-            ],
-            "limitations": [
-                "Native macOS acceptance; no Windows/Linux suite result inferred. PATH declarations are a separate behavior packet, with test growth recorded."
-            ]
+            "validation": ["Evidence 9b2138fe61e0ae4a.", "Evidence 03c0b1b43242bfb4."],
+            "limitations": ["Evidence c4b75e9f452d1030."]
         },
         {
             "commit": "6e72dc731f36345d33c5101cb1705eff61ae8673",
@@ -18662,14 +18464,14 @@
             ],
             "unresolvedRecords": 419,
             "validation": [
-                "Policy/ownership CP114pass768assert8files4.71s; composed Main118pass824assert8files4.72s; five genuine negative observations retained in frozen evidence.",
-                "Generated lint survivor2pass2assert2.01s; existing plugin153pass. Native tool options reuse29pass222assert4files76.70s; argv/resource/assertion AST preserved.",
-                "Root/CLI types, native lint/format and owner checks pass; staged50pass9skip0findings19.3s. Native packet and individual qualification receipts retained under /tmp/gspot-policy-boundary-six-final-freeze.json, /tmp/gspot-eslint-functions-056-final-freeze.json, /tmp/gspot-f061-options-reuse-final-freeze.json.",
-                "Earlier automation and metadata acceptance belongs to pushed923b6b72b and38ccc4d35; actual4055 deterministic tests,42 native tool tests,31 Supabase tests, preset capture and package-consumer evidence retained."
+                "Evidence a5a40f47c372d976.",
+                "Evidence 83384d3166ff1a77.",
+                "Evidence 94865a2901bf3f9f.",
+                "Evidence 3b5a7aef7504abca."
             ],
             "limitations": [
                 "No cross-platform skip is represented as execution proof; current CI runs inspected separately.",
-                "Review/tests-tools/061 remains partial with +1233B/+192AST after same-contract deletion; repository-root004/005/006 setup policy conflict remains separate; main001 external release steps remain partial."
+                "Evidence d2f245852647d72b."
             ]
         },
         {
@@ -18685,14 +18487,10 @@
                 "areas/kits/108"
             ],
             "unresolvedRecords": 411,
-            "validation": [
-                "Read-only exact binding/source/receipt attribution: /tmp/gspot-layout-current-closure-spec-proposal.json, /tmp/gspot-hosting-readiness-final-closure-specifications.json, /tmp/gspot-kits108-seven-whole-readiness-final.json. Current named implementations and declaration/default/argv inputs are compared to actual accepted native receipt snapshots.",
-                "SARIF output original28-owner packet production1881bytes/357AST fewer; compiler original5-owner packet496bytes fewer; scope input original12-owner packet455bytes fewer. These costs are packet-specific; no unrelated offset or W3 aggregate shrink claimed.",
-                "Seven check names change only identity data/native formatter whitespace150bytes0executableAST; authored example update0bytes with all unrelated fields/bytes exact. Normal mechanical checkpoint and push passed."
-            ],
+            "validation": ["Evidence dfaf6b6341bb5e22.", "Evidence 8a847a66134a829f.", "Evidence cb6ab27e9d4cf85c."],
             "limitations": [
-                "No new OS/tool execution claimed by receipt reconciliation. Docker-backed nginx case remains a platform skip, and later compiler/native-loader behavior remains separately open.",
-                "Historical webmanifest growth remains explicit; areas/checks/070 remains partial. Source-layout005/017/038 and whole naming012 are not closed by this narrower audit.",
+                "Evidence 73773a13b609accd.",
+                "Evidence 1c70208e178cebde.",
                 "main001 remains partial for external publication and setup; no deployment/publication performed."
             ]
         },
@@ -18704,25 +18502,19 @@
                 "areas/integration-tests/040"
             ],
             "unresolvedRecords": 408,
-            "validation": [
-                "Combined Main36pass100assert4files2.43s; Root types/native lint/format and actual staged50pass9skip0findings20.1s pass. Immutable packet hashes and genuine first failure/negative controls retained under /tmp/gspot-count-pattern037-final-freeze.json, /tmp/gspot-output-contract039-final-freeze.json and /tmp/gspot-declared-output040-final-freeze.json.",
-                "Three exact native packets remove2906bytes/477AST; portable fixture separately adds tested index-only coverage with no production change or Git protection override."
-            ],
+            "validation": ["Evidence 1ba513091ed3212e.", "Evidence 578ee22e023bed62."],
             "limitations": [
                 "Only the named-check correction subsite of integration-tests084 is deleted here; wider084 remains partial.",
-                "Windows tracked fixture correction is locally verified and awaits actual Windows CI; no platform pass inferred from this Main run."
+                "Evidence 80ea95fe3fcd69ff."
             ]
         },
         {
             "commit": "5a4b25e1add91b920534a749f592ec373b9e4a13",
             "completedRecords": ["slices/kits-general/027", "slices/kits-general/036"],
             "unresolvedRecords": 406,
-            "validation": [
-                "Immutable packet hashes and exact hunk composition preserve held owners. Main native CLI replays match124/449 and21/92; native scanner receipt3/14 matches identical production source. Normal commits and pushes pass without policy exceptions or hook bypass.",
-                "All1092 records,1648 assignments,2259 original ID rows and490 original closed rows retained.24 repeated evidence pairs share exact reversible references, saving12674bytes without removing quotations, decisions or memberships."
-            ],
+            "validation": ["Evidence 597791e8b2737b0b.", "Evidence 1cb8966639b4be64."],
             "limitations": [
-                "No new platform execution is claimed from local macOS receipts. Current CI is inspected separately; Windows tool acquisition delay and PurgeCSS drive-path failure remain unresolved.",
+                "Evidence 78f6091d301d1ac6.",
                 "main/001 remains partial for external publication/setup. No npm publication, release tag or deployment performed."
             ]
         },
@@ -18730,38 +18522,24 @@
             "commit": "7818e8ca1d860e93272223a9e73f8aba06340cd1",
             "completedRecords": ["areas/integration-tests/084"],
             "unresolvedRecords": 405,
-            "validation": [
-                "All cited original/current obligations are mapped with zero residuals. Five exact whole-owner hashes plus the exact relevant refusal callback match integrated files. Existing native-linter partial-fix contracts remain under areas/tool-tests/004."
-            ],
-            "limitations": [
-                "Local Darwin/Bun results do not establish all-platform success. CI is inspected separately. main/001 remains partial; no publication/tag/deployment."
-            ],
+            "validation": ["Evidence 4fb2c7597e2ae9f9."],
+            "limitations": ["Evidence eacc105317ebbb16."],
             "ci": "https://github.com/stefanionescu/gspot/actions/runs/37919381053 (pending when inspected)"
         },
         {
             "commit": "cccfbf9870c634f36246e69f32871e4678480ed6",
             "completedRecords": ["slices/kits-general/015"],
             "unresolvedRecords": 404,
-            "validation": [
-                "Exact six authored owners plus normal regenerated workspace lock integrated, preserving CLI sideEffects and original brand. Other native parser bodies and existing SDK/template controls remain unchanged. Normal commit/push hooks pass; narrow production growth exception recorded as init-formatter-inference-size-exception."
-            ],
-            "limitations": [
-                "Packed formatter acceptance does not prove complete grammar delivery; that separate packaging obligation remains. Native local evidence is Darwin only; current CI is pending, with no platform skip treated as a pass. main/001 external publication/setup remains partial."
-            ],
+            "validation": ["Evidence d2c4db0b2f348004."],
+            "limitations": ["Evidence 488493ac1c984024."],
             "ci": "https://github.com/stefanionescu/gspot/actions/runs/37920336673 (pending when inspected)"
         },
         {
             "commit": "2c65d42f63e5a907e39b9bd6be634202a527c486",
             "completedRecords": ["review/repository-root/004", "review/repository-root/006"],
             "unresolvedRecords": 402,
-            "validation": [
-                "Frozen native setup proposal /tmp/gspot-repository004005006-final-freeze.json and main /tmp/gspot-setup-and-fixture-main-cp-staged-authenticated.log retain exact bodies and errors. Nine-owner checkpoint includes generated normal tool lock and Ruff shared Python setup; Ruff8pass122assert and all25 original expectation ASTs/resources preserved. Original authored automation proposal removes785bytes; main security/policy amendments are explicit in the committed diff."
-            ],
-            "limitations": [
-                "Local Darwin acceptance only. CI37922939897 pending; no platform skip counts as proof. Native optional-WASI lock variation remains recorded and fails the required drift gate when present.",
-                "No live publication/deployment/database invocation; release and docs workflow preparation tested locally. Repository-root005 stays partial: duplicate check:types task/step deleted but seven required authored compiler flags retained after exact seven-finding native probe.",
-                "The Ruff fixture checkpoint supplements shared Python acquisition; broader tools-cache and Windows timing obligations remain. main/001 remains partial."
-            ],
+            "validation": ["Evidence 790a4a7e302f3bef."],
+            "limitations": ["Evidence c011fe850fe3288c.", "Evidence f4ec266790f5bb82.", "Evidence c3e4733f56d7cb5d."],
             "ci": "https://github.com/stefanionescu/gspot/actions/runs/37922939897 (pending when inspected)"
         },
         {
@@ -18774,14 +18552,8 @@
                 "review/tests-layout/038"
             ],
             "unresolvedRecords": 397,
-            "validation": [
-                "Main22-owner integration removes4337bytes; frozen original delta4270 with AST+37/functions0/expect0 explicitly retained. Main recovery23pass129assert4files, Root/CP types0, staged31pass7skip0findings; normal commit25pass2skip0findings and push31pass7skip0findings. Original matrix35/175 and direct57/376 plus native22tools cases/replay retain all controls.",
-                "Proofs: /tmp/gspot-layout-support-six-final-v2-freeze.json, /tmp/gspot-layout-support-six-main-resolution-proof.json, /tmp/gspot-layout-six-main-staged-amendment/proof.json, /tmp/gspot-layout-six-evidence-only-lineage.json, /tmp/gspot-layout-six-main-current-policy-ownership-native.log."
-            ],
-            "limitations": [
-                "Tests-layout017 is partial: shared Next/Supabase and three native tsconfig objects implemented; remaining JSconfig duplication and original library/native project mapping stay explicit.",
-                "Darwin local receipts only. CI37923594912 pending; platform skips and prior unrelated failures are not credited as platform passes. main/001 stays partial."
-            ],
+            "validation": ["Evidence 7047249997210a05.", "Evidence 698cca080f4881e1."],
+            "limitations": ["Evidence 724a3ba80bb5ff97.", "Evidence 79eb4b3bad40f72c."],
             "ci": "https://github.com/stefanionescu/gspot/actions/runs/37923594912 (pending when inspected)"
         },
         {
@@ -18796,12 +18568,9 @@
                 "areas/tool-tests/045"
             ],
             "unresolvedRecords": 390,
-            "validation": [
-                "Mechanical1b6bd3b98 and behavior d56c5d843 retain separate commits; staged27pass0findings, native hooks and successful normal commit/push gates.",
-                "Semgrep main5ad96dff staged152pass0findings and repeated native apply idempotent; fixture root Python coverage preserved."
-            ],
+            "validation": ["Evidence 9ef203a5e5e02fcd.", "Evidence c9abb80c2f8d9278."],
             "limitations": [
-                "Actual Windows/Linux native replay and overall final verification remain; tests-layout003 retains automatic-selection versus literal empty-list obligation.",
+                "Evidence 55ec4e47cacd19c1.",
                 "Shared repository lifecycle005, ownership move020/022 and helper-default007 remain partial outside this checkpoint."
             ],
             "ci": {
@@ -18814,9 +18583,7 @@
             "completedRecords": ["review/policy-exceptions/003", "areas/checks/044"],
             "unresolvedRecords": 388,
             "validation": ["Evidence 43086d237ef6ffa2."],
-            "limitations": [
-                "Cross-platform and full final suite acceptance remain outstanding; review/code-execution/007 stays partial for its explicit remaining acceptance obligation."
-            ]
+            "limitations": ["Evidence 37496814ff25d5d2."]
         },
         {
             "commit": "35ff0a744c33e8a79fd040f4f7d4e89bcaa30398",
@@ -18856,14 +18623,8 @@
                 "slices/tests-integration-checks/029"
             ],
             "unresolvedRecords": 379,
-            "validation": [
-                "Evidence 28bd68840502ea6f.",
-                "Receipts:/tmp/gspot-platform-contracts-main-staged-native-final.log;/tmp/gspot-platform-contracts-main-commit.log;/tmp/gspot-platform-contracts-main-push.log;/tmp/gspot-platform-contracts-main-cli.log;/tmp/gspot-platform-contracts-wrangler-metadata-cli.log;/tmp/gspot-platform-contracts-main-native-tools.log;/tmp/gspot-platform-contracts-wrangler-integrated-native-final.log;/tmp/gspot-platform-contracts-wrangler-native-live.log."
-            ],
-            "limitations": [
-                "Current Linux/macOS/Windows CI is pending; these record closures establish their implementation and focused acceptance, not global release/platform acceptance. Main/001 remains partial.",
-                "Original failed Wrangler package-export/schema-annotation and mistaken command/preload probes retained; no false proof from zero-input staged filters."
-            ]
+            "validation": ["Evidence 28bd68840502ea6f.", "Evidence 6fac4b2537d7996d."],
+            "limitations": ["Evidence e215039ca18521c3.", "Evidence 5cffe2b86d96e559."]
         },
         {
             "commit": "e612fce45b842be8b452f33bfe69029a92cc7694",
@@ -18874,11 +18635,9 @@
                 "slices/kits-frameworks-tools/029"
             ],
             "unresolvedRecords": 375,
-            "validation": [
-                "Five named native CLI controls pass with35assertions; no package acquisition or platform-wide claim. Shipped owner hashes and original assertion chains checked."
-            ],
+            "validation": ["Evidence 3cb2c7dedd226ecf."],
             "limitations": [
-                "Darwin only; no installed Zod3 runtime claim. Producer workdir mistake affected57 ignored artifacts,0 tracked outputs; no Main validation was running. Exact qualification retained; no blanket Main before/after identity claim.",
+                "Evidence 452f110406cc4e7b.",
                 "RHF024,React046 and shared positive historical costs remain partial/unwaived."
             ]
         },
@@ -18889,9 +18648,7 @@
             "validation": [
                 "Actual345dd Linux CLI acceptance and exact13-owner e612 hash bridge. No source or test edits needed."
             ],
-            "limitations": [
-                "No Windows/macOS/native-SDK acceptance inferred. Swift074 source/behavior complete with706productionbytes removed; historical test-cost allocation remains pending review. Drizzle021/015 +374 production remains partial."
-            ]
+            "limitations": ["Evidence ad9ebb2314de8fbb."]
         },
         {
             "commit": "488be8b30c2a4065bc576e63a7fde10b00e633f1",
@@ -18902,12 +18659,8 @@
                 "slices/kits-frameworks-tools/024"
             ],
             "unresolvedRecords": 369,
-            "validation": [
-                "39 CLI cases passed with 253 assertions; one native Semgrep case passed with 5 assertions. Staged checks: 47 passed, 3 skipped, zero findings. Existing nine native sample cases passed with 45 assertions; exact committed owner identities and retained observations audited."
-            ],
-            "limitations": [
-                "Native evidence is from macOS; skipped or filtered cases do not prove another platform. The separate whole frontend test/support growth packet is not approved by these per-record closures."
-            ]
+            "validation": ["Evidence 816e478d61dba5ad."],
+            "limitations": ["Evidence 0c018570bc45b32c."]
         },
         {
             "commit": "05997a065f49ff80c71173cd699953c132f85fcf",
@@ -18919,12 +18672,8 @@
                 "slices/kits-frameworks-tools/054"
             ],
             "unresolvedRecords": 364,
-            "validation": [
-                "Exact per-record current source and native receipt audit at /tmp/gspot-05997-per-record-closure-evidence.json. Fifteen native cases and 166 CLI cases passed; only named controls are credited to each record. Earlier actual Linux planning matrix matches current callback bytes."
-            ],
-            "limitations": [
-                "The approved init split keeps real installed drift in native lifecycle tests. Cross-platform and database release acceptance remain open."
-            ]
+            "validation": ["Evidence 7dc3c575f9f354a4."],
+            "limitations": ["Evidence 658a3ceff3605334."]
         },
         {
             "commit": "fc2af1dd6dda2eb6bd62e42f445879e89b2bb1aa",
@@ -18934,42 +18683,28 @@
                 "slices/tests-integration-execution/021"
             ],
             "unresolvedRecords": 361,
-            "validation": [
-                "Current replay: mise exec -- bun test tests/cli/parsers/output tests/cli/execution/count-pattern.test.ts; 98 passed, zero failed, 150 assertions across seven files. Current committed owner audit preserves prior mechanical and behavioral evidence."
-            ],
-            "limitations": [
-                "Earlier failed temporary gates remain recorded; no platform execution is inferred from path metadata. Native tool relocation preserves existing code and is not a new tool-runtime claim."
-            ]
+            "validation": ["Evidence 487c8146024b5434."],
+            "limitations": ["Evidence 6ef72fdbc46b98e7."]
         },
         {
             "commit": "e8894f855ab294ccf7ec51c90a84fb1c92a1ea2f",
             "completedRecords": ["review/tests-layout/007", "areas/tool-tests/043"],
             "unresolvedRecords": 359,
-            "validation": [
-                "Staged120-owner integration:29 checks passed,2 skipped,zero findings. Current configured types pass. Focused64cases294assertions passes; one existing native Squawk case5assertions passes. Original failed fullCLI11-case receipt and corrected focused corpus remain explicit."
-            ],
-            "limitations": [
-                "Final fullCLI and cross-platform release acceptance remain open; no platform skips or filtered cases credited as execution."
-            ]
+            "validation": ["Evidence 62d422cbb6bf2f27."],
+            "limitations": ["Evidence df5041b7b939486b."]
         },
         {
             "commit": "e53d4db4ee2571663209c3a62f8122f4f65d9e71",
             "completedRecords": ["review/source-layout/026", "review/source-layout/027"],
             "unresolvedRecords": 357,
-            "validation": [
-                "Exact original and later API source/test lineage at /tmp/gspot-source-layout026027-e53-review/closure-bridge.json. Current naming corpus35cases115assertions passes; configured types, native ESLint and Prettier pass."
-            ],
-            "limitations": [
-                "Later file owners follow the explicit strict repository public API decision; no compatibility aliases or new behavior introduced."
-            ]
+            "validation": ["Evidence b16bb5fb27ae797c."],
+            "limitations": ["Evidence 9ea91ea6727b636b."]
         },
         {
             "commit": "e53d4db4ee2571663209c3a62f8122f4f65d9e71",
             "completedRecords": ["slices/tests-integration-checks/032"],
             "unresolvedRecords": 356,
-            "validation": [
-                "Actual integrated CLI run:117 passed,434 assertions,two existing host skips; three native history cases passed with22 assertions. Configured types and normal staged checks passed; staged29 passed,two skipped,zero findings. Exact logs /tmp/gspot-integration-checks032-main-cli.log and /tmp/gspot-integration-checks032-main-native.log."
-            ],
+            "validation": ["Evidence c3d2b4ddb3da7edb."],
             "limitations": [
                 "Final Windows execution and full release verification remain separately tracked; host skips are not execution evidence."
             ]
@@ -18978,9 +18713,7 @@
             "commit": "4ea1e5c0038d3390e14327ab6555cacba7ff71a9",
             "completedRecords": ["slices/tests-integration-checks/028"],
             "unresolvedRecords": 355,
-            "validation": [
-                "Current pinned replay on the integrated e889 sources:30 cases passed,136 assertions,two files,zero failures; includes both LFS controls. Existing source callback and final path verified directly from committed4ea and HEAD. Receipt /tmp/gspot-jest041-local-consolidation/receipt.json."
-            ],
+            "validation": ["Evidence 058520ac1227d3ae."],
             "limitations": ["Final full release and cross-platform acceptance remain separately tracked."]
         },
         {
@@ -18989,8 +18722,8 @@
             "unresolvedRecords": 354,
             "validation": [
                 "Final Jest27 pass/117 assertions; configured lint/format zero findings.",
-                "Four fs type mirrors derive exact native readFile binary return; pinned Node/Bun assignments pass under Node22 and26 declarations. Actual staged945-test-file compiler passes. Type-only increase220 bytes; no runtime or assertion changes.",
-                "Integrated CLI/plugin replay4098 passed,3 existing skips,0 failures,17503 assertions,4101 tests378 files464.32 seconds. /tmp/gspot-post-e889-compiler-full-cli-final.log."
+                "Evidence cd73693e83036a1f.",
+                "Evidence e408f6f03769d740."
             ],
             "limitations": [
                 "This Darwin replay is not final Linux/macOS/Windows release acceptance; cache tool-suite integration remains separate."
@@ -19000,56 +18733,36 @@
             "commit": "8518651b2b9212a86270483ac7b9665c4a835232",
             "completedRecords": ["review/source-layout/052"],
             "unresolvedRecords": 353,
-            "validation": [
-                "Native XML/render and Markdown formatting pass. Main staged29 passed,3 skipped,zero findings6.6s; normal commit24/2/0 and push29/3/0. /tmp/gspot-source052-main-staged-final2.log and /tmp/gspot-source052-main-push.log."
-            ],
+            "validation": ["Evidence fa77b272152a2d51."],
             "limitations": ["Static documentation only; main/127 was already closed and remains unchanged."]
         },
         {
             "commit": "a56647e4badba8ac7afe3347131d77d1beeb1990",
             "completedRecords": [],
             "unresolvedRecords": 353,
-            "validation": [
-                "Actual staged29/2/0; normal commit22/1/0 and push29/2/0. Exact indexed10 owners preserve all original fixture assertions, CLI arguments and pre-init subjects.",
-                "CI9f5dd012 run37957260858: Linux/macOS CLI/plugin jobs, docs and package jobs success. Old tool2/3 failures match corrected fixture-delivery cases; tools4 failure is duplicate agent_rules input, not compiler failure."
-            ],
-            "limitations": [
-                "New main CI pending; old Windows jobs not credited. External18 documentation links and normal lock refresh remain pending."
-            ]
+            "validation": ["Evidence 30a6d00cea82e1c9.", "Evidence d1a32e0f0c6b057d."],
+            "limitations": ["Evidence 56206fcfd0e9bd3d."]
         },
         {
             "commit": "039328af6394b7d345ce0dac6c52698ccb1a13b5",
             "completedRecords": ["areas/developer-experience/032", "areas/developer-experience/033"],
             "unresolvedRecords": 351,
-            "validation": [
-                "Main combined staged13:44 passed/3 skipped/0 findings in12.0s; commit hook33 passed/1 skipped/0 findings. Exact approved frozen index excluded the unrelated unapproved applyPlan draft."
-            ],
-            "limitations": [
-                "First push was rejected by drift in generated ESLint output after integrating the pending level001 source. Main regenerates this through gspot apply for the next coherent level checkpoint before retrying normal push. No hook bypass, live publication, deployment, or platform success inferred."
-            ]
+            "validation": ["Evidence edc904b3f508b8a2."],
+            "limitations": ["Evidence b586910d40467e8f."]
         },
         {
             "commit": "52404404f1bf4041e49f4097e572d41c1648f510",
             "completedRecords": ["slices/kits-frameworks-tools/001"],
             "unresolvedRecords": 350,
-            "validation": [
-                "Main focused five-family56/590 passes. gspot apply writes only .gspot/config/eslint.config.mjs. Combined staged152 checks passed/11 skipped/0 findings in67.8s. Native types/lint/format and exact rule-document parity are recorded in immutable freeze."
-            ],
-            "limitations": [
-                "Normal push retry is running after regeneration; no platform CI success for this successor commit is inferred. No package publication or deployment."
-            ]
+            "validation": ["Evidence b8d1023611b176aa."],
+            "limitations": ["Evidence 39d4531242ca308d."]
         },
         {
             "commit": "9f5dd012bea84a1b3ca70684306288ff17ea6f27",
             "completedRecords": [],
             "unresolvedRecords": 350,
-            "validation": [
-                "GitHub run37957260858 completed successful CLI jobs on Linux113912217540, macOS113912217387, and Windows113912217344; docs113912217161 and package113912217539 also succeeded. These are actual jobs on pushed9f5, not proofs for later drafts.",
-                "Tools1 jobs on Linux113912217655 and macOS113912217606 each failed exactly8 Commitlint executable discovery cases. Actual logs: /tmp/gspot-ci9f5-job-113912217655-actual-plain.log and /tmp/gspot-ci9f5-job-113912217606-actual-plain.log. The suite-owned executable repair is pushed at a566 and Main8/72 native receipt passes; successor platform CI remains required."
-            ],
-            "limitations": [
-                "All four Windows tool shards were cancelled; no Windows tool success inferred. Earlier Linux/macOS tool failures and repository lockfile drift remain recorded. No release, deployment, or database execution."
-            ],
+            "validation": ["Evidence ae54888526e9de07.", "Evidence 46991eaa8eaba216."],
+            "limitations": ["Evidence 9f0b6741d5e1ddee."],
             "ci": {
                 "runId": 37957260858,
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37957260858",
@@ -19061,34 +18774,22 @@
             "commit": "7ac2a998a555ed454e044446e8b1dfa5f5aaa8f3",
             "completedRecords": ["review/repository-root/016"],
             "unresolvedRecords": 349,
-            "validation": [
-                "Current committed a566 grammar owner hashes and pin/type values match full ancestry. Main pinned Bun assets2/4 pass at52404404. Independent configured types/native six-owner lint/format pass. Original118-byte reduction proven per file without attributing later shared-pins packet costs."
-            ],
-            "limitations": [
-                "Only local macOS assets evidence; broader Windows/Linux and release package acceptance remain separate. Root held import-order-only change excluded. No archive builds or live publication."
-            ]
+            "validation": ["Evidence 8509287be92c301f."],
+            "limitations": ["Evidence c397e4d02f4793f8."]
         },
         {
             "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
             "completedRecords": ["slices/tests-integration-lifecycle/034"],
             "unresolvedRecords": 348,
-            "validation": [
-                "Exact original callback and native-copy ancestor bridge in frozen proof; focused dependencies/copy19/93 passes on pinned macOS Bun. This closes the applicable cancellation/depth obligations after the mandated native engine replacement."
-            ],
-            "limitations": [
-                "Related035 movement remains a separate unapproved positive-size draft. Windows/native-copy CI acceptance is still separate."
-            ]
+            "validation": ["Evidence 82875ab36b76426c."],
+            "limitations": ["Evidence cb283d7287d256f8."]
         },
         {
             "commit": "26117cf44c8545c3d4a0f41be1d18d9f044b658c",
             "completedRecords": ["review/repository-root/047"],
             "unresolvedRecords": 347,
-            "validation": [
-                "Main staged49 passed/5 skipped/0 findings in10.7s; normal push49 passed/5 skipped/0 findings in13.4s. Native97/96 file inventory and four-shard exclusions are exact. Every existing task, npm-only/source-launcher contract,900000ms timeout, workflow permission and60-minute boundary remains."
-            ],
-            "limitations": [
-                "Designated actual Linux database workflow37965939028 dispatched after normal push; pending result, no database success inferred. No live release tag, package publication or documentation deployment. Successor Linux/macOS/Windows CI remains separate."
-            ],
+            "validation": ["Evidence 322f70a9d9c9c0d3."],
+            "limitations": ["Evidence 5b181105ab83f159."],
             "ci": {
                 "databaseRunId": 37965939028,
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37965939028",
@@ -19100,9 +18801,7 @@
             "completedRecords": [],
             "unresolvedRecords": 347,
             "validation": ["Evidence 643ae7eae5b901bd."],
-            "limitations": [
-                "This is genuine Linux/Docker/Supabase execution, not a macOS skip. Cross-platform broader tool suites and final release verification still remain."
-            ],
+            "limitations": ["Evidence 0a2bb3b26a493355."],
             "ci": {
                 "runId": 37965939028,
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37965939028",
@@ -19129,9 +18828,7 @@
                 "Main focused native CLI tests: 30 pass, 144 assertions, three files, 14.44 seconds.",
                 "Exact non-import bodies, linked deletion, types and native lint/format evidence retained."
             ],
-            "limitations": [
-                "Historical private paths are superseded by the owner decision strict-repository-public-api-owners; original finding text remains."
-            ]
+            "limitations": ["Evidence 6ffc025ae01bb213."]
         },
         {
             "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
@@ -19152,8 +18849,8 @@
             "validation": [
                 "Combined Main staged checkpoint: 44 checks passed, three skipped, zero findings, 15.9 seconds.",
                 "Normal commit hooks: 33 checks passed, one skipped, zero findings; commitlint passed.",
-                "Main SQL/Swift focused replay: 22 tests and 102 assertions; only the prescribed ineffective read-spy leaves of checks/013 are implemented.",
-                "The duplicate agent_rules ancestor fixture tables are removed; actual ancestor coverage replay passes two tests with 14 assertions."
+                "Evidence c95d77fdbc5ae7e5.",
+                "Evidence 5c3d62136a058e09."
             ],
             "limitations": [
                 "Local native results are macOS; simulated Windows error branches do not prove an actual Windows run.",
@@ -19164,10 +18861,7 @@
             "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
             "completedRecords": [],
             "unresolvedRecords": 334,
-            "validation": [
-                "CI a566 Linux tools shard4: 96 pass, two skipped, two fail, 776 assertions, 24 files, 1477.27 seconds. The failures are the duplicated agent_rules ancestor tables; the reducing fixture fix is committed in c0dafc5ea and local two-case native replay passes.",
-                "CI a566 Linux tools shards2 and3, macOS tools shard2, docs, package, Linux and macOS CLI/plugin jobs have success status from actual API."
-            ],
+            "validation": ["Evidence 7c47b6b463d74a0b.", "Evidence a1016fadd682d316."],
             "limitations": [
                 "Windows and other matrix jobs remain running at this observation; no platform skip is counted as proof.",
                 "Manual public documentation URLs and normal managed-lock freshness failures remain separately unresolved."
@@ -19191,13 +18885,10 @@
             "completedRecords": ["review/repository-root/020"],
             "unresolvedRecords": 332,
             "validation": [
-                "All 15 override pairs and actual private package resolutions verified. Native negative/positive coverage, assertion, YAML and unused-selector behavior passed.",
+                "Evidence 52e3241b05afd73c.",
                 "The verification commit normal staged/commit/push gates passed with no findings."
             ],
-            "limitations": [
-                "Native private consumer evidence is local macOS.",
-                "Earlier store-resolution-only receipts are retained as qualified historical evidence and are not the private-loader proof."
-            ]
+            "limitations": ["Native private consumer evidence is local macOS.", "Evidence d2a42f0ee519cda9."]
         },
         {
             "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
@@ -19205,7 +18896,7 @@
             "unresolvedRecords": 331,
             "validation": [
                 "Exact committed current-owner body and original helper/suppression lineage checked.",
-                "Corrected native levels9/416 and existing44 other configuration controls pass; Pages/App Router2/13 and types/scopedlint/format pass."
+                "Evidence c973286d73672312."
             ],
             "limitations": [
                 "The separate configs.all catalog growth in commands/029 is not approved or attributed to this reducing leaf."
@@ -19249,21 +18940,15 @@
             "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
             "completedRecords": ["areas/unit-tests/048"],
             "unresolvedRecords": 327,
-            "validation": [
-                "Main current parser/structure/Swift five-file38/105 replay passes; exact diagnostic positions and corrected-source behavior remain."
-            ],
-            "limitations": [
-                "Old statements body is not claimed byte-identical after later stronger consolidation; original native proof is qualified."
-            ]
+            "validation": ["Evidence 5ccc1b7b6c8662b3."],
+            "limitations": ["Evidence 14308a01e86e8afe."]
         },
         {
             "commit": "a41e1c41485f48bc4ef17d96bb741568abd2dd4f",
             "completedRecords": ["review/code-commands/045"],
             "unresolvedRecords": 326,
             "validation": ["Main 5 tests, 49 assertions; staged 44 passed, 3 skipped, zero findings."],
-            "limitations": [
-                "Separate technical Git-object diagnostics and parser prose are outside the named historical fix locations. No fresh cross-platform acceptance is inferred."
-            ]
+            "limitations": ["Evidence 830342e2fa3c9e87."]
         },
         {
             "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
@@ -19308,7 +18993,7 @@
             ],
             "limitations": [
                 "The 45 move-table census is historical ownership evidence, not an unrelated aggregate size allocation.",
-                "Tests-layout/045 remains partial until all authored prose literals are corrected; native identifiers and parser-negative syntax remain exact.",
+                "Evidence da460c504456f213.",
                 "No Windows-runtime or final full-suite acceptance is claimed."
             ]
         },
@@ -19332,15 +19017,13 @@
             ],
             "unresolvedRecords": 300,
             "validation": [
-                "Mandatory staged check: 152 passed, zero failed, 11 skipped, zero findings. Normal commit hooks: 113 passed, zero failed, three skipped; commitlint passed.",
-                "Policy cleanup: 32 tests, 92 assertions; native effective selections and check sets agree across five scopes. Knip passes all five scopes. Normal gspot apply regenerated owned ESLint and Knip files; repeated emission writes zero files.",
-                "Native test prose controls: 85 tests/312 assertions and 154/615 CLI, plus 10/91 and 8/46 executable-tool controls; types, lint and formatting pass.",
-                "CI correctness amendment: 19 tests/60 assertions; actual CodeQL reports one test-file race before and zero after. Existing no-write observations remain.",
+                "Evidence efc8e094ad902e2a.",
+                "Evidence d450f0a7b9d902d7.",
+                "Evidence c25b5632ff9b0f7a.",
+                "Evidence aee1e3e20d5e8c28.",
                 "Checkpoint removes 2,389 bytes overall. Tool-path five-byte increase uses the exact recorded owner approval."
             ],
-            "limitations": [
-                "Cross-platform CI remains pending; local checks do not establish Windows behavior. Public npm and documentation-site release dependencies remain external to main/001."
-            ]
+            "limitations": ["Evidence 6f800f32f97a9238."]
         },
         {
             "commit": "49c37336491469e783b82b9e6ff545d1ed17af11",
@@ -19357,27 +19040,19 @@
             ],
             "unresolvedRecords": 291,
             "validation": [
-                "Focused integration checkout: 34 tests, 164 assertions across six files; Root with adopted CI source: 50 tests, 237 assertions across seven files.",
-                "Staged check: 152 passed, zero failed, 11 skipped, zero findings. Final ordinary commit hook: 113 passed, zero failed, three skipped, zero findings; commitlint passed after correcting footer formatting.",
-                "Normal apply regenerates policy-dependent Vale data without tool installation. Native Node/Bun reconciliation acceptance covers 24 level/project/manual-choice vectors with idempotent repeated emission.",
-                "The nine-record closure includes previously pushed, audited owner transfers and manifest sharing; those implementations were not replayed."
+                "Evidence 788019e57f2b8360.",
+                "Evidence bc3bb8962451e126.",
+                "Evidence 0ca41d799ef9c515.",
+                "Evidence 69371b891e5a43df."
             ],
-            "limitations": [
-                "Linux/macOS/Windows CI for this exact integration is not yet complete. The native receipts cited for prior owner transfers retain their original runtime and platform limits."
-            ]
+            "limitations": ["Evidence 9b43ada6fea12291."]
         },
         {
             "commit": "f1f6a532591fe4d504866d355478bb4107ef4d4f",
             "completedRecords": ["review/repository-root/032"],
             "unresolvedRecords": 290,
-            "validation": [
-                "Normal apply writes the generated workflow and gitattributes. Focused native CI/schema/help/export suite: 205 tests, 777 assertions.",
-                "Staged check: 150 passed, zero failed, 13 skipped, zero findings. Ordinary commit hook: 111 passed, zero failed, five skipped; commitlint passed.",
-                "Native real npm consumer and both providers fail-fast controls retain their saved evidence; /tmp/gspot-rr032-ci-setup-candidate-final-freeze.json and /tmp/gspot-rr032-repository-adoption-final-freeze.json."
-            ],
-            "limitations": [
-                "Cross-platform CI is pending; local YAML and shell checks do not establish native Windows execution. Public npm first-publication prerequisites and live setup remain in partial main/001."
-            ]
+            "validation": ["Evidence 4ade0cf593387360.", "Evidence 82e3db369f604720.", "Evidence 6e7f6f6abe3d5b98."],
+            "limitations": ["Evidence 2861366fedebc890."]
         },
         {
             "commit": "a1be5898f8fdc324c526779bb745861b91917055",
@@ -19393,16 +19068,8 @@
                 "review/commands-templates/019"
             ],
             "unresolvedRecords": 281,
-            "validation": [
-                "Current focused export/init/remove tests: 36 passed, zero failed, 376 assertions across four files; macOS Bun 1.4.2. Saved policy native suite: 65 passed, 218 assertions.",
-                "Integrated plugin/template checkpoint native tests: 38 passed, 523 assertions. Required rule applicability retained at both levels, including prescribed all-only and Pages branches.",
-                "Checkpoint staged check: 151 passed, zero failed, 12 skipped, zero findings. Commit hook: 112 passed, zero failed, four skipped. Push check: 151 passed, zero failed, 12 skipped, zero findings."
-            ],
-            "limitations": [
-                "`review/commands-templates/001` stays partial for the additional unused-name and unused-ignore obligations of `review/policy-exceptions/007`.",
-                "Shared canonical-writer/schema work and cross-platform final verification retain their own unresolved records; no unrelated byte reduction or platform inference is claimed.",
-                "Public first-publication and live setup remain in partial `main/001`; generated CI npm installation returns 404 for the unpublished plugin."
-            ]
+            "validation": ["Evidence bc22c42bbdd42ffa.", "Evidence ed776b1948990a6a.", "Evidence b93731b3862d2411."],
+            "limitations": ["Evidence 7cf822bec780d5d1.", "Evidence c457bb0e4ab8aed1.", "Evidence 593d803ce73a8427."]
         },
         {
             "commit": "82b5b4f83efb79b498136e4d8691386ddd4d0817",
@@ -19420,14 +19087,10 @@
                 "review/tests-tools/059"
             ],
             "unresolvedRecords": 270,
-            "validation": [
-                "Full reducing checkpoint: 17 owners, 847 bytes removed including normal-generated tool lockfiles. Staged check: 151 passed, zero failed, 12 skipped, zero findings; commit hook: 112 passed, zero failed, four skipped; push: 151 passed, zero failed, 12 skipped, zero findings.",
-                "Actual native acceptance: commit hooks 6 tests/98 assertions; lockfile tools 5/35 and CLI 7/46; callback/parser/init controls 22/62 plus 6/111; plugin rule families 187 passed; native Svelte 1/4. Types, lint and format pass.",
-                "Original 1,092 IDs, 1,648 assignments, 2,259 original row occurrences and 490 originally closed rows preserved by ledger audit."
-            ],
+            "validation": ["Evidence f55571e471543350.", "Evidence deceb2e98df10508.", "Evidence dbfd6a599507df63."],
             "limitations": [
-                "All local acceptance is macOS except the explicitly cited successful Ubuntu database workflow; no skip proves another platform.",
-                "Unadopted growth in historical lockfile-sample changes remains explicitly partial; the 202-byte reducing successor is not an unrelated offset.",
+                "Evidence 4877f801bd4b4462.",
+                "Evidence f5a46024d95fd22d.",
                 "Public first publication and live setup remain partial `main/001`."
             ]
         },
@@ -19441,13 +19104,9 @@
                 "review/verification/015"
             ],
             "unresolvedRecords": 265,
-            "validation": [
-                "Nine authored owners remove 474 bytes; normal schema and gspot apply producers regenerate seven owned outputs. Evidence: `/tmp/gspot-verification-first-five-reduced-final-freeze.json`.",
-                "Focused native acceptance: affected schema cases 21 tests/79 assertions and Semgrep generation 11 tests/55 assertions; original message and rule acceptance remains byte-qualified. Types, lint and formatting pass. Normal schema producer --check passes.",
-                "Main staged check passes 152 checks, zero failures, 11 skips and zero findings in 55.2 seconds. Normal commit hooks pass 113 checks with zero findings; commitlint passes."
-            ],
+            "validation": ["Evidence 4ba296f88cd0b5a3.", "Evidence ab00bc4f6e54dada.", "Evidence 1f01aaef48d6c6f5."],
             "limitations": [
-                "Native local execution is macOS/Bun; Node 24 runs owned lint and format. No native Semgrep executable or other-platform success is claimed. Separate /019 and /029 remain open.",
+                "Evidence da60da162728e67a.",
                 "Public first publication and live setup remain partial main/001."
             ]
         },
@@ -19461,15 +19120,8 @@
                 "slices/tests-integration-commands/048"
             ],
             "unresolvedRecords": 260,
-            "validation": [
-                "Native word audit runs 106 actual probes and a final five-scope prose check with zero findings; ten authored policy/product owners remove 8,478 bytes. Pinned Taplo accepts all ten owners. Evidence /tmp/gspot-words031-audit/freeze.json and classification.json.",
-                "Existing affected CLI tests pass 20 tests and 95 assertions; publication cleanup passes 41 tests and 109 assertions. Every original assertion/resource remains. The publication suffix leaves review/tests-cli/080 partial.",
-                "Main staged gate passes 152 checks, zero failures, 11 skips, zero findings in 66.9 seconds; normal commit hooks pass 113 checks, zero findings, plus commitlint."
-            ],
-            "limitations": [
-                "Native new tool evidence is macOS only. The earlier a1 CI run has CLI passes on Linux/macOS/Windows, package and docs success; tool Windows jobs cancelled, with no platform credit. Current-source CI must run after integration.",
-                "Public publication and live setup remain partial main/001."
-            ]
+            "validation": ["Evidence 2a8ecdb57825cafe.", "Evidence f71654c282085f25.", "Evidence 41742ca78618ad18."],
+            "limitations": ["Evidence 2f8a26c8883e0fd2.", "Public publication and live setup remain partial main/001."]
         },
         {
             "commit": "f66dd64f487ac3214f7680ba756c9778aed1a83f",
@@ -19479,9 +19131,7 @@
                 "review/policy-exceptions/056"
             ],
             "unresolvedRecords": 258,
-            "validation": [
-                "Focused macOS native cases and whole native docs path check passed. All1092 starting IDs/1648 memberships/original490 closed rows remain."
-            ],
+            "validation": ["Evidence c32ffddef4e9bd8f."],
             "limitations": [
                 "Broader spelling gap and titled-shell conflict remain separately explicit; no platform skip treated as evidence."
             ]
@@ -19543,9 +19193,7 @@
                 "slices/tests-tools-samples/068"
             ],
             "unresolvedRecords": 239,
-            "validation": [
-                "Original/current cost and native execution lineage verified in immutable five-row bridge; no implementation or behavior changed."
-            ],
+            "validation": ["Evidence f183690315fd4bde."],
             "limitations": [
                 "No closure of kits/064 or broader cross-platform aggregates; main/097 stays already complete."
             ]
@@ -19560,12 +19208,8 @@
                 "slices/kits-frameworks-tools/014"
             ],
             "unresolvedRecords": 234,
-            "validation": [
-                "297 tests/1177 assertions; configured types0; native setting producer0; CLI build0; staged47/0/3skip15.1s; push47/0/3skip15.8s."
-            ],
-            "limitations": [
-                "Import-linter Windows fix is implemented but native Windows CI remains required; main001 and cross-platform aggregates remain partial."
-            ]
+            "validation": ["Evidence a1cd892648431469."],
+            "limitations": ["Evidence 55c736039a6ff767."]
         },
         {
             "commit": "9245c5bdf73a26627517b10c836db46e5cb48f6b",
@@ -19584,7 +19228,7 @@
             ],
             "unresolvedRecords": 223,
             "validation": [
-                "65 tests/137 assertions; configured types0; scoped lint/format/Taplo0; native platform fixtures and historical six-record121/242+6/38 controls.",
+                "Evidence d8794249776f4cbc.",
                 "Staged47/0/3skip14.1s; commit35/0/1skip10.8s; push47/0/3skip15.2s."
             ],
             "limitations": ["No native Windows claim; CI, database aggregate and external main001 remain open."],
@@ -19618,9 +19262,7 @@
                 "slices/tests-integration-execution/018"
             ],
             "unresolvedRecords": 215,
-            "validation": [
-                "165CLI tests/881assertions;14native tool tests/79assertions; configured types0; lint/format0; staged44/0/3skip16.0s; commit33/0/1skip15.1s; push44/0/3skip15.9s."
-            ],
+            "validation": ["Evidence 6c06f271745370af."],
             "limitations": [
                 "Windows and Linux test aggregates require actual CI; main001 external release remains partial."
             ]
@@ -19636,20 +19278,14 @@
                 "slices/tests-integration-commands/019"
             ],
             "unresolvedRecords": 209,
-            "validation": [
-                "Six exact current owner sets match committed native-evidence bridge; original assertions and final fix obligations audited."
-            ],
-            "limitations": [
-                "Historical native installation blockers remain recorded; current cross-platform aggregate is not inferred. Other four audited rows remain partial with specific cost obligations."
-            ]
+            "validation": ["Evidence 9a0aa53b99483a3e."],
+            "limitations": ["Evidence 918ec7bf1bcc595c."]
         },
         {
             "commit": "9c2a3043500369da4527dcef1ca6effe00a1fd65",
             "completedRecords": ["slices/checks-other/049", "slices/tests-integration-commands/036"],
             "unresolvedRecords": 207,
-            "validation": [
-                "53CLItests/279assertions; configured types/lint/format/Taplo0; staged79pass0fail6skip68.6s; commit54pass0fail2skip15.2s; push79pass0fail6skip70.3s."
-            ],
+            "validation": ["Evidence 57f3e9d05b3d1831."],
             "limitations": ["Cross-platform aggregate and external release main001 remain partial."],
             "ci": [
                 {
@@ -19677,18 +19313,14 @@
                 "areas/integration-tests/014"
             ],
             "unresolvedRecords": 203,
-            "validation": [
-                "Frozen native178tests/443assertions and117tests/243assertions;19Node24/Bunrows; current committed owner hash equality. Integrated295staged44/0/3skip16.0s and push44/0/3skip15.9s pass."
-            ],
+            "validation": ["Evidence dc5435d9729a8b4f."],
             "limitations": ["Cross-platform aggregate requires actual CI; no platform inference from matching source."]
         },
         {
             "commit": "03bb7509325cd9bbe8826dec2551c9b7b6cfd896",
             "completedRecords": ["areas/kits/049", "areas/kits/129", "areas/kits/034"],
             "unresolvedRecords": 200,
-            "validation": [
-                "All prescribed final committed owner hashes equal frozen complete witnesses; current native root/child recommended/all manual-selection and retired-key checks passed."
-            ],
+            "validation": ["Evidence 29a60f3dab94546a."],
             "limitations": ["Whole cross-platform verification and external main001 release steps remain partial."]
         },
         {
@@ -19705,12 +19337,8 @@
                 "areas/integration-tests/036"
             ],
             "unresolvedRecords": 191,
-            "validation": [
-                "66CLItests/377assertions, configured types0; staged151pass0fail12skip65.1s; commit112pass0fail4skip17.6s plus commitlint1pass; push151pass0fail12skip68.3s. All38final source/generated owners equal committed bytes."
-            ],
-            "limitations": [
-                "Initial generated-site-rule drift and unnecessary-adverb failures are retained and corrected through normal producer/source changes. Windows tools aggregate and external release remain partial."
-            ],
+            "validation": ["Evidence 4e1f63a9bbd14c08."],
+            "limitations": ["Evidence 8621d8c912801130."],
             "ci": [
                 {
                     "conclusion": "",
@@ -19734,9 +19362,7 @@
             "commit": "0498cfeeea7eb387645f1c27ca707f99d34ffb03",
             "completedRecords": ["review/policy-format/024"],
             "unresolvedRecords": 190,
-            "validation": [
-                "Exact source/current-owner lineage and decreasing prescribed leaves; actual native field declarations and live caller census. Staged151pass0fail12skip65.1s; commit112pass0fail4skip17.6s; push151pass0fail12skip68.3s."
-            ],
+            "validation": ["Evidence f88e135821fbe50e."],
             "limitations": [
                 "Original all97 shared policy-contract size and full platform verification remain separate obligations."
             ]
@@ -19745,12 +19371,8 @@
             "commit": "7ed9f891a548a8903548fb57415c394a73b13162",
             "completedRecords": ["review/glossary/007", "review/glossary/022"],
             "unresolvedRecords": 188,
-            "validation": [
-                "Native154tests/480assertions plus30integratedtests/80assertions; types/lint/format0; staged44pass0fail3skip20.4s, commit33pass0fail1skip19.6s pluscommitlint1, push44pass0fail3skip23.4s."
-            ],
-            "limitations": [
-                "Initial wrong test path yielded no cases and remains a failed receipt; no credit assigned. Original preparation failures and raw internal map-order difference are retained. Full cross-platform aggregate remains partial."
-            ],
+            "validation": ["Evidence de4229b493df90a5."],
+            "limitations": ["Evidence 7b41852e9f15854a."],
             "ci": [
                 {
                     "conclusion": "failure",
@@ -19783,10 +19405,7 @@
                 "slices/tests-tools-samples/018",
                 "slices/tests-tools-samples/019"
             ],
-            "validation": [
-                "The exact two-owner lockfile cleanup removes305 bytes, preserves24 assertions, and passes12 native cases/81 assertions. Three-file staged gate29 passed/0 findings, commit22 passed/0 findings, push29 passed/0 findings.",
-                "The native image assertion now uses prescribed secret category while checking native private-key text and redaction. CLI Docker48 passed/75 assertions; fresh executable image rerun remains in CI."
-            ],
+            "validation": ["Evidence 899a1057b250193c.", "Evidence 3f39c00b54075c36."],
             "unresolvedRecords": 187,
             "limitations": [
                 "Original related GroupB growth remains2285 bytes; this reducing successor does not waive it or close those records.",
@@ -19806,9 +19425,7 @@
             "commit": "f18ce4f2cfd6d8a8600fe2ab7f34f60cd0049297",
             "completedRecords": ["review/tests-layout/003"],
             "unresolvedRecords": 185,
-            "validation": [
-                "Normal Main producer187up-to-date; exact historical pointer hashes and current native output/applicability proof; gspot staged/commit/push gates all0."
-            ],
+            "validation": ["Evidence 32283a01c61753ab."],
             "limitations": ["No new full suite/platform result inferred from a generated-pointer deletion."]
         },
         {
@@ -19822,9 +19439,7 @@
                 "slices/tests-tools-samples/066"
             ],
             "unresolvedRecords": 179,
-            "validation": [
-                "Native init: 115 tests and 543 assertions. Native spelling: 10 cases and 54 assertions. Staged: 29 passed, 0 failed, 2 skipped, 0 findings. Original assertions and resources preserved; two-owner successor removes 242 bytes."
-            ],
+            "validation": ["Evidence 18a08c7a2929f894."],
             "limitations": [
                 "Actual cross-platform aggregate, pending growth decisions and main/001 publication/setup remain separate."
             ]
@@ -19838,51 +19453,35 @@
                 "slices/tests-tools-samples/052"
             ],
             "unresolvedRecords": 175,
-            "validation": [
-                "Current CLI19tests111assertions pass, one Windows-specific skip; native public generation22assertions pass. Actual Spectral2.41670seconds, jscpd20.41187seconds, eight Node/Bun Sonar vectors and three Vale archive/install/removal controls pass. Exact related source/test allocation is reducing for every closed concern."
-            ],
-            "limitations": [
-                "Main001 remains partial. Once-tools failures prove retention of coverage provider and React types; no whole-suite or skipped-platform green inferred."
-            ]
+            "validation": ["Evidence 99e8593923549b5d."],
+            "limitations": ["Evidence 4f696dd1837a2195."]
         },
         {
             "commit": "525a99755cc89096829644f522f0d083d92d7c56",
             "completedRecords": ["areas/kits/135", "areas/kits/138"],
             "unresolvedRecords": 173,
-            "validation": [
-                "Native Node24.20.0 and Bun1.4.2 each pass70 manifest and public-policy assertions; four relevant callback AST bodies match preserved actual native owners. Independent TypeScript plan repair removes99bytes12ASTnodes, preserves25 assertion expressions and passes10tests33assertions plus types/lint/format."
-            ],
-            "limitations": [
-                "Main001 remains partial; native macOS evidence is qualified and no aggregate tools/platform green is inferred. Shared schema/test contracts and their unresolved adoption remain separately accounted for."
-            ]
+            "validation": ["Evidence 67070a98995a6d7b."],
+            "limitations": ["Evidence 2bffaa42ca905474."]
         },
         {
             "commit": "938f1406936bfebae6e6bf891e28003ddd2a7fbf",
             "completedRecords": ["slices/tests-integration-commands/044"],
             "unresolvedRecords": 172,
-            "validation": [
-                "Current native CLI owner21pass/0fail/143assert; actual scoped callback691.94ms. Original/current hashes and SQL same-contract byte cost audited. Prior pushed staged/push gates70/0 and29/0 remain valid for unchanged source."
-            ],
-            "limitations": [
-                "main/001 external publication/setup and final release verification remain partial; no platform success inferred from local replay."
-            ]
+            "validation": ["Evidence 2e2ef6fc0ba547af."],
+            "limitations": ["Evidence 0433411466aeb647."]
         },
         {
             "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
             "completedRecords": ["slices/tests-integration-lifecycle/003"],
             "unresolvedRecords": 171,
-            "validation": [
-                "Actual named Linux/macOS/Windows callback passes; current owner byte-identical to tested525a; current focused9pass/37assert. No final tools/release pass claimed."
-            ],
+            "validation": ["Evidence ad18c731d8daa95d."],
             "limitations": ["main/001 external publication/setup and final combined verification remain partial."]
         },
         {
             "commit": "c8468157370eac2727e626e6c23155423f459ebc",
             "completedRecords": ["slices/tests-integration-execution/015", "slices/tests-integration-execution/028"],
             "unresolvedRecords": 169,
-            "validation": [
-                "Exact current source hashes match actual tested CI525a inputs; named JSON case passes on Linux/macOS/Windows and newline-name case passes on POSIX with explicit Windows skip. Original callbacks/assertions/resources and reducing cost proofs preserved."
-            ],
+            "validation": ["Evidence 2d6cab3a95a311e6."],
             "limitations": [
                 "Other tool shards, full latest combined verification and main/001 external steps remain unresolved."
             ]
