@@ -19,9 +19,8 @@ export const FEATURES: FeatureProps['features'] = [
         link: 'Set up Git hooks',
     },
     {
-        title: 'Install rules for agents',
-        description:
-            'gspot installs rules that tell an agent how to write code in your repository, linked from AGENTS.md.',
+        title: 'Write agent rules',
+        description: 'gspot writes agent rules that describe how to write code, linked from AGENTS.md.',
         image: '/brand/home/agents.svg',
         href: '/guides/agents/',
         link: 'Set up coding agents',

@@ -1,13 +1,13 @@
 ---
 title: Coding agents
-description: Install instructions for coding agents and preserve authored content.
+description: Write agent rules and preserve authored content.
 ---
 
-gspot installs Markdown rules that describe what its checks look for. The check results decide whether code passes.
+gspot writes Markdown agent rules that describe what its checks look for. The check results decide whether code passes.
 
-## Installed instructions
+## Agent rules and instruction files
 
-With `agent_rules.enabled = true`, gspot writes selected rules under `.gspot/rules/` and a managed block in `AGENTS.md`. The selection follows applicable configurations and the chosen level. Conditional rules install only when their inputs match.
+With `agent_rules.enabled = true`, gspot writes selected rules under `.gspot/rules/` and a managed block in `AGENTS.md`. The selection follows applicable configurations and the chosen level. Conditional agent rules are written only when their inputs match.
 
 [Codex reads `AGENTS.md`](https://developers.openai.com/codex/guides/agents-md). Other agents have their own instruction-file conventions. [Claude Code reads `CLAUDE.md`](https://code.claude.com/docs/en/memory), so an `AGENTS.md` file alone does not ensure Claude Code loads it.
 
@@ -33,4 +33,4 @@ Run the check with your [runner's prefix](/guides/install/) and read each findin
 gspot set agent_rules.enabled false
 ```
 
-This removes installed rules and managed instruction blocks. gspot deletes an instruction file it created unless you edited it. Authored instruction content remains yours.
+This removes generated agent rules and managed instruction blocks. gspot deletes an instruction file it created unless you edited it. Authored instruction content remains yours.
