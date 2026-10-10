@@ -14,7 +14,7 @@ import { configurationManifests } from '#cli/configurations/public.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { LICENSE_SETTINGS } from '#tests/config/cli/checks/general/licenses.ts';
 import { environmentBin, environmentExecutable } from '#cli/platform/contracts.ts';
-import type { ExceptionMembership } from '#tests/types/cli/checks/general/license-origins.ts';
+import type { ExceptionMembership } from '#tests/types/cli/checks/license-origins.ts';
 import { EXCEPTION_ENTRY, EXCEPTION_MEMBERSHIP } from '#tests/config/cli/checks/general/license-origins.ts';
 
 /** Generate each real selected project before substituting its native scanner report. */

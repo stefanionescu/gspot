@@ -6,7 +6,6 @@ actionlint
 ajv
 ASCII
 ASD
-ast-grep
 astro-check
 axe
 basedpyright

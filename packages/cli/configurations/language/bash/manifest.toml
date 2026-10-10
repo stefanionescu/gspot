@@ -51,6 +51,15 @@ system = true
 name = "bats"
 system = true
 
+[[tool]]
+name = "ast-grep"
+version = "0.45.3"
+npm = "@ast-grep/cli"
+mise = "ast-grep"
+brew = "ast-grep"
+cargo = "ast-grep"
+github = { name = "ast-grep/ast-grep", version = "0.45.3" }
+
 [[tool_file]]
 target = ".gspot/config/shellcheckrc"
 tool = "shellcheck"

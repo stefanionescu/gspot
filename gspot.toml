@@ -451,11 +451,6 @@ paths = ["docs/src/pages/schema"]
 reason = "Astro maps this directory to the published /schema/gspot.schema.json endpoint; moving the route changes the public schema URL."
 
 [[ignore]]
-check = "structure/lone-files"
-paths = ["tests/config/cli/checks/tool/xcode", "tests/config/tools/configurations/language/bash", "tests/types/cli/checks/general"]
-reason = "These config and types namespaces own suite data for their behavioral source owners, even when an owner needs one file."
-
-[[ignore]]
 check = "structure/prefix-collisions"
 paths = ["docs/src/content.config.ts"]
 reason = "Astro fixes the name of the content configuration file beside the content folder."
