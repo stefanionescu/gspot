@@ -85,7 +85,7 @@ export async function linkinator(input: CheckInput, isExternal: boolean): Promis
 }
 
 /**
- * html-validate over every built page, with the configuration for built output.
+ * html-validate over every built page, with the configuration for built files.
  * @param input the check input
  * @returns the findings
  */
@@ -177,7 +177,7 @@ export async function purgecss(input: CheckInput): Promise<Finding[]> {
 }
 
 /**
- * The compressed weight of the output paths each ceiling names.
+ * The compressed weight of the built paths each ceiling names.
  * @param input the check input
  * @returns one finding for each ceiling passed
  */
@@ -205,7 +205,7 @@ export async function siteSize(input: CheckInput): Promise<Finding[]> {
 }
 
 /**
- * The sitemap against the output: every route it lists is a built page, and every built page is listed unless the policy leaves it out.
+ * The sitemap against the built pages: every route it lists is a built page, and every built page is listed unless the policy leaves it out.
  * @param input the check input
  * @returns the findings
  */

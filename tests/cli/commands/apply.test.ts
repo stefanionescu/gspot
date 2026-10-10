@@ -19,7 +19,7 @@ import { open, chmod, unlink, readdir, readFile, writeFile } from 'node:fs/promi
 
 const INIT = buildInitArguments(['bash']);
 
-test('apply preserves a policy replaced after session opening and publishes no generated outputs', async () => {
+test('apply preserves a policy replaced after session opening and publishes no generated files', async () => {
     await using directory = await testdir();
     const original = buildPolicy(['bash']);
     const replacement = `${original}[scope.worker]\nconfigurations = ["python"]\n`;

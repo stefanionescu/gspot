@@ -287,7 +287,7 @@ export function requiredToolNames(check: PlannedCheck, session: Pick<Session, 's
 }
 
 /**
- * Select tool declarations consumed by applicable checks, fixers, and their generated configuration.
+ * Select tool declarations consumed by applicable checks, fixers, and their generated tool files.
  * Requirements include supported platforms so committed output does not depend on the current host.
  * @param session the saved policy and repository inventory
  * @returns the selected manifests with only their required tools

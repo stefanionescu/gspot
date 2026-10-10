@@ -93,8 +93,13 @@ test('ignore removal counts changed entries and keeps partial paths and other se
     };
     const global = { ...selected, reason: 'Keep scope-wide expansion.' };
     const other = { check: 'bash/shellcheck', rule: 'SC2034', reason: 'Read by sourcing.', paths: ['b.sh'] };
+    const globalOther = {
+        check: other.check,
+        rule: other.rule,
+        reason: 'The variables are read by sourcing scripts.',
+    };
     const policy = buildPolicy(['bash'], {
-        tables: stringify({ ignore: [first, second, global, other] }),
+        tables: stringify({ ignore: [first, second, global, other, globalOther] }),
     });
     await createFileTree(directory.path, {
         'gspot.toml': policy,
@@ -106,12 +111,13 @@ test('ignore removal counts changed entries and keeps partial paths and other se
     const partial = await runGspot(directory.path, [...argv, '--paths', 'b.sh', 'missing.sh']);
     expect(partial.code, partial.stdout + partial.stderr).toBe(0);
     expect(partial.stdout).toStartWith('removed 2 ignore entries for bash/shellcheck\n');
-    const remaining = [other, global, { ...first, paths: ['a.sh'] }, { ...second, paths: ['c.sh'] }];
+    const remaining = [globalOther, other, global, { ...first, paths: ['a.sh'] }, { ...second, paths: ['c.sh'] }];
     expect(parse(await readFile(join(directory.path, 'gspot.toml'), 'utf8'))['ignore']).toStrictEqual(remaining);
     const whole = await runGspot(directory.path, argv);
     expect(whole.code, whole.stdout + whole.stderr).toBe(0);
     expect(whole.stdout).toStartWith('removed 1 ignore entry for bash/shellcheck\n');
     expect(parse(await readFile(join(directory.path, 'gspot.toml'), 'utf8'))['ignore']).toStrictEqual([
+        globalOther,
         other,
         { ...first, paths: ['a.sh'] },
         { ...second, paths: ['c.sh'] },

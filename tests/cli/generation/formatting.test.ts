@@ -54,7 +54,7 @@ test.each(['recommended', 'all'] as const)(
     },
 );
 
-test('the format width reaches editors and generated tool configurations', async () => {
+test('the format width reaches editors and generated tool files', async () => {
     const width = 6;
     await using directory = await testdir();
     await createFileTree(directory.path, {
@@ -193,7 +193,7 @@ const selected = selectConfigurations(policy.configurations, configurationManife
 const { format } = scopeView(knownSettings(selected, policy.level), policy, selected, '');
 
 describe('prettierConfiguration', () => {
-    test('a plugin is loaded from the tool project installation relative to each configuration file', () => {
+    test('a plugin is loaded from the tool project installation relative to each tool file', () => {
         expect(
             prettierConfiguration({
                 policy,

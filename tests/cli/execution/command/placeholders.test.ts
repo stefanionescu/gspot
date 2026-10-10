@@ -19,7 +19,7 @@ test.each([0, 1, 2])('replaces a file marker at position %s without dropping nei
     }
 });
 
-test('an isolated Markdown command retains the companion configuration owned by its manifest', async () => {
+test('an isolated Markdown command retains the companion tool file owned by its manifest', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['markdown']),

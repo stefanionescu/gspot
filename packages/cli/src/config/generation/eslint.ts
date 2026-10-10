@@ -27,7 +27,7 @@ export const TEST_RULE_NAMES = [
 
 // Shared ESLint data comes from the JavaScript configuration's shipped assets.
 
-// The check that runs ESLint, whose ignores with a rule become blocks of the generated configuration.
+// The check that runs ESLint, whose ignores with a rule become blocks of the generated tool file.
 export const LINT_CHECK = 'javascript/eslint';
 
 /** Default folder boundaries selected by all-level repository policy. */

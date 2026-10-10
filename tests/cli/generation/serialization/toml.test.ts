@@ -81,7 +81,7 @@ test('a quoted word from a template reaches typos.toml through init', async () =
     expect(parse(target!.content)['default']).toMatchObject({ 'extend-words': { [word]: word } });
 });
 
-test('TOML tool configurations round-trip dynamic strings and option keys', async () => {
+test('TOML tool files round-trip dynamic strings and option keys', async () => {
     const text = String.raw`café "quoted" \value # comment`;
     const path = 'docs/"draft"/**';
     const reason = 'Reviewed upstream.\n[extend]\nuseDefault = false';

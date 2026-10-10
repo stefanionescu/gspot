@@ -268,7 +268,7 @@ Runtime names follow the pinned [globals package](https://github.com/sindresorhu
 set. Web Workers and service workers have different APIs. Browser and native files do not
 receive Node.js rules. React Native retains the `process` and `require` globals its
 runtime supports, and does not receive Node.js globals such as `Buffer` and `__dirname`.
-Unknown runtime names fail policy validation before configuration is generated.
+Unknown runtime names fail policy validation before tool files are emitted.
 
 JavaScript checks inherit an authored `jsconfig.json` first and `tsconfig.json` otherwise. The TypeScript fallback keeps compiler settings and declarations while selecting JavaScript sources for this check. An authored JSX setting remains in force; otherwise the generated project uses `jsx: "preserve"`. Scopes without either project file use Bundler resolution when an extensionless import style matches a JavaScript source file. Ambient types come from the source project, including authored custom roots.
 
@@ -530,7 +530,7 @@ summary = "Rule options for selected paths, in order. A scope's overrides apply 
 name = "tools.eslint.import_extensions"
 type = "table"
 default = { "**/*" = "js" }
-summary = "The import suffix for each path pattern: js for compiled ESM, ts for Deno and Bun, extensionless for bundled code."
+summary = "Import suffix by path pattern: js for compiled ESM, ts for Deno and Bun, extensionless for bundled code."
 
 [[setting]]
 name = "architecture.roles.scripts"

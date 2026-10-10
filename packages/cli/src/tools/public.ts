@@ -54,7 +54,7 @@ function libraryInspection(root: string, tool: ToolPin, path: string, found: str
     };
 }
 
-// Query a host library through the declared native executable and its complete argument list.
+// Query a host library through the declared executable and its complete argument list.
 function inspectLibraryCommand(context: ToolSearch, cwd: string, tool: ToolPin, command: string[]): ToolInspection {
     const hint = installHint(tool);
     const [program, ...args] = command;
@@ -88,7 +88,7 @@ function inspectHostLibrary(context: ToolSearch, cwd: string, tool: ToolPin): To
         : libraryInspection(root, tool, dependency.path, dependency.version, hint);
 }
 
-// Read library versions from the tool project installation used by generated configurations.
+// Read library versions from the tool project installation used by generated tool files.
 function inspectLibrary(context: ToolSearch, cwd: string, tool: ToolPin): ToolInspection {
     if (tool.system === true) return inspectHostLibrary(context, cwd, tool);
     const root = context.installedRoot ?? context.root;

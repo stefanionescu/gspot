@@ -1,4 +1,4 @@
-// A tool config and its pointer exist only where an enabled check consumes the tool.
+// A tool file and its pointer exist only where an enabled check consumes the tool.
 import { parse } from 'yaml';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';

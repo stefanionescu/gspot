@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import type { linkinatorReportSchema } from '#cli/parsers/schema/site.ts';
 
-/** The output of one isolated static-site build. */
+/** The result of one isolated static-site build. */
 export type SiteBuild = {
     cwd: string;
     command: string[];

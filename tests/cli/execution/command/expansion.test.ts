@@ -9,7 +9,7 @@ import { rejection } from '#tests/harness/expectations.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
 import { substitute, commandToolFiles } from '#cli/execution/command/arguments/public.ts';
 
-test('nested configuration inputs stop at the declared scope and reject ancestors linked outside the repository', async () => {
+test('nested tool file inputs stop at the declared scope and reject ancestors linked outside the repository', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['swift'], { tables: '[scope."app"]\n' }),
@@ -69,7 +69,7 @@ test.each([
     ).toStrictEqual(['before', ...expected, 'after']);
 });
 
-test('command execution reads linked authored configs and preserves strict managed-config reads', async () => {
+test('command execution reads linked authored tool files and preserves strict tool-file reads', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['swift']),

@@ -33,7 +33,7 @@ Select platforms that support the applicable checks. Manual checks run when sele
 
 ## Tool setup
 
-The generated mise job installs the committed tool pins. Without mise, native tools and any Python runtime requirements need explicit setup on your runner. Use your own pipeline when those prerequisites are not supplied by the generated job.
+The generated mise job installs the committed tool pins. Without mise, install executable tools and required Python runtimes on your runner. Use your own pipeline when those prerequisites are not supplied by the generated job.
 
 When initialization detects an existing lint job, Bitbucket Pipelines, Jenkins, CircleCI, Azure Pipelines, or Buildkite, it prints integration steps instead of creating a second pipeline. Preserve your existing job and add gspot after its tool setup.
 
@@ -48,7 +48,7 @@ Both providers run this command after runtime setup and before `gspot install` a
 
 ## Your own pipeline
 
-Install project dependencies and the native and Python requirements reported by `doctor`. On a POSIX shell:
+Install project dependencies and the executable and Python requirements reported by `doctor`. On a POSIX shell:
 
 ```shell
 npm install --global "@gspothq/cli@$(cat .gspot/version)"

@@ -31,7 +31,7 @@ export type Generated = {
     toolFiles: EmittedToolFile[];
 };
 
-/** The repository and resolved scope whose configurations are generated. */
+/** The repository and resolved scope whose tool files are emitted. */
 export type EmitInputs = {
     root: string;
     files: TrackedFile[];

@@ -413,7 +413,7 @@ export function installationDiagnostics(result: Pick<SpawnResult, 'stdout' | 'st
  * Read native version output, using installed npm metadata when the declared package supplies the executable.
  * @param root the installation root
  * @param cwd the project working folder
- * @param path the resolved native executable
+ * @param path the resolved executable
  * @param tool the declared version query and package
  * @returns the version or the native query failure
  */

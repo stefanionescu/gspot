@@ -3,7 +3,7 @@ products = ["DOM"]
 title = "Static Site"
 requires = ["html"]
 suggests = ["css", "javascript"]
-description = "A site built to a folder and served as files: the build, its output, its links, its weight, its sitemap."
+description = "A site built to a folder and served as files: its build, links, weight, and sitemap."
 
 [detect]
 paths = ["site.webmanifest", "sitemap.xml"]
@@ -51,19 +51,19 @@ level = "recommended"
 stage = "push"
 runs = "scope"
 needs = ["build"]
-summary = "Runs the build command of the site and fails when it fails or writes no output folder."
-why = "Every other output check reads what the build wrote, so a broken build hides all of them."
+summary = "Runs the site build command and fails when it fails or writes no build folder."
+why = "Other site checks read the built files, so a failed build hides their findings."
 help = "Run the build command by hand and fix what it prints. Name the command under site.build_command."
 
 [[check]]
 name = "build-reproducible"
 title = "Check reproducible site builds"
-example = "A build that embeds the current timestamp produces different bytes across repeated builds. Remove the timestamp from generated output or derive it from a stable declared input, then rerun the reproducibility check."
+example = "A build that embeds the current timestamp produces different bytes across repeated builds. Remove the timestamp from built files or derive it from a stable declared input, then rerun the reproducibility check."
 level = "all"
 stage = "push"
 runs = "scope"
 needs = ["build"]
-summary = "Builds the site twice and compares the two outputs file by file."
+summary = "Builds the site twice and compares its files."
 why = "A build that differs from run to run cannot be cached, compared, or trusted to hold what was reviewed."
 help = "Take the timestamp, the random value, or the unordered list out of the build."
 
@@ -128,7 +128,7 @@ when = { setting = "site.max_kilobytes" }
 stage = "push"
 runs = "scope"
 needs = ["build"]
-summary = "Sums the compressed weight of the output paths each ceiling in site.max_kilobytes names."
+summary = "Sums the compressed weight of the built paths each ceiling in site.max_kilobytes names."
 why = "Weight arrives a kilobyte at a time, and only a ceiling notices."
 help = "Remove what the page does not need, or raise the ceiling with a reason."
 
@@ -140,14 +140,14 @@ level = "recommended"
 stage = "push"
 runs = "scope"
 needs = ["build"]
-summary = "Compares the sitemap with the output: every listed route is a built page, and every built page is listed."
+summary = "Compares the sitemap with the built pages: every listed route is a page, and every page is listed."
 why = "A page outside the sitemap is found late by search engines, and a listed page that does not exist costs trust with them."
 help = "Add the page to the sitemap, remove the dead entry, or leave a page out under site.sitemap_exclude."
 
 [[check]]
 name = "dead-assets"
 title = "Find unused assets"
-example = "An image in the output directory that no built page or stylesheet references reports an unused asset. Remove it from the source asset set and rebuild."
+example = "An image in the build folder that no built page or stylesheet references reports an unused asset. Remove it from the source asset set and rebuild."
 level = "all"
 stage = "push"
 runs = "scope"
@@ -212,7 +212,7 @@ type = "list"
 items = { paths = { type = "list", items = "string" }, kb = { type = "number", validation = { minimum = 0, integer = true } } }
 direction = "tightening"
 default = []
-summary = "Weight ceilings: the output paths, and the most kilobytes they may weigh compressed."
+summary = "Weight ceilings: the built paths, and the most kilobytes they may weigh compressed."
 
 [[setting]]
 name = "site.sitemap_exclude"

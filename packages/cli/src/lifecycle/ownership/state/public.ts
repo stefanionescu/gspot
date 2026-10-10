@@ -144,7 +144,7 @@ export function readInstalledTree(directory: string, kind: InstallationKind): In
     const entries: InstalledFile[] = [];
     const entry = lstatSync(directory, { throwIfNoEntry: false });
     if (entry?.isSymbolicLink() === true) throw new Error(`Unsafe lifecycle destination: ${basename(directory)}`);
-    if (entry?.isDirectory() !== true) throw new Error(`Installed output is not a directory: ${directory}`);
+    if (entry?.isDirectory() !== true) throw new Error(`Installed folder is not a directory: ${directory}`);
     const root = realpathSync(directory);
     const cacheDirectory = kind === 'python' ? '__pycache__' : undefined;
     const collect = (prefix: string | undefined, target: string, ancestors: string[]): void => {

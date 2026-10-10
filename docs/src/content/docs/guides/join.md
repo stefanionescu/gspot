@@ -17,7 +17,7 @@ Install app dependencies from the committed lockfile, then run the matching comm
 | Yarn Berry   | `yarn install --immutable`       | `yarn gspot install`      | `yarn gspot check`      |
 | Bun          | `bun install --frozen-lockfile`  | `bunx gspot install`      | `bunx gspot check`      |
 
-Install native tools when the repository does not use mise. `gspot doctor` names missing requirements.
+Without mise, install executable tools. `gspot doctor` names missing requirements.
 
 ## With mise
 

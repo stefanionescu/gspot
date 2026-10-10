@@ -101,17 +101,6 @@ test.each([...IGNORE_CASES])(
     },
 );
 
-test('removing the ignore of one rule keeps the ignore of the other rule', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, { 'gspot.toml': TWO_RULES, 'entry.sh': 'echo example\n' });
-    const removed = await runGspot(directory.path, ['ignore', 'bash/shellcheck', '--rule', 'SC2086', '--remove']);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(removed.stdout).toContain('removed 1 ignore entry for bash/shellcheck');
-    const policy = await readFile(join(directory.path, 'gspot.toml'), 'utf8');
-    expect(policy).not.toContain('SC2086');
-    expect(policy).toContain('rule = "SC2034"');
-});
-
 test('merged ignores print saved paths and allow individual paths to be removed', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {

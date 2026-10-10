@@ -12,7 +12,7 @@ import { EXTERNAL_INPUT_CASES } from '#tests/config/cli/lifecycle/apply.ts';
 import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 
-test('generated outputs are writable: apply keeps their bytes, and a prune removes them', async () => {
+test('generated files are writable: apply keeps their bytes, and a prune removes them', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], { agentRules: true, tables: '[agent_rules]\nenabled = true\n' }),

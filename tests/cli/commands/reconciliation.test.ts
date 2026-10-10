@@ -147,7 +147,7 @@ test('apply retains saved configurations, settings and command checks when sourc
     expect(await readTree(sandbox.path)).toStrictEqual(stable);
 });
 
-test('absent scopes retain authored settings without planning their checks or tool configurations', async () => {
+test('absent scopes retain authored settings without planning their checks or tool files', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], {

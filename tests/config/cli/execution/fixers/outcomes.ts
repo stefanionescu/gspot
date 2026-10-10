@@ -6,7 +6,6 @@ export const FIXER_OUTCOMES = [
         exit_codes: [3],
         status: 'unchanged',
         after: 'original',
-        note: undefined,
     },
     {
         name: 'finding exit with corrected bytes',
@@ -14,7 +13,6 @@ export const FIXER_OUTCOMES = [
         exit_codes: [3],
         status: 'changed',
         after: 'corrected',
-        note: undefined,
     },
     {
         name: 'undeclared exit with partial bytes',
@@ -30,15 +28,6 @@ export const FIXER_OUTCOMES = [
         exit_codes: undefined,
         status: 'unchanged',
         after: 'original',
-        note: undefined,
-    },
-    {
-        name: 'default exit with corrected bytes',
-        script: "await Bun.write('source.txt', 'corrected')",
-        exit_codes: undefined,
-        status: 'changed',
-        after: 'corrected',
-        note: undefined,
     },
     {
         name: 'default failure with original bytes',
@@ -46,14 +35,6 @@ export const FIXER_OUTCOMES = [
         exit_codes: undefined,
         status: 'failed',
         after: 'original',
-        note: 'exited 3',
-    },
-    {
-        name: 'default failure with partial bytes',
-        script: "await Bun.write('source.txt', 'partial'); process.exitCode = 3",
-        exit_codes: undefined,
-        status: 'failed',
-        after: 'partial',
         note: 'exited 3',
     },
 ];

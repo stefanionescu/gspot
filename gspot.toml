@@ -437,11 +437,6 @@ reason = "The Vale substitution list names the British spellings it corrects."
 
 [[ignore]]
 check = "spelling/typos"
-paths = ["tests/config/samples/spelling.ts", "tests/config/cli/parsers/output/formats.ts", "tests/config/cli/generation/eslint/runtimes.ts"]
-reason = "The spelling tests use deliberate misspellings; every other test file stays checked."
-
-[[ignore]]
-check = "spelling/typos"
 paths = ["tests/config/samples/spelling.ts"]
 reason = "This literal supplies a deliberate misspelling to the spelling checks and their corrections."
 

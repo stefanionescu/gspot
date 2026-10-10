@@ -92,7 +92,7 @@ export function filesUnder(folder: string): string[] {
 }
 
 /**
- * Locate a built file in the original repository's normalized output folder.
+ * Locate a built file in the original repository's normalized build folder.
  * @param input the policy view owning the build.
  * @param build the build's isolated project folder.
  * @param absolute the built file's absolute path.
@@ -131,7 +131,7 @@ export function cachedBuild(input: CheckInput): Promise<SiteBuild> {
 }
 
 /**
- * Requires built output before a dependent check reads it.
+ * Requires built files before a dependent check reads it.
  * @param input the check input.
  * @returns the successful build, or a skipped-check error.
  */
@@ -142,7 +142,7 @@ export async function requireBuild(input: CheckInput): Promise<SiteBuild> {
 }
 
 /**
- * One finding when the build command fails or writes no output folder.
+ * One finding when the build command fails or writes no build folder.
  * @param input the check input.
  * @returns the findings.
  */
@@ -160,7 +160,7 @@ export async function siteBuild(input: CheckInput): Promise<Finding[]> {
 }
 
 /**
- * Builds one isolated source snapshot twice at the same path, with clean output, and compares the files.
+ * Builds one isolated source snapshot twice at the same path, with clean build folders, and compares the files.
  * @param input the check input.
  * @returns one finding for each file that differs, appears, or disappears.
  */

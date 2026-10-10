@@ -20,9 +20,9 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
     const planned = planFixer(session, `console.error('Fatal: cannot write'); process.exitCode = ${String(code)}`);
     planned.check.exit_codes = [3];
     planned.check.crash_pattern = '^Fatal:';
-    const failed = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
-        ({ results }) => results[0]!,
-    );
+    const {
+        results: [failed],
+    } = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false });
     expect(failed).toMatchObject({
         status: 'failed',
         changed: [],
@@ -30,11 +30,10 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
     });
     const corrected = planFixer(session, "await Bun.write('source.txt', 'corrected')");
     corrected.check.crash_pattern = planned.check.crash_pattern;
-    expect(
-        await applyFixers(session, [corrected], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
-            ({ results }) => results[0]!,
-        ),
-    ).toMatchObject({
+    const {
+        results: [correctedResult],
+    } = await applyFixers(session, [corrected], { checks: BUILT_IN_CHECKS, isDryRun: false });
+    expect(correctedResult).toMatchObject({
         status: 'changed',
         changed: ['source.txt'],
     });
@@ -42,19 +41,19 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
 
 test.each(FIXER_OUTCOMES)(
     '$name classifies $status from execution and resulting bytes',
-    async ({ script, exit_codes: exitCodes, status, after, note }) => {
+    async ({ script, exit_codes: exitCodes, status, after, ...row }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': buildFixerPolicy(), 'source.txt': 'original' });
         const session = await openSession(sandbox.path);
         const planned = planFixer(session, script);
         if (exitCodes !== undefined) planned.check.exit_codes = exitCodes;
-        const result = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
-            ({ results }) => results[0]!,
-        );
+        const {
+            results: [result],
+        } = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false });
         expect(result).toMatchObject({ status });
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(after);
-        expect(result.changed).toStrictEqual(after === 'original' ? [] : ['source.txt']);
-        if (note !== undefined) expect(result).toMatchObject({ note: textContaining(note) });
+        expect(result!.changed).toStrictEqual(after === 'original' ? [] : ['source.txt']);
+        if ('note' in row) expect(result).toMatchObject({ note: textContaining(row.note) });
     },
 );
 
@@ -64,11 +63,11 @@ test('compares bytes that decode to the same replacement character', async () =>
     const session = await openSession(sandbox.path);
     await writeFile(join(sandbox.path, 'source.txt'), Buffer.from([0xff]));
     const planned = planFixer(session, "await Bun.write('source.txt', new Uint8Array([0xfe]))");
-    const result = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
-        ({ results }) => results[0]!,
-    );
-    expect(result.status).toBe('changed');
-    expect(result.changed).toStrictEqual(['source.txt']);
+    const {
+        results: [result],
+    } = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false });
+    expect(result!.status).toBe('changed');
+    expect(result!.changed).toStrictEqual(['source.txt']);
     expect(await readFile(join(sandbox.path, 'source.txt'))).toStrictEqual(Buffer.from([0xfe]));
 });
 
@@ -77,11 +76,11 @@ test('counts deletion of an empty file as a change', async () => {
     await createFileTree(sandbox.path, { 'gspot.toml': buildFixerPolicy(), 'source.txt': '' });
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, "require('node:fs').unlinkSync('source.txt')");
-    const result = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
-        ({ results }) => results[0]!,
-    );
-    expect(result.status).toBe('changed');
-    expect(result.changed).toStrictEqual(['source.txt']);
+    const {
+        results: [result],
+    } = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false });
+    expect(result!.status).toBe('changed');
+    expect(result!.changed).toStrictEqual(['source.txt']);
     expect(await pathExists(join(sandbox.path, 'source.txt'))).toBe(false);
 });
 

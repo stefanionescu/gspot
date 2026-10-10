@@ -21,7 +21,7 @@ run the command again. An unknown configuration or setting names the entry. When
 
 ## A tool is missing
 
-Run `gspot install` to install the locked npm and Python tools. Native tools come from mise, or
+Run `gspot install` to install the locked npm and Python tools. Executable tools come from mise, or
 from your own install. See [runners](/guides/runners/). A check whose tool is
 missing fails, and `doctor` names the tool.
 
@@ -74,7 +74,7 @@ If the error says `There is no terminal to ask in`, supply `--yes` for nonintera
 
 Read `.gspot/version` and install that exact version through the repository's runner. Use [Upgrade gspot](/guides/upgrade/) only when intentionally moving the pin.
 
-## A hook cannot find a native tool
+## A hook cannot find an executable tool
 
 Run `gspot doctor`, install the tool using the install command it prints, and rerun the hook. For mise, trust the generated pins and run `mise install`. An execution error exits `2` and blocks the Git operation.
 

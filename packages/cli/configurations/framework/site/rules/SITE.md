@@ -14,7 +14,7 @@ Keep request-specific state isolated between edge requests.
 ## Build
 
 Escape every value the build writes into HTML. Keep public paths and internal links consistent
-with the deployed output.
+with the deployed site.
 
 ## Templates and browser assets
 

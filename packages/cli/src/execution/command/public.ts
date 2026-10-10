@@ -108,7 +108,7 @@ function companionEnvironment(
     return { ...env, PATH: [...directories, env['PATH'] ?? environmentVariables()['PATH'] ?? ''].join(delimiter) };
 }
 
-// The result of a nested-configuration check whose configuration is not generated yet, or undefined.
+// The result of a nested tool-file check whose tool file is not emitted yet, or undefined.
 function missingToolFile(
     session: ToolSession,
     planned: PlannedCheck,
