@@ -39,18 +39,15 @@ function missingOutputs(input: CheckInput, targets: GeneratedPath[], command: Co
 }
 
 // Both snapshots use the same native traversal and source containment boundary.
-function copiedFiles(root: string, scope: string, paths: GeneratedPath[]): Map<string, Buffer> {
+function copiedFiles(root: string, scope: string, patterns: string[], targets: GeneratedPath[]): Map<string, Buffer> {
     const cwd = join(root, scope);
-    const patterns = paths.filter((entry) => entry.kind === 'pattern').map((entry) => entry.path);
     const excluded = [...SCRATCH_DIRECTORIES, DOT_GSPOT].map((name) => `!**/${name}/**`);
     return new Map([
         ...globPaths(cwd, [...patterns, ...excluded], { dot: true }).map((path): [string, Buffer] => [
             posix.join(scope, path),
             readSource(cwd, path),
         ]),
-        ...paths
-            .filter((entry) => entry.kind !== 'pattern')
-            .map((entry): [string, Buffer] => [entry.path, readSource(root, entry.path)]),
+        ...targets.map((entry): [string, Buffer] => [entry.path, readSource(root, entry.path)]),
     ]);
 }
 
@@ -76,6 +73,7 @@ function generatedInputs(input: CheckInput) {
         return path === '' ? [] : [{ kind, path, original }];
     });
 
+    const targets = declared.filter((entry) => entry.kind !== 'pattern');
     const patterns = declared.filter((entry) => entry.kind === 'pattern').map((entry) => entry.path);
     const isMatched = pathMatcher(patterns);
     const selected = input.files
@@ -83,8 +81,8 @@ function generatedInputs(input: CheckInput) {
         .filter((path) => isMatched(path));
 
     if (command.length === 0 || declared.length === 0) return undefined;
-    if (declared.every((entry) => entry.kind === 'pattern') && selected.length === 0) return undefined;
-    return { planned, values, command, declaration, declared, selected };
+    if (targets.length === 0 && selected.length === 0) return undefined;
+    return { planned, values, command, declaration, patterns, targets, selected };
 }
 
 /**
@@ -96,8 +94,7 @@ export async function generatedCode(input: CheckInput): Promise<Finding[]> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
     const inputs = generatedInputs(input);
     if (inputs === undefined) return [];
-    const { planned, values, command, declaration, declared, selected } = inputs;
-    const targets = declared.filter((entry) => entry.kind !== 'pattern');
+    const { planned, values, command, declaration, patterns, targets, selected } = inputs;
     const missing = missingOutputs(input, targets, command);
     if (missing.length > 0) return missing;
     using folder = await copyIntoScratch(
@@ -105,7 +102,7 @@ export async function generatedCode(input: CheckInput): Promise<Finding[]> {
         targets.map((entry) => entry.path),
     );
     const cwd = join(folder.path, input.scope);
-    const before = copiedFiles(folder.path, input.scope, declared);
+    const before = copiedFiles(folder.path, input.scope, patterns, targets);
     const argv = substitute({ ...input, root: folder.path }, planned, declaration, {
         ...values,
         root: folder.path,
@@ -120,10 +117,9 @@ export async function generatedCode(input: CheckInput): Promise<Finding[]> {
             );
         stdout = result.stdout;
     }
-    const after = copiedFiles(folder.path, input.scope, declared);
-    for (const entry of targets.filter((entry) => entry.kind === 'stdout'))
-        after.set(entry.path, Buffer.from(stdout.trim()));
+    const after = copiedFiles(folder.path, input.scope, patterns, targets);
     const trimmed = new Set(targets.filter((entry) => entry.kind === 'stdout').map((entry) => entry.path));
+    for (const path of trimmed) after.set(path, Buffer.from(stdout.trim()));
     return [...new Set([...before.keys(), ...after.keys()])]
         .filter((path) => {
             const was = before.get(path);

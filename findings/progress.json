@@ -2814,7 +2814,7 @@
             "status": "partial",
             "owner": "root",
             "commit": null,
-            "verification": [],
+            "verification": ["Evidence 998e168ce1d9957a."],
             "additionalChanges": [
                 {
                     "commit": null,
@@ -4325,7 +4325,7 @@
             "status": "partial",
             "owner": "root",
             "commit": null,
-            "verification": [],
+            "verification": ["Evidence 998e168ce1d9957a."],
             "additionalChanges": [
                 {
                     "commit": null,
@@ -5144,7 +5144,8 @@
                 "Evidence 99f43d4885cb47d9.",
                 "Current release gate requires successful ci.yml and generated gspot.yml runs for the exact main/push commit before release; 16 native Bash/JQ negative/positive vectors preserve all tag/publication gates and remove nine authored bytes. /tmp/gspot-release-two-workflow-final-freeze.json.",
                 "Evidence a449987ccc63d237.",
-                "Evidence 0175901faf714fc9."
+                "Evidence 0175901faf714fc9.",
+                "Evidence 3c7f27f41cf1ad68."
             ],
             "remaining": [
                 "Release preparation and final verification remain. External first npm publication, trusted publisher/account setup, Cloudflare repository secrets/domain setup, release tag/publication and deployment are outside this implementation boundary."
@@ -12112,7 +12113,7 @@
             "status": "partial",
             "owner": "root",
             "commit": null,
-            "verification": [],
+            "verification": ["Evidence 998e168ce1d9957a."],
             "additionalChanges": [
                 {
                     "commit": null,
