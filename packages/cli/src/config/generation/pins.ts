@@ -24,8 +24,8 @@ export const CLI_PINS = {
         },
         node: {
             name: 'actions/setup-node',
-            sha: '820762786026740c76f36085b0efc47a31fe5020',
-            version: 'v7.0.0',
+            sha: '949feb2413d6458794dcd2491c4babbbce0c15c1',
+            version: 'v7.1.0',
         },
     } satisfies Record<string, ActionPin>,
     runners: { linux: 'ubuntu-24.04', macos: 'macos-15', windows: 'windows-2025' } satisfies Record<
