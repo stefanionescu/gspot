@@ -61,7 +61,7 @@ function flushFile(temporary: string, value: FileCopy): void {
 }
 
 // A batch keeps each descriptor open while its flush runs, then checks the staged identity and destination again.
-async function stageStagedFile(bounds: Bounds, { path, value }: StagedFile): Promise<void> {
+async function stageFile(bounds: Bounds, { path, value }: StagedFile): Promise<void> {
     validateRead(bounds, path, value);
     const target = preparedPath(bounds, path);
     const temporary = join(dirname(target), `.gspot-${randomUUID()}.tmp`);
@@ -262,7 +262,7 @@ export function replaceEntry(bounds: Bounds, path: string, value: FileCopy, expe
 export async function replaceEntries(bounds: Bounds, entries: StagedFile[]): Promise<void> {
     for (let offset = 0; offset < entries.length; offset += FILE_WRITE_BATCH) {
         const settled = await Promise.allSettled(
-            entries.slice(offset, offset + FILE_WRITE_BATCH).map((entry) => stageStagedFile(bounds, entry)),
+            entries.slice(offset, offset + FILE_WRITE_BATCH).map((entry) => stageFile(bounds, entry)),
         );
         const failed = settled.find((result) => result.status === 'rejected');
         if (failed !== undefined) throw failed.reason;
