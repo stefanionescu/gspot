@@ -115,7 +115,7 @@ test('apply retains saved configurations, settings and command checks when sourc
     const path = join(sandbox.path, 'gspot.toml');
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], {
-            tables: '[bash]\nsafety_owners = ["source.sh"]\n[reasons]\n"bash.safety_owners" = "The launcher owns process management."\n[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "The launcher intentionally expands its argument list."\n[check."project/source"]\npaths = ["*.sh"]\nstage = "commit"\ncommand = ["bash", "-n", "{files}"]\n',
+            tables: '[architecture.roles]\nenv = ["source.sh"]\n[reasons]\n"architecture.roles.env" = "The launcher owns process management."\n[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "The launcher intentionally expands its argument list."\n[check."project/source"]\npaths = ["*.sh"]\nstage = "commit"\ncommand = ["bash", "-n", "{files}"]\n',
         }),
         'source.sh': 'echo source\n',
     });
@@ -129,7 +129,7 @@ test('apply retains saved configurations, settings and command checks when sourc
     expect(await readFile(path, 'utf8')).toBe(planned);
     const absent = parse(planned);
     expect(absent['configurations']).toContain('bash');
-    expect(absent['bash']).toMatchObject({ safety_owners: ['source.sh'] });
+    expect(absent['architecture']).toMatchObject({ roles: { env: ['source.sh'] } });
     expect(absent['ignore']).toMatchObject([{ check: 'bash/shellcheck', rule: 'SC2086' }]);
     expect(absent['check']).toMatchObject({ 'project/source': { command: ['bash', '-n', '{files}'] } });
     expect(emitAll(await openSession(sandbox.path)).files.map((file) => file.path)).not.toContain(
@@ -151,7 +151,7 @@ test('absent scopes retain authored settings without planning their checks or to
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], {
-            tables: '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\npaths = ["scripts/**"]\nreason = "The launcher intentionally expands its arguments."\n[scope."scripts"]\nconfigurations = ["bash"]\n[scope."scripts".bash]\nsafety_owners = ["source.sh"]\n[scope."scripts".reasons]\n"bash.safety_owners" = "The launcher owns process management."\n',
+            tables: '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\npaths = ["scripts/**"]\nreason = "The launcher intentionally expands its arguments."\n[scope."scripts"]\nconfigurations = ["bash"]\n[scope."scripts".architecture.roles]\nenv = ["source.sh"]\n[scope."scripts".reasons]\n"architecture.roles.env" = "The launcher owns process management."\n',
         }),
         'scripts/source.sh': 'echo source\n',
     });
@@ -168,15 +168,15 @@ test('absent scopes retain authored settings without planning their checks or to
     });
     expect(absent.scopes.map((scope) => scope.scope.path)).toStrictEqual(['']);
     expect(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'))).toMatchObject({
-        scope: { scripts: { bash: { safety_owners: ['source.sh'] } } },
+        scope: { scripts: { architecture: { roles: { env: ['source.sh'] } } } },
         ignore: [{ paths: ['scripts/**'], reason: 'The launcher intentionally expands its arguments.' }],
     });
     await createFileTree(sandbox.path, { 'scripts/source.sh': 'echo restored\n' });
     await applyCommand({ cwd: sandbox.path, isDryRun: false });
     const restored = await openSession(sandbox.path);
-    expect(
-        restored.scopes.find((scope) => scope.scope.path === 'scripts')?.view.settings['bash.safety_owners'],
-    ).toStrictEqual(['scripts/source.sh']);
+    expect(restored.scopes.find((scope) => scope.scope.path === 'scripts')?.view.roles.env).toStrictEqual([
+        'scripts/source.sh',
+    ]);
     const stable = await readTree(sandbox.path);
     await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(await readTree(sandbox.path)).toStrictEqual(stable);

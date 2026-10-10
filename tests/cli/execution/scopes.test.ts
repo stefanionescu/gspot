@@ -53,10 +53,10 @@ describe('scoped readers preserve their owned inputs', () => {
     });
 });
 
-test('nested Bash safety settings merge root and scoped owners without leaking to siblings', async () => {
+test('Bash safety ignores exempt declared paths without leaking to descendants or siblings', async () => {
     await using sandbox = await testdir();
     const policy = buildPolicy(['bash'], {
-        tables: '[bash]\nsafety_owners = ["root.sh"]\n[reasons]\n"bash.safety_owners" = "The root script owns process cleanup."\n[scope."app"]\n[scope."app".bash]\nsafety_owners = ["cleanup.sh"]\n[scope."app".reasons]\n"bash.safety_owners" = "The application script owns process cleanup."\n[scope."app/child"]\n[scope."sibling"]\n',
+        tables: '[[ignore]]\ncheck = "bash/safety"\nrule = "recursive-remove"\npaths = ["root.sh"]\nreason = "The root script owns process cleanup."\n[[ignore]]\ncheck = "bash/safety"\nrule = "recursive-remove"\npaths = ["app/cleanup.sh"]\nreason = "The application script owns process cleanup."\n[scope."app"]\n[scope."app/child"]\n[scope."sibling"]\n',
     });
     const source = '#!/usr/bin/env bash\nrm -rf "$target"\n';
     await createFileTree(sandbox.path, {

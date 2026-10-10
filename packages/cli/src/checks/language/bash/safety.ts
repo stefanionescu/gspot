@@ -1,5 +1,4 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { pathMatcher } from '#cli/repository/paths/public.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { getScriptIndex } from '#cli/checks/language/contracts.ts';
 import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES } from '#cli/config/checks/language/bash.ts';
@@ -10,15 +9,10 @@ import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES } from '#cli/config/checks/langua
  * @returns the findings
  */
 export const safety: BuiltInCheck = async (input) => {
-    const owners = input.view.options('bash').safety_owners;
-    const isOwner = pathMatcher(owners);
+    const rules = [...(input.policyFiles.policy.level === 'all' ? SAFETY_LINE_RULES : []), ...SAFETY_OWNER_RULES];
     const index = await getScriptIndex(input);
     return index.files.flatMap((file) =>
         file.code.flatMap((code, position) => {
-            const rules = [
-                ...(input.policyFiles.policy.level === 'all' ? SAFETY_LINE_RULES : []),
-                ...(isOwner(file.path) ? [] : SAFETY_OWNER_RULES),
-            ];
             const isCleanup = file.temporaryPaths.some((temporary) => temporary.cleanupLines.includes(position + 1));
             return rules
                 .filter(([pattern]) => pattern.test(code))

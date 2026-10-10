@@ -5,36 +5,35 @@ export const AUTHORED_PATH_CASES = [
         files: { 'scripts/kept.sh': 'echo kept\n', 'src/kept.txt': 'kept\n' },
         policy: {
             configurations: ['bash'],
-            bash: { safety_owners: ['scripts/kept.sh', 'scripts/gone.sh'] },
             architecture: {
                 modules: [{ name: 'core', paths: ['src/**', 'gone/**'] }],
-                roles: { config: 'core' },
+                roles: { config: 'core', env: ['scripts/kept.sh', 'scripts/gone.sh'] },
             },
             reasons: {
-                'bash.safety_owners': 'The authored scripts own separate safety contracts.',
+                'architecture.roles.env': 'The authored scripts own separate safety contracts.',
                 'architecture.modules': 'The source module owns these paths.',
                 'architecture.roles.config': 'The module holds configuration data.',
             },
         },
-        unmatched: ['scripts/gone.sh', 'gone/**'],
+        unmatched: ['gone/**', 'scripts/gone.sh'],
     },
     {
         name: 'authored scopes prefix once and inherited paths report once',
         files: { 'app/kept.sh': 'echo kept\n', 'app/deep/kept.sh': 'echo kept\n' },
         policy: {
             configurations: ['bash'],
-            bash: { safety_owners: ['root-gone.sh'] },
-            reasons: { 'bash.safety_owners': 'The root script owns this contract.' },
+            architecture: { roles: { env: ['root-gone.sh'] } },
+            reasons: { 'architecture.roles.env': 'The root script owns this contract.' },
             scope: {
                 app: {
                     configurations: ['bash'],
-                    bash: { safety_owners: ['kept.sh', 'gone.sh'] },
-                    reasons: { 'bash.safety_owners': 'The app scripts own these contracts.' },
+                    architecture: { roles: { env: ['kept.sh', 'gone.sh'] } },
+                    reasons: { 'architecture.roles.env': 'The app scripts own these contracts.' },
                 },
                 'app/deep': {
                     configurations: ['bash'],
-                    bash: { safety_owners: ['kept.sh', 'gone.sh'] },
-                    reasons: { 'bash.safety_owners': 'The nested scripts own these contracts.' },
+                    architecture: { roles: { env: ['kept.sh', 'gone.sh'] } },
+                    reasons: { 'architecture.roles.env': 'The nested scripts own these contracts.' },
                 },
             },
         },

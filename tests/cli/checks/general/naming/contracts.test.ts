@@ -5,13 +5,13 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { allChecks } from '#cli/configurations/contracts.ts';
-import { knownSettings } from '#cli/policy/settings/public.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { KnownSettings } from '#cli/types/policy/settings.ts';
 import { nameFindings } from '#cli/checks/general/naming/public.ts';
 import { effectivePolicy } from '#cli/checks/general/naming/contracts.ts';
 import { settingValue, declarationFor } from '#cli/policy/settings/contracts.ts';
+import { knownSettings, effectiveSettings } from '#cli/policy/settings/public.ts';
 import { selectConfigurations, configurationManifests } from '#cli/configurations/public.ts';
 
 import {
@@ -39,14 +39,15 @@ function defaultNamingContext() {
     const selected = selectConfigurations(['naming'], configurationManifests());
     const settings = knownSettings(selected);
     const policy = parseStrictPolicy(buildPolicy(['naming'], { agentRules: true }));
-    return { settings, effective: effectivePolicy(settings, policy, '', selected) };
+    const view = effectiveSettings(settings, policy, selected, '');
+    return { settings, effective: effectivePolicy(view, policy, '', selected) };
 }
 
 test.each(['recommended', 'all'] as const)('each language owns its effective ceilings at %s', (level) => {
     const selected = selectConfigurations(['naming'], configurationManifests());
     const settings = knownSettings(selected, level);
     const policy = parseStrictPolicy(buildPolicy(['naming'], { agentRules: true, level }));
-    const effective = effectivePolicy(settings, policy, '', selected);
+    const effective = effectivePolicy(effectiveSettings(settings, policy, selected, ''), policy, '', selected);
     for (const language of NAMING_LANGUAGES) {
         const characters = namingCeiling(settings, `naming.${language}.max_chars`);
         const words = namingCeiling(settings, `naming.${language}.max_words`);
@@ -71,7 +72,8 @@ test('category ceilings inherit root and scope language settings while explicit 
         }),
     );
     for (const { scope, characters, functions, words } of SCOPE_CEILINGS) {
-        const effective = effectivePolicy(settings, policy, scope, selected);
+        const view = effectiveSettings(settings, policy, selected, scope);
+        const effective = effectivePolicy(view, policy, scope, selected);
         expect(effective.limitsFor('swift', 'functions')).toMatchObject({
             maxChars: functions,
             maxWords: words,
@@ -219,7 +221,7 @@ test.each(NATIVE_NAME_CATEGORIES)(
                 tables: '[[naming.overrides]]\npaths = ["source"]\ncase = ["upper-snake"]\nreason = "The authored interface selects this case."\n',
             }),
         );
-        const effective = effectivePolicy(settings, policy, '', selected);
+        const effective = effectivePolicy(effectiveSettings(settings, policy, selected, ''), policy, '', selected);
         const context = { check, policy: effective, isTestFile: false };
         const identifier: Identifier = {
             file: 'source',

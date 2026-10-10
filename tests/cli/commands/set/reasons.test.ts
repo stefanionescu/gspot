@@ -61,21 +61,21 @@ test.each([
     { key: 'naming.banned', flag: '', item: 'added', expected: ['original', 'added'] },
     { key: 'naming.banned', flag: '--remove', item: 'original', expected: undefined },
     { key: 'naming.banned', flag: '--replace', item: 'added', expected: ['added'] },
-    { key: 'bash.safety_owners', flag: '', item: 'added', expected: ['original', 'added'] },
-    { key: 'bash.safety_owners', flag: '--remove', item: 'original', expected: undefined },
-    { key: 'bash.safety_owners', flag: '--replace', item: 'added', expected: ['added'] },
+    { key: 'links.allowed_urls', flag: '', item: 'added', expected: ['original', 'added'] },
+    { key: 'links.allowed_urls', flag: '--remove', item: 'original', expected: undefined },
+    { key: 'links.allowed_urls', flag: '--replace', item: 'added', expected: ['added'] },
 ])('list edits preserve authored reasons and omit defaults for $key $flag', async ({ key, flag, item, expected }) => {
     await using directory = await testdir();
     const policy = [
-        'configurations = ["bash", "naming"]',
+        'configurations = ["bash", "naming", "docs"]',
         '[agent_rules]',
         'enabled = false',
         '[naming]',
         'banned = ["original"]',
-        '[bash]',
-        'safety_owners = ["original"]',
+        '[links]',
+        'allowed_urls = ["original"]',
         '[reasons]',
-        '"bash.safety_owners" = "The original script owns process management."',
+        '"links.allowed_urls" = "The original script owns process management."',
     ].join('\n');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const args = ['set', key, item, ...[flag].filter((value) => value !== '')];
@@ -84,6 +84,6 @@ test.each([
 
     const parsed = Bun.TOML.parse(await readFile(join(directory.path, 'gspot.toml'), 'utf8'));
     expect(valueAt(parsed, key.split('.'))).toStrictEqual(expected);
-    if (key === 'bash.safety_owners' && expected !== undefined)
+    if (key === 'links.allowed_urls' && expected !== undefined)
         expect(valueAt(parsed, ['reasons', key])).toBe('The original script owns process management.');
 });

@@ -20,7 +20,6 @@ export const CHECKED_RULE_LINES = [
     ['framework/react-native/REACT-NATIVE.md', 'Use `Pressable`'],
     ['framework/nestjs/NESTJS.md', 'forwardRef'],
     ['database/postgres/POSTGRES.md', 'Migration structure'],
-    ['language/bash/BASH.md', 'bash.safety_owners'],
     ['platform/supabase/SUPABASE.md', '### Migration names'],
     ['library/zod/ZOD.md', 'Use `z.strictObject()`'],
     ['language/html/HTML.md', 'active-document data URLs'],

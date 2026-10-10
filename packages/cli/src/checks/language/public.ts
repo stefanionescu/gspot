@@ -221,7 +221,7 @@ export function docstringConfiguration(text: string, convention?: unknown): Docs
 export async function pydoclint(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const configured = docstringConfiguration(
         readText(session.root, posix.join(planned.scope.scope.path, PYTHON_MANIFEST)) ?? '',
-        planned.scope.view.settings['tools.ruff.docstring_convention'],
+        planned.scope.view.values['tools.ruff']?.docstring_convention,
     );
     const groups = await docstringGroups(session, planned.files, configured.style);
     const report = emptyResult(planned);

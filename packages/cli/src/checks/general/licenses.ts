@@ -110,7 +110,7 @@ async function scanLicenses(input: CheckInput) {
             scopeRoot: join(input.root, dirname(manifest)),
             view: selection.view,
         };
-        const configuration = allowlistSchema.parse(selected.view.options('licenses'));
+        const configuration = selected.view.options('licenses');
         const packages = await scanner.scan(selected, selected.scopeRoot);
         if (packages.length === 0)
             throw new Error(

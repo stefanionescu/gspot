@@ -107,7 +107,7 @@ function namingCheck(
 ): BuiltInCheck {
     return (input) => {
         const policy = effectivePolicy(
-            input.selection.surface,
+            input.selection.view,
             input.policyFiles.policy,
             input.scope,
             input.selection.selected,

@@ -36,7 +36,7 @@ export const SAFETY_LINE_RULES: [RegExp, string, string][] = [
     [/\|\|\s*true(?:\s|$)/u, 'blanket-success', 'a command failure is discarded with || true'],
 ];
 
-/** Patterns only a safety owner may carry. */
+/** Patterns requiring reasoned ignores. */
 export const SAFETY_OWNER_RULES: [RegExp, string, string][] = [
     [/\bpkill\s+-f\b/u, 'broad-kill', 'processes are matched broadly'],
     [/\bkillall\b/u, 'broad-kill', 'processes are matched broadly'],

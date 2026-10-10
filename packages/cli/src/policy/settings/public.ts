@@ -2,16 +2,15 @@
 // configurations override an earlier scalar default; other scalar disagreements are reported as conflicts.
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { createTable } from '#cli/platform/contracts.ts';
 import { toolsSchema } from '#cli/policy/schema/tools.ts';
 import { coversScope } from '#cli/repository/paths/public.ts';
 import { limitTableSchema, policyJsonSchema } from '#cli/policy/schema/contracts.ts';
 import { rootSettingSchemas, tableSettingSchemas } from '#cli/policy/schema/public.ts';
 import type { Level, Manifest, SettingDeclaration } from '#cli/types/configurations.ts';
 import { settingTypeSchema, settingItemsSchema } from '#cli/parsers/schema/contracts.ts';
-import { tablesFor, mergeValue, listSettings, settingValue } from '#cli/policy/settings/contracts.ts';
-import { settingValueSchemas, activeSettingNamespacesSchema } from '#cli/policy/schema/native/public.ts';
-import { TOOL_DEADLINE, TOOL_KEY_DEPTH, ISO_DATE_LENGTH, OVERRIDING_KINDS } from '#cli/config/policy/settings.ts';
+import { TOOL_DEADLINE, ISO_DATE_LENGTH, OVERRIDING_KINDS } from '#cli/config/policy/settings.ts';
+import { namingSettingKeys, activeSettingNamespacesSchema } from '#cli/policy/schema/native/public.ts';
+import { tablesFor, mergeValue, listSettings, settingValue, namespaceValues } from '#cli/policy/settings/contracts.ts';
 
 import type {
     Policy,
@@ -231,19 +230,13 @@ export function effectiveSettings(
     const listed = listSettings(surface, policy, scope);
     const settings = Object.fromEntries(listed.map((row) => [row.key, row.value]));
     const namespaces: Record<string, unknown> = {};
-    const rows = listed
-        .map((row) => {
-            const segments = row.key.split('.');
-            const depth = segments[0] === 'tools' ? TOOL_KEY_DEPTH : 1;
-            return { row, path: segments.slice(depth, -1), name: segments.slice(0, depth).join('.') };
-        })
-        .filter(({ row }) => Object.hasOwn(settingValueSchemas, row.declaration.name));
-    for (const { row, path, name } of rows) {
-        const holder = createTable(namespaces, row.value === undefined ? [name] : [name, ...path]);
-        const key = row.key.slice(row.key.lastIndexOf('.') + 1);
-        if (holder === undefined) throw new Error(`The setting ${row.key} runs through a non-table value.`);
-        if (row.value !== undefined) holder[key] = row.value;
-    }
+    namespaceValues(namespaces, listed);
+    const variants = Object.values(namingSettingKeys)
+        .flatMap((keys) => keys.map((key) => `naming.${key}`))
+        .filter((key) => !surface.declarations.has(key))
+        .map((key) => settingValue(surface, policy, key, scope))
+        .filter((row) => row !== undefined);
+    namespaceValues(namespaces, variants);
     const declarations = [...surface.declarations.values()].filter(
         (entry) => entry.name.startsWith('limits.') && entry.type === 'number',
     );

@@ -2,10 +2,10 @@
 import { test, expect } from 'bun:test';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { parseStrictPolicy } from '#cli/policy/public.ts';
-import { knownSettings } from '#cli/policy/settings/public.ts';
 import { rulesFor } from '#cli/checks/general/naming/public.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { effectivePolicy } from '#cli/checks/general/naming/contracts.ts';
+import { knownSettings, effectiveSettings } from '#cli/policy/settings/public.ts';
 
 const manifests = configurationManifests();
 const javascript = manifests.get('javascript')!;
@@ -16,7 +16,10 @@ test('a selected framework adds its rules after the shipped ones and before the 
         tables: '[[naming.overrides]]\npaths = ["src/hooks/**"]\ncategories = ["functions"]\nignored_prefix = "^use(?=[A-Z])"\nreason = "A hook starts with use."\n',
     });
     const policy = parseStrictPolicy(text);
-    const effective = effectivePolicy(knownSettings([]), policy, '', [javascript, express]);
+    const effective = effectivePolicy(effectiveSettings(knownSettings([]), policy, [], ''), policy, '', [
+        javascript,
+        express,
+    ]);
     const callback = rulesFor(effective, {
         file: 'src/routes/auth.ts',
         line: 1,

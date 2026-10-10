@@ -5,6 +5,7 @@ import { stemOf, compact } from '#cli/platform/contracts.ts';
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { bashIdentifiers } from '#cli/parsers/naming/bash.ts';
+import { tablesFor } from '#cli/policy/settings/contracts.ts';
 import { pathMatcher } from '#cli/repository/paths/public.ts';
 import { sqlIdentifiers } from '#cli/parsers/naming/public.ts';
 import { swiftIdentifiers } from '#cli/parsers/naming/swift.ts';
@@ -14,10 +15,10 @@ import { pythonIdentifiers } from '#cli/parsers/naming/python.ts';
 import { createIdentifier } from '#cli/parsers/naming/contracts.ts';
 import { CATEGORY_PARENTS } from '#cli/config/checks/general/naming.ts';
 import { grammarFor, parseSource } from '#cli/parsers/source/public.ts';
+import { namingSettingKeys } from '#cli/policy/schema/native/public.ts';
 import { typescriptIdentifiers } from '#cli/parsers/naming/typescript.ts';
-import { tablesFor, settingValue } from '#cli/policy/settings/contracts.ts';
 import { isOwned, selectForScope } from '#cli/repository/selection/public.ts';
-import type { Policy, KnownSettings, NamingSettings } from '#cli/types/policy/settings.ts';
+import type { Policy, ScopeView, NamingSettings } from '#cli/types/policy/settings.ts';
 import type { Identifier, NamingTerms, NamingLanguage, NamingOverride } from '#cli/types/parsers/naming.ts';
 import type { Term, PathRule, FileNames, PathContainer, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
@@ -54,28 +55,26 @@ function reservedTerms(shipped: NamingTerms, naming: NamingSettings): Map<string
     return reserved;
 }
 
-function buildLimitsFor(
-    shipped: NamingTerms,
-    surface: KnownSettings,
-    policy: Policy,
-    scope: string,
-): EffectivePolicy['limitsFor'] {
+function buildLimitsFor(shipped: NamingTerms, view: Pick<ScopeView, 'values'>): EffectivePolicy['limitsFor'] {
     return (language, category) => {
         const table: NamingLanguage | undefined = shipped.languages[language];
         const parent = CATEGORY_PARENTS[category] ?? category;
-        const prefix = `naming.${language}`;
-
-        const ceiling = (slot: string): number => {
-            const found = [`${prefix}.${parent}.${slot}`, `${prefix}.${slot}`]
-                .map((key) => settingValue(surface, policy, key, scope)?.value)
-                .find((value): value is number => typeof value === 'number');
-            return found ?? 0;
+        const ceiling = (slot: 'max_chars' | 'max_words'): number => {
+            const keys = namingSettingKeys[slot];
+            const categoryKey = keys.find((key) => key === `${language}.${parent}.${slot}`);
+            const languageKey = keys.find((key) => key === `${language}.${slot}`);
+            return (
+                (categoryKey === undefined ? undefined : view.values.naming?.[categoryKey]) ??
+                (languageKey === undefined ? undefined : view.values.naming?.[languageKey]) ??
+                0
+            );
         };
-        const cases = settingValue(surface, policy, `${prefix}.${parent}.case`, scope)?.value;
+        const key = namingSettingKeys.case.find((name) => name === `${language}.${parent}.case`);
+        const cases = key === undefined ? undefined : view.values.naming?.[key];
         const defaults =
-            [category, parent].map((name) => table?.categories[name]?.case).find((names) => names !== undefined) ?? [];
+            [category, parent].map((name) => table?.categories[name]?.case).find((value) => value !== undefined) ?? [];
         return {
-            caseNames: Array.isArray(cases) && cases.length > 0 ? (cases as string[]) : defaults,
+            caseNames: cases !== undefined && cases.length > 0 ? cases : defaults,
             maxChars: ceiling('max_chars'),
             maxWords: ceiling('max_words'),
         };
@@ -175,14 +174,14 @@ export function compileTerms(terms: string[], origin: Pick<Term, 'source' | 'gro
 
 /**
  * The policy in force for a scope: the shipped lists with the repository's additions, exemptions, and ceilings.
- * @param surface the scope's settings surface
+ * @param view the scope's parsed settings
  * @param policy the repository policy
  * @param scope the scope path, '' for the root
  * @param manifests the selected manifests, whose naming rules follow the shipped ones
  * @returns the effective policy
  */
 export function effectivePolicy(
-    surface: KnownSettings,
+    view: Pick<ScopeView, 'values'>,
     policy: Policy,
     scope: string,
     manifests: Pick<Manifest, 'configuration' | 'naming'>[],
@@ -224,7 +223,7 @@ export function effectivePolicy(
             ...Object.entries(naming.allowed),
         ]),
         rules,
-        limitsFor: buildLimitsFor(shipped, surface, policy, scope),
+        limitsFor: buildLimitsFor(shipped, view),
         isDigitsAllowed: shipped.allow_digits,
         isRepeatAllowed: shipped.allow_repeated_words,
     };

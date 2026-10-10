@@ -260,20 +260,12 @@ help = "Open the owner with [[ -n ${NAME_READY:-} ]] && return 0 and then readon
 [[check]]
 name = "safety"
 title = "Find unsafe shell commands"
-example = "A `killall worker` command outside bash.safety_owners reports a broad-kill finding. Target the specific process, or move shared process management into its declared owner."
+example = "A `killall worker` command reports broad-kill. Target the specific process, or ignore that rule for the owning script with a reason."
 level = "recommended"
 stage = "commit"
-summary = "Finds broad process kills and recursive deletes outside their owners, except traps that remove mktemp paths. At all, it also reports discarded failures."
+summary = "Finds broad process kills and recursive deletes, except traps that remove mktemp paths. At all, it also reports discarded failures."
 why = "Each of these is a way a script destroys something it did not mean to and says nothing."
-help = "Handle the failure, and move the delete or kill into a script named under bash.safety_owners."
-
-[[setting]]
-name = "bash.safety_owners"
-type = "list"
-items = "path"
-direction = "loosening"
-default = []
-summary = "The scripts allowed to delete recursively or kill processes; everything else is refused."
+help = "Handle the failure. For required cleanup, use gspot ignore bash/safety with --rule, --paths and --reason."
 
 [[naming.overrides]]
 paths = ["**"]

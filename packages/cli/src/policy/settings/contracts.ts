@@ -1,9 +1,10 @@
 import { settingPaths } from '#cli/policy/paths.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { SettingDeclaration } from '#cli/types/configurations.ts';
-import { compact, valueAt, isRecord } from '#cli/platform/contracts.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/paths/public.ts';
-import { CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/policy/settings.ts';
+import { compact, valueAt, isRecord, createTable } from '#cli/platform/contracts.ts';
+import { settingValueSchemas, activeSettingNamespaceSchemas } from '#cli/policy/schema/native/public.ts';
+import { TOOL_KEY_DEPTH, CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/policy/settings.ts';
 
 import type {
     Policy,
@@ -286,4 +287,30 @@ export function harnessFolders(policy: Policy, scope: string): string[] {
     const nested = policy.scopeTables[scope]?.architecture?.roles;
     const roles = nested?.['test_harness'] === undefined ? policy.architecture.roles : nested;
     return rolePaths(roles, 'test_harness').map((folder) => folder.replace(/\/(?:\*\*)?$/u, ''));
+}
+
+/**
+ * Populate native namespace tables from direct settings and their declared naming variants.
+ * @param namespaces the scope's execution tables.
+ * @param rows the values already resolved through the selected declarations.
+ */
+export function namespaceValues(namespaces: Record<string, unknown>, rows: SettingEntry[]): void {
+    const entries = rows
+        .filter((row) => Object.hasOwn(settingValueSchemas, row.declaration.name))
+        .flatMap((row) => {
+            const segments = row.key.split('.');
+            const depth = segments[0] === 'tools' ? TOOL_KEY_DEPTH : 1;
+            const name = segments.slice(0, depth).join('.');
+            const flat = segments.slice(depth).join('.');
+            const path = row.key === row.declaration.name ? segments.slice(depth) : [flat];
+            const paths = [path];
+            if (name === 'naming' && path.length > 1 && Object.hasOwn(activeSettingNamespaceSchemas.naming.shape, flat))
+                paths.push([flat]);
+            return paths.map((parts) => ({ row, name, path: parts.slice(0, -1), field: parts.slice(-1).join('') }));
+        });
+    for (const { row, name, path, field } of entries) {
+        const holder = createTable(namespaces, row.value === undefined ? [name] : [name, ...path]);
+        if (holder === undefined) throw new Error(`The setting ${row.key} runs through a non-table value.`);
+        if (row.value !== undefined) holder[field] = row.value;
+    }
 }

@@ -213,7 +213,7 @@ test('the required folders group keeps identifier terms separate without droppin
     const session = await openSession(sandbox.path);
     const [selection] = session.scopes;
     if (selection === undefined) throw new Error('The native root selection is missing.');
-    const selected = effectivePolicy(selection.surface, session.policyFiles.policy, '', selection.selected);
+    const selected = effectivePolicy(selection.view, session.policyFiles.policy, '', selection.selected);
     const expected = Object.entries(namingTerms().groups)
         .filter(([group]) => group !== 'folders')
         .flatMap(([group, { terms }]) => compileTerms(terms, { source: `${group} group`, group }));
