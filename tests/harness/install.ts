@@ -113,8 +113,8 @@ async function prepareValeProject(session: ToolSession): Promise<string> {
             const problem = await installValePackages({
                 owner: {
                     read: files.read.bind(files),
-                    installTree: async (kind, source) => {
-                        await installTree(log, kind, readInstalledTree(source, kind));
+                    installTree: (kind, source) => {
+                        return installTree(log, kind, readInstalledTree(source, kind));
                     },
                 },
                 search: session,

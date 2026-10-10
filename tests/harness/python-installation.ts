@@ -83,8 +83,8 @@ export async function installSuitePythonTools(root: string, cancelSignal: AbortS
             pythonToolProject,
             {
                 read: log.files.read.bind(log.files),
-                installTree: async (kind, directory) => {
-                    await installTree(log, kind, readInstalledTree(directory, kind));
+                installTree: (kind, directory) => {
+                    return installTree(log, kind, readInstalledTree(directory, kind));
                 },
             },
             { root, executable, cancelSignal },
