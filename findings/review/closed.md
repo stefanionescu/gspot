@@ -2510,3 +2510,12 @@ One starting open record is complete. Original IDs and quotations remain above.
 | ID                                       | Verdict | Evidence                                                                      | Source                                           |
 | ---------------------------------------- | ------- | ----------------------------------------------------------------------------- | ------------------------------------------------ |
 | `slices/tests-integration-lifecycle/003` | fixed   | Evidence f568f0803963f1d7. Commit `ca2975ca5552d3276e78bbd6d897c44cfdf70a09`. | `findings/slices/tests-integration-lifecycle.md` |
+
+## Implemented checkpoint c84681573 of October 10, 2026
+
+2 starting open records are complete at `c8468157370eac2727e626e6c23155423f459ebc`. Their original IDs and quotations remain in their source files.
+
+| ID                                       | Verdict | Evidence                                                                      | Source                                           |
+| ---------------------------------------- | ------- | ----------------------------------------------------------------------------- | ------------------------------------------------ |
+| `slices/tests-integration-execution/015` | fixed   | Evidence 8bde2701223f5f90. Commit `c8468157370eac2727e626e6c23155423f459ebc`. | `findings/slices/tests-integration-execution.md` |
+| `slices/tests-integration-execution/028` | fixed   | Evidence bf1fe9d7ca8f7db1. Commit `c8468157370eac2727e626e6c23155423f459ebc`. | `findings/slices/tests-integration-execution.md` |

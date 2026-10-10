@@ -1,5 +1,5 @@
 {
-    "openRecords": 171,
+    "openRecords": 169,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 171,
+        "openRecords": 169,
         "records": 1092,
         "batches": [
             {
@@ -1096,8 +1096,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 233,
-                "unresolvedAssignments": 58
+                "completedAssignments": 235,
+                "unresolvedAssignments": 56
             },
             {
                 "id": "python",
@@ -1479,8 +1479,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 93,
-                "unresolvedAssignments": 38
+                "completedAssignments": 94,
+                "unresolvedAssignments": 37
             },
             {
                 "id": "test-quality",
@@ -1956,8 +1956,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 402,
-                "unresolvedAssignments": 67
+                "completedAssignments": 404,
+                "unresolvedAssignments": 65
             },
             {
                 "id": "scripts-repository",
@@ -13869,10 +13869,10 @@
             ]
         },
         "slices/tests-integration-execution/015": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a5937dac4484bf322927edf8456b6fe587b42da",
+            "verification": ["Evidence 8bde2701223f5f90."]
         },
         "slices/tests-integration-execution/018": {
             "status": "complete",
@@ -13917,10 +13917,10 @@
             "verification": []
         },
         "slices/tests-integration-execution/028": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 465ecfb7ffcbe2c5."]
+            "commit": "c8468157370eac2727e626e6c23155423f459ebc",
+            "verification": ["Evidence bf1fe9d7ca8f7db1."]
         },
         "slices/tests-integration-execution/029": {
             "status": "complete",
@@ -19875,6 +19875,17 @@
                 "Actual named Linux/macOS/Windows callback passes; current owner byte-identical to tested525a; current focused9pass/37assert. No final tools/release pass claimed."
             ],
             "limitations": ["main/001 external publication/setup and final combined verification remain partial."]
+        },
+        {
+            "commit": "c8468157370eac2727e626e6c23155423f459ebc",
+            "completedRecords": ["slices/tests-integration-execution/015", "slices/tests-integration-execution/028"],
+            "unresolvedRecords": 169,
+            "validation": [
+                "Exact current source hashes match actual tested CI525a inputs; named JSON case passes on Linux/macOS/Windows and newline-name case passes on POSIX with explicit Windows skip. Original callbacks/assertions/resources and reducing cost proofs preserved."
+            ],
+            "limitations": [
+                "Other tool shards, full latest combined verification and main/001 external steps remain unresolved."
+            ]
         }
     ],
     "verificationEvidenceFile": "verification.json"

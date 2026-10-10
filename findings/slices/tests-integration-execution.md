@@ -1,6 +1,6 @@
 # Tests: Execution Integration Tests
 
-3 unresolved review records remain.
+1 unresolved review record remains.
 
 ## Open findings
 
@@ -106,3 +106,12 @@ Original records and quotations remain above. These records are complete at `295
 | ID                                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ---------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-execution/018` | complete | Integrated lifecycle checkpoint:165 CLI tests/881 assertions across20files; configured types, scoped formatter and ESLint pass. Original native preservation proofs retain unique diagnostics, bytes, modes, resource cleanup and intentional failures; actual cross-platform aggregate remains open. Prescribed corrected-pass runs are deleted. Retain all distinct fatal7/findings1, EISDIR, malformed JSON, missing-image, exact asset bytes/modes and policy-exception controls. Commit `29553132fff4b24951509da88fad9f464ec77729`. |
+
+## Implementation checkpoint c84681573 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `c8468157370eac2727e626e6c23155423f459ebc`.
+
+| ID                                       | Status   | Evidence                                                                      |
+| ---------------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `slices/tests-integration-execution/015` | complete | Evidence 8bde2701223f5f90. Commit `c8468157370eac2727e626e6c23155423f459ebc`. |
+| `slices/tests-integration-execution/028` | complete | Evidence bf1fe9d7ca8f7db1. Commit `c8468157370eac2727e626e6c23155423f459ebc`. |
