@@ -28,7 +28,7 @@ export const CLI_PINS = {
             version: 'v7.1.0',
         },
     } satisfies Record<string, ActionPin>,
-    runners: { linux: 'ubuntu-24.04', macos: 'macos-15', windows: 'windows-2025' } satisfies Record<
+    runners: { linux: 'ubuntu-24.04', macos: 'macos-26', windows: 'windows-2025' } satisfies Record<
         NonNullable<Policy['ci']>['platforms'][number],
         string
     >,
