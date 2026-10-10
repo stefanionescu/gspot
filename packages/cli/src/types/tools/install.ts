@@ -35,7 +35,7 @@ export type InstalledFile = { path: string; file: FileCopy };
 /** The part of the lifecycle owner a tool project reads and installs through. */
 export type ToolOwner = {
     read(path: string): FileCopy | undefined;
-    installTree(kind: InstallationKind, directory: string): void;
+    installTree(kind: InstallationKind, directory: string): void | Promise<void>;
 };
 
 /** An inspected executable with a usable version and resolved path. */

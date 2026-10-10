@@ -3,6 +3,8 @@ import type { Stats } from 'node:fs';
 /** File bytes and mode, or a symbolic link's target bytes and mode. */
 export type FileCopy = { bytes: Buffer; mode: number; isLink?: true };
 
+export type StagedFile = { path: string; value: Pick<FileCopy, 'bytes' | 'mode'> };
+
 export type PathFormat = 'portable' | 'native';
 
 export type Bounds = {
@@ -29,6 +31,8 @@ export type Root = {
     read(path: string): FileCopy | undefined;
     /** Replace an entry only while its current copy matches expected. */
     write(path: string, value: FileCopy, expected: FileCopy | undefined): void;
+    /** Durably write independent new regular files, settling all writes before rejection. */
+    writeAll(entries: StagedFile[]): Promise<void>;
     /** Create a symbolic link from the copy's target bytes and mode. */
     link(path: string, value: FileCopy): void;
     /** Remove an entry only while its current copy matches expected. */

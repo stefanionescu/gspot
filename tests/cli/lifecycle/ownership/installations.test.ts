@@ -17,9 +17,9 @@ test.each([...INSTALLATIONS])(
         {
             using log = openOwnership(directory.path);
 
-            installTree(log, kind, readInstalledTree(staged.path, kind));
+            await installTree(log, kind, readInstalledTree(staged.path, kind));
             expect(await readFile(join(directory.path, folder, 'tool/index.js'), 'utf8')).toBe('export {};\n');
-            installTree(log, kind, readInstalledTree(staged.path, kind));
+            await installTree(log, kind, readInstalledTree(staged.path, kind));
             deleteInstallation(log, kind);
             expect(await pathExists(join(directory.path, folder))).toBe(false);
         }
@@ -36,8 +36,11 @@ test.each([...INSTALLATIONS])(
         {
             using log = openOwnership(directory.path);
 
+            const failure = await installTree(log, kind, readInstalledTree(staged.path, kind)).catch(
+                (error: unknown) => error,
+            );
             expect(() => {
-                installTree(log, kind, readInstalledTree(staged.path, kind));
+                throw failure;
             }).toThrow(`${folder} exists and gspot did not create it. Move it aside, then run gspot install.`);
             expect(await readFile(join(directory.path, folder, 'authored/index.js'), 'utf8')).toBe('authored\n');
         }
@@ -61,7 +64,7 @@ test.each(INSTALLATIONS.flatMap((installation) => SWAP_CASES.map((entry) => ({ .
         expect(await pathExists(join(directory.path, `${folder}.previous`))).toBe(false);
         expect(await pathExists(join(directory.path, `${folder}.next`))).toBe(false);
         using log = openOwnership(directory.path);
-        installTree(log, kind, readInstalledTree(join(directory.path, folder), kind));
+        await installTree(log, kind, readInstalledTree(join(directory.path, folder), kind));
         expect(await readFile(join(directory.path, folder, 'tool/index.js'), 'utf8')).toBe(kept);
     },
 );
@@ -77,7 +80,7 @@ test('an install killed after its swap and before its record is replaced by the 
     {
         using log = openOwnership(directory.path);
 
-        installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
+        await installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
     }
     expect(await readFile(join(directory.path, '.gspot/node_modules/tool/index.js'), 'utf8')).toBe('reinstalled\n');
 });
@@ -92,15 +95,15 @@ test('installation publishes internal directory aliases as owned files without f
     {
         using log = openOwnership(repository.path);
 
-        installTree(log, 'python', readInstalledTree(installation.path, 'python'));
+        await installTree(log, 'python', readInstalledTree(installation.path, 'python'));
         expect(log.files.read('.gspot/.venv/lib64/package.py')?.bytes.toString()).toBe('value = 7\n');
         const attributes = await lstat(join(repository.path, '.gspot/.venv/lib64'));
         expect(attributes.isSymbolicLink()).toBe(false);
-        installTree(log, 'python', readInstalledTree(installation.path, 'python'));
+        await installTree(log, 'python', readInstalledTree(installation.path, 'python'));
         expect(log.files.read('.gspot/.venv/lib/package.py')?.bytes.toString()).toBe('value = 7\n');
         await symlink(outside.path, join(installation.path, 'external'), 'dir');
         expect(() => {
-            installTree(log, 'python', readInstalledTree(installation.path, 'python'));
+            return installTree(log, 'python', readInstalledTree(installation.path, 'python'));
         }).toThrow('Source link leaves the repository');
         expect(log.files.read('.gspot/.venv/external/secret.py')).toBeUndefined();
         expect(await readFile(join(outside.path, 'secret.py'), 'utf8')).toBe('external bytes');
@@ -120,14 +123,14 @@ test('installation resolves nested directory aliases and rejects cycles before p
     {
         using log = openOwnership(repository.path);
 
-        installTree(log, 'python', readInstalledTree(installation.path, 'python'));
+        await installTree(log, 'python', readInstalledTree(installation.path, 'python'));
         expect(log.files.read('.gspot/.venv/nested/library/alias.py')?.bytes.toString()).toBe('value = 9\n');
         expect(log.files.read('.gspot/.venv/nested/library/__pycache__/package.pyc')).toBeUndefined();
         expect(await readlink(join(repository.path, '.gspot/.venv/lib/alias.py'))).toBe('package.py');
         await symlink('..', join(installation.path, 'lib/cycle'), 'dir');
         await writeFile(join(installation.path, 'lib/package.py'), 'unpublished change');
         expect(() => {
-            installTree(log, 'python', readInstalledTree(installation.path, 'python'));
+            return installTree(log, 'python', readInstalledTree(installation.path, 'python'));
         }).toThrow('Installed directory link forms a cycle');
         expect(log.files.read('.gspot/.venv/lib/package.py')?.bytes.toString()).toBe('value = 9\n');
     }
@@ -143,13 +146,13 @@ test('installation refuses a linked output root before publication and accepts a
         using log = openOwnership(repository.path);
 
         expect(() => {
-            installTree(log, 'npm', readInstalledTree(join(installation.path, 'node_modules'), 'npm'));
+            return installTree(log, 'npm', readInstalledTree(join(installation.path, 'node_modules'), 'npm'));
         }).toThrow('Unsafe lifecycle destination');
         expect(log.files.read('.gspot/node_modules/package/file.js')).toBeUndefined();
         expect(await readFile(join(outside.path, 'package/file.js'), 'utf8')).toBe('external bytes');
         await unlink(join(installation.path, 'node_modules'));
         await createFileTree(installation.path, { 'node_modules/package/file.js': 'installed bytes' });
-        installTree(log, 'npm', readInstalledTree(join(installation.path, 'node_modules'), 'npm'));
+        await installTree(log, 'npm', readInstalledTree(join(installation.path, 'node_modules'), 'npm'));
         expect(log.files.read('.gspot/node_modules/package/file.js')?.bytes.toString()).toBe('installed bytes');
     }
 });
@@ -166,9 +169,9 @@ test('a Python installation replaces the whole environment, runtime caches inclu
     {
         using log = openOwnership(directory.path);
 
-        installTree(log, 'python', readInstalledTree(staged.path, 'python'));
+        await installTree(log, 'python', readInstalledTree(staged.path, 'python'));
         await createFileTree(directory.path, { [`${cache}/unowned.pyc`]: 'runtime bytes' });
-        installTree(log, 'python', readInstalledTree(staged.path, 'python'));
+        await installTree(log, 'python', readInstalledTree(staged.path, 'python'));
         expect(log.files.read('.gspot/.venv/lib/package.py')?.bytes.toString()).toBe('value = 2\n');
         expect(log.files.read('.gspot/.venv/lib/package.pyc')?.bytes.toString()).toBe('packaged legacy bytecode');
         // Runtime caches leave with the old environment; the staged caches are never published.
@@ -186,10 +189,10 @@ describe.if(isPosix)('lifecycle ownership', () => {
         {
             using log = openOwnership(directory.path);
 
-            installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
+            await installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
             await writeFile(join(directory.path, '.gspot/node_modules/obsolete'), 'hand edit');
             await rm(join(staged.path, 'obsolete'));
-            installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
+            await installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
             expect(await readFile(join(directory.path, '.gspot/node_modules/.bin/tool'), 'utf8')).toBe(
                 'new executable',
             );

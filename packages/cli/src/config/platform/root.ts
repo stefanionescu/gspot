@@ -10,6 +10,9 @@ export const CLAIM_POLL_MS = 10;
 
 export const CLAIM_WAIT_BYTES = 4;
 
+/** Flush at most this many staged files before starting the next group. */
+export const FILE_WRITE_BATCH = 16;
+
 /** The lifecycle state folder never enters command checks or generated plans. */
 export const LIFECYCLE_PRIVATE_PATH = new RegExp(`(?:^|/)\\${STATE_DIRECTORY}(?:/|$)`, 'iu');
 

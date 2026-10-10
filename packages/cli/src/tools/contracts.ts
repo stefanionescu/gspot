@@ -310,7 +310,7 @@ export async function installToolProject<Parsed, Preparation, Installation>(
         },
         project,
     );
-    owner.installTree(description.kind, join(work.path, basename(INSTALLATION_DIRECTORIES[description.kind])));
+    await owner.installTree(description.kind, join(work.path, basename(INSTALLATION_DIRECTORIES[description.kind])));
     return summary;
 }
 

@@ -97,7 +97,7 @@ export function recoverInstallations(log: Log): void {
  * @param kind the installation
  * @param entries every file of the installation, at its path under the installation folder
  */
-export function installTree(log: Log, kind: InstallationKind, entries: InstalledFile[]): void {
+export async function installTree(log: Log, kind: InstallationKind, entries: InstalledFile[]): Promise<void> {
     const { files, state } = log;
     const { folder, staging, previous } = sideFolders(kind);
     // An install still in progress made the folder: a crash after its swap and before its record leaves it there.
@@ -107,11 +107,17 @@ export function installTree(log: Log, kind: InstallationKind, entries: Installed
     setKind(log, 'installing', kind, true);
     files.removeTree(staging);
     files.mkdir(staging, EXECUTABLE_FILE);
-    // A link is written after the file it names, which the write checks is there.
-    const ordered = entries.toSorted(
-        (left, right) => Number(left.file.isLink === true) - Number(right.file.isLink === true),
+    await files.writeAll(
+        entries
+            .filter(({ file }) => file.isLink !== true)
+            .map(({ path, file }) => ({
+                path: `${staging}${path.slice(folder.length)}`,
+                value: { bytes: file.bytes, mode: file.mode },
+            })),
     );
-    for (const { path, file } of ordered) files.write(`${staging}${path.slice(folder.length)}`, file, undefined);
+    // A link is written after every regular file is flushed and committed.
+    for (const { path, file } of entries.filter((entry) => entry.file.isLink === true))
+        files.write(`${staging}${path.slice(folder.length)}`, file, undefined);
     files.removeTree(previous);
     if (files.stat(folder) !== undefined) files.renameDirectory(folder, previous);
     files.renameDirectory(staging, folder);

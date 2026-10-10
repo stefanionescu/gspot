@@ -36,15 +36,15 @@ test.each(VALE_ACQUISITION_FAILURES)(
         });
         using log = openOwnership(directory.path);
         const session = await openSession(directory.path);
-        installTree(log, 'vale', readInstalledTree(join(directory.path, 'staged'), 'vale'));
+        await installTree(log, 'vale', readInstalledTree(join(directory.path, 'staged'), 'vale'));
         const tool = toolPin(session.manifests.values(), 'vale');
         const version = tool.version;
         const request = {
             search: session,
             owner: {
                 read: (path: string) => log.files.read(path),
-                installTree: (kind: InstallationKind, output: string) => {
-                    installTree(log, kind, readInstalledTree(output, kind));
+                installTree: async (kind: InstallationKind, output: string) => {
+                    await installTree(log, kind, readInstalledTree(output, kind));
                 },
             },
             level: session.policyFiles.policy.level,
@@ -81,7 +81,7 @@ async function linkedStyles(directory: string, kind: string): Promise<string> {
     const root = join(directory, 'project');
     {
         using log = openOwnership(root);
-        installTree(log, 'vale', readInstalledTree(join(directory, 'staged'), 'vale'));
+        await installTree(log, 'vale', readInstalledTree(join(directory, 'staged'), 'vale'));
     }
     if (kind === 'configuration') {
         await unlink(join(root, '.gspot/config/vale.ini'));
@@ -125,7 +125,7 @@ test.each(['recommended', 'all'] as const)('package readiness requires the gener
     expect(hasValePackages(sandbox.path, level)).toBe(level === 'recommended');
     for (const folder of VALE_PACKAGE_FOLDERS) await createFileTree(sandbox.path, { [`staged/${folder}/.keep`]: '' });
     using log = openOwnership(sandbox.path);
-    installTree(log, 'vale', readInstalledTree(join(sandbox.path, 'staged'), 'vale'));
+    await installTree(log, 'vale', readInstalledTree(join(sandbox.path, 'staged'), 'vale'));
     expect(hasValePackages(sandbox.path, level)).toBe(true);
 });
 
@@ -137,7 +137,7 @@ test.each(VALE_PACKAGE_FOLDERS)(
         for (const folder of VALE_PACKAGE_FOLDERS.filter((folder) => folder !== missing))
             await createFileTree(sandbox.path, { [`staged/${folder}/.keep`]: '' });
         using log = openOwnership(sandbox.path);
-        installTree(log, 'vale', readInstalledTree(join(sandbox.path, 'staged'), 'vale'));
+        await installTree(log, 'vale', readInstalledTree(join(sandbox.path, 'staged'), 'vale'));
         expect(hasValePackages(sandbox.path, 'all')).toBe(false);
     },
 );
@@ -156,8 +156,8 @@ test.each([false, true])(
             search: session,
             owner: {
                 read: (path: string) => log.files.read(path),
-                installTree: (kind: InstallationKind, output: string) => {
-                    installTree(log, kind, readInstalledTree(output, kind));
+                installTree: async (kind: InstallationKind, output: string) => {
+                    await installTree(log, kind, readInstalledTree(output, kind));
                 },
             },
             level: session.policyFiles.policy.level,

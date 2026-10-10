@@ -147,7 +147,7 @@ export async function installValePackages(request: ValeInstallation): Promise<st
         return entry?.isDirectory() !== true;
     });
     if (missing !== undefined) return `Vale setup output is missing: ${VALE_PACKAGE_DIRECTORY}/${missing}`;
-    owner.installTree('vale', join(work, VALE_PACKAGE_DIRECTORY));
+    await owner.installTree('vale', join(work, VALE_PACKAGE_DIRECTORY));
     return undefined;
 }
 
