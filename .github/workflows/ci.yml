@@ -1,16 +1,16 @@
-name: Windows compiler native configuration acceptance
+name: Windows declared POSIX exclusions
 on:
     workflow_dispatch:
 permissions:
     contents: read
 concurrency:
-    group: windows-compiler-seven-${{ github.ref }}
+    group: windows-posix-skips-${{ github.ref }}
     cancel-in-progress: false
 defaults:
     run:
         shell: bash
 jobs:
-    compiler:
+    exclusions:
         runs-on: windows-2025
         timeout-minutes: 60
         steps:
@@ -20,6 +20,14 @@ jobs:
                   persist-credentials: false
             - name: Prepare the repository
               uses: ./.github/actions/setup
-            - name: Validate native TypeScript configuration
+              with:
+                  tools: bun node
+            - name: Observe declared POSIX-only registrations
               run: |
-                  mise run test:tools -- --test-name-pattern '^the typescript configuration' -- tests/tools/configurations/cases.test.ts
+                  mise exec -- bun -e '
+                  import { TEST_TIMEOUT_MS } from "./tests/config/timeouts.ts";
+                  const node = Bun.spawnSync(["node", "--version"]);
+                  console.log(JSON.stringify({ bun: Bun.version, node: node.stdout.toString().trim(), timeoutMs: TEST_TIMEOUT_MS }));
+                  const child = Bun.spawnSync([process.execPath, "test", "--timeout", String(TEST_TIMEOUT_MS), "./tests/tools/configurations/language/javascript/jsconfig.test.ts", "./tests/tools/lifecycle/python-project.test.ts"], { stdout: "inherit", stderr: "inherit" });
+                  process.exit(child.exitCode);
+                  '
