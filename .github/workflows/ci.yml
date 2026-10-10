@@ -84,7 +84,7 @@ jobs:
                   const monitored = {};
                   for (const name of ['fsyncSync', 'lstatSync', 'statSync', 'realpathSync', 'readlinkSync', 'openSync', 'readFileSync', 'writeFileSync', 'fchmodSync', 'renameSync', 'mkdirSync', 'symlinkSync', 'unlinkSync']) {
                       const native = fs[name];
-                      monitored[name] = function (...args) {
+                      monitored[name] = (...args) => {
                           const start = performance.now();
                           try { return native(...args); }
                           finally {
@@ -95,6 +95,7 @@ jobs:
                               }
                           }
                       };
+                      Object.defineProperties(monitored[name], Object.getOwnPropertyDescriptors(native));
                   }
                   mock.module('node:fs', () => ({ ...fs, ...monitored }));
                   const url = (path) => pathToFileURL(resolve(process.cwd(), path)).href;
