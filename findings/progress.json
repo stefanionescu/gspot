@@ -1,5 +1,5 @@
 {
-    "openRecords": 152,
+    "openRecords": 146,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 152,
+        "openRecords": 146,
         "records": 1092,
         "batches": [
             {
@@ -1096,8 +1096,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 243,
-                "unresolvedAssignments": 48
+                "completedAssignments": 247,
+                "unresolvedAssignments": 44
             },
             {
                 "id": "python",
@@ -1250,8 +1250,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 64,
-                "unresolvedAssignments": 35
+                "completedAssignments": 67,
+                "unresolvedAssignments": 32
             },
             {
                 "id": "swift-bash-sql",
@@ -1479,8 +1479,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 98,
-                "unresolvedAssignments": 33
+                "completedAssignments": 100,
+                "unresolvedAssignments": 31
             },
             {
                 "id": "test-quality",
@@ -1956,8 +1956,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 418,
-                "unresolvedAssignments": 51
+                "completedAssignments": 422,
+                "unresolvedAssignments": 47
             },
             {
                 "id": "scripts-repository",
@@ -2096,8 +2096,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 103,
-                "unresolvedAssignments": 29
+                "completedAssignments": 104,
+                "unresolvedAssignments": 28
             },
             {
                 "id": "installation-docs",
@@ -2241,8 +2241,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 114,
-                "unresolvedAssignments": 23
+                "completedAssignments": 117,
+                "unresolvedAssignments": 20
             },
             {
                 "id": "policy-file",
@@ -5129,10 +5129,10 @@
             ]
         },
         "diagram/repository/015": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "aec223e2efbc38d27a4dc731e2ddb09fd4d8420a",
+            "verification": ["Evidence b83acd9838adf9f6."]
         },
         "main/001": {
             "status": "partial",
@@ -7936,7 +7936,7 @@
                 "Trusted temporary npm user config fixes pnpm10.34.6: actual shared-runner acceptance14passed/215assertions across locks and tool-project restoration; synthetic token probe passes npm11.19.0,Bun1.4.2,pnpm10.34.6,Yarn1.22.22,Berry4.12.0 without tokens in configuration or locks."
             ],
             "remaining": [
-                "CLI fixtures still invoke executable installations and start installation registries; complete prescribed test moves so CLI/plugin need neither.",
+                "CLI/plugin orchestration starts no installation registry. Fixture separation remains partial: integrate prescribed native Bash transports and executable discovery/version preparation, then complete tool-free execution comparisons.",
                 "CI must verify shared temporary npm-manager settings and credential behavior on supported platforms."
             ],
             "additionalChanges": [
@@ -12184,10 +12184,10 @@
             ]
         },
         "slices/checks-other/046": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "aec223e2efbc38d27a4dc731e2ddb09fd4d8420a",
+            "verification": ["Evidence 75faadf0368bb55e."]
         },
         "slices/checks-other/049": {
             "status": "complete",
@@ -14564,10 +14564,10 @@
             ]
         },
         "slices/tests-tools-samples/024": {
-            "status": "partial",
-            "owner": "root",
-            "commit": null,
-            "verification": [],
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": ["Evidence 203d18d18c8ed9b9."],
             "additionalChanges": [
                 {
                     "commit": null,
@@ -14721,10 +14721,10 @@
             ]
         },
         "slices/tests-tools-samples/039": {
-            "status": "partial",
-            "owner": "root",
-            "commit": null,
-            "verification": [],
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": ["Evidence b5fa110db5f859f9."],
             "additionalChanges": [
                 {
                     "commit": null,
@@ -14854,10 +14854,10 @@
             ]
         },
         "slices/tests-tools-samples/054": {
-            "status": "partial",
-            "owner": "root",
-            "commit": null,
-            "verification": [],
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": ["Evidence d87466b83ea42acf."],
             "additionalChanges": [
                 {
                     "commit": null,
@@ -14882,10 +14882,10 @@
             ]
         },
         "slices/tests-tools-samples/063": {
-            "status": "partial",
-            "owner": "root",
-            "commit": null,
-            "verification": [],
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": ["Evidence 656d4171ba662b5f."],
             "additionalChanges": [
                 {
                     "commit": null,
@@ -19524,6 +19524,34 @@
                 "head": "344656b74",
                 "recordSpecificResults": "completed supported-host cases; aggregate run not green"
             }
+        },
+        {
+            "commit": "aec223e2efbc38d27a4dc731e2ddb09fd4d8420a",
+            "completedRecords": ["slices/checks-other/046", "diagram/repository/015"],
+            "unresolvedRecords": 150,
+            "validation": ["Evidence 75faadf0368bb55e.", "Evidence b83acd9838adf9f6."],
+            "limitations": [
+                "macOS native Xcode message tests; Node24/Bun policy consumers; no Windows/Xcode engine claim."
+            ]
+        },
+        {
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "completedRecords": [
+                "slices/tests-tools-samples/024",
+                "slices/tests-tools-samples/063",
+                "slices/tests-tools-samples/039",
+                "slices/tests-tools-samples/054"
+            ],
+            "unresolvedRecords": 146,
+            "validation": [
+                "Evidence 203d18d18c8ed9b9.",
+                "Evidence 656d4171ba662b5f.",
+                "Evidence b5fa110db5f859f9.",
+                "Evidence d87466b83ea42acf."
+            ],
+            "limitations": [
+                "Current committed owners verified at aec223e2e; named original Darwin test outcomes only; unrelated mixed packets and platform obligations remain partial."
+            ]
         }
     ],
     "verificationEvidenceFile": "verification.json"

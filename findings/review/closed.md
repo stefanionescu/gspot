@@ -2578,3 +2578,23 @@ One starting open record is complete. Original IDs and quotations remain above.
 | `areas/tool-tests/005`   | fixed   | Evidence 5dfcc42ec84c2e76. Evidence 57b38c768e6917b7. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. | `findings/areas/tool-tests.md`   |
 | `areas/tool-tests/006`   | fixed   | Evidence 5dfcc42ec84c2e76. Evidence c14ebdcc2fba056d. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. | `findings/areas/tool-tests.md`   |
 | `areas/tool-tests/049`   | fixed   | Evidence 5dfcc42ec84c2e76. Evidence 024274b1753038b2. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. | `findings/areas/tool-tests.md`   |
+
+## Implemented checkpoint aec223e2e of October 10, 2026
+
+2 starting open records are complete at `aec223e2efbc38d27a4dc731e2ddb09fd4d8420a`. Their original IDs and quotations remain in their source files.
+
+| ID                        | Verdict | Evidence                                                                      | Source                            |
+| ------------------------- | ------- | ----------------------------------------------------------------------------- | --------------------------------- |
+| `slices/checks-other/046` | fixed   | Evidence 75faadf0368bb55e. Commit `aec223e2efbc38d27a4dc731e2ddb09fd4d8420a`. | `findings/slices/checks-other.md` |
+| `diagram/repository/015`  | fixed   | Evidence b83acd9838adf9f6. Commit `aec223e2efbc38d27a4dc731e2ddb09fd4d8420a`. | `findings/diagram/repository.md`  |
+
+## Verified sample cleanup at 9a3851a9a of October 10, 2026
+
+4 starting open records are complete at `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. Their original IDs and quotations remain in their source files.
+
+| ID                               | Verdict | Evidence                                                                      | Source                                   |
+| -------------------------------- | ------- | ----------------------------------------------------------------------------- | ---------------------------------------- |
+| `slices/tests-tools-samples/024` | fixed   | Evidence 203d18d18c8ed9b9. Commit `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. | `findings/slices/tests-tools-samples.md` |
+| `slices/tests-tools-samples/063` | fixed   | Evidence 656d4171ba662b5f. Commit `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. | `findings/slices/tests-tools-samples.md` |
+| `slices/tests-tools-samples/039` | fixed   | Evidence b5fa110db5f859f9. Commit `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. | `findings/slices/tests-tools-samples.md` |
+| `slices/tests-tools-samples/054` | fixed   | Evidence d87466b83ea42acf. Commit `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. | `findings/slices/tests-tools-samples.md` |

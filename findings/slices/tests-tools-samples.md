@@ -1,6 +1,6 @@
 # Tests: Native-Tool Tests and Samples
 
-19 unresolved review records remain.
+15 unresolved review records remain.
 
 ## Open findings
 
@@ -215,3 +215,14 @@ Original records and quotations remain above. These records are complete at `540
 | `slices/tests-tools-samples/023` | complete | Evidence 17e205c4c8598122. Commit `54052b005060b4a523a1115b5ec9b5fc09e34473`. |
 | `slices/tests-tools-samples/030` | complete | Evidence ab411b90c52e783a. Commit `54052b005060b4a523a1115b5ec9b5fc09e34473`. |
 | `slices/tests-tools-samples/036` | complete | Evidence 0efdaf4caee5121e. Commit `54052b005060b4a523a1115b5ec9b5fc09e34473`. |
+
+## Implementation checkpoint 9a3851a9a of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `9a3851a9ad5626d65229aa8208302ed5c7f065b6`.
+
+| ID                               | Status   | Evidence                                                                      |
+| -------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `slices/tests-tools-samples/024` | complete | Evidence 203d18d18c8ed9b9. Commit `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. |
+| `slices/tests-tools-samples/063` | complete | Evidence 656d4171ba662b5f. Commit `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. |
+| `slices/tests-tools-samples/039` | complete | Evidence b5fa110db5f859f9. Commit `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. |
+| `slices/tests-tools-samples/054` | complete | Evidence d87466b83ea42acf. Commit `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. |

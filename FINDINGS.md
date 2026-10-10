@@ -1,6 +1,6 @@
 # Unresolved Findings
 
-152 unresolved review records remain. 48 come from the review of October 6, 2026 and the owner decisions of that day. 104 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
+146 unresolved review records remain. 48 come from the review of October 6, 2026 and the owner decisions of that day. 98 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
 
 On October 6, 2026, a read-only verification checked all 802 older records against commit `3e1445a2d` and closed 203. The owner decisions of October 6 and 7, 2026 closed 15 more. A coherence check then compared every open record with the decisions and with every other record, and closed 272 duplicates, superseded records, and wrong records. [The closed list](findings/review/closed.md) gives the evidence for each. Each older findings file ends with a "Status on October 6, 2026" table that gives the current file and what remains; the original rows above it are history.
 
@@ -20,7 +20,7 @@ On October 6, 2026, a read-only verification checked all 802 older records again
 8. Carve-outs: test time limits sit in at least six places. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
 9. File and folder names: `commands/policy-edit.ts`, `tools/installed-files.ts`, and `tools/installation.ts` are explained, with a target tree and a move table, in [the source layout review](findings/review/source-layout.md). [The test layout review](findings/review/tests-layout.md) has the same for `tests/`.
 
-940 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
+946 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
 
 ## Review of October 6, 2026
 
@@ -61,7 +61,7 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | [Repository Setup and Ceremony](findings/areas/repository.md)                                                  |            1 |
 | [Native-Tool, Acceptance, and Package Tests](findings/areas/tool-tests.md)                                     |            3 |
 | [Unit Tests and Check Integration Tests](findings/areas/unit-tests.md)                                         |            0 |
-| [Checks: Database, Framework, Library, Platform, Tool, and the Registry](findings/slices/checks-other.md)      |            4 |
+| [Checks: Database, Framework, Library, Platform, Tool, and the Registry](findings/slices/checks-other.md)      |            3 |
 | [The Config Constants](findings/slices/config.md)                                                              |            3 |
 | [Kits: Frameworks, Libraries, Platforms, Tools, and Postgres](findings/slices/kits-frameworks-tools.md)        |            7 |
 | [Kits: General](findings/slices/kits-general.md)                                                               |            1 |
@@ -73,7 +73,7 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | [Tests: Execution Integration Tests](findings/slices/tests-integration-execution.md)                           |            1 |
 | [Tests: Generation Integration Tests](findings/slices/tests-integration-generation.md)                         |            1 |
 | [Tests: Lifecycle and Repository Integration Tests](findings/slices/tests-integration-lifecycle.md)            |            4 |
-| [Tests: Native-Tool Tests and Samples](findings/slices/tests-tools-samples.md)                                 |           19 |
+| [Tests: Native-Tool Tests and Samples](findings/slices/tests-tools-samples.md)                                 |           15 |
 
 ## Pending summary records
 
@@ -138,3 +138,11 @@ Original records and quotations remain above. These records are complete at `59d
 | ID         | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `main/017` | complete | Policy check, agent_rules, ignore and scope fields now exactly match public TOML keys. Obsolete entries owner is deleted; repository-wide reader search finds no old policy property access. Composite configurationSettings, scopeTables and declarations retain their specified ownership. Main normalized/public schema and lifecycle owner family269 cases786assertions pass; Root types0; full staged63 passing checks and corrected affected6 pass, original move failures retained. Commit `59d271c9ceedb7ec9b2dee75d44330a825fa1a1d`. |
+
+## Repository naming checkpoint aec223e2e of October 10, 2026
+
+The original record and quotation remain above.
+
+| ID                       | Status   | Evidence                                                                      |
+| ------------------------ | -------- | ----------------------------------------------------------------------------- |
+| `diagram/repository/015` | complete | Evidence b83acd9838adf9f6. Commit `aec223e2efbc38d27a4dc731e2ddb09fd4d8420a`. |
