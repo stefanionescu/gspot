@@ -1,6 +1,6 @@
 # Native-Tool, Acceptance, and Package Tests
 
-2 unresolved review records remain.
+0 unresolved review records remain.
 
 ## Findings
 
@@ -152,3 +152,12 @@ Original records and quotations remain above. These records are complete at `ca2
 | ID                     | Status   | Evidence                                                                      |
 | ---------------------- | -------- | ----------------------------------------------------------------------------- |
 | `areas/tool-tests/044` | complete | Evidence 99acc0186c899d14. Commit `ca2975ca5552d3276e78bbd6d897c44cfdf70a09`. |
+
+## Implementation checkpoint ccfa20b33 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `ccfa20b334487a7ed1e414b067b775dcd82f5ece`.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/tool-tests/024` | complete | Deleted the obsolete requiredRules helper and framework-disabled-rule test together with their unused imports. Exact one-owner historical deletion removes1489 bytes; no unrelated Next.js changes or aggregate reductions are assigned to this record. The approved level-specific required-rule replacement retains its56 native controls. Exact removal proof /tmp/gspot-domain-remaining21-637-evidence/024-original-deletion.patch SHA256e20786e39e22abb32d814639d2533ab3165dfe0c5bd024f9e4a996f3c76ef151. Commit `ccfa20b334487a7ed1e414b067b775dcd82f5ece`.                                                              |
+| `areas/tool-tests/025` | complete | Replaced the redundant installed JavaScript-only Vue/Svelte registration with the actual planning prerequisite test and exact skipped note. The prescribed callback changes from2766 to669 bytes, removing2097 bytes without using other deleted Vue helpers or callbacks as offsets. Current planning callback matches the existing native pass at line1316 of /tmp/gspot-987-combined-cli-plugin-native.log. Exact exclusive proof /tmp/gspot-domain-remaining21-637-evidence/test024025-exclusive-cost.json; no installation or platform success is inferred from a skip. Commit `ccfa20b334487a7ed1e414b067b775dcd82f5ece`. |
