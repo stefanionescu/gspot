@@ -1,5 +1,5 @@
 {
-    "openRecords": 21,
+    "openRecords": 19,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -1234,10 +1234,20 @@
             "scope": "CLI package-manager fixture boundaries",
             "decision": "Allow the exact423-byte test-only pnpm/Yarn disposable version-mock correction, retaining all assertions and production behavior.",
             "evidence": ["Explicit user approval in this conversation.", "/tmp/gspot-ci2e-pnpm-test-fix/freeze.json"]
+        },
+        {
+            "id": "bun-native-lock-network27",
+            "date": "2026-10-10",
+            "scope": "Bun lockfile native resolution; review/repository-root/004 and /045",
+            "decision": "Allow exact27-production-byte native --network-concurrency=1 addition to the existing Bun lock-resolution command. Keep one command owner and strict lockfile drift enforcement. No new setting, environment switch, retry or normalization.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-bun-e985-supported-native-probe/full-current/freeze.json SHA256 bdf2ed07795510a7bbf3ade28d0b16eeb6ac5927c5754498fd127540433f2a20; native macOS proof only, cross-platform CI remains required."
+            ]
         }
     ],
     "implementationBatches": {
-        "openRecords": 21,
+        "openRecords": 19,
         "records": 1092,
         "batches": [
             {
@@ -2987,8 +2997,8 @@
                     "review/glossary/028",
                     "review/glossary/029"
                 ],
-                "completedAssignments": 25,
-                "unresolvedAssignments": 3
+                "completedAssignments": 27,
+                "unresolvedAssignments": 1
             }
         ],
         "overlapPolicy": "Each starting record retains its ID and original quotation. Overlapping records appear in every applicable batch. Batch assignment does not close a finding. Second-pass slice corrections precede area and main-summary reconciliation."
@@ -7979,18 +7989,12 @@
             ]
         },
         "review/glossary/008": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "9dc1172cb6d2050cce0ebcece7d3a4474107f995",
             "verification": [
-                "Evidence a54f15598472523e.",
-                "Evidence 9d47f2907c7f8519.",
-                "Evidence f197f61756c1f848.",
-                "Evidence 15b7e23ff87ec367.",
-                "Evidence 66b9441b73390aab.",
-                "Evidence fdc839bbba7e99bb.",
-                "Evidence b08fdb8a622785f2.",
-                "Evidence a3c072fa2ad241d0."
+                "Refused inputs use error and reported check results use finding; obsolete problem symbols/owners are absent in current CLI/configuration/docs census. Direct findings and consolidated Postgres headings are delivered; areas/checks008 shares this3234-byte concern already counted once.",
+                "Current delivery /tmp/gspot-glossary008011-current-delivery-proof.json; exact binding/cost/native audit /tmp/gspot-glossary008011-a1-final/glossary008-review.json. Original external parser/ESLint fields retained; no global platform success inferred."
             ],
             "additionalChanges": [
                 {
@@ -8030,10 +8034,13 @@
             ]
         },
         "review/glossary/011": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence a49010dd837404ac."],
+            "commit": "9dc1172cb6d2050cce0ebcece7d3a4474107f995",
+            "verification": [
+                "One root words=reason map feeds Typos and Vale, generated Vale vocabulary is words, and docs say accepted words. Native dictionary traversal is shared at9dc1172cb, removing126 bytes and reducing the complete approved concern to251 bytes.",
+                "Current delivery /tmp/gspot-glossary008011-current-delivery-proof.json; exact native and owner hashes /tmp/gspot-glossary011-e985-final/freeze.json. Both runtimes60 vectors each/native2 cases16 assertions, normal apply187 unchanged and staged18/0 pass; no skipped platform credit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -20255,6 +20262,15 @@
             "limitations": [
                 "Cross-platform full-suite/database/global release obligations remain in their summary records; original failed/skipped receipts preserved."
             ]
+        },
+        {
+            "commit": "9dc1172cb6d2050cce0ebcece7d3a4474107f995",
+            "completedRecords": ["review/glossary/008", "review/glossary/011"],
+            "unresolvedRecords": 19,
+            "validation": [
+                "Current committed source census/native owner bridge, approved3234/251 costs counted once, normal producer/staged/commit evidence."
+            ],
+            "limitations": ["Global cross-platform/full-suite/release obligations remain separate."]
         }
     ],
     "verificationEvidenceFile": "verification.json"
