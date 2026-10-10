@@ -217,3 +217,16 @@ test.each(['tools.taplo.unknown', 'tools.eslint.verbatim', 'tools.v8r.verbatim']
         expect(await readTree(sandbox.path)).toStrictEqual(before);
     },
 );
+
+test('an invalid level preserves the policy', async () => {
+    await using sandbox = await testdir();
+    const policyPath = join(sandbox.path, 'gspot.toml');
+    const policy = buildPolicy(['bash', 'naming']);
+    await Bun.write(policyPath, policy);
+    const refused = await runGspot(sandbox.path, ['set', 'level', 'strict']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stdout + refused.stderr).toContain('Invalid option: expected one of');
+    expect(refused.stdout + refused.stderr).toContain('recommended');
+    expect(refused.stdout + refused.stderr).toContain('all');
+    expect(await Bun.file(policyPath).text()).toBe(policy);
+});

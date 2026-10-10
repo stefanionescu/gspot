@@ -10,9 +10,9 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { spawnGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { SYNTAX_CASES } from '#tests/config/tools/configurations/language/bash/syntax.ts';
+import { runGspot, spawnGspot, checkReport, buildRunOptions } from '#tests/harness/gspot.ts';
+import { SYNTAX_CASES, DECLARATION_CASES } from '#tests/config/tools/configurations/language/bash/syntax.ts';
 
 // Windows has no Zsh or Bats; Linux and macOS run all three.
 test.each(isPosix ? SYNTAX_CASES : SYNTAX_CASES.slice(0, 1))(
@@ -74,3 +74,80 @@ test.skipIf(!isPosix)('Bash findings retain newline and colon directory names wi
         ),
     ).toStrictEqual(paths);
 });
+
+test('switching levels preserves finding checks and selects stricter naming checks', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['bash', 'naming']),
+        'entry.sh': 'helper_command=example\n',
+    });
+    const command = ['check', '--only', 'bash/bash-syntax', 'naming/identifiers', '--json'];
+    const recommended = await checkReport(sandbox.path, command);
+    expect(recommended.code, recommended.stdout + recommended.stderr).toBe(0);
+    const report = recommended.report;
+    expect(report.skips).toStrictEqual([]);
+    expect(report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
+        { check: 'bash/bash-syntax', status: 'passed' },
+    ]);
+    await Bun.write(join(sandbox.path, 'entry.sh'), 'if then\n');
+    const invalid = await checkReport(sandbox.path, command);
+    expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
+    expect(invalid.report.checks[0]).toMatchObject({
+        check: 'bash/bash-syntax',
+        status: 'failed',
+        fileCount: 1,
+    });
+    await Bun.write(join(sandbox.path, 'entry.sh'), 'helper_command=example\n');
+    const all = await runGspot(sandbox.path, ['set', 'level', 'all']);
+    expect(all.code, all.stdout + all.stderr).toBe(0);
+    const strict = await checkReport(sandbox.path, command);
+    expect(strict.code, strict.stdout + strict.stderr).toBe(1);
+    const strictReport = strict.report;
+    expect(strictReport.skips).toStrictEqual([]);
+    expect(strictReport.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
+        { check: 'bash/bash-syntax', status: 'passed' },
+        { check: 'naming/identifiers', status: 'failed' },
+    ]);
+    expect(strictReport.checks[1]!.findings).toHaveLength(1);
+    expect(strictReport.checks[1]!.findings[0]).toMatchObject({
+        check: 'naming/identifiers',
+        file: 'entry.sh',
+        line: 1,
+        rule: 'banned-term',
+    });
+    const reset = await runGspot(sandbox.path, ['set', 'level', '--default']);
+    expect(reset.code, reset.stdout + reset.stderr).toBe(0);
+    const routine = await checkReport(sandbox.path, command);
+    expect(routine.code, routine.stdout + routine.stderr).toBe(0);
+    expect(routine.report.checks.map((check) => check.check)).toStrictEqual(['bash/bash-syntax']);
+});
+
+test.each(DECLARATION_CASES)(
+    '$kind directories return to source checks when their declaration is removed',
+    async ({ kind, directory, tables, files, setup }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['bash'], { tables }),
+            'entry.sh': 'echo example\n',
+            ...Object.fromEntries(files),
+        });
+        for (const command of setup) {
+            const changed = await runGspot(sandbox.path, command);
+            expect(changed.code, changed.stdout + changed.stderr).toBe(0);
+        }
+        const before = await checkReport(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json']);
+        expect(before.code, before.stdout + before.stderr).toBe(0);
+        expect(before.report.checks).toMatchObject([
+            { check: 'bash/bash-syntax', status: 'passed', fileCount: 1, findings: [] },
+        ]);
+        const removed = await runGspot(sandbox.path, ['set', kind, directory, '--remove']);
+        expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+        const after = await checkReport(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json']);
+        expect(after.code, after.stdout + after.stderr).toBe(1);
+        const checked = after.report.checks[0];
+        expect(checked).toMatchObject({ check: 'bash/bash-syntax', status: 'failed', fileCount: 2 });
+        expect(new Set(checked?.findings.map((finding) => finding.file))).toStrictEqual(
+            new Set([`${directory}/broken.sh`]),
+        );
+    },
+);
