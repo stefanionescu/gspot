@@ -8,10 +8,10 @@ export const SCANNER_FAILURES = [
 ];
 
 export const UNUSED_LICENSE_FILES = [
-    { name: 'missing', content: undefined },
-    { name: 'malformed', content: '{' },
-    { name: 'stale', content: '{"allowed":[],"exceptions":{}}' },
-];
+    ['missing', [], false],
+    ['malformed', ['{'], true],
+    ['stale', ['{"allowed":[],"exceptions":{}}'], true],
+] as const;
 
 /** Exact exceptions must match both the package version and its reported license. */
 export const LICENSE_EXCEPTIONS = [

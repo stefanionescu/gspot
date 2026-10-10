@@ -106,13 +106,13 @@ test.each(SCANNER_FAILURES)(
 );
 
 test.each(UNUSED_LICENSE_FILES)(
-    'a $name unused license file does not change the selected scanning policy',
-    async ({ content }) => {
+    'a %s unused license file does not change the selected scanning policy',
+    async (_name, contents, exists) => {
         await using sandbox = await testdir();
         await preparePythonProject(sandbox.path);
         const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/allowed');
         const path = join(sandbox.path, '.gspot/config/licenses.json');
-        if (content !== undefined) await Bun.write(path, content);
+        for (const content of contents) await Bun.write(path, content);
         using spawn = spyOn(processes, 'run').mockResolvedValue({
             code: 0,
             missing: false,
@@ -122,8 +122,8 @@ test.each(UNUSED_LICENSE_FILES)(
         });
         expect(await BUILT_IN_CALCULATIONS['licenses/allowed'](selected)).toStrictEqual([]);
         expect(spawn).toHaveBeenCalledTimes(1);
-        expect(await Bun.file(path).exists()).toBe(content !== undefined);
-        if (content !== undefined) expect(await Bun.file(path).text()).toBe(content);
+        expect(await Bun.file(path).exists()).toBe(exists);
+        for (const content of contents) expect(await Bun.file(path).text()).toBe(content);
     },
 );
 

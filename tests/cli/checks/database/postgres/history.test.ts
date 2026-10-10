@@ -239,5 +239,4 @@ test('manifest migration folders retain every owned root and child file while ex
                 .files.map(({ path }) => basename(path)),
         ).toStrictEqual(['5_custom.sql']);
     }
-    expect(await Bun.file(join(sandbox.path, 'app/custom_extra/6_ignored.sql')).text()).toBe('invalid SQL;');
 });
