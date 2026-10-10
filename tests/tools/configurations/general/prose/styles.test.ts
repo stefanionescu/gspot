@@ -5,10 +5,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { readAsset } from '#cli/platform/root/public.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { runBuiltInCheck } from '#cli/execution/contracts.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { parseAlerts } from '#cli/parsers/output/contracts.ts';
@@ -36,14 +36,14 @@ test('Vale preserves ESLint delimiters while checking punctuation inside reasons
     });
     const session = await openSession(directory.path);
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-    const failed = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(session, planned!);
+    const failed = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(session, planned!);
     expect(failed.status, failed.note).toBe('failed');
     expect(failed.findings).toStrictEqual([
         containing({ file: 'source.ts', line: 4, column: 56, rule: 'Example.Dashes' }),
         containing({ file: 'source.ts', line: 5, column: 15, rule: 'Example.Dashes' }),
     ]);
     await Bun.write(join(directory.path, 'source.ts'), '// Punctuation stays checked.\n');
-    const corrected = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(session, planned!);
+    const corrected = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(session, planned!);
     expect(corrected.status, corrected.note).toBe('passed');
 });
 
@@ -70,7 +70,7 @@ test('Vale accepts explicit minimum versions and still reports vague or redundan
     });
     const session = await openSession(directory.path);
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-    const result = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(session, planned!);
+    const result = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(session, planned!);
     expect(result.status, result.note).toBe('failed');
     expect(result.findings).toStrictEqual([
         containing({ file: 'versions.md', line: 4, rule: 'Example.Versions' }),
@@ -139,7 +139,7 @@ test('generated recommended Vale configuration reports unhelpful link text and a
     using ownership = openOwnership(directory.path);
     writeGeneratedFiles(session, emitAll(session), ownership);
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-    const failed = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(session, planned!);
+    const failed = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(session, planned!);
     expect(failed.status, failed.note).toBe('failed');
     expect(failed.findings).toStrictEqual([
         containing({ file: 'guide.md', line: 3, rule: 'gspot.link-text' }),
@@ -153,7 +153,7 @@ test('generated recommended Vale configuration reports unhelpful link text and a
         join(directory.path, 'source.ts'),
         'const example = "[here](guide.md)";\n// Read [request guide](guide.md).\n',
     );
-    const corrected = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(session, planned!);
+    const corrected = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(session, planned!);
     expect(corrected.status, corrected.note).toBe('passed');
     expect(corrected.findings).toStrictEqual([]);
 });

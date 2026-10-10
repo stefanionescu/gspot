@@ -4,7 +4,6 @@ import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { readSource } from '#cli/platform/root/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
@@ -12,6 +11,7 @@ import { buildCheckInput } from '#tests/harness/input.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { buildTrackedFile } from '#tests/harness/tracked.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { routeFor, routeGroups } from '#cli/checks/general/public.ts';
 import { DIAGNOSTIC, EXECUTION_FAILURES } from '#tests/config/cli/checks/general/prose.ts';
@@ -129,7 +129,7 @@ test('each stdin route scans the bytes held by the run and maps its own alerts',
             });
         }),
     );
-    const findings = await BUILT_IN_CHECKS['prose/vale'].input(input);
+    const findings = await BUILT_IN_CALCULATIONS['prose/vale'](input);
     expect(run.mock.calls.map(([command]) => command.includes('--ext=.ts'))).toStrictEqual(paths.map(() => true));
     expect(scanned).toStrictEqual(original);
     expect(nativePaths).toStrictEqual(paths.map((path) => `--path=${path}.ts`));

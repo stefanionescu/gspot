@@ -5,11 +5,11 @@ import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { runBuiltInCheck } from '#cli/execution/contracts.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
@@ -69,7 +69,7 @@ test.each(['recommended', 'all'] as const)(
             const planned = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] }).find(
                 (entry) => entry.scope.scope.path === scope,
             )!;
-            const result = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(session, planned);
+            const result = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(session, planned);
             const rules = result.findings.map(({ rule }) => rule);
             for (const entry of PACKAGE_STYLE_CASES) {
                 expect(rules.includes(entry.rule), entry.rule).toBe(level === 'all');
@@ -80,7 +80,7 @@ test.each(['recommended', 'all'] as const)(
             expect(await Bun.file(join(sandbox.path, path)).text()).toBe(sample);
             expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
             await Bun.write(join(sandbox.path, path), '# Guide\n\nRead the guide.\n');
-            const corrected = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(
+            const corrected = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(
                 await openSession(sandbox.path),
                 planned,
             );

@@ -2,9 +2,9 @@ import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import * as toolRunner from '#cli/execution/command/public.ts';
 import { linkinator } from '#cli/checks/general/site/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
@@ -13,8 +13,8 @@ import { SITE_POLICY, STATIC_SITE_FILES } from '#tests/config/samples/site.ts';
 
 const analyzers = {
     links: (input: CheckInput) => linkinator(input, false),
-    markup: BUILT_IN_CHECKS['site/html-validate'].input,
-    selectors: BUILT_IN_CHECKS['site/purgecss'].input,
+    markup: BUILT_IN_CALCULATIONS['site/html-validate'],
+    selectors: BUILT_IN_CALCULATIONS['site/purgecss'],
 };
 
 test.each([...SITE_REPORTS])(
@@ -27,7 +27,7 @@ test.each([...SITE_REPORTS])(
         const request = buildCheckInput(await openSession(sandbox.path), check, {
             resources: resources,
         });
-        await BUILT_IN_CHECKS['site/build'].input(request);
+        await BUILT_IN_CALCULATIONS['site/build'](request);
         let code = 2;
         let stdout = '';
         const command = spyOn(toolRunner, 'runCheckTool').mockImplementation(async (_input, argv) => {

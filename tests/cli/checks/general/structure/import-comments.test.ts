@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/commands/public.ts';
 import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 
 test('Swift import runs report an intervening comment and accept moving it above the imports', async () => {
     await using sandbox = await testdir({
@@ -36,7 +36,7 @@ test('a comment between imports is reported at its line, and imports without one
             '"""A test module."""\n\nimport os\n# the path tools\nimport sys\n\nVALUE = [os.sep, sys.prefix]\n',
         'example/plain.py': '"""A test module."""\n\nimport os\nimport sys\n\nVALUE = [os.sep, sys.prefix]\n',
     });
-    const findings = await BUILT_IN_CHECKS['structure/import-comments'].input(
+    const findings = await BUILT_IN_CALCULATIONS['structure/import-comments'](
         buildCheckInput(await openSession(sandbox.path), 'structure/import-comments'),
     );
     expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([

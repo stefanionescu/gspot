@@ -7,11 +7,11 @@ import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { checkInput } from '#cli/execution/contracts.ts';
 import { stat, chmod, readFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { fakeTool, getKeptMode } from '#tests/harness/platforms.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import { GENERATED_TYPES, DATABASE_SCHEMAS } from '#tests/config/cli/checks/platform/supabase/types.ts';
@@ -152,7 +152,7 @@ test.each(['', 'apps/api'])(
         const planned = plans.find((check) => check.scope.scope.path === scope)!;
         const input = checkInput(session, planned);
         input.cancelSignal = AbortSignal.abort();
-        expect(await rejection(BUILT_IN_CHECKS['supabase/stale-types'].input(input))).toContain(
+        expect(await rejection(BUILT_IN_CALCULATIONS['supabase/stale-types'](input))).toContain(
             'The command was canceled.',
         );
         expect(await readFile(join(sandbox.path, prefix, 'database.ts'), 'utf8')).toBe(GENERATED_TYPES);

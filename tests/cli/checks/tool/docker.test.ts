@@ -3,13 +3,13 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
+import { BUILT_IN_CHECKS, BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 
 import {
     CLEAN_REPORT,
@@ -48,7 +48,7 @@ test.each(COMPOSE_SOURCES)('Trivy scans only service images in $name', async ({ 
         }),
     );
     expect(
-        await BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image')),
+        await BUILT_IN_CALCULATIONS['docker/trivy-image'](buildCheckInput(session, 'docker/trivy-image')),
     ).toStrictEqual([
         {
             check: 'docker/trivy-image',
@@ -73,7 +73,7 @@ test.each(REPORT_FAILURES)('Trivy refuses $name with its diagnostic', async ({ c
     resources.use(mockPinnedExecutables([toolPin(session.manifests.values(), 'trivy')]));
     resources.use(spyOn(processes, 'run').mockResolvedValue({ code, stdout, stderr, missing: false, duration: 1 }));
     expect(
-        await rejection(BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image'))),
+        await rejection(BUILT_IN_CALCULATIONS['docker/trivy-image'](buildCheckInput(session, 'docker/trivy-image'))),
     ).toContain(diagnostic);
 });
 
@@ -96,7 +96,7 @@ test('Trivy accepts a clean native report without an image finding', async () =>
         }),
     );
     expect(
-        await BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image')),
+        await BUILT_IN_CALCULATIONS['docker/trivy-image'](buildCheckInput(session, 'docker/trivy-image')),
     ).toStrictEqual([]);
 });
 
@@ -109,7 +109,7 @@ test.each(INVALID_COMPOSE)('Trivy refuses $name before scanning an image', async
     const session = await openSession(directory.path);
     using scan = spyOn(processes, 'run');
     expect(
-        await rejection(BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image'))),
+        await rejection(BUILT_IN_CALCULATIONS['docker/trivy-image'](buildCheckInput(session, 'docker/trivy-image'))),
     ).toContain('Cannot read Compose service images in compose.yaml.');
     expect(scan).not.toHaveBeenCalled();
 });
@@ -123,7 +123,7 @@ test('Trivy leaves build-only services unscanned', async () => {
     const session = await openSession(directory.path);
     using scan = spyOn(processes, 'run');
     expect(
-        await BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image')),
+        await BUILT_IN_CALCULATIONS['docker/trivy-image'](buildCheckInput(session, 'docker/trivy-image')),
     ).toStrictEqual([]);
     expect(scan).not.toHaveBeenCalled();
 });
@@ -146,7 +146,7 @@ test('Trivy retains each native advisory and secret identity without exporting s
             duration: 1,
         }),
     );
-    const findings = await BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image'));
+    const findings = await BUILT_IN_CALCULATIONS['docker/trivy-image'](buildCheckInput(session, 'docker/trivy-image'));
     expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
         { file: 'compose.yaml', rule: 'CVE-example', message: 'nginx:1.27.2: CVE-example (example)' },
         { file: 'compose.yaml', rule: 'CVE-neighbor', message: 'nginx:1.27.2: CVE-neighbor (neighbor)' },
@@ -165,7 +165,7 @@ describe.each(['recommended', 'all'] as const)('%s Docker language ignores', (le
                 [`${scope === '' ? '' : scope + '/'}.dockerignore`]: text,
             });
             const input = buildCheckInput(await openSession(sandbox.path), 'docker/dockerignore', { scope });
-            const findings = BUILT_IN_CHECKS['docker/dockerignore'].input(input);
+            const findings = BUILT_IN_CALCULATIONS['docker/dockerignore'](input);
             expect(findings.map(({ rule }) => rule)).toStrictEqual(missing === '' ? [] : ['missing-entry']);
             if (missing !== '')
                 expect(findings[0]!.message).toBe(
@@ -180,9 +180,11 @@ describe.each(['recommended', 'all'] as const)('%s Docker context ignores', (lev
         await using sandbox = await testdir({ 'gspot.toml': buildPolicy(['docker'], { level }), ...files });
         const input = buildCheckInput(await openSession(sandbox.path), 'docker/dockerignore');
         expect(
-            BUILT_IN_CHECKS['docker/dockerignore']
-                .input(input)
-                .map(({ file, rule, message }) => ({ file, rule, message })),
+            BUILT_IN_CALCULATIONS['docker/dockerignore'](input).map(({ file, rule, message }) => ({
+                file,
+                rule,
+                message,
+            })),
         ).toStrictEqual(findings);
     });
 });
@@ -205,7 +207,7 @@ test('Trivy scans a repeated image once and projects every advisory and secret t
             duration: 1,
         }),
     );
-    const findings = await BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image'));
+    const findings = await BUILT_IN_CALCULATIONS['docker/trivy-image'](buildCheckInput(session, 'docker/trivy-image'));
     expect(scan).toHaveBeenCalledTimes(1);
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
         ['compose.yaml', 'docker-compose.prod.yml'].flatMap((file) => [
@@ -254,7 +256,7 @@ test.each(['recommended', 'all'] as const)(
                 Dockerfile: 'FROM scratch\n',
                 'app/Dockerfile': 'FROM scratch\n',
             });
-            const findings = BUILT_IN_CHECKS['docker/dockerignore'].input(
+            const findings = BUILT_IN_CALCULATIONS['docker/dockerignore'](
                 buildCheckInput(await openSession(sandbox.path), 'docker/dockerignore', {
                     scope,
                     paths: [prefix + 'Dockerfile'],

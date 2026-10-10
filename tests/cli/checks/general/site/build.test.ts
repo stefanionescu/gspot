@@ -4,13 +4,13 @@ import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { checkReport, buildRunOptions } from '#tests/harness/gspot.ts';
 import { SITE_POLICY, SITE_BUILD_SCRIPT } from '#tests/config/samples/site.ts';
 import { filesUnder, cachedBuild } from '#cli/checks/general/site/contracts.ts';
@@ -58,7 +58,7 @@ describe('site build reproducibility', () => {
         const first = await cachedBuild(request);
         const before = await readFile(join(first.folder, 'index.html'), 'utf8');
         expect(first.isBuilt).toBe(true);
-        expect(await BUILT_IN_CHECKS['site/build-reproducible'].input(request)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['site/build-reproducible'](request)).toStrictEqual([]);
         expect(await readFile(join(first.folder, 'index.html'), 'utf8')).toBe(before);
         expect(await readFile(join(sandbox.path, 'dist/index.html'), 'utf8')).toBe('edited output');
         // Windows keeps no POSIX mode bits, so the file stays at its default there.
@@ -114,7 +114,7 @@ writeFileSync('built-once', 'yes');`,
     });
     const first = await cachedBuild(request);
     expect(first.isBuilt).toBe(true);
-    expect(await rejection(BUILT_IN_CHECKS['site/build-reproducible'].input(request))).toContain(
+    expect(await rejection(BUILT_IN_CALCULATIONS['site/build-reproducible'](request))).toContain(
         'The second site build failed',
     );
     expect(await readFile(join(first.folder, 'index.html'), 'utf8')).toBe('first');
@@ -147,7 +147,7 @@ writeFileSync('built-once', 'yes');`,
         paths: ['build.js'],
         resources,
     });
-    const findings = await BUILT_IN_CHECKS['site/build-reproducible'].input(input);
+    const findings = await BUILT_IN_CALCULATIONS['site/build-reproducible'](input);
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([...expected]);
     expect(await readFile(join(sandbox.path, 'build.js'), 'utf8')).toBe(script);
     expect(await pathExists(join(sandbox.path, 'built-once'))).toBe(false);
@@ -227,7 +227,7 @@ test('scoped site builds reuse only declared workspace sources for both native b
     expect(built.isBuilt, built.outputTail).toBe(true);
     expect(await readFile(join(built.folder, 'index.html'), 'utf8')).toBe('<h1>Workspace site</h1>');
     expect(await pathExists(join(built.cwd, '../packages/unused/private.txt'))).toBe(false);
-    expect(await BUILT_IN_CHECKS['site/build-reproducible'].input(input)).toStrictEqual([]);
+    expect(await BUILT_IN_CALCULATIONS['site/build-reproducible'](input)).toStrictEqual([]);
     expect(await pathExists(join(sandbox.path, 'web/dist'))).toBe(false);
     expect(await readFile(join(sandbox.path, 'packages/core/value.js'), 'utf8')).toBe(
         'export const value = "<h1>Workspace site</h1>";',

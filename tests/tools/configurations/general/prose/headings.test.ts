@@ -4,9 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { planRun, isActive } from '#cli/planning/public.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { runBuiltInCheck } from '#cli/execution/contracts.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
@@ -68,7 +68,7 @@ async function checkHeadings({ scope, level }: HeadingCase): Promise<void> {
     const planned = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] }).find(
         (entry) => entry.scope.scope.path === scope,
     )!;
-    const failed = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(session, planned);
+    const failed = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(session, planned);
     expect(failed.status, failed.note).toBe('failed');
     const { findings } = failed;
     expect(
@@ -80,7 +80,7 @@ async function checkHeadings({ scope, level }: HeadingCase): Promise<void> {
     expect(await Bun.file(join(sandbox.path, path)).text()).toBe(source);
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
     await Bun.write(join(sandbox.path, path), '# Guide\n\nRead [request guide](sample.md).\n');
-    const corrected = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(
+    const corrected = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(
         await openSession(sandbox.path),
         planned,
     );
@@ -126,7 +126,7 @@ describe('child-only native prose inputs', () => {
                     .map(({ scope }) => scope.scope.path),
             ).toStrictEqual(['child']);
             const planned = checks.find(({ scope }) => scope.scope.path === 'child')!;
-            const result = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(session, planned);
+            const result = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(session, planned);
             expect(result.status, result.note).toBe('failed');
             expect(
                 result.findings

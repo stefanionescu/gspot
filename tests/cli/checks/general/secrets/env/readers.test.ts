@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 
 import {
@@ -97,7 +97,7 @@ test('environment reads without a template in their scope report the unmet prere
         scope: 'app',
         paths: ['.env.example', 'app/source.ts'],
     });
-    expect(() => BUILT_IN_CHECKS['secrets/env-template'].input(input)).toThrow('secrets.env_examples');
+    expect(() => BUILT_IN_CALCULATIONS['secrets/env-template'](input)).toThrow('secrets.env_examples');
     const checked = await checkReport(sandbox.path, [
         'check',
         'app/source.ts',
@@ -132,7 +132,7 @@ test('modern environment accessors in component and module files require matchin
         'notes.txt': 'import.meta.env.UNREAD_API; Deno.env.get("UNREAD_API");\n',
     };
     await createFileTree(sandbox.path, { 'gspot.toml': policy, '.env.example': 'KNOWN=example\n', ...sources });
-    const rejected = BUILT_IN_CHECKS['secrets/env-template'].input(
+    const rejected = BUILT_IN_CALCULATIONS['secrets/env-template'](
         buildCheckInput(await openSession(sandbox.path), 'secrets/env-template'),
     );
     expect(rejected.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
@@ -149,7 +149,7 @@ test('modern environment accessors in component and module files require matchin
         'KNOWN=example\nVITE_API=example\nSVELTE_API=example\nVUE_API=example\nDENO_API=example\nMODULE_API=example\nCOMMON_API=example\nLEGACY_API=example\n',
     );
     expect(
-        BUILT_IN_CHECKS['secrets/env-template'].input(
+        BUILT_IN_CALCULATIONS['secrets/env-template'](
             buildCheckInput(await openSession(sandbox.path), 'secrets/env-template'),
         ),
     ).toStrictEqual([]);

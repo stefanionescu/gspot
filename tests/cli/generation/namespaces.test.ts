@@ -7,8 +7,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { targetInScope } from '#cli/configurations/contracts.ts';
 import { sourceConfigurations } from '#cli/configurations/public.ts';
 import { detectConfigurations } from '#cli/repository/selection/contracts.ts';
@@ -88,7 +88,7 @@ test.each(namespaceCases.filter(({ name }) => name === 'site'))(
         expect(loneFiles.some(({ scope }) => scope.scope.path === entry.scope)).toBe(entry.level === 'all');
         if (entry.level === 'all')
             expect(
-                await BUILT_IN_CHECKS['structure/lone-files'].input(
+                await BUILT_IN_CALCULATIONS['structure/lone-files'](
                     buildCheckInput(session, 'structure/lone-files', { scope: entry.scope }),
                 ),
             ).toMatchObject([{ file: posix.join(entry.scope, 'assets/logo.svg'), rule: 'lone-file' }]);

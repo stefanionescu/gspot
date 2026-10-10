@@ -9,11 +9,11 @@ import { toPosix } from '#cli/platform/contracts.ts';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { nextjsTsc } from '#cli/checks/framework/public.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { stat, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import type { NextjsCommands } from '#tests/types/cli/checks/framework/nextjs.ts';
@@ -92,7 +92,7 @@ for (const scope of ['', 'apps/web'])
             using read = mockNextjsCommands(check);
             const { directories, routesSeen, commands } = read;
             const execute = async () => {
-                if (check === 'nextjs/build') return BUILT_IN_CHECKS['nextjs/build'].input(input);
+                if (check === 'nextjs/build') return BUILT_IN_CALCULATIONS['nextjs/build'](input);
                 const result = await nextjsTsc(session, planned);
                 return result.findings;
             };

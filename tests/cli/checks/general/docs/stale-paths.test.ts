@@ -5,8 +5,8 @@ import { rm, mkdir } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 
 import {
@@ -24,7 +24,7 @@ test('wildcard examples stay intact while emphasized literal paths remain checke
         'reports/README.md': '',
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
-    const found = BUILT_IN_CHECKS['docs/stale-paths'].input(
+    const found = BUILT_IN_CALCULATIONS['docs/stale-paths'](
         buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
     );
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
@@ -42,7 +42,7 @@ test('literal gitignore paths resolve while missing paths remain findings', asyn
         'app/.gitignore': 'cache/\n*.ts\n!private.ts\n',
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
-    const found = BUILT_IN_CHECKS['docs/stale-paths'].input(
+    const found = BUILT_IN_CALCULATIONS['docs/stale-paths'](
         buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
     );
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
@@ -67,9 +67,12 @@ test('command check IDs resolve while undefined checks remain findings', async (
     );
     const input = buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] });
     expect(
-        BUILT_IN_CHECKS['docs/stale-paths']
-            .input(input)
-            .map(({ file, line, rule, message }) => ({ file, line, rule, message })),
+        BUILT_IN_CALCULATIONS['docs/stale-paths'](input).map(({ file, line, rule, message }) => ({
+            file,
+            line,
+            rule,
+            message,
+        })),
     ).toStrictEqual([{ file: 'a.md', line: 1, rule: 'missing-path', message: textContaining('tests/missing') }]);
 });
 
@@ -81,7 +84,7 @@ test('mise task aliases resolve while undefined aliases remain findings', async 
             '[tasks.build]\nalias = "compile"\nrun = "true"\n[tasks.test]\nalias = ["verify", "validate"]\nrun = "true"\n',
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
-    const found = BUILT_IN_CHECKS['docs/stale-paths'].input(
+    const found = BUILT_IN_CALCULATIONS['docs/stale-paths'](
         buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
     );
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
@@ -99,7 +102,7 @@ test('tasks in shared mise configuration paths resolve without reading legacy to
         '.tool-versions': 'node 22\n',
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
-    const found = BUILT_IN_CHECKS['docs/stale-paths'].input(
+    const found = BUILT_IN_CALCULATIONS['docs/stale-paths'](
         buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
     );
     expect(found.map(({ message: description }) => description)).toStrictEqual([
@@ -116,7 +119,7 @@ test('document-relative references resolve without accepting nearby missing path
         'src/here.ts': '',
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
-    const found = BUILT_IN_CHECKS['docs/stale-paths'].input(
+    const found = BUILT_IN_CALCULATIONS['docs/stale-paths'](
         buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['docs/guide.md'] }),
     );
     expect(found.map(({ line, message: description }) => [line, description])).toStrictEqual([
@@ -133,7 +136,7 @@ test('nested tilde text is excluded while shell paths remain checked', async () 
         'a.md': '> ~~~text\n> src/example.ts\n> ~~~~\n\n~~~sh\ncat src/missing.ts\n~~~\n',
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
-    const found = BUILT_IN_CHECKS['docs/stale-paths'].input(
+    const found = BUILT_IN_CALCULATIONS['docs/stale-paths'](
         buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
     );
     expect(found.map((finding) => [finding.line, finding.message])).toStrictEqual([
@@ -154,7 +157,7 @@ test.each([
     const session = await openSession(sandbox.path);
     await Bun.write(join(sandbox.path, path), text);
     const selected = buildCheckInput(session, 'docs/stale-paths', { paths: ['a.md'] });
-    expect(() => BUILT_IN_CHECKS['docs/stale-paths'].input(selected)).toThrow(
+    expect(() => BUILT_IN_CALCULATIONS['docs/stale-paths'](selected)).toThrow(
         `Cannot read task definitions from ${path}.`,
     );
 });
@@ -167,7 +170,7 @@ test('a directory at a task configuration path is an error, not absent configura
     await rm(join(sandbox.path, 'package.json'));
     await mkdir(join(sandbox.path, 'package.json'));
     const selected = buildCheckInput(session, 'docs/stale-paths', { paths: ['a.md'] });
-    expect(() => BUILT_IN_CHECKS['docs/stale-paths'].input(selected)).toThrow(
+    expect(() => BUILT_IN_CALCULATIONS['docs/stale-paths'](selected)).toThrow(
         'Cannot read task definitions from package.json.',
     );
 });
@@ -180,7 +183,7 @@ test.each(['recommended', 'all'] as const)(
             'gspot.toml': buildPolicy([], { level, tables: DOC_TASK_SCOPES }),
             ...DOC_TASK_FILES,
         });
-        const found = BUILT_IN_CHECKS['docs/stale-paths'].input(
+        const found = BUILT_IN_CALCULATIONS['docs/stale-paths'](
             buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths'),
         );
         expect(found).toHaveLength(DOC_TASK_FINDINGS.length);
@@ -200,7 +203,7 @@ test('a selected child document does not read unrelated or shadowed package scri
     const session = await openSession(sandbox.path);
     await createFileTree(sandbox.path, { 'package.json': '{broken', 'sibling/package.json': '{broken' });
     const input = buildCheckInput(session, 'docs/stale-paths', { paths: ['app/nested/guide.md'] });
-    expect(BUILT_IN_CHECKS['docs/stale-paths'].input(input)).toStrictEqual([]);
+    expect(BUILT_IN_CALCULATIONS['docs/stale-paths'](input)).toStrictEqual([]);
 });
 
 test.each([
@@ -215,7 +218,7 @@ test.each([
     const session = await openSession(sandbox.path);
     await Bun.write(join(sandbox.path, path), text);
     const input = buildCheckInput(session, 'docs/stale-paths', { paths: ['app/nested/guide.md'] });
-    expect(() => BUILT_IN_CHECKS['docs/stale-paths'].input(input)).toThrow(
+    expect(() => BUILT_IN_CALCULATIONS['docs/stale-paths'](input)).toThrow(
         `Cannot read task definitions from ${path}.`,
     );
 });
@@ -230,7 +233,7 @@ test.each(DOC_FENCE_PATH_CASES)(
         });
         const input = buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['guide.md'] });
         expect(
-            BUILT_IN_CHECKS['docs/stale-paths'].input(input).map(({ line, message }) => [line, message]),
+            BUILT_IN_CALCULATIONS['docs/stale-paths'](input).map(({ line, message }) => [line, message]),
         ).toStrictEqual([
             ...(reported ? [[2, 'src/example.ts names no tracked file or folder.']] : []),
             [5, 'src/missing.ts names no tracked file or folder.'],

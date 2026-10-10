@@ -4,9 +4,9 @@ import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { rejection, containing } from '#tests/harness/expectations.ts';
 import { unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
@@ -28,19 +28,19 @@ test.skipIf(!isPosix)(
         await symlink('working-tree.swift', join(sandbox.path, path));
         const session = await openSession(sandbox.path);
         const input = buildCheckInput(session, 'xcode/symlinks');
-        expect(await BUILT_IN_CHECKS['xcode/symlinks'].input(input)).toStrictEqual([
+        expect(await BUILT_IN_CALCULATIONS['xcode/symlinks'](input)).toStrictEqual([
             containing({ check: 'xcode/symlinks', file: path, line: 1, rule: 'symlink', fixable: false }),
         ]);
         await unlink(join(sandbox.path, path));
         await writeFile(join(sandbox.path, path), 'let value = 1\n');
         gitOutput(sandbox.path, ['add', '.']);
         const corrected = buildCheckInput(await openSession(sandbox.path), 'xcode/symlinks');
-        expect(await BUILT_IN_CHECKS['xcode/symlinks'].input(corrected)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['xcode/symlinks'](corrected)).toStrictEqual([]);
         const index = await readFile(join(sandbox.path, '.git', 'index'));
         await writeFile(join(sandbox.path, '.git', 'index'), 'broken');
         expect(await rejection(openSession(sandbox.path))).toContain('Git ls-files failed');
         await writeFile(join(sandbox.path, '.git', 'index'), index);
         const recovered = buildCheckInput(await openSession(sandbox.path), 'xcode/symlinks');
-        expect(await BUILT_IN_CHECKS['xcode/symlinks'].input(recovered)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['xcode/symlinks'](recovered)).toStrictEqual([]);
     },
 );

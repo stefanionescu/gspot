@@ -22,7 +22,7 @@ import { scopeView, activeIgnores } from '#cli/policy/settings/public.ts';
 import { valueAt, isRecord, expandPaths } from '#cli/platform/contracts.ts';
 import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { DRIFT_HELP, DRIFT_MESSAGES } from '#cli/config/checks/general/gspot.ts';
-import type { FixResult, CheckInput, CheckResult, BuiltInChecks } from '#cli/types/execution/check.ts';
+import type { FixResult, CheckInput, CheckResult, BuiltInCheck } from '#cli/types/execution/check.ts';
 import { emitPolicy, parseTomlText, readPolicyFile, writePolicyFile } from '#cli/policy/document/public.ts';
 
 // Authored source selectors that match no tracked file or folder.
@@ -105,12 +105,16 @@ async function unusedNames(input: CheckInput): Promise<Finding[]> {
 }
 
 // Same-check records share one raw native pass. Each retains its own rule and path match.
-async function unusedIgnores(input: CheckInput, session: ToolSession, checks: BuiltInChecks): Promise<Finding[]> {
+async function unusedIgnores(
+    input: CheckInput,
+    session: ToolSession,
+    checks: Record<string, BuiltInCheck>,
+): Promise<Finding[]> {
     const findings: Finding[] = [];
     const entries = activeIgnores(session.policyFiles.policy);
     for (const name of new Set(entries.map((entry) => entry.check))) {
         const implementation = checks[name];
-        if (!name.startsWith('structure/') || implementation === undefined || !('input' in implementation)) continue;
+        if (!name.startsWith('structure/') || implementation === undefined) continue;
         const policy = {
             ...session.policyFiles.policy,
             ignore: session.policyFiles.policy.ignore.filter((entry) => entry.check !== name),
@@ -126,7 +130,7 @@ async function unusedIgnores(input: CheckInput, session: ToolSession, checks: Bu
         const planned = configuredChecks(observed).filter((check) => check.check.name === name);
         if (planned.length === 0) continue;
         const outcomes = await Promise.all(
-            planned.map(async (check) => await implementation.input(checkInput(observed, check))),
+            planned.map(async (check) => await implementation(checkInput(observed, check))),
         );
         const raw = outcomes.flatMap((outcome) => (Array.isArray(outcome) ? outcome : outcome.findings));
         for (const entry of entries.filter(
@@ -242,7 +246,7 @@ export function fixPolicyLayout(planned: PlannedCheck, root: string): FixResult 
 export async function unmatchedPaths(
     input: CheckInput,
     session: ToolSession,
-    checks: BuiltInChecks,
+    checks: Record<string, BuiltInCheck>,
 ): Promise<Finding[]> {
     const names = everyTable(input.policyFiles.policy).some(
         ({ table }) => table.naming?.overrides.some((override) => (override.allowed?.length ?? 0) > 0) === true,

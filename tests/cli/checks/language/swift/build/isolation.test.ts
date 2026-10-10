@@ -4,9 +4,9 @@ import * as spawn from '#cli/platform/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { buildPlan } from '#cli/checks/language/swift/public.ts';
 import { isolateCompilerCache } from '#tests/harness/environment.ts';
@@ -39,8 +39,8 @@ test('Swift build side effects stay in the source copy and do not become later i
         await writeFile(join(cwd, 'Sources/Value.swift'), 'modified by build');
         return { code: 0, stdout: '', stderr: '', missing: false, duration: 1 };
     });
-    expect(await BUILT_IN_CHECKS['swift/build'].input(initial)).toStrictEqual([]);
-    expect(await BUILT_IN_CHECKS['swift/build'].input(next)).toStrictEqual([]);
+    expect(await BUILT_IN_CALCULATIONS['swift/build'](initial)).toStrictEqual([]);
+    expect(await BUILT_IN_CALCULATIONS['swift/build'](next)).toStrictEqual([]);
     expect(sources).toStrictEqual(['let value = 1\n', 'let value = 1\n']);
     expect(artifacts).toStrictEqual([
         [false, false],
@@ -75,7 +75,7 @@ test('Periphery build side effects stay in its source copy and findings name ori
             duration: 1,
         };
     });
-    expect(await BUILT_IN_CHECKS['swift/periphery'].input(input)).toMatchObject([
+    expect(await BUILT_IN_CALCULATIONS['swift/periphery'](input)).toMatchObject([
         { file: 'Main.swift', line: 1, column: 5, rule: 'unused' },
     ]);
     expect(sources).toStrictEqual(['let unused = 1\n']);
@@ -102,8 +102,8 @@ test('concurrent Swift compilation and Periphery retain separate source and arti
     try {
         expect(
             await Promise.all([
-                BUILT_IN_CHECKS['swift/build'].input(compile),
-                BUILT_IN_CHECKS['swift/periphery'].input(periphery),
+                BUILT_IN_CALCULATIONS['swift/build'](compile),
+                BUILT_IN_CALCULATIONS['swift/periphery'](periphery),
             ]),
         ).toStrictEqual([[], []]);
         expect(new Set(directories).size).toBe(2);
@@ -155,6 +155,6 @@ test.each(['../External.xcodeproj', 'C:External.xcodeproj'])(
             missing: false,
             duration: 1,
         });
-        expect(await BUILT_IN_CHECKS['swift/build'].input(corrected)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['swift/build'](corrected)).toStrictEqual([]);
     },
 );

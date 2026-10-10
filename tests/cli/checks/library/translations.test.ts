@@ -3,20 +3,20 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 
 test('a missing base locale is reported and restoring it enables key comparisons', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'messages/de.json': '{}' });
     const policy = { configurations: ['translations'], translations: { messages_folder: 'messages' } };
     await Bun.write(join(sandbox.path, 'gspot.toml'), stringify({ level: 'all', ...policy }));
-    const missing = BUILT_IN_CHECKS['translations/locales'].input(
+    const missing = BUILT_IN_CALCULATIONS['translations/locales'](
         buildCheckInput(await openSession(sandbox.path), 'translations/locales', { paths: ['messages/de.json'] }),
     );
     expect(missing).toMatchObject([{ file: 'messages/en.json', rule: 'base-locale' }]);
     await Bun.write(join(sandbox.path, 'messages/en.json'), '{"heading":"Welcome"}');
-    const compared = BUILT_IN_CHECKS['translations/locales'].input(
+    const compared = BUILT_IN_CALCULATIONS['translations/locales'](
         buildCheckInput(await openSession(sandbox.path), 'translations/locales', {
             paths: ['messages/de.json', 'messages/en.json'],
         }),

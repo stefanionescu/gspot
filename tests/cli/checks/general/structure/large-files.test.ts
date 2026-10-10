@@ -7,8 +7,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { BYTES_PER_KB } from '#cli/config/platform/runtime.ts';
 
 test('a file over the limit that is neither declared nor under LFS is reported', async () => {
@@ -27,7 +27,7 @@ test('a file over the limit that is neither declared nor under LFS is reported',
             limits: { file_kb: 1 },
         }),
     );
-    const found = BUILT_IN_CHECKS['repository/large-files'].input(
+    const found = BUILT_IN_CALCULATIONS['repository/large-files'](
         buildCheckInput(await openSession(sandbox.path), 'repository/large-files', { paths: paths }),
     );
     expect(found.map((finding) => finding.file)).toStrictEqual(['big.bin']);

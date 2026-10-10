@@ -5,10 +5,10 @@ import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { checkInput } from '#cli/execution/contracts.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { randomUUID, generateKeyPair } from 'node:crypto';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 
@@ -46,13 +46,13 @@ test.skipIf(!hasLinuxDocker())(
         try {
             await importImage(sandbox.path, tags[0], privateKey);
             await importImage(sandbox.path, tags[1], 'No credentials in this image.\n');
-            const findings = await BUILT_IN_CHECKS['docker/trivy-image'].input(input);
+            const findings = await BUILT_IN_CALCULATIONS['docker/trivy-image'](input);
             expect(findings[0]!.message).not.toContain('BEGIN RSA PRIVATE KEY');
             expect(findings).toMatchObject([
                 { file: 'compose.yaml', line: 1, rule: 'private-key', message: textContaining('private-key') },
             ]);
             await Bun.write(join(sandbox.path, '.gspot/config/trivy.yml'), 'severity: [');
-            expect(await rejection(BUILT_IN_CHECKS['docker/trivy-image'].input(input))).toContain(
+            expect(await rejection(BUILT_IN_CALCULATIONS['docker/trivy-image'](input))).toContain(
                 'Trivy could not scan',
             );
             await Bun.write(join(sandbox.path, '.gspot/config/trivy.yml'), 'severity: [HIGH, CRITICAL]\n');
@@ -60,7 +60,7 @@ test.skipIf(!hasLinuxDocker())(
             const corrected = await openSession(sandbox.path);
             const files = corrected.repository.files;
             expect(
-                await BUILT_IN_CHECKS['docker/trivy-image'].input(
+                await BUILT_IN_CALCULATIONS['docker/trivy-image'](
                     checkInput(corrected, { scope: corrected.scopes[0]!, check, files }),
                 ),
             ).toStrictEqual([]);

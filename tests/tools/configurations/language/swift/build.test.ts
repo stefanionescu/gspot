@@ -3,11 +3,11 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { buildPlan } from '#cli/checks/language/swift/public.ts';
 import { XCODE_PROJECT } from '#tests/config/samples/swift/xcode.ts';
 import { isolateCompilerCache } from '#tests/harness/environment.ts';
@@ -25,22 +25,22 @@ test.skipIf(!isMacos)(
             'Sources/Example/Value.swift': 'public let value: Int = 1\n',
         });
         const first = buildCheckInput(await openSession(sandbox.path), 'swift/build');
-        expect(await BUILT_IN_CHECKS['swift/build'].input(first)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['swift/build'](first)).toStrictEqual([]);
         const plan = buildPlan(first);
         const files = await Array.fromAsync(new Bun.Glob('**/Value.swift.o').scan({ cwd: plan.folder }));
         expect(files).toHaveLength(1);
         const compiledFile = join(plan.folder, files[0]!);
         const { mtimeMs: modified } = await stat(compiledFile);
         const again = buildCheckInput(await openSession(sandbox.path), 'swift/build');
-        expect(await BUILT_IN_CHECKS['swift/build'].input(again)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['swift/build'](again)).toStrictEqual([]);
         expect(await stat(compiledFile)).toMatchObject({ mtimeMs: modified });
         await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = "wrong"\n');
         expect(
-            await BUILT_IN_CHECKS['swift/build'].input(buildCheckInput(await openSession(sandbox.path), 'swift/build')),
+            await BUILT_IN_CALCULATIONS['swift/build'](buildCheckInput(await openSession(sandbox.path), 'swift/build')),
         ).toMatchObject([{ file: 'Sources/Example/Value.swift', line: 1, rule: 'compiler' }]);
         await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = 2\n');
         expect(
-            await BUILT_IN_CHECKS['swift/build'].input(buildCheckInput(await openSession(sandbox.path), 'swift/build')),
+            await BUILT_IN_CALCULATIONS['swift/build'](buildCheckInput(await openSession(sandbox.path), 'swift/build')),
         ).toStrictEqual([]);
     },
 );
@@ -76,7 +76,7 @@ test.skipIf(!isMacos)(
             'untracked.txt': 'authored content\n',
         });
         const first = buildCheckInput(await openSession(sandbox.path), 'swift/build');
-        expect(await BUILT_IN_CHECKS['swift/build'].input(first)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['swift/build'](first)).toStrictEqual([]);
         const plan = buildPlan(first);
         const objects = await Array.fromAsync(new Bun.Glob('**/main.o').scan({ cwd: plan.folder }));
         expect(objects.length).toBeGreaterThan(0);
@@ -84,7 +84,7 @@ test.skipIf(!isMacos)(
             objects.map((file) => stat(join(plan.folder, file)).then(({ mtimeMs }) => mtimeMs)),
         );
         expect(
-            await BUILT_IN_CHECKS['swift/build'].input(buildCheckInput(await openSession(sandbox.path), 'swift/build')),
+            await BUILT_IN_CALCULATIONS['swift/build'](buildCheckInput(await openSession(sandbox.path), 'swift/build')),
         ).toStrictEqual([]);
         expect(
             await Promise.all(objects.map((file) => stat(join(plan.folder, file)).then(({ mtimeMs }) => mtimeMs))),
@@ -95,11 +95,11 @@ test.skipIf(!isMacos)(
         expect(await pathExists(join(sandbox.path, 'build'))).toBe(false);
         await writeFile(join(sandbox.path, 'main.swift'), 'let value: Int = "wrong"\nprint(value)\n');
         expect(
-            await BUILT_IN_CHECKS['swift/build'].input(buildCheckInput(await openSession(sandbox.path), 'swift/build')),
+            await BUILT_IN_CALCULATIONS['swift/build'](buildCheckInput(await openSession(sandbox.path), 'swift/build')),
         ).toMatchObject([{ file: 'main.swift', line: 1, column: 18, rule: 'compiler' }]);
         await writeFile(join(sandbox.path, 'main.swift'), source);
         expect(
-            await BUILT_IN_CHECKS['swift/build'].input(buildCheckInput(await openSession(sandbox.path), 'swift/build')),
+            await BUILT_IN_CALCULATIONS['swift/build'](buildCheckInput(await openSession(sandbox.path), 'swift/build')),
         ).toStrictEqual([]);
     },
 );

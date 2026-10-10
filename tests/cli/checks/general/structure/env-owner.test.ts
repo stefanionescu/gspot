@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/commands/public.ts';
 import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { ENVIRONMENT_SOURCE, PYTHON_ENVIRONMENT_SOURCE } from '#tests/config/cli/checks/general/structure/env-owner.ts';
 
 test('Swift environment reads require an owner and ignore comments and string literals', async () => {
@@ -13,7 +13,7 @@ test('Swift environment reads require an owner and ignore comments and string li
         'gspot.toml': buildPolicy(['swift'], { level: 'all' }),
     });
     expect(
-        await BUILT_IN_CHECKS['structure/env-owner'].input(
+        await BUILT_IN_CALCULATIONS['structure/env-owner'](
             buildCheckInput(await openSession(sandbox.path), 'structure/env-owner'),
         ),
     ).toStrictEqual([]);
@@ -21,7 +21,7 @@ test('Swift environment reads require an owner and ignore comments and string li
         `${sandbox.path}/gspot.toml`,
         buildPolicy(['swift'], { level: 'all', tables: '[architecture.roles]\nenv = ["Sources/Environment.swift"]\n' }),
     );
-    const result = await BUILT_IN_CHECKS['structure/env-owner'].input(
+    const result = await BUILT_IN_CALCULATIONS['structure/env-owner'](
         buildCheckInput(await openSession(sandbox.path), 'structure/env-owner'),
     );
     expect(result.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
@@ -33,7 +33,7 @@ test('Swift environment reads require an owner and ignore comments and string li
         buildPolicy(['swift'], { level: 'all', tables: '[architecture.roles]\nenv = ["Sources/Screen.swift"]\n' }),
     );
     expect(
-        await BUILT_IN_CHECKS['structure/env-owner'].input(
+        await BUILT_IN_CALCULATIONS['structure/env-owner'](
             buildCheckInput(await openSession(sandbox.path), 'structure/env-owner'),
         ),
     ).toStrictEqual([]);

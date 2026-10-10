@@ -7,10 +7,10 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
 import type { OpenapiProject } from '#tests/types/cli/checks/openapi.ts';
@@ -70,7 +70,7 @@ test.each(['', 'apps/api'])(
     async (scope) => {
         await using directory = await testdir();
         const testRepository = await applyChanges(directory.path, '{"fail":true}\n', scope);
-        expect(await rejection(BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input))).toContain(
+        expect(await rejection(BUILT_IN_CALCULATIONS['supabase/stale-types'](testRepository.input))).toContain(
             'Generation failed',
         );
         await expectPreserved(directory.path, testRepository);
@@ -82,7 +82,7 @@ test.each(['', 'apps/api'])(
     async (scope) => {
         await using directory = await testdir();
         const testRepository = await applyChanges(directory.path, '{"version":3}\n', scope);
-        expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([
+        expect(await BUILT_IN_CALCULATIONS['supabase/stale-types'](testRepository.input)).toStrictEqual([
             {
                 check: testRepository.check.name,
                 file: posix.join(scope, 'openapi.json'),
@@ -93,7 +93,7 @@ test.each(['', 'apps/api'])(
             },
         ]);
         await writeFile(join(directory.path, scope, 'schema.json'), testRepository.edited);
-        expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['supabase/stale-types'](testRepository.input)).toStrictEqual([]);
         await expectPreserved(directory.path, testRepository);
     },
 );
@@ -112,7 +112,7 @@ test.each(['', 'apps/api'])(
         });
         const input = buildCheckInput(await openSession(sandbox.path), 'openapi/stale-document', { scope });
         using spawn = spyOn(processes, 'run');
-        expect(await rejection(BUILT_IN_CHECKS['supabase/stale-types'].input(input))).toBe(
+        expect(await rejection(BUILT_IN_CALCULATIONS['supabase/stale-types'](input))).toBe(
             `The openapi.document setting names ${posix.join(scope, 'openapi.json')}, which does not exist.`,
         );
         expect(spawn).not.toHaveBeenCalled();

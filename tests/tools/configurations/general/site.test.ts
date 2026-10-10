@@ -4,12 +4,12 @@ import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { initRepository } from '#tests/harness/install.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
 import { shareRepository } from '#tests/harness/repository.ts';
@@ -44,8 +44,8 @@ async function inspectSiteOutput(scenario: SiteOutputCase): Promise<void> {
     const { check, body, finding } = scenario;
     const analyze = {
         'site/linkinator': linkinator,
-        'site/html-validate': BUILT_IN_CHECKS['site/html-validate'].input,
-        'site/purgecss': BUILT_IN_CHECKS['site/purgecss'].input,
+        'site/html-validate': BUILT_IN_CALCULATIONS['site/html-validate'],
+        'site/purgecss': BUILT_IN_CALCULATIONS['site/purgecss'],
     }[check];
     const { root, environment } = testRepository();
     using resources = new DisposableStack();

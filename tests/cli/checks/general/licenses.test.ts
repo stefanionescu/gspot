@@ -7,11 +7,11 @@ import { symlink, readFile } from 'node:fs/promises';
 import { openSession } from '#cli/commands/public.ts';
 import { fakeTool } from '#tests/harness/platforms.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { environmentBin } from '#cli/platform/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { rejection, containing, textContaining } from '#tests/harness/expectations.ts';
 
@@ -60,7 +60,7 @@ test.each(
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const input = buildCheckInput(await openSession(sandbox.path), 'licenses/allowed', { scope });
         using spawn = spyOn(processes, 'run');
-        expect(await rejection(BUILT_IN_CHECKS['licenses/allowed'].input(input))).toBe(
+        expect(await rejection(BUILT_IN_CALCULATIONS['licenses/allowed'](input))).toBe(
             `Install the project dependencies first: ${installed} is missing in ${scope === '' ? 'the root' : scope}.`,
         );
         expect(spawn).not.toHaveBeenCalled();
@@ -96,7 +96,7 @@ test.each(SCANNER_FAILURES)(
                 );
             }),
         );
-        expect(await rejection(BUILT_IN_CHECKS['licenses/allowed'].input(selected))).toContain(diagnostic);
+        expect(await rejection(BUILT_IN_CALCULATIONS['licenses/allowed'](selected))).toContain(diagnostic);
         expect(directories.length).toBeGreaterThan(0);
         for (const directory of directories) {
             expect(directory).not.toBe(sandbox.path);
@@ -120,7 +120,7 @@ test.each(UNUSED_LICENSE_FILES)(
             stderr: '',
             stdout: '[{"Name":"present","Version":"1.0.0","License":"MIT"}]',
         });
-        expect(await BUILT_IN_CHECKS['licenses/allowed'].input(selected)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['licenses/allowed'](selected)).toStrictEqual([]);
         expect(spawn).toHaveBeenCalledTimes(1);
         expect(await Bun.file(path).exists()).toBe(content !== undefined);
         if (content !== undefined) expect(await Bun.file(path).text()).toBe(content);
@@ -144,7 +144,7 @@ test('an unused license file linked outside the repository does not change scann
         stderr: '',
         stdout: '[{"Name":"present","Version":"1.0.0","License":"MIT"}]',
     });
-    expect(await BUILT_IN_CHECKS['licenses/allowed'].input(selected)).toStrictEqual([]);
+    expect(await BUILT_IN_CALCULATIONS['licenses/allowed'](selected)).toStrictEqual([]);
     expect(spawn).toHaveBeenCalledTimes(1);
     expect(await readFile(destination, 'utf8')).toBe(original);
 });
@@ -192,7 +192,7 @@ test('combined license scans preserve manifest order, license alternatives, unkn
             ),
         });
     });
-    const findings = await BUILT_IN_CHECKS['licenses/allowed'].input(selected);
+    const findings = await BUILT_IN_CALCULATIONS['licenses/allowed'](selected);
     expect(findings).toMatchObject(
         PROJECT_FINDINGS.map(({ file, message }) => ({
             file,
@@ -228,7 +228,7 @@ test.each(LICENSE_EXCEPTIONS)(
                 stdout: JSON.stringify([{ Name: installed, Version: '1.0.0', License: license }]),
             }),
         );
-        expect(await BUILT_IN_CHECKS['licenses/allowed'].input(selected)).toStrictEqual(
+        expect(await BUILT_IN_CALCULATIONS['licenses/allowed'](selected)).toStrictEqual(
             findings.map(({ rule, diagnostic }) =>
                 containing({
                     file: rule === 'stale-exception' ? 'gspot.toml' : 'pyproject.toml',

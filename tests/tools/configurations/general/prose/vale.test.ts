@@ -4,8 +4,8 @@ import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { TOKEN_IGNORES } from '#cli/config/generation/eta.ts';
 import { runBuiltInCheck } from '#cli/execution/contracts.ts';
 import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
@@ -23,11 +23,11 @@ for (const extension of ['md', 'sh']) {
         });
         const session = await openSession(directory.path);
         const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-        const failed = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(session, planned!);
+        const failed = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(session, planned!);
         expect(failed.status, failed.note).toBe('failed');
         expect(failed.findings).toStrictEqual([containing({ file: path, line: 1, rule: 'Example.Concrete' })]);
         await Bun.write(join(directory.path, path), '# We inspect the records.\n');
-        const corrected = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(session, planned!);
+        const corrected = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(session, planned!);
         expect(corrected.status, corrected.note).toBe('passed');
     });
 }
@@ -65,7 +65,7 @@ test.each([
     });
     const session = await openSession(directory.path);
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-    const result = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(session, planned!);
+    const result = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(session, planned!);
     expect(result.status, result.note).toBe('failed');
     expect(result.findings).toStrictEqual([
         containing({ file: path, line: 2, rule: 'Example.Concrete' }),
@@ -94,7 +94,7 @@ test.each([
     });
     const session = await openSession(directory.path);
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-    const result = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(session, planned!);
+    const result = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(session, planned!);
     expect(result.status, result.note).toBe('failed');
     expect(result.findings).toStrictEqual([
         containing({
@@ -105,7 +105,7 @@ test.each([
         }),
     ]);
     await Bun.write(join(directory.path, path), `${prefix}${marker} We inspect records.\n${code}\n`);
-    const corrected = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(
+    const corrected = await runBuiltInCheck(BUILT_IN_CALCULATIONS['prose/vale'])(
         await openSession(directory.path),
         planned!,
     );

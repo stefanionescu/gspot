@@ -328,8 +328,7 @@ export function runBuiltInCheck(builtInCheck: BuiltInCheck): Executable['run'] {
  */
 export function checkRun(check: CheckDeclaration, checks: BuiltInChecks): Executable['run'] {
     const implementation = checks[check.name];
-    if (implementation !== undefined)
-        return 'input' in implementation ? runBuiltInCheck(implementation.input) : implementation.run;
+    if (implementation !== undefined) return implementation.run;
     if (check.command === undefined) {
         throw new Error(`The check ${check.name} names no command, and gspot has no built-in check by that name.`);
     }

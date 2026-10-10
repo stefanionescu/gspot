@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/commands/public.ts';
 import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { PYTHON_MODULE_HEADER } from '#tests/config/samples/python.ts';
 
 test('a module-level instance is a singleton until its composition file has a policy ignore', async () => {
@@ -13,7 +13,7 @@ test('a module-level instance is a singleton until its composition file has a po
         'gspot.toml': buildPolicy(['python'], { level: 'all' }),
         'example/shared.py': `${PYTHON_MODULE_HEADER}class Store:\n    """Holds things."""\n\n\nstore = Store()\n`,
     });
-    const unallowed = await BUILT_IN_CHECKS['python/singletons'].input(
+    const unallowed = await BUILT_IN_CALCULATIONS['python/singletons'](
         buildCheckInput(await openSession(sandbox.path), 'python/singletons'),
     );
     expect(unallowed.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
@@ -37,7 +37,7 @@ test('FastAPI composition objects use the same explicit file ignores as other Py
         'api.py': 'app = FastAPI()\nrouter = APIRouter()\nsettings = Settings()\n',
         'outside.py': 'settings = Settings()\n',
     });
-    const native = await BUILT_IN_CHECKS['python/singletons'].input(
+    const native = await BUILT_IN_CALCULATIONS['python/singletons'](
         buildCheckInput(await openSession(sandbox.path), 'python/singletons'),
     );
     expect(native.map(({ file, line }) => ({ file, line }))).toStrictEqual([

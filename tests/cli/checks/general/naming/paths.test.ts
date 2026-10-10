@@ -4,8 +4,8 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { MIGRATION_NAMING_FILES } from '#tests/config/cli/checks/general/naming/paths.ts';
 import { fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/contracts.ts';
@@ -49,7 +49,7 @@ test.each(['', 'app'])(
         const policy = buildPolicy(['naming', 'sql'], { level: 'all', tables: '[scope."app"]\n' });
         await writeFile(join(sandbox.path, 'gspot.toml'), policy);
         const first = buildCheckInput(await openSession(sandbox.path), 'naming/paths', { scope });
-        const refused = await BUILT_IN_CHECKS['naming/paths'].input(first);
+        const refused = await BUILT_IN_CALCULATIONS['naming/paths'](first);
         expect(
             (Array.isArray(refused) ? refused : refused.findings)
                 .filter(({ rule }) => rule === 'digits')
@@ -60,7 +60,7 @@ test.each(['', 'app'])(
             buildPolicy(['naming', 'postgres'], { level: 'all', tables: '[scope."app"]\n' }),
         );
         const corrected = buildCheckInput(await openSession(sandbox.path), 'naming/paths', { scope });
-        const allowed = await BUILT_IN_CHECKS['naming/paths'].input(corrected);
+        const allowed = await BUILT_IN_CALCULATIONS['naming/paths'](corrected);
         expect(
             (Array.isArray(allowed) ? allowed : allowed.findings)
                 .filter(({ rule }) => rule === 'digits')

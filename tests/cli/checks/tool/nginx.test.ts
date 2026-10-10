@@ -4,13 +4,13 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { testArguments } from '#cli/checks/tool/public.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { NGINX_CONFIGURATION } from '#tests/config/cli/checks/tool/nginx.ts';
 
@@ -99,7 +99,7 @@ test.each(['stdout', 'stderr'])(
             });
         });
 
-        expect(await rejection(BUILT_IN_CHECKS['nginx/config-test'].input(input))).toBe(
+        expect(await rejection(BUILT_IN_CALCULATIONS['nginx/config-test'](input))).toBe(
             `The openssl command could not write the temporary certificate: ${diagnostic}`,
         );
         expect(spawn).toHaveBeenCalledTimes(1);

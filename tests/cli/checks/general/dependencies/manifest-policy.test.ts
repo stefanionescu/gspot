@@ -4,9 +4,9 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { createEslint } from '#tests/harness/generated.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { parsePackageManifest } from '#cli/parsers/packages/public.ts';
 import { MANIFEST, REGISTRY_ALIASES } from '#tests/config/cli/checks/general/dependencies/manifest-policy.ts';
 
@@ -17,13 +17,13 @@ describe('manifest policy reads', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': DEPENDENCIES_POLICY, 'README.md': '# Example\n' });
         expect(
-            BUILT_IN_CHECKS['dependencies/package-json'].input(
+            BUILT_IN_CALCULATIONS['dependencies/package-json'](
                 buildCheckInput(await openSession(sandbox.path), 'dependencies/package-json'),
             ),
         ).toStrictEqual([]);
         await writeFile(join(sandbox.path, 'package.json'), MANIFEST);
         expect(
-            BUILT_IN_CHECKS['dependencies/package-json'].input(
+            BUILT_IN_CALCULATIONS['dependencies/package-json'](
                 buildCheckInput(await openSession(sandbox.path), 'dependencies/package-json'),
             ),
         ).toStrictEqual([]);
@@ -73,7 +73,7 @@ test.each(['recommended', 'all'] as const)(
             ),
         ).toStrictEqual([0, 0, 1]);
         expect(
-            BUILT_IN_CHECKS['dependencies/package-json'].input(
+            BUILT_IN_CALCULATIONS['dependencies/package-json'](
                 buildCheckInput(await openSession(sandbox.path), 'dependencies/package-json'),
             ),
         ).toStrictEqual([]);

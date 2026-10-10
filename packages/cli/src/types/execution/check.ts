@@ -19,11 +19,8 @@ export type SuppressionComment = {
     forbidden: boolean;
 };
 
-/** Native input implementations or session callbacks, keyed by the declared check ID. */
-export type BuiltInChecks = Record<
-    string,
-    ({ input: BuiltInCheck } | { run: Executable['run'] }) & { fix?: BuiltInFix }
->;
+/** Execution callbacks, keyed by the declared check ID. */
+export type BuiltInChecks = Record<string, { run: Executable['run']; fix?: BuiltInFix }>;
 
 /** A native correction publishes through the same repository or disposable-copy boundary as command fixes. */
 export type BuiltInFix = (planned: PlannedCheck, root: string) => FixResult | Promise<FixResult>;

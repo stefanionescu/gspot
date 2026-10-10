@@ -6,8 +6,8 @@ import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
 import { git, commitAll } from '#tests/harness/git.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { checkReport, buildRunOptions } from '#tests/harness/gspot.ts';
 import { STAGED_CASES, TRACKED_PATTERNS } from '#tests/config/cli/checks/general/secrets/env/files.ts';
 
@@ -24,7 +24,7 @@ test('tracked-file checks distinguish environment files from templates in nested
     await Bun.write(join(directory.path, 'gspot.toml'), buildPolicy(['secrets'], { level: 'all' }));
     const input = buildCheckInput(await openSession(directory.path), 'repository/tracked-files', { paths: [] });
     expect(
-        BUILT_IN_CHECKS['repository/tracked-files'].input(input).map(({ file, rule }) => ({ file, rule })),
+        BUILT_IN_CALCULATIONS['repository/tracked-files'](input).map(({ file, rule }) => ({ file, rule })),
     ).toStrictEqual(privateFiles.map((file) => ({ file, rule: 'tracked-file' })));
 });
 
@@ -114,7 +114,7 @@ test.each(['recommended', 'all'] as const)(
         const staged = git(sandbox.path, ['add', '-f', '.']);
         expect(staged.code, staged.stderr).toBe(0);
         const input = buildCheckInput(await openSession(sandbox.path), 'repository/tracked-files', { paths: [] });
-        const found = BUILT_IN_CHECKS['repository/tracked-files'].input({
+        const found = BUILT_IN_CALCULATIONS['repository/tracked-files']({
             ...input,
             index: [...input.index, ...input.index, ...indexOnly.map((path) => ({ ...input.index[0]!, path }))],
         });

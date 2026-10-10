@@ -4,11 +4,11 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { environmentBin } from '#cli/platform/contracts.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
@@ -105,7 +105,7 @@ test.each(['stdout', 'stderr'])(
         );
         expect(
             await rejection(
-                BUILT_IN_CHECKS['python/import-linter'].input(buildCheckInput(session, 'python/import-linter')),
+                BUILT_IN_CALCULATIONS['python/import-linter'](buildCheckInput(session, 'python/import-linter')),
             ),
         ).toBe(`The lint-imports command failed: ${diagnostic}`);
         expect(await Bun.file(join(sandbox.path, 'pyproject.toml')).text()).toBe(manifest);
@@ -140,7 +140,7 @@ test('import-linter follows INI precedence and retains separate chains for decor
             duration: 1,
         }),
     );
-    const findings = await BUILT_IN_CHECKS['python/import-linter'].input(
+    const findings = await BUILT_IN_CALCULATIONS['python/import-linter'](
         buildCheckInput(session, 'python/import-linter'),
     );
     expect(findings.map((finding) => [finding.file, finding.rule])).toStrictEqual([

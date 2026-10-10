@@ -5,9 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { isolateCompilerCache } from '#tests/harness/environment.ts';
 import { isMacos, isPosix } from '#tests/config/harness/platforms.ts';
@@ -25,7 +25,7 @@ test('a silent successful Swift build returns no findings', async () => {
     const input = prepared.input;
     const run = spyOn(spawn, 'run').mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
-        expect(await BUILT_IN_CHECKS['swift/build'].input(input)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['swift/build'](input)).toStrictEqual([]);
     } finally {
         run.mockRestore();
     }
@@ -89,9 +89,9 @@ test('a later Swift session reads a failed build after an earlier successful bui
             duration: 1,
         });
     try {
-        expect(await BUILT_IN_CHECKS['swift/build'].input(first)).toStrictEqual([]);
-        expect(await BUILT_IN_CHECKS['swift/build'].input(first)).toStrictEqual([]);
-        expect(await BUILT_IN_CHECKS['swift/build'].input(second)).toStrictEqual([
+        expect(await BUILT_IN_CALCULATIONS['swift/build'](first)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['swift/build'](first)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['swift/build'](second)).toStrictEqual([
             {
                 check: 'swift/build',
                 file: 'Main.swift',
@@ -115,12 +115,12 @@ test('canceled Swift compilation refuses to launch the compiler', async () => {
     const input = prepared.input;
     input.cancelSignal = AbortSignal.abort();
     using run = spyOn(spawn, 'run');
-    expect(await rejection(BUILT_IN_CHECKS['swift/build'].input(input))).toBe('The command was canceled.');
+    expect(await rejection(BUILT_IN_CALCULATIONS['swift/build'](input))).toBe('The command was canceled.');
     const analyzer = buildPlan(input, 'analyze');
     await mkdir(analyzer.scratch!, { recursive: true });
     const state = join(analyzer.scratch!, 'state');
     await writeFile(state, 'retained compiler state');
-    expect(await rejection(BUILT_IN_CHECKS['swift/swiftlint-analyze'].input(input))).toBe('The command was canceled.');
+    expect(await rejection(BUILT_IN_CALCULATIONS['swift/swiftlint-analyze'](input))).toBe('The command was canceled.');
     expect(await readFile(state, 'utf8')).toBe('retained compiler state');
     expect(run).not.toHaveBeenCalled();
 });
@@ -143,12 +143,12 @@ test('Swift response files stay inside the compiler cache before log publication
         duration: 1,
     });
     try {
-        expect(await rejection(BUILT_IN_CHECKS['swift/build'].input(input))).toContain('Unsafe lifecycle path:');
+        expect(await rejection(BUILT_IN_CALCULATIONS['swift/build'](input))).toContain('Unsafe lifecycle path:');
         expect(await pathExists(plan.log)).toBe(false);
         const response = join(plan.folder, 'sources');
         await writeFile(response, 'Sources/Main.swift\nSources/Owner.swift\n');
         run.mockResolvedValue({ code: 0, stdout: `swiftc @${response}`, stderr: '', missing: false, duration: 1 });
-        expect(await BUILT_IN_CHECKS['swift/build'].input(corrected)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['swift/build'](corrected)).toStrictEqual([]);
         expect(await readFile(plan.log, 'utf8')).toContain('swiftc Sources/Main.swift Sources/Owner.swift');
     } finally {
         run.mockRestore();
@@ -168,7 +168,7 @@ test('a failed Swift source preparation releases its build claim before a later 
     const plan = buildPlan(input);
     await rm(join(sandbox.path, 'Main.swift'));
     using run = spyOn(spawn, 'run');
-    expect(await rejection(BUILT_IN_CHECKS['swift/build'].input(input))).toContain('ENOENT');
+    expect(await rejection(BUILT_IN_CALCULATIONS['swift/build'](input))).toContain('ENOENT');
     expect(run).not.toHaveBeenCalled();
     expect(await pathExists(join(plan.folder, 'build.lock'))).toBe(false);
     {
@@ -195,7 +195,7 @@ test.skipIf(!isPosix)(
                 duration: 1,
             });
         });
-        expect(await BUILT_IN_CHECKS['swift/build'].input(input)).toStrictEqual([
+        expect(await BUILT_IN_CALCULATIONS['swift/build'](input)).toStrictEqual([
             containing({ file: 'Main.swift', line: 4, column: 2, rule: 'compiler', message: 'Missing value' }),
         ]);
     },

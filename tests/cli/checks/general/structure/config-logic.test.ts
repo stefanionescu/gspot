@@ -4,8 +4,8 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 
 test('a configuration module with a function or a call is reported; literals pass', async () => {
     await using sandbox = await testdir();
@@ -20,7 +20,7 @@ test('a configuration module with a function or a call is reported; literals pas
         join(sandbox.path, 'gspot.toml'),
         stringify({ level: 'all', configurations: ['typescript'], architecture: { roles: { config: 'config' } } }),
     );
-    const found = await BUILT_IN_CHECKS['structure/config-logic'].input(
+    const found = await BUILT_IN_CALCULATIONS['structure/config-logic'](
         buildCheckInput(await openSession(sandbox.path), 'structure/config-logic', { paths: paths }),
     );
     expect(found.map((finding) => `${finding.file}:${String(finding.line)}`)).toStrictEqual([
@@ -46,7 +46,7 @@ test('configuration imports follow project aliases and reject runtime owners', a
         join(sandbox.path, 'gspot.toml'),
         stringify({ level: 'all', configurations: ['typescript'], architecture: { roles: { config: 'config' } } }),
     );
-    const findings = await BUILT_IN_CHECKS['structure/config-logic'].input(
+    const findings = await BUILT_IN_CALCULATIONS['structure/config-logic'](
         buildCheckInput(await openSession(sandbox.path), 'structure/config-logic', { paths: paths }),
     );
     expect(findings.map((finding) => [finding.file, finding.line, finding.rule])).toStrictEqual([

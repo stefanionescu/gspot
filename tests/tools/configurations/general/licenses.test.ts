@@ -4,11 +4,11 @@ import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { useEnvironment } from '#tests/harness/environment.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
@@ -114,7 +114,7 @@ test('native Python license scanning ignores project scanner exclusions and matc
     const metadata = join(location.stdout.trim(), 'licensed_example-1.0.0.dist-info/METADATA');
     await Bun.write(metadata, `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: GPL-3.0-only\n`);
     expect(
-        await BUILT_IN_CHECKS['licenses/allowed'].input(buildCheckInput(await openSession(root), 'licenses/allowed')),
+        await BUILT_IN_CALCULATIONS['licenses/allowed'](buildCheckInput(await openSession(root), 'licenses/allowed')),
     ).toStrictEqual([
         containing({
             file: 'pyproject.toml',
@@ -132,7 +132,7 @@ test('native Python license scanning ignores project scanner exclusions and matc
     const corrected = await runGspot(root, ['apply', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(
-        await BUILT_IN_CHECKS['licenses/allowed'].input(buildCheckInput(await openSession(root), 'licenses/allowed')),
+        await BUILT_IN_CALCULATIONS['licenses/allowed'](buildCheckInput(await openSession(root), 'licenses/allowed')),
     ).toStrictEqual([]);
 });
 
@@ -158,7 +158,7 @@ test('native installed font metadata justifies its root exception in a descendan
         }),
     );
     const session = await openSession(sandbox.path);
-    expect(await BUILT_IN_CHECKS['licenses/allowed'].input(buildCheckInput(session, 'licenses/allowed'))).toStrictEqual(
+    expect(await BUILT_IN_CALCULATIONS['licenses/allowed'](buildCheckInput(session, 'licenses/allowed'))).toStrictEqual(
         [],
     );
 });

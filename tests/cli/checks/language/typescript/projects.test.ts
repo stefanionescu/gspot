@@ -9,8 +9,8 @@ import { emitAll } from '#cli/generation/public.ts';
 import { toPosix } from '#cli/platform/contracts.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { getTsconfig } from '#cli/parsers/packages/public.ts';
 import { createReadCache } from '#cli/platform/root/public.ts';
 import { copyIntoScratch } from '#cli/execution/copy/public.ts';
@@ -38,11 +38,11 @@ test.each(['recommended', 'all'] as const)(
         });
         const session = await openSession(sandbox.path);
         const input = buildCheckInput(session, 'typescript/tsconfig', { scope: 'app', paths: ['app/source.ts'] });
-        expect(BUILT_IN_CHECKS['typescript/tsconfig'].input(input)).toMatchObject([
+        expect(BUILT_IN_CALCULATIONS['typescript/tsconfig'](input)).toMatchObject([
             { file: 'tsconfig.json', rule: 'strict' },
         ]);
         expect(() =>
-            BUILT_IN_CHECKS['typescript/tsconfig'].input(buildCheckInput(session, 'typescript/tsconfig')),
+            BUILT_IN_CALCULATIONS['typescript/tsconfig'](buildCheckInput(session, 'typescript/tsconfig')),
         ).toThrow(
             expect.objectContaining({
                 name: 'GspotError',
@@ -55,10 +55,10 @@ test.each(['recommended', 'all'] as const)(
         expect(JSON.parse(generated!.content)).toMatchObject({ extends: '../../../tsconfig.json' });
         const reopened = await openSession(sandbox.path);
         expect(
-            BUILT_IN_CHECKS['typescript/tsconfig'].input(buildCheckInput(reopened, 'typescript/tsconfig')),
+            BUILT_IN_CALCULATIONS['typescript/tsconfig'](buildCheckInput(reopened, 'typescript/tsconfig')),
         ).toMatchObject([{ file: 'tsconfig.json', rule: 'strict' }]);
         expect(() =>
-            BUILT_IN_CHECKS['typescript/tsconfig'].input(
+            BUILT_IN_CALCULATIONS['typescript/tsconfig'](
                 buildCheckInput(reopened, 'typescript/tsconfig', { scope: 'app' }),
             ),
         ).toThrow(
@@ -86,7 +86,7 @@ test.each(['recommended', 'all'] as const)(
         });
         const session = await openSession(sandbox.path);
         expect(
-            BUILT_IN_CHECKS['typescript/tsconfig'].input(
+            BUILT_IN_CALCULATIONS['typescript/tsconfig'](
                 buildCheckInput(session, 'typescript/tsconfig', { scope: 'app' }),
             ),
         ).toStrictEqual([]);

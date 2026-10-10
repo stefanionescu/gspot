@@ -6,10 +6,10 @@ import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { checkInput } from '#cli/execution/contracts.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { XCTEST_FILES } from '#tests/config/cli/checks/tool/swift-tests/sources.ts';
 import { createTestRepository, prepareCliRepository } from '#tests/harness/repository.ts';
@@ -59,7 +59,7 @@ test.each([
         'Examples/Checks.swift': `import Testing\nfunc checks() throws {\n    ${body}\n}\n`,
     });
     const session = await openSession(sandbox.path);
-    const findings = await BUILT_IN_CHECKS['swift-tests/skip-reasons'].input(
+    const findings = await BUILT_IN_CALCULATIONS['swift-tests/skip-reasons'](
         buildCheckInput(session, 'swift-tests/skip-reasons'),
     );
     expect(findings.map(({ file, rule, line }) => ({ file, rule, line }))).toStrictEqual(
@@ -101,7 +101,7 @@ test.each([
         'Examples/Checks.swift': `import Testing\n@Test func checks() {\n    ${body}\n}\n`,
     });
     const session = await openSession(sandbox.path);
-    const findings = await BUILT_IN_CHECKS['swift-tests/sleep'].input(buildCheckInput(session, check));
+    const findings = await BUILT_IN_CALCULATIONS['swift-tests/sleep'](buildCheckInput(session, check));
     expect(findings).toHaveLength(count);
     if (count > 0) expect(findings[0]).toMatchObject({ file: 'Examples/Checks.swift', line: 3 });
 });
@@ -121,7 +121,7 @@ test('a sleep path ignore excludes an unreadable file before source parsing', as
     const input = checkInput(session, planned.find((entry) => entry.scope.scope.path === 'integration')!);
     expect(input.files.map(({ path }) => path)).not.toContain('integration/Allowed.swift');
     await rm(join(sandbox.path, 'integration/Allowed.swift'));
-    const findings = await BUILT_IN_CHECKS['swift-tests/sleep'].input(input);
+    const findings = await BUILT_IN_CALCULATIONS['swift-tests/sleep'](input);
     expect(findings.map(({ file, rule, line }) => ({ file, rule, line }))).toStrictEqual([
         { file: 'integration/Blocked.swift', rule: 'sleep', line: 2 },
     ]);

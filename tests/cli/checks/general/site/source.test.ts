@@ -6,9 +6,9 @@ import { unlink, readFile } from 'node:fs/promises';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { levelSchema } from '#cli/parsers/schema/contracts.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { checkOutRevision } from '#cli/execution/copy/public.ts';
@@ -32,7 +32,7 @@ test.each(['assets', 'public', 'static'])(
         });
         commitAll(sandbox.path);
         const input = buildCheckInput(await openSession(sandbox.path), 'site/dead-assets', { scope: 'docs' });
-        expect(BUILT_IN_CHECKS['site/dead-assets'].input(input)).toMatchObject([
+        expect(BUILT_IN_CALCULATIONS['site/dead-assets'](input)).toMatchObject([
             { file: `docs/${folder}/unused.svg`, line: 1, check: 'site/dead-assets', rule: 'dead-asset' },
         ]);
     },
@@ -52,7 +52,7 @@ test('asset references read staged bytes without borrowing an unstaged README or
     });
     const findings = await checkOutRevision(sandbox.path, { kind: 'index' }, async (root) => {
         const input = buildCheckInput(await openSession(root), 'site/dead-assets', { scope: 'docs' });
-        return BUILT_IN_CHECKS['site/dead-assets'].input(input);
+        return BUILT_IN_CALCULATIONS['site/dead-assets'](input);
     });
     expect(findings).toMatchObject([{ file: 'docs/assets/unused.svg', rule: 'dead-asset' }]);
     expect(await readFile(join(sandbox.path, 'README.md'), 'utf8')).toBe('![Unused](docs/assets/unused.svg)\n');
@@ -67,7 +67,7 @@ test('a site without Git keeps its local references and reports an unused asset'
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'site/dead-assets');
     expect(input.index).toStrictEqual([]);
-    expect(BUILT_IN_CHECKS['site/dead-assets'].input(input)).toMatchObject([
+    expect(BUILT_IN_CALCULATIONS['site/dead-assets'](input)).toMatchObject([
         { file: 'assets/unused.svg', rule: 'dead-asset' },
     ]);
 });
@@ -80,7 +80,7 @@ test.each(['astro', 'vue', 'svelte', 'jsx', 'tsx'])('a %s component names its as
         'assets/unused.svg': '<svg/>',
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'site/dead-assets');
-    expect(BUILT_IN_CHECKS['site/dead-assets'].input(input)).toMatchObject([
+    expect(BUILT_IN_CALCULATIONS['site/dead-assets'](input)).toMatchObject([
         { file: 'assets/unused.svg', rule: 'dead-asset' },
     ]);
 });
@@ -95,7 +95,7 @@ test('an unstaged deletion removes the tracked outside reference without failing
     await unlink(join(sandbox.path, 'README.md'));
     const input = buildCheckInput(await openSession(sandbox.path), 'site/dead-assets', { scope: 'docs' });
     expect(input.index.map((entry) => entry.path)).toContain('README.md');
-    expect(BUILT_IN_CHECKS['site/dead-assets'].input(input)).toMatchObject([
+    expect(BUILT_IN_CALCULATIONS['site/dead-assets'](input)).toMatchObject([
         { file: 'docs/assets/logo.svg', rule: 'dead-asset' },
     ]);
 });
@@ -105,7 +105,7 @@ test.each(INVALID_WEB_MANIFESTS)('malformed web manifest %s produces a parse fin
         'gspot.toml': buildPolicy(['site']),
         'site.webmanifest': source,
     });
-    const findings = await BUILT_IN_CHECKS['site/webmanifest'].input(
+    const findings = await BUILT_IN_CALCULATIONS['site/webmanifest'](
         buildCheckInput(await openSession(sandbox.path), 'site/webmanifest'),
     );
     expect(findings).toMatchObject([{ check: 'site/webmanifest', file: 'site.webmanifest', line: 1, rule: 'parse' }]);
@@ -116,7 +116,7 @@ test('a valid web manifest reports missing names and icons and passes after the 
         'gspot.toml': buildPolicy(['site']),
         'site.webmanifest': '{"icons": [{"src": "icon.png"}]}',
     });
-    const rejected = await BUILT_IN_CHECKS['site/webmanifest'].input(
+    const rejected = await BUILT_IN_CALCULATIONS['site/webmanifest'](
         buildCheckInput(await openSession(sandbox.path), 'site/webmanifest'),
     );
     expect(rejected).toMatchObject([
@@ -128,7 +128,7 @@ test('a valid web manifest reports missing names and icons and passes after the 
         'icon.png': 'icon',
     });
     expect(
-        await BUILT_IN_CHECKS['site/webmanifest'].input(
+        await BUILT_IN_CALCULATIONS['site/webmanifest'](
             buildCheckInput(await openSession(sandbox.path), 'site/webmanifest'),
         ),
     ).toStrictEqual([]);
@@ -161,7 +161,7 @@ test.each(SVG_SAVING_CASES)('SVG optimization $name', async ({ level, percent, s
         missing: false,
         duration: 1,
     });
-    const findings = await BUILT_IN_CHECKS['site/svgo'].input(buildCheckInput(session, 'site/svgo'));
+    const findings = await BUILT_IN_CALCULATIONS['site/svgo'](buildCheckInput(session, 'site/svgo'));
     expect(run.mock.calls.map(([, options]) => options.stdin)).toStrictEqual([ORIGINAL_SVG]);
     if (finding) {
         expect(findings).toMatchObject([{ file: 'icon.svg', rule: 'unoptimized' }]);
@@ -182,7 +182,7 @@ test.each(levelSchema.options)('web manifests use native HTML links rather than 
         });
     for (const scope of ['', 'app']) {
         const path = scope === '' ? 'metadata/app manifest.json' : 'app/metadata/app manifest.json';
-        const findings = await BUILT_IN_CHECKS['site/webmanifest'].input(
+        const findings = await BUILT_IN_CALCULATIONS['site/webmanifest'](
             buildCheckInput(await openSession(sandbox.path), 'site/webmanifest', { scope }),
         );
         expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
@@ -194,7 +194,7 @@ test.each(levelSchema.options)('web manifests use native HTML links rather than 
             [join(scope, 'metadata/icon.png')]: 'icon',
         });
         expect(
-            await BUILT_IN_CHECKS['site/webmanifest'].input(
+            await BUILT_IN_CALCULATIONS['site/webmanifest'](
                 buildCheckInput(await openSession(sandbox.path), 'site/webmanifest', { scope }),
             ),
         ).toStrictEqual([]);

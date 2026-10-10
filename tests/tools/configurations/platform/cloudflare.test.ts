@@ -3,11 +3,11 @@ import { createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
 import { levelSchema } from '#cli/parsers/schema/contracts.ts';
 import { WRANGLER } from '#tests/config/samples/cloudflare.ts';
@@ -69,7 +69,7 @@ test.each(levelSchema.options)('native Wrangler schema validates root and child 
     for (const scope of ['', 'app']) {
         const path = scope === '' ? 'wrangler.jsonc' : 'app/wrangler.json';
         const session = await openSession(repository.root);
-        const findings = await BUILT_IN_CHECKS['cloudflare/wrangler'].input(
+        const findings = await BUILT_IN_CALCULATIONS['cloudflare/wrangler'](
             buildCheckInput(session, 'cloudflare/wrangler', { scope }),
         );
         expect(findings).toMatchObject([
@@ -85,7 +85,7 @@ test.each(levelSchema.options)('native Wrangler schema validates root and child 
             '{"name":"fixed","compatibility_date":"2026-01-15","workers_dev":true}\n',
         );
         expect(
-            await BUILT_IN_CHECKS['cloudflare/wrangler'].input(
+            await BUILT_IN_CALCULATIONS['cloudflare/wrangler'](
                 buildCheckInput(await openSession(repository.root), 'cloudflare/wrangler', { scope }),
             ),
         ).toStrictEqual([]);
@@ -105,7 +105,7 @@ test.each(levelSchema.options)(
             for (const scope of ['', 'app']) {
                 const path = scope === '' ? name : `${scope}/${name}`;
                 await createFileTree(repository.root, { [path]: broken });
-                const findings = await BUILT_IN_CHECKS['cloudflare/wrangler'].input(
+                const findings = await BUILT_IN_CALCULATIONS['cloudflare/wrangler'](
                     buildCheckInput(await openSession(repository.root), 'cloudflare/wrangler', { scope }),
                 );
                 expect(findings).toStrictEqual([
@@ -120,7 +120,7 @@ test.each(levelSchema.options)(
                 ]);
                 await Bun.write(join(repository.root, path), corrected);
                 expect(
-                    await BUILT_IN_CHECKS['cloudflare/wrangler'].input(
+                    await BUILT_IN_CALCULATIONS['cloudflare/wrangler'](
                         buildCheckInput(await openSession(repository.root), 'cloudflare/wrangler', { scope }),
                     ),
                 ).toStrictEqual([]);

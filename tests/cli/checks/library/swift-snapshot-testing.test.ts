@@ -4,9 +4,9 @@ import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import { detectUnselected } from '#cli/repository/selection/contracts.ts';
 import { PACKAGE_PROJECTS, DOCUMENTATION_LEVELS } from '#tests/config/cli/checks/library/swift-snapshot-testing.ts';
@@ -22,7 +22,7 @@ test.each([
         'Examples/Checks.swift': `import Testing\n@Test func checks() {\n    ${body}\n}\n`,
     });
     const session = await openSession(sandbox.path);
-    const findings = await BUILT_IN_CHECKS['swift-snapshot-testing/recording'].input(
+    const findings = await BUILT_IN_CALCULATIONS['swift-snapshot-testing/recording'](
         buildCheckInput(session, 'swift-snapshot-testing/recording'),
     );
     expect(findings).toHaveLength(count);

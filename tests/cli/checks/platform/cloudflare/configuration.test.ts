@@ -6,9 +6,9 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { planRun, isActive } from '#cli/planning/public.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { levelSchema } from '#cli/parsers/schema/contracts.ts';
 import { WRANGLER_SCHEMA } from '#tests/config/cli/checks/platform/cloudflare/configuration.ts';
 
@@ -23,9 +23,9 @@ test('Cloudflare header checks report only files in their owning scope', async (
     });
     const session = await openSession(directory.path);
     const input = buildCheckInput(session, 'cloudflare/headers');
-    expect(BUILT_IN_CHECKS['cloudflare/headers'].input(input).map(({ file }) => file)).toStrictEqual(['_headers']);
+    expect(BUILT_IN_CALCULATIONS['cloudflare/headers'](input).map(({ file }) => file)).toStrictEqual(['_headers']);
     expect(
-        BUILT_IN_CHECKS['cloudflare/headers'].input(
+        BUILT_IN_CALCULATIONS['cloudflare/headers'](
             buildCheckInput(session, 'cloudflare/headers', { scope: 'workers/api' }),
         ),
     ).toStrictEqual([]);
@@ -49,9 +49,9 @@ test.each(levelSchema.options)(
         for (const scope of ['', 'app']) {
             const path = scope === '' ? '_redirects' : `${scope}/_redirects`;
             expect(
-                BUILT_IN_CHECKS['cloudflare/redirects']
-                    .input(buildCheckInput(session, 'cloudflare/redirects', { scope }))
-                    .map(({ file, line, message }) => ({ file, line, message })),
+                BUILT_IN_CALCULATIONS['cloudflare/redirects'](
+                    buildCheckInput(session, 'cloudflare/redirects', { scope }),
+                ).map(({ file, line, message }) => ({ file, line, message })),
             ).toStrictEqual([
                 { file: path, line: 8, message: 'Use a supported Cloudflare redirect status instead of 404.' },
                 { file: path, line: 9, message: 'Use a supported Cloudflare redirect status instead of 410.' },
@@ -74,19 +74,19 @@ test.each(levelSchema.options)('headers share syntax and hosting security in bot
     for (const scope of ['', 'app']) {
         const path = scope === '' ? '_headers' : 'app/_headers';
         expect(
-            BUILT_IN_CHECKS['cloudflare/headers']
-                .input(buildCheckInput(session, 'cloudflare/headers', { scope }))
-                .map(({ file, line, message }) => ({
+            BUILT_IN_CALCULATIONS['cloudflare/headers'](buildCheckInput(session, 'cloudflare/headers', { scope })).map(
+                ({ file, line, message }) => ({
                     file,
                     line,
                     message,
-                })),
+                }),
+            ),
         ).toStrictEqual([
             { file: path, line: 1, message: 'Add a path line before this header.' },
             { file: path, line: 9, message: 'Write this header as Name: value.' },
         ]);
         expect(
-            BUILT_IN_CHECKS['cloudflare/security-headers'].input(
+            BUILT_IN_CALCULATIONS['cloudflare/security-headers'](
                 buildCheckInput(session, 'cloudflare/security-headers', { scope }),
             ),
         ).toStrictEqual([]);
@@ -122,7 +122,7 @@ test.each(levelSchema.options)(
         for (const scope of ['', 'app']) {
             const session = await openSession(sandbox.path);
             const input = buildCheckInput(session, 'cloudflare/wrangler', { scope });
-            const findings = await BUILT_IN_CHECKS['cloudflare/wrangler'].input(input);
+            const findings = await BUILT_IN_CALCULATIONS['cloudflare/wrangler'](input);
             expect(findings).toMatchObject(
                 scope === ''
                     ? [
@@ -137,7 +137,7 @@ test.each(levelSchema.options)(
                 '{"name":"fixed","compatibility_date":"2026-01-15","workers_dev":true}\n',
             );
             expect(
-                await BUILT_IN_CHECKS['cloudflare/wrangler'].input(
+                await BUILT_IN_CALCULATIONS['cloudflare/wrangler'](
                     buildCheckInput(await openSession(sandbox.path), 'cloudflare/wrangler', { scope }),
                 ),
             ).toStrictEqual([]);
@@ -163,7 +163,7 @@ test('Wrangler reads installed schema assets for a copied child scope', async ()
     }));
     const session = await openSession(revision.path);
     session.installedRoot = installed.path;
-    const findings = await BUILT_IN_CHECKS['cloudflare/wrangler'].input(
+    const findings = await BUILT_IN_CALCULATIONS['cloudflare/wrangler'](
         buildCheckInput(session, 'cloudflare/wrangler', { scope: 'app' }),
     );
     expect(findings).toMatchObject([

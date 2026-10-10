@@ -4,9 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { DYNAMIC_READS } from '#tests/config/cli/checks/language/css.ts';
 
@@ -28,7 +28,7 @@ test('global CSS classes are not module exports and explicitly local classes sti
         join(sandbox.path, 'view.ts'),
         'import styles from "./styles.module.css";\nexport const card = [styles.card, styles.local];\n',
     );
-    const corrected = BUILT_IN_CHECKS['css/module-classes'].input(
+    const corrected = BUILT_IN_CALCULATIONS['css/module-classes'](
         buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
     );
     expect(corrected).toStrictEqual([]);
@@ -45,7 +45,7 @@ test.each(['card-title', 'card_title', 'card--title'])(
             'theme.module.scss': '.panel { color: red; }\n',
             'panel.tsx': "import styles from './theme.module.scss';\nexport const panel = styles.missing;\n",
         });
-        const result = BUILT_IN_CHECKS['css/module-classes'].input(
+        const result = BUILT_IN_CALCULATIONS['css/module-classes'](
             buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
         );
         expect(result).toStrictEqual([]);
@@ -54,7 +54,7 @@ test.each(['card-title', 'card_title', 'card--title'])(
             join(sandbox.path, 'panel.tsx'),
             "import styles from './styles.module.css';\nexport const panel = styles.missing;\n",
         );
-        const failed = BUILT_IN_CHECKS['css/module-classes'].input(
+        const failed = BUILT_IN_CALCULATIONS['css/module-classes'](
             buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
         );
         expect(failed).toMatchObject([{ file: 'panel.tsx', rule: 'undefined-class' }]);
@@ -76,7 +76,7 @@ test.each([
         'styles.module.css': '.card { color: red; }\n',
         'view.ts': `import styles from './styles.module.css';\nexport const card = styles.card;\n${verbatim}`,
     });
-    const result = BUILT_IN_CHECKS['css/module-classes'].input(
+    const result = BUILT_IN_CALCULATIONS['css/module-classes'](
         buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
     );
     expect(result).toStrictEqual([]);
@@ -91,7 +91,7 @@ test('identically named stylesheets keep their own bindings and correct exact fi
         'left/view.ts': "import styles from './styles.module.css';\nexport const value = styles.right;\n",
         'right/view.ts': "import styles from './styles.module.css';\nexport const value = styles.right;\n",
     });
-    const failed = BUILT_IN_CHECKS['css/module-classes'].input(
+    const failed = BUILT_IN_CALCULATIONS['css/module-classes'](
         buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
     );
     expect(failed.length).toBeGreaterThan(0);
@@ -103,7 +103,7 @@ test('identically named stylesheets keep their own bindings and correct exact fi
         join(sandbox.path, 'left/view.ts'),
         "import styles from './styles.module.css';\nexport const value = styles.left;\n",
     );
-    const corrected = BUILT_IN_CHECKS['css/module-classes'].input(
+    const corrected = BUILT_IN_CALCULATIONS['css/module-classes'](
         buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
     );
     expect(corrected).toStrictEqual([]);
@@ -119,7 +119,7 @@ test('ignored importers cannot satisfy a selected stylesheet class', async () =>
         'ignored.ts':
             "import styles from './styles.module.css';\nexport const hidden = [styles.unused, styles.missing];\n",
     });
-    const failed = BUILT_IN_CHECKS['css/module-classes'].input(
+    const failed = BUILT_IN_CALCULATIONS['css/module-classes'](
         buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
     );
     expect(failed.length).toBeGreaterThan(0);
@@ -132,7 +132,7 @@ test('ignored importers cannot satisfy a selected stylesheet class', async () =>
         },
     ]);
     await Bun.write(join(sandbox.path, 'styles.module.css'), '.card { color: red; }\n');
-    const corrected = BUILT_IN_CHECKS['css/module-classes'].input(
+    const corrected = BUILT_IN_CALCULATIONS['css/module-classes'](
         buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
     );
     expect(corrected).toStrictEqual([]);
@@ -177,7 +177,7 @@ test.each([
         'styles.module.css': '.card { color: red; }\n',
         'view.ts': `${declaration}\nexport const value = styles.missing;\n`,
     });
-    const result = BUILT_IN_CHECKS['css/module-classes'].input(
+    const result = BUILT_IN_CALCULATIONS['css/module-classes'](
         buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
     );
     expect(result.length > 0).toBe(bound);
@@ -200,13 +200,13 @@ test.each(DYNAMIC_READS)(
             'styles.module.css': '.card { color: red; }\n.unused { color: blue; }\n',
             'view.ts': `import styles from './styles.module.css';\n${source}\nexport const absent = styles.missing;\n`,
         });
-        const failed = BUILT_IN_CHECKS['css/module-classes'].input(
+        const failed = BUILT_IN_CALCULATIONS['css/module-classes'](
             buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
         );
         expect(failed.length).toBeGreaterThan(0);
         expect(failed).toMatchObject([{ file: 'view.ts', line: 3, rule: 'undefined-class' }]);
         await Bun.write(join(sandbox.path, 'view.ts'), `import styles from './styles.module.css';\n${source}\n`);
-        const corrected = BUILT_IN_CHECKS['css/module-classes'].input(
+        const corrected = BUILT_IN_CALCULATIONS['css/module-classes'](
             buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
         );
         expect(corrected).toStrictEqual([]);
@@ -220,7 +220,7 @@ test('CSS destructuring resolves aliases and reports unused definitions and miss
         'styles.module.css': '\n.card { color: red; }\n.unused { color: blue; }\n',
         'view.ts': "import styles from './styles.module.css';\nexport const { card: label, missing } = styles;\n",
     });
-    const failed = BUILT_IN_CHECKS['css/module-classes'].input(
+    const failed = BUILT_IN_CALCULATIONS['css/module-classes'](
         buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
     );
     expect(failed.length).toBeGreaterThan(0);
@@ -232,7 +232,7 @@ test('CSS destructuring resolves aliases and reports unused definitions and miss
         join(sandbox.path, 'view.ts'),
         "import styles from './styles.module.css';\nexport const { card: label, unused } = styles;\n",
     );
-    const corrected = BUILT_IN_CHECKS['css/module-classes'].input(
+    const corrected = BUILT_IN_CALCULATIONS['css/module-classes'](
         buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
     );
     expect(corrected).toStrictEqual([]);
@@ -248,7 +248,7 @@ test.each(['mts', 'cts'])(
             'styles.module.css': '.card { color: red; }\n',
             [path]: 'import styles from "./styles.module.css";\nexport const card = styles.missing;\n',
         });
-        const failed = BUILT_IN_CHECKS['css/module-classes'].input(
+        const failed = BUILT_IN_CALCULATIONS['css/module-classes'](
             buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
         );
         expect(failed.length).toBeGreaterThan(0);
@@ -260,7 +260,7 @@ test.each(['mts', 'cts'])(
             join(sandbox.path, path),
             'import styles from "./styles.module.css";\nexport const card = styles.card;\n',
         );
-        const corrected = BUILT_IN_CHECKS['css/module-classes'].input(
+        const corrected = BUILT_IN_CALCULATIONS['css/module-classes'](
             buildCheckInput(await openSession(sandbox.path), 'css/module-classes'),
         );
         expect(corrected).toStrictEqual([]);

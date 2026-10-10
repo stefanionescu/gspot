@@ -3,8 +3,8 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { ACTIVE_URLS, INERT_MARKUP } from '#tests/config/cli/checks/language/html.ts';
 
 describe('HTML script findings', () => {
@@ -14,7 +14,7 @@ describe('HTML script findings', () => {
             await using directory = await testdir();
             await createFileTree(directory.path, { 'gspot.toml': buildPolicy(['html']), 'page.html': markup });
             const session = await openSession(directory.path);
-            const findings = await BUILT_IN_CHECKS['html/scripts'].input(
+            const findings = await BUILT_IN_CALCULATIONS['html/scripts'](
                 buildCheckInput(session, 'html/scripts', { paths: ['page.html'] }),
             );
             expect(
@@ -32,7 +32,7 @@ describe('HTML script findings', () => {
         await createFileTree(directory.path, { 'gspot.toml': buildPolicy(['html']), 'page.html': markup });
         const session = await openSession(directory.path);
         expect(
-            await BUILT_IN_CHECKS['html/scripts'].input(
+            await BUILT_IN_CALCULATIONS['html/scripts'](
                 buildCheckInput(session, 'html/scripts', { paths: ['page.html'] }),
             ),
         ).toStrictEqual([]);

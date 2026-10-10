@@ -6,12 +6,12 @@ import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { applyIgnores } from '#cli/execution/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { sarifFindings } from '#cli/parsers/output/structured/public.ts';
 import type { CapturedInvocation } from '#tests/types/cli/checks/security.ts';
 
@@ -214,7 +214,7 @@ test.if(hasToolBuild('codeql')).each(['../outside', 'C:outside'])(
         );
         const corrected = await openSession(directory.path);
         expect(
-            await BUILT_IN_CHECKS['security/codeql'].input(buildCheckInput(corrected, 'security/codeql')),
+            await BUILT_IN_CALCULATIONS['security/codeql'](buildCheckInput(corrected, 'security/codeql')),
         ).toStrictEqual([]);
         expect(copies).not.toContain(directory.path);
         expect(sources).toStrictEqual(['value = 1\n']);
@@ -275,7 +275,7 @@ test.if(hasToolBuild('codeql')).each([
         } else if (!argv.includes('create')) throw new Error('Unexpected CodeQL command');
         return { ...base, stdout: '' };
     });
-    const findings = await BUILT_IN_CHECKS['security/codeql'].input(buildCheckInput(session, 'security/codeql'));
+    const findings = await BUILT_IN_CALCULATIONS['security/codeql'](buildCheckInput(session, 'security/codeql'));
     expect(invoked.map(({ cwd }) => cwd)).not.toContain(directory.path);
     const option = (command: string, prefix: string) =>
         invoked

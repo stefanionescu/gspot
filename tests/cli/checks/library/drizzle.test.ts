@@ -7,10 +7,10 @@ import { toPosix } from '#cli/platform/contracts.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { checkReport } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { checkInput } from '#cli/execution/contracts.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { getStaged } from '#cli/repository/revisions/public.ts';
 import { rejection, containing } from '#tests/harness/expectations.ts';
 import type { MigrationProject } from '#tests/types/cli/checks/drizzle.ts';
@@ -83,11 +83,11 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
         const testRepository = await applyChanges(directory.path, scope, 'failure');
         const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
         try {
-            expect(await rejection(BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input))).toContain(
+            expect(await rejection(BUILT_IN_CALCULATIONS['supabase/stale-types'](testRepository.input))).toContain(
                 'Migration generation failed',
             );
             await writeFile(join(directory.path, testRepository.path('schema.txt')), 'current');
-            expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([]);
+            expect(await BUILT_IN_CALCULATIONS['supabase/stale-types'](testRepository.input)).toStrictEqual([]);
             await expectPreserved(directory.path, testRepository);
         } finally {
             locate.mockRestore();
@@ -102,7 +102,7 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
         const testRepository = await applyChanges(directory.path, scope, 'changed');
         const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
         try {
-            const found = await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input);
+            const found = await BUILT_IN_CALCULATIONS['supabase/stale-types'](testRepository.input);
             expect(found.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
                 {
                     check: testRepository.check.name,
@@ -128,7 +128,7 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
                 ),
             ).toBe(true);
             await writeFile(join(directory.path, testRepository.path('schema.txt')), 'current');
-            expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([]);
+            expect(await BUILT_IN_CALCULATIONS['supabase/stale-types'](testRepository.input)).toStrictEqual([]);
             await expectPreserved(directory.path, testRepository);
         } finally {
             locate.mockRestore();
@@ -143,7 +143,7 @@ test('named-schema Drizzle tables need relations and comments do not satisfy the
     await createFileTree(sandbox.path, { 'schema.ts': schema });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['drizzle'], { level: 'all' }));
     const input = buildCheckInput(await openSession(sandbox.path), 'drizzle/relations', { paths: ['schema.ts'] });
-    expect(BUILT_IN_CHECKS['drizzle/relations'].input(input)).toMatchObject([
+    expect(BUILT_IN_CALCULATIONS['drizzle/relations'](input)).toMatchObject([
         { file: 'schema.ts', line: 2, rule: 'relations' },
     ]);
     await Bun.write(
@@ -151,7 +151,7 @@ test('named-schema Drizzle tables need relations and comments do not satisfy the
         `${schema}\nexport const memberRelations = relations(members, () => ({}));\n`,
     );
     const corrected = buildCheckInput(await openSession(sandbox.path), 'drizzle/relations', { paths: ['schema.ts'] });
-    expect(BUILT_IN_CHECKS['drizzle/relations'].input(corrected)).toStrictEqual([]);
+    expect(BUILT_IN_CALCULATIONS['drizzle/relations'](corrected)).toStrictEqual([]);
 });
 
 test.each(DRIZZLE_RELATIONS_CASES)('Drizzle relations reports its finding and passes after the fix', async (entry) => {
@@ -192,13 +192,13 @@ test.each(['', 'packages/db'])('staged Drizzle tables retain unstaged scope rela
     const planned = planRun(session, { stage: 'commit', skips: [], staged, only: ['drizzle/relations'] });
     const selected = planned.find((entry) => entry.scope.scope.path === scope)!;
     expect(selected.files.map((file) => file.path)).toContain(toPosix(declarations));
-    expect(BUILT_IN_CHECKS['drizzle/relations'].input(checkInput(session, selected))).toStrictEqual([]);
+    expect(BUILT_IN_CALCULATIONS['drizzle/relations'](checkInput(session, selected))).toStrictEqual([]);
     await writeFile(join(sandbox.path, declarations), '// relations(members, () => ({}))\n');
     const missing = await openSession(sandbox.path);
     const active = planRun(missing, { stage: 'commit', skips: [], staged, only: ['drizzle/relations'] }).find(
         (entry) => entry.scope.scope.path === scope,
     )!;
-    expect(BUILT_IN_CHECKS['drizzle/relations'].input(checkInput(missing, active))).toMatchObject([
+    expect(BUILT_IN_CALCULATIONS['drizzle/relations'](checkInput(missing, active))).toMatchObject([
         { file: toPosix(source), rule: 'relations' },
     ]);
 });
@@ -218,11 +218,11 @@ test.each(['{ teams, members }', '{ teams, people: members }'])(
             'child/relations.ts': '// defineRelations({ members })\nconst example = "defineRelations({ members })";\n',
         });
         const session = await openSession(sandbox.path);
-        expect(BUILT_IN_CHECKS['drizzle/relations'].input(buildCheckInput(session, 'drizzle/relations'))).toStrictEqual(
+        expect(BUILT_IN_CALCULATIONS['drizzle/relations'](buildCheckInput(session, 'drizzle/relations'))).toStrictEqual(
             [],
         );
         expect(
-            BUILT_IN_CHECKS['drizzle/relations'].input(
+            BUILT_IN_CALCULATIONS['drizzle/relations'](
                 buildCheckInput(session, 'drizzle/relations', { scope: 'child' }),
             ),
         ).toMatchObject([{ file: 'child/schema.ts', rule: 'relations' }]);
@@ -231,7 +231,7 @@ test.each(['{ teams, members }', '{ teams, people: members }'])(
             `export const declared = defineRelations(${tables});\n`,
         );
         expect(
-            BUILT_IN_CHECKS['drizzle/relations'].input(
+            BUILT_IN_CALCULATIONS['drizzle/relations'](
                 buildCheckInput(await openSession(sandbox.path), 'drizzle/relations', { scope: 'child' }),
             ),
         ).toStrictEqual([]);

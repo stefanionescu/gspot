@@ -4,11 +4,11 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { levelSchema } from '#cli/parsers/schema/contracts.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { functionFolders } from '#cli/checks/platform/public.ts';
@@ -32,13 +32,13 @@ test('Supabase configurations and function discovery stay within nested project 
     const nested = buildCheckInput(session, 'supabase/project-file', { scope: 'apps/api' });
     expect(functionFolders(root)).toStrictEqual(['supabase/functions/root']);
     expect(functionFolders(nested)).toStrictEqual(['apps/api/edge/hello']);
-    expect(BUILT_IN_CHECKS['supabase/project-file'].input(root)).toMatchObject([
+    expect(BUILT_IN_CALCULATIONS['supabase/project-file'](root)).toMatchObject([
         { file: 'supabase/config.toml', line: 1, rule: 'function' },
     ]);
-    expect(BUILT_IN_CHECKS['supabase/project-file'].input(nested)).toStrictEqual([]);
+    expect(BUILT_IN_CALCULATIONS['supabase/project-file'](nested)).toStrictEqual([]);
     await writeFile(join(sandbox.path, 'supabase/config.toml'), '[functions.root]\nverify_jwt = true\n');
     expect(
-        BUILT_IN_CHECKS['supabase/project-file'].input(
+        BUILT_IN_CALCULATIONS['supabase/project-file'](
             buildCheckInput(await openSession(sandbox.path), 'supabase/project-file'),
         ),
     ).toStrictEqual([]);
@@ -50,10 +50,10 @@ test('Supabase malformed configuration reports syntax before storage analysis', 
         'apps/api/supabase/config.toml': '[broken',
     });
     const broken = buildCheckInput(await openSession(sandbox.path), 'supabase/project-file', { scope: 'apps/api' });
-    expect(BUILT_IN_CHECKS['supabase/project-file'].input(broken)).toMatchObject([
+    expect(BUILT_IN_CALCULATIONS['supabase/project-file'](broken)).toMatchObject([
         { file: 'apps/api/supabase/config.toml', line: 1, rule: 'syntax' },
     ]);
-    expect(await BUILT_IN_CHECKS['supabase/storage-policies'].input(broken)).toStrictEqual([]);
+    expect(await BUILT_IN_CALCULATIONS['supabase/storage-policies'](broken)).toStrictEqual([]);
 });
 
 test('Supabase migration names are checked without parsing SQL or reading another scope', async () => {
@@ -67,10 +67,10 @@ test('Supabase migration names are checked without parsing SQL or reading anothe
     });
     const session = await openSession(sandbox.path);
     expect(
-        BUILT_IN_CHECKS['supabase/migration-names'].input(buildCheckInput(session, 'supabase/migration-names')),
+        BUILT_IN_CALCULATIONS['supabase/migration-names'](buildCheckInput(session, 'supabase/migration-names')),
     ).toStrictEqual([]);
     expect(
-        BUILT_IN_CHECKS['supabase/migration-names'].input(
+        BUILT_IN_CALCULATIONS['supabase/migration-names'](
             buildCheckInput(session, 'supabase/migration-names', { scope: 'apps/api' }),
         ),
     ).toMatchObject([
@@ -85,7 +85,7 @@ test('Supabase migration names are checked without parsing SQL or reading anothe
         join(sandbox.path, 'apps/api/supabase/migrations/20261005000001_valid.sql'),
     );
     expect(
-        BUILT_IN_CHECKS['supabase/migration-names'].input(
+        BUILT_IN_CALCULATIONS['supabase/migration-names'](
             buildCheckInput(await openSession(sandbox.path), 'supabase/migration-names', { scope: 'apps/api' }),
         ),
     ).toStrictEqual([]);
@@ -114,7 +114,7 @@ test.each([1, 2])(
         );
         expect(
             await rejection(
-                BUILT_IN_CHECKS['supabase/deno-lint'].input(buildCheckInput(session, 'supabase/deno-lint')),
+                BUILT_IN_CALCULATIONS['supabase/deno-lint'](buildCheckInput(session, 'supabase/deno-lint')),
             ),
         ).toBe('The project configuration is invalid.');
         expect(await Bun.file(join(sandbox.path, 'supabase/functions/greet/deno.json')).text()).toBe('{');
@@ -137,7 +137,7 @@ test.each(STORAGE_POLICIES.flatMap((entry) => levelSchema.options.map((level) =>
             const path = join(scope, 'supabase/migrations/20261005000000_policy.sql');
             await chmod(join(sandbox.path, path), 0o600);
             const input = buildCheckInput(await openSession(sandbox.path), 'supabase/storage-policies', { scope });
-            const findings = await BUILT_IN_CHECKS['supabase/storage-policies'].input(input);
+            const findings = await BUILT_IN_CALCULATIONS['supabase/storage-policies'](input);
             expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
                 allowed
                     ? []
@@ -156,7 +156,7 @@ test.each(STORAGE_POLICIES.flatMap((entry) => levelSchema.options.map((level) =>
                 "CREATE POLICY p ON storage.objects USING (bucket_id = 'avatars');",
             );
             expect(
-                await BUILT_IN_CHECKS['supabase/storage-policies'].input(
+                await BUILT_IN_CALCULATIONS['supabase/storage-policies'](
                     buildCheckInput(await openSession(sandbox.path), 'supabase/storage-policies', { scope }),
                 ),
             ).toStrictEqual([]);
@@ -172,7 +172,7 @@ test('storage policy analysis retains the native malformed migration refusal', a
         'supabase/migrations/20261005000000_policy.sql': 'CREATE POLICY ;',
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'supabase/storage-policies');
-    expect(await rejection(BUILT_IN_CHECKS['supabase/storage-policies'].input(input))).toContain(
+    expect(await rejection(BUILT_IN_CALCULATIONS['supabase/storage-policies'](input))).toContain(
         'supabase/migrations/20261005000000_policy.sql:1:',
     );
     expect(await readFile(join(sandbox.path, 'supabase/migrations/20261005000000_policy.sql'), 'utf8')).toBe(

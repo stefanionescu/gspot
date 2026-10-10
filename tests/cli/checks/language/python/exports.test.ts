@@ -3,8 +3,8 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { PYTHON_MODULE_HEADER } from '#tests/config/samples/python.ts';
 import { SHOWN } from '#tests/config/cli/checks/language/python/exports.ts';
 
@@ -15,7 +15,7 @@ test('a function left out of __all__ carries the private prefix', async () => {
         'example/tidy.py': `${PYTHON_MODULE_HEADER}${SHOWN}\n\ndef _hidden() -> int:\n    """Give two."""\n    return 2\n\n\n__all__ = ["shown"]\n`,
     });
     expect(
-        await BUILT_IN_CHECKS['python/private-prefix'].input(
+        await BUILT_IN_CALCULATIONS['python/private-prefix'](
             buildCheckInput(await openSession(sandbox.path), 'python/private-prefix'),
         ),
     ).toMatchObject([{ file: 'example/leaky.py', line: 9, rule: 'private-prefix' }]);
@@ -29,12 +29,12 @@ test('__all__ belongs at the bottom, lists shortest names first, and stays under
         'example/__init__.py': `${PYTHON_MODULE_HEADER}__all__ = ["a", "b", "c"]\n`,
     });
     expect(
-        await BUILT_IN_CHECKS['python/exports-at-bottom'].input(
+        await BUILT_IN_CALCULATIONS['python/exports-at-bottom'](
             buildCheckInput(await openSession(sandbox.path), 'python/exports-at-bottom'),
         ),
     ).toMatchObject([{ file: 'example/top.py', line: 4, rule: 'exports-at-bottom' }]);
     expect(
-        await BUILT_IN_CHECKS['python/export-order'].input(
+        await BUILT_IN_CALCULATIONS['python/export-order'](
             buildCheckInput(await openSession(sandbox.path), 'python/export-order'),
         ),
     ).toMatchObject([{ file: 'example/listed.py', line: 14, rule: 'export-order' }]);
@@ -43,7 +43,7 @@ test('__all__ belongs at the bottom, lists shortest names first, and stays under
         buildPolicy(['python'], { level: 'all', tables: '[limits]\nindex_exports = 2\n' }),
     );
     expect(
-        await BUILT_IN_CHECKS['python/package-exports'].input(
+        await BUILT_IN_CALCULATIONS['python/package-exports'](
             buildCheckInput(await openSession(sandbox.path), 'python/package-exports'),
         ),
     ).toMatchObject([{ file: 'example/__init__.py', line: 4, rule: 'package-exports' }]);
@@ -52,7 +52,7 @@ test('__all__ belongs at the bottom, lists shortest names first, and stays under
         buildPolicy(['python'], { level: 'all', tables: '[limits]\nindex_exports = 3\n' }),
     );
     expect(
-        await BUILT_IN_CHECKS['python/package-exports'].input(
+        await BUILT_IN_CALCULATIONS['python/package-exports'](
             buildCheckInput(await openSession(sandbox.path), 'python/package-exports'),
         ),
     ).toStrictEqual([]);
@@ -64,7 +64,7 @@ test('__all__ names in shortest-first order pass export ordering', async () => {
         'example/sorted.py': `${PYTHON_MODULE_HEADER}${SHOWN}\n\ndef ab() -> int:\n    """Give two."""\n    return 2\n\n\n__all__ = ["ab", "shown"]\n`,
     });
     expect(
-        await BUILT_IN_CHECKS['python/export-order'].input(
+        await BUILT_IN_CALCULATIONS['python/export-order'](
             buildCheckInput(await openSession(sandbox.path), 'python/export-order'),
         ),
     ).toStrictEqual([]);

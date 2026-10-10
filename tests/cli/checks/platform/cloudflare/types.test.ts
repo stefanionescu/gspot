@@ -6,11 +6,11 @@ import { toPosix } from '#cli/platform/contracts.ts';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { configurationManifests } from '#cli/configurations/public.ts';
@@ -68,7 +68,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
         using _generator = spyOn(processes, 'run').mockImplementation((argv, options) =>
             run([process.execPath, ...argv.slice(1)], options),
         );
-        expect(await rejection(BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input))).toContain(
+        expect(await rejection(BUILT_IN_CALCULATIONS['supabase/stale-types'](testRepository.input))).toContain(
             'Types generation failed',
         );
         await expectPreserved(directory.path, testRepository);
@@ -86,7 +86,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
         using _generator = spyOn(processes, 'run').mockImplementation((argv, options) =>
             run([process.execPath, ...argv.slice(1)], options),
         );
-        const findings = await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input);
+        const findings = await BUILT_IN_CALCULATIONS['supabase/stale-types'](testRepository.input);
         expect(findings).toMatchObject([
             {
                 check: testRepository.input.check.name,
@@ -98,7 +98,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
         ]);
         expect(findings[0]!.message).toContain('"wrangler","types"');
         await writeFile(join(directory.path, testRepository.path('bindings.txt')), testRepository.edited);
-        expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['supabase/stale-types'](testRepository.input)).toStrictEqual([]);
         await expectPreserved(directory.path, testRepository);
     },
 );
@@ -125,7 +125,7 @@ test('custom Worker type files retain the configured interface and child scope',
         }),
     );
     expect(
-        await BUILT_IN_CHECKS['supabase/stale-types'].input(
+        await BUILT_IN_CALCULATIONS['supabase/stale-types'](
             buildCheckInput(session, 'cloudflare/stale-types', { scope: 'workers/api' }),
         ),
     ).toStrictEqual([]);

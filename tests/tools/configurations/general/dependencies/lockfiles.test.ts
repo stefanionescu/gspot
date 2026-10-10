@@ -5,11 +5,11 @@ import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { checkInput } from '#cli/execution/contracts.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { NATIVE_LOCKFILES } from '#tests/config/tools/configurations/general/dependencies/lockfiles.ts';
 
 test.each([...NATIVE_LOCKFILES])(
@@ -34,13 +34,13 @@ test.each([...NATIVE_LOCKFILES])(
             only: ['dependencies/stale-lockfile'],
         });
         const input = checkInput(session, planned!);
-        expect(await BUILT_IN_CHECKS['dependencies/stale-lockfile'].input(input)).toContainEqual(
+        expect(await BUILT_IN_CALCULATIONS['dependencies/stale-lockfile'](input)).toContainEqual(
             containing({ rule: 'stale' }),
         );
         expect(await readFile(join(directory.path, lockfileName))).toStrictEqual(lockfile);
         expect(await readFile(join(directory.path, manifestPath), 'utf8')).toBe(changed);
         await Bun.write(join(directory.path, manifestPath), manifest);
-        expect(await BUILT_IN_CHECKS['dependencies/stale-lockfile'].input(input)).toStrictEqual([]);
+        expect(await BUILT_IN_CALCULATIONS['dependencies/stale-lockfile'](input)).toStrictEqual([]);
         expect(await readFile(join(directory.path, lockfileName))).toStrictEqual(lockfile);
         expect(await pathExists(join(directory.path, 'node_modules'))).toBe(false);
     },
