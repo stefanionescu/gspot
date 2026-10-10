@@ -124,7 +124,7 @@ export async function symlinks(input: CheckInput): Promise<Finding[]> {
             input,
             { file: entry.path, line: 1 },
             'symlink',
-            `A symlink to ${target.toString('utf8')}; Xcode and the checks each follow it their own way.`,
+            `Replace this symlink to ${target.toString('utf8')} with the file it points to.`,
         );
     });
 }

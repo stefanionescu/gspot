@@ -6,7 +6,7 @@ import { scopeSourcesByEnding } from '#cli/checks/tool/xcode/project.ts';
 import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/config/checks/tool/xcode.ts';
 
 /**
- * One finding for each xcconfig line that is no setting, no include, and no comment.
+ * One finding for each invalid xcconfig line.
  * @param input the check input
  * @returns the findings
  */
@@ -28,7 +28,7 @@ export function xcconfig(input: CheckInput): Finding[] {
                               input,
                               { file: path, line: index + 1 },
                               'xcconfig-line',
-                              'This line is no KEY = value setting, no #include, and no comment.',
+                              'Write this line as KEY = value.',
                           ),
                       ];
             }),
