@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { valueAt } from '#cli/platform/contracts.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
-import { containing, textContaining } from '#tests/harness/expectations.ts';
 
 test('ignores and loosened settings always require reasons and refusals preserve the policy', async () => {
     await using directory = await testdir();
@@ -55,37 +55,6 @@ test('named allowances always require a reason and removal restores enforcement'
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
     const report = restored.report;
     expect(report.checks[0]?.findings).toStrictEqual([containing({ file: 'entry.sh', line: 1, rule: 'banned-term' })]);
-});
-
-test('placeholder reasons and omitted tool-option reasons are refused without a policy write', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, {
-        'gspot.toml': `configurations = ["bash"]\n[agent_rules]\nenabled = false\n`,
-        'entry.sh': 'echo example\n',
-    });
-    const before = await readFile(join(directory.path, 'gspot.toml'), 'utf8');
-    const ignored = await runGspot(directory.path, ['ignore', 'bash/bash-syntax', '--reason', 'TBD']);
-    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(2);
-    expect(ignored.stdout + ignored.stderr).toContain('needs a reason that says something');
-    expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe(before);
-    const loosened = await runGspot(directory.path, ['set', 'limits.file_lines', '400', '--reason', 'TBD']);
-    expect(loosened.code, loosened.stdout + loosened.stderr).toBe(2);
-    const policyPath = join(directory.path, 'gspot.toml');
-    const written = await readFile(policyPath, 'utf8');
-    await Bun.write(policyPath, written + '\n[tools.shellcheck.verbatim]\nexternal_sources = true\n');
-    const checked = await checkReport(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
-    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const findings = checked.report.checks
-        .filter((check) => check.check === 'gspot/policy')
-        .flatMap((check) => check.findings);
-    const aboutExtra = {
-        file: 'gspot.toml',
-        message: textContaining('[tools.shellcheck.verbatim] needs an entry in [reasons]'),
-    };
-    expect(findings).toMatchObject([aboutExtra]);
-    expect(await readFile(policyPath, 'utf8')).toBe(
-        written + '\n[tools.shellcheck.verbatim]\nexternal_sources = true\n',
-    );
 });
 
 test.each([

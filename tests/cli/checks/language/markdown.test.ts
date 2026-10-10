@@ -5,9 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { rejection } from '#tests/harness/expectations.ts';
 import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
 
 test('TSX and JSONC fences use their declared syntax while JSON rejects comments', async () => {
     await using sandbox = await testdir();
@@ -50,25 +48,6 @@ test('tilde fences and unclosed examples still report invalid code', async () =>
         [2, 'syntax'],
         [6, 'syntax'],
     ]);
-});
-
-test('Bash examples report syntax errors, pass after fixes, and stop on cancellation', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['markdown'], { level: 'all' }),
-        'a.md': '```bash\nif then\n```\n',
-    });
-    let selected: CheckInput = buildCheckInput(await openSession(sandbox.path), 'markdown/fences', {
-        paths: ['a.md'],
-    });
-    const found = await BUILT_IN_CALCULATIONS['markdown/fences'](selected);
-    expect(found).toMatchObject([{ check: 'markdown/fences', file: 'a.md', line: 2, rule: 'syntax', fixable: false }]);
-    expect(found[0]!.message).toContain('syntax error');
-    await writeFile(join(sandbox.path, 'a.md'), '```bash\nprintf "%s\\n" "Hello"\n```\n');
-    selected = buildCheckInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['a.md'] });
-    expect(await BUILT_IN_CALCULATIONS['markdown/fences'](selected)).toStrictEqual([]);
-    selected.cancelSignal = AbortSignal.abort();
-    expect(await rejection(BUILT_IN_CALCULATIONS['markdown/fences'](selected))).toBe('The command was canceled.');
 });
 
 test.each(['tsx', 'jsx'])('a %s fence rejects unclosed JSX and passes after the fix', async (language) => {

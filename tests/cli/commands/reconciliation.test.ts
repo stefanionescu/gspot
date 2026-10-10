@@ -12,7 +12,7 @@ import { collectPins } from '#cli/configurations/contracts.ts';
 import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import { rm, unlink, readFile, writeFile } from 'node:fs/promises';
 import { openSession, applyCommand } from '#cli/commands/public.ts';
-import type { NpmLockfile } from '#tests/types/cli/commands/reconciliation.ts';
+import type { NpmLockfile } from '#tests/types/cli/reconciliation.ts';
 import { EXPO_DEPENDENCIES, NATIVE_DEPENDENCIES } from '#tests/config/samples/react.ts';
 
 import {

@@ -28,44 +28,6 @@ test.each([
     expect(diagnostic.message).toContain('bash');
 });
 
-test('a nested unknown setting is a finding at its key path', async () => {
-    const policy = buildPolicy(['bash'], {
-        tables: '[scope."api"]\n[scope."api".limits]\nfile_linse = 200\n',
-    });
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/source.sh': 'echo example\n' });
-    const invalid = await checkReport(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json']);
-    expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
-    const report = invalid.report;
-    expect(report.checks.find((check) => check.check === 'gspot/policy')?.findings).toMatchObject([
-        { message: textContaining('scope.api.limits.file_linse:') },
-    ]);
-});
-
-test('a loosening without a reason is a finding of gspot/policy, and the rest of the policy runs', async () => {
-    const policy = buildPolicy(['bash'], {
-        tables: '[limits]\nfile_lines = 1000\n',
-    });
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.sh': 'echo example\n' });
-    const checked = await checkReport(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json']);
-    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const report = checked.report;
-    expect(report.checks).toMatchObject([
-        { check: 'bash/bash-syntax', status: 'passed' },
-        {
-            check: 'gspot/policy',
-            status: 'failed',
-            findings: [{ file: 'gspot.toml', message: textContaining('limits.file_lines: ') }],
-        },
-    ]);
-    const listed = await runGspot(sandbox.path, ['list', '--json']);
-    expect(listed.code, listed.stdout + listed.stderr).toBe(0);
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code).toBe(2);
-    expect(applied.stdout + applied.stderr).toContain('gspot.toml: limits.file_lines:');
-});
-
 test.each(['\n', '\r\n'])('configuration errors name the key path in text and JSON with %j lines', async (newline) => {
     await using sandbox = await testdir();
     const policy = ['configurations = []', 'runner = "wrong"', ''].join(newline);

@@ -17,25 +17,6 @@ import { BASE_CHECK } from '#tests/config/cli/execution/command/findings.ts';
 import { PROJECT_PATH_IGNORES } from '#tests/config/cli/execution/impact.ts';
 import { NESTED_POLICY, PROJECT_OPTIONS, PROJECT_TRIGGERS } from '#tests/config/samples/commands.ts';
 
-test('command checks retain nested inputs and report their findings once at the root', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `${NESTED_POLICY}\n[check."project/syntax"]\ncommand = ["bash", "-n", "{files}"]\npaths = ["**/*.sh"]\nstage = "push"\n`,
-        'api/source.sh': 'if then\n',
-        'web/source.sh': 'echo sibling\n',
-    });
-    const options = buildRunOptions({
-        stage: 'push',
-        only: ['project/syntax'],
-        changed: ['api/source.sh'],
-    });
-    const failed = await executeRun(await openSession(sandbox.path), options);
-    expect(failed.report.exitCode).toBe(1);
-    expect(failed.report.checks).toMatchObject([
-        { check: 'project/syntax', scope: '', fileCount: 1, status: 'failed' },
-    ]);
-});
-
 test.each(PROJECT_TRIGGERS)(
     'a last-file %s triggers the affected project with %s selection',
     async (operation, selection) => {

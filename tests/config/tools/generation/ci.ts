@@ -1,13 +1,3 @@
-import type { Pipeline } from '#cli/types/generation/ci.ts';
-
-export const PIPELINE: Pipeline = {
-    version: '1.2.3',
-    platforms: ['linux'],
-    hasSwift: false,
-    isMise: true,
-    manualChecks: ['security/codeql'],
-};
-
 export const DOCTOR_EXIT_CODES = [0, 37];
 
 export const MISE_PROGRAM = `#!/bin/sh

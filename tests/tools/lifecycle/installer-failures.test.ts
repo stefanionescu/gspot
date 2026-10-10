@@ -12,7 +12,7 @@ import { pathExists } from '#tests/harness/preservation.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
-import { INSTALLATION_FAILURES } from '#tests/config/cli/lifecycle/installer-failures.ts';
+import { INSTALLATION_FAILURES } from '#tests/config/tools/lifecycle/installer-failures.ts';
 
 const { version: RUNNING_VERSION } = packageManifest;
 

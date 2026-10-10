@@ -1,5 +1,3 @@
-export const CHILD_OPTIONS = { stdout: 'pipe', stderr: 'pipe', killSignal: 'SIGKILL' } as const;
-
 /** The cancellation probe runs one subprocess whose lifetime it observes. */
 export const SLOW_CHECK = ['check', '--only', 'project/slow', '--json'];
 

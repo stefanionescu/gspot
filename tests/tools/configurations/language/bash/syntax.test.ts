@@ -10,6 +10,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { NESTED_POLICY } from '#tests/config/samples/commands.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { runGspot, spawnGspot, checkReport, buildRunOptions } from '#tests/harness/gspot.ts';
 import { SYNTAX_CASES, DECLARATION_CASES } from '#tests/config/tools/configurations/language/bash/syntax.ts';
@@ -151,3 +152,91 @@ test.each(DECLARATION_CASES)(
         );
     },
 );
+
+test('command checks retain nested inputs and report their findings once at the root', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': `${NESTED_POLICY}\n[check."project/syntax"]\ncommand = ["bash", "-n", "{files}"]\npaths = ["**/*.sh"]\nstage = "push"\n`,
+        'api/source.sh': 'if then\n',
+        'web/source.sh': 'echo sibling\n',
+    });
+    const options = buildRunOptions({
+        stage: 'push',
+        only: ['project/syntax'],
+        changed: ['api/source.sh'],
+    });
+    const failed = await executeRun(await openSession(sandbox.path), options);
+    expect(failed.report.exitCode).toBe(1);
+    expect(failed.report.checks).toMatchObject([
+        { check: 'project/syntax', scope: '', fileCount: 1, status: 'failed' },
+    ]);
+});
+
+test('placeholder reasons and omitted tool-option reasons are refused without a policy write', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': `configurations = ["bash"]\n[agent_rules]\nenabled = false\n`,
+        'entry.sh': 'echo example\n',
+    });
+    const before = await readFile(join(directory.path, 'gspot.toml'), 'utf8');
+    const ignored = await runGspot(directory.path, ['ignore', 'bash/bash-syntax', '--reason', 'TBD']);
+    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(2);
+    expect(ignored.stdout + ignored.stderr).toContain('needs a reason that says something');
+    expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe(before);
+    const loosened = await runGspot(directory.path, ['set', 'limits.file_lines', '400', '--reason', 'TBD']);
+    expect(loosened.code, loosened.stdout + loosened.stderr).toBe(2);
+    const policyPath = join(directory.path, 'gspot.toml');
+    const written = await readFile(policyPath, 'utf8');
+    await Bun.write(policyPath, written + '\n[tools.shellcheck.verbatim]\nexternal_sources = true\n');
+    const checked = await checkReport(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    const findings = checked.report.checks
+        .filter((check) => check.check === 'gspot/policy')
+        .flatMap((check) => check.findings);
+    const aboutExtra = {
+        file: 'gspot.toml',
+        message: textContaining('[tools.shellcheck.verbatim] needs an entry in [reasons]'),
+    };
+    expect(findings).toMatchObject([aboutExtra]);
+    expect(await readFile(policyPath, 'utf8')).toBe(
+        written + '\n[tools.shellcheck.verbatim]\nexternal_sources = true\n',
+    );
+});
+
+test('a nested unknown setting is a finding at its key path', async () => {
+    const policy = buildPolicy(['bash'], {
+        tables: '[scope."api"]\n[scope."api".limits]\nfile_linse = 200\n',
+    });
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/source.sh': 'echo example\n' });
+    const invalid = await checkReport(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json']);
+    expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
+    const report = invalid.report;
+    expect(report.checks.find((check) => check.check === 'gspot/policy')?.findings).toMatchObject([
+        { message: textContaining('scope.api.limits.file_linse:') },
+    ]);
+});
+
+test('a loosening without a reason is a finding of gspot/policy, and the rest of the policy runs', async () => {
+    const policy = buildPolicy(['bash'], {
+        tables: '[limits]\nfile_lines = 1000\n',
+    });
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.sh': 'echo example\n' });
+    const checked = await checkReport(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json']);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    const report = checked.report;
+    expect(report.checks).toMatchObject([
+        { check: 'bash/bash-syntax', status: 'passed' },
+        {
+            check: 'gspot/policy',
+            status: 'failed',
+            findings: [{ file: 'gspot.toml', message: textContaining('limits.file_lines: ') }],
+        },
+    ]);
+    const listed = await runGspot(sandbox.path, ['list', '--json']);
+    expect(listed.code, listed.stdout + listed.stderr).toBe(0);
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code).toBe(2);
+    expect(applied.stdout + applied.stderr).toContain('gspot.toml: limits.file_lines:');
+});
