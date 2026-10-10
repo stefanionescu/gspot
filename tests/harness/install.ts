@@ -69,7 +69,7 @@ function cacheDirectory(inputs: string[]): string {
     return join(dirname(archives), TOOL_CACHE_FOLDER, key);
 }
 
-// Cache the first installation with its native validation.
+// Cache native installations on disk; the first sandbox needs no copy.
 async function prepareNpmProject(root: string, inputs: GeneratedFile[]): Promise<SharedToolProject> {
     const directory = cacheDirectory(inputs.flatMap(({ path, content }) => [path, content]));
     let prepared = npmProjects.get(directory);
@@ -79,13 +79,10 @@ async function prepareNpmProject(root: string, inputs: GeneratedFile[]): Promise
             using files = openRoot(root);
             const path = packageToolProject.lockfilePath(packageToolProject.parse(inputs[0]!.content));
             const lockfile: GeneratedFile = { path, content: files.read(path)!.bytes.toString('utf8'), kind: 'lock' };
-            const entries = readInstalledTree(files.realPath(NODE_MODULES_DIRECTORY), 'npm');
-            return {
-                lockfile,
-                install(log) {
-                    installTree(log, 'npm', entries);
-                },
-            };
+            await mkdir(directory, { recursive: true });
+            using log = openOwnership(directory);
+            installTree(log, 'npm', readInstalledTree(files.realPath(NODE_MODULES_DIRECTORY), 'npm'));
+            return { lockfile, directory };
         })();
         npmProjects.set(directory, prepared);
         const { lockfile } = await prepared;
@@ -203,13 +200,10 @@ export async function installToolProjects(cwd: string): Promise<void> {
  */
 export async function shareToolProjects(root: string): Promise<Record<string, string>> {
     let environment: Record<string, string> = { PATH: buildToolsPath([]) };
-    {
-        using files = openRoot(root);
-        if (files.read(TOOL_PYTHON_PROJECT) !== undefined) environment = await sharePythonTools(root);
-    }
     let npm: SharedToolProject | undefined;
     {
         using files = openRoot(root);
+        if (files.read(TOOL_PYTHON_PROJECT) !== undefined) environment = await sharePythonTools(root);
         const inputs: GeneratedFile[] = [TOOL_PACKAGE_PROJECT, ...packageToolProject.additionalPaths].flatMap(
             (path) => {
                 const file = files.read(path);
@@ -229,13 +223,15 @@ export async function shareToolProjects(root: string): Promise<Record<string, st
             kind: 'lock',
             read: pythonLockfile,
         });
-    if (npm === undefined) writeGeneratedFiles(session, generated, log);
-    else {
+    let directory: string | undefined;
+    if (npm !== undefined) {
         generated.files.push({ ...npm.lockfile, ...compact({ read: log.files.read(npm.lockfile.path) }) });
-        writeGeneratedFiles(session, generated, log);
-        npm.install?.(log);
+        directory = npm.directory;
         environment['PATH'] = [join(root, NODE_MODULES_DIRECTORY, '.bin'), environment['PATH']].join(delimiter);
     }
+    writeGeneratedFiles(session, generated, log);
+    if (directory !== undefined)
+        installTree(log, 'npm', readInstalledTree(join(directory, NODE_MODULES_DIRECTORY), 'npm'));
     if (generated.files.some(({ path }) => path === VALE_CONFIG) && session.policyFiles.policy.level === 'all') {
         const vale = await prepareValeProject(session);
         installTree(log, 'vale', readInstalledTree(join(vale, VALE_PACKAGE_DIRECTORY), 'vale'));

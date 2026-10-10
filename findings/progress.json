@@ -5251,7 +5251,8 @@
                 "Evidence cf1539a1ff4fa87b.",
                 "Owner-approved single TEST_TIMEOUT_MS now reaches CLI/plugin/tools/packages through scripts/plugin.ts native Bun --timeout; child-process budget remains preload-owned.",
                 "Actual unchanged two-file 5200ms regression passes2/2 in10.44s /tmp/gspot-native-shared-timeout-main-two-files.log; integrated source/cancellation/site20pass70assert3files4.10s. Final measured constant remains pending all suites/platforms.",
-                "Evidence 0175901faf714fc9."
+                "Evidence 0175901faf714fc9.",
+                "Evidence b7088713e096ebae."
             ],
             "additionalChanges": [
                 {
@@ -9135,7 +9136,8 @@
                 "44 local native manifest pins installed/resolved, focused native tests and all package consumers passed; full tools suite started.",
                 "Evidence 0175901faf714fc9.",
                 "Evidence 702f63a4844df48a.",
-                "Evidence a710a8f87755c78d."
+                "Evidence a710a8f87755c78d.",
+                "Evidence b7088713e096ebae."
             ],
             "remaining": [
                 "Full tools suite must pass and establish every applicable tool resolves.",
