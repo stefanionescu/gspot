@@ -1,6 +1,6 @@
 # Tests: Lifecycle and Repository Integration Tests
 
-6 unresolved review records remain.
+5 unresolved review records remain.
 
 ## Open findings
 
@@ -213,3 +213,11 @@ Original records and quotations remain above. These records are complete at `ba9
 | ID                                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ---------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-lifecycle/041` | complete | Native init 115 tests 543 assertions and spelling 10 cases 54 assertions pass; staged 29 pass 0 fail 2 skip 0 findings. Original assertions/resources preserved; reducing two-owner successor removes 242 bytes. All28CLI buildInitOptions callers now omit redundant hooks/runner/ci/agentRules values. Prescribed installer-failures and moved init replacement/refusal callers already omit them; four remaining serialization overrides deleted. Global native TypeScript AST census has zero redundant quiet fields. Proof /tmp/gspot-lifecycle041-02dd-draft/freeze.json and /tmp/gspot-lifecycle041-02dd-final-caller-proof.json. No intentional changed choices removed. Commit `ba91c6b14f8493bf36b7f2bfedfe1035db3e6301`. |
+
+## Implementation checkpoint ca2975ca5 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `ca2975ca5552d3276e78bbd6d897c44cfdf70a09`.
+
+| ID                                       | Status   | Evidence                                                                      |
+| ---------------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `slices/tests-integration-lifecycle/003` | complete | Evidence f568f0803963f1d7. Commit `ca2975ca5552d3276e78bbd6d897c44cfdf70a09`. |

@@ -1,5 +1,5 @@
 {
-    "openRecords": 172,
+    "openRecords": 171,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 172,
+        "openRecords": 171,
         "records": 1092,
         "batches": [
             {
@@ -1956,8 +1956,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 401,
-                "unresolvedAssignments": 68
+                "completedAssignments": 402,
+                "unresolvedAssignments": 67
             },
             {
                 "id": "scripts-repository",
@@ -2241,8 +2241,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 109,
-                "unresolvedAssignments": 28
+                "completedAssignments": 110,
+                "unresolvedAssignments": 27
             },
             {
                 "id": "policy-file",
@@ -14016,16 +14016,10 @@
             ]
         },
         "slices/tests-integration-lifecycle/003": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": [
-                "Deleted third apply in obsolete-output parent test, whose sole assertion was exit zero. Preserved unsafe-parent refusal, outside bytes, actual corrected deletion and output publication assertions.",
-                "Evidence cde7352de5243559."
-            ],
-            "remaining": [
-                "Mandatory staged verification, coherent mechanical/behavior commits, push and cross-platform CI evidence."
-            ]
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "verification": ["Evidence f568f0803963f1d7."]
         },
         "slices/tests-integration-lifecycle/005": {
             "status": "partial",
@@ -14036,7 +14030,16 @@
                 "Evidence cde7352de5243559."
             ],
             "remaining": [
-                "Mandatory staged verification, coherent mechanical/behavior commits, push and cross-platform CI evidence."
+                "Verify corrected preview on Linux, macOS and Windows; final combined release verification remains distinct."
+            ],
+            "additionalChanges": [
+                {
+                    "commit": "5422cc6b0e0ffa0cd24a77ad8e3cb340f21fbcf2",
+                    "evidence": "/tmp/gspot-lifecycle005-duplicate-lint-intake.json",
+                    "verification": [
+                        "Current committed preview duplicate scoped lint deleted (-417 bytes); native9pass/0fail/37assert after normal plugin build. Dedicated native ESLint ignores preserve path/scope coverage. Staged29pass/0fail/2skip/0findings; cross-platform corrected preview remains required."
+                    ]
+                }
             ]
         },
         "slices/tests-integration-lifecycle/006": {
@@ -19858,6 +19861,15 @@
             "limitations": [
                 "main/001 external publication/setup and final release verification remain partial; no platform success inferred from local replay."
             ]
+        },
+        {
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "completedRecords": ["slices/tests-integration-lifecycle/003"],
+            "unresolvedRecords": 171,
+            "validation": [
+                "Actual named Linux/macOS/Windows callback passes; current owner byte-identical to tested525a; current focused9pass/37assert. No final tools/release pass claimed."
+            ],
+            "limitations": ["main/001 external publication/setup and final combined verification remain partial."]
         }
     ],
     "verificationEvidenceFile": "verification.json"
