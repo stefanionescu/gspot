@@ -1,6 +1,6 @@
 # Unresolved Findings
 
-19 unresolved review records remain. 7 come from the review of October 6, 2026 and the owner decisions of that day. 12 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
+17 unresolved review records remain. 7 come from the review of October 6, 2026 and the owner decisions of that day. 10 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
 
 On October 6, 2026, a read-only verification checked all 802 older records against commit `3e1445a2d` and closed 203. The owner decisions of October 6 and 7, 2026 closed 15 more. A coherence check then compared every open record with the decisions and with every other record, and closed 272 duplicates, superseded records, and wrong records. [The closed list](findings/review/closed.md) gives the evidence for each. Each older findings file ends with a "Status on October 6, 2026" table that gives the current file and what remains; the original rows above it are history.
 
@@ -20,7 +20,7 @@ On October 6, 2026, a read-only verification checked all 802 older records again
 8. Carve-outs: one TEST_TIMEOUT_MS serves every suite through the runner and preload. Final platform measurement remains pending. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
 9. File and folder names: `commands/policy-edit.ts`, `tools/installed-files.ts`, and `tools/installation.ts` are explained, with a target tree and a move table, in [the source layout review](findings/review/source-layout.md). [The test layout review](findings/review/tests-layout.md) has the same for `tests/`.
 
-1073 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
+1075 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
 
 ## Review of October 6, 2026
 
@@ -53,7 +53,7 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | Review                                                                                                         | Open records |
 | -------------------------------------------------------------------------------------------------------------- | -----------: |
 | Pending summary records (below)                                                                                |            5 |
-| [Findings From Implementation Verification](findings/additional.md)                                            |            1 |
+| [Findings From Implementation Verification](findings/additional.md)                                            |            0 |
 | [Built-in Checks](findings/areas/checks.md)                                                                    |            2 |
 | [Developer Experience in Non-JavaScript and Mixed Projects](findings/areas/developer-experience.md)            |            0 |
 | [Integration Tests Outside the Checks Folder](findings/areas/integration-tests.md)                             |            0 |
@@ -68,7 +68,7 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | [Kits: Python, Swift, Bash, and SQL](findings/slices/kits-other-languages.md)                                  |            0 |
 | [Kits: JavaScript, TypeScript, CSS, HTML, and Markdown](findings/slices/kits-web-languages.md)                 |            0 |
 | [Tests: Acceptance](findings/slices/tests-acceptance.md)                                                       |            0 |
-| [Tests: Check Integration Tests](findings/slices/tests-integration-checks.md)                                  |            3 |
+| [Tests: Check Integration Tests](findings/slices/tests-integration-checks.md)                                  |            2 |
 | [Tests: Command, Policy, Platform, and Tools Integration Tests](findings/slices/tests-integration-commands.md) |            0 |
 | [Tests: Execution Integration Tests](findings/slices/tests-integration-execution.md)                           |            0 |
 | [Tests: Generation Integration Tests](findings/slices/tests-integration-generation.md)                         |            0 |

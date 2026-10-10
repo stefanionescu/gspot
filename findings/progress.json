@@ -1,5 +1,5 @@
 {
-    "openRecords": 19,
+    "openRecords": 17,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -1244,10 +1244,30 @@
                 "Explicit user approval in this conversation.",
                 "/tmp/gspot-bun-e985-supported-native-probe/full-current/freeze.json SHA256 bdf2ed07795510a7bbf3ade28d0b16eeb6ac5927c5754498fd127540433f2a20; native macOS proof only, cross-platform CI remains required."
             ]
+        },
+        {
+            "id": "native-generator-tool-floor65",
+            "date": "2026-10-10",
+            "scope": "Drizzle/Wrangler native generator minima and version queries",
+            "decision": "Allow exact65 static bytes across two manifests: Drizzle minimum0.21.0 for generate, Wrangler minimum3.78.3 for deterministic types output, and explicit --version queries for both system tools. No executable source increase.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-freshness-e985-native-attribution/complete-manifest65-final/freeze-corrected.json SHA2560912d4797ede0afb4ba8ff6d07d5666d2aeb84aa4e3d9c63543a59752bfc5e71; native5pass39assertions, types/Taplo pass; prior timestamp/old-floor failures retained."
+            ]
+        },
+        {
+            "id": "npm-cache-native-creation137",
+            "date": "2026-10-10",
+            "scope": "tests/harness/install.ts private npm cache creation",
+            "decision": "Allow exact137 support bytes for native validated cache creation; production and test callbacks unchanged. Keep journaled fixture publication, exact cache keys, shared failed promises and real installation.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-native-cache-creation-e985-proof/freeze.json SHA25647c7e2f664a9eaf285e49c042ce849c55a5d1ca65f95a1ba8d91cd71bf30b5bd; native36cases180assertions; actual Windows benchmark is feasibility only, no full-suite performance claim."
+            ]
         }
     ],
     "implementationBatches": {
-        "openRecords": 19,
+        "openRecords": 17,
         "records": 1092,
         "batches": [
             {
@@ -1707,8 +1727,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 94,
-                "unresolvedAssignments": 5
+                "completedAssignments": 96,
+                "unresolvedAssignments": 3
             },
             {
                 "id": "swift-bash-sql",
@@ -1936,8 +1956,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 122,
-                "unresolvedAssignments": 9
+                "completedAssignments": 123,
+                "unresolvedAssignments": 8
             },
             {
                 "id": "test-quality",
@@ -2413,8 +2433,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 466,
-                "unresolvedAssignments": 3
+                "completedAssignments": 467,
+                "unresolvedAssignments": 2
             },
             {
                 "id": "scripts-repository",
@@ -3006,12 +3026,12 @@
     "implementationBaseline": "b36d7d0fc",
     "implementationRecords": {
         "additional/next-app-router-links": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "a6e22f689739296608dbd311a05e7864aa2175dc",
-            "verification": ["Evidence 01badde4fa0217fb.", "Evidence 6f05798883ca7763."],
-            "remaining": [
-                "Exact1007-byte size disposition remains required. Resolve upstream reporting requirement using existing report/PR or a compliant human-authored report with public reproduction; factual draft and portable reproduction are prepared."
+            "commit": "8cef1123d57bbf3c0809ebaf7ec282da3967a0b6",
+            "verification": [
+                "Pages-only directory detection and level applicability are delivered with the original Pages test and App-only off control. Exact1007-byte concern explicitly approved; current template/test owners are byte-identical to e985.",
+                "Upstream reporting obligation is fulfilled by existing https://github.com/vercel/next.js/pull/94556, whose current public body identifies the same parseUrlForAppDir/parseUrlForPages recursion bug. Current source/report proof /tmp/gspot-next-app-router-upstream-current-completion-proof.json. PR remains open; no new message, upgrade or upstream release claim."
             ]
         },
         "areas/checks/008": {
@@ -13582,10 +13602,13 @@
             ]
         },
         "slices/tests-integration-checks/011": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "8cef1123d57bbf3c0809ebaf7ec282da3967a0b6",
+            "verification": [
+                "Original native links/markup/selectors cases run in tools with actual installed locator and emitted shipped configuration; handwritten config, command redirect and10-second override are removed. Current CLI fatal/malformed-report boundary mocks remain distinct coverage.",
+                "Exact original same-operation transport/emitted-locator concern removes232 bytes across five owners, with overlaps counted once. /tmp/gspot-five-historical-leaves-947-readonly/receipt.json SHA2565a20487a2df5dfa8b0804ef9a51c886ee438e1e6de116f061dad8979f63ec5b2 maps all six current native rows and byte-identical callbacks to actual prior pass lines700\u2013705. Original full-run failures elsewhere and platform limits retained; no aggregate pass inferred."
+            ]
         },
         "slices/tests-integration-checks/013": {
             "status": "complete",
@@ -20271,6 +20294,17 @@
                 "Current committed source census/native owner bridge, approved3234/251 costs counted once, normal producer/staged/commit evidence."
             ],
             "limitations": ["Global cross-platform/full-suite/release obligations remain separate."]
+        },
+        {
+            "commit": "8cef1123d57bbf3c0809ebaf7ec282da3967a0b6",
+            "completedRecords": ["additional/next-app-router-links", "slices/tests-integration-checks/011"],
+            "unresolvedRecords": 17,
+            "validation": [
+                "Re-read exact original/current bindings, actual committed owner hashes, native callback bridges and current public upstream report. All obligations for these two leaf records fulfilled."
+            ],
+            "limitations": [
+                "Global cross-platform/full-suite/release records remain separate; open upstream PR is a report, not a shipped dependency fix."
+            ]
         }
     ],
     "verificationEvidenceFile": "verification.json"
