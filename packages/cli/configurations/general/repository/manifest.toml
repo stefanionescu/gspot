@@ -29,6 +29,5 @@ help = "Add the reported file or folder to .gitignore and remove it from the ind
 name = "limits.file_kb"
 type = "number"
 direction = "ceiling"
-default_all = 1024
 default = 1024
 summary = "The largest file Git may track, in kilobytes. Larger files need Git LFS or a generated or vendored entry."

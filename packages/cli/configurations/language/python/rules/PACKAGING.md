@@ -14,7 +14,7 @@ Install from the uv lockfile:
 uv sync --frozen
 ```
 
-At level `all`, use pip only in paths listed in `tools.pip.installs_allowed`. Update lockfiles only
+At level `all`, justify pip use with `gspot ignore python/pip-installs`. Update lockfiles only
 when the task includes dependency maintenance.
 
 ## Import correctness

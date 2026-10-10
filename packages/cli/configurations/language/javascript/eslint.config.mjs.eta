@@ -169,7 +169,6 @@ const sonarRules = {
     // The secrets configuration owns secret detection.
     'sonarjs/no-hardcoded-passwords': 'off',
     'sonarjs/no-hardcoded-secrets': 'off',
-    // A file of fixtures beside tests contains no test cases.
     'sonarjs/no-empty-test-file': 'off',
     'sonarjs/no-collapsible-if': 'error',
     ...levelRules.sonar,
