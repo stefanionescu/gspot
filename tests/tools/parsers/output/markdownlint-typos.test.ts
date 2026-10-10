@@ -27,8 +27,7 @@ async function runMarkdown(root: string, paths: string[]) {
     }
     const environment = await shareToolProjects(root);
     const configuration = generated.files.find(({ path }) => path === '.gspot/config/markdownlint-cli2.mjs')!;
-    const plans = planRun(session, { stage: 'all', only: ['markdown/markdownlint'], skips: [] });
-    const planned = plans[0]!;
+    const planned = planRun(session, { stage: 'all', only: ['markdown/markdownlint'], skips: [] })[0]!;
     const command = [
         'markdownlint-cli2',
         '--no-globs',
@@ -37,7 +36,7 @@ async function runMarkdown(root: string, paths: string[]) {
         ...paths.map((path) => `:${path}`),
     ];
     const failed = await runTestCommand(command, { cwd: root, env: environment });
-    return { planned, command, failed, environment };
+    return { session, planned, command, failed, environment };
 }
 
 test('native Markdown JSON preserves filename delimiters, positions, and fixability', async () => {
@@ -80,9 +79,9 @@ test('native Markdown output refuses crashes and failures without attributed fin
         }),
         'sample.md': 'café <img src="example.png">   \n',
     });
-    const { planned, failed } = await runMarkdown(sandbox.path, ['sample.md']);
+    const { session, planned, failed } = await runMarkdown(sandbox.path, ['sample.md']);
     expect(failed.code, failed.stderr).toBe(1);
-    const declared = planRun(await openSession(sandbox.path), {
+    const declared = planRun(session, {
         stage: 'all',
         only: ['sandbox/markdown'],
         skips: [],

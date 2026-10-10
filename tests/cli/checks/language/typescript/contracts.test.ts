@@ -165,9 +165,12 @@ test('a scope whose project lists no JavaScript file passes with nothing to comp
     const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(applied.exitCode).toBe(0);
     const reopened = await openSession(sandbox.path);
-    const [root] = planRun(reopened, { stage: 'push', skips: [], only: ['javascript/tsc'] });
-    // Saved scope policy can outlive its JavaScript inputs and generated compiler configuration.
-    const site = { ...root!, scope: reopened.scopes.find((entry) => entry.scope.path === 'site')!, files: [] };
+    const site = planRun(reopened, {
+        stage: 'push',
+        skips: [],
+        only: ['javascript/tsc'],
+        staged: ['gspot.toml'],
+    }).find((entry) => entry.scope.scope.path === 'site')!;
     expect(await checkjs(reopened, site)).toMatchObject({
         check: 'javascript/tsc',
         scope: 'site',

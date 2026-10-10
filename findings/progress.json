@@ -1,5 +1,5 @@
 {
-    "openRecords": 175,
+    "openRecords": 173,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 175,
+        "openRecords": 173,
         "records": 1092,
         "batches": [
             {
@@ -1250,8 +1250,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 61,
-                "unresolvedAssignments": 38
+                "completedAssignments": 62,
+                "unresolvedAssignments": 37
             },
             {
                 "id": "swift-bash-sql",
@@ -1479,8 +1479,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 92,
-                "unresolvedAssignments": 39
+                "completedAssignments": 93,
+                "unresolvedAssignments": 38
             },
             {
                 "id": "test-quality",
@@ -4312,6 +4312,11 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": "525a99755cc89096829644f522f0d083d92d7c56",
+                    "evidence": "/tmp/gspot-kits104-docs-525a/freeze.json",
+                    "verification": ["Evidence 043ef4ffc04c4700."]
                 }
             ]
         },
@@ -4590,10 +4595,10 @@
             ]
         },
         "areas/kits/135": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "525a99755cc89096829644f522f0d083d92d7c56",
+            "verification": ["Evidence 15a9935583acd167."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -4612,10 +4617,10 @@
             ]
         },
         "areas/kits/138": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "525a99755cc89096829644f522f0d083d92d7c56",
+            "verification": ["Evidence 0c56f2d4d03e153d."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -13049,7 +13054,14 @@
             "status": "partial",
             "owner": null,
             "commit": null,
-            "verification": []
+            "verification": [],
+            "additionalChanges": [
+                {
+                    "commit": "525a99755cc89096829644f522f0d083d92d7c56",
+                    "evidence": "/tmp/gspot-integration007-clean-54dd-final/freeze.json",
+                    "verification": ["Evidence 3ee6934eaed32397."]
+                }
+            ]
         },
         "slices/tests-integration-checks/008": {
             "status": "partial",
@@ -14477,6 +14489,11 @@
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-tools-parser-fixer-next8-evidence.json",
                     "limitations": ["Evidence 9f7f42cd2c36be5e."]
+                },
+                {
+                    "commit": "525a99755cc89096829644f522f0d083d92d7c56",
+                    "evidence": "/tmp/gspot-samples-six-525a-final/freeze.json",
+                    "verification": ["Evidence 7cfed2f3923408b2."]
                 }
             ]
         },
@@ -19636,6 +19653,17 @@
             ],
             "limitations": [
                 "Main001 remains partial. Once-tools failures prove retention of coverage provider and React types; no whole-suite or skipped-platform green inferred."
+            ]
+        },
+        {
+            "commit": "525a99755cc89096829644f522f0d083d92d7c56",
+            "completedRecords": ["areas/kits/135", "areas/kits/138"],
+            "unresolvedRecords": 173,
+            "validation": [
+                "Native Node24.20.0 and Bun1.4.2 each pass70 manifest and public-policy assertions; four relevant callback AST bodies match preserved actual native owners. Independent TypeScript plan repair removes99bytes12ASTnodes, preserves25 assertion expressions and passes10tests33assertions plus types/lint/format."
+            ],
+            "limitations": [
+                "Main001 remains partial; native macOS evidence is qualified and no aggregate tools/platform green is inferred. Shared schema/test contracts and their unresolved adoption remain separately accounted for."
             ]
         }
     ],
