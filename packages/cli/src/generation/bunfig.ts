@@ -1,3 +1,4 @@
+import { inScope } from '#cli/repository/paths/public.ts';
 import { parseTomlFile } from '#cli/parsers/toml/public.ts';
 import { SECONDS_PER_DAY } from '#cli/config/platform/runtime.ts';
 import { openRoot, readText } from '#cli/platform/root/public.ts';
@@ -14,7 +15,7 @@ export function bunfigChanges(root: string, scopes: ScopeSelection[]): EmittedTo
     using files = openRoot(root);
     const selected = scopes
         .filter((selection) => selection.selected.some((manifest) => manifest.configuration.name === 'dependencies'))
-        .map((selection) => ({ selection, prefix: selection.scope.path === '' ? '' : `${selection.scope.path}/` }))
+        .map((selection) => ({ selection, prefix: inScope(selection.scope.path, '') }))
         .filter(({ prefix }) => ['bun.lock', 'bun.lockb'].some((name) => files.stat(`${prefix}${name}`) !== undefined));
     return selected.map(({ selection, prefix }) => {
         const path = `${prefix}bunfig.toml`;

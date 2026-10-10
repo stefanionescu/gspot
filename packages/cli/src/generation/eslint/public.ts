@@ -6,8 +6,8 @@ import type { SelectorPaths } from '#cli/types/generation/fragments.ts';
 import { ESLINT_RULE_NAMES_FILE } from '#cli/config/generation/eslint.ts';
 import { extensionsTagged } from '#cli/repository/discovery/contracts.ts';
 import type { EslintPresets, EslintRuleNames } from '#cli/types/parsers/eslint.ts';
-import { isInScope, literalGlob, pathMatcher } from '#cli/repository/paths/public.ts';
 import { eslintPresetsSchema, eslintRuleNamesSchema } from '#cli/parsers/schema/public.ts';
+import { inScope, isInScope, literalGlob, pathMatcher } from '#cli/repository/paths/public.ts';
 
 import type {
     EslintFiles,
@@ -123,7 +123,7 @@ export function eslintModule(input: EslintModuleInput): EslintModule {
                     : {
                           files: (payload.files ?? codeFiles).map((entry) => [
                               ...(Array.isArray(entry) ? entry : [entry]),
-                              scope.path === '' ? '**/*' : `${scope.path}/**/*`,
+                              inScope(scope.path, '**/*'),
                           ]),
                           ignores: [...(payload.ignores ?? []), ...scope.excluded],
                       };

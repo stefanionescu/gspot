@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { GspotError } from '#cli/platform/public.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { inScope } from '#cli/repository/paths/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { parseExpoDoctor } from '#cli/parsers/tool/public.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
@@ -24,7 +25,7 @@ function hasInstalledExpo(scopeRoot: string): boolean {
  * @returns one finding for each check Doctor reports as failed
  */
 export async function expoDoctor(input: CheckInput): Promise<Finding[]> {
-    const path = input.scope === '' ? 'package.json' : `${input.scope}/package.json`;
+    const path = inScope(input.scope, 'package.json');
     const manifest = readPackageManifest(input.root, path);
     if (manifest === undefined) throw new Error(`Manifest is missing: ${path}`);
     if ({ ...manifest.devDependencies, ...manifest.dependencies }['expo'] === undefined)

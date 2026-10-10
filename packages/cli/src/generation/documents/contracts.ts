@@ -14,8 +14,8 @@ import { isConfigurationSelected } from '#cli/configurations/public.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { GENERATED_JSON_KEY } from '#cli/config/parsers/generated-header.ts';
 import type { GeneratedFile, ToolFileInputs } from '#cli/types/generation/files.ts';
-import { isInScope, pathMatcher, nestedScopes } from '#cli/repository/paths/public.ts';
 import { toPosix, expandPaths, directoryOf, extensionOf } from '#cli/platform/contracts.ts';
+import { inScope, isInScope, pathMatcher, nestedScopes } from '#cli/repository/paths/public.ts';
 
 import {
     HTML_EXTENSIONS,
@@ -189,7 +189,7 @@ export function selectedIgnorePaths(scopes: ScopeSelection[]): string[] {
                         (lockfile) => 'configuration' in lockfile && names.has(lockfile.configuration),
                     ).map(({ file }) => file),
                 ];
-                return paths.map((path) => (scope.path === '' ? path : `${scope.path}/${path}`));
+                return paths.map((path) => inScope(scope.path, path));
             }),
         ),
     ];
@@ -325,8 +325,7 @@ export function pointerPaths(
     )
         return [];
     const scope = selection.scope.path;
-    if (pointer.directories === undefined)
-        return [toolFile.per_scope && scope !== '' ? `${scope}/${pointer.path}` : pointer.path];
+    if (pointer.directories === undefined) return [toolFile.per_scope ? inScope(scope, pointer.path) : pointer.path];
     const children = nestedScopes(
         context.scopes.map((entry) => entry.scope.path),
         scope,

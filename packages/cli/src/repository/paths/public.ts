@@ -167,6 +167,26 @@ export function literalGlob(path: string): string {
 }
 
 /**
+ * Resolve a scope-relative path within its repository.
+ * @param scope the repository-relative scope
+ * @param path the scope-relative path
+ * @returns the repository-relative path
+ */
+export function inScope(scope: string, path: string): string {
+    return scope === '' ? path : `${scope}/${path}`;
+}
+
+/**
+ * Resolve a repository path already owned by a scope relative to that scope.
+ * @param scope the repository-relative scope
+ * @param path the repository-relative path in the scope
+ * @returns the scope-relative path
+ */
+export function fromScope(scope: string, path: string): string {
+    return scope === '' ? path : path.slice(scope.length + 1);
+}
+
+/**
  * The repository-relative path of a tool file generated for a scope.
  * @param scope the scope path, empty for the root
  * @param toolFile the tool-file declaration
@@ -176,7 +196,7 @@ export function targetInScope(scope: string, toolFile: ToolFileDeclaration): str
     if (scope === '' || !toolFile.per_scope) return toolFile.target;
     if (toolFile.target.startsWith(CONFIG_PREFIX))
         return posix.join(CONFIG_PREFIX, scope, toolFile.target.slice(CONFIG_PREFIX.length));
-    return `${scope}/${toolFile.target}`;
+    return inScope(scope, toolFile.target);
 }
 
 /**

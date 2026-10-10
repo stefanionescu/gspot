@@ -5,12 +5,13 @@ import { readRepository } from '#cli/repository/public.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { npmToolNames } from '#cli/configurations/contracts.ts';
 import { readPackageManifests } from '#cli/repository/contracts.ts';
+import { inScope, fromScope } from '#cli/repository/paths/public.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { PYTHON_PROJECT_FILES } from '#tests/config/samples/python.ts';
-import { INVALID_WORKSPACE_CASES } from '#tests/config/cli/repository/scopes.ts';
 import { scopeOf, plannedScopes, packageWorkspaces } from '#cli/repository/paths/contracts.ts';
+import { SCOPE_PATH_CASES, INVALID_WORKSPACE_CASES } from '#tests/config/cli/repository/scopes.ts';
 
 function proposeProjectScopes(files: TrackedFile[], manifests: PackageManifest[]) {
     const configurations = configurationManifests();
@@ -218,3 +219,11 @@ test('Python scopes use captured project files and omit workspace-only members a
     await writeFile(join(sandbox.path, 'pyproject.toml'), '[invalid');
     expect(proposeProjectScopes(repository.files, packageManifests).map((scope) => scope.path)).toStrictEqual(['api']);
 });
+
+test.each(SCOPE_PATH_CASES)(
+    '$scope resolves $path and restores its scope-relative path',
+    ({ scope, path, repositoryPath }) => {
+        expect(inScope(scope, path)).toBe(repositoryPath);
+        expect(fromScope(scope, repositoryPath)).toBe(path);
+    },
+);

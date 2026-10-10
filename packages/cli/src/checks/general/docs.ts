@@ -7,7 +7,6 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { parseMiseTasks } from '#cli/parsers/mise.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { expandPaths } from '#cli/platform/contracts.ts';
-import { isGlob } from '#cli/repository/paths/public.ts';
 import { readSource } from '#cli/platform/root/public.ts';
 import { globPaths } from '#cli/platform/root/contracts.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
@@ -15,6 +14,7 @@ import type { ProseLine } from '#cli/types/parsers/source.ts';
 import { runnerSchema } from '#cli/parsers/schema/contracts.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { BANNED_HEADINGS } from '#cli/config/generation/prose.ts';
+import { isGlob, inScope } from '#cli/repository/paths/public.ts';
 import { parsePackageManifest } from '#cli/parsers/packages/public.ts';
 import { scopeOf, scopeAncestors } from '#cli/repository/paths/contracts.ts';
 import { MISE_FILES, LICENSE_FILE } from '#cli/config/repository/inventory.ts';
@@ -179,7 +179,7 @@ export function stalePaths(input: CheckInput): Finding[] {
 export function requiredFiles(input: CheckInput): Finding[] {
     const isLicenseRequired = input.view.options('docs').require_license;
     const findings: Finding[] = [];
-    const readme = input.scope === '' ? 'README.md' : `${input.scope}/README.md`;
+    const readme = inScope(input.scope, 'README.md');
     if (statSync(join(input.root, readme), { throwIfNoEntry: false }) === undefined)
         findings.push(
             findingAt(

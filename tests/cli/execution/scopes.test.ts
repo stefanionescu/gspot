@@ -1,8 +1,12 @@
+import { join } from 'node:path';
+import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
+import { commandEnvironment } from '#cli/execution/command/public.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { READERS_HEADERS, EXPECTED_READERS } from '#tests/config/cli/execution/scopes.ts';
 
@@ -117,3 +121,22 @@ test.each([
         expect(await Bun.file(`${sandbox.path}/${path}`).text()).toBe(source);
     },
 );
+
+test.each(['recommended', 'all'] as const)('native scoped command paths remain relative at %s', async (level) => {
+    await using sandbox = await testdir();
+    const scope = 'apps/café [web]';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['swift'], { level, tables: `[scope.${JSON.stringify(scope)}]\n` }),
+        'Sources/Main.swift': 'let value = 1\n',
+        [`${scope}/Sources/Main.swift`]: 'let value = 2\n',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planRun(session, { stage: 'commit', only: ['swift/swiftlint'], skips: [] });
+    expect(planned.map((check) => check.scope.scope.path)).toStrictEqual(['', scope]);
+    for (const check of planned) {
+        const environment = commandEnvironment(session, check);
+        expect(environment.cwd).toBe(join(sandbox.path, check.scope.scope.path));
+        expect(environment.files).toStrictEqual(['Sources/Main.swift']);
+        expect(environment.substitutions.files).toStrictEqual(['Sources/Main.swift']);
+    }
+});

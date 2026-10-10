@@ -3,8 +3,8 @@ import { toPosix } from '#cli/platform/contracts.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { toolFileName } from '#cli/configurations/contracts.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
-import { targetInScope } from '#cli/repository/paths/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { inScope, targetInScope } from '#cli/repository/paths/public.ts';
 import { diagnosticSchema, svelteFailureSchema } from '#cli/parsers/schema/svelte.ts';
 import { FAILURE_LINE, DIAGNOSTIC_LINE } from '#cli/config/checks/framework/svelte.ts';
 
@@ -30,7 +30,7 @@ export function svelteFindings(check: string, scope: string, stdout: string): Fi
         return [
             {
                 check,
-                file: scope === '' ? toPosix(diagnostic.filename) : `${scope}/${toPosix(diagnostic.filename)}`,
+                file: inScope(scope, toPosix(diagnostic.filename)),
                 line: diagnostic.start.line + 1,
                 column: diagnostic.start.character + 1,
                 ...(rule === undefined ? {} : { rule }),

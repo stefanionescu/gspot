@@ -1,5 +1,5 @@
 import type { ScopeView } from '#cli/types/policy/settings.ts';
-import { isInScope, nestedScopes } from '#cli/repository/paths/public.ts';
+import { inScope, isInScope, nestedScopes } from '#cli/repository/paths/public.ts';
 import { eslintNodePatterns, eslintSourcePattern } from '#cli/generation/eslint/public.ts';
 
 import type {
@@ -100,7 +100,7 @@ export function boundaryBlocks(context: EslintContext): EslintBlock[] {
                 path: scope.path,
                 modules,
                 roles,
-                prefix: scope.path === '' ? '' : `${scope.path}/`,
+                prefix: inScope(scope.path, ''),
                 tests: view.test_files,
                 trpc:
                     selected.some(({ configuration }) => configuration.name === 'trpc') &&

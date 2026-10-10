@@ -2,6 +2,7 @@ import { statSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/platform/public.ts';
 import { toolPath } from '#cli/platform/contracts.ts';
+import { inScope } from '#cli/repository/paths/public.ts';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { TAIL_LINES } from '#cli/config/execution/command.ts';
@@ -26,7 +27,7 @@ import type {
 function prefixScope(findings: Finding[], scopePath: string): void {
     for (const finding of findings)
         if (finding.file !== '' && !isAbsolute(finding.file) && !finding.file.startsWith(`${scopePath}/`))
-            finding.file = `${scopePath}/${finding.file}`;
+            finding.file = inScope(scopePath, finding.file);
 }
 
 function countMatches(check: CheckDeclaration, result: SpawnResult): number {

@@ -8,11 +8,11 @@ import { DOT_GSPOT, POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { ownedBy, migrationFiles } from '#cli/repository/selection/public.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
 import type { Session, PlanEntry, PlanInputs, PlannedCheck } from '#cli/types/planning.ts';
-import { isInScope, pathMatcher, isOutsideChildren, isToolProjectPath } from '#cli/repository/paths/public.ts';
+import { inScope, isInScope, pathMatcher, isOutsideChildren, isToolProjectPath } from '#cli/repository/paths/public.ts';
 
 // Every tracked file under the scope.
 function projectFiles(context: PlanInputs, scopePath: string, runs: CheckDeclaration['runs']): TrackedFile[] {
-    const prefix = scopePath === '' ? '' : `${scopePath}/`;
+    const prefix = inScope(scopePath, '');
     return context.session.repository.files.filter(
         (file) => file.path.startsWith(prefix) && (runs !== 'scope' || isOutsideChildren(file.path, context.children)),
     );

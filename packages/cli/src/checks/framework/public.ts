@@ -2,6 +2,7 @@ import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { checkInput } from '#cli/execution/contracts.ts';
+import { inScope } from '#cli/repository/paths/public.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
@@ -147,7 +148,7 @@ export async function nextBuild(input: CheckInput): Promise<Finding[]> {
     const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
     const cwd = isolated.scopeRoot;
     const manifest = parsePackageManifest(
-        readSource(input.root, posix.join(input.scope, 'package.json'), input.reads).toString('utf8'),
+        readSource(input.root, inScope(input.scope, 'package.json'), input.reads).toString('utf8'),
     );
     const flags = parseNextBuildFlags(manifest.scripts?.['build'] ?? 'next build');
     const command = ['next', 'build', ...flags];
@@ -157,7 +158,7 @@ export async function nextBuild(input: CheckInput): Promise<Finding[]> {
     return [
         findingAt(
             input,
-            { file: input.scope === '' ? 'package.json' : `${input.scope}/package.json`, line: 1 },
+            { file: inScope(input.scope, 'package.json'), line: 1 },
             'build',
             `next build failed: ${output}`,
         ),

@@ -4,6 +4,7 @@ import { emptyResult } from '#cli/execution/report.ts';
 import { checkCompanions } from '#cli/planning/public.ts';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { fromScope } from '#cli/repository/paths/public.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { coverageArguments } from '#cli/planning/contracts.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
@@ -185,7 +186,7 @@ export function commandEnvironment(session: ToolSession, planned: PlannedCheck):
     const runsInScope = check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root');
     const cwd = runsInScope ? join(session.root, scope.scope.path) : session.root;
     const files = planned.files.map((file) =>
-        scope.scope.path === '' || cwd === session.root ? file.path : file.path.slice(scope.scope.path.length + 1),
+        cwd === session.root ? file.path : fromScope(scope.scope.path, file.path),
     );
     const substitutions: Substitutions = {
         files: files.map((path) => `${planned.check.path_prefix ?? ''}${path}`),

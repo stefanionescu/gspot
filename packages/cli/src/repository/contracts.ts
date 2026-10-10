@@ -17,7 +17,7 @@ import { toPosix, isInside, decodeUtf8 } from '#cli/platform/contracts.ts';
 import { join, posix, dirname, resolve, basename, relative } from 'node:path';
 import { ENTRY_MODES, GITLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { EXECUTABLE_BITS, EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
-import { isInScope, pathMatcher, isToolingPath } from '#cli/repository/paths/public.ts';
+import { inScope, isInScope, pathMatcher, isToolingPath } from '#cli/repository/paths/public.ts';
 import { statSync, lstatSync, existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 import { getTsconfig, manifestParser, parsePackageManifest } from '#cli/parsers/packages/public.ts';
 import type { PackageJson, DependencyMap, PackageManifest, InstalledDependency } from '#cli/types/parsers/packages.ts';
@@ -338,7 +338,7 @@ export function installedDependency(root: string, manifest: string, name: string
  * @returns aliases relative to the repository root.
  */
 export function aliasesFor(root: string, scope: string, reads: ReadCache): Record<string, string> {
-    const prefix = scope === '' ? '' : `${scope}/`;
+    const prefix = inScope(scope, '');
     const aliases = packageAliases(root, prefix);
     const path = join(root, prefix, 'tsconfig.json');
     const config = getTsconfig(root, path, reads);

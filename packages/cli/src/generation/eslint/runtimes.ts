@@ -1,10 +1,9 @@
-import { posix } from 'node:path';
 import { compact } from '#cli/platform/contracts.ts';
 import { rolePaths } from '#cli/policy/settings/contracts.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { EslintContext, EslintRuntimeBlock } from '#cli/types/generation/eslint.ts';
-import { literalGlob, nestedScopes, pathExpressions } from '#cli/repository/paths/public.ts';
 import { MISE_SCRIPT_PATH, ESLINT_BROWSER_CONFIGURATIONS } from '#cli/config/generation/eslint.ts';
+import { inScope, literalGlob, nestedScopes, pathExpressions } from '#cli/repository/paths/public.ts';
 
 function frameworkRuntime(configurations: string[]): string | undefined {
     if (configurations.includes('react-native')) return 'react-native';
@@ -21,7 +20,7 @@ function frameworkRuntime(configurations: string[]): string | undefined {
  */
 export function scriptPaths({ policy, selection }: Pick<EslintContext, 'policy' | 'selection'>): string[] {
     const scripts = rolePaths(selection.view.roles, 'scripts');
-    return policy.runner === 'mise' ? [...scripts, posix.join(selection.scope.path, MISE_SCRIPT_PATH)] : scripts;
+    return policy.runner === 'mise' ? [...scripts, inScope(selection.scope.path, MISE_SCRIPT_PATH)] : scripts;
 }
 
 /**
@@ -40,7 +39,7 @@ export function runtimeBlocks(policy: Policy, scopes: ScopeSelection[]): EslintR
             scopes.map((entry) => entry.scope.path),
             scope,
         ).map((path) => `!${literalGlob(path)}/**`);
-        const prefix = scope === '' ? '' : `${scope}/`;
+        const prefix = inScope(scope, '');
         const tool = selection.view.values['tools.eslint'];
         const version = compact({
             nodeVersion: tool?.node_version,

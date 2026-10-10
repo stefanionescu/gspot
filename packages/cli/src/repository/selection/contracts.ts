@@ -6,7 +6,7 @@ import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import type { Layout, TrackedFile } from '#cli/types/repository/inventory.ts';
 import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
 import { projectFolder, isLintOnlyManifest } from '#cli/repository/paths/contracts.ts';
-import { isInScope, pathMatcher, filenameMatcher, isToolProjectPath } from '#cli/repository/paths/public.ts';
+import { inScope, isInScope, pathMatcher, filenameMatcher, isToolProjectPath } from '#cli/repository/paths/public.ts';
 
 import type {
     Manifest,
@@ -67,7 +67,7 @@ function extensionEvidence(detect: Manifest['detect'], tree: Layout): DetectionE
 
 function contentEvidence(root: string, detect: Manifest['detect'], tree: Layout): DetectionEvidence | undefined {
     for (const [path, pattern] of Object.entries(detect.content)) {
-        const target = tree.scope === '' ? path : `${tree.scope}/${path}`;
+        const target = inScope(tree.scope, path);
         const file = tree.candidates.find((candidate) => candidate.path === target);
         if (file === undefined) continue;
         const text = readText(root, file.path);

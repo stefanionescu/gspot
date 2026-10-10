@@ -11,10 +11,10 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { RAN_STATUSES } from '#cli/config/execution/runtime.ts';
 import { copyIntoScratch } from '#cli/execution/copy/public.ts';
-import { targetInScope } from '#cli/repository/paths/public.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
 import { requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { inScope, targetInScope } from '#cli/repository/paths/public.ts';
 import type { PythonDocstringStyle } from '#cli/types/parsers/python.ts';
 import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
@@ -164,7 +164,7 @@ export function tsconfig(input: CheckInput): Finding[] {
         input.reads,
     );
     const scopeTsconfig =
-        project === undefined ? posix.join(input.scope, 'tsconfig.json') : toPosix(relative(input.root, project.path));
+        project === undefined ? inScope(input.scope, 'tsconfig.json') : toPosix(relative(input.root, project.path));
     const candidates = new Set([
         scopeTsconfig,
         ...input.files
