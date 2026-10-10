@@ -1327,6 +1327,28 @@
                 "/tmp/gspot-windows-package-launcher-bc051-freeze/freeze.json SHA25634deca5440c6a5d5e5797be5d320c3708b196a53b4e79c7eef7b8cdf5c50e3b9; focused macOS1pass30assertions, native types/lint/format pass; Windows replay38063427579 pending, not a platform pass.",
                 "Exact integrated owner hashes and costs: /tmp/gspot-final-fixture-main-intake.json."
             ]
+        },
+        {
+            "id": "ci-read-only-github-token43",
+            "date": "2026-10-10",
+            "scope": ".github/workflows/ci.yml GitHub release lookup and manifest pin acquisition",
+            "decision": "Adopt the expressly approved43-byte CI workflow environment change: GITHUB_TOKEN uses the existing github.token with contents:read. Preserve all command, permission, job, timeout and setup contracts. No live accounts, secrets or publisher configuration changed. Authorization stays confined to GitHub API hosts.",
+            "evidence": [
+                "Explicit user approval of the exact43-byte exception in this conversation.",
+                "/tmp/gspot-ci-auth-ad94-evidence/freeze.json SHA256c9268b98e5825ff80cae041e9d5f1002c43c3c0903e6262bbcd4df3e3422f96f; native SwiftFormat0.61.1 acquisition and19 bounded-header controls pass. Actual previous check/macOS tools failures are unauthenticated403s before suite execution, not native test failures.",
+                "Integrated canonical source caea2dbe63904debdcddc773a0e89a55ec4a9d34; staged24pass0fail2skip0findings7.6s, commit19pass0fail1skip0findings7.1s plus commitlint pass. Native CI replay still required."
+            ]
+        },
+        {
+            "id": "sixteen-native-tools-shards425",
+            "date": "2026-10-10",
+            "scope": ".github/workflows/ci.yml tools matrix, displayed shard and native Bun shard flag",
+            "decision": "Adopt the exact reviewed425 static-byte increase to expand the tools matrix from4 to16shards. Each canonical shard string owns its index and total, used by the name and native flag. All104 ordinary tool test paths run exactly once with6\u20137paths per shard; database tests stay in their designated workflow. Keep one TEST_TIMEOUT_MS and every60-minute outer job limit. This implements carve-outs001 explicit fallback after observed60-minute cancellations. No native completion or final timeout measurement is inferred.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-ci-shards-ad94-proof/freeze.json SHA25627184724afdf43613aa8ab44e468d43533b244eab49e99b25d67541a01e4ba03; Bun1.4.2 native partitions repeat identically with reversed argv and preserve104path union with zero duplicates. Original callbacks/source/runner unchanged.",
+                "Three actual Windows60-minute job cancellations preserved; the completed CI file alone takes at least2393.87seconds. Actionlint,Prettier,Yamllint pass; raw Zizmor baseline/candidate findings identical. Native expanded CI replay still required."
+            ]
         }
     ],
     "implementationBatches": {
@@ -5782,7 +5804,8 @@
                 "Actual unchanged two-file 5200ms regression passes2/2 in10.44s /tmp/gspot-native-shared-timeout-main-two-files.log; integrated source/cancellation/site20pass70assert3files4.10s. Final measured constant remains pending all suites/platforms.",
                 "Evidence 0175901faf714fc9.",
                 "Evidence b7088713e096ebae.",
-                "Prescribed Defender step deleted in2e910518d5e4d241671ef17594134ae7ef5c690c; exact source reduction323 bytes. Native Actionlint/YAML/formatting and staged24 checks pass; raw Zizmor retains only the already-reasoned self-repository findings."
+                "Prescribed Defender step deleted in2e910518d5e4d241671ef17594134ae7ef5c690c; exact source reduction323 bytes. Native Actionlint/YAML/formatting and staged24 checks pass; raw Zizmor retains only the already-reasoned self-repository findings.",
+                "Approved native16-shard fallback: /tmp/gspot-ci-shards-ad94-proof/freeze.json SHA25627184724afdf43613aa8ab44e468d43533b244eab49e99b25d67541a01e4ba03. Current104toolpaths partition exactly; actual future completion and single timeout measurement remain pending."
             ],
             "additionalChanges": [
                 {
@@ -8366,11 +8389,11 @@
                 "Evidence 58665157ca33b480.",
                 "Evidence 0c3dc06ab4176ba4.",
                 "Later full tools run: two pnpm lock tests and one pnpm tool-project test fail ERR_PNPM_FETCH_401 after shared npm executable PATH was corrected. Earlier focused passes do not establish this later context.",
-                "Evidence 31751b6dfd2661b9."
+                "Evidence 31751b6dfd2661b9.",
+                "Final matched CLI/plugin no-acquisition comparison: Evidence 5f4e4fc303c8fc26. Current CI acceptance capsule /tmp/gspot-ad94-current-acceptance/freeze.json SHA256ed60b9c25cd052b0a4e0dddfe17ebd657580ab9fa04ab4d6f0173505cb16e51b preserves native Linux npm token-refresh and private Python passes, plus incomplete platform-manager cases."
             ],
             "remaining": [
-                "CLI/plugin orchestration starts no installation registry. Fixture separation remains partial: integrate prescribed native Bash transports and executable discovery/version preparation, then complete tool-free execution comparisons.",
-                "CI must verify shared temporary npm-manager settings and credential behavior on supported platforms."
+                "Complete supported-platform native npm-manager, temporary settings, credential and recovery acceptance. Prescribed fixture transports and tool-free CLI/plugin comparison are implemented; do not infer missing tool outcomes from that comparison."
             ],
             "additionalChanges": [
                 {
@@ -20456,6 +20479,20 @@
             ],
             "limitations": [
                 "Six records stay partial. Current full tools/platform timing and credential acceptance remain pending. Latest CI exposes unauthenticated GitHub acquisition rate limits and Windows copied-tool dependencies; failed receipts preserved. main001 external publication/setup/deploy is excluded; repository-root040 retains sideEffects by owner decision."
+            ]
+        },
+        {
+            "commit": "caea2dbe63904debdcddc773a0e89a55ec4a9d34",
+            "completedRecords": [],
+            "unresolvedRecords": 6,
+            "validation": [
+                "Exact43-byte CI authentication fix approved and committed through normal staged/hooks. Its current-source Windows/macOS/Linux CI replay remains required.",
+                "Final CLI/plugin isolation proof closes repository-root003 in metadata7518c8dcf0cc9c1c1de8fbfa6fd2ab0098b8c967;1092records/1648memberships and every2259original ID rows/490closed rows preserved.",
+                "Final ad94 CI capsule captures20 jobs, seven successes and four acquisition failures with nine running: Linux/macOS CLI pass; all three package jobs pass. Windows package native footer is7pass1skip105assertions, never reported as8passes."
+            ],
+            "limitations": [
+                "Four implementation-verification records stay partial pending actual current platform tools and timing; main001 publication/account/deployment and repository-root040 retained sideEffects remain partial.",
+                "Existing Windows HTML fixture copies lack companion metadata and a valid dependency store; the native diagnostic failure is preserved. No global green or current complete tools footer inferred."
             ]
         }
     ],

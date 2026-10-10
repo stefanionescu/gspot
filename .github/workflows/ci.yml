@@ -1,5 +1,5 @@
 name: ci
-# Run all four test suites on Linux, macOS, and Windows; shard tool tests four ways.
+# Run all four test suites on Linux, macOS, and Windows; shard tool tests sixteen ways.
 on:
     push:
         branches: [main]
@@ -94,12 +94,28 @@ jobs:
             - name: Run the CLI and plugin tests
               run: mise run test
     tools:
-        name: tools (${{ matrix.os }} ${{ matrix.shard }}/4)
+        name: tools (${{ matrix.os }} ${{ matrix.shard }})
         strategy:
             fail-fast: false
             matrix:
                 os: *platforms
-                shard: [1, 2, 3, 4]
+                shard:
+                    - 1/16
+                    - 2/16
+                    - 3/16
+                    - 4/16
+                    - 5/16
+                    - 6/16
+                    - 7/16
+                    - 8/16
+                    - 9/16
+                    - 10/16
+                    - 11/16
+                    - 12/16
+                    - 13/16
+                    - 14/16
+                    - 15/16
+                    - 16/16
         runs-on: ${{ matrix.os }}
         timeout-minutes: 60
         steps:
@@ -113,4 +129,4 @@ jobs:
               with:
                   native-tests: 'true'
             - name: Run this shard of the tool tests
-              run: mise run test:tools -- "--shard=${{ matrix.shard }}/4"
+              run: mise run test:tools -- "--shard=${{ matrix.shard }}"
