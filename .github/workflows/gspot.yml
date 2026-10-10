@@ -32,7 +32,7 @@ jobs:
             ~/.local/share/mise/installs
             ~/.local/share/pnpm/store
             ~/.yarn/berry/cache
-      - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
           version: 2026.10.7
           cache: false
@@ -77,7 +77,7 @@ jobs:
             ~/.local/share/mise/installs
             ~/.local/share/pnpm/store
             ~/.yarn/berry/cache
-      - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
           version: 2026.10.7
           cache: false

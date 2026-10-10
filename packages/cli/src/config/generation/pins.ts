@@ -14,8 +14,8 @@ export const CLI_PINS = {
         },
         mise: {
             name: 'jdx/mise-action',
-            sha: '5ac50f778e26fac95da98d50503682459e86d566',
-            version: 'v3.2.0',
+            sha: '2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca',
+            version: 'v5.1.1',
         },
         cache: {
             name: 'actions/cache',
