@@ -1,6 +1,6 @@
 # Built-in Checks
 
-9 unresolved review records remain.
+8 unresolved review records remain.
 
 ## Findings
 
@@ -325,3 +325,11 @@ Original records and quotations remain above. These records are complete at `0fe
 | ------------------ | -------- | ----------------------------------------------------------------------------- |
 | `areas/checks/070` | complete | Evidence 2473155e49b5239d. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |
 | `areas/checks/073` | complete | Evidence 6881937308ec2bc1. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |
+
+## Implementation checkpoint 1a3bc9a03 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `1a3bc9a03b4429258b043988d2d2138be1b52d93`.
+
+| ID                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/checks/011` | complete | The complete approved scope refactor is committed after its separate mechanical owner move `e475c143127a48511bb0353a187a23b11fb5d051`. Repository-owned inScope/fromScope, target and Semgrep path calculations replace duplicated callers while retaining distinct confinement and native-library behavior. Current33-owner proof is `/tmp/gspot-scope011-main-final-owner-proof.json`; only the strict-naming correction differs from the reviewed AFTER. The complete concern adds2948 bytes, below the approved2952. Actual61/324 and15/57 focused native cases pass; Node24/Bun target2025 and Semgrep1080 path vectors per runtime agree. Corrected current staged checks pass44/0 with3skips; no platform success inferred. Commit `1a3bc9a03b4429258b043988d2d2138be1b52d93`. |

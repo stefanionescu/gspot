@@ -1,6 +1,6 @@
 # Tests: Generation Integration Tests
 
-1 unresolved review record remains.
+0 unresolved review records remain.
 
 ## Open findings
 
@@ -25,3 +25,11 @@ Original records and quotations remain above. These records are complete at `3d1
 | ID                                        | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ----------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-generation/012` | complete | Every generated extension is parsed or named explicitly as a plain tool file. Native INI parsing covers cfg/ini and unknown extensions fail rather than passing unread. Both original level cases and the negative unknown-format witness were verified; owner-approved increase is 1,035 bytes including 203 generated lockfile bytes. Frozen /tmp/gspot-template012-main-native-review/freeze.json. Commit `3d180af9dc94cfc800fecf959f8faf43dd43ea3c`. |
+
+## Implementation checkpoint 1a3bc9a03 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `1a3bc9a03b4429258b043988d2d2138be1b52d93`.
+
+| ID                                        | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ----------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-generation/014` | complete | Exact approved 1476-byte target/data patch is committed in `2f1a35193c737067939831967b9e75b569954a1a`. Each non-fragment target required by selected tools/checks is present at both levels; explicit omitted defaults and every native format assertion remain. Current two native cases pass with ten assertions. The exact owner proof and focused evidence are `/tmp/gspot-scope011-ce783-intake-final/freeze.json`; source imports follow the separate repository owner move. Commit `1a3bc9a03b4429258b043988d2d2138be1b52d93`. |

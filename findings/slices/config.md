@@ -1,6 +1,6 @@
 # The Config Constants
 
-2 unresolved review records remain.
+1 unresolved review record remains.
 
 ## Open findings
 
@@ -57,3 +57,11 @@ Original records and quotations remain above. These records are complete at `0fe
 | ID                  | Status   | Evidence                                                                      |
 | ------------------- | -------- | ----------------------------------------------------------------------------- |
 | `slices/config/033` | complete | Evidence 41fd6dcd5f07abb1. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |
+
+## Implementation checkpoint 0bfd75e03 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `0bfd75e036954b94bb599f3ba919f6c04b46a60b`.
+
+| ID                  | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/config/043` | complete | The reduced approved1346-byte concern validates each placeholders through the same setting namespace and keeps command placeholders in one owner. Current authored1350 includes the separately committed4-byte target reduction once. Five final owners match the frozen approved AFTER; command argument owner also retains the later approved scope-path helper imports and calls. The actual placeholder changes apply cleanly and add only their reviewed131 bytes. Original45 focused cases and23 Node/Bun vectors pass, with preserved assertions. Current types/lint/staged44pass/0fail/3skip and normal commit hooks pass. Review `/tmp/gspot-approved-DX014-config043-current-intake/config043/meta.json`. Commit `0bfd75e036954b94bb599f3ba919f6c04b46a60b`. |
