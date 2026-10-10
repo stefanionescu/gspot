@@ -1,10 +1,6 @@
 name: ci
-# Checks, documentation, and npm package tests run on Linux. CLI, plugin, and tool tests run on
-# Linux, macOS, and Windows. Tool tests split into four shards per system.
+# Disposable diagnostic branch; no full-suite acceptance.
 on:
-    push:
-        branches: [main]
-    pull_request:
     workflow_dispatch:
 permissions:
     contents: read
@@ -15,85 +11,9 @@ defaults:
     run:
         shell: bash
 jobs:
-    check:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 60
-        steps:
-            - name: Check out the repository
-              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-              with:
-                  fetch-depth: 0
-                  persist-credentials: false
-            - name: Prepare the repository
-              uses: ./.github/actions/setup
-            # A pull request checks out a detached merge commit, so the commit checks compare with the default branch.
-            - name: Point origin/HEAD at the default branch
-              run: git remote set-head origin "${DEFAULT_BRANCH}"
-              env:
-                  DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-            - name: Install the repository checks
-              id: install
-              run: mise run install:checks
-            - name: Verify the committed tool lockfiles
-              run: |
-                  bun scripts/plugin.ts install --refresh-lockfiles
-                  git diff --exit-code .gspot/bun.lock .gspot/uv.lock
-            - name: Validate registry pins
-              run: mise run check:pins
-            - name: Build the CLI
-              run: mise run build:cli
-    docs:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 60
-        steps:
-            - name: Check out the repository
-              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-              with:
-                  persist-credentials: false
-            - name: Prepare docs and CLI
-              uses: ./.github/actions/setup
-              with:
-                  tools: bun node
-                  setup: bun install --frozen-lockfile --filter '@gspothq/{cli,docs}'
-            - name: Build the site
-              run: mise run build:docs
-    package:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 60
-        steps:
-            - name: Check out the repository
-              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-              with:
-                  persist-credentials: false
-            - name: Prepare the repository
-              uses: ./.github/actions/setup
-            - name: Test the packages
-              run: mise run test:package
-    test:
-        strategy:
-            fail-fast: false
-            matrix:
-                os: [ubuntu-24.04, macos-15, windows-2025]
-        runs-on: ${{ matrix.os }}
-        timeout-minutes: 60
-        steps:
-            - name: Check out the repository
-              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-              with:
-                  fetch-depth: 0
-                  persist-credentials: false
-            - name: Prepare the repository
-              uses: ./.github/actions/setup
-            - name: Run the CLI and plugin tests
-              run: mise run test
     tools:
-        name: tools (${{ matrix.os }} ${{ matrix.shard }}/4)
-        strategy:
-            fail-fast: false
-            matrix:
-                os: [ubuntu-24.04, macos-15, windows-2025]
-                shard: [1, 2, 3, 4]
-        runs-on: ${{ matrix.os }}
+        name: Svelte stages (windows-2025)
+        runs-on: windows-2025
         timeout-minutes: 60
         steps:
             - name: Check out the repository
@@ -110,5 +30,18 @@ jobs:
               if: runner.os == 'Windows'
               shell: pwsh
               run: Set-MpPreference -DisableRealtimeMonitoring $true
-            - name: Run this shard of the tool tests
-              run: mise run test:tools -- "--shard=${{ matrix.shard }}/4"
+            - name: Observe the unchanged Svelte callback
+              run: |
+                  cat > "$RUNNER_TEMP/gspot-svelte-stage-preload.js" <<'OBSERVER'
+                  // @bun
+                  import{spyOn as k}from"bun:test";import{appendFileSync as v,writeFileSync as S}from"fs";import{dirname as g,resolve as f}from"path";import{fileURLToPath as I,pathToFileURL as R}from"url";var m=f(g(I(import.meta.url)),"svelte-stages.ndjson");S(m,"");var d=[],G=0,O=["install","sync","lock","init","set","remove","check","apply","run"];function p(s){let o=JSON.stringify(s)+`
+                  `;v(m,o),process.stderr.write("GSPOT_STAGE "+o)}for(let[s,o]of[["tests/harness/platforms.ts",["linkInstalledModules"]],["tests/harness/install.ts",["initRepository","shareToolProjects"]],["tests/harness/python-installation.ts",["sharePythonTools"]],["packages/cli/src/lifecycle/ownership/state/public.ts",["readInstalledTree","installTree"]],["tests/harness/gspot.ts",["spawnGspot"]]]){let l=await import(R(f(process.cwd(),s)).href);for(let t of o){let h=l[t];d.push(k(l,t).mockImplementation(function(...n){let u=++G,y=performance.now(),r={id:u,name:t,at:new Date().toISOString()};if(t.endsWith("Tree")&&["npm","python","vale"].includes(n[1]))r.kind=n[1];if(t==="spawnGspot")r.operation=O.find((e)=>e===n[1][0]);p({...r,event:"start",rss:process.memoryUsage().rss});let i=(e,c=!1)=>{let a=t==="readInstalledTree"?e:t==="installTree"?n[2]:void 0;p({...r,event:c?"error":"end",ms:performance.now()-y,rss:process.memoryUsage().rss,...a?{entries:a.length,bytes:a.reduce((w,T)=>w+T.file.bytes.length,0)}:{}})};try{let e=Reflect.apply(h,this,n);if(e&&typeof e.then==="function")e.then((c)=>i(c),()=>i(void 0,!0));else i(e);return e}catch(e){throw i(void 0,!0),e}}))}}process.on("exit",()=>{for(let s of d)s.mockRestore()});
+                  OBSERVER
+                  mise run test:tools -- --preload "$RUNNER_TEMP/gspot-svelte-stage-preload.js" -- tests/tools/configurations/framework/svelte.test.ts
+            - name: Preserve stage diagnostics
+              if: always()
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: svelte-windows-${{ github.sha }}
+                  path: ${{ runner.temp }}/svelte-stages.ndjson
+                  retention-days: 1
