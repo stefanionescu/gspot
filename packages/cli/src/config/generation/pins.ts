@@ -9,8 +9,8 @@ export const CLI_PINS = {
     actions: {
         checkout: {
             name: 'actions/checkout',
-            sha: '34e114876b0b11c390a56381ad16ebd13914f8d5',
-            version: 'v4.3.1',
+            sha: '3d3c42e5aac5ba805825da76410c181273ba90b1',
+            version: 'v7.0.1',
         },
         mise: {
             name: 'jdx/mise-action',
