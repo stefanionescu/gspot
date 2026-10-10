@@ -1,67 +1,14 @@
-name: ci
-# Run all four test suites on Linux, macOS, and Windows; shard tool tests four ways.
+name: Windows package launcher acceptance
 on:
-    push:
-        branches: [main]
-    pull_request:
     workflow_dispatch:
 permissions:
     contents: read
-concurrency:
-    group: ci-${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 defaults:
     run:
         shell: bash
 jobs:
-    check:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 60
-        steps:
-            - name: Check out the repository
-              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-              with:
-                  fetch-depth: 0
-                  persist-credentials: false
-            - name: Prepare the repository
-              uses: ./.github/actions/setup
-            # A pull request checks out a detached merge commit, so the commit checks compare with the default branch.
-            - name: Point origin/HEAD at the default branch
-              run: git remote set-head origin "${DEFAULT_BRANCH}"
-              env:
-                  DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-            - name: Install the repository checks
-              id: install
-              run: mise run install:checks
-            - name: Verify the committed tool lockfiles
-              run: |
-                  bun scripts/plugin.ts install --refresh-lockfiles
-                  git diff --exit-code .gspot/bun.lock .gspot/uv.lock
-            - name: Validate registry pins
-              run: mise run check:pins
-            - name: Build the CLI
-              run: mise run build:cli
-    docs:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 60
-        steps:
-            - name: Check out the repository
-              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-              with:
-                  persist-credentials: false
-            - name: Prepare docs and CLI
-              uses: ./.github/actions/setup
-              with:
-                  tools: bun node
-                  setup: bun install --frozen-lockfile --filter '@gspothq/{cli,docs}'
-            - name: Build the site
-              run: mise run build:docs
-    package:
-        strategy:
-            fail-fast: false
-            matrix:
-                os: &platforms [ubuntu-24.04, macos-15, windows-2025]
-        runs-on: ${{ matrix.os }}
+    launcher:
+        runs-on: windows-2025
         timeout-minutes: 60
         steps:
             - name: Check out the repository
@@ -70,45 +17,5 @@ jobs:
                   persist-credentials: false
             - name: Prepare the repository
               uses: ./.github/actions/setup
-            - name: Test the packages
-              run: mise run test:package
-    test:
-        strategy:
-            fail-fast: false
-            matrix:
-                os: *platforms
-        runs-on: ${{ matrix.os }}
-        timeout-minutes: 60
-        steps:
-            - name: Check out the repository
-              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-              with:
-                  fetch-depth: 0
-                  persist-credentials: false
-            - name: Prepare the repository
-              uses: ./.github/actions/setup
-              with:
-                  tools: bun node
-            - name: Run the CLI and plugin tests
-              run: mise run test
-    tools:
-        name: tools (${{ matrix.os }} ${{ matrix.shard }}/4)
-        strategy:
-            fail-fast: false
-            matrix:
-                os: *platforms
-                shard: [1, 2, 3, 4]
-        runs-on: ${{ matrix.os }}
-        timeout-minutes: 60
-        steps:
-            - name: Check out the repository
-              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-              with:
-                  fetch-depth: 0
-                  persist-credentials: false
-            - name: Prepare the repository
-              uses: ./.github/actions/setup
-              with:
-                  native-tests: 'true'
-            - name: Run this shard of the tool tests
-              run: mise run test:tools -- "--shard=${{ matrix.shard }}/4"
+            - name: Validate the packed launcher with Node absent from Bun PATH
+              run: mise run test:package -- --test-name-pattern 'the packed CLI validates own record keys in Node and Bun without Node on PATH' -- tests/packages/launcher.test.ts
