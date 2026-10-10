@@ -1,4 +1,4 @@
-// Lockfile parsers reject any merge-marker prefix; generated output requires the token separator.
+// Lockfile parsers reject any merge-marker prefix; generated files require the token separator.
 const CONFLICT_MARKER_SOURCE = '^(?:<{7}|={7}|>{7})';
 
 export const UNSUPPORTED_ENTRY =

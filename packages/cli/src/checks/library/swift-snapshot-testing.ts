@@ -47,7 +47,7 @@ export async function recording(input: CheckInput): Promise<Finding[]> {
 
 /**
  * Report snapshot references whose sibling Swift test source is absent.
- * @param input the scoped source and reference files
+ * @param input the source and reference files
  * @returns the orphan reference findings
  */
 export function references(input: CheckInput): Finding[] {

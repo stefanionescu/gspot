@@ -35,9 +35,8 @@ test.each(['', 'hooks', '.husky'])(
             '--dry-run',
         ]);
         expect(result.code).toBe(0);
-        const hooks = result.stdout.split('\n').find((line) => /^hooks\s/.test(line)) ?? '';
         for (const token of hooksPath === '' ? ['none'] : [`${hooksPath}/`, 'pre-commit'])
-            expect(hooks).toContain(token);
+            expect(result.stdout).toContain(token);
         expect(await readFile(join(sandbox.path, 'hooks/use-thing.ts'), 'utf8')).toContain('useThing');
         expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
     },

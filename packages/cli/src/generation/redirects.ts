@@ -1,4 +1,4 @@
-// Redirect declared shared package fields to their applicable generated tool configuration.
+// Redirect declared shared package fields to their generated tool files.
 import { posix } from 'node:path';
 import type { Session } from '#cli/types/planning.ts';
 import { openRoot } from '#cli/platform/root/public.ts';
@@ -9,7 +9,7 @@ import { isInScope, nestedScopes } from '#cli/repository/paths/public.ts';
 import type { GeneratedFile, EmittedToolFile } from '#cli/types/generation/files.ts';
 
 /**
- * Redirect authored package fields declared by selected manifests to generated native configurations.
+ * Redirect authored package fields declared by selected manifests to generated tool files.
  * @param session the authored inventory and selected scopes
  * @param generated the actual tool files emitted for applicable checks
  * @returns changes to the declared package fields

@@ -52,9 +52,9 @@ function moveClaudeFile(log: Log, report: ApplyReport): void {
 }
 
 /**
- * Writes generated outputs and removes recorded outputs no configuration needs. Every plan is made before the first write.
+ * Writes generated files and removes recorded files no configuration needs. Plans precede writes.
  * @param log the locked ownership context.
- * @param request generated outputs, pruning policy, and reviewed originals.
+ * @param request generated files, pruning policy, and reviewed originals.
  */
 function writeGenerated(log: Log, request: WriteRequest): void {
     const { generated, report, retained, reviewedOriginals, conflictedOutputs } = request;
@@ -86,7 +86,7 @@ function writeGenerated(log: Log, request: WriteRequest): void {
     const generatedPlans = [...replacements, ...blocks, ...configurations];
     // `CLAUDE.md` is no output: it moves into `AGENTS.md` after the batch instead of getting its old text back.
     const expected = new Set([...generatedPaths(generated), 'CLAUDE.md']);
-    // Pruning restores only recorded outputs that no selected owner still needs.
+    // Pruning restores only recorded files no selected owner needs.
     const pruning = log.state.files
         .filter((entry) => isStray(entry, expected))
         .map((entry) => planRestoration(log, entry.path));
@@ -187,10 +187,10 @@ function keyDrift(root: string, generated: Generated): Drift[] {
 }
 
 /**
- * Whether a recorded output has no selected owner and is not retained.
- * @param entry the recorded output
- * @param expectedPaths the outputs and moves selected now
- * @returns whether apply restores the original file or removes the output
+ * Whether a recorded file has no selected owner and is not retained.
+ * @param entry the recorded file
+ * @param expectedPaths the files and moves selected now
+ * @returns whether apply restores the original file or removes it
  */
 export function isStray(entry: Ownership['files'][number], expectedPaths: ReadonlySet<string>): boolean {
     return entry.installed !== undefined && !expectedPaths.has(entry.path) && !RETAINED_PATHS.has(entry.path);
@@ -199,7 +199,7 @@ export function isStray(entry: Ownership['files'][number], expectedPaths: Readon
 /**
  * Apply generated plans through the repository's lifecycle owner.
  * @param session the configuration and repository reads.
- * @param generated the generated outputs whose lockfiles were resolved before committing policy.
+ * @param generated the generated files whose lockfiles were resolved before committing policy.
  * @param log the command's locked ownership context.
  * @param options reviewed originals authorized for replacement.
  * @returns generated changes.

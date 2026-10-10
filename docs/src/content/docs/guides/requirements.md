@@ -16,7 +16,7 @@ Every repository needs Git. gspot requires Node.js 24.2 or newer, or Bun 1.4.2 o
 | Native tools, such as ShellCheck, Gitleaks, or typos             | mise, or the exact pinned tools on `PATH`. `gspot doctor` lists missing tools with install commands.   |
 | Project commands, such as Jest, Vitest, Next.js, or Swift builds | The project runtime, dependencies, and build tools. These remain your project's dependencies.          |
 
-mise installs the native tool pins gspot writes to `.mise/conf.d/gspot-tools.toml`. Initialization proposes mise when it is available. An explicit runner choice takes precedence. The generated mise configuration requires mise 2026.8.8 or newer. It installs the CLI through the npm backend (`npm:@gspothq/cli`).
+mise installs the native tool pins gspot writes to `.mise/conf.d/gspot-tools.toml`. Initialization proposes mise when it is available. An explicit runner choice takes precedence. The generated mise tool file requires mise 2026.8.8 or newer. It installs the CLI through the npm backend (`npm:@gspothq/cli`).
 
 ## Platform limits
 

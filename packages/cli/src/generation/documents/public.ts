@@ -160,7 +160,7 @@ function policyOverrides(policy: Policy, fromConfig: (pattern: string) => string
     });
 }
 
-// The plugins Prettier loads: the authored ones, then each shipped plugin by a path relative to the configuration file.
+// Prettier loads authored plugins, then shipped plugins by paths relative to its tool file.
 function pluginEntries(
     plugins: PrettierPlugin[],
     prefix: string,

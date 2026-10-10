@@ -24,4 +24,4 @@ gspot provides no uninstall command. Review Git history to identify the setup fi
 4. If Git uses `.gspot/hooks`, run `git config --unset core.hooksPath`. If a hook manager owns the hooks, remove only its gspot integration lines.
 5. Remove the CLI dependency using your package manager, then remove `gspot.toml` and `.gspot/` after reviewing them for authored files you need to keep.
 
-Run your remaining checks and review the diff before committing. Restoring the setup commit restores the tracked configuration. Run `gspot install` again to restore installed tools and hooks.
+Run your remaining checks and review the diff before committing. Restoring the setup commit restores the tracked files. Run `gspot install` again to restore installed tools and hooks.

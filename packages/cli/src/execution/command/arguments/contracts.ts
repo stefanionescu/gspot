@@ -56,7 +56,7 @@ export function fileBatches(files: string[], fixed: string[], platform: NodeJS.P
     // Reserve space below cmd.exe's 8191-character limit for the npm wrapper.
     const limit = platform === 'win32' ? WINDOWS_COMMAND_LIMIT : UNIX_COMMAND_LIMIT;
     const budget = limit - fixed.reduce((size, argument) => size + argumentSize(argument, platform), 0);
-    if (budget < 0) throw new Error('Tool arguments exceed the command limit. Shorten the tool configuration.');
+    if (budget < 0) throw new Error('Tool arguments exceed the command limit. Shorten the tool arguments.');
     const batches: string[][] = [[]];
     let used = 0;
     for (const file of files) {

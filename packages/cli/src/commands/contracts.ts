@@ -79,7 +79,7 @@ export function registerInstall(program: Program): void {
 }
 
 /**
- * Preview or install this clone's locked tools without regenerating tracked configuration.
+ * Preview or install locked tools and hooks.
  * @param options the working directory and whether this is a dry run
  * @returns the text to print and the exit code
  */
@@ -116,7 +116,7 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
  * Preview or apply one policy change through the same validated transaction.
  * @param root the repository root
  * @param options the authored change, summary, and preview choice
- * @returns the prepared policy diff or the result of applying generated outputs
+ * @returns the prepared policy diff or the result of applying generated files
  */
 export async function savePolicy(root: string, options: SavePolicyOptions): Promise<PolicySaveResult> {
     const { input, change, summary, isDryRun } = options;

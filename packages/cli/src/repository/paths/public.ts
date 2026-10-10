@@ -24,7 +24,7 @@ export function pathMatcher(patterns: string[]): (path: string) => boolean {
 }
 
 /**
- * Compile the same directory, inclusion, and exclusion selectors for CLI and generated tool configurations.
+ * Compile shared path selectors for the CLI and generated tool files.
  * @param patterns the selectors, a leading ! for an exclusion
  * @returns the inclusions and exclusions, directories expanded
  */

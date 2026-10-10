@@ -1,4 +1,4 @@
-/** Supported formats for selecting an owned section in a shared tool config file. */
+/** Supported formats for owned sections in shared tool files. */
 export const TOOL_FILE_FORMATS: Record<string, string> = {
     '.json': 'json',
     '.yaml': 'yaml',

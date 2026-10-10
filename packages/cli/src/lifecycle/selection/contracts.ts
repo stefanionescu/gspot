@@ -76,7 +76,7 @@ function configurationMutation(policy: Policy, rootIds: string[], scopeIds: Map<
 }
 
 /**
- * Calculate configuration changes without modifying policy or generated outputs.
+ * Calculate configuration changes without modifying policy or generated files.
  * @param session the saved policy and current repository inventory
  * @returns the policy mutation and descriptions of changed selections
  */

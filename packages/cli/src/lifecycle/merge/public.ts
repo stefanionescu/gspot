@@ -141,7 +141,7 @@ export function pruneParents(
 }
 
 /**
- * Plans the merge of owned keys into a shared configuration file the developer keeps.
+ * Plans the merge of owned keys into an authored tool file.
  * @param request the destination, requested fields, and read ownership
  * @returns the next copy with its ownership, or undefined when the file must be preserved
  */

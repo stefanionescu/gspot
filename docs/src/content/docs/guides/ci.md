@@ -10,7 +10,7 @@ gspot init --ci github
 gspot init --ci gitlab
 ```
 
-GitHub receives a workflow. Include the generated GitLab configuration in your pipeline:
+GitHub receives a workflow. Include the generated GitLab tool file in your pipeline:
 
 ```yaml title="GitLab pipeline include"
 include:

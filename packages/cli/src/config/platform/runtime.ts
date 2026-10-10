@@ -1,6 +1,6 @@
 import packageManifest from '#cli-package' with { type: 'json' };
 
-/** Version of the CLI package used by commands and generated output. */
+/** CLI package version for commands and generated files. */
 export const { version: RUNNING_VERSION } = packageManifest;
 
 /** Node and Bun place the executable and entry file before program arguments. */

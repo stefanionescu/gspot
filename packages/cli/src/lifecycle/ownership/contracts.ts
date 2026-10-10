@@ -144,7 +144,7 @@ function restoreBlock(
 }
 
 // What giving back a whole file writes: an adopted file stays as it is, any other is deleted. Only gspot writes under
-// `.gspot`, so a file adopted there is generated output and goes like any other.
+// `.gspot`, so an adopted generated file is deleted.
 function fileRestoration(existing: OwnershipEntry, current: FileCopy | undefined): Restoration | undefined {
     if (current !== undefined && !isRecorded(current, existing.installed)) return undefined;
     const isKept = existing.adopted === true && current !== undefined && !existing.path.startsWith(`${DOT_GSPOT}/`);
@@ -219,7 +219,7 @@ export function planBlock(log: Log, path: string, body: string, style: BlockStyl
 }
 
 /**
- * Proposes merged fields in a configuration file the repository authored.
+ * Proposes merged fields in an authored tool file.
  * @param log the open log
  * @param path the file
  * @param changes the keys and the values they must hold

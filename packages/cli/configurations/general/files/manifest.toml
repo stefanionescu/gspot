@@ -104,7 +104,7 @@ help = "Fix the line yamllint names, or set the rule's options with gspot set to
 
 [[check]]
 name = "v8r"
-title = "Validate configuration schemas"
+title = "Validate file schemas"
 example = "A governed JSON file with a string where its selected schema requires a boolean reports a schema mismatch. Replace the value with the intended boolean and rerun against the same schema."
 level = "recommended"
 stage = "push"

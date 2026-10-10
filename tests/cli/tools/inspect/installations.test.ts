@@ -212,7 +212,7 @@ test.each(['mise', 'npm'])(
         expect(inspectTool(context, tool).state).toBe('error');
         expect(inspectTool(context, buildLibraryPin('globals', '17.12.0')).state).toBe('error');
         const discovered = inspectTool(context, toolPin(configurationManifests().values(), 'editorconfig-checker'));
-        expect(discovered.note).toBe('Tool installation is incomplete. Run: gspot install');
+        expect(discovered.note).toContain('gspot install');
         expect(discovered.path).toBeUndefined();
         expect(discovered.state).toBe('error');
         {

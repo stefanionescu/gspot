@@ -121,7 +121,7 @@ export async function checkjs(session: ToolSession, planned: PlannedCheck): Prom
         throw new Error(`The javascript configuration declares no ${CONFIGURATION_DIRECTORY}/jsconfig.json target.`);
     const target = targetInScope(scope, jsconfig);
     const generated = getTsconfig(session.root, join(session.root, target), session.reads);
-    if (generated === undefined) throw new Error(`Missing JavaScript configuration: ${target}`);
+    if (generated === undefined) throw new Error(`Missing JavaScript tool file: ${target}`);
     const project = {
         ...generated,
         ...scopeCompilerProject(session.root, scope, session.repository.scopes, generated),

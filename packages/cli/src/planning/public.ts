@@ -146,7 +146,7 @@ export function isActive(check: PlannedCheck): boolean {
 }
 
 /**
- * Checks enabled by persistent policy, before evaluating executable tool configurations.
+ * List policy-enabled checks for each applicable scope.
  * @param session the open session
  * @param includeUnsupported whether to include requirements for other platforms
  * @returns every check the policy turns on, in each scope it applies to

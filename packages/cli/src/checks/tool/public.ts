@@ -209,10 +209,10 @@ export async function nginxTest(input: CheckInput): Promise<CheckOutcome> {
 }
 
 /**
- * The docker arguments that run nginx -t over one configuration file.
- * @param text the configuration.
- * @param mounts the host paths: the configuration, the certificate, and the key.
- * @param mounts.configs the captured configuration files and container paths.
+ * Docker arguments that run nginx -t over one tool file.
+ * @param text the tool file text.
+ * @param mounts the host paths: the tool file, certificate, and key.
+ * @param mounts.configs the captured tool files and container paths.
  * @param mounts.certificate the throwaway certificate.
  * @param mounts.key the throwaway key.
  * @param image the nginx image.

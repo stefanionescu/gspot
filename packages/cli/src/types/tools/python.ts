@@ -20,5 +20,5 @@ export type PythonRequirement = NonNullable<NonNullable<PythonToolLockfile['mani
 /** Authored uv configuration sources, with uv.toml taking precedence over pyproject.toml. */
 export type PythonSettingsSources = { uv: string | undefined; project: string | undefined };
 
-/** Repository index settings and the credentials that generated output must omit. */
+/** Repository index settings and credentials that lockfiles must omit. */
 export type PythonIndexSettings = { settings: Record<string, unknown>; credentials: string[] };

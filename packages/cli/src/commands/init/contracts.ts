@@ -196,7 +196,7 @@ function applyIntegrations(document: TomlTable, draft: PolicyDraft): void {
 }
 
 /**
- * Writes the policy and the generated files, retires the replaced configuration, and installs the tools.
+ * Writes policy and generated files, retires replaced tool files, and installs tools.
  * @param root the repository root
  * @param options whether initialization installs the tools
  * @param prepared what init prepared

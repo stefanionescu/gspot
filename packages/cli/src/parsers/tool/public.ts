@@ -301,7 +301,7 @@ export function parseExpoDoctor(stdout: string): string[] {
 
 /**
  * Read literal options without treating comments, strings, or nested env values as property names.
- * @param path the configuration file name
+ * @param path the tool file name
  * @param text the source text
  * @returns disabled checks and likely secret keys with one-based source lines
  */

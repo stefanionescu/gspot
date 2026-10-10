@@ -159,10 +159,10 @@ export function writeScopeProject(
     if (ownedInputs(session, planned).length === 0) return undefined;
     const generatedPath = join(scratch, target);
     const generated = getTsconfig(scratch, generatedPath, createReadCache(scratch));
-    if (generated === undefined) throw new Error(`Missing JavaScript configuration: ${target}`);
+    if (generated === undefined) throw new Error(`Missing JavaScript tool file: ${target}`);
     const project = scopeCompilerProject(scratch, planned.scope.scope.path, session.repository.scopes, generated);
     if (project.fileNames.length === 0) return undefined;
-    // Managed configurations are read-only; only the disposable copy is rewritten.
+    // Rewrite the tool file only in the disposable copy.
     chmodSync(generatedPath, PRIVATE_FILE);
     writeFileSync(
         generatedPath,

@@ -46,7 +46,7 @@ export function svelteFindings(check: string, scope: string, stdout: string): Fi
  * @returns one finding for each error and warning
  */
 export async function svelteCheck(input: CheckInput): Promise<Finding[]> {
-    // A scope with a generated TypeScript configuration is checked with its strict compiler options.
+    // A scope with a TypeScript tool file uses its strict compiler options.
     const tsconfig = input.selection.selected
         .flatMap((manifest) => manifest.toolFiles)
         .find((config) => !config.fragment && toolFileName(config.target) === 'tsconfig');

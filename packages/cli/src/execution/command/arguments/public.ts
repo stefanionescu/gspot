@@ -97,7 +97,7 @@ function plainPart(
     return [substituteValue(session, planned, part, substitutions)];
 }
 
-// The nested config files a check reads: its scope's own, its pointers, and those between an input and its scope.
+// The nested tool files a check reads: its scope's own, its pointers, and those between an input and its scope.
 function nestedConfigurations(session: CommandSource, planned: CommandCheck): string[] {
     const nested = planned.check.nested_config_file;
     if (nested === undefined) return [];
@@ -125,11 +125,11 @@ function nestedConfigurations(session: CommandSource, planned: CommandCheck): st
 }
 
 /**
- * Configuration paths named by a check command or its environment.
+ * Tool file paths named by a check command or its environment.
  * @param session the open session
  * @param planned the planned check
  * @param command the command to read, the check's own by default
- * @returns the configuration paths, relative to the root
+ * @returns the tool file paths, relative to the root
  */
 export function commandConfigurations(
     session: CommandSource,
@@ -158,10 +158,10 @@ export function commandConfigurations(
 }
 
 /**
- * Select source and configuration files needed by an isolated command.
+ * Select source and tool files needed by an isolated command.
  * @param session the source repository session
  * @param planned the check and its selected files
- * @param command the command with configuration placeholders
+ * @param command the command with tool-file placeholders
  * @returns repository-relative paths for the isolated workspace
  */
 export function isolatedFiles(session: CommandSource, planned: CommandCheck, command: string[]): string[] {

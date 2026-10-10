@@ -212,7 +212,7 @@ function lockfileDrift<Parsed, Preparation, Installation>(
     return description.matches(project, recorded.bytes.toString('utf8')) ? { path } : { path, kind: 'changed' };
 }
 
-// Preparation may replace a lockfile already present in the command's generated outputs.
+// Preparation may replace a lockfile in the command's generated files.
 function recordLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
     const index = files.findIndex((file) => file.path === lockfile.path);
     if (index === -1) files.push(lockfile);
@@ -323,9 +323,9 @@ export function toolProjectDrift(root: string, generated: GeneratedFile[]): Lock
 }
 
 /**
- * Append the selected npm and Python projects' lockfiles before publishing configuration.
+ * Append selected npm and Python lockfiles before writing generated files.
  * @param preparation the root and command-owned Python installer.
- * @param files the generated outputs.
+ * @param files the generated files.
  * @param owner the repository reader.
  * @param options the lockfile preparation request.
  */

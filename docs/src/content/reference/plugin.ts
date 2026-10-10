@@ -58,7 +58,7 @@ export function pluginReferencePages(): Map<string, ReferencePage> {
         'plugin/index.md',
         referencePage(
             'ESLint plugin rules',
-            `${String(Object.keys(plugin.rules).length)} rules for standalone ESLint and generated gspot configuration.`,
+            `${String(Object.keys(plugin.rules).length)} rules for standalone ESLint and gspot.`,
             table(
                 ['Rule', 'Preset', 'Summary'],
                 Object.entries(plugin.rules)

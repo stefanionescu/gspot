@@ -164,7 +164,7 @@ export function scopeIgnorePatterns(patterns: string[], scope: string): string[]
 }
 
 /**
- * The tool project folders and declared outputs excluded from generated code configurations.
+ * Tool project folders and declared outputs excluded from generated tool files.
  * @param declarationPaths authored generated and vendored paths
  * @param exclusions additional exclusions of the native configuration
  * @returns ordered repository-relative patterns

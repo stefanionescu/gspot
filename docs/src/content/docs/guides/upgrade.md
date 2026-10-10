@@ -38,6 +38,6 @@ gspot doctor
 gspot check
 ```
 
-Review the policy, generated files, tool requirements, and lockfile changes. An edited managed output is reported instead of overwritten. Move its desired settings into `gspot.toml` and move the edited output aside before regenerating it.
+Review the policy, generated files, tool requirements, and lockfile changes. An edited generated file is reported instead of overwritten. Move its settings into `gspot.toml` and move the edited generated file aside before regenerating it.
 
 Commit the updated CLI dependency, policy, generated files, and lockfiles together. Teammates then follow [Join a repository](/guides/join/).

@@ -124,7 +124,7 @@ function hasSection(root: string, path: string, replace: NonNullable<ToolPin['re
     return hasToolSection(source, path, replace);
 }
 
-// The tool configurations one replace row finds among the tracked files.
+// The tool files one replace row finds among tracked files.
 function planTakeoverConfigs(
     root: string,
     inventory: Set<string>,
@@ -148,10 +148,10 @@ function planTakeoverConfigs(
 }
 
 /**
- * Discover configuration sections declared by the tools that own them.
+ * Find the file sections each tool declares.
  * @param root the repository root
  * @param paths the tracked file paths
- * @returns tool configurations with their containing files and sections
+ * @returns tool files and their owned sections
  */
 function getToolConfigs(root: string, paths: Iterable<string>): ToolFile[] {
     const inventory = new Set([...paths].filter((path) => !isToolProjectPath(path)));
@@ -215,7 +215,7 @@ export function getHooks(root: string): Tooling['hooks'] {
  * @param files the tracked files
  * @param packageManifests the parsed package manifests
  * @param npmNames declared npm installer packages
- * @returns everything init lists except the tool configurations, which need the configurations
+ * @returns surveyed repository files, except tool files
  */
 export function surveyRepository(
     root: string,
@@ -275,11 +275,11 @@ export function getLintJobs(root: string, paths: string[]): string[] {
 }
 
 /**
- * Find the tool configuration the configurations replace, with the hooks, CI, agent files, lint folders, and runner found.
+ * Find tool files to replace, hooks, CI, agent files, lint folders, and the runner.
  * @param root the repository root
  * @param files the tracked files
  * @param packageManifests the parsed package manifests
- * @returns the configuration files, hooks, CI, agent files, lint folders, and runner found
+ * @returns tool files, hooks, CI, agent files, lint folders, and the runner
  */
 export function getTooling(root: string, files: TrackedFile[], packageManifests: PackageManifest[]): Tooling {
     const configurations = getToolConfigs(

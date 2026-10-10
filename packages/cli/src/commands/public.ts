@@ -253,7 +253,7 @@ export function registerApply(program: Program): void {
 }
 
 /**
- * Generates configuration or previews proposed changes without writing.
+ * Writes generated files or previews changes without writing.
  * @param options the parsed flags
  * @returns the command result
  */
