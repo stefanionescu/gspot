@@ -10,7 +10,6 @@ import { getKeptMode } from '#tests/harness/platforms.ts';
 import { applyChanges } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { shareRepository } from '#tests/harness/repository.ts';
-import { installToolProjects } from '#tests/harness/install.ts';
 import { installedModules } from '#tests/harness/environment.ts';
 import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 import type { TypecheckOutcome } from '#tests/types/tools/configurations/typescript.ts';
@@ -31,7 +30,6 @@ const repository: InstalledScenario = {
         await appendFile(join(root, 'gspot.toml'), ARCHITECTURE);
         const applied = await spawnGspot(root, ['apply'], environment);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await installToolProjects(root);
         const formatted = await spawnGspot(root, ['check', '--only', 'format/prettier', '--fix'], environment);
         expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     },

@@ -10,7 +10,6 @@ import { testModules } from '#tests/harness/environment.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
 import { shareRepository } from '#tests/harness/repository.ts';
 import { installedPackage } from '#cli/repository/contracts.ts';
-import { installToolProjects } from '#tests/harness/install.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import rxjsManifest from 'rxjs/package.json' with { type: 'json' };
 import { CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
@@ -193,7 +192,6 @@ const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
                 await appendFile(join(root, 'gspot.toml'), ARCHITECTURE);
                 const applied = await spawnGspot(root, ['apply'], environment);
                 if (applied.code !== 0) throw new Error(applied.stdout + applied.stderr);
-                await installToolProjects(root);
                 const formatted = await spawnGspot(root, ['check', '--only', 'format/prettier', '--fix'], environment);
                 if (formatted.code !== 0) throw new Error(formatted.stdout + formatted.stderr);
             },

@@ -8,10 +8,12 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { applyIgnores } from '#cli/execution/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
+import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { sarifFindings } from '#cli/parsers/output/structured/public.ts';
 import type { CapturedInvocation } from '#tests/types/cli/checks/security.ts';
 
@@ -213,6 +215,7 @@ test.if(hasToolBuild('codeql')).each(['../outside', 'C:outside'])(
             buildPolicy(['security'], { tables: '[tools.codeql]\nlanguages = ["python"]\n', level: 'all' }),
         );
         const corrected = await openSession(directory.path);
+        using _pins = mockPinnedExecutables([toolPin(corrected.manifests.values(), 'codeql')]);
         expect(
             await BUILT_IN_CALCULATIONS['security/codeql'](buildCheckInput(corrected, 'security/codeql')),
         ).toStrictEqual([]);
@@ -244,8 +247,8 @@ test.if(hasToolBuild('codeql')).each([
         'source file.ts': 'export const source = true;\n',
     });
     const session = await openSession(directory.path);
-    const manifest = session.manifests.get('security')!;
-    const packVersion = manifest.tools.find((tool) => tool.name === 'codeql')!.query_packs!['javascript']!;
+    const pin = toolPin(session.manifests.values(), 'codeql');
+    using _pins = mockPinnedExecutables([pin]);
     // Every database creation and analysis the check ran, with the copy it ran in.
     const invoked: CapturedInvocation[] = [];
     using _run = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
@@ -283,7 +286,7 @@ test.if(hasToolBuild('codeql')).each([
             .map(({ argv }) => argv.find((part) => part.startsWith(prefix)));
     expect(option('create', '--language=')).toStrictEqual(['--language=javascript']);
     expect(option('analyze', 'codeql/')).toStrictEqual([
-        `codeql/javascript-queries@${packVersion}:codeql-suites/javascript-security-extended.qls`,
+        `codeql/javascript-queries@${pin.query_packs!['javascript']!}:codeql-suites/javascript-security-extended.qls`,
     ]);
     expect(await readFile(join(directory.path, 'source file.ts'), 'utf8')).toBe('export const source = true;\n');
     const kept = applyIgnores(findings, session.policyFiles.policy.ignore).kept;
