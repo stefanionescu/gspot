@@ -1,4 +1,4 @@
-/** Native lock checks use local dependency projects and retain their exact authored manifests. */
+/** Local dependency projects retain their exact authored manifests. */
 const JAVASCRIPT_PROJECT = {
     manifestPath: 'package.json',
     manifest: '{"private":true,"dependencies":{"library":"file:./library"}}',

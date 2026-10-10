@@ -21,7 +21,7 @@ test.each(['recommended', 'all'] as const)('%s frozen installs run only for decl
             tables: '[[ignore]]\ncheck = "dependencies/stale-lockfile"\npaths = ["ignored/**"]\nreason = "This external project has its own installation."\n[scope.app]\nconfigurations = ["dependencies"]\n',
         }),
         'package.json': '{"name":"root","private":true}\n',
-        'bun.lock': 'Root lock.\n',
+        'bun.lock': 'Root lockfile.\n',
         'source.txt': 'Root source.\n',
         'app/package.json': '{"name":"child","private":true}\n',
         'app/source.txt': 'Child source.\n',

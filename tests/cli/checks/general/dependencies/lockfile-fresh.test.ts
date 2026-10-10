@@ -64,7 +64,7 @@ test.each([
     },
 );
 
-test('Yarn Berry validates metadata locks with install --immutable and preserves repository inputs', async () => {
+test('Yarn Berry preserves its lockfile with install --immutable', async () => {
     const files = {
         'gspot.toml': buildPolicy(['dependencies']),
         'package.json': '{"name":"example","private":true}\n',
@@ -106,7 +106,7 @@ test.each(['recommended', 'all'] as const)(
                 tables: '[scope.app]\nconfigurations = ["dependencies"]\n',
             }),
             'package.json': '{"name":"root","private":true}\n',
-            'bun.lock': 'Original lock.\n',
+            'bun.lock': 'Original lockfile.\n',
             'source.txt': 'Root source.\n',
             'app/package.json': '{"name":"child","private":true}\n',
             'app/source.txt': 'Child source.\n',
@@ -131,6 +131,6 @@ test.each(['recommended', 'all'] as const)(
         expect(triggered.report.checks).toMatchObject([{ check: 'dependencies/stale-lockfile', status: 'passed' }]);
         expect(commands).toStrictEqual([[which.sync('bun'), 'install', '--frozen-lockfile', '--dry-run']]);
         expect(inputs).toStrictEqual([['Root source.\n', 'Child source.\n']]);
-        expect(await readFile(join(directory.path, 'bun.lock'), 'utf8')).toBe('Original lock.\n');
+        expect(await readFile(join(directory.path, 'bun.lock'), 'utf8')).toBe('Original lockfile.\n');
     },
 );

@@ -221,7 +221,7 @@ export async function registryEnvironment(root: string): Promise<Record<string, 
  * @param root the repository whose connection settings apply
  * @param work the isolated native project
  * @param installer the native package manager requirement.
- * @param argv the actual lock or immutable-install command
+ * @param argv the lockfile or immutable-install command
  * @param failure the operation's failure description
  * @returns validated lockfile bytes and the private routing environment
  */
