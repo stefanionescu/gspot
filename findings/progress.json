@@ -1,5 +1,5 @@
 {
-    "openRecords": 179,
+    "openRecords": 175,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 179,
+        "openRecords": 175,
         "records": 1092,
         "batches": [
             {
@@ -1096,8 +1096,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 231,
-                "unresolvedAssignments": 60
+                "completedAssignments": 232,
+                "unresolvedAssignments": 59
             },
             {
                 "id": "python",
@@ -1143,8 +1143,8 @@
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
                 ],
-                "completedAssignments": 27,
-                "unresolvedAssignments": 12
+                "completedAssignments": 28,
+                "unresolvedAssignments": 11
             },
             {
                 "id": "javascript-web",
@@ -1250,8 +1250,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 60,
-                "unresolvedAssignments": 39
+                "completedAssignments": 61,
+                "unresolvedAssignments": 38
             },
             {
                 "id": "swift-bash-sql",
@@ -1340,8 +1340,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 59,
-                "unresolvedAssignments": 23
+                "completedAssignments": 60,
+                "unresolvedAssignments": 22
             },
             {
                 "id": "frameworks-platforms",
@@ -1479,8 +1479,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 91,
-                "unresolvedAssignments": 40
+                "completedAssignments": 92,
+                "unresolvedAssignments": 39
             },
             {
                 "id": "test-quality",
@@ -1956,8 +1956,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 398,
-                "unresolvedAssignments": 71
+                "completedAssignments": 400,
+                "unresolvedAssignments": 69
             },
             {
                 "id": "scripts-repository",
@@ -2241,8 +2241,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 107,
-                "unresolvedAssignments": 30
+                "completedAssignments": 109,
+                "unresolvedAssignments": 28
             },
             {
                 "id": "policy-file",
@@ -2650,10 +2650,10 @@
             "verification": ["Evidence 57d33151c58914cd.", "Evidence 3cad1527a5abd5d1.", "Evidence 7f3fd9dc95852ce9."]
         },
         "areas/checks/025": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 9b3e70df41c7ce2f."],
+            "commit": "54dd199b46787f83d480b109e727d03e7ff17660",
+            "verification": ["Evidence 98ee20fc1af7b992."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-native-names-final-freeze.json",
@@ -2714,15 +2714,10 @@
             ]
         },
         "areas/checks/032": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
-            "verification": [
-                "Evidence a54f15598472523e.",
-                "Evidence 7bd6261850b418f3.",
-                "Evidence 4f93bbab82bba503.",
-                "Duplicate Bash/Swift implementations and identical_function_lines are absent; shared Sonar rule template uses limits.duplication.min_lines."
-            ],
+            "commit": "54dd199b46787f83d480b109e727d03e7ff17660",
+            "verification": ["Evidence f396ac06a592ea96."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -2734,8 +2729,7 @@
                     "commit": null,
                     "verification": ["Evidence 07b1879e7752093d."]
                 }
-            ],
-            "remaining": "Custom duplicate implementations and identical_function_lines deleted; native Sonar reads limits.duplication.min_lines directly. No fresh jscpd/native JS diagnostic replay in this report; whole native acceptance is not claimed."
+            ]
         },
         "areas/checks/034": {
             "status": "partial",
@@ -5173,6 +5167,11 @@
                     "commit": "78b98449db7a28e4e30482209bf6ac637330bebf",
                     "evidence": "/tmp/gspot-current-doctor-78b9.log",
                     "verification": ["Evidence 998fefc84cf02768."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-docs-brace-54dd-candidate/freeze.json",
+                    "verification": ["Evidence cc00ed82797e52ef."]
                 }
             ]
         },
@@ -14650,22 +14649,16 @@
             ]
         },
         "slices/tests-tools-samples/051": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
-            "verification": [
-                "Only unused planted Vale guide.md removed; package archive consumer vectors retained. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
-            ],
-            "remaining": ["Evidence a4403efb371df5d5."]
+            "commit": "54dd199b46787f83d480b109e727d03e7ff17660",
+            "verification": ["Evidence b6703957591d70c2."]
         },
         "slices/tests-tools-samples/052": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
-            "verification": [
-                "removePackages now proves actual vale.ini bytes remain, replacing ownership-list inventory. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
-            ],
-            "remaining": ["Evidence a4403efb371df5d5."]
+            "commit": "54dd199b46787f83d480b109e727d03e7ff17660",
+            "verification": ["Evidence 952799d89707635e."]
         },
         "slices/tests-tools-samples/053": {
             "status": "complete",
@@ -19627,6 +19620,22 @@
             ],
             "limitations": [
                 "Actual cross-platform aggregate, pending growth decisions and main/001 publication/setup remain separate."
+            ]
+        },
+        {
+            "commit": "54dd199b46787f83d480b109e727d03e7ff17660",
+            "completedRecords": [
+                "areas/checks/025",
+                "areas/checks/032",
+                "slices/tests-tools-samples/051",
+                "slices/tests-tools-samples/052"
+            ],
+            "unresolvedRecords": 175,
+            "validation": [
+                "Current CLI19tests111assertions pass, one Windows-specific skip; native public generation22assertions pass. Actual Spectral2.41670seconds, jscpd20.41187seconds, eight Node/Bun Sonar vectors and three Vale archive/install/removal controls pass. Exact related source/test allocation is reducing for every closed concern."
+            ],
+            "limitations": [
+                "Main001 remains partial. Once-tools failures prove retention of coverage provider and React types; no whole-suite or skipped-platform green inferred."
             ]
         }
     ],

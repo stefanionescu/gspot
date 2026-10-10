@@ -43,11 +43,11 @@ jobs:
               with:
                   ref: ${{ inputs.release_tag || github.ref }}
                   persist-credentials: false
-            - name: Prepare the documentation workspace
+            - name: Prepare docs and CLI
               uses: ./.github/actions/setup
               with:
                   tools: bun node
-                  setup: bun install --frozen-lockfile --filter @gspothq/docs
+                  setup: bun install --frozen-lockfile --filter '@gspothq/{cli,docs}'
             - name: Name the source commit the documentation links to
               shell: bash
               run: printf 'GSPOT_DOCS_REVISION=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_ENV"
