@@ -1,13 +1,16 @@
-name: Windows HTML executable companion acceptance
+name: Windows tutorial publication diagnostic
 on:
     workflow_dispatch:
 permissions:
     contents: read
+concurrency:
+    group: windows-tutorial-${{ github.ref }}
+    cancel-in-progress: false
 defaults:
     run:
         shell: bash
 jobs:
-    html:
+    tutorial:
         runs-on: windows-2025
         timeout-minutes: 60
         steps:
@@ -17,63 +20,42 @@ jobs:
                   persist-credentials: false
             - name: Prepare the repository
               uses: ./.github/actions/setup
-            - name: Verify native companion relocation and missing companion refusal
+            - name: Compare native tool file inventories
               run: |
-                  cat > "$RUNNER_TEMP/companion-probe.ts" <<'PROBE'
-                  import {copyInstalledModule} from "./tests/harness/platforms.ts";
-                  import {testModules,installedModules} from "./tests/harness/environment.ts";
-                  import {createRequire} from "node:module";
-                  import {testdir} from "testdirs";
-                  import {join,dirname,resolve,relative,isAbsolute} from "node:path";
-                  import {readdir,readlink,readFile,realpath,rename} from "node:fs/promises";
-                  await using sandbox=await testdir();
-                  const name="html-validate";
-                  const originalPackage=join(testModules,name);
-                  const source=await realpath(originalPackage);
-                  const manifest=JSON.parse(await readFile(join(source,"package.json"),"utf8"));
-                  const nativeRequire=createRequire(join(source,"package.json"));
-                  const outcomes=async(paths)=>await Promise.all(paths.map(async path=>({path,realpath:await realpath(path),entries:await readdir(path)})));
-                  const resolutions=Object.fromEntries(Object.keys(manifest.dependencies).map(dependency=>{try{return [dependency,{path:nativeRequire.resolve(dependency)}]}catch(error){return [dependency,{error:error.code,message:error.message}]}}));
-                  const sourceLink=await readlink(originalPackage).then(target=>({target}),error=>({error:error.code}));
-                  console.log(JSON.stringify({bunGeometry:{version:Bun.version,revision:Bun.revision,originalPackage,source,sourceLink,dependencies:manifest.dependencies,resolutions,stores:await outcomes([testModules,dirname(source),installedModules])}},null,2));
-                  const nodeProbe=`import {realpathSync,readlinkSync,readdirSync,lstatSync,readFileSync} from "node:fs";import {createRequire} from "node:module";import {join,dirname} from "node:path";const [original,copied]=process.argv.slice(1);const inspect=path=>{const outcome=operation=>{try{return {value:operation()}}catch(error){return {error:error.code,message:error.message}}};const source=realpathSync(path);const manifest=JSON.parse(readFileSync(join(path,"package.json"),"utf8"));const require=createRequire(join(source,"package.json"));return {path,source,isSymbolicLink:lstatSync(path).isSymbolicLink(),readlink:outcome(()=>readlinkSync(path)),dependencyLink:outcome(()=>readlinkSync(join(path,"node_modules"))),dependencyRealpath:outcome(()=>realpathSync(join(path,"node_modules"))),store:dirname(source),entries:readdirSync(dirname(source)),dependencies:manifest.dependencies,resolutions:Object.fromEntries(Object.keys(manifest.dependencies).map(name=>[name,outcome(()=>require.resolve(name))]))}};console.log(JSON.stringify({node:{version:process.version,execPath:process.execPath,original:inspect(original),...(copied?{copied:inspect(copied)}:{})}},null,2));`;
-                  const nativeOriginal=Bun.spawnSync(["node","--input-type=module","-e",nodeProbe,originalPackage]);
-                  console.log(JSON.stringify({nativeOriginal:{code:nativeOriginal.exitCode,stdout:nativeOriginal.stdout.toString(),stderr:nativeOriginal.stderr.toString()}},null,2));
-                  const originalVersion=Bun.spawnSync(["node",join(originalPackage,"bin/html-validate.mjs"),"--version"]);
-                  console.log(JSON.stringify({originalVersion:{code:originalVersion.exitCode,stdout:originalVersion.stdout.toString(),stderr:originalVersion.stderr.toString()}},null,2));
-                  const original=join(testModules,".bin");
-                  const entries=(await readdir(original)).filter(entry=>entry===name||entry.startsWith(`${name}.`));
-                  const layout=await Promise.all(entries.map(async entry=>({entry,realpath:await realpath(join(original,entry)),sha256:new Bun.CryptoHasher("sha256").update(await readFile(join(original,entry))).digest("hex")})));
-                  const target=join(sandbox.path,"node_modules");
-                  await copyInstalledModule(target,name);
-                  const nativeCopied=Bun.spawnSync(["node","--input-type=module","-e",nodeProbe,originalPackage,join(target,name)]);
-                  console.log(JSON.stringify({nativeCopied:{code:nativeCopied.exitCode,stdout:nativeCopied.stdout.toString(),stderr:nativeCopied.stderr.toString()}},null,2));
-                  const dependencies=JSON.parse(nativeCopied.stdout.toString()).node;
-                  const dependencyPaths=Object.keys(manifest.dependencies).map(name=>({name,original:dependencies.original.resolutions[name],copied:dependencies.copied.resolutions[name]}));
-                  console.log(JSON.stringify({dependencyPaths},null,2));
-                  const sameDependencies=dependencyPaths.every(entry=>entry.original.value&&entry.original.value===entry.copied.value);
-                  const metadata=join(target,".bin",`${name}.bunx`);
-                  const raw=await readFile(metadata);
-                  const sameCompanion=raw.equals(await readFile(join(original,`${name}.bunx`)));
-                  const encoded=raw.toString("utf16le").split('"')[0];
-                  const program=resolve(target,encoded);
-                  const boundary=relative(target,program);
-                  const confined=!(isAbsolute(boundary)||boundary===".."||boundary.startsWith("..\\"));
-                  const copied=await realpath(program);
-                  const version=Bun.spawnSync([join(target,".bin",`${name}.exe`),"--version"]);
-                  await rename(metadata,`${metadata}.held`);
-                  let absent;
-                  try{absent=Bun.spawnSync([join(target,".bin",`${name}.exe`),"--version"]);}finally{await rename(`${metadata}.held`,metadata);}
-                  const restored=Bun.spawnSync([join(target,".bin",`${name}.exe`),"--version"]);
-                  console.log(JSON.stringify({bun:Bun.version,revision:Bun.revision,sameCompanion,confined,layout,encoded,program:copied,copiedEntries:await readdir(join(target,".bin")),metadataSHA256:new Bun.CryptoHasher("sha256").update(raw).digest("hex"),version:{code:version.exitCode,stdout:version.stdout.toString(),stderr:version.stderr.toString()},absent:{code:absent.exitCode,stdout:absent.stdout.toString(),stderr:absent.stderr.toString()},restored:{code:restored.exitCode,stdout:restored.stdout.toString(),stderr:restored.stderr.toString()}},null,2));
-                  if(!sameDependencies||!sameCompanion||!confined||originalVersion.exitCode!==0||version.exitCode!==0||restored.exitCode!==0||absent.exitCode!==255||!absent.stderr.toString().includes("could not find bin metadata file"))throw new Error("Native companion transport witness failed");
+                  cat > .windows-inventory-probe.ts <<'PROBE'
+                  import { globSync } from 'node:fs';
+                  import { join, normalize } from 'node:path';
+                  import { SUPABASE_DATABASE_TEST } from './scripts/config/plugin.ts';
+                  const pattern = 'tests/tools/**/*.test.ts';
+                  const cwd = process.cwd();
+                  const bun = [...new Bun.Glob(pattern).scanSync({ cwd })];
+                  const filesystem = globSync(pattern, { cwd });
+                  const paths = entries => entries.map(path => normalize(path)).sort();
+                  const bunPaths = paths(bun);
+                  const filesystemPaths = paths(filesystem);
+                  const excluded = join(SUPABASE_DATABASE_TEST);
+                  const node = Bun.spawnSync(['node', '--version']);
+                  console.log('GSPOT_INVENTORY ' + JSON.stringify({
+                      bun: Bun.version, revision: Bun.revision, node: { code: node.exitCode, version: node.stdout.toString().trim() }, platform: process.platform, pattern,
+                      excluded: { authored: SUPABASE_DATABASE_TEST, native: excluded },
+                      counts: { bunRaw: bun.length, filesystemRaw: filesystem.length,
+                          bunOriginalFilter: bun.filter(path => path !== SUPABASE_DATABASE_TEST).length,
+                          bunNativeFilter: bun.filter(path => path !== excluded).length,
+                          filesystemNativeFilter: filesystem.filter(path => path !== excluded).length },
+                      exclusionMatches: { bun: bun.filter(path => normalize(path) === excluded),
+                          filesystem: filesystem.filter(path => normalize(path) === excluded) },
+                      onlyBun: bunPaths.filter(path => !filesystemPaths.includes(path)),
+                      onlyFilesystem: filesystemPaths.filter(path => !bunPaths.includes(path)),
+                      bunPaths, filesystemPaths,
+                      partitions: { count: 16, measured: false,
+                          reason: 'Bun test help has no file-list or shard-inventory operation; no partition algorithm assumed.' }
+                  }));
                   PROBE
-                  cp "$RUNNER_TEMP/companion-probe.ts" companion-probe.ts
-                  trap 'rm -f companion-probe.ts' EXIT
-                  mise exec -- bun companion-probe.ts
-            - name: Prepare native publication timing observer
+                  trap 'rm -f .windows-inventory-probe.ts' EXIT
+                  mise exec -- bun .windows-inventory-probe.ts
+            - name: Prepare native tutorial timing observer
               run: |
-                  cat > .windows-ci-publication-observer.mjs <<'OBSERVER'
+                  cat > .windows-example-observer.mjs <<'OBSERVER'
                   import { mock } from 'bun:test';
                   import * as fs from 'node:fs';
                   import { resolve, basename } from 'node:path';
@@ -135,22 +117,49 @@ jobs:
                   const commandUrl = url('tests/harness/command.ts');
                   const command = await import(commandUrl);
                   const nativeCommand = command.runTestCommand;
+                  let commandSequence = 0;
+                  const safeNativeCommand = (argv) => {
+                      const selected = argv.slice(2);
+                      return argv[1]?.replaceAll('\\', '/').endsWith('/packages/cli/src/main.ts') &&
+                          ['["apply"]', '["install"]', '["check","--staged"]', '["check","--staged","--json"]'].includes(JSON.stringify(selected))
+                          ? ['source-gspot', ...selected] : [basename(argv[0]), '<arguments redacted>'];
+                  };
                   mock.module(commandUrl, () => ({
                       ...command,
                       async runTestCommand(...args) {
                           const start = performance.now();
                           const executable = basename(args[0][0]);
-                          record({ phase: 'runTestCommand', event: 'start', executable });
+                          const id = ++commandSequence;
+                          const argv = safeNativeCommand(args[0]);
+                          record({ phase: 'runTestCommand', event: 'start', executable, id, argv });
                           try {
                               const result = await nativeCommand(...args);
-                              record({ phase: 'runTestCommand', event: 'end', executable, ms: performance.now() - start, code: result.code });
+                              record({ phase: 'runTestCommand', event: 'end', executable, id, argv, ms: performance.now() - start, code: result.code });
                               return result;
                           } catch (error) {
-                              record({ phase: 'runTestCommand', event: 'error', executable, ms: performance.now() - start, error: error?.name });
+                              record({ phase: 'runTestCommand', event: 'error', executable, id, argv, ms: performance.now() - start, error: error?.name });
                               throw error;
                           }
                       },
                   }));
+                  const copyUrl = url('packages/cli/src/execution/copy/public.ts');
+                  const copy = await import(copyUrl);
+                  const nativeCopy = copy.copyInto;
+                  mock.module(copyUrl, () => ({ ...copy, async copyInto(...args) {
+                      const start = performance.now();
+                      record({ phase: 'copyInto', event: 'start', files: args[0].files?.length, dependencies: args[0].dependencies?.length });
+                      try { return await nativeCopy(...args); }
+                      finally { record({ phase: 'copyInto', event: 'end', ms: performance.now() - start }); }
+                  }}));
+                  const pythonUrl = url('tests/harness/python-installation.ts');
+                  const python = await import(pythonUrl);
+                  const nativePython = python.sharePythonTools;
+                  mock.module(pythonUrl, () => ({ ...python, async sharePythonTools(...args) {
+                      const start = performance.now();
+                      record({ phase: 'sharePythonTools', event: 'start' });
+                      try { return await nativePython(...args); }
+                      finally { record({ phase: 'sharePythonTools', event: 'end', ms: performance.now() - start }); }
+                  }}));
                   const installUrl = url('tests/harness/install.ts');
                   const install = await import(installUrl);
                   const nativeShare = install.shareToolProjects;
@@ -163,7 +172,36 @@ jobs:
                           finally { record({ phase: 'shareToolProjects', event: 'end', ms: performance.now() - start }); }
                       },
                   }));
-                  record({ phase: 'observer', event: 'ready' });
+                  const gspotUrl = url('tests/harness/gspot.ts');
+                  const gspot = await import(gspotUrl);
+                  const nativeSpawn = gspot.spawnGspot;
+                  let sequence = 0;
+                  const tutorialArgv = new Set(['["apply"]', '["install"]', '["check","--staged"]', '["check","--staged","--json"]']);
+                  mock.module(gspotUrl, () => ({ ...gspot, async spawnGspot(...args) {
+                      const start = performance.now();
+                      const id = ++sequence;
+                      const serialized = JSON.stringify(args[1]);
+                      const argv = tutorialArgv.has(serialized) ? args[1] : { redacted: true, count: args[1]?.length };
+                      record({ phase: 'spawnGspot', event: 'start', id, argv });
+                      try {
+                          const result = await nativeSpawn(...args);
+                          record({ phase: 'spawnGspot', event: 'end', id, argv, ms: performance.now() - start, code: result.code,
+                              stdoutBytes: Buffer.byteLength(result.stdout), stderrBytes: Buffer.byteLength(result.stderr) });
+                          if (serialized === '["check","--staged","--json"]') {
+                              try {
+                                  const report = JSON.parse(result.stdout);
+                                  if (Array.isArray(report.checks)) record({ phase: 'completedCheckReport', id, duration: report.duration,
+                                      checks: report.checks.map(({ check, status, duration }) => ({ check, status, duration })) });
+                              } catch { /* Diagnostic parsing does not change native results. */ }
+                          }
+                          return result;
+                      } catch (error) {
+                          record({ phase: 'spawnGspot', event: 'error', id, argv, ms: performance.now() - start, error: error?.name });
+                          throw error;
+                      }
+                  }}));
+                  record({ phase: 'observer', event: 'ready', revision: 'example-v4' });
                   OBSERVER
-            - name: Validate HTML scopes, registry credentials, and GitHub CI refusals
-              run: mise run test:tools -- --preload ./.windows-ci-publication-observer.mjs --test-name-pattern 'keeps built HTML exceptions confined|reports audio and video autoplay|native registry settings authenticate|invalid comparisons and failed installs fail the job in github CI' -- tests/tools/generation/site-html.test.ts tests/tools/generation/html-accessibility.test.ts tests/tools/npm/environment.test.ts tests/tools/commands/ci.test.ts
+            - name: Replay the unchanged recorded example
+              run: |
+                  mise run test:tools -- --preload ./.windows-example-observer.mjs --test-name-pattern '^the recorded example reports the agent findings and passes after the fix$' -- tests/tools/commands/example.test.ts
