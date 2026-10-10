@@ -105,10 +105,5 @@ jobs:
               uses: ./.github/actions/setup
               with:
                   native-tests: 'true'
-            # Defender scans every file a sandbox install writes, which makes those installs run for minutes.
-            - name: Stop Windows Defender scanning on this disposable runner
-              if: runner.os == 'Windows'
-              shell: pwsh
-              run: Set-MpPreference -DisableRealtimeMonitoring $true
             - name: Run this shard of the tool tests
               run: mise run test:tools -- "--shard=${{ matrix.shard }}/4"
