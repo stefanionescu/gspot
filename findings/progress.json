@@ -1377,7 +1377,7 @@
                 "Explicit user answer: Allow this exact verified fix.",
                 "Canonical patch SHA2563ba0c52978e3a208a244ca028901e3499a8bcb811bb7841135a17c8bd4c5087f; native14pass0fail126assertions."
             ],
-            "adoption": "Pending actual Windows successor38088386660; source is unadopted."
+            "adoption": "Condition met: actual Windows38088386660/job114319588448 passes3 unchanged library cases,0fail15assert. Exact789 source patch adopted; four excluded skips are not passes. Evidence53ecb02ae6208675."
         },
         {
             "id": "native-tools-cohorts3409",

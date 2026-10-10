@@ -6,3 +6,6 @@ export type SandboxInstallation = { without?: string[]; level?: Level };
 
 /** The suite-owned native cache and its exact lockfile. */
 export type SharedToolProject = { lockfile: GeneratedFile; directory?: string };
+
+/** Selected native projects and their sandbox command environment. */
+export type SharedToolProjects = { npm?: SharedToolProject; environment: Record<string, string> };

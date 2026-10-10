@@ -21,12 +21,12 @@ import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { TOOL_CACHE_FOLDER } from '#tests/config/harness/install.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { createInstallationRegistry } from '#tests/harness/registry.ts';
-import { sharePythonTools } from '#tests/harness/python-installation.ts';
 import { toolPin, toolProjectPackage } from '#cli/configurations/contracts.ts';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/state/public.ts';
 import { hasValePackages, installValePackages } from '#cli/lifecycle/install/contracts.ts';
-import type { SharedToolProject, SandboxInstallation } from '#tests/types/harness/install.ts';
+import { sharePythonTools, preparePythonProject } from '#tests/harness/python-installation.ts';
 import { testModules, installedModules, sourceLauncherDirectory } from '#tests/harness/environment.ts';
+import type { SharedToolProject, SharedToolProjects, SandboxInstallation } from '#tests/types/harness/install.ts';
 
 import {
     UV_LOCKFILE,
@@ -71,7 +71,16 @@ function cacheDirectory(inputs: string[]): string {
 }
 
 // Cache native installations on disk; the first sandbox needs no copy.
-async function prepareNpmProject(root: string, inputs: GeneratedFile[]): Promise<SharedToolProject> {
+async function prepareSharedProjects(root: string): Promise<SharedToolProjects> {
+    using authored = openRoot(root);
+    const python = authored.read(TOOL_PYTHON_PROJECT) !== undefined;
+    const environment = python ? await preparePythonProject(root) : { PATH: buildToolsPath([]) };
+    const inputs = [TOOL_PACKAGE_PROJECT, ...packageToolProject.additionalPaths].flatMap((path) => {
+        const file = authored.read(path);
+        return file === undefined ? [] : [{ path, content: file.bytes.toString('utf8') }];
+    });
+    if (!inputs.some(({ path }) => path === TOOL_PACKAGE_PROJECT))
+        return { environment: python ? await sharePythonTools(root) : environment };
     const directory = cacheDirectory(inputs.flatMap(({ path, content }) => [path, content]));
     let prepared = npmProjects.get(directory);
     if (prepared === undefined) {
@@ -79,7 +88,11 @@ async function prepareNpmProject(root: string, inputs: GeneratedFile[]): Promise
             await installToolProjects(root);
             using files = openRoot(root);
             const path = packageToolProject.lockfilePath(packageToolProject.parse(inputs[0]!.content));
-            const lockfile: GeneratedFile = { path, content: files.read(path)!.bytes.toString('utf8'), kind: 'lock' };
+            const lockfile: GeneratedFile = {
+                path,
+                content: files.read(path)!.bytes.toString('utf8'),
+                kind: 'lock',
+            };
             readInstalledTree(join(root, NODE_MODULES_DIRECTORY), 'npm');
             await copyInto({
                 root,
@@ -91,9 +104,10 @@ async function prepareNpmProject(root: string, inputs: GeneratedFile[]): Promise
         })();
         npmProjects.set(directory, prepared);
         const { lockfile } = await prepared;
-        return { lockfile };
+        return { npm: { lockfile }, environment };
     }
-    return prepared;
+    const npm = await prepared;
+    return { npm, environment: python ? await sharePythonTools(root) : environment };
 }
 
 // Only upstream packages are cached; each sandbox keeps its own generated styles and vocabulary.
@@ -204,19 +218,7 @@ export async function installToolProjects(cwd: string): Promise<void> {
  * @returns the managed native command environment for the sandbox
  */
 export async function shareToolProjects(root: string): Promise<Record<string, string>> {
-    let environment: Record<string, string> = { PATH: buildToolsPath([]) };
-    let npm: SharedToolProject | undefined;
-    {
-        using files = openRoot(root);
-        if (files.read(TOOL_PYTHON_PROJECT) !== undefined) environment = await sharePythonTools(root);
-        const inputs: GeneratedFile[] = [TOOL_PACKAGE_PROJECT, ...packageToolProject.additionalPaths].flatMap(
-            (path) => {
-                const file = files.read(path);
-                return file === undefined ? [] : [{ path, content: file.bytes.toString('utf8'), kind: 'tool_file' }];
-            },
-        );
-        if (inputs.some(({ path }) => path === TOOL_PACKAGE_PROJECT)) npm = await prepareNpmProject(root, inputs);
-    }
+    const { npm, environment } = await prepareSharedProjects(root);
     const session = await openSession(root);
     const generated = emitAll(session);
     using log = openOwnership(root);
