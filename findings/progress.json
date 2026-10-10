@@ -1,5 +1,5 @@
 {
-    "openRecords": 145,
+    "openRecords": 118,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -787,10 +787,350 @@
                 "Explicit user reply: Allow both verified fixes.",
                 "/tmp/gspot-lifecycle048-d4b-final/freeze.json SHA256 ec18487617b7e9903cbd13b805b875547cb3effe3865ec0e88955908250e3ca9"
             ]
+        },
+        {
+            "id": "swift-metadata064-size",
+            "date": "2026-10-10",
+            "scope": "areas/kits/064",
+            "decision": "Allow the verified Swift metadata implementation: 14,146 total bytes, including 5,908 production bytes.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-kits064-current-complete-review.json SHA256 ae772e93f99e4900a3b12224940e752789849ced9ddb84d7c6141d82f8c07521"
+            ]
+        },
+        {
+            "id": "five-framework-template-sizes",
+            "date": "2026-10-10",
+            "scope": "areas/kits/046, areas/kits/050, areas/kits/052, slices/kits-frameworks-tools/021, slices/tests-integration-generation/014",
+            "decision": "Allow the five exact reviewed fixes: React pair 8,344; Express 9; JavaScript rules 28; Drizzle 2,080; template assertions 1,476 bytes; shared costs counted once.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-five-reviewed-size-exceptions.json SHA256 77fdb8f17436f4508d42367c40fefd4b2f5f91c615d1e400f92bffbee46ad2c2"
+            ]
+        },
+        {
+            "id": "docs-cli-filter-size",
+            "date": "2026-10-10",
+            "scope": "Docs build installation filters",
+            "decision": "Allow adding the CLI workspace to both filtered docs installations, 44 bytes; preserve removal of the docs workspace dependency.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-docs-filtered-install-owner-proposal/proposal.json SHA256 e38abbca0d262acda03f979ae67274dc9969b668d6a0bf3188d2ba6153ad0ad2"
+            ]
+        },
+        {
+            "id": "fixture-preparation-cache-size",
+            "date": "2026-10-10",
+            "scope": "Six CI and three Python tool cases",
+            "decision": "Allow the exact shared preparation cache correction: 525 test/type bytes; retain real installer failure checks.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-windows-fixture-cache-c18e/freeze.json SHA256 49bd010ba9e0f6f06fae5ab4348387e918a6c9fc1947d89e0392f4f397d57474"
+            ]
+        },
+        {
+            "id": "bash-native-retention-034",
+            "date": "2026-10-10",
+            "scope": "areas/checks/034, areas/kits/128",
+            "decision": "Retain existing Bash embeds and owner-aware cleanup instead of the infeasible Semgrep replacement. Remove the configuration knobs using reasoned ignores.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-bash034-range-correlation-supplement-freeze.json SHA256 d67436205ac9e7d7d55da9696190fa5c0c230daccc7fdbd0f2279dec6a518eda"
+            ]
+        },
+        {
+            "id": "site-storage-postgres-sizes",
+            "date": "2026-10-10",
+            "scope": "areas/checks/070, areas/checks/073, slices/config/033",
+            "decision": "Allow exact historical fixes: webmanifest selection 3,817; storage-policy parsing 4,888; Postgres constants ownership 2,641 bytes.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-checks070073-config033-051a-evidence/readiness.json SHA256 ccae5a9021a78cc6bbc1d931b7ef8a07e6859abb065a1a674a2b365df5844dc5"
+            ]
+        },
+        {
+            "id": "import-linter-skip-assertion-016",
+            "date": "2026-10-10",
+            "scope": "areas/integration-tests/016",
+            "decision": "Adopt exact python/import-linter identifier and skipped-status assertions, delete redundant note assertion; setting-name prescription is overridden.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-integration016-f18-status-draft/freeze.json SHA256 e7b6a7d73baf1d00505958c6a75173b2e30aee953927c14c424ade5f29e37def"
+            ]
+        },
+        {
+            "id": "placeholder043-reduced-size",
+            "date": "2026-10-10",
+            "scope": "slices/config/043",
+            "decision": "Adopt the latest reduced validated placeholder owner and each-setting validation: 1,346 total bytes, including 760 production bytes. This replaces the older 1,544-byte and 1,350-byte drafts.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-config043-dead-names/final/CP.patch SHA256 a71006256ded7f65f4af928a90cdc0456661955bee3608d3a73ea60337203587"
+            ]
+        },
+        {
+            "id": "pins037-reduced-size",
+            "date": "2026-10-10",
+            "scope": "slices/config/037",
+            "decision": "Adopt the latest six-owner pin checks: 5,855 total bytes, including 4,989 production/type bytes. This replaces the earlier 9,710-byte proposal; no pin upgrades are authorized.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-config037-72cf-candidate/freeze.json SHA256 c88c7bcad3eae04ef028c923857e11841b59d47f013e9e05e27747e8b6856375"
+            ]
+        },
+        {
+            "id": "typed-settings012-filesystem077-sizes",
+            "date": "2026-10-10",
+            "scope": "areas/checks/012, areas/integration-tests/077",
+            "decision": "Allow declaration-derived typed settings: 3,739 authored and 17,906 generated bytes, counted once; allow the original 862-byte filesystem test fix.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-checks012-full-f18-final/freeze.json SHA256 26072d40feb0005e23330d03f00de1fc3778e42abc436e4ca8e6660a7e50d015"
+            ]
+        },
+        {
+            "id": "dependency-cleanup046-size",
+            "date": "2026-10-10",
+            "scope": "review/policy-exceptions/046",
+            "decision": "Allow exact 451-byte static-data dependency cleanup. Retain React types and Vitest coverage provider required by native tests; use exact Knip package names.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-policy-exceptions046-final-freeze.json SHA256 6caad8db79fc022b261c2d54c45d7b389c32dc00385ab8d8ee06cc2b0be2b32d"
+            ]
+        },
+        {
+            "id": "runner014-reduced-size",
+            "date": "2026-10-10",
+            "scope": "areas/developer-experience/014",
+            "decision": "Adopt the latest two-source runner-selection fix, 201 bytes, preserving repository declarations and locks. The earlier 1,288-byte test packet remains unadopted.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-dx014-e312-successor-final/authored.patch SHA256 9abf4fd7e8814bf63c95e20b2932d0fa61b6dd208475fb3be9f6294840668281"
+            ]
+        },
+        {
+            "id": "samples-six-size",
+            "date": "2026-10-10",
+            "scope": "slices/tests-tools-samples/009, /024, /025, /027, /030, /031",
+            "decision": "Allow the exact 786-byte native parser/fixer test packet; retain assertion, refusal and platform qualifications. Already closed records remain closed.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-samples-six-525a-final/freeze.json SHA256 4a898329f90b5e352a18e288c0a69d694b4a659582590735b176e5b956181bb3"
+            ]
+        },
+        {
+            "id": "suite-ci-move-size",
+            "date": "2026-10-10",
+            "scope": "review/owner-decisions/005, review/repository-root/003",
+            "decision": "Allow the exact 337-byte CI test move: ten native Bash cases in tools, six generation cases in CLI.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-suite-separation-525a-final/ci-mechanical/freeze.json SHA256 ac7eef6920839da56386f68b2c486391ffaa23e789155786078c7d1af04aa4f8"
+            ]
+        },
+        {
+            "id": "suite-hook-move-size",
+            "date": "2026-10-10",
+            "scope": "review/owner-decisions/005, review/repository-root/003",
+            "decision": "Allow the exact 303-byte generated-hook test move: four native cases in tools, one generation case in CLI.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-suite-separation-525a-hooks-final/freeze.json SHA256 747dbd52c2adc80fc19555caa937cc69a2c261d5dd2c0d98c12523f323ff5394"
+            ]
+        },
+        {
+            "id": "suite-markdown-move-size",
+            "date": "2026-10-10",
+            "scope": "review/owner-decisions/005, review/repository-root/003",
+            "decision": "Allow the exact 121-byte native Markdown test move, preserving assertions and cleanup.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-suite-separation-525a-more-bash-final/markdown/freeze.json SHA256 a2e3da48e4fffaeb1bf55e25a9ed0dba194108b0594c2b4949fc8aa8d390aec3"
+            ]
+        },
+        {
+            "id": "suite-installer-move-size",
+            "date": "2026-10-10",
+            "scope": "review/owner-decisions/005, review/repository-root/003",
+            "decision": "Allow the exact two-byte installer-failure test move, preserving assertions and cleanup.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-suite-separation-525a-installer-final/freeze.json SHA256 51af2bd0292ff62d20151912cfb5009012bd6859790440c8d8fa9fbd1198e78b"
+            ]
+        },
+        {
+            "id": "toml-producer002-size",
+            "date": "2026-10-10",
+            "scope": "review/policy-format/002",
+            "decision": "Allow the exact native generator correction: 497 production and 15 generated preview bytes. Generate actual current managed files through their normal producer.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-pf002-native-producer-final-freeze.json SHA256 b43708b2dc7853286ede6636306b32b4decd9919cd5670bc88f3510cfab16e14"
+            ]
+        },
+        {
+            "id": "suite-process-mocks-size",
+            "date": "2026-10-10",
+            "scope": "review/owner-decisions/005, review/repository-root/003",
+            "decision": "Allow the exact 408-byte CLI executable lookup/version mock-boundary correction. Production readiness remains enforced.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-suite-separation-nine-mocks-final/freeze.json SHA256 36fc2d04038138c172197cac8b649c1b9ca5b8bcfc499375e2d9a6475316c4f7"
+            ]
+        },
+        {
+            "id": "suite-remaining-bash-moves-size",
+            "date": "2026-10-10",
+            "scope": "review/owner-decisions/005, review/repository-root/003",
+            "decision": "Allow the exact 1,719-byte remaining 23 native Bash test moves. Preserve pure refusals in CLI and all resources.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-suite-separation-remaining-bash-final/freeze.json SHA256 92dfbcb132868eda74fdb1dad9de67742734bcc2c107c977140b234d7009dc11"
+            ]
+        },
+        {
+            "id": "scope011-unified-size",
+            "date": "2026-10-10",
+            "scope": "areas/checks/011",
+            "decision": "Adopt the latest complete unified current scope-path refactor: 2,952 bytes, including 740 production and 2,212 tests. This replaces earlier 929/1,089/2,950-byte proposals and the separate 81-byte draft, without adding their costs together.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-scope011-unified-final/freeze.json SHA256 9571221cc3ad1b5129005e4fa5fe6591c64d6f613fe3f12c34272e58084c8bd9"
+            ]
+        },
+        {
+            "id": "package-node-floor006-size",
+            "date": "2026-10-10",
+            "scope": "review/policy-exceptions/006",
+            "decision": "Allow the exact 76-byte manifest change removing the root override and declaring required Node floors in docs/tests; no executable increase.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-pe006-isolated-cost-review/freeze.json SHA256 898fc958e0b587b589c5bf2faad2f7bf918bcf295aa61e15724140940ac88b3c"
+            ]
+        },
+        {
+            "id": "shared-policy-wave3-historical-size",
+            "date": "2026-10-10",
+            "scope": "Original shared policy/schema/writer implementation",
+            "decision": "Allow the frozen 544-owner historical implementation: 21,319 authored production and 131,400 total bytes, counted once. This does not adopt unrelated later edits or close incomplete behavior.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-w3-size-decision-review-a7/REVIEW.md SHA256 4d1cb1028100c574dd253ee2161ad79d995a922ee4e163efd274eb5030b362bb"
+            ]
+        },
+        {
+            "id": "acceptance-execution-test-sizes",
+            "date": "2026-10-10",
+            "scope": "slices/tests-acceptance/033, /034, /043; slices/tests-integration-execution/026",
+            "decision": "Allow exact historical test-only patches: shared acceptance 1,955 bytes and Actionlint test move 43 bytes; no unrelated costs or production increase.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-six-test-binding-native-cost-capsule/capsule.json SHA256 556341cc34d47cad8f64668f9554cff4b88f3a8111b108c9b4916d6f3ec31046"
+            ]
+        },
+        {
+            "id": "manager-query028-context-override",
+            "date": "2026-10-10",
+            "scope": "review/code-execution/028",
+            "decision": "Retain generation root-manager and installation private-scratch version queries once per distinct context. Reusing the root query loses the changed-major refusal.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-ce028-current-987-native/freeze.json SHA256 c5ec0e201c4dfcc062f69464345f5f340bce6e2758e9fb5a7f987fa2f5e406df"
+            ]
+        },
+        {
+            "id": "translation-test002-size",
+            "date": "2026-10-10",
+            "scope": "slices/tests-integration-checks/002",
+            "decision": "Allow the exact three-file translation test-owner move, 1,489 test-only bytes, preserving every assertion.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-translations002-current-final/freeze.json SHA256 57f4d6dd90d399236cc79eedad332a503e4f9010e66a810b4c69c03e7fd5ba28"
+            ]
+        },
+        {
+            "id": "markdown-pointer021-size",
+            "date": "2026-10-10",
+            "scope": "areas/developer-experience/021",
+            "decision": "Allow the exact two-file Markdown applicability correction, 81 bytes; older shared pointer behavior is separately accounted.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-DX021-markdown-pointer-successor/final-freeze.json SHA256 ef9bcdf0e65cb36a494e00ddb78b02285d2cb8490cc8927f4acae0f128ccfc80"
+            ]
+        },
+        {
+            "id": "glossary023-size",
+            "date": "2026-10-10",
+            "scope": "review/glossary/023",
+            "decision": "Allow the exact 123-byte secrets.env_examples vocabulary change, including 24 shared namespace bytes counted once; preserve html.templates.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-glossary023-current-readonly/audit.json SHA256 3b01b04d21f77df698d1a28bd34703267a352c9bc05748b8cb8387daa7916871"
+            ]
+        },
+        {
+            "id": "catalogue-ban015-retention",
+            "date": "2026-10-10",
+            "scope": "diagram/repository/015",
+            "decision": "Retain the catalogue naming ban and record the override: pinned Typos accepts catalogue. This explicit latest instruction supersedes the prescribed deletion; retain completed record status and original quotation.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-diagram015-54052-review/final-receipt.json SHA256 f6a9a2a538d4627436fe2696ed8779b9292a3ffa1096029d7bba867aac7d7f4a"
+            ]
+        },
+        {
+            "id": "launcher-absence006-clarification",
+            "date": "2026-10-10",
+            "scope": "slices/tests-integration-lifecycle/006",
+            "decision": "Preserve the two intentional launcher-absence tests restricted PATH. The successful-hook PATH duplication is already removed; buildSandboxPath is inapplicable to absence tests.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-lifecycle006-helper-proof/freeze.json SHA256 b82491f1dc0f261d88a17cc314ffdcfba731a4f43624d50c403e1c30730902aa"
+            ]
+        },
+        {
+            "id": "python-shared-install-size",
+            "date": "2026-10-10",
+            "scope": "areas/tool-tests/045",
+            "decision": "Allow the exact one-file Python shared-installation fix, 150 test bytes, preserving all 37 assertion sites and project interpreter paths.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-0e68-tools-045-current/python-final-freeze.json SHA256 dc8e25523f3d7faeccc1138a09ec3111bc97540c86fe6df14e8f8742dba5ca0f"
+            ]
+        },
+        {
+            "id": "plugin066-test-size",
+            "date": "2026-10-10",
+            "scope": "review/configurations-plugin/066",
+            "decision": "Allow the exact required pointer/rule cleanup test lineage: production shrinks 22 bytes; complete concern adds 3,780 bytes.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-cp066-test-adoption-readonly/adjudication.json SHA256 ca8a3ef7ff7eacf58daea7c32e461a97c6e6d608e6e1f3463fc199fdbab2c50b"
+            ]
+        },
+        {
+            "id": "test-layout026027-move-size",
+            "date": "2026-10-10",
+            "scope": "review/tests-layout/026, review/tests-layout/027",
+            "decision": "Allow the exact 36-byte mechanical final-owner move of 22 files, preserving held edits and assertions.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-test-layout026027-mechanical/final/freeze.json SHA256 c13ebb303cc5f13081e3412044df9c5a0b1d479542de0d95ed4083d75edcb1d9"
+            ]
+        },
+        {
+            "id": "prepared-fourteen-exact-sizes",
+            "date": "2026-10-10",
+            "scope": "Exact prepared fourteen-packet review",
+            "decision": "Allow the exact reviewed packets, including shared pointer 4,303; App Router 1,007; shared native samples 2,285; claim-race 159 bytes. Later explicitly approved reduced successors govern runner014, placeholder043 and scope011. Costs shared with separately approved packets are counted once.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-pending-packaging-test-doc-owner-decisions/inventory.json SHA256 7501757c0f2cbee530384d285ac00136b29b923828e60ff984e66d34cff2c0aa"
+            ]
         }
     ],
     "implementationBatches": {
-        "openRecords": 145,
+        "openRecords": 118,
         "records": 1092,
         "batches": [
             {
@@ -1096,8 +1436,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 248,
-                "unresolvedAssignments": 43
+                "completedAssignments": 251,
+                "unresolvedAssignments": 40
             },
             {
                 "id": "python",
@@ -1250,8 +1590,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 67,
-                "unresolvedAssignments": 32
+                "completedAssignments": 70,
+                "unresolvedAssignments": 29
             },
             {
                 "id": "swift-bash-sql",
@@ -1340,8 +1680,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 66,
-                "unresolvedAssignments": 16
+                "completedAssignments": 67,
+                "unresolvedAssignments": 15
             },
             {
                 "id": "frameworks-platforms",
@@ -1479,8 +1819,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 100,
-                "unresolvedAssignments": 31
+                "completedAssignments": 104,
+                "unresolvedAssignments": 27
             },
             {
                 "id": "test-quality",
@@ -1956,8 +2296,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 423,
-                "unresolvedAssignments": 46
+                "completedAssignments": 424,
+                "unresolvedAssignments": 45
             },
             {
                 "id": "scripts-repository",
@@ -2096,8 +2436,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 104,
-                "unresolvedAssignments": 28
+                "completedAssignments": 106,
+                "unresolvedAssignments": 26
             },
             {
                 "id": "installation-docs",
@@ -2241,8 +2581,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 118,
-                "unresolvedAssignments": 19
+                "completedAssignments": 119,
+                "unresolvedAssignments": 18
             },
             {
                 "id": "policy-file",
@@ -2340,8 +2680,8 @@
                     "review/policy-exceptions/061",
                     "review/carve-outs/001"
                 ],
-                "completedAssignments": 69,
-                "unresolvedAssignments": 22
+                "completedAssignments": 85,
+                "unresolvedAssignments": 6
             },
             {
                 "id": "layout",
@@ -2442,7 +2782,7 @@
             },
             {
                 "id": "configurations",
-                "status": "partial",
+                "status": "complete",
                 "records": [
                     "review/configurations-plugin/001",
                     "review/configurations-plugin/002",
@@ -2504,8 +2844,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 58,
-                "unresolvedAssignments": 1
+                "completedAssignments": 59,
+                "unresolvedAssignments": 0
             },
             {
                 "id": "names",
@@ -2540,8 +2880,8 @@
                     "review/glossary/028",
                     "review/glossary/029"
                 ],
-                "completedAssignments": 22,
-                "unresolvedAssignments": 6
+                "completedAssignments": 23,
+                "unresolvedAssignments": 5
             }
         ],
         "overlapPolicy": "Each starting record retains its ID and original quotation. Overlapping records appear in every applicable batch. Batch assignment does not close a finding. Second-pass slice corrections precede area and main-summary reconciliation."
@@ -2947,15 +3287,10 @@
             ]
         },
         "areas/checks/070": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
-            "verification": [
-                "All prescribed functional obligations are committed and current AST/data matches native-tested implementations. Native169cases/519assertions and34Node/Bun controls retained; later148/529 migration controls cover current defaults. /tmp/gspot-checks070073-config033-051a-evidence/readiness.json."
-            ],
-            "remaining": [
-                "Exact whole3817-byte/source1522-byte size disposition pending; shared HTML extraction counted once, unrelated headers excluded."
-            ]
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "verification": ["Evidence 2473155e49b5239d."]
         },
         "areas/checks/071": {
             "status": "complete",
@@ -2979,13 +3314,10 @@
             ]
         },
         "areas/checks/073": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
-            "verification": [
-                "All prescribed functional obligations are committed and current AST/data matches native-tested implementations. Native169cases/519assertions and34Node/Bun controls retained; later148/529 migration controls cover current defaults. /tmp/gspot-checks070073-config033-051a-evidence/readiness.json."
-            ],
-            "remaining": ["Exact whole4888-byte/source635-byte size disposition pending for parsed storage policies."]
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "verification": ["Evidence 6881937308ec2bc1."]
         },
         "areas/checks/075": {
             "status": "partial",
@@ -3855,10 +4187,10 @@
             ]
         },
         "areas/kits/046": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 6a8bfd964fec04e5."],
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "verification": ["Evidence ea56a9a2dd10694a."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-next-five-final-freeze.json",
@@ -3886,10 +4218,10 @@
             ]
         },
         "areas/kits/050": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 0342c600c21c7f5b."],
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "verification": ["Evidence 10caa74e7d9019c5."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-eight-final-freeze.json",
@@ -3912,31 +4244,10 @@
             ]
         },
         "areas/kits/052": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": [
-                "Evidence 4b8bf83bd543ad8b.",
-                "Evidence de1cb2d09c9a5ef8.",
-                "Evidence 65b60b92f8626dac.",
-                "Evidence 6f5432cd509318e7.",
-                "Evidence c21da651f27ae0c7.",
-                "Evidence f0862a6e87a0e422.",
-                "Evidence 05d5c4d8bdff3836.",
-                "Evidence e747a69c26c3cdb2.",
-                "Evidence 1e52ab4321d35379.",
-                "Evidence 07229fc50cbe9573.",
-                "Evidence bae7024eda0ab103.",
-                "Evidence eb151791eb2b2360.",
-                "Evidence 91f0b234de28c443.",
-                "Evidence 000f496ce4afd6de.",
-                "Evidence f5b2c7130520fdcd.",
-                "Evidence c3444a6588935426.",
-                "Evidence 0dadb915410423f7.",
-                "Evidence d06465bfd225119a.",
-                "Evidence 4fcee0f936c4e249.",
-                "Evidence 99b202ba6a74c838."
-            ],
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "verification": ["Evidence 7755c6dec251b16b."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-eight-final-freeze.json",
@@ -4103,14 +4414,10 @@
             ]
         },
         "areas/kits/064": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
-            "verification": [
-                "Evidence a54f15598472523e.",
-                "Evidence 7b3e61487ad87e53.",
-                "readSwiftVersion reads Package.swift header or chosen pbxproj metadata at generation. Init computes SDK destination after template merge, and old swiftformat.swift_version is absent. Fixed manifest destination remains static initial default overridden by actual init inference."
-            ],
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "verification": ["Evidence 3b19fa2446f697ef."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -4122,8 +4429,7 @@
                     "commit": null,
                     "verification": ["Evidence 7b3e61487ad87e53."]
                 }
-            ],
-            "remaining": "Generation version and post-template init SDK precedence are implemented and current focused/native cases pass. Original producer growth +5908 production bytes/+110 lines/+667 AST still needs Root simplification disposition; old whole-owner proof cannot be replayed as current byte identity."
+            ]
         },
         "areas/kits/068": {
             "status": "complete",
@@ -5132,7 +5438,14 @@
             "status": "complete",
             "owner": "main",
             "commit": "aec223e2efbc38d27a4dc731e2ddb09fd4d8420a",
-            "verification": ["Evidence b83acd9838adf9f6."]
+            "verification": ["Evidence b83acd9838adf9f6.", "Evidence 2d8ed87ad81322c6."],
+            "additionalChanges": [
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-diagram015-54052-review/final-receipt.json",
+                    "verification": ["Evidence 2d8ed87ad81322c6."]
+                }
+            ]
         },
         "main/001": {
             "status": "partial",
@@ -7200,16 +7513,10 @@
             ]
         },
         "review/configurations-plugin/066": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "98cbc5d0e7f8aef131aa09305383fcf61e31b54b",
-            "verification": [
-                "Swift URLSession override removed. Remaining Knip/docs/Python aggregate obligations require implementation and verification.",
-                "Evidence 51e7fcf07fc2e09f.",
-                "Evidence 7efd12c3179ed7f6.",
-                "Evidence d782740b2170ed5f."
-            ],
-            "remaining": "Functional obligations verified. Exact committed test/static lineage makes whole concern3780 bytes larger despite22-byte production reduction. Explicit owner test-size decision remains pending; separate650-byte draft is unadopted."
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "verification": ["Evidence bf56d66ff0fa5041."]
         },
         "review/configurations-plugin/067": {
             "status": "complete",
@@ -7821,19 +8128,16 @@
             ]
         },
         "review/glossary/023": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef.", "Evidence 754bfaf0229de054."],
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "verification": ["Evidence 712dca01bfaf076e."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
                 }
-            ],
-            "remaining": [
-                "Exact123-byte direct vocabulary size disposition is pending;24-byte namespace overlap is counted once. Functional binding has no newly identified gap."
             ]
         },
         "review/glossary/024": {
@@ -8032,10 +8336,10 @@
             "verification": ["Evidence ec9463577bed36f3.", "Evidence c51cdc5959cab60e."]
         },
         "review/policy-exceptions/006": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 9cd682b03224429d."],
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "verification": ["Evidence 294fe54aa9ab761a."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8294,10 +8598,10 @@
             ]
         },
         "review/policy-format/002": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "b50351148a0fa0f1d61323a4a6eb888c8d46041f",
+            "verification": ["Evidence 1ff02a647776045e."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8312,10 +8616,10 @@
             ]
         },
         "review/policy-format/003": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence 6b43f65a1cf86e17."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8330,10 +8634,10 @@
             ]
         },
         "review/policy-format/005": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence cb018eae7f719146."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8358,10 +8662,10 @@
             ]
         },
         "review/policy-format/006": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence b6fe34b79f8263f9."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8399,10 +8703,10 @@
             ]
         },
         "review/policy-format/008": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence c1c509857a05da53."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8417,10 +8721,10 @@
             ]
         },
         "review/policy-format/009": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence a49010dd837404ac."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence d6fd38faa570a029."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8453,10 +8757,10 @@
             ]
         },
         "review/policy-format/011": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence 39328b7d55d81251."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8471,10 +8775,10 @@
             ]
         },
         "review/policy-format/013": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence 16301f4bdf8ab4f3."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8494,10 +8798,10 @@
             ]
         },
         "review/policy-format/014": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence 933ad50036c3f7ab."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8512,10 +8816,10 @@
             ]
         },
         "review/policy-format/015": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence 842dc431d53cebd2."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8530,10 +8834,10 @@
             ]
         },
         "review/policy-format/016": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence 1315bcf3dc8b7b15."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8548,10 +8852,10 @@
             ]
         },
         "review/policy-format/017": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence a54f15598472523e.", "Evidence b446624cdd0d1446."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence 4b1d772c659ab84a."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8568,16 +8872,13 @@
                     "evidence": "/tmp/gspot-packaging-aec-readonly/PF017-whole-binding-final-receipt.json",
                     "verification": ["Evidence 963d24e132f6624b."]
                 }
-            ],
-            "remaining": [
-                "Whole functional binding is verified by current committed ownership census and matching12named Ubuntu controls. Exact shared Wave3 size adoption remains pending; no closure or broader platform acceptance inferred."
             ]
         },
         "review/policy-format/018": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence 9757b3f1abbdbf78."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8754,10 +9055,10 @@
             ]
         },
         "review/policy-format/027": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence fc5835f96f9bf84b."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -8815,10 +9116,10 @@
             ]
         },
         "review/policy-format/030": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "verification": ["Evidence 3ff30528634e2046."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -12230,15 +12531,10 @@
             ]
         },
         "slices/config/033": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
-            "verification": [
-                "All prescribed functional obligations are committed and current AST/data matches native-tested implementations. Native169cases/519assertions and34Node/Bun controls retained; later148/529 migration controls cover current defaults. /tmp/gspot-checks070073-config033-051a-evidence/readiness.json."
-            ],
-            "remaining": [
-                "Exact whole2641-byte test-growth disposition pending; production shrinks56bytes; approved Squawk064 is a separate concern."
-            ]
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "verification": ["Evidence 41fd6dcd5f07abb1."]
         },
         "slices/config/035": {
             "status": "complete",
@@ -12347,10 +12643,10 @@
             ]
         },
         "slices/kits-frameworks-tools/021": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "verification": ["Evidence ba35fe2cfd49b694."]
         },
         "slices/kits-frameworks-tools/022": {
             "status": "partial",
@@ -14031,10 +14327,10 @@
             ]
         },
         "slices/tests-integration-lifecycle/006": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "verification": ["Evidence 931763d6917936b4."]
         },
         "slices/tests-integration-lifecycle/007": {
             "status": "complete",
@@ -19575,6 +19871,72 @@
             "limitations": [
                 "Original dead data/header deletion independently reduces450 bytes. Ubuntu named native cases cover identical current owners; no Windows or broad Python acceptance claim."
             ]
+        },
+        {
+            "commit": "ce783aff96a99ec1020614d0029a806b3de274ae",
+            "completedRecords": [
+                "review/policy-format/003",
+                "review/policy-format/005",
+                "review/policy-format/006",
+                "review/policy-format/008",
+                "review/policy-format/009",
+                "review/policy-format/011",
+                "review/policy-format/013",
+                "review/policy-format/014",
+                "review/policy-format/015",
+                "review/policy-format/016",
+                "review/policy-format/018",
+                "review/policy-format/027",
+                "review/policy-format/030",
+                "review/policy-format/017"
+            ],
+            "unresolvedRecords": 131,
+            "validation": [
+                "Exact current binding/41-owner audit; unchanged native schema, canonical writer and consumer evidence.",
+                "Main policy-layout --fix passes without changes;14 complete records; shared historical size explicitly approved once."
+            ],
+            "limitations": [
+                "PF002 requires its approved generator correction and normal tracked output refresh. Actual platform release verification remains separate."
+            ]
+        },
+        {
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "completedRecords": [
+                "areas/kits/064",
+                "areas/kits/046",
+                "areas/kits/050",
+                "slices/kits-frameworks-tools/021",
+                "areas/kits/052",
+                "areas/checks/070",
+                "areas/checks/073",
+                "slices/config/033",
+                "review/glossary/023",
+                "review/policy-exceptions/006",
+                "review/configurations-plugin/066"
+            ],
+            "unresolvedRecords": 120,
+            "validation": [
+                "Exact binding/source/callback and native evidence audit for12records; owner adopts exact independently accounted costs and applicability clarifications."
+            ],
+            "limitations": [
+                "No platform-wide claim; native Windows aggregate suite and release publication remain outside this checkpoint."
+            ]
+        },
+        {
+            "commit": "0fe6956397b8e7e100921a435f48c5370238474d",
+            "completedRecords": ["slices/tests-integration-lifecycle/006"],
+            "unresolvedRecords": 119,
+            "validation": ["Current2nativeabsencecases/4assertions; explicitownerapplicabilityclarification."],
+            "limitations": ["ExistingPOSIXapplicabilityretained."]
+        },
+        {
+            "commit": "b50351148a0fa0f1d61323a4a6eb888c8d46041f",
+            "completedRecords": ["review/policy-format/002"],
+            "unresolvedRecords": 118,
+            "validation": [
+                "Mainnormalproducer+repeatidempotence; pinnedTaploall79; nativedrift; staged152/0/11; exactapprovedsource/gencost."
+            ],
+            "limitations": ["No broadplatformacceptancefromindividualencodingvectors."]
         }
     ],
     "verificationEvidenceFile": "verification.json"

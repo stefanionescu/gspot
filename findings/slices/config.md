@@ -1,6 +1,6 @@
 # The Config Constants
 
-3 unresolved review records remain.
+2 unresolved review records remain.
 
 ## Open findings
 
@@ -49,3 +49,11 @@ Original records and quotations remain above. These records are complete at `895
 | ID                  | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | ------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/config/035` | complete | The gspot manifest declares policy with its title, summary, why and help; POLICY_CHECK remains the report name. Native configurationManifests and public explain(undefined, gspot/policy) agree on the fully qualified identity and provide the documented check explanation. Accepted native receipt /tmp/gspot-config035-native-declaration-accepted.log. Initial probes assumed a title in public output and an unqualified normalized name; both invalid probe assumptions are retained and corrected against the actual owners. Commit `895fee5825d9d51d34a78dd6f2231db9b22f078f`. |
+
+## Implementation checkpoint 0fe695639 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `0fe6956397b8e7e100921a435f48c5370238474d`.
+
+| ID                  | Status   | Evidence                                                                      |
+| ------------------- | -------- | ----------------------------------------------------------------------------- |
+| `slices/config/033` | complete | Evidence 41fd6dcd5f07abb1. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |

@@ -1,6 +1,6 @@
 # Built-in Checks
 
-11 unresolved review records remain.
+9 unresolved review records remain.
 
 ## Findings
 
@@ -316,3 +316,12 @@ Original records and quotations remain above. These records are complete at `54d
 ## Generated-code verification of October 10, 2026
 
 `areas/checks/045` remains partial. Evidence 998e168ce1d9957a. The current amendment removes repeated classifications while preserving native generation behavior. Historical shared growth and final acceptance remain explicit.
+
+## Implementation checkpoint 0fe695639 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `0fe6956397b8e7e100921a435f48c5370238474d`.
+
+| ID                 | Status   | Evidence                                                                      |
+| ------------------ | -------- | ----------------------------------------------------------------------------- |
+| `areas/checks/070` | complete | Evidence 2473155e49b5239d. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |
+| `areas/checks/073` | complete | Evidence 6881937308ec2bc1. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |

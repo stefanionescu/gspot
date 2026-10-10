@@ -2606,3 +2606,58 @@ One starting open record is complete. Original IDs and quotations remain above.
 | ID                     | Verdict | Evidence                                                                      | Source                         |
 | ---------------------- | ------- | ----------------------------------------------------------------------------- | ------------------------------ |
 | `areas/tool-tests/044` | fixed   | Evidence 99acc0186c899d14. Commit `ca2975ca5552d3276e78bbd6d897c44cfdf70a09`. | `findings/areas/tool-tests.md` |
+
+## Implemented checkpoint ce783aff9 of October 10, 2026 for review/policy-format/003
+
+14 starting open records are complete at `ce783aff96a99ec1020614d0029a806b3de274ae`. Their original IDs and quotations remain in their source files.
+
+| ID                         | Verdict | Evidence                                                                      | Source                             |
+| -------------------------- | ------- | ----------------------------------------------------------------------------- | ---------------------------------- |
+| `review/policy-format/003` | fixed   | Evidence 6b43f65a1cf86e17. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+| `review/policy-format/005` | fixed   | Evidence cb018eae7f719146. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+| `review/policy-format/006` | fixed   | Evidence b6fe34b79f8263f9. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+| `review/policy-format/008` | fixed   | Evidence c1c509857a05da53. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+| `review/policy-format/009` | fixed   | Evidence d6fd38faa570a029. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+| `review/policy-format/011` | fixed   | Evidence 39328b7d55d81251. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+| `review/policy-format/013` | fixed   | Evidence 16301f4bdf8ab4f3. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+| `review/policy-format/014` | fixed   | Evidence 933ad50036c3f7ab. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+| `review/policy-format/015` | fixed   | Evidence 842dc431d53cebd2. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+| `review/policy-format/016` | fixed   | Evidence 1315bcf3dc8b7b15. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+| `review/policy-format/018` | fixed   | Evidence 9757b3f1abbdbf78. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+| `review/policy-format/027` | fixed   | Evidence fc5835f96f9bf84b. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+| `review/policy-format/030` | fixed   | Evidence 3ff30528634e2046. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+| `review/policy-format/017` | fixed   | Evidence 4b1d772c659ab84a. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. | `findings/review/policy-format.md` |
+
+## Implemented checkpoint 0fe695639 of October 10, 2026 for areas/kits/064
+
+11 starting open records are complete at `0fe6956397b8e7e100921a435f48c5370238474d`. Their original IDs and quotations remain in their source files.
+
+| ID                                 | Verdict | Evidence                                                                      | Source                                     |
+| ---------------------------------- | ------- | ----------------------------------------------------------------------------- | ------------------------------------------ |
+| `areas/kits/064`                   | fixed   | Evidence 3b19fa2446f697ef. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. | `findings/areas/kits.md`                   |
+| `areas/kits/046`                   | fixed   | Evidence ea56a9a2dd10694a. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. | `findings/areas/kits.md`                   |
+| `areas/kits/050`                   | fixed   | Evidence 10caa74e7d9019c5. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. | `findings/areas/kits.md`                   |
+| `slices/kits-frameworks-tools/021` | fixed   | Evidence ba35fe2cfd49b694. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. | `findings/slices/kits-frameworks-tools.md` |
+| `areas/kits/052`                   | fixed   | Evidence 7755c6dec251b16b. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. | `findings/areas/kits.md`                   |
+| `areas/checks/070`                 | fixed   | Evidence 2473155e49b5239d. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. | `findings/areas/checks.md`                 |
+| `areas/checks/073`                 | fixed   | Evidence 6881937308ec2bc1. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. | `findings/areas/checks.md`                 |
+| `slices/config/033`                | fixed   | Evidence 41fd6dcd5f07abb1. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. | `findings/slices/config.md`                |
+| `review/glossary/023`              | fixed   | Evidence 712dca01bfaf076e. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. | `findings/review/glossary.md`              |
+| `review/policy-exceptions/006`     | fixed   | Evidence 294fe54aa9ab761a. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. | `findings/review/policy-exceptions.md`     |
+| `review/configurations-plugin/066` | fixed   | Evidence bf56d66ff0fa5041. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. | `findings/review/configurations-plugin.md` |
+
+## Implemented checkpoint 0fe695639 of October 10, 2026 for slices/tests-integration-lifecycle/006
+
+1 starting open records are complete at `0fe6956397b8e7e100921a435f48c5370238474d`. Their original IDs and quotations remain in their source files.
+
+| ID                                       | Verdict | Evidence                                                                      | Source                                           |
+| ---------------------------------------- | ------- | ----------------------------------------------------------------------------- | ------------------------------------------------ |
+| `slices/tests-integration-lifecycle/006` | fixed   | Evidence 931763d6917936b4. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. | `findings/slices/tests-integration-lifecycle.md` |
+
+## Implemented checkpoint b50351148 of October 10, 2026 for review/policy-format/002
+
+1 starting open records are complete at `b50351148a0fa0f1d61323a4a6eb888c8d46041f`. Their original IDs and quotations remain in their source files.
+
+| ID                         | Verdict | Evidence                                                                      | Source                             |
+| -------------------------- | ------- | ----------------------------------------------------------------------------- | ---------------------------------- |
+| `review/policy-format/002` | fixed   | Evidence 1ff02a647776045e. Commit `b50351148a0fa0f1d61323a4a6eb888c8d46041f`. | `findings/review/policy-format.md` |

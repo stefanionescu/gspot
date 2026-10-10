@@ -1,6 +1,6 @@
 # Tests: Lifecycle and Repository Integration Tests
 
-4 unresolved review records remain.
+3 unresolved review records remain.
 
 ## Open findings
 
@@ -229,3 +229,11 @@ Original records and quotations remain above. These records are complete at `542
 | ID                                       | Status   | Evidence                                                                      |
 | ---------------------------------------- | -------- | ----------------------------------------------------------------------------- |
 | `slices/tests-integration-lifecycle/005` | complete | Evidence 6aa96d9a47254e24. Commit `5422cc6b0e0ffa0cd24a77ad8e3cb340f21fbcf2`. |
+
+## Implementation checkpoint 0fe695639 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `0fe6956397b8e7e100921a435f48c5370238474d`.
+
+| ID                                       | Status   | Evidence                                                                      |
+| ---------------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `slices/tests-integration-lifecycle/006` | complete | Evidence 931763d6917936b4. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |

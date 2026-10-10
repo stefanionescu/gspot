@@ -1,6 +1,6 @@
 # Configurations and the ESLint Plugin
 
-1 unresolved review record remains.
+0 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -315,3 +315,11 @@ Original IDs and quotations remain above. This checkpoint does not close a recor
 | ID                                 | Status  | Evidence                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/configurations-plugin/066` | partial | Pointer paths use an early return with the same directory contract. Native 31 cases and Node/Bun vectors pass. Evidence 7efd12c3179ed7f6. Exact committed test lineage remains 3,780 bytes larger across the complete concern; the production change reduces 22 bytes. Owner size decision remains pending. Evidence d782740b2170ed5f. Commit `98cbc5d0e7f8aef131aa09305383fcf61e31b54b`. |
+
+## Implementation checkpoint 0fe695639 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `0fe6956397b8e7e100921a435f48c5370238474d`.
+
+| ID                                 | Status   | Evidence                                                                      |
+| ---------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `review/configurations-plugin/066` | complete | Evidence bf56d66ff0fa5041. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |

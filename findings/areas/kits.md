@@ -1,6 +1,6 @@
 # Kits, Settings, and Names
 
-15 unresolved review records remain.
+11 unresolved review records remain.
 
 ## Findings
 
@@ -371,3 +371,14 @@ Original records and quotations remain above. These records are complete at `663
 | `areas/kits/068` | complete | Evidence 6364f2e4bceea0c8. Commit `663f57e0e2e32b5e7db6ce1b613fe970fb58b429`. |
 
 | `areas/kits/141` | partial | Evidence 1e18fdd148a83e53. Commit `663f57e0e2e32b5e7db6ce1b613fe970fb58b429`. |
+
+## Implementation checkpoint 0fe695639 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `0fe6956397b8e7e100921a435f48c5370238474d`.
+
+| ID               | Status   | Evidence                                                                      |
+| ---------------- | -------- | ----------------------------------------------------------------------------- |
+| `areas/kits/064` | complete | Evidence 3b19fa2446f697ef. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |
+| `areas/kits/046` | complete | Evidence ea56a9a2dd10694a. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |
+| `areas/kits/050` | complete | Evidence 10caa74e7d9019c5. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |
+| `areas/kits/052` | complete | Evidence 7755c6dec251b16b. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |

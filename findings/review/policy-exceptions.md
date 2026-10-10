@@ -1,6 +1,6 @@
 # This Repository's Own gspot Policy: Entries and Customizations
 
-4 unresolved review records remain.
+3 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -299,3 +299,11 @@ Original records and quotations remain above. These records are complete at `d4b
 | ID                             | Status   | Evidence                                                                                                                                                                                                                                                               |
 | ------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/policy-exceptions/043` | complete | Docs use source aliases without CLI workspace dependency. Metadata-only exports and original description retained. Native isolated site checks pass; fresh Node/Bun metadata consumers reject8 runtime/deep routes. Commit `d4b9f0ea3c00499118b3dbc8ee07f74af7ef4022`. |
+
+## Implementation checkpoint 0fe695639 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `0fe6956397b8e7e100921a435f48c5370238474d`.
+
+| ID                             | Status   | Evidence                                                                      |
+| ------------------------------ | -------- | ----------------------------------------------------------------------------- |
+| `review/policy-exceptions/006` | complete | Evidence 294fe54aa9ab761a. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |

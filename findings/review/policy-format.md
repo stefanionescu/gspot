@@ -1,6 +1,6 @@
 # The gspot.toml Policy Format
 
-16 unresolved review records remain.
+1 unresolved review record remains.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -1468,3 +1468,32 @@ Original records and quotations remain above. These records are complete at `049
 | ID                         | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `review/policy-format/024` | complete | Each native tool option has its tools namespace; gspot rules retain their configuration owner. tools.semgrep.rule_files is the only native rule-file field, vitest.config_file is deleted in favor of native lookup, and env templates/readers are owned by secrets.env_examples/reader_functions. Whole exact original/declaration/caller bridge: /tmp/gspot-pf024-same-concern-cost-bridge/bridge.json. The prescribed direct leaves remove174bytes; final security/testing guides remove70bytes, giving244same-concern bytes removed. The overlapping764-byte old env schema/type retirement is separately disclosed and not double-credited. Other shared W3 growth remains qualified. Both final guide owners are byte-equal to pushed0498cfeee. Native declarations, retired-name census, formatting/prose, configured types and151check staged/push gates pass. No new tool install or cross-platform runtime claim. Commit `0498cfeeea7eb387645f1c27ca707f99d34ffb03`. |
+
+## Implementation checkpoint ce783aff9 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `ce783aff96a99ec1020614d0029a806b3de274ae`.
+
+| ID                         | Status   | Evidence                                                                      |
+| -------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `review/policy-format/003` | complete | Evidence 6b43f65a1cf86e17. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+| `review/policy-format/005` | complete | Evidence cb018eae7f719146. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+| `review/policy-format/006` | complete | Evidence b6fe34b79f8263f9. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+| `review/policy-format/008` | complete | Evidence c1c509857a05da53. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+| `review/policy-format/009` | complete | Evidence d6fd38faa570a029. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+| `review/policy-format/011` | complete | Evidence 39328b7d55d81251. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+| `review/policy-format/013` | complete | Evidence 16301f4bdf8ab4f3. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+| `review/policy-format/014` | complete | Evidence 933ad50036c3f7ab. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+| `review/policy-format/015` | complete | Evidence 842dc431d53cebd2. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+| `review/policy-format/016` | complete | Evidence 1315bcf3dc8b7b15. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+| `review/policy-format/018` | complete | Evidence 9757b3f1abbdbf78. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+| `review/policy-format/027` | complete | Evidence fc5835f96f9bf84b. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+| `review/policy-format/030` | complete | Evidence 3ff30528634e2046. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+| `review/policy-format/017` | complete | Evidence 4b1d772c659ab84a. Commit `ce783aff96a99ec1020614d0029a806b3de274ae`. |
+
+## Implementation checkpoint b50351148 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `b50351148a0fa0f1d61323a4a6eb888c8d46041f`.
+
+| ID                         | Status   | Evidence                                                                      |
+| -------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `review/policy-format/002` | complete | Evidence 1ff02a647776045e. Commit `b50351148a0fa0f1d61323a4a6eb888c8d46041f`. |

@@ -1,6 +1,6 @@
 # Vocabulary
 
-6 unresolved review records remain.
+5 unresolved review records remain.
 
 One name for each concept, and one concept for each name. The owner decision of October 7, 2026 in `findings/progress.json` makes this file the reference for every name in the ledger, as `findings/review/glossary.md`. When a record proposes a name that this table does not use, the table wins.
 
@@ -263,3 +263,11 @@ Original records and quotations remain above. These records are complete at `3e3
 | ID                    | Status   | Evidence                                                                      |
 | --------------------- | -------- | ----------------------------------------------------------------------------- |
 | `review/glossary/017` | complete | Evidence a68190b783281dd6. Commit `3e3c49628c435d59273af7490873047e00015370`. |
+
+## Implementation checkpoint 0fe695639 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `0fe6956397b8e7e100921a435f48c5370238474d`.
+
+| ID                    | Status   | Evidence                                                                      |
+| --------------------- | -------- | ----------------------------------------------------------------------------- |
+| `review/glossary/023` | complete | Evidence 712dca01bfaf076e. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |
