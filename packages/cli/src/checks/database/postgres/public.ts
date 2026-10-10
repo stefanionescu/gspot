@@ -207,7 +207,7 @@ export function docFindings(input: Pick<CheckInput, 'check'>, migration: Migrati
 }
 
 /**
- * The layout findings of every migration, when postgres.docs asks for the layout.
+ * The layout findings of every migration at level all.
  * @param input the check input
  * @returns the findings
  */
