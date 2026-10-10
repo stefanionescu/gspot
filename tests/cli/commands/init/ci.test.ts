@@ -60,7 +60,7 @@ test('initialization distinguishes retained CI jobs from tool settings that gene
     expect(preview.stderr).toBe('');
     const retained = preview.stdout.split('left in place\n', 2)[1]?.split('\n\n', 1)[0];
     expect(retained).toContain('setup.cfg');
-    expect(retained).toContain('generated sqlfluff configuration takes over');
+    expect(retained).toContain('generated sqlfluff tool file takes over');
     expect(retained).toContain('.gitlab-ci.yml: quality');
     expect(retained).toContain('existing lint job retained; no duplicate CI job proposed');
     expect(preview.stdout).not.toContain('kept active');

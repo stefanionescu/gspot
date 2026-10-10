@@ -5,6 +5,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { reportingCheck } from '#tests/harness/policy.ts';
 import { LINKS } from '#tests/config/cli/execution/copy.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
@@ -20,22 +21,11 @@ async function stageLinks(root: string): Promise<void> {
 
 async function linkSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const sandbox = await testdir();
-    const check = {
-        command: [
-            process.execPath,
-            '-e',
-            'process.argv.slice(1).forEach((path) => console.log(path)); process.exitCode = 1;',
-            '{files}',
-        ],
-        paths: ['src/**'],
-        stage: 'commit',
-        output: { format: 'lines' },
-    };
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             configurations: [],
             agent_rules: { enabled: false },
-            check: { 'sandbox/report': check },
+            check: { 'sandbox/report': reportingCheck({ paths: ['src/**'], stage: 'commit' }) },
         }),
         'src/source.ts': 'export {};\n',
     });

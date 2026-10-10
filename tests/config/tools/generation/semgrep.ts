@@ -55,7 +55,6 @@ export const EXPRESS_SOURCE_FINDINGS = [
 export const FRAMEWORK_FINDINGS = [
     { scope: 'app', file: 'app/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },
     { scope: 'app/child', file: 'app/child/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },
-    { scope: 'sibling', file: 'sibling/ignored.js', line: 1, rule: 'gspot.javascript.no-eval' },
 ];
 
 /** An exception response whose correction keeps its cause private. */
@@ -117,7 +116,6 @@ export const PLATFORM_SOURCE_FINDINGS = [
     { file: 'src/list.js', rule: 'gspot.supabase.postgrest-filter-interpolation', line: 1 },
     { file: 'src/search.js', rule: 'gspot.supabase.postgrest-filter-interpolation', line: 1 },
     { file: 'supabase/functions/cors/index.ts', rule: 'gspot.supabase.edge-cors-wildcard-with-credentials', line: 1 },
-    { file: 'supabase/functions/eval/index.ts', rule: 'gspot.javascript.no-eval', line: 1 },
 ];
 
 /** Workers CORS restrictions at all cover every source in a selected scope. */

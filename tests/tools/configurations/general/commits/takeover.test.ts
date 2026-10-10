@@ -34,7 +34,7 @@ test.each(COMMITLINT_TAKEOVERS)(
         const prepared = await prepare(sandbox.path, options);
         expect(prepared.plan.remove).toContainEqual({
             path: file,
-            note: 'replaced by the generated commitlint configuration',
+            note: 'replaced by the generated commitlint tool file',
         });
         const initialized = await writeSetup(sandbox.path, options, prepared);
         expect(initialized.exitCode).toBe(0);

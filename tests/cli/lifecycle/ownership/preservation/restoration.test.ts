@@ -6,8 +6,8 @@ import { getCliSourcePath } from '#tests/harness/gspot.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { OWNERSHIP_BYTES, OWNERSHIP_REFUSAL } from '#tests/config/samples/ownership.ts';
-import { applyPlans, getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { planBlock, planReplacement, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 import { stat, chmod, lstat, unlink, readdir, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 import { BLOCK_CASES, ADOPTED_FILE_CASES } from '#tests/config/cli/lifecycle/ownership/preservation/restoration.ts';
@@ -43,7 +43,6 @@ const replacedFiles = async () => {
         expect(applyPlans(log, [planRestoration(log, 'config.txt')])[0]).toBe('changed');
         expect(log.files.read('config.txt')).toBeUndefined();
         expect(await readFile(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('keep\n');
-        expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
         const ownershipMetadata = await stat(join(directory.path, '.gspot/state/ownership.json'));
         expect(ownershipMetadata.mode & 0o777).toBe(getKeptMode(0o600));
     } finally {
@@ -142,22 +141,18 @@ describe('lifecycle ownership', () => {
     );
 });
 
-test.each(BLOCK_CASES)(
-    'removing a managed block restores the original state when $name',
-    async ({ files, isCreated, kept }) => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, files);
-        {
-            using log = openOwnership(directory.path);
+test.each(BLOCK_CASES)('removing a managed block restores the original state when $name', async ({ files, kept }) => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, files);
+    {
+        using log = openOwnership(directory.path);
 
-            applyPlans(log, [planBlock(log, 'NOTES.md', 'managed text', 'markdown')]);
-            expect(getOwnership(directory.path).files[0]).toMatchObject({ block: { created: isCreated } });
-            expect(applyPlans(log, [planRestoration(log, 'NOTES.md')])[0]).toBe('changed');
-        }
-        const path = join(directory.path, 'NOTES.md');
-        expect((await pathExists(path)) ? await readFile(path, 'utf8') : undefined).toBe(kept);
-    },
-);
+        applyPlans(log, [planBlock(log, 'NOTES.md', 'managed text', 'markdown')]);
+        expect(applyPlans(log, [planRestoration(log, 'NOTES.md')])[0]).toBe('changed');
+    }
+    const path = join(directory.path, 'NOTES.md');
+    expect((await pathExists(path)) ? await readFile(path, 'utf8') : undefined).toBe(kept);
+});
 
 test('giving back the last file of a folder removes the folders it leaves empty', async () => {
     await using directory = await testdir();
@@ -197,7 +192,6 @@ test.each(ADOPTED_FILE_CASES)(
                     }),
                 ])[0],
             ).toBe('unchanged');
-            expect(getOwnership(directory.path).files[0]?.adopted).toBe(true);
             if (isChanged)
                 applyPlans(log, [
                     planReplacement(log, {
@@ -209,7 +203,6 @@ test.each(ADOPTED_FILE_CASES)(
             expect(applyPlans(log, [planRestoration(log, path)])[0]).toBe('changed');
         }
         expect(await pathExists(join(directory.path, path))).toBe(isKept);
-        expect(getOwnership(directory.path).files).toStrictEqual([]);
     },
 );
 

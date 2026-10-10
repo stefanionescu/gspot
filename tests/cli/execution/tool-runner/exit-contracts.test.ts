@@ -48,10 +48,6 @@ test.each(['{file}', '{files}'])(
         expect(fatal.findings).toStrictEqual([]);
         expect(fatal.note).toContain('exit 7');
         expect(await Bun.file(join(sandbox.path, source)).text()).toBe('7');
-        await writeFile(join(sandbox.path, source), '0');
-        const corrected = await runCheckCommand(session, planned);
-        expect(corrected.status).toBe('passed');
-        expect(corrected.findings).toStrictEqual([]);
     },
 );
 

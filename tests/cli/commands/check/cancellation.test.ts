@@ -2,10 +2,10 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { git, gitOutput } from '#tests/harness/git.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -87,9 +87,9 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'] as const)(
             scratch: {},
             bin: {},
         });
-        expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
-        expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        const indexed = git(sandbox.path, ['ls-files', '--stage', '-z']).stdout;
+        gitOutput(sandbox.path, ['init', '-q']);
+        gitOutput(sandbox.path, ['add', '-A']);
+        const indexed = gitOutput(sandbox.path, ['ls-files', '--stage', '-z']);
         const scratch = join(sandbox.path, 'scratch');
         await writeFile(join(sandbox.path, 'source.sh'), 'echo authored\n');
         const nativeGit = Bun.which('git');
@@ -122,7 +122,7 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'] as const)(
             expect(await pathExists(started.checkout!)).toBe(false);
         }
         expect(await readdir(scratch)).toStrictEqual([]);
-        expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
+        expect(gitOutput(sandbox.path, ['ls-files', '--stage', '-z'])).toBe(indexed);
         expect(await readFile(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
         const retry = await checkReport(sandbox.path, ['check', '--staged', '--only', 'bash/bash-syntax', '--json']);
         expect(retry.code, retry.stdout + retry.stderr).toBe(0);
@@ -136,16 +136,11 @@ test.skipIf(!isPosix)('push cancellation retains completed reports and names ref
         'gspot.toml': buildPolicy(['bash']),
         'source.sh': 'echo first\n',
     });
-    for (const args of [
-        ['init', '-q'],
-        ['add', '-A'],
-        ['commit', '-qm', 'feat: first'],
-    ])
-        gitOutput(sandbox.path, args);
-    const first = git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim();
+    commitAll(sandbox.path);
+    const first = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     await writeFile(join(sandbox.path, 'source.sh'), 'echo second\n');
-    expect(git(sandbox.path, ['commit', '-qam', 'feat: second']).code).toBe(0);
-    const second = git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim();
+    gitOutput(sandbox.path, ['commit', '-qam', 'feat: second']);
+    const second = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     const marker = join(sandbox.path, 'started.json');
     const nativeGit = Bun.which('git');
     expect(nativeGit).not.toBeNull();
@@ -171,7 +166,7 @@ test.skipIf(!isPosix)('push cancellation retains completed reports and names ref
     });
     expect(await pathExists(started.checkout)).toBe(false);
     await waitForExit(started.pid);
-    expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(second);
+    expect(gitOutput(sandbox.path, ['rev-parse', 'HEAD'])).toBe(second);
 });
 
 test.skipIf(!isPosix).each(['SIGINT', 'SIGTERM'] as const)(
@@ -183,12 +178,10 @@ test.skipIf(!isPosix).each(['SIGINT', 'SIGTERM'] as const)(
             'gspot.toml': buildPolicy(['bash']),
             'source.sh': 'echo indexed\n',
         });
-        expect(git(root, ['init', '-q']).code).toBe(0);
-        expect(git(root, ['add', '-A']).code).toBe(0);
-        gitOutput(root, ['commit', '-qm', 'feat: push input']);
+        commitAll(root);
         const revision = gitOutput(root, ['rev-parse', 'HEAD']);
         const ref = gitOutput(root, ['symbolic-ref', 'HEAD']);
-        const indexed = git(root, ['ls-files', '--stage', '-z']).stdout;
+        const indexed = gitOutput(root, ['ls-files', '--stage', '-z']);
         const started = join(root, 'listening');
         const program = `
 process.on('newListener',(name)=>{ if(name==='SIGTERM') setImmediate(()=>require('node:fs').writeFileSync(${JSON.stringify(started)},'ready')); });
@@ -216,7 +209,7 @@ await import(${JSON.stringify(gspot)});
                 message: 'Check stopped before every check finished.',
                 exitCode: 2,
             });
-            expect(git(root, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
+            expect(gitOutput(root, ['ls-files', '--stage', '-z'])).toBe(indexed);
             const protocol = `${ref} ${revision} ${ref} ${'0'.repeat(revision.length)}\n`;
             const retry = await runGspot(
                 root,

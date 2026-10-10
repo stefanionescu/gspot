@@ -11,8 +11,8 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { PYPROJECT } from '#tests/config/samples/python.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { writeSetup } from '#cli/commands/init/contracts.ts';
+import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
-import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { prepare, initCommand } from '#cli/commands/init/public.ts';
 import { buildInitOptions, buildInitArguments } from '#tests/harness/init.ts';
 import { INIT_FILES, INIT_ORIGINALS } from '#tests/config/samples/commands.ts';
@@ -28,9 +28,8 @@ test.each(['', 'hooks', '.husky'])(
             'hooks/use-thing.ts': 'export function useThing() { return true; }\n',
             ...(hooksPath === '' ? {} : { [`${hooksPath}/pre-commit`]: '#!/bin/sh\nexit 0\n' }),
         });
-        expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
-        const configured = hooksPath === '' ? { code: 0 } : git(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
-        expect(configured.code).toBe(0);
+        gitOutput(sandbox.path, ['init', '-q']);
+        if (hooksPath !== '') gitOutput(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
         const result = await runGspot(sandbox.path, [
             ...buildInitArguments(['bash', 'javascript', 'spelling', 'markdown'], { hooks: true }),
             '--dry-run',
@@ -229,9 +228,7 @@ test('init replaces a nested spelling configuration and deletes the original', a
     expect(preview.exitCode).toBe(0);
     expect(preview.json).toMatchObject({
         plan: {
-            remove: containingAll([
-                { path: 'nested/typos.toml', note: 'replaced by the generated typos configuration' },
-            ]),
+            remove: containingAll([{ path: 'nested/typos.toml', note: 'replaced by the generated typos tool file' }]),
         },
     });
     expect(await readFile(join(directory.path, 'nested/typos.toml'), 'utf8')).toBe(original);

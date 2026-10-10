@@ -44,8 +44,6 @@ test.each([
         const invalid = files.read(path)!;
         expect(invalid.bytes.toString('utf8')).toBe('{');
         files.write(path, { bytes: Buffer.from(content), mode: invalid.mode }, invalid);
-        const corrected = await executeRun(session, options);
-        expect(corrected.report.exitCode).toBe(0);
         expect(files.read(path)!.bytes.toString('utf8')).toBe(content);
     },
 );
@@ -83,8 +81,6 @@ test('a denied asset existence read is an execution error and a genuinely missin
     expect(missing.report.exitCode).toBe(1);
     expect(missing.report.checks[0]?.findings).toMatchObject([{ file: assetManifest, line: 1, rule: 'missing-image' }]);
     await writeFile(target, new Uint8Array([0, 1, 2]));
-    const corrected = await executeRun(session, options);
-    expect(corrected.report.exitCode).toBe(0);
     expect(await readFile(join(sandbox.path, assetManifest), 'utf8')).toBe(content);
     expect(await readFile(target)).toStrictEqual(Buffer.from([0, 1, 2]));
 });

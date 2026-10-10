@@ -1,5 +1,8 @@
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 
+/** Report selected paths and fail. */
+export const REPORT_PROGRAM = 'process.argv.slice(1).forEach((path) => console.log(path)); process.exitCode = 1;';
+
 export const PROJECT_TRIGGERS = [
     ['delete', 'staged'],
     ['rename', 'changed'],

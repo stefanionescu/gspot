@@ -1,20 +1,18 @@
 // Bun comparisons use Git history to distinguish committed and working-tree inputs.
 import { join } from 'node:path';
+import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
+import { reportingCheck } from '#tests/harness/policy.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 
-const policy = `configurations = []
-[check."sandbox/paths"]
-command = ${JSON.stringify([process.execPath, '-e', 'process.argv.slice(1).forEach((path) => console.log(path)); process.exitCode = 1;', '{files}'])}
-paths = ["api/**", "web/**"]
-stage = "commit"
-[check."sandbox/paths".output]
-format = "lines"
-`;
+const policy = stringify({
+    configurations: [],
+    check: { 'sandbox/paths': reportingCheck({ paths: ['api/**', 'web/**'], stage: 'commit' }) },
+});
 
 test('changed selection uses a merge base, labels its source, and keeps a following folder positional', async () => {
     await using sandbox = await testdir();

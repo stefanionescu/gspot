@@ -8,7 +8,7 @@ import { PUSH_CONTENT } from '#tests/config/samples/git.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { gspot, runGspot, spawnGspot } from '#tests/harness/gspot.ts';
-import { git, commitAll, gitOutput, preparePushRepository } from '#tests/harness/git.ts';
+import { commitAll, gitOutput, preparePushRepository } from '#tests/harness/git.ts';
 import { PUSH_CHECK_ARGV, PUSH_CHECK_COMMAND } from '#tests/config/cli/commands/check/pre-push.ts';
 
 /** Require the pushed tree and uncommitted source and policy to stay unchanged. */
@@ -21,17 +21,17 @@ async function expectWorkingTreeKept(root: string, head: string): Promise<void> 
 test('new references compare with remote-tracking commits and scan custom destinations conservatively', async () => {
     await using sandbox = await testdir();
     const { base, reviewed, broken, zero } = await preparePushRepository(sandbox.path);
-    expect(git(sandbox.path, ['remote', 'add', 'origin', 'unused']).code).toBe(0);
-    expect(git(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]).code).toBe(0);
+    gitOutput(sandbox.path, ['remote', 'add', 'origin', 'unused']);
+    gitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
     const protocol = { stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n` };
     const originalStdin = Object.getOwnPropertyDescriptor(process, 'stdin');
     const createdRef = await runGspot(sandbox.path, PUSH_CHECK_COMMAND, {}, protocol);
     expect(createdRef.code, createdRef.stdout + createdRef.stderr).toBe(0);
     expect(Object.getOwnPropertyDescriptor(process, 'stdin')).toStrictEqual(originalStdin);
     expect((JSON.parse(createdRef.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
-    expect(git(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']).code).toBe(0);
-    expect(git(sandbox.path, ['update-ref', '-d', 'refs/remotes/origin/main']).code).toBe(0);
-    expect(git(sandbox.path, ['update-ref', 'refs/fetched/origin/main', base]).code).toBe(0);
+    gitOutput(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']);
+    gitOutput(sandbox.path, ['update-ref', '-d', 'refs/remotes/origin/main']);
+    gitOutput(sandbox.path, ['update-ref', 'refs/fetched/origin/main', base]);
     const mapped = await runGspot(sandbox.path, PUSH_CHECK_COMMAND, {}, protocol);
     expect(mapped.code, mapped.stdout + mapped.stderr).toBe(1);
     expect((JSON.parse(mapped.stdout) as PushReport).revisions[0]?.commits).toStrictEqual([reviewed, base]);
@@ -49,10 +49,10 @@ test('new references compare with remote-tracking commits and scan custom destin
 test('fetch mapping selectors do not override the native remote-tracking namespace', async () => {
     await using sandbox = await testdir();
     const { base, reviewed, broken, zero } = await preparePushRepository(sandbox.path);
-    expect(git(sandbox.path, ['remote', 'add', 'origin', 'unused']).code).toBe(0);
-    expect(git(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']).code).toBe(0);
-    expect(git(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]).code).toBe(0);
-    expect(git(sandbox.path, ['config', '--add', 'remote.origin.fetch', '^refs/heads/main']).code).toBe(0);
+    gitOutput(sandbox.path, ['remote', 'add', 'origin', 'unused']);
+    gitOutput(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']);
+    gitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
+    gitOutput(sandbox.path, ['config', '--add', 'remote.origin.fetch', '^refs/heads/main']);
     const excluded = await runGspot(
         sandbox.path,
         PUSH_CHECK_COMMAND,
@@ -258,9 +258,9 @@ test('full-tree pre-push policy checks unchanged files in the pushed object', as
     await writeFile(join(sandbox.path, 'gspot.toml'), buildPolicy(['bash'], { tables: '[hooks]\n' }));
     const configured = await runGspot(sandbox.path, ['set', 'hooks.push_files', 'all']);
     expect(configured.code, configured.stdout + configured.stderr).toBe(0);
-    expect(git(sandbox.path, ['add', 'gspot.toml', 'changed.sh']).code).toBe(0);
-    expect(git(sandbox.path, ['commit', '-qm', 'full pushed tree']).code).toBe(0);
-    const pushedCommit = git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim();
+    gitOutput(sandbox.path, ['add', 'gspot.toml', 'changed.sh']);
+    gitOutput(sandbox.path, ['commit', '-qm', 'full pushed tree']);
+    const pushedCommit = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     const all = await spawnGspot(
         sandbox.path,
         ['check', '--hook', 'pre-push', '--only', 'bash/bash-syntax', '--json', '--', 'origin', 'unused'],

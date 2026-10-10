@@ -3,7 +3,7 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { rm, lstat, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 import { SWAP_CASES, INSTALLATIONS } from '#tests/config/cli/lifecycle/ownership/installations.ts';
 import { installTree, readInstalledTree, deleteInstallation } from '#cli/lifecycle/ownership/state/public.ts';
@@ -18,10 +18,10 @@ test.each([...INSTALLATIONS])(
             using log = openOwnership(directory.path);
 
             installTree(log, kind, readInstalledTree(staged.path, kind));
-            expect(getOwnership(directory.path)).toMatchObject({ files: [], installed: [kind] });
+            expect(await readFile(join(directory.path, folder, 'tool/index.js'), 'utf8')).toBe('export {};\n');
+            installTree(log, kind, readInstalledTree(staged.path, kind));
             deleteInstallation(log, kind);
             expect(await pathExists(join(directory.path, folder))).toBe(false);
-            expect(getOwnership(directory.path).installed).toBeUndefined();
         }
     },
 );
@@ -39,8 +39,7 @@ test.each([...INSTALLATIONS])(
             expect(() => {
                 installTree(log, kind, readInstalledTree(staged.path, kind));
             }).toThrow(`${folder} exists and gspot did not create it. Move it aside, then run gspot install.`);
-            expect(await pathExists(join(directory.path, folder, 'authored/index.js'))).toBe(true);
-            expect(getOwnership(directory.path).installing).toBeUndefined();
+            expect(await readFile(join(directory.path, folder, 'authored/index.js'), 'utf8')).toBe('authored\n');
         }
     },
 );
@@ -61,7 +60,9 @@ test.each(INSTALLATIONS.flatMap((installation) => SWAP_CASES.map((entry) => ({ .
         expect(await readFile(join(directory.path, folder, 'tool/index.js'), 'utf8')).toBe(kept);
         expect(await pathExists(join(directory.path, `${folder}.previous`))).toBe(false);
         expect(await pathExists(join(directory.path, `${folder}.next`))).toBe(false);
-        expect(getOwnership(directory.path).installing).toStrictEqual([kind]);
+        using log = openOwnership(directory.path);
+        installTree(log, kind, readInstalledTree(join(directory.path, folder), kind));
+        expect(await readFile(join(directory.path, folder, 'tool/index.js'), 'utf8')).toBe(kept);
     },
 );
 
@@ -79,8 +80,6 @@ test('an install killed after its swap and before its record is replaced by the 
         installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
     }
     expect(await readFile(join(directory.path, '.gspot/node_modules/tool/index.js'), 'utf8')).toBe('reinstalled\n');
-    expect(getOwnership(directory.path)).toMatchObject({ installed: ['npm'] });
-    expect(getOwnership(directory.path).installing).toBeUndefined();
 });
 
 test('installation publishes internal directory aliases as owned files without following external links', async () => {
@@ -175,7 +174,6 @@ test('a Python installation replaces the whole environment, runtime caches inclu
         // Runtime caches leave with the old environment; the staged caches are never published.
         expect(await pathExists(join(directory.path, `${cache}/unowned.pyc`))).toBe(false);
         expect(await pathExists(join(directory.path, `${cache}/new.pyc`))).toBe(false);
-        expect(getOwnership(directory.path)).toStrictEqual({ version: 1, files: [], installed: ['python'] });
     }
 });
 

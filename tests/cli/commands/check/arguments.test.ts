@@ -4,30 +4,19 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { buildPolicy } from '#tests/harness/policy.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { useEnvironment } from '#tests/harness/environment.ts';
-import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { spawnGspot, checkReport } from '#tests/harness/gspot.ts';
+import { buildPolicy, reportingCheck } from '#tests/harness/policy.ts';
 
 // A sandbox with three commit checks that report every file they receive.
 async function selectionSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
-    const command = [
-        process.execPath,
-        '-e',
-        'process.argv.slice(1).forEach((path) => console.log(path)); process.exitCode = 1;',
-        '{files}',
-    ];
     const entries = Object.fromEntries(
         ['one', 'two', 'three'].map((name) => [
             `sandbox/${name}`,
-            {
-                command,
-                paths: ['src/**', 'docs/**'],
-                stage: 'commit',
-                output: { format: 'lines' },
-            },
+            reportingCheck({ paths: ['src/**', 'docs/**'], stage: 'commit' }),
         ]),
     );
     const sandbox = await testdir();
@@ -137,7 +126,7 @@ stage = "${name}"
     });
     commitAll(sandbox.path);
     await Bun.write(join(sandbox.path, 'source.txt'), 'staged input');
-    expect(git(sandbox.path, ['add', 'source.txt']).code).toBe(0);
+    gitOutput(sandbox.path, ['add', 'source.txt']);
     const staged = await checkReport(sandbox.path, [
         'check',
         '--only',

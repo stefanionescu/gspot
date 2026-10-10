@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { git } from '#tests/harness/git.ts';
 import { readFile } from 'node:fs/promises';
+import { gitOutput } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { InitJson } from '#cli/types/commands/init.ts';
@@ -35,8 +35,8 @@ test.each([
     async (path, content, remote, provider, note) => {
         await using repository = await testdir();
         await createFileTree(repository.path, { [path]: content });
-        expect(git(repository.path, ['init', '-q']).code).toBe(0);
-        expect(git(repository.path, ['remote', 'add', 'origin', remote]).code).toBe(0);
+        gitOutput(repository.path, ['init', '-q']);
+        gitOutput(repository.path, ['remote', 'add', 'origin', remote]);
         const result = await runGspot(repository.path, [
             ...buildInitArguments(['none'], { json: true, ci: null }),
             '--dry-run',

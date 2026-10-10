@@ -1,7 +1,7 @@
 /** Restoration removes a file created by its block and retains an authored file. */
 export const BLOCK_CASES = [
-    { name: 'the block created the file', files: {}, isCreated: true, kept: undefined },
-    { name: 'the file was authored', files: { 'NOTES.md': 'Authored.\n' }, isCreated: false, kept: 'Authored.\n' },
+    { name: 'the block created the file', files: {}, kept: undefined },
+    { name: 'the file was authored', files: { 'NOTES.md': 'Authored.\n' }, kept: 'Authored.\n' },
 ];
 /** Adopted outputs survive restoration only before their authored bytes have changed. */
 export const ADOPTED_FILE_CASES = [

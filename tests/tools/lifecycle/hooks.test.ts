@@ -1,11 +1,11 @@
 // Git runs the gspot hooks through core.hooksPath; a repository that already runs hooks keeps them.
+import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
-import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { installCommand } from '#cli/commands/contracts.ts';
 import { readGitSetting } from '#cli/platform/git/public.ts';
@@ -14,6 +14,7 @@ import { environmentVariables } from '#cli/platform/public.ts';
 import { hookStatus } from '#cli/lifecycle/install/contracts.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { buildPolicy, reportingCheck } from '#tests/harness/policy.ts';
 import { createInstallationRegistry } from '#tests/harness/registry.ts';
 import { INDEX_COMMAND, SAMPLE_COMMAND } from '#tests/config/tools/lifecycle/hooks.ts';
 import { useEnvironment, sourceLauncherDirectory } from '#tests/harness/environment.ts';
@@ -67,7 +68,15 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
 
     await createFileTree(main, {
         'gspot.toml': buildPolicy([], {
-            tables: `[hooks]\nenabled = true\n[check."sandbox/defect"]\ncommand = ${JSON.stringify([process.execPath, '-e', SAMPLE_COMMAND, '{files}'])}\npaths = ["src/**"]\nstage = "commit"\n[check."sandbox/defect".output]\nformat = "lines"\n`,
+            tables: stringify({
+                hooks: { enabled: true },
+                check: {
+                    'sandbox/defect': {
+                        ...reportingCheck({ paths: ['src/**'], stage: 'commit' }),
+                        command: [process.execPath, '-e', SAMPLE_COMMAND, '{files}'],
+                    },
+                },
+            }),
         }),
         'src/kept.txt': 'clean\n',
     });

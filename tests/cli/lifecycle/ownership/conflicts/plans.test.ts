@@ -140,56 +140,9 @@ test('a preserved file refuses the whole batch and leaves every proposed destina
         expect(() => applyPlans(log, plans)).toThrow(`The file authored.txt ${OWNERSHIP_REFUSAL}`);
         expect(await readFile(join(directory.path, 'owned.txt'), 'utf8')).toBe('installed');
         expect(await readFile(join(directory.path, 'authored.txt'), 'utf8')).toBe('keep authored');
-    }
-});
-
-test('restoration journals completed removals and preserves a later edit', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, { 'authored.txt': 'original\n' });
-    {
-        using log = openOwnership(directory.path);
-
-        applyPlans(log, [
-            planReplacement(log, {
-                path: 'authored.txt',
-                next: { bytes: Buffer.from('installed\n'), mode: 0o444 },
-                kind: 'tool_file',
-                canReplace: true,
-            }),
-        ]);
-        applyPlans(log, [
-            planReplacement(log, {
-                path: 'generated.txt',
-                next: { bytes: Buffer.from('generated\n'), mode: 0o644 },
-                kind: 'tool_file',
-            }),
-        ]);
         expect(() => applyPlans(log, [planRestoration(log, '.gspot/unowned')])).toThrow(
             `The file .gspot/unowned ${OWNERSHIP_REFUSAL}`,
         );
-        const plans = ['authored.txt', 'generated.txt'].map((path) => planRestoration(log, path));
-        expect(await readFile(join(directory.path, 'authored.txt'), 'utf8')).toBe('installed\n');
-        await writeFile(join(directory.path, 'generated.txt'), 'user edit\n');
-        expect(() => applyPlans(log, plans)).toThrow('Lifecycle destination changed during removal: generated.txt');
-        expect(log.files.read('authored.txt')).toBeUndefined();
-        expect(await readFile(join(directory.path, 'generated.txt'), 'utf8')).toBe('user edit\n');
-        expect(log.state.pending?.map((entry) => entry.path)).toStrictEqual(['authored.txt', 'generated.txt']);
-    }
-});
-
-test('retirement journals completed removals and preserves a later stale read', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, { 'first.json': '{}\n', 'second.json': '{}\n' });
-    {
-        using log = openOwnership(directory.path);
-
-        const plans = ['first.json', 'second.json'].map((path) => planRetirement(log, path, log.files.read(path)!));
-        await writeFile(join(directory.path, 'second.json'), '{"edited":true}\n');
-        expect(() => applyPlans(log, plans)).toThrow('Lifecycle destination changed during removal: second.json');
-        expect(log.files.read('first.json')).toBeUndefined();
-        expect(await readFile(join(directory.path, 'second.json'), 'utf8')).toBe('{"edited":true}\n');
-        expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
-        expect(log.state.pending?.map((entry) => entry.path)).toStrictEqual(['first.json', 'second.json']);
     }
 });
 

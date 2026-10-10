@@ -1,10 +1,10 @@
 // Bun check sandboxes read indexed snapshots and preserve working-tree bytes and outputs.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
-import { git, gitOutput } from '#tests/harness/git.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
@@ -21,9 +21,9 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     await using directory = await testdir();
     const policy = buildPolicy(['bash']);
     await createFileTree(directory.path, { 'gspot.toml': policy, 'script with spaces.sh': 'if then\n' });
-    expect(git(directory.path, ['init', '-q']).code).toBe(0);
-    expect(git(directory.path, ['add', '-A']).code).toBe(0);
-    const index = git(directory.path, ['ls-files', '--stage', '-z']).stdout;
+    gitOutput(directory.path, ['init', '-q']);
+    gitOutput(directory.path, ['add', '-A']);
+    const index = gitOutput(directory.path, ['ls-files', '--stage', '-z']);
     await writeFile(join(directory.path, 'script with spaces.sh'), 'echo repaired only in the working tree\n');
     await writeFile(join(directory.path, 'gspot.toml'), 'invalid working policy');
     const args = ['check', '--staged', '--only', 'bash/bash-syntax', '--json'];
@@ -35,13 +35,13 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     expect(new Set(failedReport.checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(
         new Set(['script with spaces.sh']),
     );
-    expect(git(directory.path, ['ls-files', '--stage', '-z']).stdout).toBe(index);
+    expect(gitOutput(directory.path, ['ls-files', '--stage', '-z'])).toBe(index);
     expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe('invalid working policy');
     expect(await readFile(join(directory.path, 'script with spaces.sh'), 'utf8')).toBe(
         'echo repaired only in the working tree\n',
     );
     await writeFile(join(directory.path, 'gspot.toml'), policy);
-    expect(git(directory.path, ['add', 'gspot.toml', 'script with spaces.sh']).code).toBe(0);
+    gitOutput(directory.path, ['add', 'gspot.toml', 'script with spaces.sh']);
     await writeFile(join(directory.path, 'script with spaces.sh'), 'if then\n');
     const passed = await checkReport(directory.path, args);
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
@@ -74,14 +74,14 @@ test('staged checks validate the index version pin instead of the working pin', 
         '.gspot/version': '0.0.0\n',
         'script.sh': 'echo valid\n',
     });
-    expect(git(directory.path, ['init', '-q']).code).toBe(0);
-    expect(git(directory.path, ['add', '-A']).code).toBe(0);
+    gitOutput(directory.path, ['init', '-q']);
+    gitOutput(directory.path, ['add', '-A']);
     await writeFile(join(directory.path, '.gspot/version'), `${RUNNING_VERSION}\n`);
     const args = ['check', '--staged', '--only', 'bash/bash-syntax', '--json'];
     const refused = await runGspot(directory.path, args);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).error).toBe('pin');
-    expect(git(directory.path, ['add', '.gspot/version']).code).toBe(0);
+    gitOutput(directory.path, ['add', '.gspot/version']);
     await writeFile(join(directory.path, '.gspot/version'), '0.0.0\n');
     const accepted = await runGspot(directory.path, args);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
@@ -114,8 +114,8 @@ stage = "commit"
 `,
     });
     await chmod(join(directory.path, 'task.sh'), 0o755);
-    expect(git(directory.path, ['init', '-q']).code).toBe(0);
-    expect(git(directory.path, ['add', '-A']).code).toBe(0);
+    gitOutput(directory.path, ['init', '-q']);
+    gitOutput(directory.path, ['add', '-A']);
     await writeFile(join(directory.path, 'payload.dat'), Buffer.from([0, 1, 2]));
     await chmod(join(directory.path, 'task.sh'), 0o644);
     const result = await checkReport(directory.path, ['check', '--staged', '--only', 'project/index-bytes', '--json']);
@@ -160,8 +160,8 @@ paths = ["source.txt"]
 stage = "commit"
 `,
     });
-    expect(git(directory.path, ['init', '-q']).code).toBe(0);
-    expect(git(directory.path, ['add', '-A']).code).toBe(0);
+    gitOutput(directory.path, ['init', '-q']);
+    gitOutput(directory.path, ['add', '-A']);
     const args = ['check', '--staged', '--only', 'project/dependencies', '--json'];
     const first = await runGspot(directory.path, args);
     expect(first.code, first.stdout + first.stderr).toBe(0);

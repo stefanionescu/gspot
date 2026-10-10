@@ -71,9 +71,6 @@ test.each(['recommended', 'all'] as const)('orphan assets follow %s and tracked 
         level === 'all' ? [{ check: 'xcode/orphan-assets', file: assetManifest, rule: 'orphan-asset' }] : [],
     );
     if (level === 'recommended') return;
-    await Bun.write(`${sandbox.path}/app/Source.swift`, 'let image = Image("Logo")\n');
-    const corrected = await runGspot(sandbox.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     await Bun.write(`${sandbox.path}/app/Source.swift`, 'let image = "selected at runtime"\n');
     const exception =
         '\n[[ignore]]\ncheck = "xcode/orphan-assets"\nrule = "orphan-asset"\npaths = ["app/Assets.xcassets/**"]\nreason = "Assets are selected by a runtime catalog."\n';

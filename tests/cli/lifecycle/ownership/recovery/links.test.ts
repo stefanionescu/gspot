@@ -4,8 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { interruptOwner } from '#tests/harness/process.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { symlink, readFile, readlink } from 'node:fs/promises';
-import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 import { INTERRUPTION_EXIT_CODE } from '#tests/config/harness/process.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
 describe('lifecycle ownership', () => {
     test.skipIf(!isPosix).each(['before', 'after'] as const)(
@@ -26,7 +27,15 @@ describe('lifecycle ownership', () => {
                 expect(await readlink(join(directory.path, 'tool'))).toBe(point === 'after' ? 'target' : 'original');
                 expect(await readFile(join(directory.path, 'original'), 'utf8')).toBe('authored target');
                 expect(await readFile(join(directory.path, 'target'), 'utf8')).toBe('installed target');
-                expect(log.state.files.map((entry) => entry.path)).toStrictEqual(point === 'after' ? ['tool'] : []);
+                if (point === 'after') {
+                    expect(applyPlans(log, [planRestoration(log, 'tool')])).toStrictEqual(['changed']);
+                    expect(readlink(join(directory.path, 'tool'))).rejects.toMatchObject({ code: 'ENOENT' });
+                } else {
+                    expect(() => applyPlans(log, [planRestoration(log, 'tool')])).toThrow(
+                        'Lifecycle destination is not a private regular file: tool',
+                    );
+                    expect(await readlink(join(directory.path, 'tool'))).toBe('original');
+                }
             }
         },
     );

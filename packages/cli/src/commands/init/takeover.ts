@@ -21,9 +21,9 @@ function recordOutcome(entry: ToolFile, replaced: Replaced): void {
     if (shared)
         replaced.retained.push({
             path,
-            note: `${table ?? key ?? tool} settings stay here, and the generated ${tool} configuration takes over. Delete the section when ready.`,
+            note: `${table ?? key ?? tool} settings stay here, and the generated ${tool} tool file takes over. Delete the section when ready.`,
         });
-    else replaced.removed.push({ path, note: `replaced by the generated ${tool} configuration` });
+    else replaced.removed.push({ path, note: `replaced by the generated ${tool} tool file` });
 }
 
 /**

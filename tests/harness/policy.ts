@@ -1,8 +1,9 @@
 // Build sandbox policy and report public validation failures.
 import { GspotError } from '#cli/platform/public.ts';
 import { parseStrictPolicy } from '#cli/policy/public.ts';
-import type { PolicyOptions } from '#tests/types/harness/policy.ts';
+import { REPORT_PROGRAM } from '#tests/config/samples/commands.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
+import type { PolicyOptions, ReportingCheck, ReportingCheckOptions } from '#tests/types/harness/policy.ts';
 
 /**
  * Build policy with explicit configuration choices and authored TOML tables.
@@ -40,4 +41,17 @@ export function alwaysSelectedConfigurations(): string[] {
                 configuration.kind === 'general' && configuration.always_selected && configuration.when === undefined,
         )
         .map(({ configuration }) => configuration.name);
+}
+
+/**
+ * Build a check that reports each selected path and fails.
+ * @param options the selected paths and check stage.
+ * @returns the native command and its line output contract.
+ */
+export function reportingCheck(options: ReportingCheckOptions): ReportingCheck {
+    return {
+        command: [process.execPath, '-e', REPORT_PROGRAM, '{files}'],
+        ...options,
+        output: { format: 'lines' },
+    };
 }

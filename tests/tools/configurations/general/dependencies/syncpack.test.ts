@@ -35,7 +35,7 @@ test.each(SYNCPACK_TAKEOVERS)(
         const prepared = await prepare(sandbox.path, options);
         expect(prepared.plan.remove).toContainEqual({
             path: file,
-            note: 'replaced by the generated syncpack configuration',
+            note: 'replaced by the generated syncpack tool file',
         });
         expect(
             prepared.plan.remove.some((entry) => ['syncpack.config.cts', 'syncpack.config.mts'].includes(entry.path)),

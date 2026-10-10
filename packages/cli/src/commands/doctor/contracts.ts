@@ -93,7 +93,7 @@ function buildFileRow(session: Session, config: ToolFile, tools: Set<string>, co
     if (tools.has(config.tool))
         return {
             path: config.path,
-            note: `beside the generated ${config.tool} configuration`,
+            note: `beside the generated ${config.tool} tool file`,
             command: config.shared
                 ? `move any ${config.table ?? config.key ?? config.tool} setting you still need into gspot.toml, then delete the section`
                 : 'move any setting you still need into gspot.toml, then delete the file',

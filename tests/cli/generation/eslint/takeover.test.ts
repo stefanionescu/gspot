@@ -37,7 +37,7 @@ test.each(['', 'app'])('native Stylelint discovery uses owned package fields at 
     const prepared = await prepare(sandbox.path, options);
     expect(prepared.plan.remove).toContainEqual({
         path: authoredConfiguration,
-        note: 'replaced by the generated stylelint configuration',
+        note: 'replaced by the generated stylelint tool file',
     });
     expect(prepared.plan.change).toContainEqual({
         path: packagePath,
@@ -79,7 +79,7 @@ test('native Stylelint discovery retires a standalone module configuration witho
     const prepared = await prepare(sandbox.path, options);
     expect(prepared.plan.remove).toContainEqual({
         path: '.stylelintrc.mjs',
-        note: 'replaced by the generated stylelint configuration',
+        note: 'replaced by the generated stylelint tool file',
     });
     expect(prepared.plan.change.some((entry) => entry.path === 'package.json')).toBe(false);
     const initialized = await writeSetup(sandbox.path, options, prepared);
@@ -113,7 +113,7 @@ test.each(['eslint.config.mts', 'eslint.config.cts'])(
         const prepared = await prepare(sandbox.path, options);
         expect(prepared.plan.remove).toContainEqual({
             path: file,
-            note: 'replaced by the generated eslint configuration',
+            note: 'replaced by the generated eslint tool file',
         });
         const initialized = await writeSetup(sandbox.path, options, prepared);
         expect(initialized.exitCode).toBe(0);
@@ -155,7 +155,7 @@ test.each(KNIP_TAKEOVERS)(
         const prepared = await prepare(sandbox.path, options);
         expect(prepared.plan.remove).toContainEqual({
             path: file,
-            note: 'replaced by the generated knip configuration',
+            note: 'replaced by the generated knip tool file',
         });
         expect(prepared.plan.remove.some((entry) => entry.path === 'knip.config.mjs')).toBe(false);
         const initialized = await writeSetup(sandbox.path, options, prepared);
