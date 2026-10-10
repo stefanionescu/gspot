@@ -3,6 +3,7 @@ import { emitAll } from '#cli/generation/public.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { duplicateMisePins } from '#cli/tools/public.ts';
 import { readPrefix } from '#cli/platform/root/public.ts';
+import { quoteArgument } from '#cli/platform/contracts.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
@@ -10,14 +11,50 @@ import { everyManifest } from '#cli/configurations/public.ts';
 import { applicableManifests } from '#cli/planning/public.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/public.ts';
-import { detectUnselected } from '#cli/repository/selection/contracts.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';
 import { getTooling, getLintJobs } from '#cli/repository/discovery/public.ts';
+import { detectConfigurations } from '#cli/repository/selection/contracts.ts';
 import type { Suggestions, SuggestionRow } from '#cli/types/commands/doctor.ts';
 
-function suggestedConfigurations(session: Session, selected: Set<string>): Suggestions['suggested'] {
+function configurationSuggestions(session: Session): Pick<Suggestions, 'detected' | 'suggested' | 'undetected'> {
+    const { root, repository, manifests, packageManifests, policyFiles } = session;
+    const selections = everyManifest(session.scopes);
+    const selected = new Set(selections.map((manifest) => manifest.configuration.name));
+    const detected = detectConfigurations(root, repository.files, manifests, packageManifests);
+    const policy = policyFiles.policy;
+    const choices = [
+        { path: '', configurations: policy.configurations },
+        ...Object.entries(policy.scope).map(([path, table]) => ({ path, configurations: table.configurations })),
+    ];
+    const undetected = choices
+        .filter(({ configurations }) => configurations.length > 0)
+        .flatMap(({ path, configurations }) => {
+            const evidence =
+                path === ''
+                    ? detected
+                    : detectConfigurations(root, repository.files, manifests, packageManifests, path);
+            const found = new Set(evidence.map((entry) => entry.configuration));
+            const scopeArgument = path === '' ? '' : ` --scope ${quoteArgument(path)}`;
+            return configurations.flatMap((id) => {
+                const manifest = manifests.get(id);
+                if (
+                    manifest === undefined ||
+                    manifest.configuration.kind === 'general' ||
+                    found.has(id) ||
+                    !Object.values(manifest.detect).some((patterns) => Object.keys(patterns).length > 0)
+                )
+                    return [];
+                return [
+                    {
+                        configuration: id,
+                        evidence: `no detection evidence in ${path === '' ? 'root' : path}`,
+                        command: `gspot remove ${id}${scopeArgument}`,
+                    },
+                ];
+            });
+        });
     const rows = new Map<string, Suggestions['suggested'][number]>();
-    for (const manifest of everyManifest(session.scopes))
+    for (const manifest of selections)
         for (const id of manifest.configuration.suggests)
             if (!selected.has(id) && !rows.has(id))
                 rows.set(id, {
@@ -25,7 +62,13 @@ function suggestedConfigurations(session: Session, selected: Set<string>): Sugge
                     evidence: `suggested by ${manifest.configuration.name}`,
                     command: `gspot add ${id}`,
                 });
-    return rows.values().toArray();
+    return {
+        detected: detected
+            .filter((entry) => entry.kind !== 'general' && !selected.has(entry.configuration))
+            .map(({ configuration, evidence }) => ({ configuration, evidence, command: `gspot add ${configuration}` })),
+        suggested: rows.values().toArray(),
+        undetected,
+    };
 }
 
 function inactiveFileRow(session: Session, config: ToolFile, manifest: Manifest): SuggestionRow {
@@ -106,22 +149,13 @@ function getUnownedOutputs(session: Session): SuggestionRow[] {
  */
 export function getSuggestions(session: Session): Suggestions {
     const { packageManifests } = session;
-    const selections = everyManifest(session.scopes);
-    const selected = new Set(selections.map((manifest) => manifest.configuration.name));
     const manifests = applicableManifests(session);
     const tooling = getTooling(session.root, session.repository.files, packageManifests);
     const generated = emitAll(session);
     const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
-        detected: detectUnselected(
-            session.root,
-            session.repository.files,
-            session.manifests,
-            selections,
-            session.packageManifests,
-        ),
-        suggested: suggestedConfigurations(session, selected),
+        ...configurationSuggestions(session),
         unowned: [...unownedConfigs(session, tooling, tools, generated), ...getUnownedOutputs(session)],
         authored: [
             ...getLintJobs(

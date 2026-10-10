@@ -27,6 +27,7 @@ import {
     CI_REPORT_PATHS,
     TOOL_STATE_COLORS,
     SUGGESTION_SECTIONS,
+    STALE_SETUP_WARNING,
 } from '#cli/config/commands/doctor.ts';
 
 function versionText(tool: ToolInspection): string {
@@ -150,7 +151,7 @@ export async function doctorCommand(directory: string): Promise<CommandResult> {
     const report = buildDoctorReport(session, readVersionPin(root));
     const stale = reconcileConfigurations(session).notes;
     return {
-        text: `${formatDoctorReport(report)}${stale.length === 0 ? '' : 'The saved setup is stale: ' + stale.join('; ') + '. Run: gspot apply\n'}`,
+        text: `${formatDoctorReport(report)}${stale.length === 0 ? '' : STALE_SETUP_WARNING.replace('{details}', () => stale.join('; '))}`,
         json: { ...report, stale },
         exitCode: report.exitCode,
     };

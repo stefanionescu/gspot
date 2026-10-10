@@ -56,7 +56,7 @@ export const settingNamespaceSchemas = {
     }),
     dependencies: z.strictObject({
         min_release_age_days: z.number().optional(),
-        registry_hosts: z.array(z.string()).optional(),
+        registry_hosts: z.object({ registry_hosts: z.array(z.string().min(1)) }).shape['registry_hosts'].optional(),
         scanner: z.string().optional(),
     }),
     docs: z.strictObject({ banned_headings: z.array(z.string()).optional(), require_license: z.boolean().optional() }),

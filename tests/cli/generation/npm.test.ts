@@ -1,9 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { gspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { runTestCommand } from '#tests/harness/command.ts';
 import { YARN_MANAGERS } from '#tests/config/samples/npm.ts';
 import { emitAll, npmProject } from '#cli/generation/public.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/parsers/packages.ts';
@@ -71,6 +73,14 @@ test.each(NEXT_INSTALLATIONS)('$name', async (row) => {
                       .tools.find(({ name }) => name === '@next/eslint-plugin-next')!.version
                 : row.expected;
         expect(parseToolProject(generated!.content).dependencies['@next/eslint-plugin-next']).toBe(expected);
+        if (row.expected === 'manifest') {
+            const applied = await runTestCommand([process.execPath, gspot, '-C', sandbox.path, 'apply'], {
+                cwd: process.cwd(),
+            });
+            expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+            const published = parseToolProject(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8'));
+            expect(published.dependencies['@next/eslint-plugin-next']).toBe(expected);
+        }
     }
     expect(await readFile(marker, 'utf8')).toBe('Keep the source file.');
 });

@@ -6,6 +6,7 @@ export type SuggestionRow = { path: string; note: string; command: string };
 export type Suggestions = {
     detected: ConfigurationSuggestion[];
     suggested: ConfigurationSuggestion[];
+    undetected: ConfigurationSuggestion[];
     unowned: SuggestionRow[];
     authored: SuggestionRow[];
     duplicateMisePins: { tool: string; version: string; places: string[]; command: string }[];
@@ -22,7 +23,7 @@ export type DoctorReport = {
     exitCode: number;
 };
 
-export type SuggestionKey = 'detected' | 'suggested' | 'unowned' | 'authored';
+export type SuggestionKey = 'detected' | 'suggested' | 'undetected' | 'unowned' | 'authored';
 
 /** One suggestion category and the title printed in the doctor report. */
 export type SuggestionSection = { key: SuggestionKey; title: string };

@@ -133,7 +133,7 @@ summary = "The security scanner Bun names in [install.security]. An empty string
 [[setting]]
 name = "dependencies.registry_hosts"
 type = "list"
-items = "string"
+items = "native"
 direction = "loosening"
 default = ["registry.npmjs.org", "registry.yarnpkg.com"]
 summary = "The hosts a lockfile may resolve packages from."

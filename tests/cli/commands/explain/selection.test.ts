@@ -9,7 +9,7 @@ import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import type { PathExplanation } from '#cli/types/commands/explain.ts';
 import { TAPLO_REASON, TAPLO_OPTIONS } from '#tests/config/samples/taplo.ts';
 import { containing, containingAll, textContaining } from '#tests/harness/expectations.ts';
-import { EXPLAIN_POLICY, NEUTRAL_SETTING_VALUES } from '#tests/config/cli/commands/explain.ts';
+import { REASON_VALUES, EXPLAIN_POLICY, NEUTRAL_SETTING_VALUES } from '#tests/config/cli/commands/explain.ts';
 
 const inheritedSettings = async () => {
     await using sandbox = await testdir();
@@ -215,6 +215,49 @@ test('explain reads selected native Taplo options and their inherited scope reas
             source: 'gspot.toml',
             reason: TAPLO_REASON,
         })),
+    });
+    expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
+    expect(await Bun.file(join(sandbox.path, '.gspot/installed.toml')).exists()).toBe(false);
+});
+
+test.each(REASON_VALUES)('explain $key uses each current value for its reason obligation', async (row) => {
+    await using sandbox = await testdir();
+    const explanation = 'The sandbox preserves the project convention for this native setting.';
+    const policy = `configurations = ["naming"]
+[${row.table}]
+${row.field} = ${row.root}
+[reasons]
+"${row.key}" = "${explanation}"
+[scope.app]
+configurations = []
+[scope.app.${row.table}]
+${row.field} = ${row.child}
+[scope.app.reasons]
+"${row.key}" = "${explanation}"
+`;
+    await createFileTree(sandbox.path, { 'gspot.toml': policy, 'app/source.js': 'export const active = true;\n' });
+    const result = await runGspot(sandbox.path, ['explain', row.key]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const sections = result.stdout.split('Scope: ').slice(1);
+    expect(sections).toHaveLength(2);
+    for (const [index, section] of sections.entries()) {
+        const scope = index === 0 ? 'root' : 'app';
+        expect(section).toStartWith(`${scope}\n`);
+        expect(section.includes('When authored, this value requires an entry in [reasons].')).toBe(
+            row.owed[index === 0 ? 0 : 1],
+        );
+        expect(section).toContain(`Reason on record: ${explanation}`);
+        const target = index === 0 ? '' : ' --scope app';
+        expect(section).toContain(`Change it: gspot set ${row.key} <value>${target} [--reason "..."]`);
+    }
+    const reported = await runGspot(sandbox.path, ['explain', row.key, '--json']);
+    expect(reported.code, reported.stdout + reported.stderr).toBe(0);
+    expect(JSON.parse(reported.stdout)).toMatchObject({
+        key: row.key,
+        scopes: [
+            { scope: '', current: row.current[0], reason: explanation },
+            { scope: 'app', current: row.current[1], reason: explanation },
+        ],
     });
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
     expect(await Bun.file(join(sandbox.path, '.gspot/installed.toml')).exists()).toBe(false);

@@ -10,6 +10,7 @@ export const VERSION_GAP = 4;
 export const SUGGESTION_SECTIONS: SuggestionSection[] = [
     { key: 'detected', title: 'detected, not selected' },
     { key: 'suggested', title: 'suggested, not selected' },
+    { key: 'undetected', title: 'selected, not detected' },
     { key: 'unowned', title: 'configuration not owned' },
     { key: 'authored', title: 'existing lint jobs' },
 ];
@@ -26,3 +27,6 @@ export const TOOL_STATE_COLORS = {
 } as const satisfies Record<ToolInspection['state'], keyof Colors>;
 
 export const CI_REPORT_PATHS = { github: GITHUB_WORKFLOW, gitlab: GITLAB_INCLUDE_LABEL };
+
+/** Doctor reports stale choices without changing the saved setup. */
+export const STALE_SETUP_WARNING = 'The saved setup is stale: {details}. Run: gspot apply\n';

@@ -17,6 +17,12 @@ validation = { integer = true, minimum = 1, maximum = 4 }
 
 export const NATIVE_ITEM_DECLARATIONS = [
     {
+        name: 'dependencies.registry_hosts',
+        value: '["registry.npmjs.org"]',
+        invalid: '[""]',
+        diagnostic: 'dependencies.registry_hosts.default.0: Too small: expected string to have >=1 characters',
+    },
+    {
         name: 'format.overrides',
         value: '[{ paths = ["src/**"], indent_style = "tab" }]',
         invalid: '[{ paths = ["src/**"] }]',

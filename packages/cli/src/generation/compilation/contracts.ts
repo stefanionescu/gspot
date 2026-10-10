@@ -129,6 +129,13 @@ export function nativeSetting(name: string): CompiledSetting | undefined {
     const owners = new Map<string, CompiledSetting>([
         ['tools', { schema: toolsSchema, expression: 'toolsSchema' }],
         ['licenses', { schema: allowlistSchema, expression: 'allowlistSchema' }],
+        [
+            'dependencies',
+            {
+                schema: z.object({ registry_hosts: z.array(z.string().min(1)) }),
+                expression: 'z.object({registry_hosts:z.array(z.string().min(1))})',
+            },
+        ],
         ['naming', { schema: namingLists, expression: 'namingLists' }],
         ['format', { schema: formatSchema, expression: 'formatSchema' }],
         [

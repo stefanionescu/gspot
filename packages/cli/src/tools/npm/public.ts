@@ -124,6 +124,7 @@ export const packageToolProject: ToolProject<PackageToolProject, PackagePreparat
             packageInstallerCommands(project.installer).install,
             'immutable installation failed',
         );
+        guards.source('Tool project inputs changed during installation. Retry the command.');
         await assertPackageVersions(work, project.dependencies, tools);
         guards.scratch(`${project.installer.name} changed locked inputs. No installed files were written. ${SETUP}`);
         guards.source('Tool project inputs changed during installation. Retry the command.');

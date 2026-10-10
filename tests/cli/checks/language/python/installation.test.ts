@@ -14,6 +14,7 @@ import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import { toolPin, toolProjectPins } from '#cli/configurations/contracts.ts';
+import { IMPORT_CONTRACT_REPORT } from '#tests/config/cli/checks/language/python/installation.ts';
 
 test.each(LOCKFILES.filter(({ client }) => ['uv', 'poetry', 'pdm'].includes(client)))(
     'Python dependency ownership with $file applies only to locked scopes and accepts removal of the duplicate list',
@@ -133,7 +134,7 @@ test('import-linter follows INI precedence and retains separate chains for decor
     const command = resources.use(
         spyOn(processes, 'run').mockResolvedValue({
             code: 1,
-            stdout: 'First boundary BROKEN (1 ignored import)\nSecond boundary BROKEN [0.1s]\n\n\u001B[1mBroken contracts\u001B[0m\n----------------\n\u001B[1mFirst boundary\u001B[0m\n--------------\nexample.low -> example.high (l. 1)\n\nSecond boundary\n---------------\nexample.other -> example.high (l. 3)\n',
+            stdout: IMPORT_CONTRACT_REPORT,
             stderr: '',
             missing: false,
             duration: 1,
@@ -160,6 +161,7 @@ test('import-linter follows INI precedence and retains separate chains for decor
         '--config',
         'setup.cfg',
         '--no-cache',
+        '--verbose',
     ]);
     expect(command.mock.calls.map(([, options]) => options.env?.['PYTHONDONTWRITEBYTECODE'])).toStrictEqual(['1']);
     expect(await Bun.file(join(sandbox.path, 'setup.cfg')).text()).toBe(config);

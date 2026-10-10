@@ -45,11 +45,12 @@ export async function importLinter(input: CheckInput): Promise<Finding[]> {
             '--config',
             basename(configuration),
             '--no-cache',
+            '--verbose',
         ]),
         { cwd: input.scopeRoot },
     );
     const lines = stripVTControlCharacters(result.stdout).split('\n');
-    const broken = lines.flatMap((line) => {
+    const broken = lines.slice(lines.findIndex((line) => line.trim() === 'Contracts')).flatMap((line) => {
         const name = BROKEN_CONTRACT.exec(line.trim())?.groups?.['name'];
         return name === undefined ? [] : [name.trim()];
     });

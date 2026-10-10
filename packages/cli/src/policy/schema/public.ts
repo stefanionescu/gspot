@@ -30,13 +30,6 @@ const structureSchema = z.strictObject({
     reexports: authoredDefault(z.enum(['none', 'index-only']).default('none')),
 });
 
-// The package manager install settings the dependencies configuration writes into the install configuration.
-const dependenciesSchema = z.strictObject({
-    min_release_age_days: z.number().optional(),
-    scanner: z.string().optional(),
-    registry_hosts: z.array(z.string().min(1)).optional(),
-});
-
 const ignoreSchema = z.strictObject({
     check: z.string(),
     rule: z.string().optional(),
@@ -105,7 +98,6 @@ const scopeBody = {
     structure: structureSchema.optional(),
     tools: publicToolsSchema.optional(),
     format: formatSchema.optional(),
-    dependencies: dependenciesSchema.optional(),
     tool_timeout_seconds: z.number().optional(),
 };
 

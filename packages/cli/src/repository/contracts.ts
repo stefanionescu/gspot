@@ -17,8 +17,8 @@ import { toPosix, isInside, decodeUtf8 } from '#cli/platform/contracts.ts';
 import { join, posix, dirname, resolve, basename, relative } from 'node:path';
 import { ENTRY_MODES, GITLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { EXECUTABLE_BITS, EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
-import { statSync, lstatSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 import { isInScope, pathMatcher, isToolingPath } from '#cli/repository/paths/public.ts';
+import { statSync, lstatSync, existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 import { getTsconfig, manifestParser, parsePackageManifest } from '#cli/parsers/packages/public.ts';
 import type { PackageJson, DependencyMap, PackageManifest, InstalledDependency } from '#cli/types/parsers/packages.ts';
 
@@ -317,9 +317,12 @@ export function installedPackage(files: Root | undefined, root: string, manifest
  * @returns the resolved manifest and its version, or undefined when the dependency is absent.
  */
 export function installedDependency(root: string, manifest: string, name: string): InstalledDependency | undefined {
+    const require = createRequire(join(root, manifest));
+    if (require.resolve.paths(name)?.some((path) => existsSync(join(path, name, 'package.json'))) !== true)
+        return undefined;
     let path: string;
     try {
-        path = createRequire(join(root, manifest)).resolve(`${name}/package.json`);
+        path = require.resolve(`${name}/package.json`);
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'MODULE_NOT_FOUND') return undefined;
         throw error;

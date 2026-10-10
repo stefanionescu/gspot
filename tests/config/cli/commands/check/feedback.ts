@@ -32,3 +32,6 @@ export const FIXER_FEEDBACK_CASES = [
             'fixers changed 10 files; the changes are in the working tree and are not staged: `file-0.txt`, `file-1.txt`, `file-2.txt`, `file-3.txt`, `file-4.txt`, `file-5.txt`, `file-6.txt`, `file-7.txt` and 2 more',
     },
 ];
+
+/** New language evidence stays authored until the owner runs apply. */
+export const DETECTED_SOURCE = { 'added.py': 'pass\n' };

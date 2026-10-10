@@ -7,9 +7,11 @@ import { quoteArgument } from '#cli/platform/contracts.ts';
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import { pathMatcher } from '#cli/repository/paths/public.ts';
 import type { Program } from '#cli/types/commands/program.ts';
+import { isReasonOwed } from '#cli/policy/errors/contracts.ts';
 import { knownSettings } from '#cli/policy/settings/public.ts';
 import { ownersOf } from '#cli/repository/selection/public.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
+import { DIRECTION_TEXTS } from '#cli/config/commands/explain.ts';
 import { checkStageSchema } from '#cli/parsers/schema/command.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -20,7 +22,6 @@ import { unknownSettingDiagnostic } from '#cli/policy/errors/public.ts';
 import { commandHelp, commandRoot, openSession } from '#cli/commands/public.ts';
 import { settingValue, declarationFor } from '#cli/policy/settings/contracts.ts';
 import { explainCheck, explainToolRule } from '#cli/commands/explain/contracts.ts';
-import { DIRECTION_TEXTS, REASON_DIRECTIONS } from '#cli/config/commands/explain.ts';
 import { knownChecks, configurationFiles, configurationManifests } from '#cli/configurations/public.ts';
 import { unknownCheckDiagnostic, unknownConfigurationDiagnostic } from '#cli/configurations/errors/public.ts';
 
@@ -82,16 +83,18 @@ function explainConfiguration(configurationName: string): Explanation | undefine
 // The lines about one scope: its default, its current value and source, and how to change it.
 function scopeLines(key: string, declaration: SettingDeclaration, entry: SettingScope): string[] {
     const { scope, shipped, effective } = entry;
-    const { value, source = 'unset', reason } = effective === undefined ? {} : effective;
+    const { value, source, reason } = effective ?? { value: undefined, source: 'unset', reason: undefined };
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
-    const requiresReason = REASON_DIRECTIONS.includes(declaration.direction);
     return [
         '',
         `Scope: ${scope === '' ? 'root' : scope}`,
         `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
         `Current value: ${JSON.stringify(value)} (from ${source})`,
+        ...(value !== undefined && isReasonOwed(declaration, shipped, value)
+            ? ['When authored, this value requires an entry in [reasons].']
+            : []),
         ...(reason === undefined ? [] : [`Reason on record: ${reason}`]),
-        `Change it: gspot set ${quoteArgument(key)} <value>${target}${requiresReason ? ' --reason "..."' : ''}`,
+        `Change it: gspot set ${quoteArgument(key)} <value>${target} [--reason "..."]`,
         `Back to the default: gspot set ${quoteArgument(key)} --default${target}`,
     ];
 }

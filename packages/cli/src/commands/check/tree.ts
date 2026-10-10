@@ -13,7 +13,6 @@ import type { RevisionSource } from '#cli/types/execution/copy.ts';
 import { executeRun, reproduceLine } from '#cli/execution/public.ts';
 import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { getStaged, getChanged } from '#cli/repository/revisions/public.ts';
-import { reconcileConfigurations } from '#cli/lifecycle/selection/contracts.ts';
 import { selectedPaths, refuseUnknownChecks } from '#cli/commands/check/arguments.ts';
 import type { FixReport, RunReport, RunOptions } from '#cli/types/execution/check.ts';
 import type { Selections, CheckOptions, CheckCommandResult } from '#cli/types/commands/check.ts';
@@ -152,12 +151,6 @@ export async function checkTree(
     const policyFiles = readPolicy(root);
     assertVersionPin(root, policyFiles.policy.runner);
     const session = await openSession(root, policyFiles);
-    try {
-        const stale = reconcileConfigurations(session).notes;
-        if (stale.length > 0) warn(`The saved setup is stale: ${stale.join('; ')}. Run: gspot apply`);
-    } catch (error) {
-        warn(`Setup detection could not finish: ${error instanceof Error ? error.message : String(error)}`);
-    }
     if (revision !== undefined) {
         session.installedRoot = revision.installedRoot;
     }

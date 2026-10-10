@@ -8,7 +8,8 @@ import { emitAll } from '#cli/generation/public.ts';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readTree } from '#tests/harness/preservation.ts';
+import { rm, readFile, writeFile } from 'node:fs/promises';
 import { environmentBin } from '#cli/platform/contracts.ts';
 import { applicableManifests } from '#cli/planning/public.ts';
 import { doctorCommand } from '#cli/commands/doctor/public.ts';
@@ -236,5 +237,45 @@ test.each(['recommended', 'all'] as const)(
         );
         const zero = await doctorCommand(sandbox.path);
         expect((zero.json as DoctorReport).tools.map((tool) => tool.name)).not.toContain('pytest-cov');
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    'doctor suggests scoped removals at %s after evidence disappears without changing saved choices',
+    async (level) => {
+        await using sandbox = await testdir();
+        const policy = buildPolicy(['bash'], {
+            level,
+            tables: '[scope."api app"]\nconfigurations = ["python"]\n[scope."api app/deep"]\n',
+        });
+        await createFileTree(sandbox.path, {
+            'gspot.toml': policy,
+            'entry.sh': 'echo ready\n',
+            'api app/service.py': 'print("ready")\n',
+            'api app/deep/README.md': '# Service\n',
+            'sibling/service.py': 'print("sibling")\n',
+        });
+        const present = await doctorCommand(sandbox.path);
+        expect((present.json as DoctorReport).suggestions.undetected).toStrictEqual([]);
+        await rm(join(sandbox.path, 'entry.sh'));
+        await rm(join(sandbox.path, 'api app/service.py'));
+        const before = await readTree(sandbox.path);
+        const missing = await doctorCommand(sandbox.path);
+        expect((missing.json as DoctorReport).suggestions.undetected).toStrictEqual([
+            { configuration: 'bash', evidence: 'no detection evidence in root', command: 'gspot remove bash' },
+            {
+                configuration: 'python',
+                evidence: 'no detection evidence in api app',
+                command: "gspot remove python --scope 'api app'",
+            },
+        ]);
+        expect(missing.text).toContain('selected, not detected');
+        expect(missing.text).toContain("gspot remove python --scope 'api app'");
+        expect(await readTree(sandbox.path)).toStrictEqual(before);
+        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
+        await writeFile(join(sandbox.path, 'entry.sh'), 'echo ready\n');
+        await writeFile(join(sandbox.path, 'api app/service.py'), 'print("ready")\n');
+        const restored = await doctorCommand(sandbox.path);
+        expect((restored.json as DoctorReport).suggestions.undetected).toStrictEqual([]);
     },
 );

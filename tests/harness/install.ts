@@ -60,7 +60,7 @@ async function removeConfigurations(
     }
 }
 
-const npmProjects = new Map<string, Promise<SharedToolProject>>();
+const npmProjects = new Map<string, Promise<Required<SharedToolProject>>>();
 const valeProjects = new Map<string, Promise<string>>();
 
 // The runner owns these files until every native test and child command has finished.
@@ -92,9 +92,16 @@ async function prepareNpmProject(root: string, inputs: GeneratedFile[]): Promise
                     }),
                 ]);
             installTree(log, 'npm', readInstalledTree(files.realPath(NODE_MODULES_DIRECTORY), 'npm'));
-            return { directory, lockfile };
+            return {
+                lockfile,
+                install(log) {
+                    installTree(log, 'npm', readInstalledTree(join(directory, '.gspot/node_modules'), 'npm'));
+                },
+            };
         })();
         npmProjects.set(directory, prepared);
+        const { lockfile } = await prepared;
+        return { lockfile };
     }
     return prepared;
 }
@@ -234,11 +241,11 @@ export async function shareToolProjects(root: string): Promise<Record<string, st
             kind: 'lock',
             read: pythonLockfile,
         });
-    if (npm !== undefined)
+    if (npm === undefined) writeGeneratedFiles(session, generated, log);
+    else {
         generated.files.push({ ...npm.lockfile, ...compact({ read: log.files.read(npm.lockfile.path) }) });
-    writeGeneratedFiles(session, generated, log);
-    if (npm !== undefined) {
-        installTree(log, 'npm', readInstalledTree(join(npm.directory, '.gspot/node_modules'), 'npm'));
+        writeGeneratedFiles(session, generated, log);
+        npm.install?.(log);
         environment['PATH'] = [join(root, NODE_MODULES_DIRECTORY, '.bin'), environment['PATH']].join(delimiter);
     }
     if (generated.files.some(({ path }) => path === VALE_CONFIG) && session.policyFiles.policy.level === 'all') {
