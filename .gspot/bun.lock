@@ -193,7 +193,7 @@
 
     "@gar/promise-retry": ["@gar/promise-retry@1.0.3", "", {}, "sha512-GmzA9ckNokPypTg10pgpeHNQe7ph+iIKKmhKu3Ob9ANkswreCx7R3cKmY781K8QK3AqVL3xVh9A42JvIAbkkSA=="],
 
-    "@gspothq/eslint-plugin": ["@gspothq/eslint-plugin@0.1.0", "", { "dependencies": { "@typescript-eslint/utils": "^8.70.0", "picomatch": "^4.0.7" }, "peerDependencies": { "eslint": ">=9.38.0", "typescript": ">=4.8.4 <6.1.0" } }, "sha512-nUdzB9OsK7Uy68lioASNJoYSpDVgHaqI1crPcjA9hK0uDlwW2VpSit8qwmHcGwLo0aMMg8eJjNrsEo9Sq+Yh9g=="],
+    "@gspothq/eslint-plugin": ["@gspothq/eslint-plugin@0.1.0", "", { "dependencies": { "@typescript-eslint/utils": "^8.70.0", "picomatch": "^4.0.7" }, "peerDependencies": { "eslint": ">=9.38.0", "typescript": ">=4.8.4 <6.1.0" } }, "sha512-Q4QAp4KlnSuog97gupsDCY52VJhkcU6npEf5+Np6z7Exa3xZFZAhyKMf+Ic/zNzJkIiEbyqZi8VC/gxGjnNO5A=="],
 
     "@html-validate/stylish": ["@html-validate/stylish@6.1.0", "", {}, "sha512-ceNvF6/5hgvw/OrxXtdl2KurRVLN/Q/OkD/qminRRY/IIERmVaqJOpDF1nhRZMrOG/vyKKW0+Nxw6lSoHUP4Ow=="],
 
