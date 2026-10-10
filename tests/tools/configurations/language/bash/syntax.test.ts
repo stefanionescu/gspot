@@ -4,12 +4,13 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { spawnGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { SYNTAX_CASES } from '#tests/config/tools/configurations/language/bash/syntax.ts';
 
@@ -56,3 +57,20 @@ test.each(isPosix ? SYNTAX_CASES : SYNTAX_CASES.slice(0, 1))(
         }
     },
 );
+
+test.skipIf(!isPosix)('Bash findings retain newline and colon directory names without Git', async () => {
+    await using sandbox = await testdir();
+    const paths = ['source\nfiles/greet.sh', 'source:files/greet.sh'];
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['bash']),
+        ...Object.fromEntries(paths.map((path) => [path, 'if then\n'])),
+    });
+    const options = buildRunOptions({ only: ['bash/bash-syntax'] });
+    const broken = await executeRun(await openSession(sandbox.path), options);
+    expect(broken.report.exitCode).toBe(1);
+    expect(
+        [...new Set(broken.report.checks[0]!.findings.map((finding) => finding.file))].toSorted((left, right) =>
+            left.localeCompare(right),
+        ),
+    ).toStrictEqual(paths);
+});
