@@ -1,6 +1,6 @@
 # Kits: Frameworks, Libraries, Platforms, Tools, and Postgres
 
-6 unresolved review records remain.
+4 unresolved review records remain.
 
 ## Open findings
 
@@ -210,3 +210,12 @@ Original records and quotations remain above. These records are complete at `0fe
 | ID                                 | Status   | Evidence                                                                      |
 | ---------------------------------- | -------- | ----------------------------------------------------------------------------- |
 | `slices/kits-frameworks-tools/021` | complete | Evidence ba35fe2cfd49b694. Commit `0fe6956397b8e7e100921a435f48c5370238474d`. |
+
+## Implementation checkpoint e985362fc of October 10, 2026 for areas/kits/141
+
+Original records and quotations remain above. These records are complete at `e985362fce1b30e03745f935e867f017fbdbbec2`.
+
+| ID                                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/kits-frameworks-tools/022` | complete | Committed e985362fce1b30e03745f935e867f017fbdbbec2 binding/current-owner hash/native bridge: /tmp/gspot-unresolved69-e985-review/domain21-corrected-amendment.json SHA256 2897d3827536315db5a0b503eb9c9196a197032ecb2ac76e82598a88145c707b, record slices/kits-frameworks-tools/022. Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({"production":1263,"tests":7269,"whole":8532}). Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred. Commit `e985362fce1b30e03745f935e867f017fbdbbec2`. |
+| `slices/kits-frameworks-tools/037` | complete | Committed e985362fce1b30e03745f935e867f017fbdbbec2 binding/current-owner hash/native bridge: /tmp/gspot-unresolved69-e985-review/domain21-corrected-amendment.json SHA256 2897d3827536315db5a0b503eb9c9196a197032ecb2ac76e82598a88145c707b, record slices/kits-frameworks-tools/037. Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({"production":1263,"tests":7269,"whole":8532}). Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred. Commit `e985362fce1b30e03745f935e867f017fbdbbec2`. |
