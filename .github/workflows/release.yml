@@ -68,8 +68,8 @@ jobs:
                       mise run build:plugin
             - name: Build the CLI package
               run: mise run build:cli
-            # First publish each package manually with a short-lived granular token. Configure this workflow and
-            # the repository and workflow file as trusted publishers on npm before using OIDC for later releases.
+            # Run setup and build:cli, then publish the plugin and CLI manually with a short-lived granular token.
+            # Register this repository and workflow file as npm trusted publishers before later OIDC releases.
             - name: Publish the packages to npm
               run: |
                   set -euo pipefail

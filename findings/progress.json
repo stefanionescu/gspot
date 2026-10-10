@@ -5182,6 +5182,16 @@
                     "commit": null,
                     "evidence": "/tmp/gspot-native-followup-919-gspot-ci-failure.log",
                     "verification": ["Evidence da98cf921d06012f."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-release-lock-938-review/after-build/freeze.json",
+                    "verification": ["Evidence 6557cc85b749dc9a."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-release-first-publication-comment-938/freeze.json",
+                    "verification": ["Evidence 2736e50ae53899de."]
                 }
             ]
         },
@@ -7924,6 +7934,21 @@
                     "commit": null,
                     "evidence": "/tmp/gspot-ci02dd-windows-cache-final/freeze.json",
                     "verification": ["Evidence 5ce1debc3872599a."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-inspect-shell-builtin-final-freeze.json",
+                    "verification": ["Evidence 09b5a467c1e83bd4."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-suite-separation-525a-more-bash-final/nested/freeze.json",
+                    "verification": ["Evidence 88960307024dd51e."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-suite-separation-525a-native/full-cli-bundled-npm-receipt.json",
+                    "verification": ["Evidence fbcaae08b9d4802c."]
                 }
             ]
         },
@@ -8293,6 +8318,11 @@
                     "commit": null,
                     "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
                     "verification": ["Evidence bc246939c7a2c3ac."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-pf-missing-native-three-capsules-final.json",
+                    "verification": ["Evidence 7776038a9638a8fb."]
                 }
             ]
         },
@@ -8424,6 +8454,11 @@
                     "commit": null,
                     "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
                     "verification": ["Evidence bc246939c7a2c3ac."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-pf-missing-native-three-capsules-final.json",
+                    "verification": ["Evidence aa5f89525426c785."]
                 }
             ]
         },
@@ -8839,6 +8874,21 @@
                     "commit": null,
                     "evidence": "/tmp/gspot-ci02dd-windows-cache-final/freeze.json",
                     "verification": ["Evidence 5ce1debc3872599a."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-inspect-shell-builtin-final-freeze.json",
+                    "verification": ["Evidence 09b5a467c1e83bd4."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-suite-separation-525a-more-bash-final/nested/freeze.json",
+                    "verification": ["Evidence 88960307024dd51e."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-suite-separation-525a-native/full-cli-bundled-npm-receipt.json",
+                    "verification": ["Evidence fbcaae08b9d4802c."]
                 }
             ]
         },

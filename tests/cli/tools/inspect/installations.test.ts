@@ -56,7 +56,7 @@ const linkedManifest = async () => {
     await using sandbox = await testdir();
     await using outside = await testdir();
     await createFileTree(sandbox.path, {
-        '.gspot/node_modules/teller/run.sh': '#!/bin/sh\ntouch executed\necho 5.0.1\n',
+        '.gspot/node_modules/teller/run.sh': '#!/bin/sh\n>executed\necho 5.0.1\n',
     });
     await createFileTree(outside.path, { 'package.json': '{"name":"teller","version":"5.0.1"}' });
     const manifest = join(sandbox.path, '.gspot/node_modules/teller/package.json');
