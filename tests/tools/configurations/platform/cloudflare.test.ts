@@ -36,7 +36,7 @@ beforeAll(async () => {
         );
         if (installed.code !== 0) throw new Error(installed.stdout + installed.stderr);
         using log = openOwnership(root);
-        installTree(log, 'npm', readInstalledTree(join(root, 'node_modules'), 'npm'));
+        await installTree(log, 'npm', readInstalledTree(join(root, 'node_modules'), 'npm'));
         return {};
     });
 });

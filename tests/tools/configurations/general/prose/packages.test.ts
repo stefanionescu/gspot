@@ -22,8 +22,8 @@ async function installPackages(root: string): Promise<string | undefined> {
         search: session,
         owner: {
             read: (path) => log.files.read(path),
-            installTree: (kind, output) => {
-                installTree(log, kind, readInstalledTree(output, kind));
+            installTree: async (kind, output) => {
+                await installTree(log, kind, readInstalledTree(output, kind));
             },
         },
         level: session.policyFiles.policy.level,
@@ -41,7 +41,7 @@ async function expectPublishedRules(root: string): Promise<void> {
     });
     {
         using log = openOwnership(clone.path);
-        installTree(log, 'vale', readInstalledTree(join(clone.path, 'staged'), 'vale'));
+        await installTree(log, 'vale', readInstalledTree(join(clone.path, 'staged'), 'vale'));
     }
     expect(await installPackages(clone.path)).toBeUndefined();
     expect(await readFile(join(clone.path, INSTALLED))).toStrictEqual(await readFile(join(root, INSTALLED)));

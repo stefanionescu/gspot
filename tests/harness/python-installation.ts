@@ -84,7 +84,7 @@ export async function installSuitePythonTools(root: string, cancelSignal: AbortS
             {
                 read: log.files.read.bind(log.files),
                 installTree: (kind, directory) => {
-                    installTree(log, kind, readInstalledTree(directory, kind));
+                    return installTree(log, kind, readInstalledTree(directory, kind));
                 },
             },
             { root, executable, cancelSignal },
@@ -121,7 +121,7 @@ export async function sharePythonTools(root: string): Promise<Record<string, str
         ...compact({ read: original }),
     });
     writeGeneratedFiles(session, generated, log);
-    installTree(
+    await installTree(
         log,
         'python',
         readInstalledTree(join(dirname(archives), SUITE_PYTHON_FOLDER, PYTHON_ENVIRONMENT_DIRECTORY), 'python'),

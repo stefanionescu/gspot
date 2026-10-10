@@ -6,8 +6,8 @@ import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { toPosix, decodeUtf8 } from '#cli/platform/contracts.ts';
 import { ROOT_SEARCH_DEPTH } from '#cli/config/platform/runtime.ts';
 import { globPaths, sameEntry } from '#cli/platform/root/contracts.ts';
-import { claimPath, writeLink, replaceEntry } from '#cli/platform/root/writes.ts';
 import type { Root, Bounds, FileCopy, PathFormat } from '#cli/types/platform/root.ts';
+import { claimPath, writeLink, replaceEntry, replaceEntries } from '#cli/platform/root/writes.ts';
 import { RUNTIME_WASM, GRAMMAR_PACKAGES, SWIFT_GRAMMAR_FILE } from '#cli/config/platform/assets.ts';
 
 import {
@@ -209,6 +209,7 @@ export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Roo
         write: (path, value, expected) => {
             replaceEntry(bounds, path, value, expected);
         },
+        writeAll: (entries) => replaceEntries(bounds, entries),
         link: (path, value) => {
             writeLink(preparedPath(bounds, path), value.bytes, value.mode);
         },

@@ -1,14 +1,24 @@
 // Replacing files atomically inside one root, and the claim that keeps one lifecycle writer at a time.
 import { randomUUID } from 'node:crypto';
-import { join, dirname } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
+import { join, dirname, relative } from 'node:path';
+import { toPosix } from '#cli/platform/contracts.ts';
 import { sameEntry } from '#cli/platform/root/contracts.ts';
-import type { Bounds, Staging, FileCopy } from '#cli/types/platform/root.ts';
 import { PRIVATE_FILE, OWNER_WRITE_BIT } from '#cli/config/platform/modes.ts';
-import { readEntry, preparedPath, validateRead } from '#cli/platform/root/reads.ts';
-import { CLAIM_POLL_MS, CLAIM_WAIT_BYTES, CLAIM_INITIALIZATION_MS } from '#cli/config/platform/root.ts';
+import type { Bounds, Staging, FileCopy, StagedFile } from '#cli/types/platform/root.ts';
+import { readEntry, checkedPath, preparedPath, validateRead } from '#cli/platform/root/reads.ts';
 
 import {
+    CLAIM_POLL_MS,
+    FILE_WRITE_BATCH,
+    CLAIM_WAIT_BYTES,
+    CLAIM_INITIALIZATION_MS,
+} from '#cli/config/platform/root.ts';
+import {
+    fsync,
     openSync,
+    fstatSync,
+    lstatSync,
     closeSync,
     fsyncSync,
     mkdirSync,
@@ -24,11 +34,23 @@ import {
 
 // Writes the bytes and mode of a regular file to the staging path, which must not exist yet.
 // A staging file that cannot be completed is removed before the error leaves.
-function stageFile(temporary: string, value: FileCopy): void {
+function prepareFile(temporary: string, value: FileCopy): number {
     const file = openSync(temporary, 'wx', PRIVATE_FILE);
     try {
         writeFileSync(file, value.bytes);
         fchmodSync(file, value.mode);
+        return file;
+    } catch (error) {
+        closeSync(file);
+        unlinkSync(temporary);
+        throw error;
+    }
+}
+
+// A synchronous replacement must finish its flush before the caller continues.
+function flushFile(temporary: string, value: FileCopy): void {
+    const file = prepareFile(temporary, value);
+    try {
         fsyncSync(file);
     } catch (error) {
         closeSync(file);
@@ -36,6 +58,45 @@ function stageFile(temporary: string, value: FileCopy): void {
         throw error;
     }
     closeSync(file);
+}
+
+// A batch keeps each descriptor open while its flush runs, then checks the staged identity and destination again.
+async function stageFile(bounds: Bounds, { path, value }: StagedFile): Promise<void> {
+    validateRead(bounds, path, value);
+    const target = preparedPath(bounds, path);
+    const temporary = join(dirname(target), `.gspot-${randomUUID()}.tmp`);
+    const temporaryPath = toPosix(relative(bounds.canonical, temporary));
+    const file = prepareFile(temporary, value);
+    try {
+        const held = fstatSync(file);
+        await new Promise<void>((finish, reject) => {
+            fsync(file, (error) => {
+                if (error === null) finish();
+                else reject(error);
+            });
+        });
+        const staged = lstatSync(checkedPath(bounds, temporaryPath));
+        if (
+            !staged.isFile() ||
+            staged.nlink !== 1 ||
+            !isDeepStrictEqual(
+                [staged.dev, staged.ino, staged.size, staged.mtimeMs, staged.ctimeMs],
+                [held.dev, held.ino, held.size, held.mtimeMs, held.ctimeMs],
+            )
+        )
+            throw new Error(`Lifecycle destination changed during the operation: ${path}`);
+    } catch (error) {
+        closeSync(file);
+        unlinkSync(checkedPath(bounds, temporaryPath));
+        throw error;
+    }
+    closeSync(file);
+    try {
+        commitStaged({ bounds, path, target, temporary }, undefined);
+    } catch (error) {
+        unlinkSync(checkedPath(bounds, temporaryPath));
+        throw error;
+    }
 }
 
 // Windows cannot rename over a read-only file, so it goes first. The owner's recovery treats an absent target of an
@@ -74,7 +135,7 @@ function restoreRemoved(bounds: Bounds, path: string, expected: FileCopy, error:
 
 // Stages the copy beside its destination: a file, or a link when link is set.
 function stage(staging: Staging, value: FileCopy, link: string | undefined): void {
-    if (link === undefined) stageFile(staging.temporary, value);
+    if (link === undefined) flushFile(staging.temporary, value);
     else writeLink(staging.temporary, link, value.mode);
 }
 
@@ -189,6 +250,22 @@ export function replaceEntry(bounds: Bounds, path: string, value: FileCopy, expe
         staged = false;
     } finally {
         if (staged) unlinkSync(staging.temporary);
+    }
+}
+
+/**
+ * Writes independent new regular files in bounded groups, draining every flush before a failure leaves.
+ * @param bounds the root
+ * @param entries the root-relative paths and copies to write
+ * @returns after every file is flushed, closed, and committed
+ */
+export async function replaceEntries(bounds: Bounds, entries: StagedFile[]): Promise<void> {
+    for (let offset = 0; offset < entries.length; offset += FILE_WRITE_BATCH) {
+        const settled = await Promise.allSettled(
+            entries.slice(offset, offset + FILE_WRITE_BATCH).map((entry) => stageFile(bounds, entry)),
+        );
+        const failed = settled.find((result) => result.status === 'rejected');
+        if (failed !== undefined) throw failed.reason;
     }
 }
 

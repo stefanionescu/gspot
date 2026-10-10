@@ -32,8 +32,8 @@ beforeAll(async () => {
             search: session,
             owner: {
                 read: (path) => ownership.files.read(path),
-                installTree: (kind, output) => {
-                    installTree(ownership, kind, readInstalledTree(output, kind));
+                installTree: async (kind, output) => {
+                    await installTree(ownership, kind, readInstalledTree(output, kind));
                 },
             },
             level: 'all',

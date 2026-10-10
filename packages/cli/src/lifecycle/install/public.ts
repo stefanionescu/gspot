@@ -299,6 +299,6 @@ export async function installTools(
         };
     }
     applyPlans(log, context.plans);
-    for (const [kind, outputs] of context.trees) installTree(log, kind, outputs);
+    for (const [kind, outputs] of context.trees) await installTree(log, kind, outputs);
     return { note: summaries.join('; '), exitCode: 0 };
 }

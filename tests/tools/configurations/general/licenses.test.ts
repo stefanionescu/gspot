@@ -66,7 +66,7 @@ test('native license scanning accepts allowed alternatives and rejects a disallo
     }
     {
         using log = openOwnership(root);
-        installTree(log, 'npm', installation);
+        await installTree(log, 'npm', installation);
     }
     const baseline = await spawnGspot(root, LICENSE_CHECK, environment);
     expect(baseline.code, baseline.stdout + baseline.stderr).toBe(0);
@@ -149,7 +149,7 @@ test('native installed font metadata justifies its root exception in a descendan
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     {
         using log = openOwnership(sandbox.path);
-        installTree(log, 'npm', installation);
+        await installTree(log, 'npm', installation);
     }
     using state = new DisposableStack();
     state.use(

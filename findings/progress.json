@@ -1365,7 +1365,8 @@
             "evidence": [
                 "Explicit user answer: Allow this exact verified fix.",
                 "Canonical patch SHA256 f70fff584018a09164edc01de16481443c3249f71479a4623b602d1c1e8e5e92."
-            ]
+            ],
+            "adoption": "Condition satisfied: native Windows cache4 pass0fail53assertions. Exact21-owner patch adopted with no private workflows, probes or preload. Evidence edf25cfd4cc76db8; full current platform acceptance remains required."
         }
     ],
     "implementationBatches": {
@@ -5717,7 +5718,9 @@
                 "Evidence d728d481890d63ae.",
                 "Evidence 63e27aa341ff4096.",
                 "Evidence bede5f45fad13d76.",
-                "Evidence dfe9d62b7b54af24."
+                "Evidence dfe9d62b7b54af24.",
+                "Evidence edf25cfd4cc76db8.",
+                "Evidence 3847ef677c23b274."
             ],
             "remaining": [
                 "Complete the remaining full verification and actual CI acceptance. Fresh macOS package/docs passes do not prove Linux/Windows consumer or complete tools behavior.",
@@ -5836,7 +5839,9 @@
                 "Evidence 379c7378e553183c.",
                 "Evidence 568f0eac6ecdbcec.",
                 "Evidence c0359a81a8a5ee45.",
-                "Evidence 4949e5a3e1ebcaa5."
+                "Evidence 4949e5a3e1ebcaa5.",
+                "Evidence edf25cfd4cc76db8.",
+                "Evidence 3847ef677c23b274."
             ],
             "additionalChanges": [
                 {
@@ -8430,10 +8435,12 @@
                 "Evidence 379c7378e553183c.",
                 "Evidence 568f0eac6ecdbcec.",
                 "Evidence c0359a81a8a5ee45.",
-                "Evidence d728d481890d63ae."
+                "Evidence d728d481890d63ae.",
+                "Evidence edf25cfd4cc76db8.",
+                "Evidence 3847ef677c23b274."
             ],
             "remaining": [
-                "Complete supported-platform native npm-manager, temporary settings, credential and recovery acceptance. Prescribed fixture transports and tool-free CLI/plugin comparison are implemented; do not infer missing tool outcomes from that comparison."
+                "Complete accepted installation-runtime platform suite acceptance. The owner-approved Windows cache4 now pass; preserve the source-qualified manager, settings, credential, recovery and explicit POSIX-exclusion evidence."
             ],
             "additionalChanges": [
                 {
@@ -8470,6 +8477,11 @@
                     "commit": null,
                     "evidence": "/tmp/gspot-git-fixture-isolation-final-freeze.json",
                     "verification": ["Evidence 402b13666fd088d5."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-windows-async-publication-observation/final21-windows-four-receipts-capsule.json",
+                    "verification": ["Evidence edf25cfd4cc76db8."]
                 }
             ]
         },
@@ -9641,7 +9653,9 @@
                 "Evidence 3433672d7cb9d70a.",
                 "Evidence 379c7378e553183c.",
                 "Evidence 568f0eac6ecdbcec.",
-                "Evidence c0359a81a8a5ee45."
+                "Evidence c0359a81a8a5ee45.",
+                "Evidence edf25cfd4cc76db8.",
+                "Evidence 3847ef677c23b274."
             ],
             "remaining": [
                 "Complete current-pin platform tools acceptance; the frozen Darwin full run passed with three explicit container skips, which do not prove skipped behavior.",

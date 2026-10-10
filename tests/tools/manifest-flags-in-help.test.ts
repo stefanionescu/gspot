@@ -127,8 +127,8 @@ beforeAll(async () => {
             pythonToolProject,
             {
                 read: log.files.read.bind(log.files),
-                installTree: (kind, directory) => {
-                    installTree(log, kind, readInstalledTree(directory, kind));
+                installTree: async (kind, directory) => {
+                    await installTree(log, kind, readInstalledTree(directory, kind));
                 },
             },
             { root: sandbox.path, executable: 'uv' },
@@ -140,8 +140,8 @@ beforeAll(async () => {
             packageToolProject,
             {
                 read: log.files.read.bind(log.files),
-                installTree: (kind, directory) => {
-                    installTree(log, kind, readInstalledTree(directory, kind));
+                installTree: async (kind, directory) => {
+                    await installTree(log, kind, readInstalledTree(directory, kind));
                 },
             },
             { root: sandbox.path, tools: supported.map(({ tool }) => tool) },

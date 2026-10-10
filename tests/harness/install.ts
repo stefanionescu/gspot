@@ -107,14 +107,14 @@ async function prepareValeProject(session: ToolSession): Promise<string> {
             await mkdir(directory, { recursive: true });
             using log = openOwnership(directory);
             if (hasValePackages(session.root, session.policyFiles.policy.level)) {
-                installTree(log, 'vale', readInstalledTree(files.realPath(VALE_PACKAGE_DIRECTORY), 'vale'));
+                await installTree(log, 'vale', readInstalledTree(files.realPath(VALE_PACKAGE_DIRECTORY), 'vale'));
                 return directory;
             }
             const problem = await installValePackages({
                 owner: {
                     read: files.read.bind(files),
                     installTree: (kind, source) => {
-                        installTree(log, kind, readInstalledTree(source, kind));
+                        return installTree(log, kind, readInstalledTree(source, kind));
                     },
                 },
                 search: session,
@@ -236,10 +236,10 @@ export async function shareToolProjects(root: string): Promise<Record<string, st
     }
     writeGeneratedFiles(session, generated, log);
     if (directory !== undefined)
-        installTree(log, 'npm', readInstalledTree(join(directory, NODE_MODULES_DIRECTORY), 'npm'));
+        await installTree(log, 'npm', readInstalledTree(join(directory, NODE_MODULES_DIRECTORY), 'npm'));
     if (generated.files.some(({ path }) => path === VALE_CONFIG) && session.policyFiles.policy.level === 'all') {
         const vale = await prepareValeProject(session);
-        installTree(log, 'vale', readInstalledTree(join(vale, VALE_PACKAGE_DIRECTORY), 'vale'));
+        await installTree(log, 'vale', readInstalledTree(join(vale, VALE_PACKAGE_DIRECTORY), 'vale'));
     }
     return environment;
 }
