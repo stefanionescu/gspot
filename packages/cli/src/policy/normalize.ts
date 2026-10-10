@@ -111,16 +111,11 @@ function normalizeArchitecture(raw: RawPolicy['architecture'], scope = ''): Poli
     const roles = defaultValue(fields.roles, raw?.roles);
     return {
         modules: modules.map((module) => compact({ ...module, may_import: module.may_import ?? [] })),
-        roles: defaultValue(
-            fields.roles,
-            Object.fromEntries(
-                Object.entries(compact(roles)).map(([role, value]) => {
-                    const paths = [value]
-                        .flat()
-                        .map((entry) => (names.has(entry) ? entry : prefixScopePath(entry, scope)));
-                    return [role, typeof value === 'string' ? paths[0] : paths];
-                }),
-            ),
+        roles: Object.fromEntries(
+            Object.entries(compact(roles)).map(([role, value]) => {
+                const paths = [value].flat().map((entry) => (names.has(entry) ? entry : prefixScopePath(entry, scope)));
+                return [role, typeof value === 'string' ? paths[0] : paths];
+            }),
         ),
     };
 }

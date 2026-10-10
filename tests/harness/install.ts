@@ -15,15 +15,13 @@ import { packageToolProject } from '#cli/tools/npm/public.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { TOOL_CACHE_FOLDER } from '#tests/config/harness/install.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { createInstallationRegistry } from '#tests/harness/registry.ts';
 import { sharePythonTools } from '#tests/harness/python-installation.ts';
 import { toolPin, toolProjectPackage } from '#cli/configurations/contracts.ts';
-import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/state/public.ts';
 import { hasValePackages, installValePackages } from '#cli/lifecycle/install/contracts.ts';
 import type { SharedToolProject, SandboxInstallation } from '#tests/types/harness/install.ts';
@@ -78,24 +76,14 @@ async function prepareNpmProject(root: string, inputs: GeneratedFile[]): Promise
     if (prepared === undefined) {
         prepared = (async () => {
             await installToolProjects(root);
-            await mkdir(directory, { recursive: true });
             using files = openRoot(root);
-            using log = openOwnership(directory);
             const path = packageToolProject.lockfilePath(packageToolProject.parse(inputs[0]!.content));
             const lockfile: GeneratedFile = { path, content: files.read(path)!.bytes.toString('utf8'), kind: 'lock' };
-            for (const file of [...inputs, lockfile])
-                applyPlans(log, [
-                    planReplacement(log, {
-                        path: file.path,
-                        next: { bytes: Buffer.from(file.content), mode: OWNER_WRITABLE_FILE },
-                        kind: file.kind === 'lock' ? 'lock' : 'tool_file',
-                    }),
-                ]);
-            installTree(log, 'npm', readInstalledTree(files.realPath(NODE_MODULES_DIRECTORY), 'npm'));
+            const entries = readInstalledTree(files.realPath(NODE_MODULES_DIRECTORY), 'npm');
             return {
                 lockfile,
                 install(log) {
-                    installTree(log, 'npm', readInstalledTree(join(directory, '.gspot/node_modules'), 'npm'));
+                    installTree(log, 'npm', entries);
                 },
             };
         })();

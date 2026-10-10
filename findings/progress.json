@@ -1,5 +1,5 @@
 {
-    "openRecords": 173,
+    "openRecords": 172,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 173,
+        "openRecords": 172,
         "records": 1092,
         "batches": [
             {
@@ -1096,8 +1096,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 232,
-                "unresolvedAssignments": 59
+                "completedAssignments": 233,
+                "unresolvedAssignments": 58
             },
             {
                 "id": "python",
@@ -1956,8 +1956,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 400,
-                "unresolvedAssignments": 69
+                "completedAssignments": 401,
+                "unresolvedAssignments": 68
             },
             {
                 "id": "scripts-repository",
@@ -5177,6 +5177,11 @@
                     "commit": null,
                     "evidence": "/tmp/gspot-docs-brace-54dd-candidate/freeze.json",
                     "verification": ["Evidence cc00ed82797e52ef."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-native-followup-919-gspot-ci-failure.log",
+                    "verification": ["Evidence da98cf921d06012f."]
                 }
             ]
         },
@@ -7908,6 +7913,18 @@
             "remaining": [
                 "CLI fixtures still invoke executable installations and start installation registries; complete prescribed test moves so CLI/plugin need neither.",
                 "CI must verify shared temporary npm-manager settings and credential behavior on supported platforms."
+            ],
+            "additionalChanges": [
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-suite-separation-525a-final/bash-mechanical/freeze.json",
+                    "verification": ["Evidence e2ed4fbcf0ee57c8."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-ci02dd-windows-cache-final/freeze.json",
+                    "verification": ["Evidence 5ce1debc3872599a."]
+                }
             ]
         },
         "review/owner-decisions/006": {
@@ -8230,6 +8247,11 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8243,6 +8265,11 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8256,6 +8283,16 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-pf-writer-one-use-final-freeze.json",
+                    "verification": ["Evidence aba4abc7646fe2ea."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8269,6 +8306,16 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-pf-writer-one-use-final-freeze.json",
+                    "verification": ["Evidence aba4abc7646fe2ea."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8300,6 +8347,11 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8318,6 +8370,11 @@
                     "evidence": "/tmp/gspot-spelling-fixture-format-final-freeze.json",
                     "commit": null,
                     "verification": ["Evidence 237559206f4880d0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8344,6 +8401,11 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8357,6 +8419,11 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8370,6 +8437,11 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8383,6 +8455,11 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8396,6 +8473,11 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8427,6 +8509,16 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-pf018-normalize-reduction-final-freeze.json",
+                    "verification": ["Evidence b6fce5d9329dbde2."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8597,6 +8689,11 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8653,6 +8750,11 @@
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-policy-format14-binding-readiness.json",
+                    "verification": ["Evidence bc246939c7a2c3ac."]
                 }
             ]
         },
@@ -8727,6 +8829,16 @@
                     "evidence": "/tmp/gspot-ci-suite-main-intake/freeze.json",
                     "commit": null,
                     "verification": ["Evidence 93ad5543c33e771e."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-suite-separation-525a-final/bash-mechanical/freeze.json",
+                    "verification": ["Evidence e2ed4fbcf0ee57c8."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-ci02dd-windows-cache-final/freeze.json",
+                    "verification": ["Evidence 5ce1debc3872599a."]
                 }
             ]
         },
@@ -13585,11 +13697,11 @@
             ]
         },
         "slices/tests-integration-commands/044": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "938f1406936bfebae6e6bf891e28003ddd2a7fbf",
             "verification": [
-                "Applied current final-table override: init scope db, select all level, run sql/trivial-functions --json, assert passed scope db and fileCount1. Included in main58pass focused packet; commit/staged gate pending."
+                "The final-table fix is fully present: scoped ignore replacement at init, all level, sql/trivial-functions --json, and exact passed db scope with fileCount1. Native current pinned runner passes21tests143assertions, including this actual callback at691.94ms. Original310a538 and current callback/owner hashes, mandatory caller relationship to the completed SQL check deletion and native receipts are preserved in /tmp/gspot-scope044-final-readiness.json. The coherent original SQL parser/check/caller replacement removes4097whole bytes and3383production bytes; no unrelated offset or new size exception used. Independent binding review found no remaining obligation. Current public command adapter retains original assertions and resource cleanup. No cross-platform or publication claim."
             ]
         },
         "slices/tests-integration-commands/045": {
@@ -19664,6 +19776,17 @@
             ],
             "limitations": [
                 "Main001 remains partial; native macOS evidence is qualified and no aggregate tools/platform green is inferred. Shared schema/test contracts and their unresolved adoption remain separately accounted for."
+            ]
+        },
+        {
+            "commit": "938f1406936bfebae6e6bf891e28003ddd2a7fbf",
+            "completedRecords": ["slices/tests-integration-commands/044"],
+            "unresolvedRecords": 172,
+            "validation": [
+                "Current native CLI owner21pass/0fail/143assert; actual scoped callback691.94ms. Original/current hashes and SQL same-contract byte cost audited. Prior pushed staged/push gates70/0 and29/0 remain valid for unchanged source."
+            ],
+            "limitations": [
+                "main/001 external publication/setup and final release verification remain partial; no platform success inferred from local replay."
             ]
         }
     ],

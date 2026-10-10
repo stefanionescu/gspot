@@ -24,11 +24,10 @@ import {
 } from '#cli/config/policy/file.ts';
 
 function sortTable(table: TomlTable): TomlTable {
-    const keys = Object.keys(table);
     const order = [
         ...POLICY_ROOT_KEYS,
         ...POLICY_SECTIONS,
-        ...keys
+        ...Object.keys(table)
             .filter((key) => ![...POLICY_ROOT_KEYS, ...POLICY_SECTIONS, ...POLICY_TAIL].includes(key))
             .toSorted((left, right) => left.localeCompare(right)),
         ...POLICY_TAIL,
