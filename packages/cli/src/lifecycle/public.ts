@@ -58,7 +58,7 @@ function moveClaudeFile(log: Log, report: ApplyReport): void {
  */
 function writeGenerated(log: Log, request: WriteRequest): void {
     const { generated, report, retained, reviewedOriginals, conflictedOutputs } = request;
-    const configurations = generated.toolFiles.map((output) => {
+    const toolFiles = generated.toolFiles.map((output) => {
         const plan = planMerge(log, output.path, output.changes, true);
         return reviewedOriginals?.has(output.path) === true
             ? { ...plan, before: reviewedOriginals.get(output.path) }
@@ -83,7 +83,7 @@ function writeGenerated(log: Log, request: WriteRequest): void {
         return authorized.has(file.path) ? { ...plan, before: authorized.get(file.path) } : plan;
     });
     const blocks = generated.blocks.map((block) => planBlock(log, block.path, block.block, block.style));
-    const generatedPlans = [...replacements, ...blocks, ...configurations];
+    const generatedPlans = [...replacements, ...blocks, ...toolFiles];
     // `CLAUDE.md` is no output: it moves into `AGENTS.md` after the batch instead of getting its old text back.
     const expected = new Set([...generatedPaths(generated), 'CLAUDE.md']);
     // Pruning restores only recorded files no selected owner needs.
@@ -105,7 +105,7 @@ function writeGenerated(log: Log, request: WriteRequest): void {
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
     report.updated.push(
-        ...[...blocks, ...configurations].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
+        ...[...blocks, ...toolFiles].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
     );
     report.removed.push(...pruning.filter((plan) => plan.status !== 'preserved').map(({ path }) => path));
     if (report.removed.some((path) => path.startsWith(`${HOOKS_DIRECTORY}/`)))

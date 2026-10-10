@@ -59,8 +59,8 @@ function existingFileArguments(root: string, part: string): string[] | undefined
     return statSync(path, { throwIfNoEntry: false }) === undefined ? [] : [groups['flag'] ?? '', toPlatform(path)];
 }
 
-function allConfigurations(session: CommandSource, planned: CommandCheck): ToolFileDeclaration[] {
-    // A check's own targets come first because configurationPath selects the first matching target.
+function allToolFiles(session: CommandSource, planned: CommandCheck): ToolFileDeclaration[] {
+    // A check's own targets come first because toolFilePath selects the first matching target.
     const own = planned.manifest?.toolFiles ?? [];
     const every = session.manifests
         .values()
@@ -69,8 +69,8 @@ function allConfigurations(session: CommandSource, planned: CommandCheck): ToolF
     return [...own, ...every];
 }
 
-function configurationPath(session: CommandSource, planned: CommandCheck, name: string): string {
-    const target = allConfigurations(session, planned).find(
+function toolFilePath(session: CommandSource, planned: CommandCheck, name: string): string {
+    const target = allToolFiles(session, planned).find(
         (config) => !config.fragment && toolFileName(config.target) === name,
     );
     if (!target)
@@ -98,13 +98,13 @@ function plainPart(
 }
 
 // The nested tool files a check reads: its scope's own, its pointers, and those between an input and its scope.
-function nestedConfigurations(session: CommandSource, planned: CommandCheck): string[] {
+function nestedToolFiles(session: CommandSource, planned: CommandCheck): string[] {
     const nested = planned.check.nested_config_file;
     if (nested === undefined) return [];
     const scope = planned.scope.scope.path;
     const paths = [
         posix.join(scope, nested),
-        ...allConfigurations(session, planned)
+        ...allToolFiles(session, planned)
             .filter((config) => !config.fragment && config.pointer?.path === nested)
             .map((config) => targetInScope(scope, config)),
     ];
@@ -131,7 +131,7 @@ function nestedConfigurations(session: CommandSource, planned: CommandCheck): st
  * @param command the command to read, the check's own by default
  * @returns the tool file paths, relative to the root
  */
-export function commandConfigurations(
+export function commandToolFiles(
     session: CommandSource,
     planned: CommandCheck,
     command = planned.check.command ?? [],
@@ -140,12 +140,12 @@ export function commandConfigurations(
     const scope = planned.scope.scope.path;
     return [
         ...new Set([
-            ...nestedConfigurations(session, planned),
+            ...nestedToolFiles(session, planned),
             ...parts.flatMap((part) => {
                 const configured = [...part.matchAll(TOOL_FILE_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
-                    .map((name) => configurationPath(session, planned, name));
+                    .map((name) => toolFilePath(session, planned, name));
                 const pointed = [...part.matchAll(POINTER_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
@@ -172,7 +172,7 @@ export function isolatedFiles(session: CommandSource, planned: CommandCheck, com
     return [
         ...new Set([
             ...planned.files.map(({ path }) => path),
-            ...commandConfigurations(session, planned, command),
+            ...commandToolFiles(session, planned, command),
             ...owned,
         ]),
     ];
@@ -204,7 +204,7 @@ export function substituteValue(
                 : '';
         })
         .replaceAll(TOOL_FILE_PLACEHOLDER, (_match, name: string) =>
-            toPlatform(join(session.root, configurationPath(session, planned, name))),
+            toPlatform(join(session.root, toolFilePath(session, planned, name))),
         )
         .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) => toPlatform(posix.join(substitutions.scope, name)))
         .replaceAll('{scope}', () => (substitutions.scope === '' ? '.' : substitutions.scope))

@@ -5,7 +5,7 @@ import type { linkinatorReportSchema } from '#cli/parsers/schema/site.ts';
 export type SiteBuild = {
     cwd: string;
     command: string[];
-    output: string;
+    folder: string;
     isBuilt: boolean;
     outputTail: string;
 };

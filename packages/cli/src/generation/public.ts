@@ -41,7 +41,7 @@ import {
 } from '#cli/config/platform/locations.ts';
 
 // CI includes the selected manual checks and adds macOS when a scope selects Swift.
-function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: string, generated: Generated): void {
+function emitWorkflow(policy: Policy, scopes: ScopeSelection[], version: string, generated: Generated): void {
     if (policy.ci === undefined) return;
     const hasSwift = isConfigurationSelected(scopes, 'swift');
     generated.files.push(
@@ -196,7 +196,7 @@ export function emitAll(session: Session): Generated {
         ...pythonProject(manifests),
     );
     if (policy.runner === 'mise') generated.files.push(miseFile(manifests, version));
-    workflowOutput(policy, scopes, version, generated);
+    emitWorkflow(policy, scopes, version, generated);
     const selected = everyManifest(scopes);
     const rules = selectRuleFiles(policy.agent_rules, selected, repository, policy.level, session.packageManifests);
     generated.files.push(

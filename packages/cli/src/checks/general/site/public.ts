@@ -38,12 +38,12 @@ function pageOf(url: string): [string, ...string[]] {
  */
 export async function linkinator(input: CheckInput, isExternal: boolean): Promise<Finding[]> {
     const build = await requireBuild(input);
-    const pages = new Set(filesUnder(build.output));
+    const pages = new Set(filesUnder(build.folder));
     const sitemap = SITEMAP_FILES.find((path) => pages.has(path));
     const location =
         sitemap === undefined
             ? undefined
-            : readSource(build.output, sitemap)
+            : readSource(build.folder, sitemap)
                   .toString('utf8')
                   .matchAll(SITEMAP_LOCATION)
                   .map((match) => match.groups?.['url'])
@@ -53,7 +53,7 @@ export async function linkinator(input: CheckInput, isExternal: boolean): Promis
         input,
         { tool: 'linkinator', entry: LINKINATOR_PROGRAM },
         {
-            cwd: build.output,
+            cwd: build.folder,
             stdin: JSON.stringify({
                 paths,
                 origin: location === undefined ? undefined : new URL(location).origin,
@@ -75,7 +75,7 @@ export async function linkinator(input: CheckInput, isExternal: boolean): Promis
             const page = candidates.find((path) => pages.has(path)) ?? candidates[0];
             return findingAt(
                 input,
-                { file: repositoryPath(input, build, join(build.output, page)), line: 1 },
+                { file: repositoryPath(input, build, join(build.folder, page)), line: 1 },
                 'broken-link',
                 link.status === HTTP_OK_STATUS && link.url.includes('#')
                     ? `${link.url} has no matching fragment.`
@@ -91,9 +91,9 @@ export async function linkinator(input: CheckInput, isExternal: boolean): Promis
  */
 export async function htmlValidate(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
-    const pages = filesUnder(build.output)
+    const pages = filesUnder(build.folder)
         .filter((path) => path.endsWith('.html'))
-        .map((path) => join(build.output, path));
+        .map((path) => join(build.folder, path));
     if (pages.length === 0) return [];
     const configuration = input.manifests
         .values()
@@ -141,7 +141,7 @@ export async function htmlValidate(input: CheckInput): Promise<Finding[]> {
  */
 export async function purgecss(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
-    const sheets = filesUnder(build.output).filter((path) => path.endsWith('.css'));
+    const sheets = filesUnder(build.folder).filter((path) => path.endsWith('.css'));
     if (sheets.length === 0) return [];
     const configuration = input.manifests
         .values()
@@ -152,7 +152,7 @@ export async function purgecss(input: CheckInput): Promise<Finding[]> {
     const result = await runCheckTool(
         input,
         { tool: 'purgecss', entry: PURGECSS_PROGRAM },
-        { cwd: build.output, stdin: JSON.stringify({ configuration: config, css: sheets }) },
+        { cwd: build.folder, stdin: JSON.stringify({ configuration: config, css: sheets }) },
     );
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
     const report = purgecssReportSchema.parse(JSON.parse(result.stdout));
@@ -165,7 +165,7 @@ export async function purgecss(input: CheckInput): Promise<Finding[]> {
                     file: repositoryPath(
                         input,
                         build,
-                        isAbsolute(sheet.file) ? sheet.file : join(build.output, sheet.file),
+                        isAbsolute(sheet.file) ? sheet.file : join(build.folder, sheet.file),
                     ),
                     line: 1,
                 },
@@ -184,12 +184,12 @@ export async function purgecss(input: CheckInput): Promise<Finding[]> {
 export async function siteSize(input: CheckInput): Promise<Finding[]> {
     const limits = input.view.options('site').max_kilobytes;
     const build = await requireBuild(input);
-    const files = filesUnder(build.output);
+    const files = filesUnder(build.folder);
     return limits.flatMap((limit) => {
         const isCounted = pathMatcher(limit.paths);
         const bytes = files
             .filter((entry) => isCounted(entry))
-            .reduce((sum, path) => sum + gzipSync(readSource(build.output, path)).length, 0);
+            .reduce((sum, path) => sum + gzipSync(readSource(build.folder, path)).length, 0);
         const weight = Math.ceil(bytes / BYTES_PER_KB);
         return weight <= limit.kb
             ? []
@@ -211,9 +211,9 @@ export async function siteSize(input: CheckInput): Promise<Finding[]> {
  */
 export async function sitemap(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
-    const files = new Set(filesUnder(build.output));
+    const files = new Set(filesUnder(build.folder));
     if (!files.has('sitemap.xml')) return [];
-    const urls = readSource(build.output, 'sitemap.xml')
+    const urls = readSource(build.folder, 'sitemap.xml')
         .toString('utf8')
         .matchAll(SITEMAP_LOCATION)
         .map((match) => match.groups?.['url'])
@@ -226,7 +226,7 @@ export async function sitemap(input: CheckInput): Promise<Finding[]> {
         .map((url) =>
             findingAt(
                 input,
-                { file: repositoryPath(input, build, join(build.output, 'sitemap.xml')), line: 1 },
+                { file: repositoryPath(input, build, join(build.folder, 'sitemap.xml')), line: 1 },
                 'missing-page',
                 `The sitemap lists ${url}, and the build wrote no such page.`,
             ),
@@ -236,7 +236,7 @@ export async function sitemap(input: CheckInput): Promise<Finding[]> {
         .map((path) =>
             findingAt(
                 input,
-                { file: repositoryPath(input, build, join(build.output, path)), line: 1 },
+                { file: repositoryPath(input, build, join(build.folder, path)), line: 1 },
                 'unlisted-page',
                 'The build wrote this page, and the sitemap does not list it.',
             ),

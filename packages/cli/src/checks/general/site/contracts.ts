@@ -24,14 +24,14 @@ const BUILD_MEMO = { create: () => new Map<string, Promise<SiteBuild>>() };
 
 async function runBuild(input: CheckInput, scratch: string): Promise<SiteBuild> {
     const site = input.view.options('site');
-    const outputPath = site['build_folder'];
+    const folderPath = site['build_folder'];
     const cwd = join(scratch, input.scope);
     const command = site['build_command'];
     const result = await runCheckTool(input, command, { cwd });
-    const output = join(scratch, outputPath);
-    const built = result.code === 0 ? lstatSync(output, { throwIfNoEntry: false }) : undefined;
+    const folder = join(scratch, folderPath);
+    const built = result.code === 0 ? lstatSync(folder, { throwIfNoEntry: false }) : undefined;
     if (built?.isSymbolicLink() === true)
-        throw new Error(`Unsafe lifecycle destination: ${toPosix(relative(scratch, output))}`);
+        throw new Error(`Unsafe lifecycle destination: ${toPosix(relative(scratch, folder))}`);
     const isBuilt = built?.isDirectory() === true;
     const outputTail = [result.stderr, result.stdout]
         .join('\n')
@@ -39,10 +39,10 @@ async function runBuild(input: CheckInput, scratch: string): Promise<SiteBuild> 
         .split('\n')
         .slice(-OUTPUT_TAIL_LINES)
         .join(' | ');
-    return { cwd, command, output, isBuilt, outputTail };
+    return { cwd, command, folder, isBuilt, outputTail };
 }
 
-function outputDigests(folder: string): Map<string, string> {
+function buildDigests(folder: string): Map<string, string> {
     return new Map(filesUnder(folder).map((path) => [path, contentDigest(readFileSync(join(folder, path)))]));
 }
 
@@ -100,10 +100,10 @@ export function filesUnder(folder: string): string[] {
  */
 export function repositoryPath(
     input: Pick<CheckInput, 'view'>,
-    build: Pick<SiteBuild, 'output'>,
+    build: Pick<SiteBuild, 'folder'>,
     absolute: string,
 ): string {
-    const path = toPosix(relative(build.output, absolute));
+    const path = toPosix(relative(build.folder, absolute));
     portableSegments(path);
     return `${input.view.options('site')['build_folder']}/${path}`;
 }
@@ -167,16 +167,16 @@ export async function siteBuild(input: CheckInput): Promise<Finding[]> {
 export async function buildReproducible(input: CheckInput): Promise<Finding[]> {
     using folder = await copyIntoScratch(input);
     using files = openRoot(folder.path, 'native');
-    const output = input.view.options('site').build_folder;
-    files.removeTree(output);
+    const target = input.view.options('site').build_folder;
+    files.removeTree(target);
     const first = await runBuild(input, folder.path);
     if (!first.isBuilt) throw new GspotError('skip', 'The site did not build.');
-    const before = outputDigests(first.output);
-    files.removeTree(output);
+    const before = buildDigests(first.folder);
+    files.removeTree(target);
     const second = await runBuild(input, folder.path);
     if (!second.isBuilt)
         throw new Error(`The second site build failed: ${JSON.stringify(second.command)}: ${second.outputTail}`);
-    const after = outputDigests(second.output);
+    const after = buildDigests(second.folder);
     const differences = [...new Set([...before.keys(), ...after.keys()])].filter(
         (path) => before.get(path) !== after.get(path),
     );
@@ -185,7 +185,7 @@ export async function buildReproducible(input: CheckInput): Promise<Finding[]> {
         .map((path) =>
             findingAt(
                 input,
-                { file: repositoryPath(input, first, join(first.output, path)), line: 1 },
+                { file: repositoryPath(input, first, join(first.folder, path)), line: 1 },
                 'not-reproducible',
                 'Two builds of the same tree wrote this file differently. Look for a timestamp, a random value, or an unordered list.',
             ),

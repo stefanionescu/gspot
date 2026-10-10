@@ -56,10 +56,10 @@ describe('site build reproducibility', () => {
             resources: resources,
         });
         const first = await cachedBuild(request);
-        const before = await readFile(join(first.output, 'index.html'), 'utf8');
+        const before = await readFile(join(first.folder, 'index.html'), 'utf8');
         expect(first.isBuilt).toBe(true);
         expect(await BUILT_IN_CHECKS['site/build-reproducible'].input(request)).toStrictEqual([]);
-        expect(await readFile(join(first.output, 'index.html'), 'utf8')).toBe(before);
+        expect(await readFile(join(first.folder, 'index.html'), 'utf8')).toBe(before);
         expect(await readFile(join(sandbox.path, 'dist/index.html'), 'utf8')).toBe('edited output');
         // Windows keeps no POSIX mode bits, so the file stays at its default there.
         const output = await stat(join(sandbox.path, 'dist/index.html'));
@@ -117,7 +117,7 @@ writeFileSync('built-once', 'yes');`,
     expect(await rejection(BUILT_IN_CHECKS['site/build-reproducible'].input(request))).toContain(
         'The second site build failed',
     );
-    expect(await readFile(join(first.output, 'index.html'), 'utf8')).toBe('first');
+    expect(await readFile(join(first.folder, 'index.html'), 'utf8')).toBe('first');
     expect(await pathExists(join(sandbox.path, 'dist'))).toBe(false);
 });
 
@@ -225,7 +225,7 @@ test('scoped site builds reuse only declared workspace sources for both native b
     const input = buildCheckInput(session, 'site/build', { scope: 'web', resources });
     const built = await cachedBuild(input);
     expect(built.isBuilt, built.outputTail).toBe(true);
-    expect(await readFile(join(built.output, 'index.html'), 'utf8')).toBe('<h1>Workspace site</h1>');
+    expect(await readFile(join(built.folder, 'index.html'), 'utf8')).toBe('<h1>Workspace site</h1>');
     expect(await pathExists(join(built.cwd, '../packages/unused/private.txt'))).toBe(false);
     expect(await BUILT_IN_CHECKS['site/build-reproducible'].input(input)).toStrictEqual([]);
     expect(await pathExists(join(sandbox.path, 'web/dist'))).toBe(false);

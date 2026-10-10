@@ -52,11 +52,11 @@ function linkTarget(entry: string): string | undefined {
 function installedFile(
     directory: string,
     realPath: string,
-    outputPath: string,
+    filePath: string,
     source: string,
     kind: InstallationKind,
 ): FileCopy {
-    if (realPath === outputPath) {
+    if (realPath === filePath) {
         const entry = join(directory, realPath);
         const link = linkTarget(entry);
         if (link !== undefined)
@@ -67,7 +67,7 @@ function installedFile(
         const stat = fstatSync(descriptor);
         if (kind === 'vale' && (!stat.isFile() || stat.nlink !== 1))
             throw new Error(
-                `Lifecycle destination is not a private regular file: ${INSTALLATION_DIRECTORIES[kind]}/${outputPath}`,
+                `Lifecycle destination is not a private regular file: ${INSTALLATION_DIRECTORIES[kind]}/${filePath}`,
             );
         if (!stat.isFile()) throw new Error(`Unsupported installed entry: ${realPath}`);
         return { bytes: readFileSync(descriptor), mode: kind === 'vale' ? READ_ONLY_FILE : stat.mode & MODE_BITS };
@@ -95,9 +95,9 @@ export function recoverInstallations(log: Log): void {
  * Writes a finished installation beside its folder and swaps it in. A folder gspot did not install is refused.
  * @param log the open log
  * @param kind the installation
- * @param outputs every file of the installation, at its path under the installation folder
+ * @param entries every file of the installation, at its path under the installation folder
  */
-export function installTree(log: Log, kind: InstallationKind, outputs: InstalledFile[]): void {
+export function installTree(log: Log, kind: InstallationKind, entries: InstalledFile[]): void {
     const { files, state } = log;
     const { folder, staging, previous } = sideFolders(kind);
     // An install still in progress made the folder: a crash after its swap and before its record leaves it there.
@@ -108,7 +108,7 @@ export function installTree(log: Log, kind: InstallationKind, outputs: Installed
     files.removeTree(staging);
     files.mkdir(staging, EXECUTABLE_FILE);
     // A link is written after the file it names, which the write checks is there.
-    const ordered = outputs.toSorted(
+    const ordered = entries.toSorted(
         (left, right) => Number(left.file.isLink === true) - Number(right.file.isLink === true),
     );
     for (const { path, file } of ordered) files.write(`${staging}${path.slice(folder.length)}`, file, undefined);
@@ -141,32 +141,32 @@ export function deleteInstallation(log: Log, kind: InstallationKind): void {
  */
 export function readInstalledTree(directory: string, kind: InstallationKind): InstalledFile[] {
     const destination = INSTALLATION_DIRECTORIES[kind];
-    const outputs: InstalledFile[] = [];
+    const entries: InstalledFile[] = [];
     const entry = lstatSync(directory, { throwIfNoEntry: false });
     if (entry?.isSymbolicLink() === true) throw new Error(`Unsafe lifecycle destination: ${basename(directory)}`);
     if (entry?.isDirectory() !== true) throw new Error(`Installed output is not a directory: ${directory}`);
     const root = realpathSync(directory);
     const cacheDirectory = kind === 'python' ? '__pycache__' : undefined;
-    const collect = (prefix: string | undefined, output: string, ancestors: string[]): void => {
+    const collect = (prefix: string | undefined, target: string, ancestors: string[]): void => {
         const canonical = join(root, prefix ?? '');
-        if (ancestors.includes(canonical)) throw new Error(`Installed directory link forms a cycle: ${output}`);
+        if (ancestors.includes(canonical)) throw new Error(`Installed directory link forms a cycle: ${target}`);
         const names = readdirSync(canonical).filter(
             (name) =>
                 name !== cacheDirectory || !lstatSync(sourcePath(root, posix.join(prefix ?? '', name))).isDirectory(),
         );
         for (const name of names.toSorted((left, right) => left.localeCompare(right))) {
             const realPath = posix.join(prefix ?? '', name);
-            const outputPath = posix.join(output, name);
-            const path = `${destination}/${outputPath}`;
+            const filePath = posix.join(target, name);
+            const path = `${destination}/${filePath}`;
             assertMutationTarget(path);
             if (kind === 'vale' && lstatSync(join(root, realPath)).isSymbolicLink())
                 throw new Error(`Unsafe lifecycle destination: ${path}`);
             const source = sourcePath(root, realPath);
             if (lstatSync(source).isDirectory()) {
-                collect(toPosix(relative(root, source)), outputPath, [...ancestors, canonical]);
-            } else outputs.push({ path, file: installedFile(directory, realPath, outputPath, source, kind) });
+                collect(toPosix(relative(root, source)), filePath, [...ancestors, canonical]);
+            } else entries.push({ path, file: installedFile(directory, realPath, filePath, source, kind) });
         }
     };
     collect(undefined, '', []);
-    return outputs;
+    return entries;
 }

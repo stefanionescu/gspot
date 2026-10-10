@@ -7,7 +7,7 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
-import { substitute, commandConfigurations } from '#cli/execution/command/arguments/public.ts';
+import { substitute, commandToolFiles } from '#cli/execution/command/arguments/public.ts';
 
 test('nested configuration inputs stop at the declared scope and reject ancestors linked outside the repository', async () => {
     await using sandbox = await testdir();
@@ -23,7 +23,7 @@ test('nested configuration inputs stop at the declared scope and reject ancestor
     const session = await openSession(sandbox.path);
     const plans = planRun(session, { stage: 'commit', skips: [], only: ['swift/swiftlint'] });
     const planned = plans.find((plan) => plan.scope.scope.path === 'app')!;
-    expect(commandConfigurations(session, planned)).toStrictEqual([
+    expect(commandToolFiles(session, planned)).toStrictEqual([
         '.gspot/config/app/swiftlint.yml',
         'app/.swiftlint.yml',
         'app/Sources/.swiftlint.yml',
@@ -31,12 +31,12 @@ test('nested configuration inputs stop at the declared scope and reject ancestor
     await using outside = await testdir();
     await createFileTree(outside.path, { '.swiftlint.yml': 'disabled_rules: []\n' });
     await symlink(join(outside.path, '.swiftlint.yml'), join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
-    expect(() => commandConfigurations(session, planned)).toThrow(
+    expect(() => commandToolFiles(session, planned)).toThrow(
         'Source link leaves the repository: app/Sources/Feature/.swiftlint.yml',
     );
     await unlink(join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
     await symlink('../.swiftlint.yml', join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
-    expect(commandConfigurations(session, planned)).toStrictEqual([
+    expect(commandToolFiles(session, planned)).toStrictEqual([
         '.gspot/config/app/swiftlint.yml',
         'app/.swiftlint.yml',
         'app/Sources/.swiftlint.yml',

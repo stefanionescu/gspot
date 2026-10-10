@@ -31,14 +31,14 @@ function recordOutcome(entry: ToolFile, replaced: Replaced): void {
  * @param root the repository root.
  * @param tooling the tool files init found.
  * @param tools the tools consumed by applicable checks at the selected level.
- * @param configurations the applicable shared fields generated for the selection.
+ * @param toolFiles the applicable shared fields generated for the selection.
  * @returns the reads, the deletions, the unreadable files, and the shared files that stay.
  */
 export function planTakeover(
     root: string,
     tooling: Tooling,
     tools: Set<string>,
-    configurations: EmittedToolFile[],
+    toolFiles: EmittedToolFile[],
 ): Replaced {
     const replaced: Replaced = { read: new Map(), removed: [], unread: [], retained: [], changed: [] };
     const owned = tooling.toolFiles.filter(({ tool }) => tools.has(tool));
@@ -48,7 +48,7 @@ export function planTakeover(
         replaced,
     );
     using files = openRoot(root);
-    for (const output of configurations) {
+    for (const output of toolFiles) {
         replaced.read.set(output.path, files.read(output.path));
         replaced.changed.push({
             path: output.path,
@@ -58,7 +58,7 @@ export function planTakeover(
     for (const entry of owned) {
         if (
             entry.shared &&
-            configurations.some(
+            toolFiles.some(
                 (output) => output.path === entry.path && output.changes.some((field) => field.path[0] === entry.key),
             )
         )

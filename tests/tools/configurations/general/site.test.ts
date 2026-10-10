@@ -62,8 +62,8 @@ async function inspectSiteOutput(scenario: SiteOutputCase): Promise<void> {
         resources: resources,
     });
     const build = await cachedBuild(request);
-    if (scenario.files !== undefined) await createFileTree(build.output, scenario.files);
-    await createFileTree(build.output, {
+    if (scenario.files !== undefined) await createFileTree(build.folder, scenario.files);
+    await createFileTree(build.folder, {
         'index.html': `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${body}</body></html>`,
         'style.css': check === 'site/purgecss' ? USED_SELECTOR_CSS : '.unused { color: red; }',
     });
@@ -75,7 +75,7 @@ async function inspectSiteOutput(scenario: SiteOutputCase): Promise<void> {
     );
     if (check === 'site/html-validate') {
         await writeFile(
-            join(build.output, 'index.html'),
+            join(build.folder, 'index.html'),
             `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${body.repeat(400)}</body></html>`,
         );
         const large = await analyze(request, false);
@@ -83,9 +83,9 @@ async function inspectSiteOutput(scenario: SiteOutputCase): Promise<void> {
         expect(large.at(-1)).toMatchObject(finding);
     }
     if (scenario.files !== undefined)
-        await writeFile(join(build.output, 'orphan.html'), scenario.files['orphan.html'].replace('#missing', '#good'));
+        await writeFile(join(build.folder, 'orphan.html'), scenario.files['orphan.html'].replace('#missing', '#good'));
     await writeFile(
-        join(build.output, 'index.html'),
+        join(build.folder, 'index.html'),
         `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${check === 'site/purgecss' ? USED_SELECTOR_BODY : ''}<p class="unused">Example</p></body></html>`,
     );
     expect(await analyze(request, false)).toStrictEqual([]);

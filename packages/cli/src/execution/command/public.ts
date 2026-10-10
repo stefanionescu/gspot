@@ -30,7 +30,7 @@ import {
     isolatedFiles,
     perFileCommands,
     substituteValue,
-    commandConfigurations,
+    commandToolFiles,
 } from '#cli/execution/command/arguments/public.ts';
 import type {
     CheckTool,
@@ -109,7 +109,7 @@ function companionEnvironment(
 }
 
 // The result of a nested-configuration check whose configuration is not generated yet, or undefined.
-function missingConfiguration(
+function missingToolFile(
     session: ToolSession,
     planned: PlannedCheck,
     command: string[],
@@ -117,7 +117,7 @@ function missingConfiguration(
 ): CheckResult | undefined {
     if (planned.check.nested_config_file === undefined) return undefined;
     using files = openRoot(session.root);
-    const missing = commandConfigurations(session, planned, command).find((path) =>
+    const missing = commandToolFiles(session, planned, command).find((path) =>
         path.startsWith(`${DOT_GSPOT}/`)
             ? files.read(path) === undefined
             : readText(session.root, path, session.reads) === undefined,
@@ -248,7 +248,7 @@ export async function runCheckCommand(
     const environment = commandEnvironment(session, planned);
     const { env, cwd } = environment;
     const inspection = inspectTool({ ...session, cwd }, { ...tool, env });
-    const missing = missingConfiguration(session, planned, command, base);
+    const missing = missingToolFile(session, planned, command, base);
     if (missing !== undefined) return missing;
     const availability = toolAvailability(tool, inspection);
     if ('status' in availability) return { ...base, ...availability };
