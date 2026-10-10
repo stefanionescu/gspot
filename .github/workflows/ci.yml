@@ -1,6 +1,5 @@
 name: ci
-# Checks, documentation, and npm package tests run on Linux. CLI, plugin, and tool tests run on
-# Linux, macOS, and Windows. Tool tests split into four shards per system.
+# Run all four test suites on Linux, macOS, and Windows; shard tool tests four ways.
 on:
     push:
         branches: [main]
@@ -58,7 +57,11 @@ jobs:
             - name: Build the site
               run: mise run build:docs
     package:
-        runs-on: ubuntu-24.04
+        strategy:
+            fail-fast: false
+            matrix:
+                os: &platforms [ubuntu-24.04, macos-15, windows-2025]
+        runs-on: ${{ matrix.os }}
         timeout-minutes: 60
         steps:
             - name: Check out the repository
@@ -73,7 +76,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-24.04, macos-15, windows-2025]
+                os: *platforms
         runs-on: ${{ matrix.os }}
         timeout-minutes: 60
         steps:
@@ -93,7 +96,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-24.04, macos-15, windows-2025]
+                os: *platforms
                 shard: [1, 2, 3, 4]
         runs-on: ${{ matrix.os }}
         timeout-minutes: 60
