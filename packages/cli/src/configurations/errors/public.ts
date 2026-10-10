@@ -2,8 +2,14 @@ import { parseDocument } from '@decimalturn/toml-patch';
 import { similar, codeList } from '#cli/platform/contracts.ts';
 import { toolFileName } from '#cli/configurations/contracts.ts';
 import { isComment, isKeyValue } from '#cli/parsers/toml/contracts.ts';
-import { LEVEL_PLACEHOLDER, MANIFEST_TABLE_ORDER, TOOL_FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
 
+import {
+    ROOT_PLACEHOLDER,
+    FILES_PLACEHOLDER,
+    LEVEL_PLACEHOLDER,
+    MANIFEST_TABLE_ORDER,
+    TOOL_FILE_PLACEHOLDER,
+} from '#cli/config/configurations.ts';
 import type {
     Manifest,
     CheckRule,
@@ -28,16 +34,18 @@ const CHECK_RULES: CheckRule[] = [
     },
     {
         applies: (check) =>
-            check.path_prefix !== undefined && (check.runs !== 'files' || check.command?.includes('{files}') !== true),
+            check.path_prefix !== undefined &&
+            (check.runs !== 'files' || check.command?.includes(FILES_PLACEHOLDER) !== true),
         error: (check) =>
             `check ${check.name} prefixes file arguments and requires runs = "files" with {files} in its command.`,
     },
     {
         applies: (check) => {
             if (check.run_in_copy !== true) return false;
-            const perFile = check.runs === 'files' && check.command?.includes('{files}') === true;
+            const perFile = check.runs === 'files' && check.command?.includes(FILES_PLACEHOLDER) === true;
             const perScope =
-                check.runs === 'scope' && check.command?.some((argument) => argument.includes('{root}')) === true;
+                check.runs === 'scope' &&
+                check.command?.some((argument) => argument.includes(ROOT_PLACEHOLDER)) === true;
             return !perFile && !perScope;
         },
         error: (check) =>

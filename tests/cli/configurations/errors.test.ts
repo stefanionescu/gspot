@@ -5,7 +5,7 @@ import { assertManifests } from '#cli/configurations/errors/contracts.ts';
 
 import {
     SHARED_SETTING,
-    WAITING_SETTING,
+    WAITING_REFERENCES,
     CONSUMER_DECLARATION,
     SELECTOR_DECLARATION,
     MINIMUM_VERSION_CASES,
@@ -122,29 +122,30 @@ describe('assertManifests installation and guide declarations', () => {
         }).toThrow(diagnostic);
     });
 
-    test.each([
-        { name: 'an absent wait', wait: '', message: 'must wait for it' },
-        {
-            name: 'an undeclared wait',
-            wait: 'when = {setting = "tools.waiting.other"}\n',
-            message: 'which no configuration declares',
-        },
-        { name: 'the declared wait', wait: 'when = {setting = "tools.waiting.target"}\n', message: undefined },
-    ])('a check reading an empty setting validates $name', ({ wait, message: diagnostic }) => {
-        const manifest = parseConfigurationManifest('waiting', {
-            kind: 'infra',
-            tables: `[[check]]\nname = "run"\ncommand = ["tool", "{setting:tools.waiting.target}"]\n${wait}${CHECK_FIELDS}${WAITING_SETTING}`,
+    for (const { argument, declaration } of WAITING_REFERENCES)
+        test.each([
+            { name: 'an absent wait', wait: '', message: 'must wait for it' },
+            {
+                name: 'an undeclared wait',
+                wait: 'when = {setting = "tools.waiting.other"}\n',
+                message: 'which no configuration declares',
+            },
+            { name: 'the declared wait', wait: 'when = {setting = "tools.waiting.target"}\n', message: undefined },
+        ])(`a ${argument} check reading an empty setting validates $name`, ({ wait, message: diagnostic }) => {
+            const manifest = parseConfigurationManifest('waiting', {
+                kind: 'infra',
+                tables: `[[check]]\nname = "run"\ncommand = ["tool", "${argument}"]\n${wait}${CHECK_FIELDS}${declaration}`,
+            });
+            const manifests = new Map([['waiting', manifest]]);
+            if (diagnostic === undefined)
+                expect(() => {
+                    assertManifests(manifests);
+                }).not.toThrow();
+            else
+                expect(() => {
+                    assertManifests(manifests);
+                }).toThrow(diagnostic);
         });
-        const manifests = new Map([['waiting', manifest]]);
-        if (diagnostic === undefined)
-            expect(() => {
-                assertManifests(manifests);
-            }).not.toThrow();
-        else
-            expect(() => {
-                assertManifests(manifests);
-            }).toThrow(diagnostic);
-    });
 
     test('a conditional agent guide must exist in its configuration before selection', () => {
         const manifest = parseConfigurationManifest('example', {

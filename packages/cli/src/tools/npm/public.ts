@@ -6,6 +6,7 @@ import { openRoot } from '#cli/platform/root/public.ts';
 import { locateCandidates } from '#cli/tools/contracts.ts';
 import { NPM_REQUIRES } from '#cli/config/configurations.ts';
 import type { ToolProject } from '#cli/types/tools/project.ts';
+import type { Runner } from '#cli/types/repository/inventory.ts';
 import { GspotError, runBlocking } from '#cli/platform/public.ts';
 import { readPackageManifest } from '#cli/repository/contracts.ts';
 import { SETUP, VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
@@ -27,8 +28,8 @@ import {
     packageInstallerDeclarationSchema,
 } from '#cli/parsers/packages/contracts.ts';
 
-// The first package manager a candidate manifest declares, reading each manifest that exists on the way.
-async function detectedInstaller(root: string, candidates: string[]) {
+// Prefer repository declarations and locks over the selected runner.
+async function detectedInstaller(root: string, candidates: string[], runner: Runner = 'npm') {
     for (const path of candidates) {
         const manifest = readPackageManifest(root, path);
         const declared = manifest === undefined ? undefined : declaredPackageInstaller(manifest);
@@ -41,7 +42,7 @@ async function detectedInstaller(root: string, candidates: string[]) {
         if (detected !== undefined)
             return packageInstallerDeclarationSchema.parse({ name: detected.name, version: detected.version });
     }
-    return undefined;
+    return { name: runner === 'mise' ? 'npm' : runner, version: undefined };
 }
 
 // The manager the tool project recorded, or undefined when the file does not parse, as when a merge left its markers.
@@ -136,9 +137,14 @@ export const packageToolProject: ToolProject<PackageToolProject, PackagePreparat
  * Read the repository manager and retain the version recorded for its isolated tool project.
  * @param root the repository root
  * @param trackedPaths the source paths inventoried in the repository
+ * @param runner the fallback manager; mise and no answer use npm
  * @returns the manager name and its declared or recorded version, when present
  */
-export async function selectPackageInstaller(root: string, trackedPaths: string[]): Promise<PackageInstallerIdentity> {
+export async function selectPackageInstaller(
+    root: string,
+    trackedPaths: string[],
+    runner?: Runner,
+): Promise<PackageInstallerIdentity> {
     using files = openRoot(root);
     // The root declaration wins; without it, the first nested manifest provides a deterministic shared tool manager.
     const candidates = [
@@ -148,7 +154,7 @@ export async function selectPackageInstaller(root: string, trackedPaths: string[
             .toSorted((left, right) => left.localeCompare(right))
             .slice(0, 1),
     ];
-    const { name, version } = (await detectedInstaller(root, candidates)) ?? { name: 'npm', version: undefined };
+    const { name, version } = await detectedInstaller(root, candidates, runner);
     if (version !== undefined) {
         if (semver.valid(version) === null)
             throw new GspotError(

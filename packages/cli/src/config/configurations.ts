@@ -58,6 +58,14 @@ export const FILES_PLACEHOLDER = '{files}';
 
 export const FILE_PLACEHOLDER = '{file}';
 
+export const ROOT_PLACEHOLDER = '{root}';
+
+export const SCOPE_PLACEHOLDER = '{scope}';
+
+export const INDENT_PLACEHOLDER = '{indent}';
+
+export const MESSAGE_FILE_PLACEHOLDER = '{message_file}';
+
 export const LEVEL_PLACEHOLDER = /\{level:(?<recommended>[^{}:]+):(?<all>[^{}:]+)\}/gu;
 
 export const TARGET_PLACEHOLDER = /\{target(?:_json|_module)?\}/gu;

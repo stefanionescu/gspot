@@ -58,6 +58,7 @@ async function scopeSelections(
         (identity ??= selectPackageInstaller(
             repository.root,
             repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
+            policy.runner,
         ));
     const selections = await Promise.all(
         scopes.map(async (scope) => {

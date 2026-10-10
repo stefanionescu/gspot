@@ -16,13 +16,17 @@ import type {
 import {
     EACH_PLACEHOLDER,
     FILE_PLACEHOLDER,
+    ROOT_PLACEHOLDER,
     WORKSPACE_PREFIX,
+    SCOPE_PLACEHOLDER,
     FILES_PLACEHOLDER,
     LEVEL_PLACEHOLDER,
+    INDENT_PLACEHOLDER,
     POINTER_PLACEHOLDER,
     SETTING_PLACEHOLDER,
     EXISTING_PLACEHOLDER,
     TOOL_FILE_PLACEHOLDER,
+    MESSAGE_FILE_PLACEHOLDER,
 } from '#cli/config/configurations.ts';
 
 // Native list values are consumed by both argv splicing and existing each-flag expansion.
@@ -208,10 +212,10 @@ export function substituteValue(
             toPlatform(join(session.root, toolFilePath(session, planned, name))),
         )
         .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) => toPlatform(posix.join(substitutions.scope, name)))
-        .replaceAll('{scope}', () => (substitutions.scope === '' ? '.' : substitutions.scope))
-        .replaceAll('{root}', () => substitutions.root)
-        .replaceAll('{indent}', () => String(substitutions.indent))
-        .replaceAll('{message_file}', () => substitutions.messageFile ?? '');
+        .replaceAll(SCOPE_PLACEHOLDER, () => (substitutions.scope === '' ? '.' : substitutions.scope))
+        .replaceAll(ROOT_PLACEHOLDER, () => substitutions.root)
+        .replaceAll(INDENT_PLACEHOLDER, () => String(substitutions.indent))
+        .replaceAll(MESSAGE_FILE_PLACEHOLDER, () => substitutions.messageFile ?? '');
 }
 
 /**

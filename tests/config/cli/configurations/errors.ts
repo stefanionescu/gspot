@@ -43,3 +43,13 @@ selectors = [{ selector = "ExportAllDeclaration", message = "Import from the dec
 `;
 
 export const ROOT_SELECTOR_REFUSALS = [['imports = "eslint.imports.js.eta"', 'Unrecognized key: "imports"']] as const;
+
+/** Scalar and flag-list references must declare and wait for their empty setting. */
+export const WAITING_REFERENCES = [
+    { argument: '{setting:tools.waiting.target}', declaration: WAITING_SETTING },
+    {
+        argument: '{each:--target:tools.waiting.target}',
+        declaration:
+            '[[setting]]\nname = "tools.waiting.target"\ntype = "list"\nitems = "string"\ndefault = []\nsummary = "Where the tool looks."\n',
+    },
+];

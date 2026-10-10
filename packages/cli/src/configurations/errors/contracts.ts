@@ -3,8 +3,13 @@ import { GspotError } from '#cli/platform/public.ts';
 import { listAssets } from '#cli/platform/root/public.ts';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { allChecks, isBelowFloor } from '#cli/configurations/contracts.ts';
-import { SETTING_PLACEHOLDER, SETTING_DEFAULT_FIELDS, CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
 
+import {
+    EACH_PLACEHOLDER,
+    SETTING_PLACEHOLDER,
+    SETTING_DEFAULT_FIELDS,
+    CONFIGURATION_RULES_FOLDER,
+} from '#cli/config/configurations.ts';
 import type {
     Manifest,
     SettingMeaning,
@@ -86,12 +91,15 @@ function assertToolPin(manifest: Manifest, tool: ToolPin): void {
         ]);
 }
 
-// The settings a check's commands read through `{setting:...}` placeholders.
+// Scalar arguments and repeated flags both read a declared setting.
 function settingsRead(check: CheckDeclaration): string[] {
     const parts = [...(check.command ?? []), ...(check.fix ?? [])];
-    const names = parts.flatMap((part) =>
-        [...part.matchAll(SETTING_PLACEHOLDER)].map((match) => match.groups?.['name'] ?? ''),
-    );
+    const names = parts.flatMap((part) => {
+        const repeated = EACH_PLACEHOLDER.exec(part)?.groups?.['setting'];
+        return repeated === undefined
+            ? [...part.matchAll(SETTING_PLACEHOLDER)].map((match) => match.groups?.['name'] ?? '')
+            : [repeated];
+    });
     return [...new Set(names)];
 }
 
@@ -109,7 +117,10 @@ function assertSettingWait(
     const missing = settingsRead(check).filter((name) => {
         if (name === awaited) return false;
         const declaration = settings.get(name);
-        if (declaration === undefined) return false;
+        if (declaration === undefined)
+            throw manifestError(manifest.configuration.name, [
+                `check ${check.name} reads ${name}, which no configuration declares.`,
+            ]);
         const value = declaration.default;
         return value === undefined || value === '' || value === false || (Array.isArray(value) && value.length === 0);
     });
