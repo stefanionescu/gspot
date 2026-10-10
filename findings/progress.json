@@ -7194,12 +7194,14 @@
         "review/configurations-plugin/066": {
             "status": "partial",
             "owner": "main",
-            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "commit": "98cbc5d0e7f8aef131aa09305383fcf61e31b54b",
             "verification": [
                 "Swift URLSession override removed. Remaining Knip/docs/Python aggregate obligations require implementation and verification.",
-                "Evidence 51e7fcf07fc2e09f."
+                "Evidence 51e7fcf07fc2e09f.",
+                "Evidence 7efd12c3179ed7f6.",
+                "Evidence d782740b2170ed5f."
             ],
-            "remaining": "Functional obligations verified; resolve the remaining413-byte same-concern increase under the owner less-code contract before whole-record closure. No unrelated offset or size waiver inferred."
+            "remaining": "Functional obligations verified. Exact committed test/static lineage makes whole concern3780 bytes larger despite22-byte production reduction. Explicit owner test-size decision remains pending; separate650-byte draft is unadopted."
         },
         "review/configurations-plugin/067": {
             "status": "complete",
@@ -9130,7 +9132,9 @@
                 "Removed test pin overlay/task/CI env/cache entry and computed manifest tools in the shared runner.",
                 "Moved exact npm test pins to tests/package.json and pytest dependencies to their sandbox.",
                 "44 local native manifest pins installed/resolved, focused native tests and all package consumers passed; full tools suite started.",
-                "Evidence 0175901faf714fc9."
+                "Evidence 0175901faf714fc9.",
+                "Evidence 702f63a4844df48a.",
+                "Evidence a710a8f87755c78d."
             ],
             "remaining": [
                 "Full tools suite must pass and establish every applicable tool resolves.",
@@ -19510,6 +19514,13 @@
             "unresolvedRecords": 159,
             "validation": ["Evidence 9f6127ac35d76b67."],
             "limitations": ["Evidence 661982f4e6fce01a."]
+        },
+        {
+            "commit": "98cbc5d0e7f8aef131aa09305383fcf61e31b54b",
+            "completedRecords": [],
+            "unresolvedRecords": 159,
+            "validation": ["Evidence dd3a57071aed3b2f.", "Evidence 7efd12c3179ed7f6."],
+            "limitations": ["Evidence d782740b2170ed5f.", "Evidence 702f63a4844df48a.", "Evidence a710a8f87755c78d."]
         }
     ],
     "verificationEvidenceFile": "verification.json"
