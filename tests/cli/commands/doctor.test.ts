@@ -168,7 +168,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
     },
 );
 
-test('doctor detects installed test frameworks instead of recommending a different runner', async () => {
+test('doctor detects installed test frameworks instead of suggesting a different runner', async () => {
     await using sandbox = await testdir();
     const policy = buildPolicy(['nestjs']);
     const dependencies = { '@nestjs/core': '11.2.3', jest: '30.2.0' };
