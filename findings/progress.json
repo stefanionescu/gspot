@@ -1,5 +1,5 @@
 {
-    "openRecords": 185,
+    "openRecords": 179,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 185,
+        "openRecords": 179,
         "records": 1092,
         "batches": [
             {
@@ -1096,8 +1096,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 230,
-                "unresolvedAssignments": 61
+                "completedAssignments": 231,
+                "unresolvedAssignments": 60
             },
             {
                 "id": "python",
@@ -1956,8 +1956,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 392,
-                "unresolvedAssignments": 77
+                "completedAssignments": 398,
+                "unresolvedAssignments": 71
             },
             {
                 "id": "scripts-repository",
@@ -2241,8 +2241,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 105,
-                "unresolvedAssignments": 32
+                "completedAssignments": 107,
+                "unresolvedAssignments": 30
             },
             {
                 "id": "policy-file",
@@ -14105,23 +14105,12 @@
             "verification": ["Evidence e85836a5809d8692."]
         },
         "slices/tests-integration-lifecycle/041": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "ba91c6b14f8493bf36b7f2bfedfe1035db3e6301",
             "verification": [
-                "Removed quiet choices already supplied by buildInitOptions from moved init tests and existing replacement callers. Wider installer-failures/apply-installation callers remain outstanding.",
-                "Evidence 9b93c9e039ae6f80.",
-                "Evidence ecbf881ca887786a.",
-                "Evidence 8206f3687b468bb8.",
-                "Evidence c633e7516e283f7b.",
-                "Evidence 559831d5ce9c7f90.",
-                "Evidence 586700631eb91fcc.",
-                "Evidence 01010ec03fb34c75.",
-                "Evidence c55a66a76be8a19f."
-            ],
-            "remaining": [
-                "Remaining quiet-default callers in installer-failures and apply/installation.",
-                "Evidence dc22ce9bdfea875a."
+                "Native init 115 tests 543 assertions and spelling 10 cases 54 assertions pass; staged 29 pass 0 fail 2 skip 0 findings. Original assertions/resources preserved; reducing two-owner successor removes 242 bytes.",
+                "Evidence 5d8dcc555c684fe3."
             ]
         },
         "slices/tests-integration-lifecycle/042": {
@@ -14610,22 +14599,22 @@
             ]
         },
         "slices/tests-tools-samples/044": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "commit": "ba91c6b14f8493bf36b7f2bfedfe1035db3e6301",
             "verification": [
-                "One typos configuration is used directly, retaining emitted path and exact native findings. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
-            ],
-            "remaining": ["Evidence a4403efb371df5d5."]
+                "Native init 115 tests 543 assertions and spelling 10 cases 54 assertions pass; staged 29 pass 0 fail 2 skip 0 findings. Original assertions/resources preserved; reducing two-owner successor removes 242 bytes.",
+                "Evidence 66838fde02eeedd5."
+            ]
         },
         "slices/tests-tools-samples/046": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "commit": "ba91c6b14f8493bf36b7f2bfedfe1035db3e6301",
             "verification": [
-                "Eight pattern vectors are passed as [patterns]; native titles show full vectors, exact reported-file contracts retained. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
-            ],
-            "remaining": ["Evidence a4403efb371df5d5."]
+                "Native init 115 tests 543 assertions and spelling 10 cases 54 assertions pass; staged 29 pass 0 fail 2 skip 0 findings. Original assertions/resources preserved; reducing two-owner successor removes 242 bytes.",
+                "Wrapped exclusion pattern rows preserve every pattern in titles. Whole related044/046 spelling concern counted once, reduces82bytes after133byte successor. Native10cases54assertions and exact registration/body/data preservation pass; /tmp/gspot-spelling044046-final/freeze.json."
+            ]
         },
         "slices/tests-tools-samples/047": {
             "status": "partial",
@@ -14738,31 +14727,22 @@
             ]
         },
         "slices/tests-tools-samples/064": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
-            "verification": [
-                "Unnecessary manifest/mode restore removed before disposable sandbox teardown; authored changed-manifest preservation assertion retained. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
-            ],
-            "remaining": ["Evidence a4403efb371df5d5."]
+            "commit": "ba91c6b14f8493bf36b7f2bfedfe1035db3e6301",
+            "verification": ["Evidence 9e755b9d79b5a61f."]
         },
         "slices/tests-tools-samples/065": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
-            "verification": [
-                "404 refusal owns empty TMPDIR/TEMP/TMP scratch; external Node compile cache owns separate disposable sibling via native NODE_COMPILE_CACHE, preserving native npm cache behavior. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
-            ],
-            "remaining": ["Evidence a4403efb371df5d5."]
+            "commit": "ba91c6b14f8493bf36b7f2bfedfe1035db3e6301",
+            "verification": ["Evidence 737bab2cf80b4aca."]
         },
         "slices/tests-tools-samples/066": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
-            "verification": [
-                "Redundant called assertion removed; native download spy names its actual boundary and using restores both native spies. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
-            ],
-            "remaining": ["Evidence a4403efb371df5d5."]
+            "commit": "ba91c6b14f8493bf36b7f2bfedfe1035db3e6301",
+            "verification": ["Evidence 1168e9a623a451fa."]
         },
         "slices/tests-tools-samples/067": {
             "status": "partial",
@@ -19630,6 +19610,24 @@
                 "Normal Main producer187up-to-date; exact historical pointer hashes and current native output/applicability proof; gspot staged/commit/push gates all0."
             ],
             "limitations": ["No new full suite/platform result inferred from a generated-pointer deletion."]
+        },
+        {
+            "commit": "ba91c6b14f8493bf36b7f2bfedfe1035db3e6301",
+            "completedRecords": [
+                "slices/tests-integration-lifecycle/041",
+                "slices/tests-tools-samples/044",
+                "slices/tests-tools-samples/046",
+                "slices/tests-tools-samples/064",
+                "slices/tests-tools-samples/065",
+                "slices/tests-tools-samples/066"
+            ],
+            "unresolvedRecords": 179,
+            "validation": [
+                "Native init: 115 tests and 543 assertions. Native spelling: 10 cases and 54 assertions. Staged: 29 passed, 0 failed, 2 skipped, 0 findings. Original assertions and resources preserved; two-owner successor removes 242 bytes."
+            ],
+            "limitations": [
+                "Actual cross-platform aggregate, pending growth decisions and main/001 publication/setup remain separate."
+            ]
         }
     ],
     "verificationEvidenceFile": "verification.json"
