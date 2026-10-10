@@ -11,7 +11,7 @@ version = "6.15.0"
 npm = "@stoplight/spectral-cli"
 mise = "npm:@stoplight/spectral-cli"
 
-# Spectral and its Ajv plugins share one code generator instance in the private tool project.
+# Spectral and its Ajv plugins share one code generator instance in the tool project.
 
 [[tool]]
 name = "ajv"

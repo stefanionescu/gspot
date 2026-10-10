@@ -5701,7 +5701,13 @@
                 "Evidence aaa92c7930dd5a36.",
                 "Evidence 3433672d7cb9d70a.",
                 "Evidence 379c7378e553183c.",
-                "Evidence 568f0eac6ecdbcec."
+                "Evidence 568f0eac6ecdbcec.",
+                "Evidence c0359a81a8a5ee45.",
+                "Evidence 4949e5a3e1ebcaa5.",
+                "Evidence d728d481890d63ae.",
+                "Evidence 63e27aa341ff4096.",
+                "Evidence bede5f45fad13d76.",
+                "Evidence dfe9d62b7b54af24."
             ],
             "remaining": [
                 "Complete the remaining full verification and actual CI acceptance. Fresh macOS package/docs passes do not prove Linux/Windows consumer or complete tools behavior.",
@@ -5818,7 +5824,9 @@
                 "Approved native16-shard fallback: /tmp/gspot-ci-shards-ad94-proof/freeze.json SHA25627184724afdf43613aa8ab44e468d43533b244eab49e99b25d67541a01e4ba03. Current104toolpaths partition exactly; actual future completion and single timeout measurement remain pending.",
                 "Evidence 3433672d7cb9d70a.",
                 "Evidence 379c7378e553183c.",
-                "Evidence 568f0eac6ecdbcec."
+                "Evidence 568f0eac6ecdbcec.",
+                "Evidence c0359a81a8a5ee45.",
+                "Evidence 4949e5a3e1ebcaa5."
             ],
             "additionalChanges": [
                 {
@@ -6413,10 +6421,13 @@
                 "Evidence 7a592c7d7a65e4fd.",
                 "Evidence d0cd3edf8eb2e89f.",
                 "Actual Windows focused retry38038287504/job114173241543 passes2 previously failingNext.js cases,0fail,9assertions,628seconds. Receipt /tmp/gspot-windows-compiler-ce783-native-success-receipt.json; fullWindows aggregate remains unproven.",
-                "Evidence 3433672d7cb9d70a."
+                "Evidence 3433672d7cb9d70a.",
+                "Evidence c0359a81a8a5ee45.",
+                "Evidence d728d481890d63ae.",
+                "Evidence dfe9d62b7b54af24."
             ],
             "remaining": [
-                "Full final platform/suite verification remains; focused Windows two-case success does not establish uncaptured or deliberately skipped POSIX behavior."
+                "Complete the original Vue compiler native Windows control. Current Linux/macOS49 compiler controls and Windows31 applicable controls plus18 actual POSIX exclusions are verified; global platform/suite acceptance stays under the release records."
             ],
             "additionalChanges": [
                 {
@@ -8092,7 +8103,8 @@
             "verification": [
                 "Prescribed files, types and toolProjectPackage names moved; pins/type checks passed.",
                 "Use tool project and package manager terminology; retain final public API source ownership and `ToolProjectPackage`, `ToolProjectLockfile`, `toolProjectPackage`. Actual private registries and native sample identifiers stay.",
-                "Evidence 590e3f0839d641fa."
+                "Evidence 590e3f0839d641fa.",
+                "Evidence bede5f45fad13d76."
             ]
         },
         "review/glossary/006": {
@@ -8407,7 +8419,9 @@
                 "Final matched CLI/plugin no-acquisition comparison: Evidence 5f4e4fc303c8fc26. Current CI acceptance capsule /tmp/gspot-ad94-current-acceptance/freeze.json SHA256ed60b9c25cd052b0a4e0dddfe17ebd657580ab9fa04ab4d6f0173505cb16e51b preserves native Linux npm token-refresh and private Python passes, plus incomplete platform-manager cases.",
                 "Evidence 3433672d7cb9d70a.",
                 "Evidence 379c7378e553183c.",
-                "Evidence 568f0eac6ecdbcec."
+                "Evidence 568f0eac6ecdbcec.",
+                "Evidence c0359a81a8a5ee45.",
+                "Evidence d728d481890d63ae."
             ],
             "remaining": [
                 "Complete supported-platform native npm-manager, temporary settings, credential and recovery acceptance. Prescribed fixture transports and tool-free CLI/plugin comparison are implemented; do not infer missing tool outcomes from that comparison."
@@ -9617,7 +9631,8 @@
                 "Evidence b7088713e096ebae.",
                 "Evidence 3433672d7cb9d70a.",
                 "Evidence 379c7378e553183c.",
-                "Evidence 568f0eac6ecdbcec."
+                "Evidence 568f0eac6ecdbcec.",
+                "Evidence c0359a81a8a5ee45."
             ],
             "remaining": [
                 "Complete current-pin platform tools acceptance; the frozen Darwin full run passed with three explicit container skips, which do not prove skipped behavior.",

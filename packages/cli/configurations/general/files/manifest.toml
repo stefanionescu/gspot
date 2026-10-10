@@ -34,7 +34,7 @@ version = "6.1.0"
 mise = "npm:v8r"
 npm = "v8r"
 
-# v8r imports this optional peer when it loads ajv-draft-04. Private tool projects must install it.
+# v8r imports this optional peer when it loads ajv-draft-04. Tool projects must install it.
 
 [[tool]]
 name = "ajv"

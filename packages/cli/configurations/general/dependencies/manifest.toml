@@ -46,7 +46,7 @@ stage = "push"
 runs = "once"
 needs = ["network"]
 files = { filenames = ["bun.lock", "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "go.mod", "Cargo.lock", "Gemfile.lock", "gems.locked", "requirements.txt", "Pipfile.lock", "poetry.lock", "pdm.lock", "pylock.toml", "uv.lock", "pom.xml", "gradle.lockfile", "buildscript-gradle.lockfile", "conan.lock", "pubspec.lock", "mix.lock", "cabal.project.freeze", "stack.yaml.lock", "composer.lock", "renv.lock", "packages.config", "packages.lock.json", "*.deps.json"], paths = ["**/gradle/verification-metadata.xml", "gradle/verification-metadata.xml"], kinds = ["source", "generated"] }
-# The private tool lockfiles under .gspot stay out: a repository cannot upgrade a package that a gspot tool pins.
+# The tool project lockfiles under .gspot stay out: a repository cannot upgrade a package that a gspot tool pins.
 command = ["osv-scanner", "scan", "source", "--config", "{tool_file:osv-scanner}", "--format", "json", "--allow-no-lockfiles", "--recursive", "--experimental-exclude", ".gspot", "{root}"]
 output = { format = "json", items = "results", children = "packages.vulnerabilities", fields = { file = "source.path", rule = "id", message = "package.name package.version summary" } }
 summary = "Looks up every locked dependency in the Open Source Vulnerabilities (OSV) advisory database."
