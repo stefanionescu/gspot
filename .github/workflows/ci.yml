@@ -84,6 +84,8 @@ jobs:
                   persist-credentials: false
             - name: Prepare the repository
               uses: ./.github/actions/setup
+              with:
+                  tools: bun node
             - name: Run the CLI and plugin tests
               run: mise run test
     tools:

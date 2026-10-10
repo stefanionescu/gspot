@@ -19,6 +19,7 @@ import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { COMPONENT } from '#tests/config/cli/commands/init/selection.ts';
 import { readPolicyTable, parseStrictPolicy } from '#cli/policy/public.ts';
+import { buildBinaryPin, mockPinnedExecutables } from '#tests/harness/pins.ts';
 
 test('accepting defaults leaves the detected initialization plan unchanged', async () => {
     await using sandbox = await testdir();
@@ -256,6 +257,7 @@ test('initialization flags control integrations without changing the authored fo
 test.each(['mise', 'bun', 'npm', 'pnpm', 'yarn'] as const)(
     'an explicit %s runner is selected without a prompt or tool installation',
     async (runner) => {
+        using _pins = mockPinnedExecutables([buildBinaryPin(runner === 'mise' ? 'npm' : runner, '9.1.0')]);
         await using sandbox = await testdir();
         const original = await readTree(sandbox.path);
         const result = await runGspot(sandbox.path, [

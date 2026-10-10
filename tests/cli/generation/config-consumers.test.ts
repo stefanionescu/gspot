@@ -8,6 +8,7 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { toolPin, toolProjectPins } from '#cli/configurations/contracts.ts';
+import { buildBinaryPin, mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { configuredChecks, applicableManifests } from '#cli/planning/public.ts';
 import type { StylelintConfiguration } from '#tests/types/cli/generation/configuration-files.ts';
 
@@ -182,6 +183,9 @@ test.each(
 )(
     '$runner catalog at $level with custom schemas=$hasSchemas stays native and includes mise only for its runner',
     async ({ runner, level, hasSchemas }) => {
+        using _pins = mockPinnedExecutables([
+            buildBinaryPin(runner === undefined || runner === 'mise' ? 'npm' : runner, '9.1.0'),
+        ]);
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
