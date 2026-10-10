@@ -1,6 +1,6 @@
 # Unresolved Findings
 
-6 unresolved review records remain. 5 come from the review and owner decisions of October 6, 2026. 1 older record remains. Each record has a stable ID. Recorded [owner decisions](findings/progress.json) take precedence.
+5 unresolved review records remain. 4 come from the review and owner decisions of October 6, 2026. 1 older record remains. Each record has a stable ID. Recorded [owner decisions](findings/progress.json) take precedence.
 
 On October 6, 2026, a read-only verification checked all 802 older records against commit `3e1445a2d` and closed 203. The owner decisions of October 6 and 7, 2026 closed 15 more. A coherence check then compared every open record with the decisions and with every other record, and closed 272 duplicates, superseded records, and wrong records. [The closed list](findings/review/closed.md) gives the evidence for each. Each older findings file ends with a "Status on October 6, 2026" table that gives the current file and what remains; the original rows above it are history.
 
@@ -20,7 +20,7 @@ On October 6, 2026, a read-only verification checked all 802 older records again
 8. Carve-outs: one TEST_TIMEOUT_MS serves every suite through the runner and preload. Final platform measurement remains pending. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
 9. The [source layout review](findings/review/source-layout.md) and [test layout review](findings/review/tests-layout.md) preserve original paths and prescribed moves. The ledger records final owners and approved overrides.
 
-1086 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
+1087 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
 
 ## Review of October 6, 2026
 
@@ -37,7 +37,7 @@ Read-only reviewers read every folder of the repository. Each file below holds a
 | [Carve-outs](findings/review/carve-outs.md)                                                           |            1 |
 | [Source layout, names, and import graph](findings/review/source-layout.md)                            |            0 |
 | [Code: commands, lifecycle, policy, generation](findings/review/code-commands.md)                     |            0 |
-| [Code: execution, tools, parsers, platform, repository, checks](findings/review/code-execution.md)    |            1 |
+| [Code: execution, tools, parsers, platform, repository, checks](findings/review/code-execution.md)    |            0 |
 | [Configurations and the ESLint plugin](findings/review/configurations-plugin.md)                      |            0 |
 | [Test layout and wiring](findings/review/tests-layout.md)                                             |            0 |
 | [Tests in tests/cli](findings/review/tests-cli.md)                                                    |            0 |

@@ -1,5 +1,5 @@
 {
-    "openRecords": 6,
+    "openRecords": 5,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -1356,10 +1356,20 @@
             "scope": "tests/harness/platforms.ts cached package and executable transport",
             "decision": "Allow the exact reviewed229support-byte canonical Windows fixture copy correction. Copy native executable metadata and link each package dependency from its own canonical peerstore. Reuse the existing scoped package enumeration without changing store precedence or publication. Production bytes unchanged; no callback or policy relaxation. Retained Root held comments and variants are preserved separately and are not adopted by this exception.",
             "evidence": ["Explicit user answer: Allow the verified 229-byte fix.", "Evidence 379c7378e553183c."]
+        },
+        {
+            "id": "durable-installation-publication7855",
+            "date": "2026-10-10",
+            "scope": "Exact21-owner installation publication patch",
+            "decision": "Allow the exact reviewed7855-byte change (3491 production/config/types,4364 support/tests) only after the remaining four Windows cache tests pass. Retain durable writes, race checks and recovery. The patch remains unadopted in this checkpoint; actual positive cache evidence is required before integration.",
+            "evidence": [
+                "Explicit user answer: Allow this exact verified fix.",
+                "Canonical patch SHA256 f70fff584018a09164edc01de16481443c3249f71479a4623b602d1c1e8e5e92."
+            ]
         }
     ],
     "implementationBatches": {
-        "openRecords": 6,
+        "openRecords": 5,
         "records": 1092,
         "batches": [
             {
@@ -1371,7 +1381,7 @@
             },
             {
                 "id": "policy-execution",
-                "status": "partial",
+                "status": "complete",
                 "records": [
                     "main/017",
                     "slices/config/015",
@@ -1665,8 +1675,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 290,
-                "unresolvedAssignments": 1
+                "completedAssignments": 291,
+                "unresolvedAssignments": 0
             },
             {
                 "id": "python",
@@ -6410,7 +6420,7 @@
             "verification": ["Evidence 57d33151c58914cd.", "Evidence fe0e589ca3be09fd.", "Evidence 7f3fd9dc95852ce9."]
         },
         "review/code-execution/007": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
             "commit": "6fd79235d8b7620cfdc4ef175749c61253847f48",
             "verification": [
@@ -6424,11 +6434,10 @@
                 "Evidence 3433672d7cb9d70a.",
                 "Evidence c0359a81a8a5ee45.",
                 "Evidence d728d481890d63ae.",
-                "Evidence dfe9d62b7b54af24."
+                "Evidence dfe9d62b7b54af24.",
+                "Evidence 7c3f639179459b03."
             ],
-            "remaining": [
-                "Complete the original Vue compiler native Windows control. Current Linux/macOS49 compiler controls and Windows31 applicable controls plus18 actual POSIX exclusions are verified; global platform/suite acceptance stays under the release records."
-            ],
+            "remaining": [],
             "additionalChanges": [
                 {
                     "commit": "9f5dd012bea84a1b3ca70684306288ff17ea6f27",
