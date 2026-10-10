@@ -1,8 +1,8 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { rm, readFile } from 'node:fs/promises';
 import { planRun } from '#cli/planning/public.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { checkInput } from '#cli/execution/contracts.ts';
@@ -15,8 +15,7 @@ import { NATIVE_LOCKFILES } from '#tests/config/tools/configurations/general/dep
 test.each([...NATIVE_LOCKFILES])(
     'native $name validates $lockfileName without changing repository inputs',
     async ({ command: [client, ...commandArguments], lockfileName, manifestPath, manifest, changed, files }) => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, {
+        await using directory = await testdir({
             'gspot.toml': buildPolicy(['dependencies']),
             [manifestPath]: manifest,
             ...files,

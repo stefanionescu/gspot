@@ -49,7 +49,7 @@ test.skipIf(!hasLinuxDocker())(
             const findings = await BUILT_IN_CALCULATIONS['docker/trivy-image'](input);
             expect(findings[0]!.message).not.toContain('BEGIN RSA PRIVATE KEY');
             expect(findings).toMatchObject([
-                { file: 'compose.yaml', line: 1, rule: 'private-key', message: textContaining('private-key') },
+                { file: 'compose.yaml', line: 1, rule: 'secret', message: textContaining('private-key') },
             ]);
             await Bun.write(join(sandbox.path, '.gspot/config/trivy.yml'), 'severity: [');
             expect(await rejection(BUILT_IN_CALCULATIONS['docker/trivy-image'](input))).toContain(

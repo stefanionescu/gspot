@@ -1,8 +1,8 @@
 import which from 'which';
+import { testdir } from 'testdirs';
 import { join, basename } from 'node:path';
 import * as tools from '#cli/tools/public.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
@@ -19,8 +19,7 @@ test.each([
 ])(
     'frozen installation reports $failure as inability, preserves the repository, and retries successfully',
     async ({ failure, note }) => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, {
+        await using directory = await testdir({
             'gspot.toml': buildPolicy(['dependencies']),
             'package.json': '{"name":"example","private":true}\n',
             'bun.lock': 'original lockfile\n',
@@ -33,7 +32,7 @@ test.each([
             only: ['dependencies/stale-lockfile'],
         });
         const copies: string[] = [];
-        const spawn = spyOn(processes, 'run').mockImplementation(async (_command, options) => {
+        using spawn = spyOn(processes, 'run').mockImplementation(async (_command, options) => {
             copies.push(options.cwd);
             await writeFile(join(options.cwd, 'bun.lock'), 'partial installation\n');
             await mkdir(join(options.cwd, 'node_modules'), { recursive: true });
@@ -48,35 +47,30 @@ test.each([
                 isCanceled: failure === 'cancellation',
             };
         });
-        try {
-            const outcome = await executeRun(session, options);
-            const result = outcome.report.checks[0]!;
-            expect(result.status).toBe(failure === 'missing' ? 'missing' : 'error');
-            expect(result.note).toContain(note);
-            expect(result.findings).toStrictEqual([]);
-            expect(await readFile(join(directory.path, 'bun.lock'), 'utf8')).toBe('original lockfile\n');
-            expect(await readFile(join(directory.path, 'node_modules/protected.txt'), 'utf8')).toBe(
-                'installed dependency\n',
-            );
-            expect(await Promise.all(copies.map((path) => pathExists(path)))).toStrictEqual(copies.map(() => false));
-            spawn.mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
-            const retry = await executeRun(session, options);
-            const fresh = retry.report.checks[0]!;
-            expect(fresh.status).toBe('passed');
-        } finally {
-            spawn.mockRestore();
-        }
+        const outcome = await executeRun(session, options);
+        const result = outcome.report.checks[0]!;
+        expect(result.status).toBe(failure === 'missing' ? 'missing' : 'error');
+        expect(result.note).toContain(note);
+        expect(result.findings).toStrictEqual([]);
+        expect(await readFile(join(directory.path, 'bun.lock'), 'utf8')).toBe('original lockfile\n');
+        expect(await readFile(join(directory.path, 'node_modules/protected.txt'), 'utf8')).toBe(
+            'installed dependency\n',
+        );
+        expect(await Promise.all(copies.map((path) => pathExists(path)))).toStrictEqual(copies.map(() => false));
+        spawn.mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
+        const retry = await executeRun(session, options);
+        const fresh = retry.report.checks[0]!;
+        expect(fresh.status).toBe('passed');
     },
 );
 
 test('Yarn Berry validates metadata locks with install --immutable and preserves repository inputs', async () => {
-    await using directory = await testdir();
     const files = {
         'gspot.toml': buildPolicy(['dependencies']),
         'package.json': '{"name":"example","private":true}\n',
         'yarn.lock': '__metadata:\n  version: 8\n',
     };
-    await createFileTree(directory.path, files);
+    await using directory = await testdir(files);
     using _inspection = spyOn(tools, 'inspectTool').mockReturnValue({ name: 'yarn', state: 'ok', path: 'yarn' });
     using yarn = spyOn(processes, 'run').mockResolvedValue({
         code: 0,
