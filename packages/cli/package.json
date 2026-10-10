@@ -89,7 +89,6 @@
         "@types/npmcli__config": "6.0.4",
         "@types/picomatch": "4.0.2",
         "@types/semver": "7.7.1",
-        "@types/which": "3.0.4",
         "tree-sitter-bash": "0.25.1",
         "tree-sitter-css": "0.25.0",
         "tree-sitter-html": "0.23.2",

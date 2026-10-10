@@ -208,7 +208,9 @@
                 "**/Tests/**",
                 "**/*Tests.swift"
             ],
-            "ignoreDependencies": ["^.+$"]
+            "ignoreDependencies": [
+                "^(?:@darraghor/eslint-plugin-nestjs-typed|@next/eslint-plugin-next|@react-native/eslint-plugin|@typescript-eslint/utils|@vitest/eslint-plugin|bats|eslint-plugin-drizzle|eslint-plugin-expo|eslint-plugin-i18next|eslint-plugin-jest|eslint-plugin-react|eslint-plugin-react-hooks|eslint-plugin-react-native|eslint-plugin-react-refresh|eslint-plugin-svelte|eslint-plugin-testing-library|eslint-plugin-vue|eslint-plugin-vuejs-accessibility|pnpm|std-env|supabase|svelte-eslint-parser|vue-eslint-parser|yarn)$"
+            ]
         }
     }
 }

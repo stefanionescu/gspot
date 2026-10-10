@@ -273,8 +273,8 @@ entry = ["packages/cli/src/checks/general/site/linkinator.ts", "packages/cli/src
 "^@fontsource-variable/" = "The site imports the fonts from docs/src/theme.css, outside the TypeScript import graph."
 "^tree-sitter-" = "The build copies the grammar WASM files from these packages by path; nothing imports them."
 
-[tools.knip.ignore_dependencies."^.+$"]
-reason = "Every package the tests workspace lists is installed into a sandbox, which knip cannot see."
+[tools.knip.ignore_dependencies."^(?:@darraghor/eslint-plugin-nestjs-typed|@next/eslint-plugin-next|@react-native/eslint-plugin|@typescript-eslint/utils|@vitest/eslint-plugin|bats|eslint-plugin-drizzle|eslint-plugin-expo|eslint-plugin-i18next|eslint-plugin-jest|eslint-plugin-react|eslint-plugin-react-hooks|eslint-plugin-react-native|eslint-plugin-react-refresh|eslint-plugin-svelte|eslint-plugin-testing-library|eslint-plugin-vue|eslint-plugin-vuejs-accessibility|pnpm|std-env|supabase|svelte-eslint-parser|vue-eslint-parser|yarn)$"]
+reason = "Native sandbox commands load these packages from the linked tests installation."
 workspace = "tests"
 
 [tools.knip.ignore_dependencies.satteri]
