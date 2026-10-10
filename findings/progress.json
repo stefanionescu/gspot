@@ -1,5 +1,5 @@
 {
-    "openRecords": 169,
+    "openRecords": 166,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 169,
+        "openRecords": 166,
         "records": 1092,
         "batches": [
             {
@@ -1096,8 +1096,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 235,
-                "unresolvedAssignments": 56
+                "completedAssignments": 237,
+                "unresolvedAssignments": 54
             },
             {
                 "id": "python",
@@ -1250,8 +1250,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 62,
-                "unresolvedAssignments": 37
+                "completedAssignments": 63,
+                "unresolvedAssignments": 36
             },
             {
                 "id": "swift-bash-sql",
@@ -1340,8 +1340,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 60,
-                "unresolvedAssignments": 22
+                "completedAssignments": 62,
+                "unresolvedAssignments": 20
             },
             {
                 "id": "frameworks-platforms",
@@ -1479,8 +1479,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 94,
-                "unresolvedAssignments": 37
+                "completedAssignments": 95,
+                "unresolvedAssignments": 36
             },
             {
                 "id": "test-quality",
@@ -1956,8 +1956,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 404,
-                "unresolvedAssignments": 65
+                "completedAssignments": 407,
+                "unresolvedAssignments": 62
             },
             {
                 "id": "scripts-repository",
@@ -2241,8 +2241,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 110,
-                "unresolvedAssignments": 27
+                "completedAssignments": 111,
+                "unresolvedAssignments": 26
             },
             {
                 "id": "policy-file",
@@ -10169,13 +10169,10 @@
             ]
         },
         "review/tests-cli/056": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
-            "verification": [
-                "Five exact callbacks plus matching literal inputs moved into requirements/reconcile owners. Removed repeated unscoped license skip/tool-presence assertions already covered by automatic selection."
-            ],
-            "remaining": "Manual matrix retains distinct undefined/empty/Python initialization choices, yes/default equality, explicit child JavaScript, recommended\u2192all\u2192recommended scoped Semgrep/jscpd outcomes, CodeQL absence and MIT scanner activation. Existing automatic-selection tests do not cover these scoped/init controls; complete repeat deletion not claimed."
+            "commit": "e2972c91c3760bc25974a69180ac4d3869c658d5",
+            "verification": ["Evidence c0857116ba09d1f9."]
         },
         "review/tests-cli/057": {
             "status": "complete",
@@ -13280,13 +13277,10 @@
             "verification": []
         },
         "slices/tests-integration-checks/013": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "c0dafc5ea0d3618b16a65dd7338bb933db43c359",
-            "verification": [
-                "Evidence e071d5036af2be81.",
-                "Committed exact SQL and Swift ineffective read-spy assertion leaves at c0dafc5ea; five deletions remove 519 bytes/95 AST nodes. Main focused native replay passes 22 tests and 102 assertions. Full remaining cross-language sites are not claimed complete."
-            ],
+            "commit": "f639028897bcd771012e19b7197cd7f6113ebc31",
+            "verification": ["Evidence 2cb5bbcddaf75b2a."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-naming-test-partial-freeze.json",
@@ -13298,9 +13292,6 @@
                     "evidence": "/tmp/gspot-checks013-combined-final/freeze.json",
                     "verification": ["Evidence 431049ffd3b1a55f."]
                 }
-            ],
-            "remaining": [
-                "Finish and verify every other original/current final-table read-spy obligation before whole-record closure."
             ]
         },
         "slices/tests-integration-checks/015": {
@@ -13351,10 +13342,10 @@
             ]
         },
         "slices/tests-integration-checks/018": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f639028897bcd771012e19b7197cd7f6113ebc31",
+            "verification": ["Evidence 46f166b6dc7a6f46."]
         },
         "slices/tests-integration-checks/019": {
             "status": "complete",
@@ -19485,6 +19476,17 @@
             "limitations": [
                 "Other tool shards, full latest combined verification and main/001 external steps remain unresolved."
             ]
+        },
+        {
+            "commit": "e2972c91c3760bc25974a69180ac4d3869c658d5",
+            "completedRecords": [
+                "slices/tests-integration-checks/013",
+                "slices/tests-integration-checks/018",
+                "review/tests-cli/056"
+            ],
+            "unresolvedRecords": 166,
+            "validation": ["Evidence 089fdf6d16532d96."],
+            "limitations": ["Evidence f691888512e8dee8."]
         }
     ],
     "verificationEvidenceFile": "verification.json"

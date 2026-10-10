@@ -1,6 +1,6 @@
 # Tests: Check Integration Tests
 
-9 unresolved review records remain.
+7 unresolved review records remain.
 
 ## Open findings
 
@@ -200,3 +200,12 @@ Original records and quotations remain above. These records are complete at `d4b
 | `slices/tests-integration-checks/015` | complete | Exact original five-record shared isolation contract removes894 bytes/254 AST nodes across8 owners, counted once. Current ten owners match successful native executed blobs, including actual macOS Xcode source/error/project preservation. Bridge /tmp/gspot-swift-isolation-five-d4b9-closure-bridge.json SHA256 c73dbd9d5bd7d3cc877ae9bfb9bdefd819ea2b2b0b2183c5eb761ca6ba48b943. Broader platform aggregates and kits/064 remain excluded. Actual platform run spy disposes lexically; pre-aborted compiler and analyzer retain exact canceled messages/state bytes and assert no run call. Commit `d4b9f0ea3c00499118b3dbc8ee07f74af7ef4022`.                                                                                                                                                                                                                                                                                                                            |
 | `slices/tests-integration-checks/016` | complete | Exact original five-record shared isolation contract removes894 bytes/254 AST nodes across8 owners, counted once. Current ten owners match successful native executed blobs, including actual macOS Xcode source/error/project preservation. Bridge /tmp/gspot-swift-isolation-five-d4b9-closure-bridge.json SHA256 c73dbd9d5bd7d3cc877ae9bfb9bdefd819ea2b2b0b2183c5eb761ca6ba48b943. Broader platform aggregates and kits/064 remain excluded. Distinct source cwd observations remain; actual buildPlan folders differ; both native argv --scratch-path values defined and differ. Optional plan.scratch is not invented for compile/periphery. Commit `d4b9f0ea3c00499118b3dbc8ee07f74af7ef4022`.                                                                                                                                                                                                                                                                           |
 | `slices/tests-integration-checks/017` | complete | Exact original five-record shared isolation contract removes894 bytes/254 AST nodes across8 owners, counted once. Current ten owners match successful native executed blobs, including actual macOS Xcode source/error/project preservation. Bridge /tmp/gspot-swift-isolation-five-d4b9-closure-bridge.json SHA256 c73dbd9d5bd7d3cc877ae9bfb9bdefd819ea2b2b0b2183c5eb761ca6ba48b943. Broader platform aggregates and kits/064 remain excluded. One assertion-free real disposable cacheDirectory spy with testdir in existing harness; all listed cache/build/analyzer/XCTest callers use it directly or required swiftBuildInput resources; no new product env setting; old module Sets/per-test folder rm/defer gone from listed CLI owners. Original actual17 restoration/removal observations across success/throw/cancel retained; current helper body exactly equal after prescribed rename to isolateCompilerCache. Commit `d4b9f0ea3c00499118b3dbc8ee07f74af7ef4022`. |
+
+## Implementation checkpoint e2972c91c of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `e2972c91c3760bc25974a69180ac4d3869c658d5`.
+
+| ID                                    | Status   | Evidence                                                                      |
+| ------------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `slices/tests-integration-checks/013` | complete | Evidence 2cb5bbcddaf75b2a. Commit `e2972c91c3760bc25974a69180ac4d3869c658d5`. |
+| `slices/tests-integration-checks/018` | complete | Evidence 46f166b6dc7a6f46. Commit `e2972c91c3760bc25974a69180ac4d3869c658d5`. |

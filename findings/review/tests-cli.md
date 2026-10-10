@@ -1,6 +1,6 @@
 # Tests in `tests/cli`
 
-3 unresolved review records remain.
+2 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -500,3 +500,11 @@ Original records and quotations remain above. These records are complete at `a39
 | ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `review/tests-cli/006` | complete | The Python manifest owns actual production Ruff baseline/all additions and basedpyright per-level values. Both Eta generation and one representative Ruff code/basedpyright value assertion per level consume those declarations; restated lists are deleted. Ten complete generated outputs/native values are byte-identical across root, child and both levels. Main focused48tests123assertions/3files5.04s and Root/CLI types pass. Isolated native Python11/95/2files123.56s uses cached suite tools with0mise installs; both negative emitter controls fail and restore exact hashes. Producer/freshness, build/apply pass. Corrected repository-native Taplo yields whole−142bytes/-215executableAST; production+602 and test−744 disclosed. Staged68pass0fail10skip0findings; normal commit52pass0fail3skip and push68pass0fail10skip pass. Commit `a39d0fdd0fa284e013d7e103ec27b0e3d50e02cd`. |
+
+## Implementation checkpoint e2972c91c of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `e2972c91c3760bc25974a69180ac4d3869c658d5`.
+
+| ID                     | Status   | Evidence                                                                      |
+| ---------------------- | -------- | ----------------------------------------------------------------------------- |
+| `review/tests-cli/056` | complete | Evidence c0857116ba09d1f9. Commit `e2972c91c3760bc25974a69180ac4d3869c658d5`. |

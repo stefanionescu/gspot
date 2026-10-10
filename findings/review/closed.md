@@ -2519,3 +2519,13 @@ One starting open record is complete. Original IDs and quotations remain above.
 | ---------------------------------------- | ------- | ----------------------------------------------------------------------------- | ------------------------------------------------ |
 | `slices/tests-integration-execution/015` | fixed   | Evidence 8bde2701223f5f90. Commit `c8468157370eac2727e626e6c23155423f459ebc`. | `findings/slices/tests-integration-execution.md` |
 | `slices/tests-integration-execution/028` | fixed   | Evidence bf1fe9d7ca8f7db1. Commit `c8468157370eac2727e626e6c23155423f459ebc`. | `findings/slices/tests-integration-execution.md` |
+
+## Implemented checkpoint e2972c91c of October 10, 2026
+
+3 starting open records are complete at `e2972c91c3760bc25974a69180ac4d3869c658d5`. Their original IDs and quotations remain in their source files.
+
+| ID                                    | Verdict | Evidence                                                                      | Source                                        |
+| ------------------------------------- | ------- | ----------------------------------------------------------------------------- | --------------------------------------------- |
+| `slices/tests-integration-checks/013` | fixed   | Evidence 2cb5bbcddaf75b2a. Commit `e2972c91c3760bc25974a69180ac4d3869c658d5`. | `findings/slices/tests-integration-checks.md` |
+| `slices/tests-integration-checks/018` | fixed   | Evidence 46f166b6dc7a6f46. Commit `e2972c91c3760bc25974a69180ac4d3869c658d5`. | `findings/slices/tests-integration-checks.md` |
+| `review/tests-cli/056`                | fixed   | Evidence c0857116ba09d1f9. Commit `e2972c91c3760bc25974a69180ac4d3869c658d5`. | `findings/review/tests-cli.md`                |
