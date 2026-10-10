@@ -1,5 +1,5 @@
 {
-    "openRecords": 7,
+    "openRecords": 6,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -1330,7 +1330,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 7,
+        "openRecords": 6,
         "records": 1092,
         "batches": [
             {
@@ -2636,8 +2636,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 127,
-                "unresolvedAssignments": 5
+                "completedAssignments": 128,
+                "unresolvedAssignments": 4
             },
             {
                 "id": "installation-docs",
@@ -9319,10 +9319,10 @@
             ]
         },
         "review/repository-root/003": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 93ad5543c33e771e."],
+            "commit": "a730bb99b9211f8d0cc1c877ff64e9d4c671e4d6",
+            "verification": ["Evidence 93ad5543c33e771e.", "Evidence 5f4e4fc303c8fc26."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-ci-suite-main-intake/freeze.json",
@@ -9364,7 +9364,8 @@
                     "evidence": "/tmp/gspot-git-fixture-isolation-final-freeze.json",
                     "verification": ["Evidence 402b13666fd088d5."]
                 }
-            ]
+            ],
+            "remaining": []
         },
         "review/repository-root/004": {
             "status": "complete",
@@ -20443,6 +20444,18 @@
             "limitations": [
                 "No record closes at this checkpoint. Final current source/platform/suite acceptance is still required; frozen available-tools snapshot does not include the newer pins and four warning cases.",
                 "Windows callback replay38063427579 is running, not yet a platform pass. External main001 publication/account/deployment steps and owner-retained repository-root040 remain partial."
+            ]
+        },
+        {
+            "commit": "a730bb99b9211f8d0cc1c877ff64e9d4c671e4d6",
+            "completedRecords": ["review/repository-root/003"],
+            "unresolvedRecords": 6,
+            "validation": [
+                "Evidence 5f4e4fc303c8fc26.",
+                "Final current local acceptance /tmp/gspot-final-ad94-local-acceptance/receipt.json: setup/build/pins,152check passes0fail11skip,doctor0; macOS package8pass109assertions and focused Windows Git launcher1pass30assertions. Final docs298pages/runtime schema parity /tmp/gspot-final-docs-0d990-native/freeze.json."
+            ],
+            "limitations": [
+                "Six records stay partial. Current full tools/platform timing and credential acceptance remain pending. Latest CI exposes unauthenticated GitHub acquisition rate limits and Windows copied-tool dependencies; failed receipts preserved. main001 external publication/setup/deploy is excluded; repository-root040 retains sideEffects by owner decision."
             ]
         }
     ],
