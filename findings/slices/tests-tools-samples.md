@@ -1,6 +1,6 @@
 # Tests: Native-Tool Tests and Samples
 
-22 unresolved review records remain.
+19 unresolved review records remain.
 
 ## Open findings
 
@@ -205,3 +205,13 @@ Original records and quotations remain above. These records are complete at `54d
 | -------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-tools-samples/051` | complete | Unused guide.md planting is deleted. Three current native package replacement, removal and edited-authorfile controls pass184.44/185.37/187.18milliseconds; full source/static hashes equal executed peer owners. Joint original051/052 concern removes1byte5ASTnodes and is counted once. Native disposable archive and installation boundaries are real; upstream download and whole-suite green are not claimed. Original implementation53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c; final exact rows/cost/current hashes /tmp/gspot-native-samples11-audit/vale051052-final-readiness-supplement.json. Commit `54dd199b46787f83d480b109e727d03e7ff17660`. |
 | `slices/tests-tools-samples/052` | complete | Native package removal preserves the exact vale.ini bytes and authored package files while deleting installed folders. Internal ownership-list assertion is removed. Actual three package archive/install/edit/prune callbacks pass with byte-equal current owners. Joint051/052 original concern removes1byte5ASTnodes, counted once; /tmp/gspot-native-samples11-audit/vale051052-final-readiness-supplement.json. Existing source adoption53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c. No platform-wide acceptance or upstream download claim. Commit `54dd199b46787f83d480b109e727d03e7ff17660`.                                                          |
+
+## Implementation checkpoint 54052b005 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `54052b005060b4a523a1115b5ec9b5fc09e34473`.
+
+| ID                               | Status   | Evidence                                                                      |
+| -------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `slices/tests-tools-samples/023` | complete | Evidence 17e205c4c8598122. Commit `54052b005060b4a523a1115b5ec9b5fc09e34473`. |
+| `slices/tests-tools-samples/030` | complete | Evidence ab411b90c52e783a. Commit `54052b005060b4a523a1115b5ec9b5fc09e34473`. |
+| `slices/tests-tools-samples/036` | complete | Evidence 0efdaf4caee5121e. Commit `54052b005060b4a523a1115b5ec9b5fc09e34473`. |

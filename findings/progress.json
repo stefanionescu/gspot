@@ -1,5 +1,5 @@
 {
-    "openRecords": 163,
+    "openRecords": 160,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 163,
+        "openRecords": 160,
         "records": 1092,
         "batches": [
             {
@@ -1096,8 +1096,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 238,
-                "unresolvedAssignments": 53
+                "completedAssignments": 240,
+                "unresolvedAssignments": 51
             },
             {
                 "id": "python",
@@ -1479,8 +1479,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 95,
-                "unresolvedAssignments": 36
+                "completedAssignments": 96,
+                "unresolvedAssignments": 35
             },
             {
                 "id": "test-quality",
@@ -1956,8 +1956,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 408,
-                "unresolvedAssignments": 61
+                "completedAssignments": 411,
+                "unresolvedAssignments": 58
             },
             {
                 "id": "scripts-repository",
@@ -3022,7 +3022,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence ced16224cd2a5e01."],
+            "verification": ["Evidence ced16224cd2a5e01.", "Evidence f18c31f8fa514db3."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-language-tools-final-freeze.json",
@@ -3034,6 +3034,10 @@
                     "commit": null,
                     "verification": ["Evidence 6b071afd9c742de5."]
                 }
+            ],
+            "remaining": [
+                "Adopt and integrate the validated81-byte Markdown pointer applicability successor only after its exact owner size decision.",
+                "Reconcile historical same-contract pointer/conditional test growth and required generated declaration costs separately; no blanket reduction or approval inferred."
             ]
         },
         "areas/developer-experience/023": {
@@ -7599,7 +7603,7 @@
             "status": "partial",
             "owner": "main",
             "commit": "78b98449db7a28e4e30482209bf6ac637330bebf",
-            "verification": ["Evidence 887ff090660efa9d.", "Evidence 9e616ebbe104f9c5."],
+            "verification": ["Evidence 887ff090660efa9d.", "Evidence 9e616ebbe104f9c5.", "Evidence b8bb29eaff981583."],
             "additionalChanges": [
                 {
                     "commit": "78b98449db7a28e4e30482209bf6ac637330bebf",
@@ -7611,7 +7615,7 @@
                 }
             ],
             "remaining": [
-                "Reconcile actual adopted same-concern mechanical/continuation and159-byte claim-race costs with the owner less-code requirement. Supported-runtime and platform acceptance remains qualified by the original native receipts."
+                "Resolve exact same-concern mechanical/continuation costs and adopted159-byte claim-race increase; neither existing CodeQL524 nor npm94 approval covers its different paths/hunks. Original native/runtime/platform qualification remains explicit."
             ]
         },
         "review/glossary/007": {
@@ -7806,13 +7810,16 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "verification": ["Evidence 99cedf9c066772ef.", "Evidence 754bfaf0229de054."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
                     "commit": null,
                     "verification": ["Evidence b30ef09416624bd0."]
                 }
+            ],
+            "remaining": [
+                "Exact123-byte direct vocabulary size disposition is pending;24-byte namespace overlap is counted once. Functional binding has no newly identified gap."
             ]
         },
         "review/glossary/024": {
@@ -14553,10 +14560,10 @@
             ]
         },
         "slices/tests-tools-samples/023": {
-            "status": "partial",
-            "owner": "root",
-            "commit": null,
-            "verification": [],
+            "status": "complete",
+            "owner": "main",
+            "commit": "26117cf44c8545c3d4a0f41be1d18d9f044b658c",
+            "verification": ["Evidence 17e205c4c8598122."],
             "additionalChanges": [
                 {
                     "commit": null,
@@ -14627,10 +14634,10 @@
             ]
         },
         "slices/tests-tools-samples/030": {
-            "status": "partial",
-            "owner": "root",
-            "commit": null,
-            "verification": [],
+            "status": "complete",
+            "owner": "main",
+            "commit": "c8468157370eac2727e626e6c23155423f459ebc",
+            "verification": ["Evidence ab411b90c52e783a."],
             "additionalChanges": [
                 {
                     "commit": null,
@@ -14688,10 +14695,10 @@
             ]
         },
         "slices/tests-tools-samples/036": {
-            "status": "partial",
-            "owner": "root",
-            "commit": null,
-            "verification": [],
+            "status": "complete",
+            "owner": "main",
+            "commit": "7ed9f891a548a8903548fb57415c394a73b13162",
+            "verification": ["Evidence 0efdaf4caee5121e."],
             "additionalChanges": [
                 {
                     "commit": null,
@@ -19482,6 +19489,17 @@
             "unresolvedRecords": 163,
             "validation": ["Evidence 7628cb1131f5d0a5."],
             "limitations": ["Evidence be72593db5f4b95b."]
+        },
+        {
+            "commit": "54052b005060b4a523a1115b5ec9b5fc09e34473",
+            "completedRecords": [
+                "slices/tests-tools-samples/023",
+                "slices/tests-tools-samples/030",
+                "slices/tests-tools-samples/036"
+            ],
+            "unresolvedRecords": 160,
+            "validation": ["Evidence 8fd05d8c40d90a56."],
+            "limitations": ["Evidence 0b83c04f6969fd0c."]
         }
     ],
     "verificationEvidenceFile": "verification.json"
