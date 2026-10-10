@@ -94,11 +94,11 @@ export async function installSuitePythonTools(root: string, cancelSignal: AbortS
 }
 
 /**
- * Generate the sandbox's selected configuration and share the suite's managed Python installation.
+ * Generate the sandbox's selected tool projects and lockfile.
  * @param root the authored native-check repository
  * @returns the sandbox environment bin before every other tool path
  */
-export async function sharePythonTools(root: string): Promise<Record<string, string>> {
+export async function preparePythonProject(root: string): Promise<Record<string, string>> {
     const archives = environmentVariables()['GSPOT_PACKAGE_ARCHIVES'];
     if (archives === undefined) throw new Error('Run native Python tests through mise run test:tools.');
     const session = await openSession(root);
@@ -121,12 +121,24 @@ export async function sharePythonTools(root: string): Promise<Record<string, str
         ...compact({ read: original }),
     });
     writeGeneratedFiles(session, generated, log);
+    return pythonEnvironment(root);
+}
+
+/**
+ * Generate selected tool projects and share the suite's managed Python installation.
+ * @param root the authored native-check repository
+ * @returns the sandbox environment bin before every other tool path
+ */
+export async function sharePythonTools(root: string): Promise<Record<string, string>> {
+    const archives = environmentVariables()['GSPOT_PACKAGE_ARCHIVES']!;
+    const environment = await preparePythonProject(root);
+    using log = openOwnership(root);
     await installTree(
         log,
         'python',
         readInstalledTree(join(dirname(archives), SUITE_PYTHON_FOLDER, PYTHON_ENVIRONMENT_DIRECTORY), 'python'),
     );
-    return pythonEnvironment(root);
+    return environment;
 }
 
 /** Creates an authored Python project, generated lockfile, and isolated uv environment selectors. */
