@@ -307,10 +307,10 @@ export function collectRules(paths: string[], document: unknown): CapturedRules 
 }
 
 /**
- * Native pointer paths from their selected declaration and owned scope inputs.
- * @param context the source inventory, selected scope, and declaring configuration
- * @param toolFile the tool file with its optional pointer
- * @returns the applicable root or directory pointer paths
+ * Resolve declared pointer paths.
+ * @param context files, scopes and selected configuration
+ * @param toolFile the tool file declaration
+ * @returns root or directory paths
  */
 export function pointerPaths(
     context: Pick<ToolFileInputs, 'files' | 'selection' | 'manifest' | 'scopes'>,
@@ -325,25 +325,23 @@ export function pointerPaths(
     )
         return [];
     const scope = selection.scope.path;
-    let paths = [toolFile.per_scope && scope !== '' ? `${scope}/${pointer.path}` : pointer.path];
-    if (pointer.directories !== undefined) {
-        const children = nestedScopes(
-            context.scopes.map((entry) => entry.scope.path),
-            scope,
-        );
-        const matches = pathMatcher(pointer.directories);
-        const owned = ownedBy(manifest.files, selection.selected, files, '', selection.view.test_files).filter(
-            (file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)),
-        );
-        const directories = new Set(
-            owned.flatMap(({ path }) =>
-                [...expandPaths([directoryOf(path)])]
-                    .filter((directory) => directory !== '' && matches(directory))
-                    .toSorted((left, right) => right.length - left.length)
-                    .map((directory) => (isInScope(directory, scope) ? directory : scope)),
-            ),
-        );
-        paths = [...directories].map((directory) => `${directory}/${pointer.path}`);
-    }
-    return paths;
+    if (pointer.directories === undefined)
+        return [toolFile.per_scope && scope !== '' ? `${scope}/${pointer.path}` : pointer.path];
+    const children = nestedScopes(
+        context.scopes.map((entry) => entry.scope.path),
+        scope,
+    );
+    const matches = pathMatcher(pointer.directories);
+    const owned = ownedBy(manifest.files, selection.selected, files, '', selection.view.test_files).filter(
+        (file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)),
+    );
+    const directories = new Set(
+        owned.flatMap(({ path }) =>
+            [...expandPaths([directoryOf(path)])]
+                .filter((directory) => directory !== '' && matches(directory))
+                .toSorted((left, right) => right.length - left.length)
+                .map((directory) => (isInScope(directory, scope) ? directory : scope)),
+        ),
+    );
+    return [...directories].map((directory) => `${directory}/${pointer.path}`);
 }
