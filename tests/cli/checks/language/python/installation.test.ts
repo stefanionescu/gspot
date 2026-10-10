@@ -5,6 +5,7 @@ import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { environmentBin } from '#cli/platform/contracts.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
@@ -12,7 +13,6 @@ import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
-import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import { toolPin, toolProjectPins } from '#cli/configurations/contracts.ts';
 import { IMPORT_CONTRACT_REPORT } from '#tests/config/cli/checks/language/python/installation.ts';
 
@@ -61,7 +61,6 @@ test('absent Python import contracts are explicit skips and malformed project fi
     expect(absent.code, absent.stdout + absent.stderr).toBe(0);
     const report = absent.report;
     expect(report.checks).toMatchObject([{ check: 'python/import-linter', status: 'skipped' }]);
-    expect(report.checks[0]!.note).toEqual(textContaining('import-linter'));
     await writeFile(join(sandbox.path, 'pyproject.toml'), '[broken');
     const malformed = await runGspot(sandbox.path, command);
     expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);

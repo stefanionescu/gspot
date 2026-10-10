@@ -257,7 +257,7 @@ describe.each(['recommended', 'all'] as const)('%s language editor ignores', (le
             for (const path of ignored) expect(internal.split('\n')).toContain(path);
             for (const path of absent) expect(internal.split('\n')).not.toContain(path);
             expect(files.has('prettier.config.mjs')).toBe(pointer);
-            expect(files.has('.markdownlint-cli2.mjs')).toBe(true);
+            expect(files.has('.markdownlint-cli2.mjs')).toBe(markdownPointer === '.markdownlint-cli2.mjs');
             if (markdownPointer !== '') expect(files.has(markdownPointer)).toBe(true);
             expect(files.get('.prettierignore')).toBe(pointer ? internal : undefined);
             expect(files.has('.prettierrc.json')).toBe(false);

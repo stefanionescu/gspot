@@ -44,7 +44,7 @@ rule_keys = [""]
 target = ".gspot/config/markdownlint-cli2.mjs"
 tool = "markdownlint-cli2"
 per_scope = true
-pointer = { path = ".markdownlint-cli2.mjs", body = "export { default } from {target_module};" }
+pointer = { path = ".markdownlint-cli2.mjs", body = "export { default } from {target_module};", when = { configuration = "javascript" } }
 
 [[check]]
 name = "markdownlint"
