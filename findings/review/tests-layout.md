@@ -1,6 +1,6 @@
 # Test Layout and Wiring
 
-4 unresolved review records remain.
+3 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -390,3 +390,11 @@ Original records and quotations remain above. These records are complete at `542
 | ID                        | Status   | Evidence                                                                      |
 | ------------------------- | -------- | ----------------------------------------------------------------------------- |
 | `review/tests-layout/039` | complete | Evidence 992d4dca95f5493a. Commit `5422cc6b0e0ffa0cd24a77ad8e3cb340f21fbcf2`. |
+
+## Implementation checkpoint 2e910518d of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `2e910518d5e4d241671ef17594134ae7ef5c690c`.
+
+| ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-layout/005` | complete | Full binding and final-owner audit: /tmp/gspot-remaining-obligations-ccfa/four-record-closure-spec.json SHA256681501ba4c533c0c049dc98e6e4d06454482c232694c4bf7af73fc28949ede0e. Original quotations and distinct behavior controls are preserved. Equivalent suite installations use the assertion-free shareRepository owner and all equivalent callers. Distinct setup lifetimes retain their documented project/interpreter, cached-error, readiness and conditional-build contracts. The exact shared migration removes2808 bytes; all preserved callback and table assertions are audited. Source/API prerequisites are delivered. Native55 cases/562 assertions plus23 controls and the exact impacted2 callbacks/3 assertions remain qualified. Final timeout measurement and global with-tools/without-tools comparison remain at their own records. Commit `2e910518d5e4d241671ef17594134ae7ef5c690c`. |

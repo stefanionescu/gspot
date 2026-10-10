@@ -1,6 +1,6 @@
 # Unresolved Findings
 
-73 unresolved review records remain. 19 come from the review of October 6, 2026 and the owner decisions of that day. 54 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
+69 unresolved review records remain. 18 come from the review of October 6, 2026 and the owner decisions of that day. 51 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
 
 On October 6, 2026, a read-only verification checked all 802 older records against commit `3e1445a2d` and closed 203. The owner decisions of October 6 and 7, 2026 closed 15 more. A coherence check then compared every open record with the decisions and with every other record, and closed 272 duplicates, superseded records, and wrong records. [The closed list](findings/review/closed.md) gives the evidence for each. Each older findings file ends with a "Status on October 6, 2026" table that gives the current file and what remains; the original rows above it are history.
 
@@ -20,7 +20,7 @@ On October 6, 2026, a read-only verification checked all 802 older records again
 8. Carve-outs: one TEST_TIMEOUT_MS serves every suite through the runner and preload. Final platform measurement remains pending. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
 9. File and folder names: `commands/policy-edit.ts`, `tools/installed-files.ts`, and `tools/installation.ts` are explained, with a target tree and a move table, in [the source layout review](findings/review/source-layout.md). [The test layout review](findings/review/tests-layout.md) has the same for `tests/`.
 
-1019 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
+1023 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
 
 ## Review of October 6, 2026
 
@@ -39,7 +39,7 @@ Read-only reviewers read every folder of the repository. Each file below holds a
 | [Code: commands, lifecycle, policy, generation](findings/review/code-commands.md)                     |            0 |
 | [Code: execution, tools, parsers, platform, repository, checks](findings/review/code-execution.md)    |            2 |
 | [Configurations and the ESLint plugin](findings/review/configurations-plugin.md)                      |            0 |
-| [Test layout and wiring](findings/review/tests-layout.md)                                             |            4 |
+| [Test layout and wiring](findings/review/tests-layout.md)                                             |            3 |
 | [Tests in tests/cli](findings/review/tests-cli.md)                                                    |            2 |
 | [Tests in tests/tools, tests/plugin, tests/packages, and the harness](findings/review/tests-tools.md) |            0 |
 | [READMEs, guides, and the docs site](findings/review/docs-site.md)                                    |            0 |
@@ -56,7 +56,7 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | [Findings From Implementation Verification](findings/additional.md)                                            |            1 |
 | [Built-in Checks](findings/areas/checks.md)                                                                    |            7 |
 | [Developer Experience in Non-JavaScript and Mixed Projects](findings/areas/developer-experience.md)            |            0 |
-| [Integration Tests Outside the Checks Folder](findings/areas/integration-tests.md)                             |            1 |
+| [Integration Tests Outside the Checks Folder](findings/areas/integration-tests.md)                             |            0 |
 | [Kits, Settings, and Names](findings/areas/kits.md)                                                            |            7 |
 | [Repository Setup and Ceremony](findings/areas/repository.md)                                                  |            0 |
 | [Native-Tool, Acceptance, and Package Tests](findings/areas/tool-tests.md)                                     |            0 |
@@ -69,7 +69,7 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | [Kits: JavaScript, TypeScript, CSS, HTML, and Markdown](findings/slices/kits-web-languages.md)                 |            5 |
 | [Tests: Acceptance](findings/slices/tests-acceptance.md)                                                       |            0 |
 | [Tests: Check Integration Tests](findings/slices/tests-integration-checks.md)                                  |            6 |
-| [Tests: Command, Policy, Platform, and Tools Integration Tests](findings/slices/tests-integration-commands.md) |            6 |
+| [Tests: Command, Policy, Platform, and Tools Integration Tests](findings/slices/tests-integration-commands.md) |            4 |
 | [Tests: Execution Integration Tests](findings/slices/tests-integration-execution.md)                           |            0 |
 | [Tests: Generation Integration Tests](findings/slices/tests-integration-generation.md)                         |            0 |
 | [Tests: Lifecycle and Repository Integration Tests](findings/slices/tests-integration-lifecycle.md)            |            1 |
@@ -158,3 +158,8 @@ Original records and quotations remain above. These records are complete at `e89
 | ID         | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `main/064` | complete | Original c6aa merge exact; current DOCS-REVIEW absent; later complete configurations-plugin067 deliberately shortens whole prose corpus with upstream links, superseding retention of obsolete full review text. Original casing section including every table row is exact substring of committed current naming/NAMING.md; ownership section in WORKING; retained NAMING-FILES intro names only its actual two sections. c6aa byte-identical move files→engineering/agent; closed configurations-plugin054 records normal apply/staged drift. Current asset and generated selection proof retained. Owner decision002 complete; original standalone asset remains, current unconditional guide selection asserts TALKING. Current JavaScript Playwright dependency filter and Node runtime/absent-RN/Expo filter; translations NextIntl dependency-only filter. Native current-byte callback proofs:48 Playwright both levels/root-child/runners×deps,19 Node evidence rows,14 NextIntl root/inheritance/unrelated rows. No unrelated runner/package causes rule install. Full binding, source hashes, governing decisions and native evidence: /tmp/gspot-pf007-summary-637-evidence/closure-specifications.json. Costs are allocated once; no unrelated waiver or final full-platform pass is inferred. Commit `e895a73c3e4a53572e0272f499501ad240f88f38`. |
+
+Fresh release preparation at `2e910518d5e4d241671ef17594134ae7ef5c690c` passes
+the eight macOS package-consumer cases with 109 assertions, including Node
+and Bun without Node on PATH. The documentation build emits 298 pages.
+These results do not establish final Linux, Windows or full-tools acceptance.
