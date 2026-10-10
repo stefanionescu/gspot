@@ -63,7 +63,7 @@ export const YARN_ENVIRONMENT_SETTINGS = [
 /** Native lockfile resolution runs without committing a tool project installation. */
 export const LOCKFILE_ARGUMENTS: Record<Exclude<PackageInstaller['name'], 'yarn'>, readonly string[]> = {
     npm: ['npm', 'install', '--package-lock-only', '--no-audit', '--no-fund', '--omit-lockfile-registry-resolved'],
-    bun: ['bun', 'install', '--lockfile-only', '--linker', 'hoisted'],
+    bun: ['bun', 'install', '--lockfile-only', '--linker', 'hoisted', '--network-concurrency=1'],
     pnpm: ['pnpm', 'install', '--lockfile-only', '--ignore-workspace', '--node-linker=hoisted'],
 };
 
