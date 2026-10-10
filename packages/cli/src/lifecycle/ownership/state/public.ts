@@ -147,15 +147,14 @@ export function readInstalledTree(directory: string, kind: InstallationKind): In
     if (entry?.isDirectory() !== true) throw new Error(`Installed folder is not a directory: ${directory}`);
     const root = realpathSync(directory);
     const cacheDirectory = kind === 'python' ? '__pycache__' : undefined;
-    const collect = (prefix: string | undefined, target: string, ancestors: string[]): void => {
-        const canonical = join(root, prefix ?? '');
+    const collect = (prefix: string, target: string, ancestors: string[]): void => {
+        const canonical = join(root, prefix);
         if (ancestors.includes(canonical)) throw new Error(`Installed directory link forms a cycle: ${target}`);
         const names = readdirSync(canonical).filter(
-            (name) =>
-                name !== cacheDirectory || !lstatSync(sourcePath(root, posix.join(prefix ?? '', name))).isDirectory(),
+            (name) => name !== cacheDirectory || !lstatSync(sourcePath(root, posix.join(prefix, name))).isDirectory(),
         );
         for (const name of names.toSorted((left, right) => left.localeCompare(right))) {
-            const realPath = posix.join(prefix ?? '', name);
+            const realPath = posix.join(prefix, name);
             const filePath = posix.join(target, name);
             const path = `${destination}/${filePath}`;
             assertMutationTarget(path);
@@ -167,6 +166,6 @@ export function readInstalledTree(directory: string, kind: InstallationKind): In
             } else entries.push({ path, file: installedFile(directory, realPath, filePath, source, kind) });
         }
     };
-    collect(undefined, '', []);
+    collect('', '', []);
     return entries;
 }
