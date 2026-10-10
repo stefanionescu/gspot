@@ -75,6 +75,7 @@ level = "recommended"
 stage = "push"
 needs = ["docker"]
 tool = "docker"
+runs = "scope"
 command = ["docker", "compose", "-f", "{file}", "config", "--quiet", "--no-env-resolution"]
 files = { paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"] }
 output = { format = "lines" }

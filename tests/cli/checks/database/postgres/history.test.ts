@@ -1,6 +1,7 @@
 import { join, basename } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
+import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
@@ -11,7 +12,13 @@ import { rejection } from '#tests/harness/expectations.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/public.ts';
 import { buildSchema } from '#cli/checks/database/postgres/contracts.ts';
-import { PATH, ORIGINAL, MIGRATION_PREFIXES } from '#tests/config/cli/checks/database/postgres/history.ts';
+
+import {
+    PATH,
+    ORIGINAL,
+    MIGRATION_PREFIXES,
+    DEFAULT_SQUAWK_FILES,
+} from '#tests/config/cli/checks/database/postgres/history.ts';
 
 const POSTGRES_HISTORY_POLICY = buildPolicy(['postgres'], { tables: '[postgres]\nfrozen_through = "all"\n' });
 
@@ -208,18 +215,31 @@ test('manifest migration folders retain every owned root and child file while ex
             [join(scope, 'custom_extra/6_ignored.sql')]: 'invalid SQL;',
         });
     for (const scope of ['', 'app']) {
-        const input = buildCheckInput(await openSession(sandbox.path), 'postgres/migration-order', { scope });
+        const session = await openSession(sandbox.path);
+        const input = buildCheckInput(session, 'postgres/migration-order', { scope });
         const migrations = await migrationsOf(input);
         expect(migrations.map(({ name }) => name)).toStrictEqual(['1_first.sql', '2_second.sql', '3_third.sql']);
+        expect(
+            planRun(session, { stage: 'commit', skips: [], only: ['postgres/squawk'] })
+                .find((plan) => plan.scope.scope.path === scope)!
+                .files.map(({ path }) => basename(path))
+                .toSorted((left, right) => left.localeCompare(right)),
+        ).toStrictEqual(DEFAULT_SQUAWK_FILES);
     }
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
         policy + '[postgres]\nmigrations_folder = "custom"\n[scope.app.postgres]\nmigrations_folder = "custom"\n',
     );
     for (const scope of ['', 'app']) {
-        const input = buildCheckInput(await openSession(sandbox.path), 'postgres/migration-order', { scope });
+        const session = await openSession(sandbox.path);
+        const input = buildCheckInput(session, 'postgres/migration-order', { scope });
         const migrations = await migrationsOf(input);
         expect(migrations.map(({ name }) => name)).toStrictEqual(['5_custom.sql']);
+        expect(
+            planRun(session, { stage: 'commit', skips: [], only: ['postgres/squawk'] })
+                .find((plan) => plan.scope.scope.path === scope)!
+                .files.map(({ path }) => basename(path)),
+        ).toStrictEqual(['5_custom.sql']);
     }
     expect(await Bun.file(join(sandbox.path, 'app/custom_extra/6_ignored.sql')).text()).toBe('invalid SQL;');
 });

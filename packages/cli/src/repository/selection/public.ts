@@ -66,6 +66,33 @@ export function ownedBy(
 }
 
 /**
+ * Select tracked migration files without parsing their SQL.
+ * @param folder the effective migration folder, empty for manifest defaults
+ * @param selected the selected manifests
+ * @param files the tracked repository files
+ * @param scope the scope path
+ * @param testFiles the effective test paths
+ * @returns the tracked SQL migration files
+ */
+export function migrationFiles(
+    folder: string,
+    selected: Manifest[],
+    files: TrackedFile[],
+    scope: string,
+    testFiles: string[],
+): TrackedFile[] {
+    const migrations =
+        folder === ''
+            ? selected.flatMap((manifest) =>
+                  manifest.configuration.name === 'postgres'
+                      ? ownedBy(manifest.files, selected, files, scope, testFiles)
+                      : [],
+              )
+            : files.filter((file) => file.path.startsWith(`${posix.join(scope, folder)}/`));
+    return migrations.filter((file) => file.path.endsWith('.sql'));
+}
+
+/**
  * Every selected configuration that owns a file.
  * @param file the file
  * @param selected the selected manifests

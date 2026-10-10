@@ -5,21 +5,17 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
+import { substituteValue } from '#cli/execution/command/arguments/public.ts';
 import { LINT_LINE, ANSIBLE_PROJECT_FILE } from '#cli/config/checks/tool/ansible.ts';
 
-async function lintProject(input: CheckInput, folder: string, skipped: string[]): Promise<Finding[]> {
-    const skips = skipped.length === 0 ? [] : ['--skip-list', skipped.join(',')];
+async function lintProject(input: CheckInput, folder: string, argv: string[]): Promise<Finding[]> {
     const files = input.files
         .filter(({ path }) => isInScope(path, folder) && !path.endsWith('.cfg'))
         .map(({ path }) => relative(folder, path));
     if (files.length === 0) return [];
-    const result = await runCheckTool(
-        input,
-        ['ansible-lint', '--offline', '--nocolor', '-f', 'pep8', ...skips, ...files],
-        {
-            cwd: join(input.root, folder),
-        },
-    );
+    const result = await runCheckTool(input, [...argv, ...files], {
+        cwd: join(input.root, folder),
+    });
     const found = result.stdout.split('\n').flatMap((line): Finding[] => {
         const groups = LINT_LINE.exec(line)?.groups;
         if (groups === undefined) return [];
@@ -50,15 +46,20 @@ export async function ansibleLint(input: CheckInput): Promise<Finding[]> {
         .map((file) => file.path)
         .filter((path) => path === ANSIBLE_PROJECT_FILE || path.endsWith(`/${ANSIBLE_PROJECT_FILE}`))
         .map((path) => (path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''));
-    const skipped = [
-        ...input.view.rulesOff(input.check.name),
-        'experimental',
-        ...(input.policyFiles.policy.level === 'all'
-            ? []
-            : ['name', 'var-naming', 'loop-var-prefix', 'key-order', 'fqcn', 'no-handler', 'no-relative-paths']),
-    ];
+    const command = input.check.command;
+    if (command === undefined) throw new Error('The ansible-lint check has no declared command.');
+    const argv = command.map((part) =>
+        substituteValue(input, { check: input.check, scope: input.selection, files: input.files }, part, {
+            files: [],
+            root: input.root,
+            scope: input.scope,
+            indent: input.view.format.indent_style === 'space' ? input.view.format.indent_width : 0,
+        }),
+    );
+    const skipped = [...input.view.rulesOff(input.check.name), 'experimental'];
+    argv.push('--skip-list', skipped.join(','));
     const findings: Finding[] = [];
     for (const folder of folders.length > 0 ? folders : [input.scope])
-        findings.push(...(await lintProject(input, folder, skipped)));
+        findings.push(...(await lintProject(input, folder, argv)));
     return findings;
 }

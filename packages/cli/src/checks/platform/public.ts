@@ -9,10 +9,11 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import { pathMatcher } from '#cli/repository/paths/public.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { migrationFiles } from '#cli/repository/selection/public.ts';
+import { migrationsOf } from '#cli/checks/database/postgres/public.ts';
 import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
 import { toPosix, isInside, isRecord } from '#cli/platform/contracts.ts';
 import { extensionsTagged } from '#cli/repository/discovery/contracts.ts';
-import { migrationsOf, migrationPaths } from '#cli/checks/database/postgres/public.ts';
 import { denoLintReportSchema, supabaseProjectSchema } from '#cli/parsers/schema/supabase.ts';
 import type { DenoLintReport, SupabaseConfigurationRead } from '#cli/types/parsers/supabase.ts';
 
@@ -188,9 +189,15 @@ export async function storagePolicies(input: CheckInput): Promise<Finding[]> {
  * @returns the findings
  */
 export function migrationNames(input: CheckInput): Finding[] {
-    return migrationPaths(input)
-        .filter((path) => !MIGRATION_NAME.test(posix.basename(path)))
-        .map((path) =>
+    return migrationFiles(
+        input.view.options('postgres').migrations_folder,
+        input.selection.selected,
+        input.files,
+        input.scope,
+        input.view.test_files,
+    )
+        .filter(({ path }) => !path.endsWith('.down.sql') && !MIGRATION_NAME.test(posix.basename(path)))
+        .map(({ path }) =>
             findingAt(
                 input,
                 { file: path, line: 1 },

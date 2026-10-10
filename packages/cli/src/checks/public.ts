@@ -19,7 +19,6 @@ import { nginxTest, actionlint } from '#cli/checks/tool/public.ts';
 import { shellcheck } from '#cli/checks/language/bash/shellcheck.ts';
 import { generatedCode } from '#cli/checks/general/generated-code.ts';
 import { envOwner } from '#cli/checks/general/structure/env-owner.ts';
-import { trivyImage, dockerignore } from '#cli/checks/tool/docker.ts';
 import { suppressions } from '#cli/checks/general/structure/public.ts';
 import { migrationDocs } from '#cli/checks/database/postgres/public.ts';
 import { fileLines } from '#cli/checks/general/structure/file-lines.ts';
@@ -31,6 +30,7 @@ import { versionPairs } from '#cli/checks/general/dependencies/public.ts';
 import { folderNames } from '#cli/checks/general/structure/folder-names.ts';
 import { largeFiles, trackedFiles } from '#cli/checks/general/repository.ts';
 import { relations as drizzleRelations } from '#cli/checks/library/drizzle.ts';
+import { compose, trivyImage, dockerignore } from '#cli/checks/tool/docker.ts';
 import { testPlacement } from '#cli/checks/general/structure/test-placement.ts';
 import { unreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
 import { unusedFunctions } from '#cli/checks/language/bash/unused-functions.ts';
@@ -202,6 +202,7 @@ export const BUILT_IN_CHECKS = {
     'postgres/migration-docs': { input: migrationDocs },
     'sql/trivial-functions': { input: sqlTrivialFunctions },
     'docker/dockerignore': { input: dockerignore },
+    'docker/compose': { run: compose },
     'docker/trivy-image': { input: trivyImage },
     'structure/lone-files': { input: loneFiles },
     'structure/prefix-collisions': { input: prefixCollisions },

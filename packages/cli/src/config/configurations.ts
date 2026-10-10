@@ -58,6 +58,8 @@ export const FILES_PLACEHOLDER = '{files}';
 
 export const FILE_PLACEHOLDER = '{file}';
 
+export const LEVEL_PLACEHOLDER = /\{level:(?<recommended>[^{}:]+):(?<all>[^{}:]+)\}/gu;
+
 export const TARGET_PLACEHOLDER = /\{target(?:_json|_module)?\}/gu;
 
 /** Authored manifest sections follow their dependency and generation order. Nested values stay inline. */

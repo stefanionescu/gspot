@@ -23,7 +23,8 @@ stage = "commit"
 runs = "scope"
 platforms = ["macos", "linux"]
 tool = "ansible-lint"
+command = ["ansible-lint", "--offline", "--nocolor", "-f", "pep8", "--profile", "{level:moderate:production}"]
 files = { extensions = [".yml", ".yaml", ".cfg", ".j2"] }
-summary = "Runs ansible-lint beside each ansible.cfg, or at the selected scope root when no configuration file is present."
+summary = "Runs the moderate ansible-lint profile at recommended and production at all, beside each ansible.cfg or at the selected scope root."
 why = "A playbook runs as root on production hosts, and a task that is not idempotent changes them on every run."
 help = "Change the task the way the rule says. Turn one rule off with gspot ignore ansible/ansible-lint --rule `<id>` --reason \"`<why>`\"."

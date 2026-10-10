@@ -1,11 +1,11 @@
 // Which files a planned check runs over: what it owns, less excluded and child-scope paths, narrowed to a selection.
 import { kindOf } from '#cli/repository/public.ts';
-import { ownedBy } from '#cli/repository/selection/public.ts';
 import { toolFileName } from '#cli/configurations/contracts.ts';
 import { tagEntry } from '#cli/repository/discovery/contracts.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { DOT_GSPOT, POLICY_FILE } from '#cli/config/platform/locations.ts';
+import { ownedBy, migrationFiles } from '#cli/repository/selection/public.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
 import type { Session, PlanEntry, PlanInputs, PlannedCheck } from '#cli/types/planning.ts';
 import { isInScope, pathMatcher, isOutsideChildren, isToolProjectPath } from '#cli/repository/paths/public.ts';
@@ -39,6 +39,14 @@ function ownedFor(context: PlanInputs, entry: PlanEntry, scopePath: string): Tra
     const { session, scope } = context;
     const { check, manifest } = entry;
     if (check.runs !== 'files') return projectOwned(context, entry, scopePath);
+    if (check.name === 'postgres/squawk')
+        return migrationFiles(
+            scope.view.options('postgres').migrations_folder,
+            scope.selected,
+            session.repository.files,
+            scopePath,
+            scope.view.test_files,
+        );
     if (!manifest) return session.repository.files.filter((file) => pathMatcher(check.files?.paths ?? [])(file.path));
     return ownedBy(
         check.files ?? manifest.files,

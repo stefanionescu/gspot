@@ -1,9 +1,11 @@
+import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
+import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { rejection } from '#tests/harness/expectations.ts';
@@ -17,7 +19,10 @@ import {
     INVALID_COMPOSE,
     REPORT_FAILURES,
     DOCKERIGNORE_CASES,
+    DOCKER_HOST_VERSION,
     TRIVY_FINDINGS_EXIT,
+    DOCKER_CONTEXT_CASES,
+    COMPOSE_PAIRING_CASES,
 } from '#tests/config/cli/checks/tool/docker.ts';
 
 test.each(COMPOSE_SOURCES)('Trivy scans only service images in $name', async ({ source }) => {
@@ -145,7 +150,7 @@ test('Trivy retains each native advisory and secret identity without exporting s
     expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
         { file: 'compose.yaml', rule: 'CVE-example', message: 'nginx:1.27.2: CVE-example (example)' },
         { file: 'compose.yaml', rule: 'CVE-neighbor', message: 'nginx:1.27.2: CVE-neighbor (neighbor)' },
-        { file: 'compose.yaml', rule: 'private-key', message: 'nginx:1.27.2: private-key: Private key' },
+        { file: 'compose.yaml', rule: 'secret', message: 'nginx:1.27.2: private-key: Private key' },
     ]);
     expect(JSON.stringify(findings)).not.toContain('sensitive-native-value');
 });
@@ -169,3 +174,99 @@ describe.each(['recommended', 'all'] as const)('%s Docker language ignores', (le
         },
     );
 });
+
+describe.each(['recommended', 'all'] as const)('%s Docker context ignores', (level) => {
+    test.each(DOCKER_CONTEXT_CASES)('$name reports only its native ignore contract', async ({ files, findings }) => {
+        await using sandbox = await testdir({ 'gspot.toml': buildPolicy(['docker'], { level }), ...files });
+        const input = buildCheckInput(await openSession(sandbox.path), 'docker/dockerignore');
+        expect(
+            BUILT_IN_CHECKS['docker/dockerignore']
+                .input(input)
+                .map(({ file, rule, message }) => ({ file, rule, message })),
+        ).toStrictEqual(findings);
+    });
+});
+
+test('Trivy scans a repeated image once and projects every advisory and secret to its declaring files', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['docker']),
+        'compose.yaml': 'services: {app: {image: nginx:1.27.2}}\n',
+        'docker-compose.prod.yml': 'services: {app: {image: nginx:1.27.2}}\n',
+    });
+    const session = await openSession(sandbox.path);
+    using resources = new DisposableStack();
+    resources.use(mockPinnedExecutables([toolPin(session.manifests.values(), 'trivy')]));
+    const scan = resources.use(
+        spyOn(processes, 'run').mockResolvedValue({
+            code: TRIVY_FINDINGS_EXIT,
+            stdout: MIXED_REPORT,
+            stderr: '',
+            missing: false,
+            duration: 1,
+        }),
+    );
+    const findings = await BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image'));
+    expect(scan).toHaveBeenCalledTimes(1);
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
+        ['compose.yaml', 'docker-compose.prod.yml'].flatMap((file) => [
+            { file, rule: 'CVE-example' },
+            { file, rule: 'CVE-neighbor' },
+            { file, rule: 'secret' },
+        ]),
+    );
+    expect(JSON.stringify(findings)).not.toContain('sensitive-native-value');
+});
+
+test.each(COMPOSE_PAIRING_CASES)(
+    'Compose $override runs after $base in the same native invocation',
+    async ({ base, override }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildPolicy(['docker']),
+            [base]: 'services: {app: {image: nginx:1.27.2}}\n',
+            [override]: 'services: {app: {environment: {FEATURE: enabled}}}\n',
+        });
+        const session = await openSession(sandbox.path);
+        using resources = new DisposableStack();
+        resources.use(
+            mockPinnedExecutables([{ ...toolPin(session.manifests.values(), 'docker'), version: DOCKER_HOST_VERSION }]),
+        );
+        const native = resources.use(
+            spyOn(processes, 'run').mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 }),
+        );
+        const planned = planRun(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
+        expect(await BUILT_IN_CHECKS['docker/compose'].run(session, planned)).toMatchObject({
+            status: 'passed',
+            findings: [],
+        });
+        expect(native.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([
+            ['compose', '-f', base, '-f', override, 'config', '--quiet', '--no-env-resolution'],
+        ]);
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s missing Docker ignore instructions list only selected language entries in root and child',
+    async (level) => {
+        for (const scope of ['', 'app']) {
+            const prefix = scope === '' ? '' : scope + '/';
+            await using sandbox = await testdir({
+                'gspot.toml': buildPolicy(['docker'], { level, tables: '[scope.app]\nconfigurations = ["python"]\n' }),
+                Dockerfile: 'FROM scratch\n',
+                'app/Dockerfile': 'FROM scratch\n',
+            });
+            const findings = BUILT_IN_CHECKS['docker/dockerignore'].input(
+                buildCheckInput(await openSession(sandbox.path), 'docker/dockerignore', {
+                    scope,
+                    paths: [prefix + 'Dockerfile'],
+                }),
+            );
+            expect(findings).toMatchObject([
+                {
+                    file: prefix + 'Dockerfile',
+                    rule: 'missing-file',
+                    message: `Add an ignore file at ${prefix}Dockerfile.dockerignore or ${prefix}.dockerignore that lists .git, .env${scope === '' ? '' : ', .venv'}.`,
+                },
+            ]);
+        }
+    },
+);

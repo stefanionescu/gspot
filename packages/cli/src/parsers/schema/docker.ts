@@ -23,5 +23,21 @@ export const imageReportSchema = z.object({
 });
 
 export const composeSchema = z.object({
-    services: z.record(z.string(), z.object({ image: z.string().min(1).optional() })).optional(),
+    services: z
+        .record(
+            z.string(),
+            z.object({
+                image: z.string().min(1).optional(),
+                build: z
+                    .union([
+                        z.string().transform((context) => ({ context, dockerfile: undefined })),
+                        z.object({
+                            context: z.string().optional(),
+                            dockerfile: z.string().optional(),
+                        }),
+                    ])
+                    .optional(),
+            }),
+        )
+        .optional(),
 });

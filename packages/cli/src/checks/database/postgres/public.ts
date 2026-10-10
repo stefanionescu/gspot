@@ -4,10 +4,10 @@ import { memo } from '#cli/platform/memo.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { ownedBy } from '#cli/repository/selection/public.ts';
 import { MIGRATION_VERSION } from '#cli/config/parsers/sql.ts';
 import type { Migration } from '#cli/types/checks/postgres.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { migrationFiles } from '#cli/repository/selection/public.ts';
 import { positionAt, parseSqlFile } from '#cli/parsers/sql/public.ts';
 
 import {
@@ -148,38 +148,20 @@ function statementFindings(
 }
 
 /**
- * Select tracked migration files without parsing their SQL.
- * @param input the selected scope and repository inventory
- * @returns the repository-relative migration paths
- */
-export function migrationPaths(input: CheckInput): string[] {
-    const folder = input.view.options('postgres').migrations_folder;
-    const paths =
-        folder === ''
-            ? input.selection.selected
-                  .filter((manifest) => manifest.configuration.name === 'postgres')
-                  .flatMap((manifest) =>
-                      ownedBy(
-                          manifest.files,
-                          input.selection.selected,
-                          input.files,
-                          input.scope,
-                          input.view.test_files,
-                      ).map((file) => file.path),
-                  )
-            : input.files
-                  .map((file) => file.path)
-                  .filter((path) => path.startsWith(`${posix.join(input.scope, folder)}/`));
-    return paths.filter((path) => path.endsWith('.sql') && !path.endsWith('.down.sql'));
-}
-
-/**
  * Reads and parses every tracked migration in version order.
  * @param input the check input
  * @returns the migrations, empty when the repository has no migrations folder
  */
 export async function migrationsOf(input: CheckInput): Promise<Migration[]> {
-    const paths = migrationPaths(input);
+    const paths = migrationFiles(
+        input.view.options('postgres').migrations_folder,
+        input.selection.selected,
+        input.files,
+        input.scope,
+        input.view.test_files,
+    )
+        .filter((file) => !file.path.endsWith('.down.sql'))
+        .map((file) => file.path);
     if (paths.length === 0) return [];
     const folders = memo(input.reads, MIGRATION_MEMO);
     const key = JSON.stringify(paths);

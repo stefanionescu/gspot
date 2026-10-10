@@ -2,7 +2,7 @@ import { parseDocument } from '@decimalturn/toml-patch';
 import { similar, codeList } from '#cli/platform/contracts.ts';
 import { toolFileName } from '#cli/configurations/contracts.ts';
 import { isComment, isKeyValue } from '#cli/parsers/toml/contracts.ts';
-import { MANIFEST_TABLE_ORDER, TOOL_FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
+import { LEVEL_PLACEHOLDER, MANIFEST_TABLE_ORDER, TOOL_FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
 
 import type {
     Manifest,
@@ -15,6 +15,13 @@ import type {
 
 // Each way a check declaration contradicts itself, with the sentence that reports it.
 const CHECK_RULES: CheckRule[] = [
+    {
+        applies: (check) =>
+            [...(check.command ?? []), ...(check.fix ?? [])].some((argument) =>
+                argument.replaceAll(LEVEL_PLACEHOLDER, '').includes('{level:'),
+            ),
+        error: (check) => `check ${check.name} must write level choices as {level:<recommended>:<all>}.`,
+    },
     {
         applies: (check) => check.nested_config_file !== undefined && check.cwd !== 'scope',
         error: (check) => `check ${check.name} discovers nested configuration and requires cwd = scope.`,

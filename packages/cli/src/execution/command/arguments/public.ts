@@ -17,6 +17,7 @@ import {
     FILE_PLACEHOLDER,
     WORKSPACE_PREFIX,
     FILES_PLACEHOLDER,
+    LEVEL_PLACEHOLDER,
     POINTER_PLACEHOLDER,
     SETTING_PLACEHOLDER,
     EXISTING_PLACEHOLDER,
@@ -192,6 +193,9 @@ export function substituteValue(
     substitutions: Substitutions,
 ): string {
     return part
+        .replaceAll(LEVEL_PLACEHOLDER, (_match, recommended: string, all: string) =>
+            session.policyFiles.policy.level === 'all' ? all : recommended,
+        )
         .replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
             const found = planned.scope.view.settings[name];
             if (Array.isArray(found)) throw new Error(`List setting ${name} must occupy a whole command argument.`);
