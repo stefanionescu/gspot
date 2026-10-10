@@ -1,6 +1,6 @@
 # Test Layout and Wiring
 
-5 unresolved review records remain.
+4 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -382,3 +382,11 @@ Original records and quotations remain above. These records are complete at `f18
 | ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/tests-layout/003` | complete | Preset capture resolves plugin pins from tests; tests remains a workspace with configurations=[] and explicit removals, JavaScript inherited from root TypeScript. Obsolete framework/test selections and three undo ignores removed. Current authored source/policy/pin/task and emitted ESLint/AGENTS obligations are fulfilled. Normal Main gspot apply:187 outputs up to date; native emit byte-equal. Node24 applicability/browser-global controls and15 preset catalog controls retained. Four exact968-byte historical generated child Semgrep pointers removed after producer command;−3872 bytes. Native staged5 checks pass/0 findings; normal commit and push gates pass. /tmp/gspot-layout003005-2e64-final-readiness/readiness.json and /tmp/gspot-layout003-main-tombstone-receipt.json. Commit `f18ce4f2cfd6d8a8600fe2ab7f34f60cd0049297`. |
+
+## Implementation checkpoint 5422cc6b0 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `5422cc6b0e0ffa0cd24a77ad8e3cb340f21fbcf2`.
+
+| ID                        | Status   | Evidence                                                                      |
+| ------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `review/tests-layout/039` | complete | Evidence 992d4dca95f5493a. Commit `5422cc6b0e0ffa0cd24a77ad8e3cb340f21fbcf2`. |

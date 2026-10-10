@@ -1,5 +1,5 @@
 {
-    "openRecords": 166,
+    "openRecords": 163,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 166,
+        "openRecords": 163,
         "records": 1092,
         "batches": [
             {
@@ -1096,8 +1096,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 237,
-                "unresolvedAssignments": 54
+                "completedAssignments": 238,
+                "unresolvedAssignments": 53
             },
             {
                 "id": "python",
@@ -1250,8 +1250,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 63,
-                "unresolvedAssignments": 36
+                "completedAssignments": 64,
+                "unresolvedAssignments": 35
             },
             {
                 "id": "swift-bash-sql",
@@ -1956,8 +1956,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 407,
-                "unresolvedAssignments": 62
+                "completedAssignments": 408,
+                "unresolvedAssignments": 61
             },
             {
                 "id": "scripts-repository",
@@ -2241,8 +2241,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 111,
-                "unresolvedAssignments": 26
+                "completedAssignments": 112,
+                "unresolvedAssignments": 25
             },
             {
                 "id": "policy-file",
@@ -2437,8 +2437,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 82,
-                "unresolvedAssignments": 7
+                "completedAssignments": 83,
+                "unresolvedAssignments": 6
             },
             {
                 "id": "configurations",
@@ -2540,8 +2540,8 @@
                     "review/glossary/028",
                     "review/glossary/029"
                 ],
-                "completedAssignments": 21,
-                "unresolvedAssignments": 7
+                "completedAssignments": 22,
+                "unresolvedAssignments": 6
             }
         ],
         "overlapPolicy": "Each starting record retains its ID and original quotation. Overlapping records appear in every applicable batch. Batch assignment does not close a finding. Second-pass slice corrections precede area and main-summary reconciliation."
@@ -7749,10 +7749,10 @@
             ]
         },
         "review/glossary/017": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 9cd682b03224429d."],
+            "commit": "3e3c49628c435d59273af7490873047e00015370",
+            "verification": ["Evidence a68190b783281dd6."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -11414,23 +11414,10 @@
             ]
         },
         "review/tests-layout/039": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": [
-                "Moved remaining ESLint dry-run test directly from lifecycle/eslint-preview.test.ts to lifecycle/apply/eslint-dry-run.test.ts. CI preference/retention and init source/test moves remain outstanding.",
-                "Evidence ea6a4e5999646044.",
-                "Evidence 6bdaa3c82f778863.",
-                "Evidence 9b93c9e039ae6f80.",
-                "Evidence ecbf881ca887786a.",
-                "Evidence 8206f3687b468bb8.",
-                "Evidence c633e7516e283f7b.",
-                "Evidence 559831d5ce9c7f90.",
-                "Evidence 586700631eb91fcc.",
-                "Evidence 01010ec03fb34c75.",
-                "Evidence c55a66a76be8a19f."
-            ],
-            "remaining": ["Evidence dc22ce9bdfea875a."]
+            "commit": "5422cc6b0e0ffa0cd24a77ad8e3cb340f21fbcf2",
+            "verification": ["Evidence 992d4dca95f5493a."]
         },
         "review/tests-layout/041": {
             "status": "complete",
@@ -14018,16 +14005,10 @@
             "verification": ["Evidence f568f0803963f1d7."]
         },
         "slices/tests-integration-lifecycle/005": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": [
-                "Deleted scoped-ignore lint and settling dry run from native ESLint preview. No newline-containing lint paths remain there; generation/eslint/eslint-ignores.test.ts retains scoped-ignore behavior. Moved remaining native rule preview to lifecycle/apply/eslint-dry-run.test.ts.",
-                "Evidence cde7352de5243559."
-            ],
-            "remaining": [
-                "Verify corrected preview on Linux, macOS and Windows; final combined release verification remains distinct."
-            ],
+            "commit": "5422cc6b0e0ffa0cd24a77ad8e3cb340f21fbcf2",
+            "verification": ["Evidence 6aa96d9a47254e24."],
             "additionalChanges": [
                 {
                     "commit": "5422cc6b0e0ffa0cd24a77ad8e3cb340f21fbcf2",
@@ -19487,6 +19468,20 @@
             "unresolvedRecords": 166,
             "validation": ["Evidence 089fdf6d16532d96."],
             "limitations": ["Evidence f691888512e8dee8."]
+        },
+        {
+            "commit": "3e3c49628c435d59273af7490873047e00015370",
+            "completedRecords": ["review/glossary/017"],
+            "unresolvedRecords": 165,
+            "validation": ["Evidence 6ef92b7782a6caf2."],
+            "limitations": ["Evidence ebbc911cbc0738e8."]
+        },
+        {
+            "commit": "5422cc6b0e0ffa0cd24a77ad8e3cb340f21fbcf2",
+            "completedRecords": ["slices/tests-integration-lifecycle/005", "review/tests-layout/039"],
+            "unresolvedRecords": 163,
+            "validation": ["Evidence 7628cb1131f5d0a5."],
+            "limitations": ["Evidence be72593db5f4b95b."]
         }
     ],
     "verificationEvidenceFile": "verification.json"

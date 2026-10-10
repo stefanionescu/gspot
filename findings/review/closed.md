@@ -2529,3 +2529,20 @@ One starting open record is complete. Original IDs and quotations remain above.
 | `slices/tests-integration-checks/013` | fixed   | Evidence 2cb5bbcddaf75b2a. Commit `e2972c91c3760bc25974a69180ac4d3869c658d5`. | `findings/slices/tests-integration-checks.md` |
 | `slices/tests-integration-checks/018` | fixed   | Evidence 46f166b6dc7a6f46. Commit `e2972c91c3760bc25974a69180ac4d3869c658d5`. | `findings/slices/tests-integration-checks.md` |
 | `review/tests-cli/056`                | fixed   | Evidence c0857116ba09d1f9. Commit `e2972c91c3760bc25974a69180ac4d3869c658d5`. | `findings/review/tests-cli.md`                |
+
+## Implemented checkpoint 3e3c49628 of October 10, 2026
+
+1 starting open records are complete at `3e3c49628c435d59273af7490873047e00015370`. Their original IDs and quotations remain in their source files.
+
+| ID                    | Verdict | Evidence                                                                      | Source                        |
+| --------------------- | ------- | ----------------------------------------------------------------------------- | ----------------------------- |
+| `review/glossary/017` | fixed   | Evidence a68190b783281dd6. Commit `3e3c49628c435d59273af7490873047e00015370`. | `findings/review/glossary.md` |
+
+## Implemented checkpoint 5422cc6b0 of October 10, 2026
+
+2 starting open records are complete at `5422cc6b0e0ffa0cd24a77ad8e3cb340f21fbcf2`. Their original IDs and quotations remain in their source files.
+
+| ID                                       | Verdict | Evidence                                                                      | Source                                           |
+| ---------------------------------------- | ------- | ----------------------------------------------------------------------------- | ------------------------------------------------ |
+| `slices/tests-integration-lifecycle/005` | fixed   | Evidence 6aa96d9a47254e24. Commit `5422cc6b0e0ffa0cd24a77ad8e3cb340f21fbcf2`. | `findings/slices/tests-integration-lifecycle.md` |
+| `review/tests-layout/039`                | fixed   | Evidence 992d4dca95f5493a. Commit `5422cc6b0e0ffa0cd24a77ad8e3cb340f21fbcf2`. | `findings/review/tests-layout.md`                |
