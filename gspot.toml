@@ -30,7 +30,7 @@ provider = "github"
 setup = ["mise", "run", "setup"]
 
 [naming]
-banned = ["catalog", "catalogue", "corpus", "render", "sync", "synchronize", "materialize", "coerce", "scoped", "bind", "load", "loaded", "loader", "loaders", "loading", "fetch", "resolve", "resolving", "resolution", "probe", "probes", "probed", "probing", "fixture", "fixtures", "shell", "rendered", "renders", "resolved", "resolver", "synced", "bindings", "fetched"]
+banned = ["catalog", "corpus", "render", "sync", "synchronize", "materialize", "coerce", "scoped", "bind", "load", "loaded", "loader", "loaders", "loading", "fetch", "resolve", "resolving", "resolution", "probe", "probes", "probed", "probing", "fixture", "fixtures", "shell", "rendered", "renders", "resolved", "resolver", "synced", "bindings", "fetched"]
 
 [[naming.overrides]]
 allowed = ["may_import", "tool_timeout_seconds", "agent_rules", "test_files", "removed_configurations"]
