@@ -5700,7 +5700,8 @@
                 "Evidence 3c7f27f41cf1ad68.",
                 "Evidence aaa92c7930dd5a36.",
                 "Evidence 3433672d7cb9d70a.",
-                "Evidence 379c7378e553183c."
+                "Evidence 379c7378e553183c.",
+                "Evidence 568f0eac6ecdbcec."
             ],
             "remaining": [
                 "Complete the remaining full verification and actual CI acceptance. Fresh macOS package/docs passes do not prove Linux/Windows consumer or complete tools behavior.",
@@ -5816,7 +5817,8 @@
                 "Prescribed Defender step deleted in2e910518d5e4d241671ef17594134ae7ef5c690c; exact source reduction323 bytes. Native Actionlint/YAML/formatting and staged24 checks pass; raw Zizmor retains only the already-reasoned self-repository findings.",
                 "Approved native16-shard fallback: /tmp/gspot-ci-shards-ad94-proof/freeze.json SHA25627184724afdf43613aa8ab44e468d43533b244eab49e99b25d67541a01e4ba03. Current104toolpaths partition exactly; actual future completion and single timeout measurement remain pending.",
                 "Evidence 3433672d7cb9d70a.",
-                "Evidence 379c7378e553183c."
+                "Evidence 379c7378e553183c.",
+                "Evidence 568f0eac6ecdbcec."
             ],
             "additionalChanges": [
                 {
@@ -8404,7 +8406,8 @@
                 "Evidence 31751b6dfd2661b9.",
                 "Final matched CLI/plugin no-acquisition comparison: Evidence 5f4e4fc303c8fc26. Current CI acceptance capsule /tmp/gspot-ad94-current-acceptance/freeze.json SHA256ed60b9c25cd052b0a4e0dddfe17ebd657580ab9fa04ab4d6f0173505cb16e51b preserves native Linux npm token-refresh and private Python passes, plus incomplete platform-manager cases.",
                 "Evidence 3433672d7cb9d70a.",
-                "Evidence 379c7378e553183c."
+                "Evidence 379c7378e553183c.",
+                "Evidence 568f0eac6ecdbcec."
             ],
             "remaining": [
                 "Complete supported-platform native npm-manager, temporary settings, credential and recovery acceptance. Prescribed fixture transports and tool-free CLI/plugin comparison are implemented; do not infer missing tool outcomes from that comparison."
@@ -9613,7 +9616,8 @@
                 "Evidence a710a8f87755c78d.",
                 "Evidence b7088713e096ebae.",
                 "Evidence 3433672d7cb9d70a.",
-                "Evidence 379c7378e553183c."
+                "Evidence 379c7378e553183c.",
+                "Evidence 568f0eac6ecdbcec."
             ],
             "remaining": [
                 "Complete current-pin platform tools acceptance; the frozen Darwin full run passed with three explicit container skips, which do not prove skipped behavior.",
@@ -9637,7 +9641,8 @@
                 "Release source/test/constants use the owner-approved flat paths.",
                 "Evidence 0bc9fe9f0bed0759.",
                 "Evidence 4a2288232b361231.",
-                "Evidence 643ae7eae5b901bd."
+                "Evidence 643ae7eae5b901bd.",
+                "Evidence 568f0eac6ecdbcec."
             ]
         },
         "review/source-layout/001": {

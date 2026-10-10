@@ -1,7 +1,7 @@
 // Run source commands and native suites with this run's packed workspace packages.
 import { testdir } from 'testdirs';
 import { stringify } from 'smol-toml';
-import { writeFileSync } from 'node:fs';
+import { globSync, writeFileSync } from 'node:fs';
 import { join, resolve, delimiter } from 'node:path';
 import { workspaceRoot } from '#automation/workspace.ts';
 import { CLI_PINS } from '#cli/config/generation/pins.ts';
@@ -75,8 +75,8 @@ const flags = separator === -1 ? options : options.slice(0, separator);
 const paths = separator === -1 ? [] : options.slice(separator + 1);
 let defaults = suite === 'cli' ? ['tests/cli', 'tests/plugin'] : [`tests/${String(suite)}`];
 if (suite === 'tools')
-    defaults = [...new Bun.Glob('tests/tools/**/*.test.ts').scanSync({ cwd: workspaceRoot })].filter(
-        (path) => path !== SUPABASE_DATABASE_TEST,
+    defaults = globSync('tests/tools/**/*.test.ts', { cwd: workspaceRoot }).filter(
+        (path) => path !== join(SUPABASE_DATABASE_TEST),
     );
 const targets = paths.length === 0 ? defaults : paths;
 const testCommand = [
