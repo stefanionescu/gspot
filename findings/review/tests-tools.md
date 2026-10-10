@@ -1,6 +1,6 @@
 # Tests: Tools, Plugin, Packages, and the Harness
 
-3 unresolved review records remain.
+0 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -323,3 +323,13 @@ Original records and quotations remain above. These records are complete at `82b
 | ID                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/tests-tools/059` | complete | Delete the second Docker availability check; keep the single designated native Docker gate. Implementation commit `ca2975ca5552d3276e78bbd6d897c44cfdf70a09`. Designated Ubuntu database workflow 37965939028, job 113940178605, passes both stale-to-regenerated and two-scoped-database recovery cases: two tests, 19 assertions, 134.07 seconds. Test, data, types, Docker gate, command harness, Supabase source/manifest and committed generated-code reader match that successful run byte for byte. Evidence: `/tmp/gspot-database059-current-proof/proof.json`. Root-held broader generated-code changes are excluded from this attribution; no fresh dispatch or skip credit. Commit `82b5b4f83efb79b498136e4d8691386ddd4d0817`. |
+
+## Implementation checkpoint 7791eaf3a of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`.
+
+| ID                       | Status   | Evidence                                                                                                 |
+| ------------------------ | -------- | -------------------------------------------------------------------------------------------------------- |
+| `review/tests-tools/021` | complete | Evidence 262a222ce1d342d9. Evidence 99769723017084ba. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. |
+| `review/tests-tools/035` | complete | Evidence 262a222ce1d342d9. Evidence b8310222dd9eed1f. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. |
+| `review/tests-tools/038` | complete | Evidence 262a222ce1d342d9. Evidence 89788b64d83d498e. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. |

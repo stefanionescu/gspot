@@ -1,5 +1,5 @@
 {
-    "openRecords": 159,
+    "openRecords": 152,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 159,
+        "openRecords": 152,
         "records": 1092,
         "batches": [
             {
@@ -1096,8 +1096,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 240,
-                "unresolvedAssignments": 51
+                "completedAssignments": 243,
+                "unresolvedAssignments": 48
             },
             {
                 "id": "python",
@@ -1143,8 +1143,8 @@
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
                 ],
-                "completedAssignments": 28,
-                "unresolvedAssignments": 11
+                "completedAssignments": 30,
+                "unresolvedAssignments": 9
             },
             {
                 "id": "javascript-web",
@@ -1340,8 +1340,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 62,
-                "unresolvedAssignments": 20
+                "completedAssignments": 66,
+                "unresolvedAssignments": 16
             },
             {
                 "id": "frameworks-platforms",
@@ -1479,8 +1479,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 97,
-                "unresolvedAssignments": 34
+                "completedAssignments": 98,
+                "unresolvedAssignments": 33
             },
             {
                 "id": "test-quality",
@@ -1956,8 +1956,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 411,
-                "unresolvedAssignments": 58
+                "completedAssignments": 418,
+                "unresolvedAssignments": 51
             },
             {
                 "id": "scripts-repository",
@@ -2241,8 +2241,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 112,
-                "unresolvedAssignments": 25
+                "completedAssignments": 114,
+                "unresolvedAssignments": 23
             },
             {
                 "id": "policy-file",
@@ -4754,10 +4754,10 @@
             ]
         },
         "areas/tool-tests/005": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 4a63ac3c8a2a79df."],
+            "commit": "7791eaf3a2ce0efe852c71d299fbfdfd3571152a",
+            "verification": ["Evidence 5dfcc42ec84c2e76.", "Evidence 57b38c768e6917b7."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-bash-test-quality-freeze.json",
@@ -4767,10 +4767,10 @@
             ]
         },
         "areas/tool-tests/006": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 77d1b12e5cf9e51e."],
+            "commit": "7791eaf3a2ce0efe852c71d299fbfdfd3571152a",
+            "verification": ["Evidence 5dfcc42ec84c2e76.", "Evidence c14ebdcc2fba056d."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-test-cleanup-checkpoint4-final-freeze.json",
@@ -4861,10 +4861,10 @@
             ]
         },
         "areas/tool-tests/022": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7791eaf3a2ce0efe852c71d299fbfdfd3571152a",
+            "verification": ["Evidence 262a222ce1d342d9.", "Evidence 9924b5c0be8d5841."]
         },
         "areas/tool-tests/023": {
             "status": "complete",
@@ -5013,10 +5013,10 @@
             ]
         },
         "areas/tool-tests/049": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 77d1b12e5cf9e51e."],
+            "commit": "7791eaf3a2ce0efe852c71d299fbfdfd3571152a",
+            "verification": ["Evidence 5dfcc42ec84c2e76.", "Evidence 024274b1753038b2."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-test-cleanup-checkpoint4-final-freeze.json",
@@ -11633,18 +11633,10 @@
             ]
         },
         "review/tests-tools/021": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": [
-                "Evidence a0cb041279508dcd.",
-                "Evidence 98bda92f1fb395a1.",
-                "Evidence b6e4ceb11112a23b.",
-                "Evidence 4274c37f1991ecbf.",
-                "Evidence 31cc8fb0f45d1c4c.",
-                "Evidence 00285fb212d8638d.",
-                "Evidence 1289292efe621fa2."
-            ]
+            "commit": "7791eaf3a2ce0efe852c71d299fbfdfd3571152a",
+            "verification": ["Evidence 262a222ce1d342d9.", "Evidence 99769723017084ba."]
         },
         "review/tests-tools/022": {
             "status": "complete",
@@ -11765,17 +11757,10 @@
             ]
         },
         "review/tests-tools/035": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": [
-                "Evidence 5cbd73d610f8c7a5.",
-                "Evidence a09f2099afe429c8.",
-                "Evidence 1113930cefe94ac4.",
-                "Evidence 156f79b59ee16a2a.",
-                "Evidence de95cdd072df97ac.",
-                "Evidence 99b202ba6a74c838."
-            ],
+            "commit": "7791eaf3a2ce0efe852c71d299fbfdfd3571152a",
+            "verification": ["Evidence 262a222ce1d342d9.", "Evidence b8310222dd9eed1f."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-eslint-regressions-main-intake/freeze.json",
@@ -11806,17 +11791,10 @@
             ]
         },
         "review/tests-tools/038": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": [
-                "Evidence cbd6f7fad0d84aa3.",
-                "Evidence 5f6e2540f0c8d814.",
-                "Evidence e679664b0f6e9485.",
-                "Evidence f32133721ae28dc0.",
-                "Evidence 5d49b3ca162fc267.",
-                "Final rootTypeScript actualexit0 execsession77678; independent read-only /tmp/gspot-always-selected-test-configurations-independent-review.md passes exact frozen owner hashes, original case/matcher/order contracts and honest metrics. No closed record modified."
-            ]
+            "commit": "7791eaf3a2ce0efe852c71d299fbfdfd3571152a",
+            "verification": ["Evidence 262a222ce1d342d9.", "Evidence 89788b64d83d498e."]
         },
         "review/tests-tools/040": {
             "status": "complete",
@@ -19521,6 +19499,26 @@
             "unresolvedRecords": 159,
             "validation": ["Evidence dd3a57071aed3b2f.", "Evidence 7efd12c3179ed7f6."],
             "limitations": ["Evidence d782740b2170ed5f.", "Evidence 702f63a4844df48a.", "Evidence a710a8f87755c78d."]
+        },
+        {
+            "commit": "7791eaf3a2ce0efe852c71d299fbfdfd3571152a",
+            "completedRecords": [
+                "review/tests-tools/021",
+                "review/tests-tools/035",
+                "review/tests-tools/038",
+                "areas/tool-tests/022",
+                "areas/tool-tests/005",
+                "areas/tool-tests/006",
+                "areas/tool-tests/049"
+            ],
+            "unresolvedRecords": 152,
+            "validation": ["Evidence 262a222ce1d342d9.", "Evidence 5dfcc42ec84c2e76."],
+            "limitations": ["Evidence 8f90c723f3f130ab."],
+            "ci": {
+                "run": 38026957637,
+                "head": "344656b74",
+                "recordSpecificResults": "completed supported-host cases; aggregate run not green"
+            }
         }
     ],
     "verificationEvidenceFile": "verification.json"

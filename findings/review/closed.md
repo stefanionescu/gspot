@@ -2564,3 +2564,17 @@ One starting open record is complete. Original IDs and quotations remain above.
 | ID               | Verdict | Evidence                                                                      | Source                   |
 | ---------------- | ------- | ----------------------------------------------------------------------------- | ------------------------ |
 | `areas/kits/068` | fixed   | Evidence 6364f2e4bceea0c8. Commit `663f57e0e2e32b5e7db6ce1b613fe970fb58b429`. | `findings/areas/kits.md` |
+
+## Implemented checkpoint 7791eaf3a of October 10, 2026
+
+7 starting open records are complete at `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. Their original IDs and quotations remain in their source files.
+
+| ID                       | Verdict | Evidence                                                                                                 | Source                           |
+| ------------------------ | ------- | -------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `review/tests-tools/021` | fixed   | Evidence 262a222ce1d342d9. Evidence 99769723017084ba. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. | `findings/review/tests-tools.md` |
+| `review/tests-tools/035` | fixed   | Evidence 262a222ce1d342d9. Evidence b8310222dd9eed1f. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. | `findings/review/tests-tools.md` |
+| `review/tests-tools/038` | fixed   | Evidence 262a222ce1d342d9. Evidence 89788b64d83d498e. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. | `findings/review/tests-tools.md` |
+| `areas/tool-tests/022`   | fixed   | Evidence 262a222ce1d342d9. Evidence 9924b5c0be8d5841. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. | `findings/areas/tool-tests.md`   |
+| `areas/tool-tests/005`   | fixed   | Evidence 5dfcc42ec84c2e76. Evidence 57b38c768e6917b7. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. | `findings/areas/tool-tests.md`   |
+| `areas/tool-tests/006`   | fixed   | Evidence 5dfcc42ec84c2e76. Evidence c14ebdcc2fba056d. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. | `findings/areas/tool-tests.md`   |
+| `areas/tool-tests/049`   | fixed   | Evidence 5dfcc42ec84c2e76. Evidence 024274b1753038b2. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. | `findings/areas/tool-tests.md`   |

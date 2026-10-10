@@ -1,6 +1,6 @@
 # Native-Tool, Acceptance, and Package Tests
 
-7 unresolved review records remain.
+3 unresolved review records remain.
 
 ## Findings
 
@@ -133,3 +133,14 @@ Original records and quotations remain above. These records are complete at `295
 | ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `areas/tool-tests/008` | complete | Whole original/final fix and exact committed-owner bridge /tmp/gspot-test-ten-current-c2f-audit/readiness.json; SHA b8b716a74da517517f5d915b79db27fe98aecc751f11b228429b16a4dcd1a390. Existing implementation is retained; no duplicate edits or shared-packet cost allocations. No remaining implementation obligation: incidental max-args assertions removed; native parameter test retains seven/eight defect and correction inputs. Native evidence: 28 tests/90 assertions; Ruff0.16.8 root/child bothlevel defect/correction/source preservation; types/lint/format/schema pass. Cost: Whole15-owner Python/shared limit contract only; Ruff test owner -185B also includes two corrected scope table literals. No allocation of whole6491 to008. two prescribed assertions removed; full whole cost qualified Commit `29553132fff4b24951509da88fad9f464ec77729`.             |
 | `areas/tool-tests/014` | complete | Whole original/final fix and exact committed-owner bridge /tmp/gspot-test-ten-current-c2f-audit/readiness.json; SHA b8b716a74da517517f5d915b79db27fe98aecc751f11b228429b16a4dcd1a390. Existing implementation is retained; no duplicate edits or shared-packet cost allocations. No remaining current-final-table implementation obligation: one-row npm registration is plain test with same lifecycle-script refusal, no registry request and unchanged authored manifest observations. Earlier broad one-row problem sites are retained as original quotation, not substituted for final binding. Native evidence: Vale3/6 andCLI14/61; types/lint/format0; original npm/package acquisition blockers retained. Cost: Wholefive owners; plain npm refusal source leaf -132B. reducing; no fresh npm/fullplatform proof claimed Commit `29553132fff4b24951509da88fad9f464ec77729`. |
+
+## Implementation checkpoint 7791eaf3a of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`.
+
+| ID                     | Status   | Evidence                                                                                                 |
+| ---------------------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| `areas/tool-tests/022` | complete | Evidence 262a222ce1d342d9. Evidence 9924b5c0be8d5841. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. |
+| `areas/tool-tests/005` | complete | Evidence 5dfcc42ec84c2e76. Evidence 57b38c768e6917b7. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. |
+| `areas/tool-tests/006` | complete | Evidence 5dfcc42ec84c2e76. Evidence c14ebdcc2fba056d. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. |
+| `areas/tool-tests/049` | complete | Evidence 5dfcc42ec84c2e76. Evidence 024274b1753038b2. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. |
