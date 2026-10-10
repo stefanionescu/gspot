@@ -19,8 +19,8 @@ export const CLI_PINS = {
         },
         cache: {
             name: 'actions/cache',
-            sha: '5a3ec84eff668545956fd18022155c47e93e2684',
-            version: 'v4.2.3',
+            sha: '55cc8345863c7cc4c66a329aec7e433d2d1c52a9',
+            version: 'v6.1.0',
         },
         node: {
             name: 'actions/setup-node',
