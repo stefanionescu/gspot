@@ -29,25 +29,14 @@ test('native spelling file-type allowances preserve unrelated findings and neigh
     const emitted = emitAll(session);
     const configs = emitted.files.filter(({ path }) => path.endsWith('typos.toml'));
     expect(configs.map(({ path }) => path)).toStrictEqual(['.gspot/config/typos.toml']);
+    const config = configs[0]!.path;
     using log = openOwnership(sandbox.path);
     writeGeneratedFiles(session, emitted, log);
     const options = { cwd: sandbox.path, env: { PATH: buildToolsPath(['typos']) } };
-    const policy = runTestCommandBlocking(
-        ['typos', '--isolated', '--config', '.gspot/config/typos.toml', 'gspot.toml'],
-        options,
-    );
+    const policy = runTestCommandBlocking(['typos', '--isolated', '--config', config, 'gspot.toml'], options);
     expect(policy.code, policy.stdout + policy.stderr).toBe(0);
     const result = runTestCommandBlocking(
-        [
-            'typos',
-            '--isolated',
-            '--config',
-            '.gspot/config/typos.toml',
-            '--format',
-            'json',
-            'fixture.txt',
-            'neighbor.txt',
-        ],
+        ['typos', '--isolated', '--config', config, '--format', 'json', 'fixture.txt', 'neighbor.txt'],
         options,
     );
     expect(result.code, result.stderr).toBe(2);

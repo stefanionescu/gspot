@@ -64,10 +64,6 @@ test('a quoted word from a template reaches typos.toml through init', async () =
         buildInitOptions(sandbox.path, {
             from: 'house.template.toml',
             isDryRun: true,
-            hooks: false,
-            ci: 'none',
-            runner: 'none',
-            agentRules: false,
         }),
     );
     expect(plan.exitCode).toBe(0);
