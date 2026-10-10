@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
 import type { SettingsListJson } from '#cli/types/commands/list.ts';
-import { NESTED_SCOPES_POLICY } from '#tests/config/cli/commands/nested-scopes.ts';
+import { NESTED_SCOPES_POLICY } from '#tests/config/samples/nested-scopes.ts';
 
 test('nested scopes inherit parent configurations and settings and check each file in its deepest scope', async () => {
     await using directory = await testdir();

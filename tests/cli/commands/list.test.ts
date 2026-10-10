@@ -7,7 +7,7 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { getSuggestions } from '#cli/commands/doctor/contracts.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
-import { NESTED_SCOPES_POLICY } from '#tests/config/cli/commands/nested-scopes.ts';
+import { NESTED_SCOPES_POLICY } from '#tests/config/samples/nested-scopes.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 test('list shows selected policy states and available configurations while doctor keeps suggestions without writing', async () => {
