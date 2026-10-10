@@ -7,6 +7,7 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { openSession } from '#cli/commands/public.ts';
 import { openRoot } from '#cli/platform/root/public.ts';
+import { copyInto } from '#cli/execution/copy/public.ts';
 import { rootView } from '#cli/policy/settings/public.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
@@ -79,9 +80,13 @@ async function prepareNpmProject(root: string, inputs: GeneratedFile[]): Promise
             using files = openRoot(root);
             const path = packageToolProject.lockfilePath(packageToolProject.parse(inputs[0]!.content));
             const lockfile: GeneratedFile = { path, content: files.read(path)!.bytes.toString('utf8'), kind: 'lock' };
-            await mkdir(directory, { recursive: true });
-            using log = openOwnership(directory);
-            installTree(log, 'npm', readInstalledTree(files.realPath(NODE_MODULES_DIRECTORY), 'npm'));
+            readInstalledTree(join(root, NODE_MODULES_DIRECTORY), 'npm');
+            await copyInto({
+                root,
+                target: directory,
+                files: [],
+                dependencies: [{ path: NODE_MODULES_DIRECTORY, operation: 'clone' }],
+            });
             return { lockfile, directory };
         })();
         npmProjects.set(directory, prepared);
