@@ -114,7 +114,7 @@ export async function validateReleases(pins: RegistryPin[], eslintPin: string | 
 
 /**
  * Compare shared release identities, the Node major and hosted labels with their stable upstream lists.
- * @returns unavailable pins and newer stable choices without changing the table
+ * @returns unavailable pins and newer stable releases without changing the table
  */
 export async function validateSharedPins(): Promise<string[]> {
     const grammar = CLI_PINS.swiftGrammar;
@@ -153,7 +153,8 @@ export async function validateSharedPins(): Promise<string[]> {
                     .filter((candidate) => candidate.startsWith(`${family}-`))
                     .toSorted((left, right) => left.localeCompare(right, 'en', { numeric: true }))
                     .at(-1) ?? label;
-            return newest === label ? [] : [`${label} has a newer stable hosted image: ${newest}.`];
+            if (newest !== label) console.warn('%s has a newer stable hosted image: %s.', label, newest);
+            return [];
         }),
     );
     return errors;

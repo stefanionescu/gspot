@@ -1,9 +1,11 @@
 import { test, spyOn, expect } from 'bun:test';
+import { CLI_PINS } from '#cli/config/generation/pins.ts';
 import { npmPackSchema } from '#automation/parsers/npm.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { releasedPins, validateReleases } from '#automation/pins.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
+import { NODE_RELEASES_URL, RUNNER_IMAGES_URL } from '#automation/config/pins.ts';
+import { releasedPins, validateReleases, validateSharedPins } from '#automation/pins.ts';
 
 import {
     githubCommitSchema,
@@ -18,6 +20,7 @@ import {
     MALFORMED_PEER,
     COMPATIBLE_PEER,
     INCOMPATIBLE_PEER,
+    RUNNER_IMAGE_CASES,
 } from '#tests/config/cli/scripts/pins.ts';
 
 test('pin validation requests shared releases once and leaves system tools and unpublished workspace packages out', () => {
@@ -75,3 +78,48 @@ test('shared pin metadata rejects malformed native release, identity, image and 
     expect(() => githubReadmeSchema.parse({ content: '', encoding: 'utf8' })).toThrow('encoding');
     expect(() => nodeReleasesSchema.parse([])).toThrow('Invalid input');
 });
+
+test.each(RUNNER_IMAGE_CASES)(
+    'the %s hosted image keeps update notices separate from invalid pins',
+    async (_name, readme, errors, warnings) => {
+        const requests = spyOn(globalThis, 'fetch').mockImplementation(
+            Object.assign(
+                (input: Parameters<typeof fetch>[0]) => {
+                    const url = new URL(input instanceof Request ? input.url : input);
+                    if (url.href === RUNNER_IMAGES_URL)
+                        return Promise.resolve(
+                            Response.json({ encoding: 'base64', content: Buffer.from(readme).toString('base64') }),
+                        );
+                    if (url.href === NODE_RELEASES_URL)
+                        return Promise.resolve(Response.json([{ version: `v${CLI_PINS.node}.0.0`, lts: 'native' }]));
+                    const action = Object.values(CLI_PINS.actions).find((pin) =>
+                        url.pathname.includes(`/${pin.name}/`),
+                    );
+                    return Promise.resolve(
+                        Response.json({
+                            sha: action?.sha,
+                            tag_name:
+                                action?.version ??
+                                (url.pathname.includes('/jdx/mise/')
+                                    ? `v${CLI_PINS.mise.version}`
+                                    : CLI_PINS.swiftGrammar.version),
+                        }),
+                    );
+                },
+                { preconnect: fetch.preconnect },
+            ),
+        );
+        const notices = spyOn(console, 'warn').mockImplementation(() => {});
+        try {
+            expect(await validateSharedPins()).toStrictEqual([...errors]);
+            expect(notices.mock.calls).toStrictEqual(warnings.map((warning) => [...warning]));
+            if (_name === 'newer') {
+                requests.mockResolvedValue(new Response(null, { status: 503 }));
+                expect(await rejection(validateSharedPins())).toContain('answered 503');
+            }
+        } finally {
+            requests.mockRestore();
+            notices.mockRestore();
+        }
+    },
+);
