@@ -8,9 +8,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { join, extname, basename } from 'node:path';
 import { openSession } from '#cli/commands/public.ts';
+import { targetInScope } from '#cli/configurations/contracts.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { configurationManifests } from '#cli/configurations/public.ts';
+import { configuredChecks, requiredToolNames } from '#cli/planning/public.ts';
 import { PROJECT_FILES, PLAIN_TOOL_FILES } from '#tests/config/cli/generation/every-template.ts';
 
 const PARSERS: Record<string, (text: string, path: string) => void> = {
@@ -71,7 +73,25 @@ test.each(['recommended', 'all'])(
                 .map((manifest) => manifest.configuration.name),
         );
         expect(selected).toStrictEqual(new Set(configurations));
-        expect(generated.length).toBeGreaterThan(configurations.length);
+        const paths = new Set(generated.map((file) => file.path));
+        const checks = configuredChecks(session, true);
+        const checkNames = new Set(checks.map((entry) => entry.check.name));
+        const tools = new Set(checks.flatMap((entry) => requiredToolNames(entry, session)));
+        for (const { scope, selected: manifests } of session.scopes) {
+            const targets = manifests
+                .flatMap((manifest) => manifest.toolFiles)
+                .filter((file) => !file.fragment)
+                .filter((file) => file.tool.length === 0 || file.tool.some((name) => tools.has(name)))
+                .filter((file) => file.check.length === 0 || file.check.some((name) => checkNames.has(name)))
+                .map((file) => targetInScope(scope.path, file));
+            expect(targets.length).toBeGreaterThan(0);
+            expect(new Set(targets).difference(paths)).toStrictEqual(new Set<string>());
+        }
+        expect(paths).not.toContain('.gspot/config/jsconfig.json');
+        if (level === 'recommended') {
+            expect(paths).not.toContain('.gspot/config/commitlint.config.cjs');
+            expect(paths).not.toContain('.gspot/config/jscpd.json');
+        }
         for (const file of generated) {
             if (PLAIN_TOOL_FILES.includes(basename(file.path))) continue;
             const parser = PARSERS[extname(file.path)];
