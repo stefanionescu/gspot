@@ -1,5 +1,5 @@
 {
-    "openRecords": 13,
+    "openRecords": 7,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -1264,10 +1264,50 @@
                 "Explicit user approval in this conversation.",
                 "/tmp/gspot-native-cache-creation-e985-proof/freeze.json SHA25647c7e2f664a9eaf285e49c042ce849c55a5d1ca65f95a1ba8d91cd71bf30b5bd; native36cases180assertions; actual Windows benchmark is feasibility only, no full-suite performance claim."
             ]
+        },
+        {
+            "id": "final-bounded-historical16935",
+            "date": "2026-10-10",
+            "scope": "review/glossary/006; slices/tests-integration-checks/007 and /008; slices/kits-frameworks-tools/053; areas/kits/032 and /041",
+            "decision": "Adopt the explicitly approved exact historical review table, counted once: vocabulary4145, publication-during-read acceptance1182, declared scopes163, shared Docker cases1933, Playwright2225, site/Swift rejection1254, selected-language ignores1725, scoped Supabase4308. Positive historical total16935 bytes. The table's unapplied Markdown14 draft is superseded by a reducing23-byte successor, with no positive charge. Existing separately approved costs remain separate.",
+            "evidence": [
+                "Explicit user approval of the exact reviewed concern in this conversation.",
+                "/tmp/gspot-final-bounded-adoptions-06f9/inventory.json SHA256 c0324e1da7edcf508df7deda4dc74d51b0a43bde82dfcdac9f57131b4406bcb8. Native evidence and platform limits remain as recorded; no blanket cross-platform acceptance."
+            ]
+        },
+        {
+            "id": "native-docker-deptry-scope3490",
+            "date": "2026-10-10",
+            "scope": "Docker ignore-sidecar selection and Python child-scope isolation",
+            "decision": "Allow exact65 Docker manifest bytes and exact3425 Deptry bytes, comprising473 production and2952 tests. Retain authored exclusions, native pin readiness and scope isolation.",
+            "evidence": [
+                "Explicit user approval of the exact reviewed concern in this conversation.",
+                "/tmp/gspot-held-three-gaps-8cef-evidence/freeze.json SHA256 f2f2a010c7c92f82e96064585fe63a85b3d020650c57aab88c45dce80bf5ccec. Native evidence and platform limits remain as recorded; no blanket cross-platform acceptance."
+            ]
+        },
+        {
+            "id": "typescript-reference-copy5014",
+            "date": "2026-10-10",
+            "scope": "Native TypeScript reference-copy acceptance and mirrored test config",
+            "decision": "Allow exact5014 test/static bytes. Production unchanged; preserve24 assertions at both levels and strict public-owner imports.",
+            "evidence": [
+                "Explicit user approval of the exact reviewed concern in this conversation.",
+                "/tmp/gspot-ts-reference-copy-native-final/freeze.json SHA256 2a7c314aa2c8a43331743af657ee72426a251053214161c3b7c507516fe3adb6. Native evidence and platform limits remain as recorded; no blanket cross-platform acceptance."
+            ]
+        },
+        {
+            "id": "cli-bun-engine26",
+            "date": "2026-10-10",
+            "scope": "packages/cli/package.json engines.bun",
+            "decision": "Allow exact26 static bytes declaring Bun>=1.4.2 beside the existing Node floor. npm-only packaging and sideEffects stay unchanged.",
+            "evidence": [
+                "Explicit user approval of the exact reviewed concern in this conversation.",
+                "/tmp/gspot-release-consumer-e26-evidence/freeze.json SHA256 6464c69658bc88386cd8eac75ae05658358f4c20e2856d57c96a2e514e1d39b2. Native evidence and platform limits remain as recorded; no blanket cross-platform acceptance."
+            ]
         }
     ],
     "implementationBatches": {
-        "openRecords": 13,
+        "openRecords": 7,
         "records": 1092,
         "batches": [
             {
@@ -1573,12 +1613,12 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 286,
-                "unresolvedAssignments": 5
+                "completedAssignments": 290,
+                "unresolvedAssignments": 1
             },
             {
                 "id": "python",
-                "status": "partial",
+                "status": "complete",
                 "records": [
                     "slices/config/037",
                     "areas/kits/016",
@@ -1620,8 +1660,8 @@
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
                 ],
-                "completedAssignments": 38,
-                "unresolvedAssignments": 1
+                "completedAssignments": 39,
+                "unresolvedAssignments": 0
             },
             {
                 "id": "javascript-web",
@@ -1727,12 +1767,12 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 97,
-                "unresolvedAssignments": 2
+                "completedAssignments": 98,
+                "unresolvedAssignments": 1
             },
             {
                 "id": "swift-bash-sql",
-                "status": "partial",
+                "status": "complete",
                 "records": [
                     "main/097",
                     "slices/config/037",
@@ -1817,12 +1857,12 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 81,
-                "unresolvedAssignments": 1
+                "completedAssignments": 82,
+                "unresolvedAssignments": 0
             },
             {
                 "id": "frameworks-platforms",
-                "status": "partial",
+                "status": "complete",
                 "records": [
                     "additional/next-app-router-links",
                     "main/064",
@@ -1956,12 +1996,12 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 127,
-                "unresolvedAssignments": 4
+                "completedAssignments": 131,
+                "unresolvedAssignments": 0
             },
             {
                 "id": "test-quality",
-                "status": "partial",
+                "status": "complete",
                 "records": [
                     "areas/kits/031",
                     "areas/kits/054",
@@ -2433,8 +2473,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 467,
-                "unresolvedAssignments": 2
+                "completedAssignments": 469,
+                "unresolvedAssignments": 0
             },
             {
                 "id": "scripts-repository",
@@ -2573,8 +2613,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 126,
-                "unresolvedAssignments": 6
+                "completedAssignments": 127,
+                "unresolvedAssignments": 5
             },
             {
                 "id": "installation-docs",
@@ -2718,8 +2758,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 135,
-                "unresolvedAssignments": 2
+                "completedAssignments": 136,
+                "unresolvedAssignments": 1
             },
             {
                 "id": "policy-file",
@@ -2986,7 +3026,7 @@
             },
             {
                 "id": "names",
-                "status": "partial",
+                "status": "complete",
                 "records": [
                     "review/glossary/001",
                     "review/glossary/002",
@@ -3017,8 +3057,8 @@
                     "review/glossary/028",
                     "review/glossary/029"
                 ],
-                "completedAssignments": 27,
-                "unresolvedAssignments": 1
+                "completedAssignments": 28,
+                "unresolvedAssignments": 0
             }
         ],
         "overlapPolicy": "Each starting record retains its ID and original quotation. Overlapping records appear in every applicable batch. Batch assignment does not close a finding. Second-pass slice corrections precede area and main-summary reconciliation."
@@ -4190,10 +4230,13 @@
             ]
         },
         "areas/kits/032": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 37e6b33260dc5523."],
+            "commit": "d4760403eeff3224f7946cd6889083e91dd7c3ec",
+            "verification": [
+                "Selected languages own ignored_folders; generation feeds the selected lists to both Semgrep and Prettier. Duplicate bun.lock pattern is deleted. User adopts1725 exclusive historical bytes; already-approved shared pointer tests are counted separately once.",
+                "Native78pass306assertions and eight ignore cases110assertions verify selection at both levels. Current template/source proof: /tmp/gspot-unresolved69-e985-review/two-unallocated-domain-costs/review.json."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-language-tools-final-freeze.json",
@@ -4259,12 +4302,12 @@
             ]
         },
         "areas/kits/041": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+            "commit": "d4760403eeff3224f7946cd6889083e91dd7c3ec",
             "verification": [
-                "Supabase checks use the configured functions folder for scoped native include paths.",
-                "Native both-level root/child Deno path defects and fixes passed in Main7/34 tool corpus."
+                "Supabase Semgrep include paths use configured functions_folder relative to each scope. Native root/child custom folders are checked while outside and sibling files remain untouched. User adopts4308 exclusive historical bytes:83 configuration and4225 shared native table.",
+                "Native4pass30assertions plus current two Supabase controls in the qualified tools corpus; source and callback ownership proof: /tmp/gspot-unresolved69-e985-review/two-unallocated-domain-costs/review.json."
             ],
             "additionalChanges": [
                 {
@@ -7993,10 +8036,13 @@
             ]
         },
         "review/glossary/006": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "78b98449db7a28e4e30482209bf6ac637330bebf",
-            "verification": ["Evidence 887ff090660efa9d.", "Evidence 9e616ebbe104f9c5.", "Evidence b8bb29eaff981583."],
+            "commit": "d4760403eeff3224f7946cd6889083e91dd7c3ec",
+            "verification": [
+                "Claim and lockfile vocabulary, retired refresh flag, diagnostics and claim acquisition/release tests meet the adopted glossary. User adopts4145 historical vocabulary/transport bytes plus1182 actual publication-during-read acceptance bytes; superseded prototypes excluded.",
+                "Exact original/final owner hashes and qualified native evidence: /tmp/gspot-exclusive-historical-cost-final/final-receipt.json. Current source bridge: /tmp/gspot-historical-six-approved-current-bridge.json. Existing159 claim-race approval remains separate."
+            ],
             "additionalChanges": [
                 {
                     "commit": "78b98449db7a28e4e30482209bf6ac637330bebf",
@@ -8006,9 +8052,6 @@
                         "Historical +620 race prototype was never adopted; current reads/writes exactly match02fd actual +159 implementation. Safety exception CI055 is separate. Whole mixed mechanical/continuation cost reconciliation remains required; no full-record closure or blanket growth approval inferred."
                     ]
                 }
-            ],
-            "remaining": [
-                "Resolve exact same-concern mechanical/continuation costs and adopted159-byte claim-race increase; neither existing CodeQL524 nor npm94 approval covers its different paths/hunks. Original native/runtime/platform qualification remains explicit."
             ]
         },
         "review/glossary/007": {
@@ -12829,10 +12872,13 @@
             "verification": ["Evidence ed050889bad5e7ff.", "Evidence 85697c70ef3439bc."]
         },
         "slices/kits-frameworks-tools/053": {
-            "status": "partial",
-            "owner": "root",
-            "commit": null,
-            "verification": [],
+            "status": "complete",
+            "owner": "main",
+            "commit": "d4760403eeff3224f7946cd6889083e91dd7c3ec",
+            "verification": [
+                "Unchanged PLAYWRIGHT.md belongs to JavaScript with dependencies playwright and @playwright/test; its Vitest-owned entry is removed. Root/child, runner and dependency applicability is preserved at both levels. User adopts2225 whole historical bytes; production shrinks15.",
+                "Native92pass391assertions; exact unchanged1916-byte asset and current guide/manifest hashes: /tmp/gspot-exclusive-historical-cost-final/final-receipt.json."
+            ],
             "additionalChanges": [
                 {
                     "commit": null,
@@ -13580,10 +13626,13 @@
             ]
         },
         "slices/tests-integration-checks/007": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": [],
+            "status": "complete",
+            "owner": "main",
+            "commit": "d4760403eeff3224f7946cd6889083e91dd7c3ec",
+            "verification": [
+                "Tests declare real scopes and select genuine planRun entries; site builders receive their check and Docker opens a fresh session per source. User adopts163 exclusive scope/planning bytes and the shared1933 Docker case transport once.",
+                "Exact callback and current-owner proof: /tmp/gspot-exclusive-historical-cost-final/final-receipt.json; original native987 evidence preserves its actual host and source qualification."
+            ],
             "additionalChanges": [
                 {
                     "commit": "525a99755cc89096829644f522f0d083d92d7c56",
@@ -13593,10 +13642,13 @@
             ]
         },
         "slices/tests-integration-checks/008": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "d4760403eeff3224f7946cd6889083e91dd7c3ec",
+            "verification": [
+                "Rejection tests assert exact native reasons, including site and Swift errors; named table cases retain distinct licensing, Docker, Jest, Python and CodeQL outcomes. User adopts1254 site/Swift bytes;1933 shared Docker transport counted once under /007.",
+                "Native13pass62assertions, Node24/Bun and deliberate TypeError negative controls; current-owner proof /tmp/gspot-exclusive-historical-cost-final/final-receipt.json. Later already-approved process mocks remain separate."
+            ]
         },
         "slices/tests-integration-checks/009": {
             "status": "complete",
@@ -20334,6 +20386,26 @@
             ],
             "limitations": [
                 "No Windows generator execution inferred. Final whole-suite/platform and release requirements remain under their separate open records. Native Drizzle column counterexample and old Wrangler nondeterminism remain explicit tool limitations."
+            ]
+        },
+        {
+            "commit": "d4760403eeff3224f7946cd6889083e91dd7c3ec",
+            "completedRecords": [
+                "review/glossary/006",
+                "slices/tests-integration-checks/007",
+                "slices/tests-integration-checks/008",
+                "slices/kits-frameworks-tools/053",
+                "areas/kits/032",
+                "areas/kits/041"
+            ],
+            "unresolvedRecords": 7,
+            "validation": [
+                "Six binding implementations and immutable owner/callback hashes reconciled against approved Main8df; exact historical costs approved by user and counted once.",
+                "Global1092 starting-record/1648 assignment accounting retained; actual final cross-platform verification remains under main/001 and platform verification records."
+            ],
+            "limitations": [
+                "Original native987 is not current all-platform suite acceptance. Current Cloudflare mock failures remain visible under suite separation; no unrelated record is reopened.",
+                "Markdown14 positive draft is not adopted; reducing23-byte correction is separately implemented in d4760403e."
             ]
         }
     ],
