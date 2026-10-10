@@ -3,6 +3,7 @@ import type { CiDocument } from '#tests/types/cli/generation/ci.ts';
 /** Authored and generated CI files with a deliberate changed-object sample. */
 export type CiProject = {
     base: string;
+    environment: Record<string, string>;
     generated: CiDocument;
     pipeline: string;
     pipelinePath: string;

@@ -5,6 +5,21 @@ import { releasedPins, validateReleases } from '#automation/pins.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
 
+import {
+    githubCommitSchema,
+    githubReadmeSchema,
+    nodeReleasesSchema,
+    githubReleaseSchema,
+} from '#automation/parsers/releases.ts';
+import {
+    ESLINT_PIN,
+    INVALID_TAG,
+    REGISTRY_PIN,
+    MALFORMED_PEER,
+    COMPATIBLE_PEER,
+    INCOMPATIBLE_PEER,
+} from '#tests/config/cli/scripts/pins.ts';
+
 test('pin validation requests shared releases once and leaves system tools and unpublished workspace packages out', () => {
     const configuration = configurationManifests().get('javascript')!;
     const duplicate = { ...configuration, configuration: { ...configuration.configuration, name: 'shared' } };
@@ -18,42 +33,30 @@ test('pin validation requests shared releases once and leaves system tools and u
 });
 
 test('pin validation reports missing releases and incompatible ESLint peers, preserving registry failures', async () => {
-    const pin = {
-        tool: 'lint',
-        installer: 'npm',
-        name: 'lint',
-        version: '1.0.0',
-        url: 'https://registry.npmjs.org/lint/1.0.0',
-    };
+    const pin = REGISTRY_PIN;
     const requests = spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 404 }));
     try {
-        expect(await validateReleases([pin], '9.39.5')).toStrictEqual([
+        expect(await validateReleases([pin], ESLINT_PIN)).toStrictEqual([
             'lint: npm has no lint@1.0.0 (https://registry.npmjs.org/lint/1.0.0).',
         ]);
-        requests.mockResolvedValue(Response.json({ peerDependencies: { eslint: '^8.0.0' } }));
-        expect(await validateReleases([pin], '9.39.5')).toStrictEqual([
+        requests.mockResolvedValue(Response.json(INCOMPATIBLE_PEER));
+        expect(await validateReleases([pin], ESLINT_PIN)).toStrictEqual([
             'lint@1.0.0 wants eslint ^8.0.0, and the ESLint pin is 9.39.5.',
         ]);
-        requests.mockResolvedValue(Response.json({ peerDependencies: { eslint: '^9.0.0' } }));
-        expect(await validateReleases([pin], '9.39.5')).toStrictEqual([]);
+        requests.mockResolvedValue(Response.json(COMPATIBLE_PEER));
+        expect(await validateReleases([pin], ESLINT_PIN)).toStrictEqual([]);
         requests.mockResolvedValue(new Response(null, { status: 429 }));
-        expect(await rejection(validateReleases([pin], '9.39.5'))).toContain('answered 429');
+        expect(await rejection(validateReleases([pin], ESLINT_PIN))).toContain('answered 429');
     } finally {
         requests.mockRestore();
     }
 });
 
 test('pin validation rejects malformed registry metadata before compatibility checks', async () => {
-    const pin = {
-        tool: 'lint',
-        installer: 'npm',
-        name: 'lint',
-        version: '1.0.0',
-        url: 'https://registry.npmjs.org/lint/1.0.0',
-    };
-    const requests = spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ peerDependencies: 'invalid' }));
+    const pin = REGISTRY_PIN;
+    const requests = spyOn(globalThis, 'fetch').mockResolvedValue(Response.json(MALFORMED_PEER));
     try {
-        expect(await rejection(validateReleases([pin], '9.39.5'))).toContain('peerDependencies');
+        expect(await rejection(validateReleases([pin], ESLINT_PIN))).toContain('peerDependencies');
     } finally {
         requests.mockRestore();
     }
@@ -64,4 +67,11 @@ test('npm packing metadata accepts local archives and rejects missing or escapin
     expect(() => npmPackSchema.parse([])).toThrow('Invalid input: expected object, received undefined');
     for (const filename of ['../outside.tgz', String.raw`folder\outside.tgz`])
         expect(() => npmPackSchema.parse([{ filename }])).toThrow('Invalid string: must match pattern');
+});
+
+test('shared pin metadata rejects malformed native release, identity, image and LTS documents', () => {
+    expect(() => githubReleaseSchema.parse(INVALID_TAG)).toThrow('tag_name');
+    expect(() => githubCommitSchema.parse({ sha: '' })).toThrow('sha');
+    expect(() => githubReadmeSchema.parse({ content: '', encoding: 'utf8' })).toThrow('encoding');
+    expect(() => nodeReleasesSchema.parse([])).toThrow('Invalid input');
 });

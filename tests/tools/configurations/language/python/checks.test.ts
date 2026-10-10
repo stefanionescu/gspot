@@ -8,8 +8,8 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
 import { MODULE_PATH, CLEAN_MODULE } from '#tests/config/samples/python.ts';
+import { buildToolsPath, initRepository, shareToolProjects } from '#tests/harness/install.ts';
 
 import {
     PYPROJECT,
@@ -28,18 +28,17 @@ test('deptry excludes private tools without Git and preserves authored exclusion
         'generated/client.py': 'import generated_dependency\n',
         'vendor/client.py': 'import vendor_dependency\n',
     });
-    for (const command of ['apply', 'install']) {
-        const prepared = await spawnGspot(sandbox.path, [command]);
-        expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
-    }
+    const prepared = await spawnGspot(sandbox.path, ['apply']);
+    expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+    const environment = await shareToolProjects(sandbox.path);
     const args = ['check', '--only', 'python/deptry', '--json'];
-    const failed = await spawnGspot(sandbox.path, args);
+    const failed = await spawnGspot(sandbox.path, args, environment);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const findings = (JSON.parse(failed.stdout) as RunReport).checks[0]!.findings;
     expect(findings).toHaveLength(1);
     expect(findings[0]).toMatchObject({ file: 'src/main.py', rule: 'DEP001', line: 1 });
     await Bun.write(join(sandbox.path, 'src/main.py'), 'import json\nprint(json.dumps({"ready": True}))\n');
-    const corrected = await spawnGspot(sandbox.path, args);
+    const corrected = await spawnGspot(sandbox.path, args, environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks[0]).toMatchObject({
         status: 'passed',
@@ -47,12 +46,12 @@ test('deptry excludes private tools without Git and preserves authored exclusion
     });
     const initialized = git(sandbox.path, ['init', '-q']);
     expect(initialized.code, initialized.stderr).toBe(0);
-    const applied = await spawnGspot(sandbox.path, ['apply']);
+    const applied = await spawnGspot(sandbox.path, ['apply'], environment);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const primed = await spawnGspot(sandbox.path, args);
+    const primed = await spawnGspot(sandbox.path, args, environment);
     expect(primed.code, primed.stdout + primed.stderr).toBe(0);
     await Bun.write(join(sandbox.path, 'pyproject.toml'), project + exclusions.replace('"^vendor/"', '"^other/"'));
-    const changed = await spawnGspot(sandbox.path, args);
+    const changed = await spawnGspot(sandbox.path, args, environment);
     expect(changed.code, changed.stdout + changed.stderr).toBe(1);
     expect((JSON.parse(changed.stdout) as RunReport).checks[0]!.findings).toMatchObject([
         { file: 'vendor/client.py', rule: 'DEP001', line: 1 },
@@ -121,12 +120,11 @@ test.each(['recommended', 'all'] as const)(
             'app/pyproject.toml': PYPROJECT.split('[tool.pydoclint]', 1)[0]!,
             ...files,
         });
-        for (const command of ['apply', 'install']) {
-            const prepared = await spawnGspot(sandbox.path, [command]);
-            expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
-        }
+        const prepared = await spawnGspot(sandbox.path, ['apply']);
+        expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+        const environment = await shareToolProjects(sandbox.path);
         const args = ['check', '--only', 'python/pydoclint', '--json'];
-        const failed = await spawnGspot(sandbox.path, args);
+        const failed = await spawnGspot(sandbox.path, args, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
         expect(report.checks.map((check) => [check.scope, check.status])).toStrictEqual([
@@ -139,7 +137,7 @@ test.each(['recommended', 'all'] as const)(
             );
         for (const [file, text] of Object.entries(files))
             await Bun.write(join(sandbox.path, file), text.replace('amount', 'value'));
-        const corrected = await spawnGspot(sandbox.path, args);
+        const corrected = await spawnGspot(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(
             (JSON.parse(corrected.stdout) as RunReport).checks.map((check) => [
@@ -172,12 +170,11 @@ test.each(IMPORT_CONFIGURATIONS)(
             'gspot.toml': buildPolicy(['python'], { tables: '[scope."app"]\nconfigurations = ["python"]\n' }),
             ...files,
         });
-        for (const command of ['apply', 'install']) {
-            const prepared = await spawnGspot(sandbox.path, [command]);
-            expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
-        }
+        const prepared = await spawnGspot(sandbox.path, ['apply']);
+        expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+        const environment = await shareToolProjects(sandbox.path);
         const args = ['check', '--only', 'python/import-linter', '--json'];
-        const failed = await spawnGspot(sandbox.path, args);
+        const failed = await spawnGspot(sandbox.path, args, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const checks = (JSON.parse(failed.stdout) as RunReport).checks;
         expect(checks.map((check) => [check.scope, check.status])).toStrictEqual([
@@ -190,7 +187,7 @@ test.each(IMPORT_CONFIGURATIONS)(
             expect(await Bun.file(join(sandbox.path, scope + file)).text()).toBe(files[scope + file]!);
             await Bun.write(join(sandbox.path, scope + 'example/low.py'), 'VALUE = 1\n');
         }
-        const corrected = await spawnGspot(sandbox.path, args);
+        const corrected = await spawnGspot(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(
             (JSON.parse(corrected.stdout) as RunReport).checks.map((check) => [
@@ -215,12 +212,11 @@ test('pydoclint preserves authored requirements to repeat signature types in doc
         'example/__init__.py': '',
         [MODULE_PATH]: CLEAN_MODULE,
     });
-    for (const command of ['apply', 'install']) {
-        const prepared = await spawnGspot(sandbox.path, [command]);
-        expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
-    }
+    const prepared = await spawnGspot(sandbox.path, ['apply']);
+    expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+    const environment = await shareToolProjects(sandbox.path);
     const args = ['check', '--only', 'python/pydoclint', '--json'];
-    const failed = await spawnGspot(sandbox.path, args);
+    const failed = await spawnGspot(sandbox.path, args, environment);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect((JSON.parse(failed.stdout) as RunReport).checks[0]!.findings).toContainEqual(
         containing({ file: MODULE_PATH, rule: 'DOC105' }),
@@ -232,7 +228,7 @@ test('pydoclint preserves authored requirements to repeat signature types in doc
             'int: Twice the number.',
         ),
     );
-    const corrected = await spawnGspot(sandbox.path, args);
+    const corrected = await spawnGspot(sandbox.path, args, environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(await Bun.file(join(sandbox.path, 'pyproject.toml')).text()).toBe(project);
 });

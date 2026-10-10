@@ -6,7 +6,9 @@ import { gspot, runGspot } from '#tests/harness/gspot.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { shareToolProjects } from '#tests/harness/install.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
+import { useEnvironment } from '#tests/harness/environment.ts';
 import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
 import type { CiDocument } from '#tests/types/cli/generation/ci.ts';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
@@ -53,14 +55,14 @@ command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
     await writeFile(join(root, 'gspot.toml'), policy);
     const applied = await runGspot(root, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const installed = await runGspot(root, ['install']);
-    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    const environment = await shareToolProjects(root);
+    expect(environment['PATH']).toContain(root);
     const base = commitCiSource(root, 'base');
     await writeFile(join(root, 'changed.sh'), 'if then\n');
     commitCiSource(root, 'invalid change');
     const workflowPath = provider === 'gitlab' ? '.gitlab/ci/gspot.yml' : '.github/workflows/gspot.yml';
     const generated = Bun.YAML.parse(await readFile(join(root, workflowPath), 'utf8')) as CiDocument;
-    return { base, generated, pipeline, pipelinePath, workflowPath };
+    return { base, environment, generated, pipeline, pipelinePath, workflowPath };
 }
 
 /** A fake npm on the job's PATH: its global install of gspot writes a launcher of the source CLI, or fails on request. */
@@ -126,7 +128,8 @@ test.each(['gitlab', 'github'] as const)(
     async (provider) => {
         await using repository = await testdir();
         await using executables = await testdir();
-        const { base, generated } = await prepareCiProject(repository.path, provider);
+        const { base, environment, generated } = await prepareCiProject(repository.path, provider);
+        using _tools = useEnvironment(environment);
         await createCiInstall(executables.path);
         const invalid = await runCiJob(repository.path, generated, executables.path, base);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
@@ -149,7 +152,8 @@ test.each(['gitlab', 'github'] as const)(
     async (provider) => {
         await using repository = await testdir();
         await using executables = await testdir();
-        const { base, generated } = await prepareCiProject(repository.path, provider);
+        const { base, environment, generated } = await prepareCiProject(repository.path, provider);
+        using _tools = useEnvironment(environment);
         const install = await createCiInstall(executables.path);
         const malformed = await runCiJob(repository.path, generated, executables.path, '$(touch injected)');
         expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
@@ -172,7 +176,11 @@ test.each(['gitlab', 'github'] as const)(
     async (provider) => {
         await using repository = await testdir();
         await using executables = await testdir();
-        const { base, pipeline, pipelinePath, workflowPath } = await prepareCiProject(repository.path, provider);
+        const { base, environment, pipeline, pipelinePath, workflowPath } = await prepareCiProject(
+            repository.path,
+            provider,
+        );
+        using _tools = useEnvironment(environment);
         await createCiInstall(executables.path);
         const policyBefore = await readFile(join(repository.path, 'gspot.toml'));
         const invalidSetting = await runGspot(repository.path, ['set', 'ci.files', 'unknown']);

@@ -33,15 +33,12 @@ test('new references compare with remote-tracking commits and scan custom destin
     gitOutput(sandbox.path, ['update-ref', 'refs/fetched/origin/main', base]);
     const mapped = await runGspot(sandbox.path, PUSH_CHECK_COMMAND, {}, protocol);
     expect(mapped.code, mapped.stdout + mapped.stderr).toBe(1);
-    expect((JSON.parse(mapped.stdout) as PushReport).revisions[0]?.commits).toStrictEqual([reviewed, base]);
-    expect(
-        new Set(
-            (JSON.parse(mapped.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings.map(
-                (finding) => finding.file,
-            ),
-        ),
-    ).toStrictEqual(new Set(['legacy.sh']));
-    expect((JSON.parse(mapped.stdout) as PushReport).revisions[0]?.report.checks[0]?.fileCount).toBe(2);
+    const mappedReport = JSON.parse(mapped.stdout) as PushReport;
+    expect(mappedReport.revisions[0]?.commits).toStrictEqual([reviewed, base]);
+    expect(new Set(mappedReport.revisions[0]?.report.checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(
+        new Set(['legacy.sh']),
+    );
+    expect(mappedReport.revisions[0]?.report.checks[0]?.fileCount).toBe(2);
     await expectWorkingTreeKept(sandbox.path, broken);
 });
 
