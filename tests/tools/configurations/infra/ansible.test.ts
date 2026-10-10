@@ -11,7 +11,7 @@ import * as commands from '#cli/execution/command/public.ts';
 import { levelSchema } from '#cli/parsers/schema/contracts.ts';
 import { sharePythonTools } from '#tests/harness/python-installation.ts';
 import { detectConfigurations } from '#cli/repository/selection/contracts.ts';
-import { CLEAN, SHELLED } from '#tests/config/tools/configurations/tool/ansible.ts';
+import { CLEAN, SHELLED } from '#tests/config/tools/configurations/infra/ansible.ts';
 
 test.skipIf(!hasToolBuild('ansible-lint')).each(levelSchema.options)(
     'Ansible detects configless projects and lints each selected scope at level %s',

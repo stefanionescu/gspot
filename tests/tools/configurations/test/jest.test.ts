@@ -14,7 +14,7 @@ import {
     TEST_SOURCE,
     JEST_PROJECT_FILES,
     CORRECTED_TEST_SOURCE,
-} from '#tests/config/tools/configurations/tool/jest.ts';
+} from '#tests/config/tools/configurations/test/jest.ts';
 
 const files = {
     ...JEST_PROJECT_FILES,

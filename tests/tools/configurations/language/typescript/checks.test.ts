@@ -12,8 +12,8 @@ import type { RunReport } from '#cli/types/execution/check.ts';
 import { shareRepository } from '#tests/harness/repository.ts';
 import { installedModules } from '#tests/harness/environment.ts';
 import type { InstalledScenario } from '#tests/types/harness/repository.ts';
-import type { TypecheckOutcome } from '#tests/types/tools/configurations/typescript.ts';
 import { stat, chmod, mkdir, readdir, symlink, writeFile, appendFile } from 'node:fs/promises';
+import type { TypecheckOutcome } from '#tests/types/tools/configurations/language/typescript.ts';
 import { REPOSITORY, JAVASCRIPT_CONFIG } from '#tests/config/tools/configurations/language/typescript/checks.ts';
 
 import {

@@ -24,7 +24,7 @@ import {
     XCTEST_COMMAND,
     XCTEST_COVERAGE_TESTS,
     XCTEST_COVERAGE_SOURCE,
-} from '#tests/config/tools/configurations/tool/swift-tests.ts';
+} from '#tests/config/tools/configurations/test/swift-tests.ts';
 
 test.skipIf(!isMacos)(
     'XCTest and xccov report a below-floor target and pass after testing its uncovered function',

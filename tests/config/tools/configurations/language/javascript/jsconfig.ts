@@ -1,4 +1,4 @@
-import type { JsconfigCase } from '#tests/types/tools/configurations/javascript.ts';
+import type { JsconfigCase } from '#tests/types/tools/configurations/language/javascript.ts';
 
 const SCOPE_TABLE = '[scope."app"]\nconfigurations = ["javascript"]\n';
 const FORMAT_SOURCE = '/** @param {string} value */\nexport function format(value) { return value.toUpperCase(); }\n';

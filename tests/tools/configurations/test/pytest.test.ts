@@ -12,7 +12,7 @@ import { test, expect, describe, afterAll, beforeAll } from 'bun:test';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
 import { MATH, PROJECT, ARITHMETIC_TESTS } from '#tests/config/samples/python.ts';
-import { PROVIDER_FLOORS } from '#tests/config/tools/configurations/tool/pytest.ts';
+import { PROVIDER_FLOORS } from '#tests/config/tools/configurations/test/pytest.ts';
 
 describe('the pytest configuration', () => {
     test('naming accepts the test_ prefix of a test function and Ruff and coverage accept its clean source', async () => {

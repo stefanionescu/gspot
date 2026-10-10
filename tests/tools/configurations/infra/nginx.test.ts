@@ -12,7 +12,7 @@ import { buildInitArguments } from '#tests/harness/init.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { CLEAN, FORGED, SERVER } from '#tests/config/tools/configurations/tool/nginx.ts';
+import { CLEAN, FORGED, SERVER } from '#tests/config/tools/configurations/infra/nginx.ts';
 
 // The root names an image that cannot exist, so only the scope's own image lets the container test run.
 const NGINX_POLICY = buildPolicy(['nginx'], {

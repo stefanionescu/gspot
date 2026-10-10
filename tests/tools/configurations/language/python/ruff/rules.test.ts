@@ -11,7 +11,7 @@ import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
-import type { RuffFinding } from '#tests/types/tools/configurations/python.ts';
+import type { RuffFinding } from '#tests/types/tools/configurations/language/python.ts';
 import { RULE_SOURCE } from '#tests/config/tools/configurations/language/python/ruff.ts';
 
 let previewCodes: string[];

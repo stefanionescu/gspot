@@ -15,7 +15,7 @@ import {
     VITEST_SOURCE,
     VITEST_PACKAGE,
     PROVIDER_FLOORS,
-} from '#tests/config/tools/configurations/tool/vitest.ts';
+} from '#tests/config/tools/configurations/test/vitest.ts';
 
 const files = {
     ...REPOSITORY.files,
