@@ -1,16 +1,16 @@
-name: Windows native inventory diagnostic
+name: Windows compiler native configuration acceptance
 on:
     workflow_dispatch:
 permissions:
     contents: read
 concurrency:
-    group: windows-inventory-${{ github.ref }}
+    group: windows-compiler-seven-${{ github.ref }}
     cancel-in-progress: false
 defaults:
     run:
         shell: bash
 jobs:
-    inventory:
+    compiler:
         runs-on: windows-2025
         timeout-minutes: 60
         steps:
@@ -20,38 +20,6 @@ jobs:
                   persist-credentials: false
             - name: Prepare the repository
               uses: ./.github/actions/setup
-              with:
-                  tools: bun node
-            - name: Compare native tool file inventories
+            - name: Validate native TypeScript configuration
               run: |
-                  cat > .windows-inventory-probe.ts <<'PROBE'
-                  import { globSync } from 'node:fs';
-                  import { join, normalize } from 'node:path';
-                  import { SUPABASE_DATABASE_TEST } from './scripts/config/plugin.ts';
-                  const pattern = 'tests/tools/**/*.test.ts';
-                  const cwd = process.cwd();
-                  const bun = [...new Bun.Glob(pattern).scanSync({ cwd })];
-                  const filesystem = globSync(pattern, { cwd });
-                  const paths = entries => entries.map(path => normalize(path)).sort();
-                  const bunPaths = paths(bun);
-                  const filesystemPaths = paths(filesystem);
-                  const excluded = join(SUPABASE_DATABASE_TEST);
-                  const node = Bun.spawnSync(['node', '--version']);
-                  console.log('GSPOT_INVENTORY ' + JSON.stringify({
-                      bun: Bun.version, revision: Bun.revision, node: { code: node.exitCode, version: node.stdout.toString().trim() }, platform: process.platform, pattern,
-                      excluded: { authored: SUPABASE_DATABASE_TEST, native: excluded },
-                      counts: { bunRaw: bun.length, filesystemRaw: filesystem.length,
-                          bunOriginalFilter: bun.filter(path => path !== SUPABASE_DATABASE_TEST).length,
-                          bunNativeFilter: bun.filter(path => path !== excluded).length,
-                          filesystemNativeFilter: filesystem.filter(path => path !== excluded).length },
-                      exclusionMatches: { bun: bun.filter(path => normalize(path) === excluded),
-                          filesystem: filesystem.filter(path => normalize(path) === excluded) },
-                      onlyBun: bunPaths.filter(path => !filesystemPaths.includes(path)),
-                      onlyFilesystem: filesystemPaths.filter(path => !bunPaths.includes(path)),
-                      bunPaths, filesystemPaths,
-                      partitions: { count: 16, measured: false,
-                          reason: 'Bun test help has no file-list or shard-inventory operation; no partition algorithm assumed.' }
-                  }));
-                  PROBE
-                  trap 'rm -f .windows-inventory-probe.ts' EXIT
-                  mise exec -- bun .windows-inventory-probe.ts
+                  mise run test:tools -- --test-name-pattern '^the typescript configuration' -- tests/tools/configurations/cases.test.ts
