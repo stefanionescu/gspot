@@ -1,114 +1,148 @@
-name: ci
-# Run all four test suites on Linux, macOS, and Windows; shard tool tests four ways.
+name: Windows HTML executable companion acceptance
 on:
-    push:
-        branches: [main]
-    pull_request:
     workflow_dispatch:
 permissions:
     contents: read
-concurrency:
-    group: ci-${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 defaults:
     run:
         shell: bash
 jobs:
-    check:
-        runs-on: ubuntu-24.04
+    html:
+        runs-on: windows-2025
         timeout-minutes: 60
         steps:
             - name: Check out the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
-                  fetch-depth: 0
                   persist-credentials: false
             - name: Prepare the repository
               uses: ./.github/actions/setup
-            # A pull request checks out a detached merge commit, so the commit checks compare with the default branch.
-            - name: Point origin/HEAD at the default branch
-              run: git remote set-head origin "${DEFAULT_BRANCH}"
-              env:
-                  DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-            - name: Install the repository checks
-              id: install
-              run: mise run install:checks
-            - name: Verify the committed tool lockfiles
+            - name: Verify native companion relocation and missing companion refusal
               run: |
-                  bun scripts/plugin.ts install --refresh-lockfiles
-                  git diff --exit-code .gspot/bun.lock .gspot/uv.lock
-            - name: Validate registry pins
-              run: mise run check:pins
-            - name: Build the CLI
-              run: mise run build:cli
-    docs:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 60
-        steps:
-            - name: Check out the repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-              with:
-                  persist-credentials: false
-            - name: Prepare docs and CLI
-              uses: ./.github/actions/setup
-              with:
-                  tools: bun node
-                  setup: bun install --frozen-lockfile --filter '@gspothq/{cli,docs}'
-            - name: Build the site
-              run: mise run build:docs
-    package:
-        strategy:
-            fail-fast: false
-            matrix:
-                os: &platforms [ubuntu-24.04, macos-26, windows-2025]
-        runs-on: ${{ matrix.os }}
-        timeout-minutes: 60
-        steps:
-            - name: Check out the repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-              with:
-                  persist-credentials: false
-            - name: Prepare the repository
-              uses: ./.github/actions/setup
-            - name: Test the packages
-              run: mise run test:package
-    test:
-        strategy:
-            fail-fast: false
-            matrix:
-                os: *platforms
-        runs-on: ${{ matrix.os }}
-        timeout-minutes: 60
-        steps:
-            - name: Check out the repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-              with:
-                  fetch-depth: 0
-                  persist-credentials: false
-            - name: Prepare the repository
-              uses: ./.github/actions/setup
-              with:
-                  tools: bun node
-            - name: Run the CLI and plugin tests
-              run: mise run test
-    tools:
-        name: tools (${{ matrix.os }} ${{ matrix.shard }}/4)
-        strategy:
-            fail-fast: false
-            matrix:
-                os: *platforms
-                shard: [1, 2, 3, 4]
-        runs-on: ${{ matrix.os }}
-        timeout-minutes: 60
-        steps:
-            - name: Check out the repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-              with:
-                  fetch-depth: 0
-                  persist-credentials: false
-            - name: Prepare the repository
-              uses: ./.github/actions/setup
-              with:
-                  native-tests: 'true'
-            - name: Run this shard of the tool tests
-              run: mise run test:tools -- "--shard=${{ matrix.shard }}/4"
+                  cat > "$RUNNER_TEMP/companion-probe.ts" <<'PROBE'
+                  import {copyInstalledModule} from "./tests/harness/platforms.ts";
+                  import {testModules} from "./tests/harness/environment.ts";
+                  import {testdir} from "testdirs";
+                  import {join,resolve,relative,isAbsolute} from "node:path";
+                  import {readdir,readFile,realpath,rename} from "node:fs/promises";
+                  await using sandbox=await testdir();
+                  const name="html-validate";
+                  const original=join(testModules,".bin");
+                  const entries=(await readdir(original)).filter(entry=>entry===name||entry.startsWith(`${name}.`));
+                  const layout=await Promise.all(entries.map(async entry=>({entry,realpath:await realpath(join(original,entry)),sha256:new Bun.CryptoHasher("sha256").update(await readFile(join(original,entry))).digest("hex")})));
+                  const target=join(sandbox.path,"node_modules");
+                  await copyInstalledModule(target,name);
+                  const metadata=join(target,".bin",`${name}.bunx`);
+                  const raw=await readFile(metadata);
+                  if(!raw.equals(await readFile(join(original,`${name}.bunx`))))throw new Error("Companion bytes changed during copy");
+                  const encoded=raw.toString("utf16le").split('"')[0];
+                  const program=resolve(target,encoded);
+                  const boundary=relative(target,program);
+                  if(isAbsolute(boundary)||boundary===".."||boundary.startsWith("..\\"))throw new Error("Launcher escapes copied node_modules");
+                  const copied=await realpath(program);
+                  const version=Bun.spawnSync([join(target,".bin",`${name}.exe`),"--version"]);
+                  await rename(metadata,`${metadata}.held`);
+                  let absent;
+                  try{absent=Bun.spawnSync([join(target,".bin",`${name}.exe`),"--version"]);}finally{await rename(`${metadata}.held`,metadata);}
+                  const restored=Bun.spawnSync([join(target,".bin",`${name}.exe`),"--version"]);
+                  console.log(JSON.stringify({bun:Bun.version,revision:Bun.revision,layout,encoded,program:copied,copiedEntries:await readdir(join(target,".bin")),metadataSHA256:new Bun.CryptoHasher("sha256").update(raw).digest("hex"),version:{code:version.exitCode,stdout:version.stdout.toString(),stderr:version.stderr.toString()},absent:{code:absent.exitCode,stdout:absent.stdout.toString(),stderr:absent.stderr.toString()},restored:{code:restored.exitCode,stdout:restored.stdout.toString(),stderr:restored.stderr.toString()}},null,2));
+                  if(version.exitCode!==0||restored.exitCode!==0||absent.exitCode!==255||!absent.stderr.toString().includes("could not find bin metadata file"))throw new Error("Native companion transport witness failed");
+                  PROBE
+                  cp "$RUNNER_TEMP/companion-probe.ts" companion-probe.ts
+                  trap 'rm -f companion-probe.ts' EXIT
+                  mise exec -- bun companion-probe.ts
+            - name: Prepare native publication timing observer
+              run: |
+                  cat > .windows-ci-publication-observer.mjs <<'OBSERVER'
+                  import { mock } from 'bun:test';
+                  import * as fs from 'node:fs';
+                  import { resolve, basename } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+
+                  const record = (value) => process.stderr.write(`GSPOT_PHASE ${JSON.stringify({ at: new Date().toISOString(), ...value })}\n`);
+                  let publication;
+                  const monitored = {};
+                  for (const name of ['fsyncSync', 'lstatSync', 'statSync', 'realpathSync', 'readlinkSync', 'openSync', 'readFileSync', 'writeFileSync', 'fchmodSync', 'renameSync', 'mkdirSync', 'symlinkSync', 'unlinkSync']) {
+                      const native = fs[name];
+                      monitored[name] = function (...args) {
+                          const start = performance.now();
+                          try { return native(...args); }
+                          finally {
+                              if (publication) {
+                                  const result = publication[name] ??= { calls: 0, ms: 0 };
+                                  result.calls++;
+                                  result.ms += performance.now() - start;
+                              }
+                          }
+                      };
+                  }
+                  mock.module('node:fs', () => ({ ...fs, ...monitored }));
+                  const url = (path) => pathToFileURL(resolve(process.cwd(), path)).href;
+                  const stateUrl = url('packages/cli/src/lifecycle/ownership/state/public.ts');
+                  const state = await import(stateUrl);
+                  const nativeRead = state.readInstalledTree;
+                  const nativeInstall = state.installTree;
+                  const inventory = (entries) => ({ files: entries.length, bytes: entries.reduce((n, entry) => n + entry.file.bytes.length, 0) });
+                  mock.module(stateUrl, () => ({
+                      ...state,
+                      readInstalledTree(...args) {
+                          const start = performance.now();
+                          const previous = publication;
+                          publication = {};
+                          record({ phase: 'readInstalledTree', event: 'start', kind: args[1] });
+                          try {
+                              const result = nativeRead(...args);
+                              record({ phase: 'readInstalledTree', event: 'end', kind: args[1], ms: performance.now() - start, ...inventory(result), fsOperations: publication });
+                              return result;
+                          } catch (error) {
+                              record({ phase: 'readInstalledTree', event: 'error', kind: args[1], ms: performance.now() - start, error: error?.name });
+                              throw error;
+                          } finally { publication = previous; }
+                      },
+                      installTree(...args) {
+                          const start = performance.now();
+                          const previous = publication;
+                          publication = {};
+                          record({ phase: 'installTree', event: 'start', kind: args[1], ...inventory(args[2]) });
+                          try { return nativeInstall(...args); }
+                          finally {
+                              record({ phase: 'installTree', event: 'end', kind: args[1], ms: performance.now() - start, fsOperations: publication });
+                              publication = previous;
+                          }
+                      },
+                  }));
+                  const commandUrl = url('tests/harness/command.ts');
+                  const command = await import(commandUrl);
+                  const nativeCommand = command.runTestCommand;
+                  mock.module(commandUrl, () => ({
+                      ...command,
+                      async runTestCommand(...args) {
+                          const start = performance.now();
+                          const executable = basename(args[0][0]);
+                          record({ phase: 'runTestCommand', event: 'start', executable });
+                          try {
+                              const result = await nativeCommand(...args);
+                              record({ phase: 'runTestCommand', event: 'end', executable, ms: performance.now() - start, code: result.code });
+                              return result;
+                          } catch (error) {
+                              record({ phase: 'runTestCommand', event: 'error', executable, ms: performance.now() - start, error: error?.name });
+                              throw error;
+                          }
+                      },
+                  }));
+                  const installUrl = url('tests/harness/install.ts');
+                  const install = await import(installUrl);
+                  const nativeShare = install.shareToolProjects;
+                  mock.module(installUrl, () => ({
+                      ...install,
+                      async shareToolProjects(...args) {
+                          const start = performance.now();
+                          record({ phase: 'shareToolProjects', event: 'start' });
+                          try { return await nativeShare(...args); }
+                          finally { record({ phase: 'shareToolProjects', event: 'end', ms: performance.now() - start }); }
+                      },
+                  }));
+                  record({ phase: 'observer', event: 'ready' });
+                  OBSERVER
+            - name: Validate HTML scopes, registry credentials, and GitHub CI refusals
+              run: mise run test:tools -- --preload ./.windows-ci-publication-observer.mjs --test-name-pattern 'keeps built HTML exceptions confined|native registry settings authenticate|invalid comparisons and failed installs fail the job in github CI' -- tests/tools/generation/site-html.test.ts tests/tools/npm/environment.test.ts tests/tools/commands/ci.test.ts

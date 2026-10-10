@@ -2,10 +2,10 @@
 import { hostPlatform } from '#cli/platform/public.ts';
 import { missingBuild } from '#cli/planning/contracts.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
+import { quoteArgument } from '#cli/platform/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { join, dirname, relative, basename } from 'node:path';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import { quoteArgument, executableNames } from '#cli/platform/contracts.ts';
 import { testModules, installedModules } from '#tests/harness/environment.ts';
 import { cp, mkdir, lstat, chmod, readdir, symlink, realpath, copyFile, writeFile } from 'node:fs/promises';
 
@@ -98,7 +98,7 @@ export async function copyInstalledModule(target: string, name: string): Promise
     await mkdir(binaries, { recursive: true });
     const installed = join(testModules, '.bin');
     const entries = await readdir(installed);
-    for (const file of executableNames(name).filter((entry) => entries.includes(entry))) {
+    for (const file of entries.filter((entry) => entry === name || entry.startsWith(`${name}.`))) {
         const original = join(installed, file);
         const path = join(binaries, file);
         const entry = await lstat(original);
