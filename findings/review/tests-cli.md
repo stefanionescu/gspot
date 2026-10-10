@@ -1,6 +1,6 @@
 # Tests in `tests/cli`
 
-2 unresolved review records remain.
+0 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -508,3 +508,12 @@ Original records and quotations remain above. These records are complete at `e29
 | ID                     | Status   | Evidence                                                                      |
 | ---------------------- | -------- | ----------------------------------------------------------------------------- |
 | `review/tests-cli/056` | complete | Evidence c0857116ba09d1f9. Commit `e2972c91c3760bc25974a69180ac4d3869c658d5`. |
+
+## Implementation checkpoint e985362fc of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `e985362fce1b30e03745f935e867f017fbdbbec2`.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/tests-cli/010` | complete | Committed e985362fce1b30e03745f935e867f017fbdbbec2 binding/current-owner hash/native bridge: /tmp/gspot-unresolved69-e985-review/1092-six-closure-spec.json SHA256 3fc4bd755f7cb0a5d716dbee6a41aa2e5d4e5a02deca0a76f920f41e43a35cc6, record review/tests-cli/010. Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table (Latest user exact1092 historical four-concern table-v2 approval communicated by Parent; naming885 counted once for4IDs, scope diagnostic35 once, constraint127+explicit hooks45 once for049). Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred. Commit `e985362fce1b30e03745f935e867f017fbdbbec2`. |
+| `review/tests-cli/080` | complete | Committed e985362fce1b30e03745f935e867f017fbdbbec2 binding/current-owner hash/native bridge: /tmp/gspot-unresolved69-e985-review/three-binding-reconciliations-closure-spec.json SHA256 09f23e1ba248150240c52456173f67af7a9142ccfda0f470c036de5fd8074411, record review/tests-cli/080. Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table (Latest explicit user three-binding reconciliation relayed by Root; retained strict flags/targetless-ignore deletion/no one-caller helper respectively.). Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred. Commit `e985362fce1b30e03745f935e867f017fbdbbec2`.                 |
