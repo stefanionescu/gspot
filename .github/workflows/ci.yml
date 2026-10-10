@@ -1,5 +1,5 @@
 name: ci
-# Run all four test suites on Linux, macOS, and Windows; shard tool tests sixteen ways.
+# Run all four suites on each platform; split heavy tool files by their registered test names.
 on:
     push:
         branches: [main]
@@ -94,28 +94,67 @@ jobs:
             - name: Run the CLI and plugin tests
               run: mise run test
     tools:
-        name: tools (${{ matrix.os }} ${{ matrix.shard }})
+        name: tools (${{ matrix.os }} ${{ matrix.selection.shard || matrix.selection.name }})
         strategy:
             fail-fast: false
             matrix:
                 os: *platforms
-                shard:
-                    - 1/16
-                    - 2/16
-                    - 3/16
-                    - 4/16
-                    - 5/16
-                    - 6/16
-                    - 7/16
-                    - 8/16
-                    - 9/16
-                    - 10/16
-                    - 11/16
-                    - 12/16
-                    - 13/16
-                    - 14/16
-                    - 15/16
-                    - 16/16
+                selection:
+                    - shard: 1/16
+                    - shard: 2/16
+                    - shard: 3/16
+                    - shard: 4/16
+                    - shard: 5/16
+                    - shard: 6/16
+                    - shard: 7/16
+                    - shard: 8/16
+                    - shard: 9/16
+                    - shard: 10/16
+                    - shard: 11/16
+                    - shard: 12/16
+                    - shard: 13/16
+                    - shard: 14/16
+                    - shard: 15/16
+                    - shard: 16/16
+                    - name: general
+                      path: &cases tests/tools/configurations/cases.test.ts
+                      pattern: '^(?:the (?:xcode|files|github-actions|supabase|ansible) configuration |environment checks in the secrets configuration )'
+                    - name: python-swift
+                      path: *cases
+                      pattern: '^the (?:pytest|python|sql|swift) configuration(?: over a package)? '
+                    - name: data
+                      path: *cases
+                      pattern: '^the (?:postgres|docker) configuration '
+                    - name: bash
+                      path: *cases
+                      pattern: '^the bash configuration '
+                    - name: openapi-vitest
+                      path: *cases
+                      pattern: '^the (?:openapi|vitest) configuration '
+                    - name: typescript-library
+                      path: *cases
+                      pattern: '^the (?:typescript configuration|library configurations) '
+                    - name: prose-site
+                      path: *cases
+                      pattern: '^the (?:markdown, docs and prose configurations|site configuration) '
+                    - name: nestjs
+                      path: *cases
+                      pattern: '^the nestjs configuration '
+                    - name: react
+                      path: *cases
+                      pattern: '^the react configuration '
+                    - name: svelte
+                      path: *cases
+                      pattern: '^the svelte configuration '
+                    - name: vue
+                      path: *cases
+                      pattern: '^the vue configuration '
+                    - name: shared-recommended
+                      path: &shared tests/tools/lifecycle/shared-tools.test.ts
+                      pattern: '^(?:shared tools preserve scoped checks and portable lockfiles at recommended|installed tool projects leave no apply drift after initialization)$'
+                    - name: shared-all
+                      path: *shared
+                      pattern: '^(?:shared tools preserve scoped checks and portable lockfiles at all|shared native tool projects keep a separately selected Stylelint dependency and native result)$'
         runs-on: ${{ matrix.os }}
         timeout-minutes: 60
         steps:
@@ -128,5 +167,13 @@ jobs:
               uses: ./.github/actions/setup
               with:
                   native-tests: 'true'
-            - name: Run this shard of the tool tests
-              run: mise run test:tools -- "--shard=${{ matrix.shard }}"
+            - name: Run this file shard of the tool tests
+              if: matrix.selection.shard
+              run: >-
+                  mise run test:tools -- "--shard=${{ matrix.selection.shard }}"
+                  --test-name-pattern='^(?!(?:the (?:xcode|pytest|ansible|library|postgres|supabase|github-actions|docker|openapi|vitest|python|sql|typescript|swift|bash|files|markdown, docs and prose|site|nestjs|react|svelte|vue) configurations?(?: over a package)?|environment checks in the secrets configuration) \S+ reports .* and passes after the fix$|(?:shared tools preserve scoped checks and portable lockfiles at (?:recommended|all)|shared native tool projects keep a separately selected Stylelint dependency and native result|installed tool projects leave no apply drift after initialization)$)'
+            - name: Run this named group of the tool tests
+              if: matrix.selection.path
+              run: >-
+                  mise run test:tools -- "--test-name-pattern=${{ matrix.selection.pattern }}"
+                  -- "${{ matrix.selection.path }}"

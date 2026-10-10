@@ -1367,6 +1367,27 @@
                 "Canonical patch SHA256 f70fff584018a09164edc01de16481443c3249f71479a4623b602d1c1e8e5e92."
             ],
             "adoption": "Condition satisfied: native Windows cache4 pass0fail53assertions. Exact21-owner patch adopted with no private workflows, probes or preload. Evidence edf25cfd4cc76db8; full current platform acceptance remains required."
+        },
+        {
+            "id": "cold-cache-python-publication789",
+            "date": "2026-10-10",
+            "scope": "Exact3-owner shared native tool cache ordering",
+            "decision": "Allow exact789 support bytes after the unchanged three Windows library cases pass. Preserve production, assertions, real installation, cache keys, confinement and the selected-Python refusal.",
+            "evidence": [
+                "Explicit user answer: Allow this exact verified fix.",
+                "Canonical patch SHA2563ba0c52978e3a208a244ca028901e3499a8bcb811bb7841135a17c8bd4c5087f; native14pass0fail126assertions."
+            ],
+            "adoption": "Pending actual Windows successor38088386660; source is unadopted."
+        },
+        {
+            "id": "native-tools-cohorts3409",
+            "date": "2026-10-10",
+            "scope": ".github/workflows/ci.yml tools selections",
+            "decision": "Allow exact3409 workflow bytes:16 ordinary file shards,11 central groups and2 shared groups per platform. Retain existing native filters,104 test owners, all assertions, one timeout and60-minute job limits.",
+            "evidence": [
+                "Explicit user answer: Allow this exact verified CI fix.",
+                "Canonical patch SHA256843bc6a083faf09f98b77e1f9c51ad38d08949802e8b7cc9cc41e45ebdb1118a;535 declarations assigned once by actual YAML/native model; independent review; pinned staged24pass0fail2skip. Actual platform timing remains pending."
+            ]
         }
     ],
     "implementationBatches": {
