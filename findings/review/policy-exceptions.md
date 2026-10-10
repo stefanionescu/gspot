@@ -1,6 +1,6 @@
 # This Repository's Own gspot Policy: Entries and Customizations
 
-5 unresolved review records remain.
+4 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -291,3 +291,11 @@ Original records and quotations remain above. These records are complete at `f0a
 | `review/policy-exceptions/031` | complete | Adopt owner-approved eight required spellings, leaving60 evidenced entries and removing103/7829B overall. Preserve source APIs, patches and original quotations. Full native Typos/Vale and final staged/push gates152/0 pass. Commit `f0ab8b668d398269494c4a7ec130d97b0bc63092`.                                                                |
 | `review/policy-exceptions/051` | complete | Follow explicit no-patched-release fallback: checked upstream advisories/package receipts2026-10-09, record latest versions and expiry2026-11-08. Normal apply regenerates OSV config. Native OSV and staged/push gates pass; no invented fixed version. Commit `f0ab8b668d398269494c4a7ec130d97b0bc63092`.                                      |
 | `review/policy-exceptions/060` | complete | Committed f4e847 authored global attributes reuse and normal generated freshness. Remove current17 redundant lines, retain authored values; native534/2037 combined receipt qualified by selected controls. Staged49/0, commit38/0, push49/0. Commit `f0ab8b668d398269494c4a7ec130d97b0bc63092`.                                                 |
+
+## Implementation checkpoint d4b9f0ea3 of October 10, 2026 for native-docs-source-copy-and-policy-examples
+
+Original records and quotations remain above. These records are complete at `d4b9f0ea3c00499118b3dbc8ee07f74af7ef4022`.
+
+| ID                             | Status   | Evidence                                                                                                                                                                                                                                                               |
+| ------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/policy-exceptions/043` | complete | Docs use source aliases without CLI workspace dependency. Metadata-only exports and original description retained. Native isolated site checks pass; fresh Node/Bun metadata consumers reject8 runtime/deep routes. Commit `d4b9f0ea3c00499118b3dbc8ee07f74af7ef4022`. |

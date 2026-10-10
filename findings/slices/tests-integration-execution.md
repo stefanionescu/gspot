@@ -1,6 +1,6 @@
 # Tests: Execution Integration Tests
 
-4 unresolved review records remain.
+3 unresolved review records remain.
 
 ## Open findings
 
@@ -98,3 +98,11 @@ Original records and quotations remain above. These records are complete at `49c
 | ID                                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                               |
 | ---------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-execution/030` | complete | Use buildRunOptions with PROJECT_OPTIONS and positional paths, removing hand-written execution defaults and the unused built-in import. Existing committed leaf and import remove 139 bytes. /tmp/gspot-test-contract-five-current/readiness-bridges.json; current native impact tests and Main staged checks pass. Commit `49c37336491469e783b82b9e6ff545d1ed17af11`. |
+
+## Implementation checkpoint 29553132f of October 10, 2026 for native-lifecycle-test-contracts
+
+Original records and quotations remain above. These records are complete at `29553132fff4b24951509da88fad9f464ec77729`.
+
+| ID                                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ---------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-execution/018` | complete | Integrated lifecycle checkpoint:165 CLI tests/881 assertions across20files; configured types, scoped formatter and ESLint pass. Original native preservation proofs retain unique diagnostics, bytes, modes, resource cleanup and intentional failures; actual cross-platform aggregate remains open. Prescribed corrected-pass runs are deleted. Retain all distinct fatal7/findings1, EISDIR, malformed JSON, missing-image, exact asset bytes/modes and policy-exception controls. Commit `29553132fff4b24951509da88fad9f464ec77729`. |
