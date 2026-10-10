@@ -1,5 +1,5 @@
 {
-    "openRecords": 187,
+    "openRecords": 185,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 187,
+        "openRecords": 185,
         "records": 1092,
         "batches": [
             {
@@ -1956,8 +1956,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 391,
-                "unresolvedAssignments": 78
+                "completedAssignments": 392,
+                "unresolvedAssignments": 77
             },
             {
                 "id": "scripts-repository",
@@ -2241,8 +2241,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 104,
-                "unresolvedAssignments": 33
+                "completedAssignments": 105,
+                "unresolvedAssignments": 32
             },
             {
                 "id": "policy-file",
@@ -2437,8 +2437,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 81,
-                "unresolvedAssignments": 8
+                "completedAssignments": 82,
+                "unresolvedAssignments": 7
             },
             {
                 "id": "configurations",
@@ -2549,10 +2549,13 @@
     "implementationBaseline": "b36d7d0fc",
     "implementationRecords": {
         "additional/next-app-router-links": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "a6e22f689739296608dbd311a05e7864aa2175dc",
+            "verification": ["Evidence 01badde4fa0217fb.", "Evidence 6f05798883ca7763."],
+            "remaining": [
+                "Exact1007-byte size disposition remains required. Resolve upstream reporting requirement using existing report/PR or a compliant human-authored report with public reproduction; factual draft and portable reproduction are prepared."
+            ]
         },
         "areas/checks/008": {
             "status": "partial",
@@ -2950,10 +2953,15 @@
             ]
         },
         "areas/checks/070": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": [
+                "All prescribed functional obligations are committed and current AST/data matches native-tested implementations. Native169cases/519assertions and34Node/Bun controls retained; later148/529 migration controls cover current defaults. /tmp/gspot-checks070073-config033-051a-evidence/readiness.json."
+            ],
+            "remaining": [
+                "Exact whole3817-byte/source1522-byte size disposition pending; shared HTML extraction counted once, unrelated headers excluded."
+            ]
         },
         "areas/checks/071": {
             "status": "complete",
@@ -2977,10 +2985,13 @@
             ]
         },
         "areas/checks/073": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": [
+                "All prescribed functional obligations are committed and current AST/data matches native-tested implementations. Native169cases/519assertions and34Node/Bun controls retained; later148/529 migration controls cover current defaults. /tmp/gspot-checks070073-config033-051a-evidence/readiness.json."
+            ],
+            "remaining": ["Exact whole4888-byte/source635-byte size disposition pending for parsed storage policies."]
         },
         "areas/checks/075": {
             "status": "partial",
@@ -3079,10 +3090,13 @@
             ]
         },
         "areas/integration-tests/001": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": [
+                "Deleted the exact redundant expect(inspected).toHaveBeenCalled() assertion during public owner consolidation; original state and exit-code assertions are preserved by the current library-state table.",
+                "Current pinned native doctor cases ok,newer,outdated:3 passed,0 failed,6 assertions,999ms; /tmp/gspot-integration001-doctor-native.log. No policy writes or tool installation. The required deletion adds no code; broader public API fixture changes retain their separate ownership and cost evidence."
+            ]
         },
         "areas/integration-tests/003": {
             "status": "complete",
@@ -3199,7 +3213,15 @@
                     "evidence": "/tmp/gspot-python-domain-checkpoint1-final-freeze.json",
                     "commit": null,
                     "verification": ["Evidence c57c6983e8dc7899."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-integration016-f18-status-draft/freeze.json",
+                    "verification": ["Evidence 1c2a5de9c5f8a307."]
                 }
+            ],
+            "remaining": [
+                "Original setting-name assertion referred to native tool.importlinter; current configuration lookup also accepts setup.cfg and .importlinter, so the native generic skip diagnostic has no single setting-name contract. Validated 77-byte deletion retains exact check identifier/skipped status and all malformed-project assertions; final-row owner override is pending."
             ]
         },
         "areas/integration-tests/017": {
@@ -5141,6 +5163,16 @@
                     "commit": "29553132fff4b24951509da88fad9f464ec77729",
                     "evidence": "/tmp/gspot-semgrep-ci-current-evidence/freeze.json",
                     "verification": ["Evidence efbbf4e573e78a8f."]
+                },
+                {
+                    "commit": "78b98449db7a28e4e30482209bf6ac637330bebf",
+                    "evidence": "/tmp/gspot-database-78b9-native-job.log",
+                    "verification": ["Evidence b4c5c3cda8606c7b."]
+                },
+                {
+                    "commit": "78b98449db7a28e4e30482209bf6ac637330bebf",
+                    "evidence": "/tmp/gspot-current-doctor-78b9.log",
+                    "verification": ["Evidence 998fefc84cf02768."]
                 }
             ]
         },
@@ -7545,10 +7577,23 @@
             ]
         },
         "review/glossary/006": {
-            "status": "in-progress",
-            "owner": "registry implementation; main integration",
-            "commit": null,
-            "verification": ["Evidence 887ff090660efa9d.", "Evidence 9e616ebbe104f9c5."]
+            "status": "partial",
+            "owner": "main",
+            "commit": "78b98449db7a28e4e30482209bf6ac637330bebf",
+            "verification": ["Evidence 887ff090660efa9d.", "Evidence 9e616ebbe104f9c5."],
+            "additionalChanges": [
+                {
+                    "commit": "78b98449db7a28e4e30482209bf6ac637330bebf",
+                    "evidence": "/tmp/gspot-claim-wording-051a-final/freeze.json",
+                    "verification": [
+                        "Evidence 9956b493d218c41a.",
+                        "Historical +620 race prototype was never adopted; current reads/writes exactly match02fd actual +159 implementation. Safety exception CI055 is separate. Whole mixed mechanical/continuation cost reconciliation remains required; no full-record closure or blanket growth approval inferred."
+                    ]
+                }
+            ],
+            "remaining": [
+                "Reconcile actual adopted same-concern mechanical/continuation and159-byte claim-race costs with the owner less-code requirement. Supported-runtime and platform acceptance remains qualified by the original native receipts."
+            ]
         },
         "review/glossary/007": {
             "status": "complete",
@@ -8062,10 +8107,16 @@
             ]
         },
         "review/policy-exceptions/041": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "b36d7d0fc45998f482b240933576ec6b7fbc11f4",
+            "verification": [
+                "Baseline removed exact old findings/implementation/areas/repository.json spelling exclusion. Current full gspot check --only spelling/typos:5 scopes pass/0 findings,1932 files,1.1s. /tmp/gspot-policy-exception041-full-typos.log.",
+                "Current docs/stale-paths [[ignore]] retains FINDINGS.md and findings/**; historical jscpd exclude was deleted together with absent findings/implementation at baseline."
+            ],
+            "remaining": [
+                "Resolve explicit prescribed jscpd-exclusion retention against baseline deletion of its entire findings/implementation target; keep this record partial until that obligation is reconciled."
+            ]
         },
         "review/policy-exceptions/043": {
             "status": "complete",
@@ -10892,10 +10943,10 @@
             ]
         },
         "review/tests-layout/003": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f18ce4f2cfd6d8a8600fe2ab7f34f60cd0049297",
+            "verification": ["Evidence 9079f318108ff3c3.", "Evidence 9014e11494a443f3."]
         },
         "review/tests-layout/004": {
             "status": "complete",
@@ -10907,10 +10958,23 @@
             ]
         },
         "review/tests-layout/005": {
-            "status": "pending",
-            "owner": null,
+            "status": "partial",
+            "owner": "main",
             "commit": "a56647e4badba8ac7afe3347131d77d1beeb1990",
-            "verification": ["Evidence 652b98e12643c576.", "Evidence d9dc9489c7f6948a."]
+            "verification": ["Evidence 652b98e12643c576.", "Evidence d9dc9489c7f6948a."],
+            "additionalChanges": [
+                {
+                    "commit": "a827e64d7b64af08a9d4b70becc43b81d7941da5",
+                    "evidence": "/tmp/gspot-layout003005-2e64-final-readiness/readiness.json",
+                    "verification": [
+                        "Actual current shareRepository and all equivalent callers are delivered; helper/eight caller phase\u22122511bytes plus finalTypeScript owner phase\u2212297=\u22122808same-concernbytes, excluding unrelated naming022. Native55cases/562assertions plus23native controls; current helper unchanged from a827e64d7.",
+                        "Evidence 0ca0acd0a1d07230."
+                    ]
+                }
+            ],
+            "remaining": [
+                "Adjudicate retained semantically distinct setup lifetimes and final carve-outs001 platform/time-limit qualification before whole-record closure."
+            ]
         },
         "review/tests-layout/007": {
             "status": "complete",
@@ -11985,10 +12049,15 @@
             ]
         },
         "slices/config/033": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": [
+                "All prescribed functional obligations are committed and current AST/data matches native-tested implementations. Native169cases/519assertions and34Node/Bun controls retained; later148/529 migration controls cover current defaults. /tmp/gspot-checks070073-config033-051a-evidence/readiness.json."
+            ],
+            "remaining": [
+                "Exact whole2641-byte test-growth disposition pending; production shrinks56bytes; approved Squawk064 is a separate concern."
+            ]
         },
         "slices/config/035": {
             "status": "complete",
@@ -19543,6 +19612,24 @@
                 "Original related GroupB growth remains2285 bytes; this reducing successor does not waive it or close those records.",
                 "Docker daemon unavailable locally; actual CI output confirms category only, not later clean/invalid-config branches."
             ]
+        },
+        {
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "completedRecords": ["areas/integration-tests/001"],
+            "unresolvedRecords": 186,
+            "validation": [
+                "Exact adopted deletion traced in9a385; native3-case doctor state/exit controls pass on current78b9."
+            ],
+            "limitations": []
+        },
+        {
+            "commit": "f18ce4f2cfd6d8a8600fe2ab7f34f60cd0049297",
+            "completedRecords": ["review/tests-layout/003"],
+            "unresolvedRecords": 185,
+            "validation": [
+                "Normal Main producer187up-to-date; exact historical pointer hashes and current native output/applicability proof; gspot staged/commit/push gates all0."
+            ],
+            "limitations": ["No new full suite/platform result inferred from a generated-pointer deletion."]
         }
     ],
     "verificationEvidenceFile": "verification.json"
