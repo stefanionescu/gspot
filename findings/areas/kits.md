@@ -1,6 +1,6 @@
 # Kits, Settings, and Names
 
-16 unresolved review records remain.
+15 unresolved review records remain.
 
 ## Findings
 
@@ -361,3 +361,13 @@ Original records and quotations remain above. These records are complete at `525
 | ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `areas/kits/135` | complete | Replace the locales table with translations.messages_folder and translations.base_locale in the final glossary namespace; the actual reader uses both fields directly and the obsolete LocaleSettings type is deleted. Exact original setting/reader/type concern removes116 bytes; Main formatting projection removes114. Both pinned Node24.20.0 and Bun1.4.2 execute actual compiled declarations and root/child policy consumers at both levels, with traversal refusal; each passes70 native assertions across the shared six-record review. Existing translation callback assertions are preserved under the separately owned calculation-registry transport. Source adoption ca2975ca5552d3276e78bbd6d897c44cfdf70a09 and namespace f29674f8f5f5636dafd82b7398604630219fdf2f; current native ownership/cost proof /tmp/gspot-manifest-six-54dd-readiness/freeze.json and supplement.json. No unrelated or joint schema/test transport is used as a size offset. Commit `525a99755cc89096829644f522f0d083d92d7c56`. |
 | `areas/kits/138` | complete | Delete tools.eslint.component_languages and the two imposed block-language rules; native Vue/Svelte parser dispatch reads actual script language. Retain canonical tools.eslint.import_extensions. The exact deleted declaration and two template replacements remove415 bytes. Both current framework test files match their actual native full-CLI owners; component parser and plain-scope confinement cases pass5941.24/5861.97milliseconds. Pinned Node24.20.0 and Bun1.4.2 declaration/policy review each passes70 assertions and rejects the retired setting. Original assertions and callbacks remain unchanged. Source adoption ca2975ca5552d3276e78bbd6d897c44cfdf70a09; exact native/cost/current-owner proofs /tmp/gspot-manifest-six-54dd-readiness/freeze.json and supplement.json. Shared generic parser/schema transport is counted in its own contract and provides no unrelated size offset. Commit `525a99755cc89096829644f522f0d083d92d7c56`.                                                         |
+
+## Implementation checkpoint 663f57e0e of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `663f57e0e2e32b5e7db6ce1b613fe970fb58b429`.
+
+| ID               | Status   | Evidence                                                                      |
+| ---------------- | -------- | ----------------------------------------------------------------------------- |
+| `areas/kits/068` | complete | Evidence 6364f2e4bceea0c8. Commit `663f57e0e2e32b5e7db6ce1b613fe970fb58b429`. |
+
+| `areas/kits/141` | partial | Evidence 1e18fdd148a83e53. Commit `663f57e0e2e32b5e7db6ce1b613fe970fb58b429`. |

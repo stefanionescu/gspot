@@ -1,5 +1,5 @@
 {
-    "openRecords": 160,
+    "openRecords": 159,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 160,
+        "openRecords": 159,
         "records": 1092,
         "batches": [
             {
@@ -1479,8 +1479,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 96,
-                "unresolvedAssignments": 35
+                "completedAssignments": 97,
+                "unresolvedAssignments": 34
             },
             {
                 "id": "test-quality",
@@ -4126,13 +4126,10 @@
             "remaining": "Generation version and post-template init SDK precedence are implemented and current focused/native cases pass. Original producer growth +5908 production bytes/+110 lines/+667 AST still needs Root simplification disposition; old whole-owner proof cannot be replayed as current byte identity."
         },
         "areas/kits/068": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
             "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
-            "verification": [
-                "Apple plist validation now belongs to Xcode, including declared selectors and native tool checks.",
-                "Native macOS plutil and scoped plan controls passed."
-            ],
+            "verification": ["Evidence 6364f2e4bceea0c8."],
             "additionalChanges": [
                 {
                     "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
@@ -4634,10 +4631,13 @@
             ]
         },
         "areas/kits/141": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "663f57e0e2e32b5e7db6ce1b613fe970fb58b429",
+            "verification": ["Evidence 1e18fdd148a83e53."],
+            "remaining": [
+                "Whole configuration rename lineage and final acceptance remain; final stale security-guide/sample references are corrected."
+            ]
         },
         "areas/kits/142": {
             "status": "complete",
@@ -5143,7 +5143,8 @@
                 "Evidence d06465bfd225119a.",
                 "Evidence 99f43d4885cb47d9.",
                 "Current release gate requires successful ci.yml and generated gspot.yml runs for the exact main/push commit before release; 16 native Bash/JQ negative/positive vectors preserve all tag/publication gates and remove nine authored bytes. /tmp/gspot-release-two-workflow-final-freeze.json.",
-                "Evidence a449987ccc63d237."
+                "Evidence a449987ccc63d237.",
+                "Evidence 0175901faf714fc9."
             ],
             "remaining": [
                 "Release preparation and final verification remain. External first npm publication, trusted publisher/account setup, Cloudflare repository secrets/domain setup, release tag/publication and deployment are outside this implementation boundary."
@@ -5248,7 +5249,8 @@
             "verification": [
                 "Evidence cf1539a1ff4fa87b.",
                 "Owner-approved single TEST_TIMEOUT_MS now reaches CLI/plugin/tools/packages through scripts/plugin.ts native Bun --timeout; child-process budget remains preload-owned.",
-                "Actual unchanged two-file 5200ms regression passes2/2 in10.44s /tmp/gspot-native-shared-timeout-main-two-files.log; integrated source/cancellation/site20pass70assert3files4.10s. Final measured constant remains pending all suites/platforms."
+                "Actual unchanged two-file 5200ms regression passes2/2 in10.44s /tmp/gspot-native-shared-timeout-main-two-files.log; integrated source/cancellation/site20pass70assert3files4.10s. Final measured constant remains pending all suites/platforms.",
+                "Evidence 0175901faf714fc9."
             ],
             "additionalChanges": [
                 {
@@ -9127,7 +9129,8 @@
             "verification": [
                 "Removed test pin overlay/task/CI env/cache entry and computed manifest tools in the shared runner.",
                 "Moved exact npm test pins to tests/package.json and pytest dependencies to their sandbox.",
-                "44 local native manifest pins installed/resolved, focused native tests and all package consumers passed; full tools suite started."
+                "44 local native manifest pins installed/resolved, focused native tests and all package consumers passed; full tools suite started.",
+                "Evidence 0175901faf714fc9."
             ],
             "remaining": [
                 "Full tools suite must pass and establish every applicable tool resolves.",
@@ -19500,6 +19503,13 @@
             "unresolvedRecords": 160,
             "validation": ["Evidence 8fd05d8c40d90a56."],
             "limitations": ["Evidence 0b83c04f6969fd0c."]
+        },
+        {
+            "commit": "663f57e0e2e32b5e7db6ce1b613fe970fb58b429",
+            "completedRecords": ["areas/kits/068"],
+            "unresolvedRecords": 159,
+            "validation": ["Evidence 9f6127ac35d76b67."],
+            "limitations": ["Evidence 661982f4e6fce01a."]
         }
     ],
     "verificationEvidenceFile": "verification.json"
