@@ -1,5 +1,5 @@
 {
-    "openRecords": 146,
+    "openRecords": 145,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -790,7 +790,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 146,
+        "openRecords": 145,
         "records": 1092,
         "batches": [
             {
@@ -1096,8 +1096,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 247,
-                "unresolvedAssignments": 44
+                "completedAssignments": 248,
+                "unresolvedAssignments": 43
             },
             {
                 "id": "python",
@@ -1143,8 +1143,8 @@
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
                 ],
-                "completedAssignments": 30,
-                "unresolvedAssignments": 9
+                "completedAssignments": 31,
+                "unresolvedAssignments": 8
             },
             {
                 "id": "javascript-web",
@@ -1956,8 +1956,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 422,
-                "unresolvedAssignments": 47
+                "completedAssignments": 423,
+                "unresolvedAssignments": 46
             },
             {
                 "id": "scripts-repository",
@@ -2241,8 +2241,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 117,
-                "unresolvedAssignments": 20
+                "completedAssignments": 118,
+                "unresolvedAssignments": 19
             },
             {
                 "id": "policy-file",
@@ -4991,10 +4991,10 @@
             ]
         },
         "areas/tool-tests/044": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 77d1b12e5cf9e51e."],
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "verification": ["Evidence 99acc0186c899d14."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-test-cleanup-checkpoint4-final-freeze.json",
@@ -5859,13 +5859,19 @@
                 "Evidence d0cd3edf8eb2e89f."
             ],
             "remaining": [
-                "Explicit full-platform and final-suite compiler acceptance is pending. CI for the combined implementation must verify Linux, macOS and Windows; actual native Node/Bun proof is macOS only."
+                "Actual Windows rerun must verify the two Next delegation cases after the adopted cross-drive path fix. Prior Windows run has14pass4deliberatePOSIXskip2fail; no20-pass claim.",
+                "Full final platform/suite verification remains; canceled Windows tool shards and preservedPOSIX skips do not establish those behaviors."
             ],
             "additionalChanges": [
                 {
                     "commit": "9f5dd012bea84a1b3ca70684306288ff17ea6f27",
                     "evidence": "/tmp/gspot-ci345dd-type-roots-final-freeze.json",
                     "verification": ["Evidence c81851d5fd4072c6."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-compiler-windows-cross-drive-native/final/freeze.json",
+                    "verification": ["Evidence 45884f644aec9984."]
                 }
             ]
         },
@@ -8556,7 +8562,15 @@
                     "evidence": "/tmp/gspot-lone-files-physical-context-before",
                     "commit": null,
                     "verification": ["Evidence b446624cdd0d1446."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-packaging-aec-readonly/PF017-whole-binding-final-receipt.json",
+                    "verification": ["Evidence 963d24e132f6624b."]
                 }
+            ],
+            "remaining": [
+                "Whole functional binding is verified by current committed ownership census and matching12named Ubuntu controls. Exact shared Wave3 size adoption remains pending; no closure or broader platform acceptance inferred."
             ]
         },
         "review/policy-format/018": {
@@ -19551,6 +19565,15 @@
             ],
             "limitations": [
                 "Current committed owners verified at aec223e2e; named original Darwin test outcomes only; unrelated mixed packets and platform obligations remain partial."
+            ]
+        },
+        {
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "completedRecords": ["areas/tool-tests/044"],
+            "unresolvedRecords": 145,
+            "validation": ["Evidence 99acc0186c899d14."],
+            "limitations": [
+                "Original dead data/header deletion independently reduces450 bytes. Ubuntu named native cases cover identical current owners; no Windows or broad Python acceptance claim."
             ]
         }
     ],

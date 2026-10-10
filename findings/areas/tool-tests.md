@@ -1,6 +1,6 @@
 # Native-Tool, Acceptance, and Package Tests
 
-3 unresolved review records remain.
+2 unresolved review records remain.
 
 ## Findings
 
@@ -144,3 +144,11 @@ Original records and quotations remain above. These records are complete at `779
 | `areas/tool-tests/005` | complete | Evidence 5dfcc42ec84c2e76. Evidence 57b38c768e6917b7. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. |
 | `areas/tool-tests/006` | complete | Evidence 5dfcc42ec84c2e76. Evidence c14ebdcc2fba056d. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. |
 | `areas/tool-tests/049` | complete | Evidence 5dfcc42ec84c2e76. Evidence 024274b1753038b2. Commit `7791eaf3a2ce0efe852c71d299fbfdfd3571152a`. |
+
+## Implementation checkpoint ca2975ca5 of October 10, 2026
+
+Original records and quotations remain above. These records are complete at `ca2975ca5552d3276e78bbd6d897c44cfdf70a09`.
+
+| ID                     | Status   | Evidence                                                                      |
+| ---------------------- | -------- | ----------------------------------------------------------------------------- |
+| `areas/tool-tests/044` | complete | Evidence 99acc0186c899d14. Commit `ca2975ca5552d3276e78bbd6d897c44cfdf70a09`. |

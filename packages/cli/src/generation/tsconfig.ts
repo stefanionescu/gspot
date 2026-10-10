@@ -1,6 +1,6 @@
 import ts from 'typescript';
-import { join, dirname, relative } from 'node:path';
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
+import { join, dirname, resolve, relative } from 'node:path';
 import { toPosix, extensionOf } from '#cli/platform/contracts.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 import { getTsconfigProject } from '#cli/parsers/packages/public.ts';
@@ -38,10 +38,11 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
                     ),
             },
         ) ?? [];
-    const typeRoots = projectRoots.map((path) => toPosix(relative(join(root, dirname(target)), path)));
+    const folder = dirname(resolve(root, target));
+    const typeRoots = projectRoots.map((path) => toPosix(relative(folder, path)));
     if (authored !== undefined)
         return {
-            extends: toPosix(relative(dirname(join(root, target)), authored.path)),
+            extends: toPosix(relative(folder, authored.path)),
             compilerOptions: {
                 ...options,
                 ...(installedRoot === undefined || authored.config.options.typeRoots !== undefined
@@ -61,7 +62,7 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
             ...options,
             typeRoots,
         },
-        files: sources.map((file) => toPosix(relative(join(root, dirname(target)), join(root, file.path)))),
+        files: sources.map((file) => toPosix(relative(folder, join(root, file.path)))),
     };
 }
 

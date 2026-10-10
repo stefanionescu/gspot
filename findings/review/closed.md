@@ -2598,3 +2598,11 @@ One starting open record is complete. Original IDs and quotations remain above.
 | `slices/tests-tools-samples/063` | fixed   | Evidence 656d4171ba662b5f. Commit `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. | `findings/slices/tests-tools-samples.md` |
 | `slices/tests-tools-samples/039` | fixed   | Evidence b5fa110db5f859f9. Commit `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. | `findings/slices/tests-tools-samples.md` |
 | `slices/tests-tools-samples/054` | fixed   | Evidence d87466b83ea42acf. Commit `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. | `findings/slices/tests-tools-samples.md` |
+
+## Verified Python correction cleanup at ca2975ca5 of October 10, 2026
+
+1 starting open records are complete at `ca2975ca5552d3276e78bbd6d897c44cfdf70a09`. Their original IDs and quotations remain in their source files.
+
+| ID                     | Verdict | Evidence                                                                      | Source                         |
+| ---------------------- | ------- | ----------------------------------------------------------------------------- | ------------------------------ |
+| `areas/tool-tests/044` | fixed   | Evidence 99acc0186c899d14. Commit `ca2975ca5552d3276e78bbd6d897c44cfdf70a09`. | `findings/areas/tool-tests.md` |
