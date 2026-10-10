@@ -1,7 +1,7 @@
 ---
 import example from '../../config/example.json';
-import { version } from '#cli-package' with { type: 'json' };
 import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
+import { version, description } from '#cli-package' with { type: 'json' };
 
 const agentFile = example.agent.files.find((file) => file.path === 'src/utils.ts');
 if (agentFile === undefined) throw new Error('The homepage example has no src/utils.ts.');
@@ -10,10 +10,7 @@ const summary = example.rejected.trimEnd().split('\n').at(-1) ?? '';
 
 <section class="home-hero" aria-labelledby="_top">
     <div class="hero-copy">
-        <p class="purpose">
-            gspot configures linters for your languages and runs checks in Git hooks and CI. It also installs
-            instructions for coding agents.
-        </p>
+        <p class="purpose">{description}</p>
         <nav class="hero-actions" aria-label="Start using gspot">
             <a class="primary" href="/guides/install/">
                 Get started <span aria-hidden="true">→</span>
