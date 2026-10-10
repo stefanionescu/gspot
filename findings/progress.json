@@ -13292,6 +13292,11 @@
                     "evidence": "/tmp/gspot-naming-test-partial-freeze.json",
                     "commit": null,
                     "verification": ["Evidence 5f39028a0dba6dcb."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-checks013-combined-final/freeze.json",
+                    "verification": ["Evidence 431049ffd3b1a55f."]
                 }
             ],
             "remaining": [

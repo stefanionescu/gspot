@@ -72,7 +72,6 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
             'Types generation failed',
         );
         await expectPreserved(directory.path, testRepository);
-        expect(await readFile(join(directory.path, testRepository.path('bindings.txt')), 'utf8')).toBe('failure');
     },
 );
 

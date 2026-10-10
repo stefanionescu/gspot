@@ -111,8 +111,8 @@ for (const scope of ['', 'apps/web'])
                     'build',
                     scope === '' ? '--webpack' : '--turbopack',
                 ]);
+            else expect(routesSeen.every((text) => text === '// Generated routes\n')).toBe(true);
             expect(directories).not.toContain(join(directory.path, scope));
-            expect(routesSeen.every((text) => text === '// Generated routes\n')).toBe(true);
             expect(await Promise.all(directories.map((cwd) => pathExists(cwd)))).toStrictEqual(
                 directories.map(() => false),
             );

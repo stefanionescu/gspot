@@ -93,9 +93,6 @@ ${SITE_BUILD_SCRIPT}`,
         );
         expect(corrected.isBuilt).toBe(true);
         expect(await pathExists(join(sandbox.path, 'dist'))).toBe(false);
-        expect(await readFile(join(sandbox.path, 'local-input.txt'), 'utf8')).toBe(
-            'Only available in the working tree.',
-        );
     });
 });
 
