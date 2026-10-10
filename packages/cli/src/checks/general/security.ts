@@ -1,15 +1,16 @@
 import { join } from 'node:path';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { readSource } from '#cli/platform/root/public.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { CODEQL } from '#cli/config/checks/general/security.ts';
 import { copyIntoScratch } from '#cli/execution/copy/public.ts';
+import { semgrepRuleFiles } from '#cli/repository/paths/public.ts';
 import { codeqlLanguagesSchema } from '#cli/parsers/schema/codeql.ts';
 import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
 import { sarifFindings } from '#cli/parsers/output/structured/public.ts';
-import { toolPin, semgrepRuleFiles } from '#cli/configurations/contracts.ts';
 import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckTool, runCheckCommand } from '#cli/execution/command/public.ts';
 import type { CodeqlAnalysis, CodeqlLanguage } from '#cli/types/checks/general/security.ts';

@@ -11,7 +11,7 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { RAN_STATUSES } from '#cli/config/execution/runtime.ts';
 import { copyIntoScratch } from '#cli/execution/copy/public.ts';
-import { targetInScope } from '#cli/configurations/contracts.ts';
+import { targetInScope } from '#cli/repository/paths/public.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
 import { requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';

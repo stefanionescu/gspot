@@ -2,14 +2,13 @@
 import ignore from 'ignore';
 import { readText } from '#cli/platform/root/public.ts';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
-import { coversScope } from '#cli/repository/paths/public.ts';
-import { semgrepRuleFiles } from '#cli/configurations/contracts.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import { getProjectDependencies } from '#cli/repository/contracts.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { COVERAGE_FLAGS, COVERAGE_DIMENSIONS } from '#cli/config/planning.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
+import { coversScope, semgrepRuleFiles } from '#cli/repository/paths/public.ts';
 
 import type {
     Host,

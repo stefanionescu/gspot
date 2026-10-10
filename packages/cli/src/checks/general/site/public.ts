@@ -4,13 +4,12 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { pathMatcher } from '#cli/repository/paths/public.ts';
 import { BYTES_PER_KB } from '#cli/config/platform/runtime.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { targetInScope } from '#cli/configurations/contracts.ts';
 import { fileBatches } from '#cli/execution/command/arguments/contracts.ts';
+import { pathMatcher, targetInScope } from '#cli/repository/paths/public.ts';
 import { filesUnder, requireBuild, repositoryPath } from '#cli/checks/general/site/contracts.ts';
 import { purgecssReportSchema, linkinatorReportSchema, htmlValidationReportSchema } from '#cli/parsers/schema/site.ts';
 

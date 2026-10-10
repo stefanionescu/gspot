@@ -9,7 +9,7 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
-import { targetInScope } from '#cli/configurations/contracts.ts';
+import { targetInScope } from '#cli/repository/paths/public.ts';
 import { sourceConfigurations } from '#cli/configurations/public.ts';
 import { detectConfigurations } from '#cli/repository/selection/contracts.ts';
 import { CONFIGURATION_NAMESPACES } from '#tests/config/cli/generation/namespaces.ts';

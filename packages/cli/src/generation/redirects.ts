@@ -3,10 +3,9 @@ import { posix } from 'node:path';
 import type { Session } from '#cli/types/planning.ts';
 import { openRoot } from '#cli/platform/root/public.ts';
 import { parseJsonRecord } from '#cli/parsers/public.ts';
-import { targetInScope } from '#cli/configurations/contracts.ts';
 import { relativeTarget } from '#cli/generation/documents/contracts.ts';
-import { isInScope, nestedScopes } from '#cli/repository/paths/public.ts';
 import type { GeneratedFile, EmittedToolFile } from '#cli/types/generation/files.ts';
+import { isInScope, nestedScopes, targetInScope } from '#cli/repository/paths/public.ts';
 
 /**
  * Redirect authored package fields declared by selected manifests to generated tool files.

@@ -1,6 +1,6 @@
 // The selected tool files in one scope, with the pointers that lead tools to them.
 import { fragmentInputs } from '#cli/generation/fragments.ts';
-import { targetInScope } from '#cli/configurations/contracts.ts';
+import { targetInScope } from '#cli/repository/paths/public.ts';
 import { emitTarget } from '#cli/generation/compilation/public.ts';
 import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import { isConfigurationSelected } from '#cli/configurations/public.ts';

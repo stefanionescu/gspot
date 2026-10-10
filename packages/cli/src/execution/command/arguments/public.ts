@@ -2,8 +2,9 @@ import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { toPlatform } from '#cli/platform/contracts.ts';
 import { readText } from '#cli/platform/root/public.ts';
+import { toolFileName } from '#cli/configurations/contracts.ts';
+import { targetInScope } from '#cli/repository/paths/public.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { toolFileName, targetInScope } from '#cli/configurations/contracts.ts';
 
 import type {
     CommandPart,

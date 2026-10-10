@@ -8,7 +8,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { join, extname, basename } from 'node:path';
 import { openSession } from '#cli/commands/public.ts';
-import { targetInScope } from '#cli/configurations/contracts.ts';
+import { targetInScope } from '#cli/repository/paths/public.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { configurationManifests } from '#cli/configurations/public.ts';

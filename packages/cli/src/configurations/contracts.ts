@@ -1,6 +1,5 @@
 // Validated file declarations and native tool pin calculations.
 import semver from 'semver';
-import { posix } from 'node:path';
 import { compact } from '#cli/platform/contracts.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import type { ToolPin, InstallerPin } from '#cli/types/parsers/tool.ts';
@@ -15,7 +14,6 @@ import type {
     ToolProjectPins,
     CheckDeclaration,
     ToolProjectPackage,
-    ToolFileDeclaration,
 } from '#cli/types/configurations.ts';
 
 /**
@@ -64,19 +62,6 @@ export function allChecks(manifests: Iterable<Manifest>): Map<string, OwnedCheck
 }
 
 /**
- * The repository-relative path of a tool file generated for a scope.
- * @param scope the scope path, empty for the root
- * @param toolFile the tool-file declaration
- * @returns the path of the generated tool file
- */
-export function targetInScope(scope: string, toolFile: ToolFileDeclaration): string {
-    if (scope === '' || !toolFile.per_scope) return toolFile.target;
-    if (toolFile.target.startsWith(CONFIG_PREFIX))
-        return posix.join(CONFIG_PREFIX, scope, toolFile.target.slice(CONFIG_PREFIX.length));
-    return `${scope}/${toolFile.target}`;
-}
-
-/**
  * The name a `{tool_file:<name>}` placeholder uses for a tool file.
  * @param target the target path
  * @returns the file name under .gspot/config without its extensions
@@ -85,22 +70,6 @@ export function toolFileName(target: string): string {
     const bare = target.startsWith(CONFIG_PREFIX) ? target.slice(CONFIG_PREFIX.length) : target;
     const dot = bare.indexOf('.');
     return dot === -1 ? bare : bare.slice(0, dot);
-}
-
-/**
- * The selected Semgrep packs and repository rule paths for one scope.
- * @param selected the configurations this scope selects
- * @param scope the repository-relative scope path
- * @param authored the resolved repository rule paths
- * @returns the required native rule paths, relative to the repository
- */
-export function semgrepRuleFiles(selected: Manifest[], scope: string, authored: string[]): string[] {
-    const declared = selected.flatMap((manifest) =>
-        manifest.toolFiles
-            .filter((file) => file.tool.includes('semgrep') && file.rule_keys?.includes('rules') === true)
-            .map((file) => targetInScope(scope, file)),
-    );
-    return [...new Set([...declared, ...authored])];
 }
 
 /**

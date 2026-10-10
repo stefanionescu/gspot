@@ -1,7 +1,9 @@
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
+import { CONFIG_PREFIX } from '#cli/config/configurations.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { PathExpressions } from '#cli/types/repository/inventory.ts';
+import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
 
 const matcherCache = new Map<string, (path: string) => boolean>();
 
@@ -162,4 +164,33 @@ export function filenameMatcher(names: string[]): (path: string) => boolean {
  */
 export function literalGlob(path: string): string {
     return path.replaceAll(/[\\*?{}[\]()!+@,]/gu, String.raw`\$&`);
+}
+
+/**
+ * The repository-relative path of a tool file generated for a scope.
+ * @param scope the scope path, empty for the root
+ * @param toolFile the tool-file declaration
+ * @returns the path of the generated tool file
+ */
+export function targetInScope(scope: string, toolFile: ToolFileDeclaration): string {
+    if (scope === '' || !toolFile.per_scope) return toolFile.target;
+    if (toolFile.target.startsWith(CONFIG_PREFIX))
+        return posix.join(CONFIG_PREFIX, scope, toolFile.target.slice(CONFIG_PREFIX.length));
+    return `${scope}/${toolFile.target}`;
+}
+
+/**
+ * The selected Semgrep packs and repository rule paths for one scope.
+ * @param selected the configurations this scope selects
+ * @param scope the repository-relative scope path
+ * @param authored the resolved repository rule paths
+ * @returns the required native rule paths, relative to the repository
+ */
+export function semgrepRuleFiles(selected: Manifest[], scope: string, authored: string[]): string[] {
+    const declared = selected.flatMap((manifest) =>
+        manifest.toolFiles
+            .filter((file) => file.tool.includes('semgrep') && file.rule_keys?.includes('rules') === true)
+            .map((file) => targetInScope(scope, file)),
+    );
+    return [...new Set([...declared, ...authored])];
 }
