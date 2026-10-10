@@ -16,8 +16,8 @@ import { unknownConfigurations } from '#cli/configurations/errors/public.ts';
 import type { ConfigurationDeclaration } from '#cli/types/configurations.ts';
 import { parseTomlText, readPolicyFile } from '#cli/policy/document/public.ts';
 import { similar, valueAt, codeList, isRecord } from '#cli/platform/contracts.ts';
+import { FIRST_READ, FIELD_ERRORS, SCOPE_KEY_DEPTH } from '#cli/config/policy/settings.ts';
 import { configurationFiles, configurationManifests } from '#cli/configurations/public.ts';
-import { FIRST_READ, FIELD_PROBLEMS, SCOPE_KEY_DEPTH } from '#cli/config/policy/settings.ts';
 
 import {
     reasonErrors,
@@ -87,7 +87,7 @@ function ownerOf(path: KeyPath): KeyPath {
     if (path[depth] === 'reasons' && typeof reasonKey === 'string')
         return [...path.slice(0, depth), ...reasonKey.split('.')];
     const last = path.at(-1);
-    return typeof last === 'string' && FIELD_PROBLEMS.has(last) ? path.slice(0, -1) : path;
+    return typeof last === 'string' && FIELD_ERRORS.has(last) ? path.slice(0, -1) : path;
 }
 
 // Deeper owners and later array entries go first, so no removal moves an owner still to be removed.

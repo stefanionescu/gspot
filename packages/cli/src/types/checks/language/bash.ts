@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { ScriptSyntax } from '#cli/types/parsers/bash.ts';
 import type { matchSchema } from '#cli/parsers/schema/ast-grep.ts';
 
-/** How an analysis reports one problem in one file. */
+/** How an analysis reports one finding in one file. */
 export type ScriptReport = (line: number, rule: string, text: string) => void;
 
 /** One parsed shell source owned by a built-in check. */

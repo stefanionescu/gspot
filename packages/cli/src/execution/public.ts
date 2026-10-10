@@ -40,10 +40,10 @@ import type {
 function policyErrorsResult(session: ToolSession): CheckResult | undefined {
     const { errors } = session.policyFiles;
     if (errors.length === 0) return undefined;
-    const findings = errors.map((problem) => ({
+    const findings = errors.map((error) => ({
         check: POLICY_CHECK,
         file: POLICY_FILE,
-        message: errorText(problem),
+        message: errorText(error),
         fixable: false,
     }));
     return { check: POLICY_CHECK, scope: '', status: 'failed', fileCount: 1, duration: 0, findings };

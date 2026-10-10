@@ -39,8 +39,8 @@ export const TOOL_KEY_DEPTH = 2;
 /** A scoped setting starts after scope and its literal authored map key. */
 export const SCOPE_KEY_DEPTH = 2;
 
-// A problem on one of these fields belongs to the entry or key that holds the field, and reading drops that owner.
-export const FIELD_PROBLEMS = new Set(['reason', 'paths', 'path', 'basePath', 'module', 'group']);
+// An error on one of these fields belongs to the entry or key that holds the field, and reading drops that owner.
+export const FIELD_ERRORS = new Set(['reason', 'paths', 'path', 'basePath', 'module', 'group']);
 
 export const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 

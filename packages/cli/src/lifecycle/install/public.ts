@@ -167,7 +167,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
         }),
         run: async (session, manifests, context) => {
             if (hasValePackages(session.root, session.policyFiles.policy.level)) return '';
-            const problem = await installValePackages({
+            const error = await installValePackages({
                 owner: context.inputs,
                 level: session.policyFiles.policy.level,
                 search: session,
@@ -175,8 +175,8 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
                 timeoutSeconds: Number(rootView(session.scopes).settings['tool_timeout_seconds']),
                 cancelSignal: session.cancelSignal,
             });
-            if (problem === undefined) return `installed Vale packages in ${VALE_PACKAGE_DIRECTORY}`;
-            const failure = `Vale package installation failed: ${problem}. Run: gspot install`;
+            if (error === undefined) return `installed Vale packages in ${VALE_PACKAGE_DIRECTORY}`;
+            const failure = `Vale package installation failed: ${error}. Run: gspot install`;
             throw new GspotError('installation', failure);
         },
     },

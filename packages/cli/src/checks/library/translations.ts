@@ -60,10 +60,10 @@ export function locales(input: CheckInput): Finding[] {
         .entries()
         .flatMap(([path, messages]) => {
             const broken = [...messages].flatMap(([key, text]) => {
-                const problem = translationMessage(text);
-                return problem === undefined
+                const message = translationMessage(text);
+                return message === undefined
                     ? []
-                    : [findingAt(input, { file: path, line: 1 }, 'message', `${key}: ${problem}`)];
+                    : [findingAt(input, { file: path, line: 1 }, 'message', `${key}: ${message}`)];
             });
             const missing = baseMessages
                 .keys()

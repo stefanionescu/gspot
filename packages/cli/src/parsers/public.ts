@@ -175,7 +175,7 @@ export function ruleSections(text: string): RuleSection[] {
 /**
  * Read a native Bash syntax result without executing a process in the parser layer.
  * @param result the shell's exit status and diagnostic stream.
- * @returns the shell's syntax problem and body line, or undefined after success.
+ * @returns the shell's syntax finding and body line, or undefined after success.
  */
 export function parseBashSyntaxResult(result: Pick<SpawnResult, 'code' | 'stderr'>): FenceSyntaxFinding | undefined {
     if (result.code === 0) return undefined;
@@ -189,7 +189,7 @@ export function parseBashSyntaxResult(result: Pick<SpawnResult, 'code' | 'stderr
  * @param text the authored Markdown source.
  * @param checkBash the required native shell boundary, owned by the check.
  * @param context the existing run-owned grammar cache, when checking repository files.
- * @returns one syntax problem per invalid example, with aliases sharing the same outcome.
+ * @returns one syntax finding per invalid example, with aliases sharing the same outcome.
  */
 export async function findFenceSyntaxFindings(
     text: string,
@@ -219,8 +219,8 @@ export async function findFenceSyntaxFindings(
             .join('\n')
             .replaceAll(ELLIPSIS_ARGUMENTS, '()')
             .replaceAll(ANGLE_PLACEHOLDER, 'PLACEHOLDER');
-        const problem = await readers[parser](body);
-        if (problem !== undefined) findings.push({ ...problem, line: fence.line + problem.line });
+        const finding = await readers[parser](body);
+        if (finding !== undefined) findings.push({ ...finding, line: fence.line + finding.line });
     }
     return findings;
 }
@@ -300,10 +300,10 @@ export function openJsonDocument(path: string, source: string): ConfigurationDoc
 export function parseJsonc(text: string): unknown {
     const errors: ParseError[] = [];
     const value: unknown = parse(text, errors, { allowTrailingComma: true });
-    const problem = errors[0];
-    if (problem !== undefined)
+    const error = errors[0];
+    if (error !== undefined)
         throw new Error(
-            `Invalid JSON configuration at offset ${String(problem.offset)}: ${printParseErrorCode(problem.error)}.`,
+            `Invalid JSON configuration at offset ${String(error.offset)}: ${printParseErrorCode(error.error)}.`,
         );
     return value;
 }
