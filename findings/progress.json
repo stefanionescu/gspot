@@ -1,5 +1,5 @@
 {
-    "openRecords": 40,
+    "openRecords": 27,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -1237,7 +1237,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 40,
+        "openRecords": 27,
         "records": 1092,
         "batches": [
             {
@@ -1543,8 +1543,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 279,
-                "unresolvedAssignments": 12
+                "completedAssignments": 282,
+                "unresolvedAssignments": 9
             },
             {
                 "id": "python",
@@ -1697,8 +1697,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 85,
-                "unresolvedAssignments": 14
+                "completedAssignments": 94,
+                "unresolvedAssignments": 5
             },
             {
                 "id": "swift-bash-sql",
@@ -1787,8 +1787,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 76,
-                "unresolvedAssignments": 6
+                "completedAssignments": 79,
+                "unresolvedAssignments": 3
             },
             {
                 "id": "frameworks-platforms",
@@ -1926,8 +1926,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 115,
-                "unresolvedAssignments": 16
+                "completedAssignments": 121,
+                "unresolvedAssignments": 10
             },
             {
                 "id": "test-quality",
@@ -2543,8 +2543,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 122,
-                "unresolvedAssignments": 10
+                "completedAssignments": 123,
+                "unresolvedAssignments": 9
             },
             {
                 "id": "installation-docs",
@@ -2688,8 +2688,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 134,
-                "unresolvedAssignments": 3
+                "completedAssignments": 135,
+                "unresolvedAssignments": 2
             },
             {
                 "id": "policy-file",
@@ -3005,16 +3005,13 @@
             ]
         },
         "areas/checks/008": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
             "verification": [
-                "Evidence 9d47f2907c7f8519.",
-                "Evidence f197f61756c1f848.",
-                "Evidence 15b7e23ff87ec367.",
-                "Evidence 66b9441b73390aab.",
-                "Evidence fdc839bbba7e99bb.",
-                "Evidence 70052a493c9768f1."
+                "Evidence 7180e6120011c9dd.",
+                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":910,\"tests\":2324,\"whole\":3234}).",
+                "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
             ],
             "additionalChanges": [
                 {
@@ -3358,7 +3355,7 @@
             "owner": "main",
             "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
             "verification": [
-                "Committed e985362fce1b30e03745f935e867f017fbdbbec2 binding/current-owner hash/native bridge: /tmp/gspot-unresolved69-e985-review/domain21-corrected-amendment.json SHA256 2897d3827536315db5a0b503eb9c9196a197032ecb2ac76e82598a88145c707b, record areas/checks/061.",
+                "Evidence 06403ed08f698987.",
                 "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":-20,\"tests\":2141,\"whole\":2121}).",
                 "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
             ],
@@ -3410,10 +3407,14 @@
             ]
         },
         "areas/checks/072": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 37e6b33260dc5523."],
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
+            "verification": [
+                "Evidence 908ade2f2eff8ac1.",
+                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":195,\"tests\":1997,\"whole\":2192}).",
+                "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-language-tools-final-freeze.json",
@@ -4326,10 +4327,14 @@
             ]
         },
         "areas/kits/051": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 0342c600c21c7f5b."],
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
+            "verification": [
+                "Evidence bf808f5bf9a4726e.",
+                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":-577,\"tests\":6734,\"docs\":0,\"whole\":6157}).",
+                "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-eight-final-freeze.json",
@@ -4742,7 +4747,7 @@
             "owner": "main",
             "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
             "verification": [
-                "Committed e985362fce1b30e03745f935e867f017fbdbbec2 binding/current-owner hash/native bridge: /tmp/gspot-unresolved69-e985-review/domain21-corrected-amendment.json SHA256 2897d3827536315db5a0b503eb9c9196a197032ecb2ac76e82598a88145c707b, record areas/kits/107.",
+                "Evidence 8d92906766976e18.",
                 "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":39,\"tests\":134,\"whole\":173}).",
                 "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
             ],
@@ -5037,8 +5042,8 @@
             "owner": "main",
             "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
             "verification": [
-                "Committed e985362fce1b30e03745f935e867f017fbdbbec2 binding/current-owner hash/native bridge: /tmp/gspot-unresolved69-e985-review/domain21-corrected-amendment.json SHA256 2897d3827536315db5a0b503eb9c9196a197032ecb2ac76e82598a88145c707b, record areas/kits/141.",
-                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"original\":5702,\"siteSupplement\":1161,\"finalReferenceReduction\":-25,\"netLineage\":6838,\"production\":167,\"tests\":6625,\"docs\":46}).",
+                "Evidence f69176fdc4e646d2.",
+                "Evidence 0aef06adf1c4e8ad.",
                 "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
             ]
         },
@@ -12430,10 +12435,14 @@
             ]
         },
         "slices/checks-other/038": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence dccdcbda0e9d07d4."],
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
+            "verification": [
+                "Evidence e78e4e6cedd5bd48.",
+                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":1084,\"tests\":2915,\"docs\":0,\"whole\":3999}).",
+                "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-xcode-assets-freeze.json",
@@ -12535,10 +12544,14 @@
             "verification": ["Evidence 1024ec2d4bc0ba7b.", "Evidence b1c40a9ee8ee5828."]
         },
         "slices/kits-frameworks-tools/004": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 6a8bfd964fec04e5."],
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
+            "verification": [
+                "Evidence 704ef234256a11af.",
+                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":-345,\"tests\":4591,\"docs\":0,\"whole\":4246}).",
+                "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-next-five-final-freeze.json",
@@ -12610,7 +12623,7 @@
             "owner": "main",
             "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
             "verification": [
-                "Committed e985362fce1b30e03745f935e867f017fbdbbec2 binding/current-owner hash/native bridge: /tmp/gspot-unresolved69-e985-review/domain21-corrected-amendment.json SHA256 2897d3827536315db5a0b503eb9c9196a197032ecb2ac76e82598a88145c707b, record slices/kits-frameworks-tools/022.",
+                "Evidence 152852880929d059.",
                 "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":1263,\"tests\":7269,\"whole\":8532}).",
                 "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
             ],
@@ -12661,7 +12674,7 @@
             "owner": "main",
             "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
             "verification": [
-                "Committed e985362fce1b30e03745f935e867f017fbdbbec2 binding/current-owner hash/native bridge: /tmp/gspot-unresolved69-e985-review/domain21-corrected-amendment.json SHA256 2897d3827536315db5a0b503eb9c9196a197032ecb2ac76e82598a88145c707b, record slices/kits-frameworks-tools/037.",
+                "Evidence 818dea4a7642756f.",
                 "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":1263,\"tests\":7269,\"whole\":8532}).",
                 "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
             ],
@@ -12804,13 +12817,13 @@
             "verification": ["Evidence c19c03ae356a2692."]
         },
         "slices/kits-frameworks-tools/059": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
             "verification": [
-                "Evidence 7c5aca460a4e1ded.",
-                "Evidence d87aa0948588fc99.",
-                "swift.xcode_project/scheme/destination own fields; inferred project calculated before resolved view parse; effective authored empty path preserved; Periphery receives native relative value."
+                "Evidence 45c0f748eb0f2364.",
+                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":1264,\"tests\":6091,\"docs\":0,\"whole\":7355}).",
+                "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
             ],
             "additionalChanges": [
                 {
@@ -12818,16 +12831,17 @@
                     "commit": null,
                     "verification": ["Evidence 12974cfdd3b07fae."]
                 }
-            ],
-            "remaining": [
-                "Adopted project fields/default inference and native relative Periphery path implemented. Prior Root explicit-empty public apply proof remains prior evidence; current complete writer byte identity not claimed."
             ]
         },
         "slices/kits-frameworks-tools/060": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence dccdcbda0e9d07d4."],
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
+            "verification": [
+                "Evidence 1be9f04f07ef1c1f.",
+                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":1084,\"tests\":2915,\"docs\":0,\"whole\":3999}).",
+                "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-xcode-assets-freeze.json",
@@ -12945,10 +12959,14 @@
             "verification": ["Evidence 24db65f4cb159ef6."]
         },
         "slices/kits-general/053": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 6a8bfd964fec04e5."],
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
+            "verification": [
+                "Evidence 5bca761164290602.",
+                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":-345,\"tests\":4591,\"docs\":0,\"whole\":4246}).",
+                "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-next-five-final-freeze.json",
@@ -13013,7 +13031,7 @@
             "owner": "main",
             "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
             "verification": [
-                "Committed e985362fce1b30e03745f935e867f017fbdbbec2 binding/current-owner hash/native bridge: /tmp/gspot-unresolved69-e985-review/domain21-corrected-amendment.json SHA256 2897d3827536315db5a0b503eb9c9196a197032ecb2ac76e82598a88145c707b, record slices/kits-other-languages/003.",
+                "Evidence 9b3ced6924f3d563.",
                 "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"environment\":1888,\"sharedInterpreter\":2397,\"production\":3520,\"tests\":765,\"whole\":4285}).",
                 "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
             ],
@@ -13035,7 +13053,7 @@
             "owner": "main",
             "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
             "verification": [
-                "Committed e985362fce1b30e03745f935e867f017fbdbbec2 binding/current-owner hash/native bridge: /tmp/gspot-unresolved69-e985-review/domain21-corrected-amendment.json SHA256 2897d3827536315db5a0b503eb9c9196a197032ecb2ac76e82598a88145c707b, record slices/kits-other-languages/004.",
+                "Evidence 831ac7d78c944cd5.",
                 "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"environment\":1888,\"sharedInterpreter\":2397,\"production\":3520,\"tests\":765,\"whole\":4285}).",
                 "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
             ],
@@ -13052,7 +13070,7 @@
             "owner": "main",
             "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
             "verification": [
-                "Committed e985362fce1b30e03745f935e867f017fbdbbec2 binding/current-owner hash/native bridge: /tmp/gspot-unresolved69-e985-review/domain21-corrected-amendment.json SHA256 2897d3827536315db5a0b503eb9c9196a197032ecb2ac76e82598a88145c707b, record slices/kits-other-languages/007.",
+                "Evidence 1d23da543a7a47eb.",
                 "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"environment\":1888,\"sharedInterpreter\":2397,\"production\":3520,\"tests\":765,\"whole\":4285}).",
                 "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
             ],
@@ -13160,10 +13178,14 @@
             ]
         },
         "slices/kits-web-languages/008": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence abbeaa78e91a2fd0."],
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
+            "verification": [
+                "Evidence 6bfbb49468b52254.",
+                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":-577,\"tests\":6734,\"docs\":0,\"whole\":6157}).",
+                "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-options-final-freeze.json",
@@ -13173,10 +13195,14 @@
             ]
         },
         "slices/kits-web-languages/022": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 0342c600c21c7f5b."],
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
+            "verification": [
+                "Evidence c5ce2d096bb9c786.",
+                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":-577,\"tests\":6734,\"docs\":0,\"whole\":6157}).",
+                "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-eight-final-freeze.json",
@@ -13193,10 +13219,14 @@
             ]
         },
         "slices/kits-web-languages/023": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 4b8bf83bd543ad8b.", "Evidence de1cb2d09c9a5ef8.", "Evidence 27b117125c7a52ed."],
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
+            "verification": [
+                "Evidence fe679b33c215dea1.",
+                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":-577,\"tests\":6734,\"docs\":0,\"whole\":6157}).",
+                "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-eight-final-freeze.json",
@@ -13211,10 +13241,14 @@
             ]
         },
         "slices/kits-web-languages/024": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 0342c600c21c7f5b."],
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
+            "verification": [
+                "Evidence af407c3d3e1e518d.",
+                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":-577,\"tests\":6734,\"docs\":0,\"whole\":6157}).",
+                "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-eight-final-freeze.json",
@@ -13224,10 +13258,14 @@
             ]
         },
         "slices/kits-web-languages/025": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 417887cb72fd237f."],
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
+            "verification": [
+                "Evidence 61626b59619b7acb.",
+                "Exact binding fulfilled and latest explicit user cost/owner reconciliation applies; cost counted once by cited concern table ({\"production\":-577,\"tests\":6734,\"docs\":0,\"whole\":6157}).",
+                "Remaining binding obligations: none. Original failed/skip receipts retained; no full global/platform acceptance or held-Root equality inferred."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-final-freeze.json",
@@ -20157,6 +20195,32 @@
                 "areas/kits/107"
             ],
             "unresolvedRecords": 40,
+            "validation": [
+                "Exact source/native audit and approved bounded domain-cost pools: /tmp/gspot-unresolved69-e985-review/domain21-corrected-amendment.json SHA256 2897d3827536315db5a0b503eb9c9196a197032ecb2ac76e82598a88145c707b.",
+                "Every current committed owner re-read against native receipts; original quotations and case-specific limitations retained."
+            ],
+            "limitations": [
+                "No all-platform or full-suite success inferred. Kits032/041 excluded pending separate historical-cost dispositions; freshness family and global checks remain partial."
+            ]
+        },
+        {
+            "commit": "e985362fce1b30e03745f935e867f017fbdbbec2",
+            "completedRecords": [
+                "slices/kits-frameworks-tools/059",
+                "slices/kits-frameworks-tools/060",
+                "slices/checks-other/038",
+                "areas/kits/051",
+                "slices/kits-web-languages/008",
+                "slices/kits-web-languages/022",
+                "slices/kits-web-languages/023",
+                "slices/kits-web-languages/024",
+                "slices/kits-web-languages/025",
+                "slices/kits-frameworks-tools/004",
+                "slices/kits-general/053",
+                "areas/checks/008",
+                "areas/checks/072"
+            ],
+            "unresolvedRecords": 27,
             "validation": [
                 "Exact source/native audit and approved bounded domain-cost pools: /tmp/gspot-unresolved69-e985-review/domain21-corrected-amendment.json SHA256 2897d3827536315db5a0b503eb9c9196a197032ecb2ac76e82598a88145c707b.",
                 "Every current committed owner re-read against native receipts; original quotations and case-specific limitations retained."
