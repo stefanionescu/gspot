@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { parse } from 'smol-toml';
 import { gitOutput } from '#tests/harness/git.ts';
+import { readPolicy } from '#cli/policy/public.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { unlink, symlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
@@ -9,7 +9,6 @@ import { prepare } from '#cli/commands/init/public.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { usePlatform } from '#tests/harness/platforms.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { policySchema } from '#cli/policy/schema/public.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { parseManifest, linkManifestTools } from '#cli/configurations/public.ts';
@@ -21,7 +20,6 @@ import {
     LINK_POLICY,
     POLICY_PATHS,
     HISTORY_TABLES,
-    AUTOMATIC_CHECKS,
     HISTORY_MANIFEST,
     HOOK_STAGE_FILES,
     NEXT_BUILD_FILES,
@@ -35,27 +33,26 @@ import {
 test.each(MANUAL_SELECTIONS)(
     'manual configurations %j retain automatic checks and level-dependent tools',
     async ({ configurations }) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             'package.json': '{"name":"example","private":true,"type":"module"}\n',
             'source.js': 'export const port = 8080;\n',
             'site.webmanifest': '{}',
             'app/package.json': '{"name":"app","private":true,"type":"module"}\n',
             'app/source.js': 'export const port = 3000;\n',
         });
-        const options = {
+        const options = buildInitOptions(sandbox.path, {
             isDryRun: true,
             ...(configurations === undefined ? {} : { configurations: [...configurations] }),
             scopes: new Map([['app', ['javascript']]]),
-        };
-        const interactive = await prepare(sandbox.path, buildInitOptions(sandbox.path, { ...options, yes: false }));
-        const accepted = await prepare(sandbox.path, buildInitOptions(sandbox.path, options));
+        });
+        const interactive = await prepare(sandbox.path, { ...options, yes: false });
+        const accepted = await prepare(sandbox.path, options);
         expect(interactive.policyText).toBe(accepted.policyText);
         expect(interactive.plan).toStrictEqual(accepted.plan);
-        const policy = policySchema.parse(parse(accepted.policyText));
+        await Bun.write(join(sandbox.path, 'gspot.toml'), accepted.policyText);
+        const policy = readPolicy(sandbox.path).policy;
         for (const configuration of [...alwaysSelectedConfigurations(), 'licenses'])
             expect(policy.configurations).toContain(configuration);
-        await Bun.write(join(sandbox.path, 'gspot.toml'), accepted.policyText);
         for (const level of ['recommended', 'all', 'recommended'] as const) {
             const changed = await runGspot(sandbox.path, ['set', 'level', level]);
             expect(changed.code, changed.stdout + changed.stderr).toBe(0);
@@ -65,7 +62,6 @@ test.each(MANUAL_SELECTIONS)(
                 stage: 'all',
                 skips: [],
                 includeUnsupported: true,
-                only: AUTOMATIC_CHECKS,
             });
             const names = applicableManifests(session).flatMap((manifest) => manifest.tools.map((tool) => tool.name));
             expect(
