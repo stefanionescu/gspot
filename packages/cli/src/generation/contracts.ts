@@ -1,10 +1,11 @@
 // The Git hooks gspot writes: one short script per stage in .gspot/hooks, each running one gspot check.
 import { statSync } from 'node:fs';
-import { stringify } from 'smol-toml';
 import { join, posix } from 'node:path';
+import { stringify } from '@decimalturn/toml-patch';
 import type { Session } from '#cli/types/planning.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { EtaInputs } from '#cli/types/generation/eta.ts';
+import { TOOL_EMIT_FORMAT } from '#cli/config/parsers/toml.ts';
 import type { HookName } from '#cli/types/generation/hooks.ts';
 import { runGitBlocking } from '#cli/platform/git/contracts.ts';
 import { toolProjectPins } from '#cli/configurations/contracts.ts';
@@ -91,15 +92,18 @@ export function pythonProject(manifests: Manifest[]): GeneratedFile[] {
     return [
         {
             path: TOOL_PYTHON_PROJECT,
-            content: stringify({
-                project: { ...PYTHON_TOOL_PROJECT, dependencies },
-                tool: {
-                    uv: {
-                        package: false,
-                        ...(constraints.length === 0 ? {} : { 'constraint-dependencies': constraints }),
+            content: stringify(
+                {
+                    project: { ...PYTHON_TOOL_PROJECT, dependencies },
+                    tool: {
+                        uv: {
+                            package: false,
+                            ...(constraints.length === 0 ? {} : { 'constraint-dependencies': constraints }),
+                        },
                     },
                 },
-            }),
+                TOOL_EMIT_FORMAT,
+            ),
             kind: 'tool_file',
         },
     ];

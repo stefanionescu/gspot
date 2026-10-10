@@ -30,3 +30,9 @@ export const VALUE_KINDS = new Set(['String', 'Integer', 'Float', 'Boolean', 'Da
 
 /** Shared configuration edits use TOML 1.0 inline tables without trailing commas. */
 export const PATCH_FORMAT = { inlineTableStart: 2, bracketSpacing: false, trailingComma: false };
+
+/** Native generated TOML uses table headers and compact arrays. */
+export const TOOL_EMIT_FORMAT = {
+    inlineTableStart: Number.MAX_SAFE_INTEGER,
+    bracketSpacing: false,
+};

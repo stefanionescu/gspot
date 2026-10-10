@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { Eta } from 'eta';
+import { TomlDate } from 'smol-toml';
 import { stringify as stringifyYaml } from 'yaml';
 import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/planning.ts';
@@ -9,13 +10,14 @@ import { jsonText } from '#cli/generation/json-format.ts';
 import { pythonInputs } from '#cli/generation/contracts.ts';
 import { buildJsconfig } from '#cli/generation/jsconfig.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { TOOL_EMIT_FORMAT } from '#cli/config/parsers/toml.ts';
 import { collectPins } from '#cli/configurations/contracts.ts';
 import { byScopeDepth } from '#cli/repository/paths/public.ts';
 import { TOOL_KEY_DEPTH } from '#cli/config/policy/settings.ts';
 import { readSwiftVersion } from '#cli/parsers/swift/public.ts';
-import { TomlDate, stringify as stringifyToml } from 'smol-toml';
 import { TEST_RULE_NAMES } from '#cli/config/generation/eslint.ts';
 import { JSON_EXTENSIONS } from '#cli/config/generation/headers.ts';
+import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
 import { compileSettingValue } from '#cli/policy/schema/contracts.ts';
 import { getProjectDependencies } from '#cli/repository/contracts.ts';
@@ -194,7 +196,7 @@ export function etaInputs(session: Session, selection: ScopeSelection, manifests
             JSON.stringify(value, null, indent)
                 .replaceAll('\u{2028}', String.raw`\u2028`)
                 .replaceAll('\u{2029}', String.raw`\u2029`),
-        toml: stringifyToml,
+        toml: (value) => stringifyToml(value, TOOL_EMIT_FORMAT),
         yaml: stringifyYaml,
         tomlDate: TomlDate,
         packageWorkspaces: () => packageWorkspaces(root),
