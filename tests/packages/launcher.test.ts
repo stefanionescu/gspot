@@ -1,8 +1,8 @@
 // Delivered commands preserve authored instructions, report findings, and terminate canceled tools.
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
 import { createFileTree } from 'testdirs';
-import { join, basename } from 'node:path';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
@@ -154,9 +154,11 @@ test('the packed CLI validates own record keys in Node and Bun without Node on P
     );
     const git = Bun.which('git');
     expect(git).not.toBeNull();
-    const path = join(consumer.workspace, 'git-only');
-    await mkdir(path);
-    await symlink(git!, join(path, basename(git!)));
+    const path = isPosix ? join(consumer.workspace, 'git-only') : dirname(git!);
+    if (isPosix) {
+        await mkdir(path);
+        await symlink(git!, join(path, 'git'));
+    }
     expect(Bun.which('node', { PATH: path })).toBeNull();
     for (const command of [consumer.command, [process.execPath, consumer.command[1]!]]) {
         const options =

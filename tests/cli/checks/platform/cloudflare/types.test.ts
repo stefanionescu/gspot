@@ -12,6 +12,7 @@ import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { BUILT_IN_CALCULATIONS } from '#cli/checks/public.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
+import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import type { WorkerTypesProject } from '#tests/types/cli/checks/platform/cloudflare.ts';
@@ -20,6 +21,15 @@ import {
     CLOUDFLARE_TYPES_SCOPES,
     CLOUDFLARE_TYPES_GENERATOR,
 } from '#tests/config/cli/checks/platform/cloudflare/types.ts';
+
+// The mocked version process uses an owned host shim, so native path inspection can read it.
+async function mockWrangler(root: string): Promise<DisposableStack> {
+    const pin = toolPin(configurationManifests().values(), 'wrangler');
+    const path = join(root, 'node_modules', '.bin', pin.name);
+    await Bun.write(path, '');
+    await chmod(path, EXECUTABLE_FILE);
+    return mockPinnedExecutables([pin]);
+}
 
 // A test Worker whose generator stands in for wrangler types: `bindings.txt` is what it writes, or the failure.
 async function applyChanges(root: string, scope: string, content: string): Promise<WorkerTypesProject> {
@@ -63,7 +73,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
     async (scope) => {
         await using directory = await testdir();
         const testRepository = await applyChanges(directory.path, scope, 'failure');
-        using _executables = mockPinnedExecutables([toolPin(configurationManifests().values(), 'wrangler')]);
+        using _executables = await mockWrangler(directory.path);
         const run = processes.run;
         using _generator = spyOn(processes, 'run').mockImplementation((argv, options) =>
             run([process.execPath, ...argv.slice(1)], options),
@@ -80,7 +90,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
     async (scope) => {
         await using directory = await testdir();
         const testRepository = await applyChanges(directory.path, scope, '// Generated types\n');
-        using _executables = mockPinnedExecutables([toolPin(configurationManifests().values(), 'wrangler')]);
+        using _executables = await mockWrangler(directory.path);
         const run = processes.run;
         using _generator = spyOn(processes, 'run').mockImplementation((argv, options) =>
             run([process.execPath, ...argv.slice(1)], options),
@@ -113,7 +123,7 @@ test('custom Worker type files retain the configured interface and child scope',
     });
     const session = await openSession(sandbox.path);
     using resources = new DisposableStack();
-    resources.use(mockPinnedExecutables([toolPin(session.manifests.values(), 'wrangler')]));
+    resources.use(await mockWrangler(sandbox.path));
     const directories: string[] = [];
     resources.use(
         spyOn(processes, 'run').mockImplementation(async (argv, options) => {
