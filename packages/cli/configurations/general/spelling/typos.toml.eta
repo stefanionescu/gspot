@@ -1,5 +1,8 @@
 <%
 const allowed = Object.fromEntries(Object.keys(policy.words).map((word) => [word, word]));
+const dictionaries = configurationScopes('spelling').flatMap((entry) =>
+    [entry.verbatim('typos')?.default, ...Object.values(entry.verbatim('typos')?.type ?? {})]
+);
 %><%~ toml({
     default: {
         locale: settings['prose.locale'],
@@ -20,17 +23,15 @@ const allowed = Object.fromEntries(Object.keys(policy.words).map((word) => [word
         ...verbatim('typos')?.type,
         'gspot-policy': {
             'extend-glob': ['gspot.toml'],
-            'extend-identifiers': Object.fromEntries(configurationScopes('spelling').flatMap((entry) =>
-                [entry.verbatim('typos')?.default, ...Object.values(entry.verbatim('typos')?.type ?? {})].flatMap((type) =>
-                    Object.keys(type?.['extend-identifiers'] ?? {}).map((identifier) => [identifier, identifier])
-                )
+            'extend-identifiers': Object.fromEntries(dictionaries.flatMap((type) =>
+                Object.keys(type?.['extend-identifiers'] ?? {}).map((identifier) => [identifier, identifier])
             )),
-            'extend-words': Object.fromEntries(configurationScopes('spelling').flatMap((entry) => [
+            'extend-words': Object.fromEntries([
                 ...Object.entries(allowed),
-                ...[entry.verbatim('typos')?.default, ...Object.values(entry.verbatim('typos')?.type ?? {})].flatMap((type) =>
+                ...dictionaries.flatMap((type) =>
                     Object.keys(type?.['extend-words'] ?? {}).map((word) => [word, word])
                 ),
-            ])),
+            ]),
         },
     },
 }).trimEnd() %>
