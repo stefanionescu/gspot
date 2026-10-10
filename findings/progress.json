@@ -1304,6 +1304,29 @@
                 "Explicit user approval of the exact reviewed concern in this conversation.",
                 "/tmp/gspot-release-consumer-e26-evidence/freeze.json SHA256 6464c69658bc88386cd8eac75ae05658358f4c20e2856d57c96a2e514e1d39b2. Native evidence and platform limits remain as recorded; no blanket cross-platform acceptance."
             ]
+        },
+        {
+            "id": "hosted-image-update-warnings3087",
+            "date": "2026-10-10",
+            "scope": "scripts/pins.ts hosted runner image update notices; slices/config/037",
+            "decision": "Adopt the verified generic warning contract. Retain Ubuntu24.04 while pinned Actionlint1.7.12 lacks26.04 support. Valid newer hosted images produce visible update warnings; unavailable or retired images, wrong release identities, newer tool/action releases, registry errors and missing Node LTS remain fatal. Preserve all checks and native OS-conflict validation. No label-specific exception, flag, setting or new module. Allow exact3087 script/test/static bytes:29 script,2338 tests,720 static; six compatible pin updates reduce9 bytes independently.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-shared-pins-8df-evidence/warning-proposal/freeze.json SHA256 f01eac10dd4f3a1f3fe459b5425cf73002487d521a31ba48f6f4a2e82db62e6f; native24pass93assertions, types/lint/format, six severity controls and actual109 registry-pin validation pass.",
+                "Native Actionlint custom-label probe loses mixed-OS diagnostics and is rejected; official Ubuntu-support PRs remain open. No policy suppression adopted."
+            ]
+        },
+        {
+            "id": "native-executable-fixture-paths398",
+            "date": "2026-10-10",
+            "scope": "tests/cli/checks/platform/cloudflare/types.test.ts and tests/packages/launcher.test.ts",
+            "decision": "Adopt exact349 Cloudflare test bytes and49 Windows Git fixture bytes,398 total and zero production. The disposable Wrangler host shim retains native filesystem inspection and existing version mocks; the Windows Bun-without-Node fixture retains Git installation context and the unchanged absence assertion. Preserve all callbacks, assertions and cleanup. Native Windows verification remains required.",
+            "evidence": [
+                "Explicit user approval in this conversation.",
+                "/tmp/gspot-cloudflare-types-bc051-fix/freeze.json SHA2568f63c9e5ad2b68b226e59e8252b87aac4761cad27d37b0d533706aca397a926e; five cases26assertions in each PATH, native types/lint/format pass.",
+                "/tmp/gspot-windows-package-launcher-bc051-freeze/freeze.json SHA25634deca5440c6a5d5e5797be5d320c3708b196a53b4e79c7eef7b8cdf5c50e3b9; focused macOS1pass30assertions, native types/lint/format pass; Windows replay38063427579 pending, not a platform pass.",
+                "Exact integrated owner hashes and costs: /tmp/gspot-final-fixture-main-intake.json."
+            ]
         }
     ],
     "implementationBatches": {
@@ -20406,6 +20429,20 @@
             "limitations": [
                 "Original native987 is not current all-platform suite acceptance. Current Cloudflare mock failures remain visible under suite separation; no unrelated record is reopened.",
                 "Markdown14 positive draft is not adopted; reducing23-byte correction is separately implemented in d4760403e."
+            ]
+        },
+        {
+            "commit": "0d9904ce56e986dee1a9f1ca2fcced2d0a5e2b72",
+            "completedRecords": [],
+            "unresolvedRecords": 7,
+            "validation": [
+                "Six compatible shared-pin updates committed separately with normal generated producers and passing staged/commit hooks; complete net change reduces6 bytes. /tmp/gspot-final-pin-chain-receipt.json.",
+                "Approved hosted-image warning source5618daefd passes42 staged checks and32 commit-hook checks; actual109 registries pass with Ubuntu24.04-to26.04 warning. Native severity errors retained.",
+                "Exact349/49 fixture owner hashes bridge approved evidence to0d9904ce5;29 staged and22 commit-hook checks pass. Cloudflare available-tools full snapshot:4141pass3skip0fail17478assertions under frozenbc051+349; final-source matched comparison remains separate."
+            ],
+            "limitations": [
+                "No record closes at this checkpoint. Final current source/platform/suite acceptance is still required; frozen available-tools snapshot does not include the newer pins and four warning cases.",
+                "Windows callback replay38063427579 is running, not yet a platform pass. External main001 publication/account/deployment steps and owner-retained repository-root040 remain partial."
             ]
         }
     ],
