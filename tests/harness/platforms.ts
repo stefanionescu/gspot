@@ -90,7 +90,7 @@ export async function copyInstalledModule(target: string, name: string): Promise
     const destination = join(target, name);
     await cp(source, destination, { recursive: true });
     await symlink(
-        dirname(source),
+        process.platform === 'win32' ? installedModules : dirname(source),
         join(destination, 'node_modules'),
         process.platform === 'win32' ? 'junction' : 'dir',
     );

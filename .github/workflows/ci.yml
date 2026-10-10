@@ -21,17 +21,29 @@ jobs:
               run: |
                   cat > "$RUNNER_TEMP/companion-probe.ts" <<'PROBE'
                   import {copyInstalledModule} from "./tests/harness/platforms.ts";
-                  import {testModules} from "./tests/harness/environment.ts";
+                  import {testModules,installedModules} from "./tests/harness/environment.ts";
+                  import {createRequire} from "node:module";
                   import {testdir} from "testdirs";
                   import {join,resolve,relative,isAbsolute} from "node:path";
                   import {readdir,readFile,realpath,rename} from "node:fs/promises";
                   await using sandbox=await testdir();
                   const name="html-validate";
+                  const source=await realpath(join(testModules,name));
+                  const manifest=JSON.parse(await readFile(join(source,"package.json"),"utf8"));
+                  const nativeRequire=createRequire(join(source,"package.json"));
+                  const resolutions=Object.fromEntries(Object.keys(manifest.dependencies).map(dependency=>[dependency,nativeRequire.resolve(dependency)]));
+                  const installedRequire=createRequire(join(installedModules,name,"package.json"));
+                  const installedResolutions=Object.fromEntries(Object.keys(manifest.dependencies).map(dependency=>[dependency,installedRequire.resolve(dependency)]));
+                  console.log(JSON.stringify({dependencyLayout:{source,installedModules:await realpath(installedModules),dependencies:manifest.dependencies,resolutions,installedResolutions}},null,2));
                   const original=join(testModules,".bin");
                   const entries=(await readdir(original)).filter(entry=>entry===name||entry.startsWith(`${name}.`));
                   const layout=await Promise.all(entries.map(async entry=>({entry,realpath:await realpath(join(original,entry)),sha256:new Bun.CryptoHasher("sha256").update(await readFile(join(original,entry))).digest("hex")})));
                   const target=join(sandbox.path,"node_modules");
                   await copyInstalledModule(target,name);
+                  const copiedRequire=createRequire(join(target,name,"package.json"));
+                  const copiedResolutions=Object.fromEntries(Object.keys(manifest.dependencies).map(dependency=>[dependency,copiedRequire.resolve(dependency)]));
+                  for(const dependency of Object.keys(manifest.dependencies))if(await realpath(copiedResolutions[dependency])!==await realpath(resolutions[dependency]))throw new Error(`Dependency resolution changed for ${dependency}`);
+                  console.log(JSON.stringify({copiedResolutions},null,2));
                   const metadata=join(target,".bin",`${name}.bunx`);
                   const raw=await readFile(metadata);
                   if(!raw.equals(await readFile(join(original,`${name}.bunx`))))throw new Error("Companion bytes changed during copy");
