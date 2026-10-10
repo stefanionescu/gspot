@@ -6,10 +6,10 @@ title = "Docker"
 description = "Dockerfiles and Compose files: hadolint, a Compose file that parses, an ignore file beside every Dockerfile, and Trivy over the configuration."
 
 [detect]
-paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"]
+paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml", "!**/*.dockerignore"]
 
 [files]
-paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml", "**/.dockerignore"]
+paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml", "**/.dockerignore", "**/*.dockerignore"]
 
 [[tool]]
 name = "hadolint"
@@ -61,7 +61,7 @@ example = "The instruction `FROM node:latest` reports DL3007 because the tag cha
 level = "recommended"
 stage = "commit"
 command = ["hadolint", "--no-color", "--config", "{tool_file:hadolint}", "{files}"]
-files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile"] }
+files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*.dockerignore"] }
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+) (?<rule>[A-Z]+\\d+) [a-z]+: (?<message>.*)$" }
 summary = "Lints every Dockerfile, and runs ShellCheck over its RUN lines."
 why = "An unpinned base image or a cache left in a layer makes a build nobody can repeat and an image larger than it needs to be."

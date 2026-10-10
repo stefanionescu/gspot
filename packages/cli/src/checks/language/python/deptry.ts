@@ -4,6 +4,7 @@ import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
+import { childScopes } from '#cli/planning/files.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
@@ -24,7 +25,7 @@ import {
 } from '#cli/config/checks/language/python.ts';
 
 /**
- * Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot added, because the command-line flag replaces it.
+ * Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot and child scopes added, because the command-line flag replaces it.
  * @param session the repository and installed tools.
  * @param planned the dependency check and its scope.
  * @returns the native dependency findings, including undeclared application imports.
@@ -38,10 +39,18 @@ export async function deptry(session: ToolSession, planned: PlannedCheck): Promi
             'deptry',
             '.',
             '--no-ansi',
-            ...[String.raw`(^|.*[/\\])${RegExp.escape(DOT_GSPOT)}([/\\]|$)`, ...exclusions].flatMap((pattern) => [
-                '--extend-exclude',
-                pattern,
-            ]),
+            ...[
+                String.raw`(^|.*[/\\])${RegExp.escape(DOT_GSPOT)}([/\\]|$)`,
+                ...childScopes(session, planned.scope).map((path) => {
+                    const child = posix
+                        .relative(planned.scope.scope.path, path)
+                        .split('/')
+                        .map((part) => RegExp.escape(part))
+                        .join(String.raw`[/\\]`);
+                    return String.raw`^${child}([/\\]|$)`;
+                }),
+                ...exclusions,
+            ].flatMap((pattern) => ['--extend-exclude', pattern]),
         ]),
     });
 }

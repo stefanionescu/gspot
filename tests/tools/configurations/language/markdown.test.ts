@@ -59,11 +59,11 @@ test('Markdown coverage switches by level while scoped native options remain eff
     }
 });
 
-test('native Markdown discovery reads shipped defaults and scoped options through the generated editor pointers', async () => {
+test('Generated Markdown editor pointers carry defaults and scoped options', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...FILES,
-        'gspot.toml': buildPolicy(['markdown'], { level: 'all', tables: TABLES }),
+        'gspot.toml': buildPolicy(['markdown', 'javascript'], { level: 'all', tables: TABLES }),
         'root.md': FILES['root.md'].replace('![]', '![Request flow]'),
         'title.md': '# Title\n\nA document with a title.\n',
     });

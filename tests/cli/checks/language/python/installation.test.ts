@@ -212,3 +212,63 @@ test('Python install path ignores accept only the selected script and keep unman
     ]);
     expect(await readFile(join(sandbox.path, 'approved.sh'), 'utf8')).toBe('pip install approved-module\n');
 });
+
+test.each(['recommended', 'all'] as const)(
+    'deptry excludes nested scopes without replacing authored patterns at %s',
+    async (level) => {
+        await using sandbox = await testdir();
+        const scopes = ['', 'app', 'app/nested', 'other'];
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['python'], {
+                level,
+                tables: '[scope.app]\n[scope."app/nested"]\n[scope.other]\n',
+            }),
+            ...Object.fromEntries(
+                scopes.flatMap((scope) => [
+                    [
+                        join(scope, 'pyproject.toml'),
+                        '[project]\nname = "example"\nversion = "1.0.0"\n[tool.deptry]\nextend_exclude = ["authored"]\n',
+                    ],
+                    [join(scope, 'main.py'), 'VALUE = 1\n'],
+                ]),
+            ),
+            [join(environmentBin('.gspot/.venv'), 'deptry')]: 'fixture',
+        });
+        const session = await openSession(sandbox.path);
+        using resources = mockPinnedExecutables(
+            ['uv', 'deptry'].map((name) => toolPin(session.manifests.values(), name)),
+        );
+        const executed = resources.use(
+            spyOn(processes, 'run').mockResolvedValue({
+                code: 0,
+                stdout: '[]',
+                stderr: '',
+                missing: false,
+                duration: 1,
+            }),
+        );
+        const checked = await checkReport(sandbox.path, ['check', '--only', 'python/deptry', '--json']);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+        expect(checked.report.checks.map(({ scope, status }) => [scope, status])).toStrictEqual(
+            scopes.map((scope) => [scope, 'passed']),
+        );
+        const commands = executed.mock.calls.map(([command]) => command);
+        for (const scope of scopes) {
+            const command = commands.find((argv) => argv.includes(join(sandbox.path, scope)))!;
+            expect(command).toBeDefined();
+            expect(command.slice(1, 5)).toStrictEqual(['run', '--no-sync', '--project', join(sandbox.path, scope)]);
+            const patterns = command.flatMap((value, index) =>
+                value === '--extend-exclude' ? [command[index + 1]!] : [],
+            );
+            expect(patterns.at(-1)).toBe('authored');
+            expect(patterns.some((pattern) => new RegExp(pattern).test('.gspot/pyproject.toml'))).toBe(true);
+            for (const candidate of scopes.filter(
+                (path) => path !== scope && path.startsWith(scope === '' ? '' : `${scope}/`),
+            )) {
+                const relative = candidate.slice(scope === '' ? 0 : scope.length + 1);
+                expect(patterns.some((pattern) => new RegExp(pattern).test(`${relative}/.venv/sample.py`))).toBe(true);
+            }
+            expect(patterns.some((pattern) => new RegExp(pattern).test('appish/sample.py'))).toBe(false);
+        }
+    },
+);
