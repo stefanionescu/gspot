@@ -63,8 +63,8 @@ export async function wrangler(input: CheckInput): Promise<Finding[]> {
         ),
     );
     return paths.flatMap((path): Finding[] => {
-        const { table, problem } = parseWrangler(readSource(input.root, path, input.reads).toString('utf8'), path);
-        if (problem !== undefined) return [findingAt(input, { file: path, line: 1 }, 'syntax', problem)];
+        const { table, error } = parseWrangler(readSource(input.root, path, input.reads).toString('utf8'), path);
+        if (error !== undefined) return [findingAt(input, { file: path, line: 1 }, 'syntax', error)];
         const missing = Object.entries(WRANGLER_FIELDS).flatMap(([field, { pattern, rule, message }]) => {
             const value = table[field];
             return typeof value === 'string' && pattern.test(value) ? [] : [{ rule, message }];

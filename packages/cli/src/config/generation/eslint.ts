@@ -51,7 +51,7 @@ export const ESLINT_JAVASCRIPT_LIMITS: Record<string, string> = {
     parameters: 'function_parameters',
 };
 
-/** Role precedence keeps test support and type declarations outside the runtime layer. */
+/** Role precedence keeps the harness and type declarations outside the runtime layer. */
 export const ROLE_ORDER = ['test_harness', 'tests', 'types', 'env', 'config', 'runtime'] as const;
 
 /** Role policies use file categories independently of declared module identities. */

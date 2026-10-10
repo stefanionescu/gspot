@@ -76,7 +76,7 @@ help = "Split the file by its responsibility, or raise its limits.`<language>`.f
 
 [[check]]
 name = "test-placement"
-title = "Keep test support in its declared folder"
+title = "Keep the harness in its declared folder"
 example = "With architecture.roles.test_harness = 'tests/support', tests/unit/builders.ts beside order.spec.ts reports misplaced. Move builders.ts to tests/support. Tests, declarations, and assertion modules may stay."
 runs = "scope"
 level = "all"

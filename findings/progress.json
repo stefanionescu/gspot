@@ -7645,7 +7645,8 @@
                 "Evidence f197f61756c1f848.",
                 "Evidence 15b7e23ff87ec367.",
                 "Evidence 66b9441b73390aab.",
-                "Evidence fdc839bbba7e99bb."
+                "Evidence fdc839bbba7e99bb.",
+                "Evidence b08fdb8a622785f2."
             ],
             "additionalChanges": [
                 {
@@ -7732,7 +7733,7 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "verification": ["Evidence 99cedf9c066772ef.", "Evidence b08fdb8a622785f2."],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",

@@ -213,13 +213,13 @@ export function projectBuildSettings(text: string): ProjectBuildSettings {
  */
 export function parseWrangler(text: string, path: string): WranglerParse {
     try {
-        if (path.endsWith('.toml')) return { table: parseToml(text), problem: undefined };
+        if (path.endsWith('.toml')) return { table: parseToml(text), error: undefined };
         const parsed = parseJsonc(text);
         return isRecord(parsed)
-            ? { table: parsed, problem: undefined }
-            : { table: undefined, problem: 'The file does not parse as JSON with comments.' };
+            ? { table: parsed, error: undefined }
+            : { table: undefined, error: 'The file does not parse as JSON with comments.' };
     } catch (error) {
-        return { table: undefined, problem: error instanceof Error ? error.message : 'The file does not parse.' };
+        return { table: undefined, error: error instanceof Error ? error.message : 'The file does not parse.' };
     }
 }
 

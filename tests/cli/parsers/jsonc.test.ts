@@ -17,7 +17,7 @@ for (const entry of JSONC_FAILURES)
     test(`Wrangler returns the syntax diagnostic without partial fields in ${entry.source}`, () => {
         expect(parseWrangler(entry.source, 'wrangler.jsonc')).toStrictEqual({
             table: undefined,
-            problem: entry.message,
+            error: entry.message,
         });
     });
 
@@ -25,7 +25,7 @@ for (const entry of JSONC_ENTRIES)
     test(`Wrangler accepts only an object from ${entry.source}`, () => {
         expect(parseWrangler(entry.source, 'wrangler.jsonc')).toStrictEqual(
             typeof entry.value === 'object' && entry.value !== null
-                ? { table: entry.value, problem: undefined }
-                : { table: undefined, problem: 'The file does not parse as JSON with comments.' },
+                ? { table: entry.value, error: undefined }
+                : { table: undefined, error: 'The file does not parse as JSON with comments.' },
         );
     });
