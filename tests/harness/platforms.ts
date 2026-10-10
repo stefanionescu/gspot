@@ -2,12 +2,31 @@
 import { hostPlatform } from '#cli/platform/public.ts';
 import { missingBuild } from '#cli/planning/contracts.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
+import { quoteArgument } from '#cli/platform/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { join, dirname, relative, basename } from 'node:path';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import { quoteArgument, executableNames } from '#cli/platform/contracts.ts';
 import { testModules, installedModules } from '#tests/harness/environment.ts';
 import { cp, mkdir, lstat, chmod, readdir, symlink, realpath, copyFile, writeFile } from 'node:fs/promises';
+
+/**
+ * List installed packages, including names in scoped folders.
+ * @param store the installed module folder
+ * @returns package names in native directory order
+ */
+async function packageNames(store: string): Promise<string[]> {
+    const entries = await readdir(store);
+    const names = await Promise.all(
+        entries
+            .filter((entry) => !entry.startsWith('.'))
+            .map(async (entry) => {
+                if (!entry.startsWith('@')) return [entry];
+                const children = await readdir(join(store, entry));
+                return children.map((child) => join(entry, child));
+            }),
+    );
+    return names.flat();
+}
 
 /**
  * Whether the pinned tool has a build for this machine.
@@ -32,27 +51,17 @@ export function getKeptMode(mode: number): number {
 }
 
 /**
- * Links every installed module of this repository into a directory, entry by entry, so a relative link inside the
- * store resolves from its real location. A directory link of the whole store breaks those on Windows. The test
- * packages of the tests store come first. The .bun folder comes along, so a copy of the sandbox keeps each package
- * beside the packages it resolves, and so does the .bin folder of the test packages.
+ * Link test packages before workspace packages, with their .bin and the workspace .bun store.
+ * Canonical package links preserve relative dependencies that Windows store junctions break.
+ * Copied sandboxes retain the installed dependency layout.
  * @param target the node_modules directory to create
  */
 export async function linkInstalledModules(target: string): Promise<void> {
     const kind = process.platform === 'win32' ? 'junction' : 'dir';
     const packages = await Promise.all(
         [testModules, installedModules].map(async (store) => {
-            const entries = await readdir(store);
-            const names = await Promise.all(
-                entries
-                    .filter((entry) => !entry.startsWith('.'))
-                    .map(async (entry) => {
-                        if (!entry.startsWith('@')) return [entry];
-                        const children = await readdir(join(store, entry));
-                        return children.map((child) => join(entry, child));
-                    }),
-            );
-            return names.flat().map((name) => [store, name] as const);
+            const names = await packageNames(store);
+            return names.map((name) => [store, name] as const);
         }),
     );
     const links = [[installedModules, '.bun'] as const, [testModules, '.bin'] as const, ...packages.flat()];
@@ -89,16 +98,17 @@ export async function copyInstalledModule(target: string, name: string): Promise
     const source = await realpath(join(testModules, name));
     const destination = join(target, name);
     await cp(source, destination, { recursive: true });
-    await symlink(
-        dirname(source),
-        join(destination, 'node_modules'),
-        process.platform === 'win32' ? 'junction' : 'dir',
-    );
+    const store = dirname(source);
+    for (const dependency of await packageNames(store)) {
+        const path = join(destination, 'node_modules', dependency);
+        await mkdir(dirname(path), { recursive: true });
+        await symlink(await realpath(join(store, dependency)), path, process.platform === 'win32' ? 'junction' : 'dir');
+    }
     const binaries = join(target, '.bin');
     await mkdir(binaries, { recursive: true });
     const installed = join(testModules, '.bin');
     const entries = await readdir(installed);
-    for (const file of executableNames(name).filter((entry) => entries.includes(entry))) {
+    for (const file of entries.filter((entry) => entry === name || entry.startsWith(`${name}.`))) {
         const original = join(installed, file);
         const path = join(binaries, file);
         const entry = await lstat(original);

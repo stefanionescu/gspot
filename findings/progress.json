@@ -1349,6 +1349,13 @@
                 "/tmp/gspot-ci-shards-ad94-proof/freeze.json SHA25627184724afdf43613aa8ab44e468d43533b244eab49e99b25d67541a01e4ba03; Bun1.4.2 native partitions repeat identically with reversed argv and preserve104path union with zero duplicates. Original callbacks/source/runner unchanged.",
                 "Three actual Windows60-minute job cancellations preserved; the completed CI file alone takes at least2393.87seconds. Actionlint,Prettier,Yamllint pass; raw Zizmor baseline/candidate findings identical. Native expanded CI replay still required."
             ]
+        },
+        {
+            "id": "windows-cached-package-transport229",
+            "date": "2026-10-10",
+            "scope": "tests/harness/platforms.ts cached package and executable transport",
+            "decision": "Allow the exact reviewed229support-byte canonical Windows fixture copy correction. Copy native executable metadata and link each package dependency from its own canonical peerstore. Reuse the existing scoped package enumeration without changing store precedence or publication. Production bytes unchanged; no callback or policy relaxation. Retained Root held comments and variants are preserved separately and are not adopted by this exception.",
+            "evidence": ["Explicit user answer: Allow the verified 229-byte fix.", "Evidence 379c7378e553183c."]
         }
     ],
     "implementationBatches": {
@@ -5692,7 +5699,8 @@
                 "Evidence 0175901faf714fc9.",
                 "Evidence 3c7f27f41cf1ad68.",
                 "Evidence aaa92c7930dd5a36.",
-                "Evidence 3433672d7cb9d70a."
+                "Evidence 3433672d7cb9d70a.",
+                "Evidence 379c7378e553183c."
             ],
             "remaining": [
                 "Complete the remaining full verification and actual CI acceptance. Fresh macOS package/docs passes do not prove Linux/Windows consumer or complete tools behavior.",
@@ -5807,7 +5815,8 @@
                 "Evidence b7088713e096ebae.",
                 "Prescribed Defender step deleted in2e910518d5e4d241671ef17594134ae7ef5c690c; exact source reduction323 bytes. Native Actionlint/YAML/formatting and staged24 checks pass; raw Zizmor retains only the already-reasoned self-repository findings.",
                 "Approved native16-shard fallback: /tmp/gspot-ci-shards-ad94-proof/freeze.json SHA25627184724afdf43613aa8ab44e468d43533b244eab49e99b25d67541a01e4ba03. Current104toolpaths partition exactly; actual future completion and single timeout measurement remain pending.",
-                "Evidence 3433672d7cb9d70a."
+                "Evidence 3433672d7cb9d70a.",
+                "Evidence 379c7378e553183c."
             ],
             "additionalChanges": [
                 {
@@ -8394,7 +8403,8 @@
                 "Later full tools run: two pnpm lock tests and one pnpm tool-project test fail ERR_PNPM_FETCH_401 after shared npm executable PATH was corrected. Earlier focused passes do not establish this later context.",
                 "Evidence 31751b6dfd2661b9.",
                 "Final matched CLI/plugin no-acquisition comparison: Evidence 5f4e4fc303c8fc26. Current CI acceptance capsule /tmp/gspot-ad94-current-acceptance/freeze.json SHA256ed60b9c25cd052b0a4e0dddfe17ebd657580ab9fa04ab4d6f0173505cb16e51b preserves native Linux npm token-refresh and private Python passes, plus incomplete platform-manager cases.",
-                "Evidence 3433672d7cb9d70a."
+                "Evidence 3433672d7cb9d70a.",
+                "Evidence 379c7378e553183c."
             ],
             "remaining": [
                 "Complete supported-platform native npm-manager, temporary settings, credential and recovery acceptance. Prescribed fixture transports and tool-free CLI/plugin comparison are implemented; do not infer missing tool outcomes from that comparison."
@@ -9602,7 +9612,8 @@
                 "Evidence 702f63a4844df48a.",
                 "Evidence a710a8f87755c78d.",
                 "Evidence b7088713e096ebae.",
-                "Evidence 3433672d7cb9d70a."
+                "Evidence 3433672d7cb9d70a.",
+                "Evidence 379c7378e553183c."
             ],
             "remaining": [
                 "Complete current-pin platform tools acceptance; the frozen Darwin full run passed with three explicit container skips, which do not prove skipped behavior.",
