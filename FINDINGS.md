@@ -1,6 +1,6 @@
 # Unresolved Findings
 
-6 unresolved review records remain. 5 come from the review of October 6, 2026 and the owner decisions of that day. 1 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
+6 unresolved review records remain. 5 come from the review and owner decisions of October 6, 2026. 1 older record remains. Each record has a stable ID. Recorded [owner decisions](findings/progress.json) take precedence.
 
 On October 6, 2026, a read-only verification checked all 802 older records against commit `3e1445a2d` and closed 203. The owner decisions of October 6 and 7, 2026 closed 15 more. A coherence check then compared every open record with the decisions and with every other record, and closed 272 duplicates, superseded records, and wrong records. [The closed list](findings/review/closed.md) gives the evidence for each. Each older findings file ends with a "Status on October 6, 2026" table that gives the current file and what remains; the original rows above it are history.
 
@@ -13,12 +13,12 @@ On October 6, 2026, a read-only verification checked all 802 older records again
     - One local npm registry in `tests/harness/registry.ts` replaces Verdaccio and the other npm test registry. The Python index stays only for the private-index credential tests.
 2. [Owner questions](findings/review/owner-questions.md): every question has an answer. Its "Answers of October 6, 2026" section answers every record whose kind is decision.
 3. [Vocabulary](findings/review/glossary.md): one name for each concept. Every record uses these names; where an older record says otherwise, the vocabulary wins.
-4. Nothing can be installed yet. `@gspothq/cli` returns 404 on npm, and no tag or release exists (`main/001`).
+4. Public npm publication and release setup remain pending (`main/001`). Local package consumer tests pass.
 5. The working tree exports authored template customization except scopes and keeps raw values through import and re-export. Full tutorial, native-tool, and platform acceptance remains pending ([commands and templates](findings/review/commands-templates.md)).
 6. The working tree has a shared canonical policy writer and adopted TOML format. Comment preservation, omitted defaults, visible manual choices, and explicit empty paths have focused acceptance evidence. Native Taplo formatting and focused writer cases pass. Full release validation remains pending ([format review](findings/review/policy-format.md)).
-7. This repository's gspot.toml hides problems instead of fixing them. The `tests` scope selects framework configurations for plain test files. Many exceptions are dead, and the architecture layers allow two-way imports ([exceptions](findings/review/policy-exceptions.md)).
+7. The [exceptions review](findings/review/policy-exceptions.md) records tests-scope selections, stale overrides and architecture edges. Its records are complete.
 8. Carve-outs: one TEST_TIMEOUT_MS serves every suite through the runner and preload. Final platform measurement remains pending. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
-9. File and folder names: `commands/policy-edit.ts`, `tools/installed-files.ts`, and `tools/installation.ts` are explained, with a target tree and a move table, in [the source layout review](findings/review/source-layout.md). [The test layout review](findings/review/tests-layout.md) has the same for `tests/`.
+9. The [source layout review](findings/review/source-layout.md) and [test layout review](findings/review/tests-layout.md) preserve original paths and prescribed moves. The ledger records final owners and approved overrides.
 
 1086 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
 
