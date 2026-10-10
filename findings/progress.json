@@ -7949,6 +7949,16 @@
                     "commit": null,
                     "evidence": "/tmp/gspot-suite-separation-525a-native/full-cli-bundled-npm-receipt.json",
                     "verification": ["Evidence fbcaae08b9d4802c."]
+                },
+                {
+                    "commit": "049433ce04887c9a86dfed0ef761468f924f6525",
+                    "evidence": "/tmp/gspot-suite-separation-next-bash-six-final/freeze.json",
+                    "verification": ["Evidence 7721f690cda2a8d6."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-git-fixture-isolation-final-freeze.json",
+                    "verification": ["Evidence 402b13666fd088d5."]
                 }
             ]
         },
@@ -8889,6 +8899,16 @@
                     "commit": null,
                     "evidence": "/tmp/gspot-suite-separation-525a-native/full-cli-bundled-npm-receipt.json",
                     "verification": ["Evidence fbcaae08b9d4802c."]
+                },
+                {
+                    "commit": "049433ce04887c9a86dfed0ef761468f924f6525",
+                    "evidence": "/tmp/gspot-suite-separation-next-bash-six-final/freeze.json",
+                    "verification": ["Evidence 7721f690cda2a8d6."]
+                },
+                {
+                    "commit": null,
+                    "evidence": "/tmp/gspot-git-fixture-isolation-final-freeze.json",
+                    "verification": ["Evidence 402b13666fd088d5."]
                 }
             ]
         },

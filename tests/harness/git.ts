@@ -25,8 +25,6 @@ export function git(cwd: string, argv: string[], environment: Record<string, str
             '-c',
             'user.name=t',
             '-c',
-            'commit.gpgsign=false',
-            '-c',
             'maintenance.auto=false',
             '-c',
             'gc.auto=0',
@@ -37,7 +35,7 @@ export function git(cwd: string, argv: string[], environment: Record<string, str
         ],
         {
             cwd,
-            env: { ...environmentVariables(), ...environment },
+            env: { ...environmentVariables(), GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '', ...environment },
         },
     );
     return { code: result.code, stdout: result.stdout, stderr: result.stderr };
