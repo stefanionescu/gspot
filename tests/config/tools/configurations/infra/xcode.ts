@@ -8,12 +8,10 @@ export const REPOSITORY: InstalledScenario = {
 };
 
 export const CASES: FindingCase[] = [
-    // The plist reader is the macOS plutil.
     {
         check: 'xcode/plutil',
         files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
         expected: { file: 'app/Info.plist' },
-        platforms: ['darwin'],
         corrected: {
             files: {
                 'app/Info.plist':

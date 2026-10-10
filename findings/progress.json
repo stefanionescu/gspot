@@ -5720,11 +5720,15 @@
                 "Evidence bede5f45fad13d76.",
                 "Evidence dfe9d62b7b54af24.",
                 "Evidence edf25cfd4cc76db8.",
-                "Evidence 3847ef677c23b274."
+                "Evidence 3847ef677c23b274.",
+                "Evidence 7f3b31b7edc5c05d.",
+                "Evidence 53ea90b3fc843001.",
+                "Evidence f4b061234a319d6e.",
+                "Evidence b9ab6944f66e34fd."
             ],
             "remaining": [
-                "Complete the remaining full verification and actual CI acceptance. Fresh macOS package/docs passes do not prove Linux/Windows consumer or complete tools behavior.",
-                "External first npm publication, trusted publisher/account setup, Cloudflare repository secrets/domain setup, release tag/publication and deployment are outside this implementation boundary."
+                "Finish Windows tools acceptance and the measured shared timeout; current CI has54 successes and2 outer-limit cancellations, with no reported test failures.",
+                "External first npm publication, trusted publishers, Cloudflare secrets/domain, release tag/publication and deployment remain outside the implementation boundary."
             ],
             "additionalChanges": [
                 {
@@ -5841,7 +5845,9 @@
                 "Evidence c0359a81a8a5ee45.",
                 "Evidence 4949e5a3e1ebcaa5.",
                 "Evidence edf25cfd4cc76db8.",
-                "Evidence 3847ef677c23b274."
+                "Evidence 3847ef677c23b274.",
+                "Evidence 7f3b31b7edc5c05d.",
+                "Evidence 1902ac75b670976f."
             ],
             "additionalChanges": [
                 {
@@ -5851,7 +5857,7 @@
                 }
             ],
             "remaining": [
-                "Measure all four suites on every CI platform and set the single TEST_TIMEOUT_MS from the slowest test rounded up to a whole minute. Existing same-constant Bun runner flag is owner-approved; all final platform observations remain required."
+                "Complete all four suites on each CI platform, fix Windows fixture duration, and set the single TEST_TIMEOUT_MS to the slowest accepted test rounded up to a whole minute."
             ]
         },
         "review/code-commands/001": {
@@ -8437,10 +8443,12 @@
                 "Evidence c0359a81a8a5ee45.",
                 "Evidence d728d481890d63ae.",
                 "Evidence edf25cfd4cc76db8.",
-                "Evidence 3847ef677c23b274."
+                "Evidence 3847ef677c23b274.",
+                "Evidence 7f3b31b7edc5c05d.",
+                "Evidence 1902ac75b670976f."
             ],
             "remaining": [
-                "Complete accepted installation-runtime platform suite acceptance. The owner-approved Windows cache4 now pass; preserve the source-qualified manager, settings, credential, recovery and explicit POSIX-exclusion evidence."
+                "Complete the current Windows installation/cache cohort: three shared-cache outcomes remain missing from the canceled full-context job. Preserve bounded cache4, credentials, recovery and actual POSIX exclusions."
             ],
             "additionalChanges": [
                 {
@@ -8479,7 +8487,7 @@
                     "verification": ["Evidence 402b13666fd088d5."]
                 },
                 {
-                    "commit": null,
+                    "commit": "dc5630812c216d76264c46b14ff47193dfe2e480",
                     "evidence": "/tmp/gspot-windows-async-publication-observation/final21-windows-four-receipts-capsule.json",
                     "verification": ["Evidence edf25cfd4cc76db8."]
                 }
@@ -9655,11 +9663,13 @@
                 "Evidence 568f0eac6ecdbcec.",
                 "Evidence c0359a81a8a5ee45.",
                 "Evidence edf25cfd4cc76db8.",
-                "Evidence 3847ef677c23b274."
+                "Evidence 3847ef677c23b274.",
+                "Evidence 7f3b31b7edc5c05d.",
+                "Evidence 53ea90b3fc843001.",
+                "Evidence 1902ac75b670976f."
             ],
             "remaining": [
-                "Complete current-pin platform tools acceptance; the frozen Darwin full run passed with three explicit container skips, which do not prove skipped behavior.",
-                "Cross-platform verification remains pending."
+                "Complete current-pin Windows tools acceptance:92 of104 files finished;7 more have partial headers and5 were not reached in the canceled jobs. Linux/macOS completed all104; explicit skips remain qualified."
             ]
         },
         "review/repository-root/046": {

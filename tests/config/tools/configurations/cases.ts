@@ -25,7 +25,12 @@ import * as languageTypescriptChecks from '#tests/config/tools/configurations/la
 import * as generalSecretsEnvironment from '#tests/config/tools/configurations/general/secrets/environment.ts';
 /** Literal scenario names, authored repositories, and finding tables. */
 export const SCENARIOS: ConfigurationScenario[] = [
-    { name: 'the xcode configuration', repository: toolXcode.REPOSITORY, cases: toolXcode.CASES },
+    {
+        name: 'the xcode configuration',
+        repository: toolXcode.REPOSITORY,
+        cases: toolXcode.CASES,
+        platforms: ['darwin'],
+    },
     { name: 'the pytest configuration', repository: toolPytest.REPOSITORY, cases: toolPytest.CASES },
     { name: 'the ansible configuration', repository: toolAnsible.REPOSITORY, cases: toolAnsible.CASES },
     { name: 'the library configurations', repository: libraries.REPOSITORY, cases: libraries.CASES },
