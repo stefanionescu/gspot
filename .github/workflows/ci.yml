@@ -48,6 +48,10 @@ jobs:
                   await copyInstalledModule(target,name);
                   const nativeCopied=Bun.spawnSync(["node","--input-type=module","-e",nodeProbe,originalPackage,join(target,name)]);
                   console.log(JSON.stringify({nativeCopied:{code:nativeCopied.exitCode,stdout:nativeCopied.stdout.toString(),stderr:nativeCopied.stderr.toString()}},null,2));
+                  const dependencies=JSON.parse(nativeCopied.stdout.toString()).node;
+                  const dependencyPaths=Object.keys(manifest.dependencies).map(name=>({name,original:dependencies.original.resolutions[name],copied:dependencies.copied.resolutions[name]}));
+                  console.log(JSON.stringify({dependencyPaths},null,2));
+                  const sameDependencies=dependencyPaths.every(entry=>entry.original.value&&entry.original.value===entry.copied.value);
                   const metadata=join(target,".bin",`${name}.bunx`);
                   const raw=await readFile(metadata);
                   const sameCompanion=raw.equals(await readFile(join(original,`${name}.bunx`)));
@@ -62,7 +66,7 @@ jobs:
                   try{absent=Bun.spawnSync([join(target,".bin",`${name}.exe`),"--version"]);}finally{await rename(`${metadata}.held`,metadata);}
                   const restored=Bun.spawnSync([join(target,".bin",`${name}.exe`),"--version"]);
                   console.log(JSON.stringify({bun:Bun.version,revision:Bun.revision,sameCompanion,confined,layout,encoded,program:copied,copiedEntries:await readdir(join(target,".bin")),metadataSHA256:new Bun.CryptoHasher("sha256").update(raw).digest("hex"),version:{code:version.exitCode,stdout:version.stdout.toString(),stderr:version.stderr.toString()},absent:{code:absent.exitCode,stdout:absent.stdout.toString(),stderr:absent.stderr.toString()},restored:{code:restored.exitCode,stdout:restored.stdout.toString(),stderr:restored.stderr.toString()}},null,2));
-                  if(!sameCompanion||!confined||originalVersion.exitCode!==0||version.exitCode!==0||restored.exitCode!==0||absent.exitCode!==255||!absent.stderr.toString().includes("could not find bin metadata file"))throw new Error("Native companion transport witness failed");
+                  if(!sameDependencies||!sameCompanion||!confined||originalVersion.exitCode!==0||version.exitCode!==0||restored.exitCode!==0||absent.exitCode!==255||!absent.stderr.toString().includes("could not find bin metadata file"))throw new Error("Native companion transport witness failed");
                   PROBE
                   cp "$RUNNER_TEMP/companion-probe.ts" companion-probe.ts
                   trap 'rm -f companion-probe.ts' EXIT
@@ -161,4 +165,4 @@ jobs:
                   record({ phase: 'observer', event: 'ready' });
                   OBSERVER
             - name: Validate HTML scopes, registry credentials, and GitHub CI refusals
-              run: mise run test:tools -- --preload ./.windows-ci-publication-observer.mjs --test-name-pattern 'keeps built HTML exceptions confined|native registry settings authenticate|invalid comparisons and failed installs fail the job in github CI' -- tests/tools/generation/site-html.test.ts tests/tools/npm/environment.test.ts tests/tools/commands/ci.test.ts
+              run: mise run test:tools -- --preload ./.windows-ci-publication-observer.mjs --test-name-pattern 'keeps built HTML exceptions confined|reports audio and video autoplay|native registry settings authenticate|invalid comparisons and failed installs fail the job in github CI' -- tests/tools/generation/site-html.test.ts tests/tools/generation/html-accessibility.test.ts tests/tools/npm/environment.test.ts tests/tools/commands/ci.test.ts
