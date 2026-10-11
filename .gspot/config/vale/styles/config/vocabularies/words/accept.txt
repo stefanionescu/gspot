@@ -138,11 +138,13 @@ svgo
 syncpack
 taplo
 TCA
+THR
 TLS
 TOML
 trufflehog
 tsc
 TSX
+TTO
 typescript
 TypeScript
 typescript-eslint

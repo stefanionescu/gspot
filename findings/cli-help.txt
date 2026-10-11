@@ -1,0 +1,313 @@
+
+=================== gspot init
+Usage: gspot init [options]
+
+Read the repository, show a plan, and write it when you accept. The plan covers
+gspot.toml, the tool files, the agent rules, the Git hooks, and the tool
+installation. With --yes or your answer, gspot writes the plan and installs the
+tools. It replaces the tool files the selected tools already have; Git keeps the
+replaced files. init runs no check. --dry-run writes nothing.
+
+Options:
+  --yes                                            Accept the plan without asking
+  --from <template>                                Start from a template: a path, an https URL, or github:owner/repo[/path][@ref]
+  --configurations <configurations...>             Override detected configurations at the root; general checks remain automatic
+  --scope-configurations <path=configurations...>  Add scopes, each as a path and its comma-separated configurations
+  --no-install                                     Skip installing the tools and print the install command
+  --ci <provider>                                  Write a CI workflow for this provider (choices: "github", "gitlab")
+  --no-hooks                                       Install no Git hooks
+  --no-ci                                          Write no CI workflow
+  --no-agent-rules                                 Write no agent rules
+  --runner <runner>                                Select a runner (choices: "mise", "npm", "bun", "pnpm", "yarn")
+  --no-runner                                      Set up no runner
+  --dry-run                                        Print the plan and write nothing
+  -h, --help                                       Print help for the command
+
+Exit codes:
+- 0: the plan was written, shown, or declined.
+- 2: the input was invalid, or init could not finish.
+
+Example:
+gspot init --yes --configurations bash
+gspot init --dry-run --yes
+
+=================== gspot install
+Usage: gspot install [options]
+
+Install the tools gspot.toml selects, at the versions in the committed
+lockfiles, and the selected Git hooks. install prepares missing or outdated tool
+lockfiles before installing. Run it after you clone a configured repository. If
+a package install fails, the previous lockfiles and installation stay.
+--refresh-lockfiles prepares fresh lockfiles from the declared pins before
+installation. --dry-run prints the commands and writes nothing.
+
+Options:
+  --dry-run            Print the install commands and write nothing
+  --refresh-lockfiles  Prepare fresh lockfiles from the declared tool pins and
+                       install them
+  -h, --help           Print help for the command
+
+Exit codes:
+- 0: the tools were installed, or the dry run finished.
+- 2: the input was invalid, or install could not finish.
+
+Example:
+gspot install --dry-run
+
+=================== gspot apply
+Usage: gspot apply [options]
+
+Reconcile configurations with the repository, then write the tool files, agent
+rules, Git hooks, and CI workflow from gspot.toml. A generated file you edited
+stays as it is, and apply names it. --dry-run shows every change, including each
+rule that changes, without writing project files. apply installs no tools: run
+gspot install after it.
+
+Options:
+  --dry-run   Show the changes without writing project files
+  -h, --help  Print help for the command
+
+Exit codes:
+- 0: the generated files were written, or the dry run finished.
+- 2: the input was invalid, or apply could not finish.
+
+Example:
+gspot apply --dry-run
+gspot apply
+
+=================== gspot check
+Usage: gspot check [options] [paths...]
+
+Run the selected checks and print each finding with its file, line, rule, and
+help. --json prints the report as JSON. A plain check reads the working tree,
+--staged reads the staged files, and --changed reads the files changed since a
+branch. --fix runs the fixers and can change your source files. --fix --dry-run
+shows those changes in a copy.
+
+Arguments:
+  paths                  Repository files or folders to check; omit to check all
+                         applicable inputs
+
+Options:
+  --only <checks...>     Run only these checks
+  --staged               Check staged files in an exact copy of the index
+  --changed              Check files changed from the upstream or default branch
+  --base <ref>           Compare changed files against this Git reference
+                         (default: upstream or default branch)
+  --fix                  Run every fixer, then run the checks again
+  --dry-run              With --fix, print the diff of each fix and write
+                         nothing
+  --hook <hook>          Run the checks of one Git hook, as that hook does
+                         (choices: "pre-commit", "pre-push", "commit-msg")
+  --skip <checks...>     Skip these checks for this run (default: [])
+  --message-file <path>  Check this commit message file, as the commit-msg hook
+                         does
+  -h, --help             Print help for the command
+
+Exit codes:
+- 0: every check that ran passed. The report lists the skipped checks.
+- 1: findings remain, or a fix failed.
+- 2: the run could not finish: a tool is missing, a report is invalid, or the input is invalid.
+
+Example:
+gspot check --staged
+gspot check --base origin/main
+
+=================== gspot set
+Usage: gspot set [options] <setting> [value...]
+
+Write one setting to gspot.toml and apply it. gspot checks the value first. The
+setting is the dotted name that gspot list settings prints. A list value adds to
+the list unless you pass --replace or --remove. Use only one of --replace,
+--remove, and --default. --default takes no value. set installs no tools: run
+gspot install for that. --dry-run prints the change and writes nothing.
+
+Arguments:
+  setting          Dotted setting name from gspot list settings
+  value            Setting value or list items; omit with --default
+
+Options:
+  --reason <text>  Say why; required to loosen a setting
+  --scope <path>   Write the setting in this scope instead of the root
+  --replace        Replace the whole list; use --replace or --remove
+  --remove         Remove these items from the list
+  --default        Restore the inherited or default value. Omit values,
+                   --replace, and --remove.
+  --dry-run        Print the change and write nothing
+  -h, --help       Print help for the command
+
+Levels:
+Correctness, security, accessibility, type safety, routine formatting, and declared project contracts apply at both levels.
+
+These rules apply only at level `all`: word choice, architecture, naming, doc comments, declaration order, API style, and complexity. Neither level enables experimental or preview lint rules.
+
+Exit codes:
+- 0: the setting was written and applied, or the dry run finished.
+- 2: the input was invalid, or set could not finish.
+
+Example:
+gspot set level all
+
+=================== gspot add
+Usage: gspot add [options] <configuration...>
+
+Add configurations to the root selection or to one scope, apply the policy. Run
+gspot install when the change needs tools. Configurations they require are
+selected too; gspot.toml lists only the names you give. --dry-run prints the
+change and writes nothing.
+
+Arguments:
+  configuration   Built-in configuration names to add
+
+Options:
+  --scope <path>  Add the configurations to this scope
+  --dry-run       Print the change and write nothing
+  -h, --help      Print help for the command
+
+Exit codes:
+- 0: the configurations were added, or the dry run finished.
+- 2: the input was invalid, or add could not finish.
+
+Example:
+gspot add bash --dry-run
+gspot add pytest --scope services/api
+
+=================== gspot remove
+Usage: gspot remove [options] <configuration...>
+
+Remove configurations from the root selection or from one scope, apply the
+policy. Run gspot install when the remaining configuration needs tools. gspot
+refuses to remove a configuration that another selected configuration requires.
+--dry-run prints the change and writes nothing.
+
+Arguments:
+  configuration   Built-in configuration names to remove
+
+Options:
+  --scope <path>  Remove the configuration from this scope
+  --dry-run       Print the change and write nothing
+  -h, --help      Print help for the command
+
+Exit codes:
+- 0: the configuration was removed, or the dry run finished.
+- 2: the input was invalid, or remove could not finish.
+
+Example:
+gspot remove bash --dry-run
+gspot remove nextjs --scope apps/web
+
+=================== gspot export
+Usage: gspot export [options] <file>
+
+Write the policy to a template other repositories can start from. Every authored
+entry is copied except scopes, which export lists. Add any local command files
+in the destination repository. gspot.toml does not change.
+
+Arguments:
+  file        Destination path for the reusable template
+
+Options:
+  --dry-run   Print the template without writing its destination
+  -h, --help  Print help for the command
+
+Exit codes:
+- 0: the template was written.
+- 2: the input was invalid, or export could not finish.
+
+Example:
+gspot export team.template.toml
+gspot --json export team.template.toml
+
+=================== gspot ignore
+Usage: gspot ignore [options] <check>
+
+Turn off a check, or one of its rules, for some paths or everywhere. The ignore
+goes into gspot.toml, and gspot applies the policy. Every report lists the
+ignores, and --verbose prints each reason. --dry-run prints the change and
+writes nothing.
+
+Arguments:
+  check              Check ID to ignore or restore
+
+Options:
+  --paths <glob...>  Apply the ignore to these paths only; without it,
+                     everywhere
+  --rule <rule>      Turn off one rule of the check
+  --reason <text>    Say why; required when adding an ignore
+  --until <date>     Stop applying this ignore on YYYY-MM-DD (UTC)
+  --remove           Delete the matching ignore entries
+  --dry-run          Print the change and write nothing
+  -h, --help         Print help for the command
+
+Exit codes:
+- 0: the ignore was written and applied, or the dry run finished.
+- 2: the input was invalid, or ignore could not finish.
+
+Example:
+gspot ignore bash/bash-syntax --paths scripts/example.sh --reason "The file tests a syntax error."
+gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results."
+
+=================== gspot list
+Usage: gspot list [options] [kind]
+
+List the selected and available configurations. Each check has one row with its
+state in each scope that selects its configuration. gspot list settings shows
+root values and the settings each scope changes. Long values are shortened;
+--json retains complete values and inherited settings. list changes nothing and
+runs no check.
+
+Arguments:
+  kind        List configurations or effective settings (choices:
+              "configurations", "settings")
+
+Options:
+  -h, --help  Print help for the command
+
+Exit codes:
+- 0: the list was printed.
+- 2: the input was invalid, or list could not finish.
+
+Example:
+gspot list settings
+gspot list configurations
+
+=================== gspot explain
+Usage: gspot explain [options] <subject>
+
+Explain a check, a rule, a configuration, a setting, or a file path: what it is
+and what to do about it. A rule also gets the gspot ignore and gspot set lines
+that change it. A setting gets its value, its default, and where the value comes
+from. A file gets the checks that read it. explain changes nothing.
+
+Arguments:
+  subject     Check ID, rule, configuration, setting, or file path
+
+Options:
+  -h, --help  Print help for the command
+
+Exit codes:
+- 0: the explanation was printed.
+- 2: the subject is unknown, or the input was invalid.
+
+Example:
+gspot explain bash/bash-syntax
+gspot explain ./src/app.ts
+
+=================== gspot doctor
+Usage: gspot doctor [options]
+
+Report tools, Git hooks, setup suggestions, existing lint jobs, duplicate tool
+pins, and submodules. Detect stale configuration choices. doctor repairs
+nothing. Each problem includes the command to correct it.
+
+Options:
+  -h, --help  Print help for the command
+
+Exit codes:
+- 0: the selected tools and hooks are ready.
+- 1: a selected tool is missing, invalid, newer, or outdated, or a hook is not ready.
+- 2: doctor could not finish.
+
+Example:
+gspot doctor
+gspot --json doctor

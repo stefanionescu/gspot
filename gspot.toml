@@ -249,8 +249,10 @@ SSH = "Accepted spelling from this repository's previous prose vocabulary."
 STDOUT = "Accepted spelling from this repository's previous prose vocabulary."
 SVG = "Accepted spelling from this repository's previous prose vocabulary."
 TCA = "Accepted spelling from this repository's previous prose vocabulary."
+THR = "The prefix of the test-layout finding IDs in findings/, such as THR-005."
 TLS = "Accepted spelling from this repository's previous prose vocabulary."
 TSX = "Accepted spelling from this repository's previous prose vocabulary."
+TTO = "The prefix of the integration-test finding IDs in findings/, such as TTO-006."
 udid = "Original findings quote the native Apple identifier udid."
 UTC = "Accepted spelling from this repository's previous prose vocabulary."
 UTF = "Accepted spelling from this repository's previous prose vocabulary."
@@ -299,8 +301,13 @@ paths = ["docs/src/content/docs/**"]
 reason = "The site links are root-relative and resolve once Starlight builds it; its build validates them."
 
 [[ignore]]
+check = "docs/lychee"
+paths = ["findings/**"]
+reason = "findings/ quotes target docs text whose root-relative links resolve only in the built site."
+
+[[ignore]]
 check = "docs/stale-paths"
-paths = ["FINDINGS.md", "findings/**"]
+paths = ["findings/**"]
 reason = "FINDINGS.md and findings/ record an audit, and they name files and folders the cleanup deletes and moves."
 
 [[ignore]]
@@ -328,7 +335,7 @@ rule = "package-json/restrict-dependency-ranges"
 
 [[ignore]]
 check = "prose/vale"
-paths = ["FINDINGS.md", "findings/**"]
+paths = ["findings/**"]
 reason = "The findings ledger preserves original quotations and stable record text. Its technical audit terms and historical wording must remain verbatim."
 
 [[ignore]]
@@ -424,6 +431,11 @@ check = "security/codeql"
 paths = ["packages/cli/src/checks/tool/public.ts"]
 reason = "Only the leading self-repository marker is translated; later dollar signs are path characters and must stay."
 rule = "js/incomplete-sanitization"
+
+[[ignore]]
+check = "spelling/typos"
+paths = ["findings/placement/**"]
+reason = "The Name column quotes test titles and sample values verbatim, cut at a fixed length, so cut and British words stay as written."
 
 [[ignore]]
 check = "spelling/typos"

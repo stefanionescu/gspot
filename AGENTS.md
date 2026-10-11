@@ -85,13 +85,13 @@ This repository keeps module-level types in each package's `types/` folder and s
 
 These folder choices are specific to this repository and are not required of consumer repositories. Inline redundant forwarding functions. Retain required callbacks and shared calculations with real callers.
 
-A check that runs a tool uses the tool name, so readers know which rules and suppression syntax apply. A check that gspot implements uses the name of what it checks. Both use the configuration name as their prefix and the names in `findings/review/glossary.md`.
+A check that runs a tool uses the tool name, so readers know which rules and suppression syntax apply. A check that gspot implements uses the name of what it checks. Both use the configuration name as their prefix and the names in `findings/glossary.md`.
 
 Test `config/` and `types/` folders mirror the tests that use them. Flatten a one-file folder into its parent. Keep text shared by two or more test files in `config/samples/`.
 
 File-format schemas belong to their parsers. Shared parser contracts live in `parsers/schema/`. Policy tables, including `[agent_rules]`, belong to `policy/schema/`. The ownership log schema lives in `packages/cli/src/lifecycle/ownership/state/contracts.ts`.
 
-Owner decisions are recorded in `findings/progress.json`. Read them before you change how gspot ships, installs, or is configured, and never reverse one inside unrelated work. These decisions are final:
+Owner decisions are listed in the Decisions section of `findings/README.md`. Read them before you change how gspot ships, installs, or is configured, and never reverse one inside unrelated work. These decisions are final:
 
 - gspot ships only as JavaScript on npm. Never add per operating system binaries, standalone archives, platform packages, or a release-archive pin.
 - Use one setting for each concern. Do not add special time limits, per-suite or per operating system budgets, environment switches, or options for one caller. Fix the cause instead.
@@ -99,7 +99,7 @@ Owner decisions are recorded in `findings/progress.json`. Read them before you c
 - The agent rule `TALKING.md` ("When you talk, use ASD-STE100.") ships in every installation.
 - The documentation site is generativespotting.com, deployed to Cloudflare Workers.
 - Every change simplifies: it deletes, merges, or replaces with less code, and it keeps every CLI command.
-- Use one name for each concept, as `findings/review/glossary.md` fixes it. Never give one thing two names or one name two meanings.
+- Use one name for each concept, as `findings/glossary.md` fixes it. Never give one thing two names or one name two meanings.
 - This repository has no `CONTRIBUTING.md`. Repository rules that no check enforces live in this file.
 
 ## Dependency overrides
