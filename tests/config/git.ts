@@ -196,3 +196,5 @@ export const GIT_HOOK_FIELDS = {
     index: ['kind', 'source', 'tree', 'paths'],
     cancellation: ['kind', 'cancelled'],
 } as const;
+
+export const TOOL_PROJECT_BYTE_ATTRIBUTES = '\n.gspot/* -text\n';

@@ -35,6 +35,7 @@ import {
     LOCKFILE_ARGUMENTS,
     NPM_SETTING_PREFIX,
     YARN_INSTALL_SETTINGS_FILE,
+    NPM_CONFIG_DIRECTORY_VARIABLE,
 } from '#cli/config/tools/npm.ts';
 
 // Resolve in a disposable directory; keep repository credentials out of the portable result.
@@ -169,9 +170,11 @@ async function runNpmClient(request: NpmClientExecution): Promise<NpmClientRun> 
     const { root, work, client, argv, failure, timeoutSeconds, cancelSignal, steps } = request;
     const env = await registryEnvironment(root);
     const credentials = registryCredentials(env);
+    using settings = scratchFolder();
     try {
-        writeNpmrc(work, env);
-        env[`${NPM_SETTING_PREFIX}userconfig`] = join(work, NPMRC_FILE);
+        writeNpmrc(settings.path, env);
+        env[`${NPM_SETTING_PREFIX}userconfig`] = join(settings.path, NPMRC_FILE);
+        env[NPM_CONFIG_DIRECTORY_VARIABLE] = settings.path;
         const berry = isYarnBerry(client);
         if (berry) delete env['YARN_REGISTRY'];
         const versionCommand = [client.name, VERSION_FLAG];
@@ -203,7 +206,6 @@ async function runNpmClient(request: NpmClientExecution): Promise<NpmClientRun> 
         );
         return { env, lockfile };
     } finally {
-        rmSync(join(work, NPMRC_FILE), { force: true });
         rmSync(join(work, YARN_INSTALL_SETTINGS_FILE), { force: true });
     }
 }

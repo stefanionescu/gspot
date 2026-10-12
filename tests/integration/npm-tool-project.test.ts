@@ -13,12 +13,13 @@ import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 import { toolProjectLockfile } from '#cli/parsers/tool-project.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
+import { TOOL_PROJECT_BYTE_ATTRIBUTES } from '#tests/config/git.ts';
 import { createNpmClientSandbox } from '#tests/setup/npm-clients.ts';
 import { NPM_CLIENT_ROWS, NPM_REGISTRY_TOKEN } from '#tests/config/npm.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
-import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import type { ToolProjectFiles, NpmClientSandbox } from '#tests/types/npm.ts';
 import { writeLockedInputs, readToolProjectFiles } from '#tests/setup/install.ts';
+import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
 
 test.each(NPM_CLIENT_ROWS.filter(([, path]) => path === 'package.json'))(
     '%s from %s: apply keeps a stale lockfile and install repairs it',
@@ -108,6 +109,8 @@ async function expectCloneInstallation(
     const { root, artifacts } = project;
     const { manifest, lockfile } = inputs;
     const clone = join(artifacts, 'clone');
+    // Preserve native package-manager line endings through Git before testing installation byte preservation.
+    await appendFile(join(root, '.gitattributes'), TOOL_PROJECT_BYTE_ATTRIBUTES);
     commitAll(root);
     gitOutput(root, ['clone', '--quiet', '--no-local', root, clone]);
     expect(await pathExists(join(clone, '.gspot/node_modules'))).toBe(false);

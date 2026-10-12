@@ -77,6 +77,7 @@ export const YARN_ARGUMENTS = {
 export const YARN_DESCRIPTOR_SEPARATOR = /,\s*/u;
 
 export const NPMRC_FILE = '.npmrc';
+export const NPM_CONFIG_DIRECTORY_VARIABLE = 'XDG_CONFIG_HOME';
 export const YARN_INSTALL_SETTINGS_FILE = '.yarnrc-install.yml';
 
 export const NODE_TOOL = 'node';

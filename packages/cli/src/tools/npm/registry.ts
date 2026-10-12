@@ -106,7 +106,7 @@ export function registryCredentials(env: Record<string, string>): string[] {
 /**
  * Write npm connection settings through environment references.
  *
- * @param work the tool project directory.
+ * @param work the private user configuration directory.
  * @param env the environment for the tool process.
  */
 export function writeNpmrc(work: string, env: Record<string, string>): void {

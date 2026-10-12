@@ -34,15 +34,17 @@ export function miseHome(): string {
 
 /**
  * The environment for spawning tools, with Windows names normalized to uppercase.
+ * @param overrides tool variables that replace or remove inherited values.
  * @returns the variables as strings.
  */
-export function environmentVariables(): Record<string, string> {
-    const variables: Record<string, string> = {};
-    for (const [key, value] of Object.entries(process.env)) {
+export function environmentVariables(overrides?: Record<string, string | undefined>): Record<string, string> {
+    const variables = new Map<string, string>();
+    for (const [key, value] of Object.entries({ ...process.env, ...overrides })) {
         const name = process.platform === 'win32' ? key.toUpperCase() : key;
-        if (value !== undefined) variables[name] = value;
+        if (value === undefined) variables.delete(name);
+        else variables.set(name, value);
     }
-    return variables;
+    return Object.fromEntries(variables);
 }
 
 /**

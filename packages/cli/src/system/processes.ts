@@ -32,7 +32,7 @@ import {
 // Execa captures output and uses operating system shims. This boundary supervises each asynchronous process tree.
 
 function commandOptions(options: SpawnOptions, executable: string, readStdout?: Exclude<StdoutRead, 'utf8'>) {
-    const env = { ...environmentVariables(), ...options.env };
+    const env = environmentVariables(options.env);
     // A selected tool's launcher must find its sibling runtime and commands before unrelated tools on the executable search path.
     if (isAbsolute(executable) && env['PATH'] !== undefined)
         env['PATH'] = [dirname(executable), env['PATH']].filter((value) => value !== '').join(delimiter);
