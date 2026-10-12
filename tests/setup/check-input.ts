@@ -71,6 +71,7 @@ export async function swiftBuildInput(
     files: DirectoryJSON = {},
 ): Promise<{ input: CheckInput; session: Session; resources: AsyncDisposableStack }> {
     await using resources = new AsyncDisposableStack();
+    resources.use(spyOn(environment, 'currentOperatingSystem').mockReturnValue('macos'));
     resources.use(mockPinnedExecutables([...configurationManifests().values()].flatMap((manifest) => manifest.tools)));
     resources.use(await isolateCompilerCache());
     await createFileTree(sandbox.path, {

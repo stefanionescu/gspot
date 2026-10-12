@@ -111,7 +111,8 @@ test('a staged symbolic link is reported before the first commit and passes once
     ]);
     await unlink(join(sandbox.path, path));
     await writeFile(join(sandbox.path, path), 'let value = 1\n');
-    gitOutput(sandbox.path, ['add', '.']);
+    gitOutput(sandbox.path, ['update-index', '--force-remove', '--', path]);
+    gitOutput(sandbox.path, ['add', '--', path]);
 
     expect(await checkFindings(sandbox.path, 'xcode/symlinks')).toStrictEqual([]);
 });

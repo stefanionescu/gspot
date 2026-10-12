@@ -95,9 +95,13 @@ test('a missing git program is reported instead of a successful walk', async () 
     await using empty = await testdir();
     using resources = new DisposableStack();
     resources.use(useEnvironment({ PATH: empty.path }));
-    expect(await rejection(readIndexEntries(sandbox.path))).toContain('not found');
-    expect(() => findRoot(sandbox.path)).toThrow('not found');
-    expect(() => isGitRepository(sandbox.path)).toThrow('not found');
+    expect(await rejection(readIndexEntries(sandbox.path))).toMatch(
+        /Git ls-files failed.*(?:not found|not recognized)/su,
+    );
+    expect(() => findRoot(sandbox.path)).toThrow(/Git root discovery failed.*(?:not found|not recognized)/su);
+    expect(() => isGitRepository(sandbox.path)).toThrow(
+        /Git work-tree discovery failed.*(?:not found|not recognized)/su,
+    );
 });
 
 test('on Windows the executable bit comes from the Git index', async () => {

@@ -44,7 +44,7 @@ test("inspectTool finds the project compiler, and the original repository's comp
     ).toMatchObject({
         state: 'system',
         found: project.version,
-        path: join(work, 'node_modules/.bin', isWindows ? 'tsc.cmd' : 'tsc'),
+        path: join(work, 'node_modules/.bin', isWindows ? 'tsc.exe' : 'tsc'),
     });
     expect(
         inspectTool(
@@ -59,7 +59,7 @@ test("inspectTool finds the project compiler, and the original repository's comp
     ).toMatchObject({
         state: 'system',
         found: project.version,
-        path: join(work, 'node_modules/.bin', isWindows ? 'tsc.cmd' : 'tsc'),
+        path: join(work, 'node_modules/.bin', isWindows ? 'tsc.exe' : 'tsc'),
     });
 });
 

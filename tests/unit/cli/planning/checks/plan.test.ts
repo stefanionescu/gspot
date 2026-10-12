@@ -16,6 +16,7 @@ import { semgrep } from '#cli/checks/general/security.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { parseManifest } from '#cli/configurations/manifests.ts';
+import { hasToolBuild } from '#tests/setup/operating-systems.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { ALWAYS_SELECTED } from '#tests/config/configurations.ts';
 import { MOBILE_SETTINGS } from '#tests/config/eslint/framework.ts';
@@ -136,7 +137,9 @@ Release on 03/04/2026.
         const security = checks.find((check) => check.check.name === 'security/semgrep');
         expect(security).toBeDefined();
         expect(security?.files).toStrictEqual([]);
-        expect(security?.skip).toBeUndefined();
+        expect(security?.skip).toStrictEqual(
+            hasToolBuild('semgrep') ? undefined : { cause: 'platform', note: 'semgrep has no Windows build' },
+        );
         expect(await semgrep(session, security!)).toMatchObject({
             status: 'skipped',
             note: 'No selected configuration or tools.semgrep.rule_files supplies local rules.',

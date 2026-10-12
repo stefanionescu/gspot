@@ -1,8 +1,9 @@
 export const XCODE_WORKSPACE_SUFFIX = '.xcworkspace';
 
-export const MESSAGE_LINE = /^(?<file>\/[^\r\n]+?):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
+export const MESSAGE_LINE =
+    /^(?<file>(?:[A-Za-z]:)?[\\/][^\r\n]+?):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
 
-export const RESPONSE_FILE = /@(?<path>\/\S+)/gu;
+export const RESPONSE_FILE = /@(?<path>(?:[A-Za-z]:)?[\\/]\S+)/gu;
 
 export const MACOS_PRIVATE_PATH = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
 
