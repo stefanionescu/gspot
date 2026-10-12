@@ -2,9 +2,11 @@ import { join } from 'node:path';
 import * as tools from '#cli/tools/find.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
+import { processResult } from '#tests/setup/processes.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 import { WRANGLER_SCHEMA, CLOUDFLARE_HEADERS, CLOUDFLARE_REDIRECTS } from '#tests/config/cloudflare.ts';
@@ -66,32 +68,24 @@ test('_headers syntax is checked in both scopes', async () => {
     }
 });
 
-test('wrangler.json values are checked against the installed schema', async () => {
+test('Wrangler reports required fields in the root and child scopes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': settingsText(['cloudflare'], {
             level: 'all',
             tables: '[[scope]]\npath = "app"\nconfigurations = ["cloudflare"]\n',
         }),
-        'wrangler.json': '{"workers_dev":"wrong"}\n',
-        'app/wrangler.json': '{"name":"app","compatibility_date":"2026-01-15","workers_dev":"wrong"}\n',
+        'wrangler.json': '{"workers_dev":true}\n',
+        'app/wrangler.json': '{"name":"app","workers_dev":true}\n',
         'node_modules/wrangler/package.json': '{"exports":{"./package.json":"./package.json"}}\n',
         'node_modules/wrangler/config-schema.json': JSON.stringify(WRANGLER_SCHEMA),
     });
-    const nativeInspection = tools.inspectTool;
-    using _inspection = spyOn(tools, 'inspectTool').mockImplementation((context, tool) =>
-        tool.name === 'wrangler'
-            ? { name: tool.name, state: 'ok', path: join(sandbox.path, 'node_modules/wrangler/bin/wrangler.js') }
-            : nativeInspection(
-                  {
-                      ...context,
-                      root: join(import.meta.dir, '../../../../..'),
-                      cwd: join(import.meta.dir, '../../../../..'),
-                      installedRoot: join(import.meta.dir, '../../../../..'),
-                  },
-                  tool,
-              ),
-    );
+    using _inspection = spyOn(tools, 'inspectTool').mockImplementation((_context, tool) => ({
+        name: tool.name,
+        state: 'ok',
+        path: join(sandbox.path, 'node_modules', tool.name, 'bin', `${tool.name}.js`),
+    }));
+    using _process = spyOn(processes, 'run').mockResolvedValue(processResult());
     for (const scope of ['', 'app']) {
         const session = await openSession(sandbox.path);
 
@@ -99,11 +93,10 @@ test('wrangler.json values are checked against the installed schema', async () =
         expect(findings).toMatchObject(
             scope === ''
                 ? [
-                      { file: 'wrangler.json', message: '/workers_dev must be boolean' },
                       { rule: 'missing-name', file: 'wrangler.json', line: 1 },
                       { rule: 'compatibility-date', file: 'wrangler.json', line: 1 },
                   ]
-                : [{ file: 'app/wrangler.json', message: '/workers_dev must be boolean' }],
+                : [{ rule: 'compatibility-date', file: 'app/wrangler.json', line: 1 }],
         );
         await Bun.write(
             join(sandbox.path, scope, 'wrangler.json'),
@@ -123,28 +116,23 @@ test('Wrangler reads installed schema assets for a copied child scope', async ()
         'gspot.toml': settingsText(['cloudflare'], {
             tables: '[[scope]]\npath = "app"\nconfigurations = ["cloudflare"]\n',
         }),
-        'app/wrangler.json': '{"name":"copy","compatibility_date":"2026-01-15","workers_dev":"wrong"}\n',
+        'app/wrangler.json': '{"name":"copy","compatibility_date":"2026-01-15","workers_dev":true}\n',
     });
-    const nativeInspection = tools.inspectTool;
-    using _inspection = spyOn(tools, 'inspectTool').mockImplementation((context, tool) =>
-        tool.name === 'wrangler'
-            ? { name: tool.name, state: 'ok', path: join(installed.path, 'node_modules/wrangler/bin/wrangler.js') }
-            : nativeInspection(
-                  {
-                      ...context,
-                      root: join(import.meta.dir, '../../../../..'),
-                      cwd: join(import.meta.dir, '../../../../..'),
-                      installedRoot: join(import.meta.dir, '../../../../..'),
-                  },
-                  tool,
-              ),
-    );
+    using _inspection = spyOn(tools, 'inspectTool').mockImplementation((_context, tool) => ({
+        name: tool.name,
+        state: 'ok',
+        path: join(installed.path, 'node_modules', tool.name, 'bin', `${tool.name}.js`),
+    }));
+    using process = spyOn(processes, 'run').mockResolvedValue(processResult());
     const session = await openSession(revision.path);
     session.installedRoot = installed.path;
     const findings = await CHECK_FUNCTIONS['cloudflare/wrangler'](
         buildCheckInput(session, 'cloudflare/wrangler', { scope: 'app' }),
     );
-    expect(findings).toMatchObject([{ file: 'app/wrangler.json', message: '/workers_dev must be boolean' }]);
+    expect(findings).toStrictEqual([]);
+    expect(process.mock.calls[0]?.[0]).toContain(join(installed.path, 'node_modules/wrangler/config-schema.json'));
+    expect(process.mock.calls[0]?.[0]).toContain('app/wrangler.json');
+    expect(process.mock.calls[0]?.[1].cwd).toBe(revision.path);
 });
 
 test('Cloudflare Pages without a Wrangler configuration skips schema validation without tools', async () => {

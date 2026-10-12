@@ -11,8 +11,6 @@ RuleTester.describe = describe;
 
 RuleTester.it = it;
 
-RuleTester.itOnly = it.only;
-
 RuleTester.itSkip = it.skip;
 
 RuleTester.describeSkip = describe.skip;

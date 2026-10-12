@@ -26,7 +26,7 @@ jobs:
             - uses: $/.github/actions/setup
             - if: matrix.suite == 'integration' && runner.os == 'Linux'
               run: sudo apt-get update && sudo apt-get install --yes libxml2-utils zsh
-            - if: matrix.suite == 'integration' && runner.os == 'macOS'
+            - if: runner.os == 'macOS'
               run: brew install bash
             - run: mise run setup
             - run: mise run ${{ matrix.suite == 'unit' && 'test' || format('test:{0}', matrix.suite) }}

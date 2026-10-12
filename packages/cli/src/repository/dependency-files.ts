@@ -84,7 +84,7 @@ export function installedPackage(
         else {
             const directory = files.realPath(toPosix(relative(root, dirname(manifest))));
             const path = toPosix(relative(root, join(directory, basename(manifest))));
-            text = files.read(path)?.bytes.toString('utf8');
+            text = readText(root, path);
         }
         return text === undefined ? undefined : readJson(manifest, text, packageJsonSchema);
     } catch (error) {
