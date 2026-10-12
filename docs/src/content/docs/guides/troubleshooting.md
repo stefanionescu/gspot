@@ -1,83 +1,59 @@
 ---
 title: Troubleshooting
-description: Fix a policy that does not load, a missing tool, lockfiles that disagree, a version mismatch, and slow checks.
+description: Fix gspot.toml errors, missing tools, failed installs, version mismatches, and slow checks.
 ---
 
-Start with the diagnosis:
+Start with `gspot doctor`. It lists missing tools, hook problems, and generated files that changed.
+When you [report a problem](https://github.com/stefanionescu/gspot/issues), include the output, check name,
+and command that reproduces it. Leave out credentials.
 
-```bash
-gspot doctor
-```
+## gspot.toml has an error
 
-`doctor` lists missing tools, hooks that do not match the policy, and generated files that
-changed. Each problem comes with the command that fixes it. When you
-[report a problem](https://github.com/stefanionescu/gspot/issues), include the output, the check ID, and the command that reproduces it.
-Leave out credentials.
+Fix the value or table named by the error and run the command again.
+A setting that loosens a check needs a reason beside its value.
 
-## The policy does not load
+## A tool cannot run
 
-An error in `gspot.toml` names the line and the column. Fix the value or table it names and
-run the command again. An unknown configuration or setting names the entry. When a change weakens a setting and requires a reason, the error prints the command with `--reason`.
+Run `gspot install`. It installs program tools with mise. Without mise, install the programs that
+`gspot doctor` lists. See [What you need](/guides/install/#what-you-need).
+A missing tool makes the run incomplete with exit code 2, which also stops a commit in the hook.
 
-## A tool is missing
+## `gspot install` fails
 
-Run `gspot install` to install the locked npm and Python tools. Executable tools come from mise, or
-from your own install. See [runners](/guides/runners/). A check whose tool is
-missing fails, and `doctor` names the tool.
+If `gspot install` prints `GitHub refused a tool download`, set `GITHUB_TOKEN` to a token that can read public releases
+and run it again. Otherwise, fix the error and run `gspot install` again.
+To make new lockfiles, delete them and run `gspot install`.
 
-## A GitHub download returns HTTP 403
+## The installed version differs from the pinned version
 
-`gspot install` downloads the EditorConfig checker from GitHub. When the error says
-`API rate limit exceeded`, GitHub refused the download. Set `GITHUB_TOKEN` to a token that reads public releases, then run `gspot install` again. If credentials are unavailable, wait for the limit to reset before retrying. Keep the token out of policy files and reports.
-
-## The policy and the lockfiles disagree
-
-`gspot install` prepares missing or outdated required lockfiles in scratch copies before installing. If a package install fails, the previous lockfiles and installed tool projects remain. Repair package-manager or registry errors and retry. To resolve the declared pins again intentionally, run `gspot install --refresh-lockfiles`. An integrity failure alone does not change a committed lockfile. See [Join a repository](/guides/join/).
-
-## The gspot version differs from the pin
-
-The pin is in `.gspot/version`. Use that version, or move the pin as
-[upgrade gspot](/guides/upgrade/) describes.
+Install the version the repository pins, as [Join a repository](/guides/join/) shows.
+To move the repository to a new version, see [Upgrade gspot](/guides/upgrade/).
 
 ## A generated file has local edits
 
-`gspot apply` keeps a generated file you edited and names it. Move the change you want into
-`gspot.toml`, then run `gspot apply` again.
+See [Generated files](/guides/generated-files/) for how gspot keeps your edits.
 
-## A check is slow
+## A check runs slowly
 
-Run the reproduce command the report prints, to time that check alone. `--verbose` prints each
-command gspot runs.
+Run the reproduce command in the report to time that check alone. `--verbose` prints each command.
+Set `GSPOT_JOBS` to a smaller number when tools compete for memory, as on a small CI machine:
 
-gspot runs as many checks at once as the machine has processor cores. Set `GSPOT_JOBS` to a
-smaller number when the tools compete for memory, as on a small CI runner:
-
-```bash
+```shell
 GSPOT_JOBS=2 gspot check
 ```
 
-## A Windows path is refused
+On Windows, run `$env:GSPOT_JOBS = "2"` first, then `gspot check`.
 
-gspot refuses drive-relative paths, reserved device names, Universal Naming Convention (UNC)
-paths, and output folders that are links. In `gspot.toml`, write paths relative to the
-repository with forward slashes, then run `gspot apply`.
+## The working tree has uncommitted changes
 
-## The working tree has
+Commit or stash your work before `gspot init`.
 
-Commit or stash authored work before `init`. If you just added the CLI dependency, include its manifest and lockfile in that commit.
+## No terminal accepts the question
 
-## Initialization needs a terminal or --yes
-
-If the error says `There is no terminal to ask in`, supply `--yes` for noninteractive initialization, including previews: `gspot init --dry-run --yes`.
-
-## “This repository pins gspot”
-
-Read `.gspot/version` and install that exact version through the repository's runner. Use [Upgrade gspot](/guides/upgrade/) only when intentionally moving the pin.
-
-## A hook cannot find an executable tool
-
-Run `gspot doctor`, install the tool using the install command it prints, and rerun the hook. For mise, trust the generated pins and run `mise install`. An execution error exits `2` and blocks the Git operation.
+Pass `--yes` to accept the plan without the "Continue?" question.
+A dry run never asks: `gspot init --dry-run`.
 
 ## npm exec cannot find gspot
 
-Install the exact CLI dependency in the repository. Initialization does not add `@gspothq/cli` to `devDependencies`. If the CLI is already installed, verify that hooks use the runner configured by `runner`.
+Add `@gspothq/cli` with your package manager; init does not add it.
+See [Install gspot](/guides/install/). In a fresh clone, run your package manager's install, then `gspot install`.

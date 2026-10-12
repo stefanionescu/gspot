@@ -1,5 +1,0 @@
-<% const document = {
-    assume_in_transaction: settings['tools.squawk.assume_in_transaction'],
-    excluded_rules: [...rulesOff('postgres/squawk'), ...(isAll ? [] : ['prefer-bigint-over-int', 'prefer-bigint-over-smallint', 'prefer-identity', 'prefer-text-field', 'require-table-schema'])],
-    excluded_paths: [...frozenMigrationPaths(files('.sql'), settings['postgres.frozen_through'])],
-}; recordRules(document); %><%~ toml(document).trimEnd() %>

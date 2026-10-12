@@ -1,8 +1,8 @@
+import { stemOf } from '#cli/system/paths.ts';
+import { codeLines } from '#cli/parsers/bash.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import { stemOf } from '#cli/platform/contracts.ts';
-import { codeLines } from '#cli/parsers/bash/public.ts';
-import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { getScriptIndex } from '#cli/checks/language/contracts.ts';
+import { readScripts } from '#cli/checks/language/bash/scripts.ts';
+import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 
 import {
     FORWARDER_STEM,
@@ -14,21 +14,21 @@ import {
 
 /**
  * One finding per wrapper stem, deprecated alias, or forwarding body.
- * @param input the check context
- * @returns the findings
+ * @param input the check context.
+ * @returns the findings.
  */
-export const wrappers: BuiltInCheck = async (input) => {
-    const index = await getScriptIndex(input);
-    return index.files.flatMap((file) => {
+export async function bashWrappers(input: CheckInput): Promise<Finding[]> {
+    const index = await readScripts(input);
+    return index.flatMap((file) => {
         const findings = [];
-        const code = codeLines(file.code).filter((line) => !line.code.startsWith('#!'));
+        const code = codeLines(file.code);
         if (FORWARDER_STEM.test(stemOf(file.path)))
             findings.push(
                 findingAt(
                     input,
                     { file: file.path, line: 1 },
                     'wrapper-name',
-                    'The file name says this script is a wrapper; a canonical script has one name.',
+                    'The file name says this script is a wrapper; each script has one name.',
                 ),
             );
         const alias = file.lines.findIndex((line) => DEPRECATED_ALIAS.test(line));
@@ -38,11 +38,11 @@ export const wrappers: BuiltInCheck = async (input) => {
                     input,
                     { file: file.path, line: alias + 1 },
                     'deprecated-alias',
-                    'Delete this deprecated alias, and call the canonical script.',
+                    'Delete this deprecated alias, and call the original script.',
                 ),
             );
         const forwarding = code.filter(
-            (line) => FORWARDER_INTERPRETER.test(line.code) && FORWARDED_SCRIPT.test(line.code),
+            (line) => FORWARDER_INTERPRETER.test(line.text) && FORWARDED_SCRIPT.test(line.text),
         );
         if (forwarding.length === 1 && code.length <= FORWARDER_MAX_LINES)
             findings.push(
@@ -55,4 +55,4 @@ export const wrappers: BuiltInCheck = async (input) => {
             );
         return findings;
     });
-};
+}

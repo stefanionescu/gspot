@@ -3,7 +3,6 @@
         "strict": true,
         "target": "ESNext",
         "module": "Preserve",
-        "moduleResolution": "bundler",
         "moduleDetection": "force",
         "allowImportingTsExtensions": true,
         "verbatimModuleSyntax": true,
@@ -14,22 +13,19 @@
         "noUncheckedIndexedAccess": true,
         "exactOptionalPropertyTypes": true,
         "noImplicitOverride": true,
-        "forceConsistentCasingInFileNames": true,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "noPropertyAccessFromIndexSignature": true,
         "resolveJsonModule": true,
         "paths": {
             "#cli/*": ["./packages/cli/src/*"],
-            "#plugin/*": ["./packages/eslint-plugin/src/*"],
             "#tests/*": ["./tests/*"],
             "#docs/*": ["./docs/*"],
             "#cli-package": ["./packages/cli/package.json"],
-            "#workspace-package": ["./package.json"],
-            "#plugin-package": ["./packages/eslint-plugin/package.json"],
-            "#automation/*": ["./scripts/*"]
+            "#eslint-plugin/*": ["./packages/eslint-plugin/src/*"],
+            "#eslint-plugin-package": ["./packages/eslint-plugin/package.json"],
+            "#root-package": ["./package.json"]
         }
     },
-    "include": ["packages/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"],
-    "exclude": ["**/node_modules", "packages/*/dist"]
+    "include": ["scripts/**/*.ts", "tests/**/*.ts", "packages/cli/src/types/**/*.d.ts"]
 }

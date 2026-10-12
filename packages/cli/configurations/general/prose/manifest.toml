@@ -1,15 +1,4 @@
-products = ["Vale"]
-ignored = [
-    ".gspot/config/vale/styles/Google/",
-    ".gspot/config/vale/styles/Microsoft/",
-    ".gspot/config/vale/styles/write-good/",
-    ".gspot/config/vale/styles/proselint/",
-    ".gspot/config/vale/styles/alex/",
-    ".gspot/config/vale/styles/RedHat/",
-    ".gspot/config/vale/styles/Harper/",
-    ".gspot/config/vale/styles/.vale-config/",
-    ".gspot/config/vale/styles/config/dictionaries/",
-]
+allowed_words = ["Vale", "DOM", "DTO", "RPC"]
 
 [configuration]
 title = "Prose"
@@ -29,7 +18,17 @@ winget = "errata-ai.Vale"
 scoop = "vale"
 github = { name = "errata-ai/vale", version = "v3.21.0" }
 suppression = { marker = "^<!--\\s*vale\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }
-replaces = [".vale.ini", "_vale.ini", "vale.ini"]
+[[tool.replace]]
+file = ".vale.ini"
+shared = false
+
+[[tool.replace]]
+file = "_vale.ini"
+shared = false
+
+[[tool.replace]]
+file = "vale.ini"
+shared = false
 
 [[tool_file]]
 target = ".gspot/config/vale.ini"
@@ -37,422 +36,51 @@ tool = "vale"
 rule_keys = ["*.rules", "*.BasedOnStyles"]
 
 [[tool_file]]
-source = "vale.ini.eta"
-target = ".gspot/config/vale-scoped.ini"
-tool = "vale"
-check = "prose/vale"
-per_scope = true
-rule_keys = ["*.rules", "*.BasedOnStyles"]
-
-[[tool_file]]
-source = "styles/gspot/acronyms.yml.eta"
 target = ".gspot/config/vale/styles/gspot/acronyms.yml"
 tool = "vale"
-generated_header = false
 
 [[tool_file]]
-source = "styles/gspot/alt-text.yml.eta"
 target = ".gspot/config/vale/styles/gspot/alt-text.yml"
 tool = "vale"
-generated_header = false
 
 [[tool_file]]
-source = "styles/gspot/banned-headings.yml.eta"
 target = ".gspot/config/vale/styles/gspot/banned-headings.yml"
 tool = "vale"
-generated_header = false
-per_scope = true
 
 [[tool_file]]
-source = "styles/gspot/currency.yml.eta"
-target = ".gspot/config/vale/styles/gspot/currency.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/dashes.yml.eta"
-target = ".gspot/config/vale/styles/gspot/dashes.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/dates.yml.eta"
-target = ".gspot/config/vale/styles/gspot/dates.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/file-paths.yml.eta"
-target = ".gspot/config/vale/styles/gspot/file-paths.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/future.yml.eta"
-target = ".gspot/config/vale/styles/gspot/future.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/heading-case.yml.eta"
 target = ".gspot/config/vale/styles/gspot/heading-case.yml"
 tool = "vale"
-generated_header = false
 
 [[tool_file]]
-source = "styles/gspot/hedging.yml.eta"
-target = ".gspot/config/vale/styles/gspot/hedging.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/history.yml.eta"
-target = ".gspot/config/vale/styles/gspot/history.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/idioms.yml.eta"
-target = ".gspot/config/vale/styles/gspot/idioms.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/interface-verbs.yml.eta"
-target = ".gspot/config/vale/styles/gspot/interface-verbs.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/item-length.yml.eta"
 target = ".gspot/config/vale/styles/gspot/item-length.yml"
 tool = "vale"
-generated_header = false
 
 [[tool_file]]
-source = "styles/gspot/link-text.yml.eta"
-target = ".gspot/config/vale/styles/gspot/link-text.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/locations.yml.eta"
-target = ".gspot/config/vale/styles/gspot/locations.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/marketing.yml.eta"
-target = ".gspot/config/vale/styles/gspot/marketing.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/modals.yml.eta"
-target = ".gspot/config/vale/styles/gspot/modals.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/paragraph-length.yml.eta"
 target = ".gspot/config/vale/styles/gspot/paragraph-length.yml"
 tool = "vale"
-generated_header = false
 
 [[tool_file]]
-source = "styles/gspot/placeholders.yml.eta"
-target = ".gspot/config/vale/styles/gspot/placeholders.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/possessives.yml.eta"
 target = ".gspot/config/vale/styles/gspot/possessives.yml"
 tool = "vale"
-generated_header = false
 
 [[tool_file]]
-source = "styles/gspot/self-reference.yml.eta"
-target = ".gspot/config/vale/styles/gspot/self-reference.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/sentence-length.yml.eta"
 target = ".gspot/config/vale/styles/gspot/sentence-length.yml"
 tool = "vale"
-generated_header = false
 
 [[tool_file]]
-source = "styles/gspot/since.yml.eta"
-target = ".gspot/config/vale/styles/gspot/since.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/symbols.yml.eta"
-target = ".gspot/config/vale/styles/gspot/symbols.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/title-case.yml.eta"
 target = ".gspot/config/vale/styles/gspot/title-case.yml"
 tool = "vale"
-generated_header = false
 
 [[tool_file]]
-source = "styles/gspot/us-english.yml.eta"
-target = ".gspot/config/vale/styles/gspot/us-english.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/version-range.yml.eta"
-target = ".gspot/config/vale/styles/gspot/version-range.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "vocabularies/gspot/accept.txt.eta"
 target = ".gspot/config/vale/styles/config/vocabularies/words/accept.txt"
 tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/ampm.yml.eta"
-target = ".gspot/config/vale/styles/gspot/ampm.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/bias-free.yml.eta"
-target = ".gspot/config/vale/styles/gspot/bias-free.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/dash-spacing.yml.eta"
-target = ".gspot/config/vale/styles/gspot/dash-spacing.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/date-ordinals.yml.eta"
-target = ".gspot/config/vale/styles/gspot/date-ordinals.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/numeric-dates.yml.eta"
-target = ".gspot/config/vale/styles/gspot/numeric-dates.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/gendered-terms.yml.eta"
-target = ".gspot/config/vale/styles/gspot/gendered-terms.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/jargon.yml.eta"
-target = ".gspot/config/vale/styles/gspot/jargon.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/militaristic-language.yml.eta"
-target = ".gspot/config/vale/styles/gspot/militaristic-language.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/negative-numbers.yml.eta"
-target = ".gspot/config/vale/styles/gspot/negative-numbers.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/ordinal-adverbs.yml.eta"
-target = ".gspot/config/vale/styles/gspot/ordinal-adverbs.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/percentage-numbers.yml.eta"
-target = ".gspot/config/vale/styles/gspot/percentage-numbers.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/time-ranges.yml.eta"
-target = ".gspot/config/vale/styles/gspot/time-ranges.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/suspended-hyphens.yml.eta"
-target = ".gspot/config/vale/styles/gspot/suspended-hyphens.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/url-prepositions.yml.eta"
-target = ".gspot/config/vale/styles/gspot/url-prepositions.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/numbered-units.yml.eta"
-target = ".gspot/config/vale/styles/gspot/numbered-units.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/leading-conjunctions.yml.eta"
-target = ".gspot/config/vale/styles/gspot/leading-conjunctions.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/conscious-language.yml.eta"
-target = ".gspot/config/vale/styles/gspot/conscious-language.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/contractions.yml.eta"
-target = ".gspot/config/vale/styles/gspot/contractions.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/punctuated-headings.yml.eta"
-target = ".gspot/config/vale/styles/gspot/punctuated-headings.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/obvious-fields.yml.eta"
-target = ".gspot/config/vale/styles/gspot/obvious-fields.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/product-centric-writing.yml.eta"
-target = ".gspot/config/vale/styles/gspot/product-centric-writing.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/release-notes.yml.eta"
-target = ".gspot/config/vale/styles/gspot/release-notes.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/topic-references.yml.eta"
-target = ".gspot/config/vale/styles/gspot/topic-references.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/session-identifiers.yml.eta"
-target = ".gspot/config/vale/styles/gspot/session-identifiers.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/straight-quotes.yml.eta"
-target = ".gspot/config/vale/styles/gspot/straight-quotes.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/merge-conflict-markers.yml.eta"
-target = ".gspot/config/vale/styles/gspot/merge-conflict-markers.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/unneeded-adverbs.yml.eta"
-target = ".gspot/config/vale/styles/gspot/unneeded-adverbs.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/auto-prefixes.yml.eta"
-target = ".gspot/config/vale/styles/gspot/auto-prefixes.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/question-marks.yml.eta"
-target = ".gspot/config/vale/styles/gspot/question-marks.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/case-sensitive-terms.yml.eta"
-target = ".gspot/config/vale/styles/gspot/case-sensitive-terms.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/gerund-headings.yml.eta"
-target = ".gspot/config/vale/styles/gspot/gerund-headings.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/slash-alternatives.yml.eta"
-target = ".gspot/config/vale/styles/gspot/slash-alternatives.yml"
-tool = "vale"
-generated_header = false
-
-[[tool_file]]
-source = "styles/gspot/no-gerunds-in-titles.tengo.eta"
-target = ".gspot/config/vale/styles/gspot/no-gerunds-in-titles.tengo"
-tool = "vale"
-generated_header = false
-
 
 [[check]]
 name = "vale"
 tool = "vale"
-title = "Lint prose"
-example = "The sentence `Release on 03/04/2026.` reports an ambiguous date at the recommended level. Write `Release on March 4, 2026.` when March 4 is the intended date, then rerun. Write legitimate project names in [words]."
+example = "The sentence `Release on 03/04/2026.` reports an ambiguous date at the recommended level. Write `Release on March 4, 2026.` when March 4 is the intended date, then rerun. Write legitimate project names in the root allowed_words setting."
 level = "recommended"
 stage = "commit"
 summary = "Checks ambiguous dates, link text, and alternative text with bundled Vale styles at level `recommended`. Level `all` adds the complete style and upstream packages."
 why = "Prose that hedges, markets or wanders is read by everyone who reads the code, and nothing else checks it."
-help = "Rewrite the sentence the alert names, write a real name and its reason in [words], or use gspot ignore prose/vale --rule `<rule>` --reason \"`<why>`\"."
-
-[[setting]]
-name = "limits.docs.sentence_words"
-type = "number"
-direction = "ceiling"
-default = 30
-summary = "The most words one sentence of documentation may have."
-
-[[setting]]
-name = "limits.docs.list_item_words"
-type = "number"
-direction = "ceiling"
-default = 45
-summary = "The most words one list item may have."
-
-[[setting]]
-name = "limits.docs.paragraph_sentences"
-type = "number"
-direction = "ceiling"
-default = 6
-summary = "The most sentences one paragraph may have."
-
-[[setting]]
-name = "prose.locale"
-type = "string"
-default = "en-us"
-summary = "The English locale typos checks against: en, en-us, en-gb, en-ca, or en-au."
-validation = { enum = ["en", "en-us", "en-gb", "en-ca", "en-au"] }
+help = "Rewrite the sentence the alert names, write a real name and its reason in the root allowed_words setting, or use gspot ignore prose/vale --rule `<rule>` --reason \"`<why>`\"."

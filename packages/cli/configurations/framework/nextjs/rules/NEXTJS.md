@@ -1,7 +1,3 @@
----
-title: Next.js
----
-
 # Next.js
 
 Preserve the project's router, installed Next.js and React versions, runtime, and deployment
@@ -11,12 +7,12 @@ adapter. App Router guidance applies only to App Router routes.
 
 Keep privileged operations and credentials on the server. Send only authorized fields to the
 browser. That includes query hydration and Server Component props. A hidden control, type, or filename
-is not an access boundary. A client entry includes its imports in the client graph; keep it small
+does not control access. A client entry includes its imports in the client graph; keep it small
 and compose server-rendered children into it.
 
 Validate and authorize every mutation at its server entry. Routes, actions, and RPC procedures
 share the same domain operation. Initial server reads do not HTTP-fetch the application's own
-Route Handler. Rendering, GET requests, and prefetching perform no writes.
+Route Handler. Rendering, `GET` requests, and prefetching perform no writes.
 
 See [Server and Client Components](https://nextjs.org/docs/app/getting-started/server-and-client-components).
 
@@ -34,7 +30,7 @@ See [streaming](https://nextjs.org/docs/app/guides/streaming).
 
 ## Cache contracts
 
-Identify whether Cache Components is enabled before choosing APIs. Above a cached operation,
+Check whether the project enables Cache Components before choosing APIs. Above a cached operation,
 state who may read it, its key, lifetime, and invalidation path. Include identity, tenant, locale,
 filters, and permissions where they affect results; session tokens stay out of keys.
 

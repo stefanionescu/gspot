@@ -1,20 +1,14 @@
-import type { Option } from '@clack/prompts';
-import type { FileCopy } from '#cli/types/platform/root.ts';
-import type { Template } from '#cli/types/policy/templates.ts';
-import type { Level, Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
+import type { Session } from '#cli/types/planning.ts';
+import type { Template } from '#cli/types/settings/file.ts';
+import type { Settings } from '#cli/types/settings/values.ts';
+import type { Generated } from '#cli/types/generation/files.ts';
+import type { FileCopy } from '#cli/types/system/safe-folder.ts';
+import type { Level, Manifest } from '#cli/types/configurations.ts';
+import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
+import type { ConfigurationEvidence } from '#cli/types/repository/selection.ts';
 import type { Tooling, Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 
-import type {
-    CiChoice,
-    InitOptions,
-    RunnerChoice,
-    InitSelection,
-    ConfigurationReason,
-} from '#cli/types/lifecycle/selection.ts';
-
-export type Choice<T extends string> = Option<T> & { label: string };
-
-export type Planning = {
+type InitPlanInputs = {
     root: string;
     hasGit: boolean;
     index: Repository['index'];
@@ -23,76 +17,62 @@ export type Planning = {
     selection: InitSelection;
     everySelected: Manifest[];
     answers: InitAnswers;
-    replaced: Replaced;
+    replaced: ReplacedFiles;
 };
 
-export type InitPlan = {
+type InitPlan = {
     level: Level;
-    ci?: { commands: string[] };
-    template?: { name: string; digest: string; selection: string; detected: string[] };
+    template?: { source: string; digest: string; detected: string[] };
     configurations: { configuration: string; how: ConfigurationReason; checks: number; checksOff: number }[];
     write: InitFileRow[];
-    remove: InitFileRow[];
-    unread: InitFileRow[];
+    delete: InitFileRow[];
     retained: InitFileRow[];
     change: InitFileRow[];
     noLongerRuns: InitFileRow[];
 };
 
 /** The authored configuration init replaces: what it read, what it deletes, and what stays for the developer. */
-export type Replaced = {
+type ReplacedFiles = {
     changed: InitFileRow[];
     read: Map<string, FileCopy | undefined>;
-    removed: InitFileRow[];
-    unread: InitFileRow[];
+    deleted: InitFileRow[];
     retained: InitFileRow[];
 };
 
-export type PolicyDraft = {
+type SettingsDraft = InitAnswers & {
     template?: Template;
     configurations: string[];
     scopes: ScopeEntry[];
-    hooks: boolean;
-    ci: CiChoice;
-    agentRules: boolean;
-    runner: RunnerChoice;
     commitScopes?: string[];
 };
 
-/** The answers init collects from flags or the terminal. */
-export type InitAnswers = {
+/** The defaults or template values init uses. */
+type InitAnswers = {
     hooks: boolean;
     ci: CiChoice;
-    agentRules: boolean;
-    runner: RunnerChoice;
+    rules: boolean;
 };
 
 /** Everything init computes before it asks to continue. */
-export type InitPrepared = {
+type InitPrepared = {
+    session: Session;
+    generated: Generated;
     plan: InitPlan;
-    policyText: string;
-    removed: { path: string }[];
+    settingsText: string;
+    deleted: { path: string }[];
     read: Map<string, FileCopy | undefined>;
 };
 
-export type Written = { lines: string[]; installNote: string; exitCode: number };
-
-export type RetirementResult = { removed: string[]; preserved: string[] };
-
-/** The JSON the init command prints: the plan, the policy it wrote or previewed, and what stopped it. */
-export type InitJson = {
+/** The JSON the init command prints: the plan and the settings it wrote or showed in a dry run. */
+type InitJson = {
     root?: string;
     plan?: InitPlan;
-    policy?: string;
+    settings?: string;
     dryRun?: boolean;
     written?: boolean;
-    error?: string;
-    message?: string;
-    /** What the tool installation said, when it did not finish. */
-    note?: string;
 };
 
-export type DetectionSummary = {
+type DetectionSummary = {
     files: TrackedFile[];
     detected: ConfigurationEvidence[];
     scopes: ScopeEntry[];
@@ -104,4 +84,77 @@ export type DetectionSummary = {
 };
 
 /** A file initialization writes, removes, or preserves, with its explanation. */
-export type InitFileRow = { path: string; note: string };
+type InitFileRow = { path: string; note: string };
+
+/** The CI provider init selects, including an explicit choice to write no workflow. */
+type CiChoice = NonNullable<Settings['ci']>['provider'] | 'none';
+
+type InitOptions = {
+    cwd: string;
+    yes: boolean;
+    isDryRun: boolean;
+    configurations?: string[];
+    from?: string;
+    template?: Template;
+};
+
+type ConfigurationReason = 'named' | 'detected' | 'suggested' | 'required';
+
+/** What init selection reads. */
+type InitDetection = {
+    root: string;
+    manifests: Map<string, Manifest>;
+    files: TrackedFile[];
+    packageManifests: DependencyFile[];
+    options: Pick<InitOptions, 'configurations' | 'template'>;
+    /** Whether the folder contains a Git repository; a configuration whose checks all read git stays out otherwise. */
+    hasGit: boolean;
+};
+
+/** The configurations init selects: at the root, per scope, and the closure of both. */
+type InitSelection = {
+    scopes: ScopeEntry[];
+    rootIds: string[];
+    scopeConfigurations: Map<string, string[]>;
+    selectedIds: Set<string>;
+    detected: ConfigurationEvidence[];
+    how: Map<string, ConfigurationReason>;
+};
+
+/** The inputs to init selection. */
+type InitInputs = {
+    root: string;
+    repo: Repository;
+    packageManifests: DependencyFile[];
+    scopes: ScopeEntry[];
+    manifests: Map<string, Manifest>;
+    options: Pick<InitOptions, 'configurations' | 'template'>;
+};
+
+/** Explicit, detected, and recommended choices for explaining initial selection. */
+type ConfigurationChoices = { named: Set<string>; chosen: Set<string>; listed: Set<string> };
+
+type InitFormatOptions = {
+    tabWidth?: number | undefined;
+    printWidth?: number | undefined;
+    singleQuote?: boolean | undefined;
+};
+
+export type {
+    InitPlan,
+    InitJson,
+    InitInputs,
+    InitAnswers,
+    InitFileRow,
+    InitOptions,
+    InitPrepared,
+    ReplacedFiles,
+    SettingsDraft,
+    InitDetection,
+    InitSelection,
+    InitPlanInputs,
+    DetectionSummary,
+    InitFormatOptions,
+    ConfigurationReason,
+    ConfigurationChoices,
+};

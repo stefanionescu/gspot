@@ -1,7 +1,3 @@
----
-title: Working in a Repository
----
-
 # Working in a Repository
 
 ## Running processes
@@ -14,30 +10,27 @@ serve different code. Stop what you started when the task ends.
 
 ## Thinking before coding
 
-Read the relevant code before touching it. Understand the contracts, data flow,
-and ownership boundaries. Then think through your approach:
+Read the relevant code before touching it. Understand the public interfaces, data flow,
+and how the modules work together. Then think through your approach:
 
-- What is the simplest change that solves the problem correctly?
-- What are the failure modes? What happens with bad input, missing data, concurrent access, network failures?
+- Which change solves the problem correctly with the fewest steps?
+- Which failures can occur? What happens with bad input, missing data, concurrent access, network failures?
 - Does this change affect other parts of the system? Trace the call chain.
 
 When you rename or move a file, update every reference: imports, documentation, configuration, and scripts.
 
-Before adding a new module, directory, or helper, identify the correct owner for
-the behavior. When you add a file, tell the user why its owner needs it.
+Before adding a new module, directory, or helper, identify the module that implements
+the behavior. When you add a file, tell the user why that module needs it.
 
 ## Scope discipline
 
-- Do what was asked. Do not expand scope.
-- If you discover something unrelated that needs fixing, mention it to the user. Do not silently fix it unless it is trivial and in a file you are editing.
-- Do not add features, refactor surrounding code, or "improve" things that were not requested.
+- Complete the requested task. Do not expand scope.
+- If you discover something unrelated that needs fixing, mention it to the user. Do not silently fix it unless the fix takes one small edit in a file you already edit.
+- Do not add features, refactor surrounding code, or make unrequested improvements.
 
 ## Verification and tests
 
-When the repository has checks, run `gspot check --staged` before you commit, and fix what it reports.
-
-The rule files hold the decisions no check makes. What a check reports reaches you as a finding,
-and `gspot explain <check>` describes the check.
+A check reports what it finds as a finding, and `gspot explain <check>` describes the check.
 
 Do not run verification broader than the change. Run no full test suite, build, scan, or Docker
 check unless the user asks for it or the checks of the repository include it.
@@ -47,26 +40,24 @@ test. Language and framework instructions say how to write a test, not when.
 
 ## No defensive logic
 
-Do not add guards, fallbacks, retries, defaults, or wrappers for states the real contract rules
-out. Handle known failure modes at real boundaries: user input, network calls, persistence,
-permissions, and external services. Trust an internal invariant once it is established; when one
-is unclear, trace the code and clarify the contract instead of adding speculative protection.
+Do not add guards, fallbacks, retries, defaults, or wrappers for states the public interface rules
+out. Handle known failure modes where failures can occur: user input, network calls, persistence,
+permissions, and external services. Trust an internal invariant once the public interface establishes it. When an invariant lacks a clear promise, trace the code and clarify the promised behavior instead of adding speculative protection.
 
 ## Abstractions
 
 <!-- level: all -->
 
-Keep one implementation for each concept in its existing owner. Extract shared behavior only
-when real callers prove the same contract and the extraction removes complexity. Do not add
+Keep one implementation for each concept in the module that implements it. Extract shared behavior only
+when real callers need the same behavior and the extraction removes complexity. Do not add
 forwarding wrappers, one-caller helpers, or abstractions for hypothetical reuse. Prefer local
 duplication when callers have different responsibilities. Remove abstractions whose cost exceeds their benefit.
 
-- An abstraction that gains flags, modes, optional branches, or caller-specific conditions is
-  the wrong one. Do not box loosely related behavior into one function with a parameter that
+- An abstraction that gains flags, modes, optional branches, or caller-specific conditions needs a different design. Do not box loosely related behavior into one function with a parameter that
   picks the behavior.
 - Inline a wrong abstraction into each caller, delete the branches each caller does not need,
   and extract only the common behavior that remains.
-- A preparatory refactor that makes the requested change easy is allowed: first keep the
+- You can prepare the code to support the requested change: first keep the
   behavior, then change it, in separate commits.
 - Replace positional booleans and ambiguous arguments with an options parameter using named fields.
 - Pass a function in only when it replaces several option flags across real callers.
@@ -79,14 +70,14 @@ duplication when callers have different responsibilities. Remove abstractions wh
 
 Never introduce compatibility layers, wrapper functions, re-exports for renamed symbols, deprecated-but-kept code, or any other form of backward-compatible scaffolding. A published API follows the deprecation policy its project declares instead.
 
-When something is replaced or renamed:
+When you replace or rename something:
 
 - Delete the old implementation entirely.
 - Update every call site to use the new version.
 
-## Structural ownership
+## Structure
 
 <!-- level: all -->
 
-Group constants, types, and schemas by the behavior they belong to. Do not impose a config or
-types folder on another project, and do not mirror the source tree in tests.
+Group constants, types, and schemas by the behavior they belong to. Do not mirror the source
+tree in tests.

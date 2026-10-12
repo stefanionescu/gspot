@@ -1,26 +1,16 @@
+import { positionAt } from '#cli/text.ts';
+import { isRecord } from '#cli/objects.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import type { Node, ParseResult } from '@pgsql/types';
-import { isRecord } from '#cli/platform/contracts.ts';
-import { readSource } from '#cli/platform/root/public.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
-import { trivialText } from '#cli/parsers/source/contracts.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
-import { positionAt, parseSqlFile } from '#cli/parsers/sql/public.ts';
-import { parse, nodeOf, nodesOf } from '#cli/parsers/sql/contracts.ts';
+import { readSource } from '#cli/system/file-reads.ts';
+import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
-import { PARSED_DIALECTS, OUTPUT_PARAMETERS } from '#cli/config/checks/language/sql.ts';
-import type { SqlSource, SqlFileInput, SqlFunctionFindings } from '#cli/types/checks/language/sql.ts';
+import { trivialText } from '#cli/checks/general/structure/trivial-functions.ts';
+import { PARSED_DIALECT, OUTPUT_PARAMETERS } from '#cli/config/checks/language/sql.ts';
+import type { SqlSource, SqlFileInput, SqlFunctionFindings } from '#cli/types/checks/language.ts';
+import { nodeOf, nodesOf, walkSqlTree, parseSqlFile, parsePostgres } from '#cli/parsers/sql/postgres.ts';
 
-function sources(input: CheckInput): SqlSource[] {
-    return input.files
-        .filter((file) => file.kind === 'source')
-        .map((file) => ({
-            path: file.path,
-            text: readSource(input.root, file.path, input.reads).toString('utf8'),
-        }));
-}
-
-// Whether a PL/pgSQL node is one executable statement: a statement node other than a block, placed on a line.
+// Whether a procedural SQL node supplies one executable statement: a statement node other than a block, placed on a line.
 function isProceduralStatement(key: string, child: unknown): boolean {
     if (!key.startsWith('PLpgSQL_stmt_') || key === 'PLpgSQL_stmt_block') return false;
     if (!isRecord(child)) return false;
@@ -29,13 +19,10 @@ function isProceduralStatement(key: string, child: unknown): boolean {
 }
 
 function countNodes(value: unknown, isStatement: (key: string, child: unknown) => boolean): number {
-    if (value === null || typeof value !== 'object') return 0;
-    if (Array.isArray(value)) return value.reduce<number>((count, child) => count + countNodes(child, isStatement), 0);
     let count = 0;
-    for (const [key, child] of Object.entries(value)) {
+    walkSqlTree(value, (key, child) => {
         if (isStatement(key, child)) count += 1;
-        count += countNodes(child, isStatement);
-    }
+    });
     return count;
 }
 
@@ -49,10 +36,9 @@ async function sqlBody(statement: SqlStatementView<'CreateFunctionStmt'>): Promi
     const body = nodeOf(nodeOf(functionOption(statement, 'as'), 'List')?.items?.[0], 'String')?.sval;
     let tree: Node | ParseResult | undefined = statement.fields.sql_body;
     if (body !== undefined) {
-        const parsedBody = await parse(body);
-        if (parsedBody.error !== undefined)
-            throw new Error(`Cannot analyze SQL function body: ${parsedBody.error.text}`);
-        tree = parsedBody.tree;
+        const parsedBody = await parsePostgres(body);
+        if ('error' in parsedBody) throw new Error(`Cannot analyze SQL function body: ${parsedBody.error.text}`);
+        tree = parsedBody.value;
     }
     return countNodes(tree, (key) => key.endsWith('Stmt'));
 }
@@ -72,37 +58,38 @@ async function bodyStatements(
     return language === 'sql' ? sqlBody(statement) : undefined;
 }
 
-// The findings of one `CREATE FUNCTION` statement, and whether the function is trivial.
+// The findings of one `CREATE FUNCTION` statement, and whether the function counts as trivial.
 async function functionFindings(
     analysis: SqlFileInput,
     statement: SqlStatementView<'CreateFunctionStmt'>,
     index: number,
 ): Promise<SqlFunctionFindings> {
-    const { input, source, threshold, maximum, parsed } = analysis;
+    const { input, source, statementLimit, parameterLimit, parsed } = analysis;
     const at = { file: source.path, ...positionAt(source.text, statement.start) };
     const findings: Finding[] = [];
     const parameters = nodesOf(statement.fields.parameters, 'FunctionParameter');
     const count = parameters.filter(
         (parameter) => parameter.mode === undefined || !OUTPUT_PARAMETERS.has(parameter.mode),
     ).length;
-    if (maximum !== undefined && count > maximum)
+    if (count > parameterLimit)
         findings.push(
             findingAt(
                 input,
                 at,
                 'function-parameters',
-                `This function declares ${String(count)} input parameters, over the limit of ${String(maximum)}.`,
+                `This function declares ${String(count)} input parameters, over the limit of ${String(parameterLimit)}.`,
             ),
         );
-    if (threshold === undefined) return { findings, isTrivial: false };
     const statements = await bodyStatements(parsed, statement, index);
-    const isTrivial = statements !== undefined && statements <= threshold;
+    const isTrivial = statements !== undefined && statements <= statementLimit;
     if (isTrivial)
-        findings.push(findingAt(input, at, 'trivial-function', trivialText('This function', statements, threshold)));
+        findings.push(
+            findingAt(input, at, 'trivial-function', trivialText('This function', statements, statementLimit)),
+        );
     return { findings, isTrivial };
 }
 
-// The findings of one file: each function's, then the file's when every statement is a trivial function.
+// The findings of one file: each function's, then the file's when every statement contains a trivial function.
 async function fileFindings(analysis: SqlFileInput): Promise<Finding[]> {
     const { input, source, parsed } = analysis;
     const findings: Finding[] = [];
@@ -127,21 +114,24 @@ async function fileFindings(analysis: SqlFileInput): Promise<Finding[]> {
 
 /**
  * Report trivial PostgreSQL functions and excessive declared input parameters.
- * @param input the check input
- * @returns the findings
+ * @param input the check input.
+ * @returns the findings.
  */
-export async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
-    const sqlfluff = input.view.options('tools.sqlfluff');
+export async function sqlFunctions(input: CheckInput): Promise<Finding[]> {
+    const sqlfluff = input.selection.view.options('tools.sqlfluff');
     const dialect = sqlfluff['dialect'];
-    if (!PARSED_DIALECTS.has(dialect)) return [];
+    if (dialect !== PARSED_DIALECT) return [];
     const findings: Finding[] = [];
-    const threshold = input.view.limit('min_function_statements', 'sql');
-    const maximum = input.view.limit('function_parameters', 'sql');
-    if (threshold === undefined && maximum === undefined) return [];
-    for (const source of sources(input)) {
+    const statementLimit = input.selection.view.limit('min_function_statements', 'sql');
+    const parameterLimit = input.selection.view.limit('function_parameters', 'sql');
+    for (const file of input.files) {
+        const source: SqlSource = {
+            path: file.path,
+            text: readSource(input.root, file.path, input.reads).toString('utf8'),
+        };
         const parsed = await parseSqlFile(source.text, input.reads);
         if (parsed.error !== undefined) continue;
-        findings.push(...(await fileFindings({ input, source, parsed, threshold, maximum })));
+        findings.push(...(await fileFindings({ input, source, parsed, statementLimit, parameterLimit })));
     }
     return findings;
 }

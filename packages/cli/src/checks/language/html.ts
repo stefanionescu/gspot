@@ -1,18 +1,18 @@
 import { decodeHTMLAttribute } from 'entities';
 import { findingAt } from '#cli/checks/finding.ts';
-import { getAttributes } from '#cli/parsers/html.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
-import { pathMatcher } from '#cli/repository/paths/public.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
-import type { ParsedSource } from '#cli/types/parsers/source.ts';
-import type { MarkupAttribute } from '#cli/types/parsers/html.ts';
-import { visitParsedSources } from '#cli/parsers/source/public.ts';
+import { elementAttributes } from '#cli/parsers/html.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
+import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
+import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { SourceTree, MarkupAttribute } from '#cli/types/parsers/tree-sitter.ts';
 
 import {
     LETTERS,
     SHOWN_TEXT,
+    SCRIPT_SCHEMES,
     URL_ATTRIBUTES,
     COPY_ATTRIBUTES,
+    EVENT_ATTRIBUTE,
     PLACEHOLDER_MARKS,
     INERT_SCRIPT_TYPES,
     ACTIVE_DOCUMENT_TYPES,
@@ -34,10 +34,11 @@ function withoutPlaceholders(text: string): string {
     return rest;
 }
 
-// Script and active-document contexts can execute data URLs. Image and text resources are inert.
+// Script and active-document contexts can execute data URLs. Image and text resources remain inert.
 function isActiveResource(attribute: MarkupAttribute, url: URL, scriptType: string): boolean {
     if (attribute.element === 'script') return !INERT_SCRIPT_TYPES.has(scriptType);
-    if (DOCUMENT_URL_ATTRIBUTES[attribute.element]?.includes(attribute.name) !== true) return false;
+    const attributes = Object.entries(DOCUMENT_URL_ATTRIBUTES).find(([name]) => name === attribute.element)?.[1];
+    if (attributes === undefined || !new Set<string>(attributes).has(attribute.name)) return false;
     const mediaType = url.pathname.split(',', 1)[0]?.split(';', 1)[0]?.trim().toLowerCase() ?? '';
     return ACTIVE_DOCUMENT_TYPES.has(mediaType);
 }
@@ -46,21 +47,12 @@ function isActiveResource(attribute: MarkupAttribute, url: URL, scriptType: stri
 function scriptScheme(attribute: MarkupAttribute, scriptType: string): string | undefined {
     if (!URL_ATTRIBUTES.has(attribute.name)) return undefined;
     const url = URL.parse(decodeHTMLAttribute(attribute.value), 'https://example.invalid');
-    switch (url?.protocol) {
-        case 'javascript:':
-        case 'vbscript:': {
-            return url.protocol;
-        }
-        case 'data:': {
-            return isActiveResource(attribute, url, scriptType) ? url.protocol : undefined;
-        }
-        default: {
-            return undefined;
-        }
-    }
+    if (url === null) return undefined;
+    if (SCRIPT_SCHEMES.has(url.protocol)) return url.protocol;
+    return url.protocol === 'data:' && isActiveResource(attribute, url, scriptType) ? url.protocol : undefined;
 }
 
-function literalFindings(input: CheckInput, source: ParsedSource): Finding[] {
+function literalFindings(input: CheckInput, source: SourceTree): Finding[] {
     const texts = source.rootNode
         .descendantsOfType('text')
         .filter((node) => LETTERS.test(withoutPlaceholders(node.text)))
@@ -73,7 +65,7 @@ function literalFindings(input: CheckInput, source: ParsedSource): Finding[] {
             ),
         );
     const attributes = source.rootNode.descendantsOfType('element').flatMap((element) =>
-        getAttributes(element)
+        elementAttributes(element)
             .filter(
                 (attribute) =>
                     COPY_ATTRIBUTES.has(attribute.name) && LETTERS.test(withoutPlaceholders(attribute.value)),
@@ -94,14 +86,14 @@ function literalFindings(input: CheckInput, source: ParsedSource): Finding[] {
     return [...texts, ...attributes];
 }
 
-function inlineFindings(input: CheckInput, source: ParsedSource): Finding[] {
+function inlineFindings(input: CheckInput, source: SourceTree): Finding[] {
     return source.rootNode
         .descendantsOfType('script_element')
         .filter((element) =>
             element.namedChildren.some((child) => child.type === 'raw_text' && child.text.trim() !== ''),
         )
         .flatMap((element) => {
-            const attributes = getAttributes(element);
+            const attributes = elementAttributes(element);
             const scriptType = attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
             if (INERT_SCRIPT_TYPES.has(scriptType) || attributes.some((entry) => entry.name === 'src')) return [];
             return [
@@ -119,9 +111,9 @@ function inlineFindings(input: CheckInput, source: ParsedSource): Finding[] {
         });
 }
 
-function attributeFindings(input: CheckInput, source: ParsedSource): Finding[] {
+function attributeFindings(input: CheckInput, source: SourceTree): Finding[] {
     return source.rootNode.descendantsOfType(['element', 'script_element']).flatMap((element) => {
-        const attributes = getAttributes(element);
+        const attributes = elementAttributes(element);
         const scriptType = attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
         return attributes.flatMap((attribute) => {
             const position = {
@@ -129,7 +121,7 @@ function attributeFindings(input: CheckInput, source: ParsedSource): Finding[] {
                 line: attribute.node.startPosition.row + 1,
                 column: attribute.node.startPosition.column + 1,
             };
-            if (/^on[a-z]+$/u.test(attribute.name))
+            if (EVENT_ATTRIBUTE.test(attribute.name))
                 return [
                     findingAt(
                         input,
@@ -155,13 +147,11 @@ function attributeFindings(input: CheckInput, source: ParsedSource): Finding[] {
 
 /**
  * Inline script, handler attributes and script links in every owned HTML file.
- * @param input the check input
- * @returns the findings
+ * @param input the check input.
+ * @returns the findings.
  */
-export async function scripts(input: CheckInput): Promise<Finding[]> {
-    const files = input.files
-        .filter((file) => file.kind === 'source')
-        .map((file) => ({ path: file.path, grammar: 'html' as const }));
+export async function htmlScripts(input: CheckInput): Promise<Finding[]> {
+    const files = input.files.map((file) => ({ path: file.path, grammar: 'html' as const }));
     const findings: Finding[] = [];
     await visitParsedSources({ ...input, files }, (source) =>
         findings.push(...inlineFindings(input, source), ...attributeFindings(input, source)),
@@ -170,12 +160,12 @@ export async function scripts(input: CheckInput): Promise<Finding[]> {
 }
 
 /**
- * Literal copy in the template files the policy names. With no template files the check passes.
- * @param input the check input
- * @returns the findings
+ * Literal copy in the template files the settings names. With no template files the check passes.
+ * @param input the check input.
+ * @returns the findings.
  */
-export async function literals(input: CheckInput): Promise<Finding[]> {
-    const { templates } = input.view.options('html');
+export async function htmlTemplateText(input: CheckInput): Promise<Finding[]> {
+    const { templates } = input.selection.view.options('html');
     if (templates.length === 0) return [];
     const isTemplate = pathMatcher(templates);
     const files = input.files

@@ -1,11 +1,4 @@
----
-title: Bash Language
----
-
 # Bash Language
-
-Functions, variables, quoting, arrays, conditionals, arithmetic, loops, delimited data, paths,
-command substitution, and pipelines. Script structure and options are in the Bash file.
 
 ## Functions
 
@@ -51,8 +44,7 @@ Mark constants `readonly` immediately after assignment, and
 `export` only what child processes need. Never casually overwrite `PATH`, `HOME`, `IFS`,
 `CDPATH`, `SHELL`, `PWD`, or `BASH_ENV`, and never export `CDPATH`.
 
-A directory constant is
-computed with `CDPATH='' cd -- <path> && pwd -P` and carries a failure path, `|| exit 1` in an
+Compute a directory constant with `CDPATH='' cd -- <path> && pwd -P` and carries a failure path, `|| exit 1` in an
 entrypoint and `|| return 1` in a library. Use `$HOME`, not a quoted `~`, inside paths, and
 assign a home-relative value before exporting it. Quote array elements passed to `unset -v`.
 
@@ -67,8 +59,8 @@ export PROJECT_ROOT
 
 Forward arguments with `"$@"`, and use `$*` only to join arguments into one string on
 purpose. Single quotes hold literals and double quotes hold expansions. Command substitution
-output is never an unquoted argument list, and word splitting never parses data. Use functions,
-not aliases. Parameter expansion replaces external tools for simple string work:
+output never supplies an unquoted argument list, and word splitting never parses data. Use functions,
+not aliases. Parameter expansion replaces external tools for string work:
 
 ```bash
 filename="archive.tar.gz"
@@ -78,7 +70,7 @@ base="${filename%.tar.gz}"
 ## Arrays and argument lists
 
 Command arguments live in arrays, expanded with `"${array[@]}"` and never populated from raw
-`$(...)`. Read lines with a `while read` loop or `readarray`, and read filenames from NUL-delimited streams:
+`$(...)`. Read lines with a `while read` loop or `readarray`, and read filenames from `NUL`-delimited streams:
 
 ```bash
 declare -a archive_args
@@ -90,14 +82,14 @@ while IFS= LC_ALL=C read -r -d '' file; do
 done < <(find . -type f -name '*.sql' -print0)
 ```
 
-Arrays are not ersatz nested data structures; that need is the sign to leave Bash.
+Do not use arrays to imitate nested data structures. A need for those structures signals that the work belongs outside Bash.
 
 ## Conditionals and arithmetic
 
 `[[ ... ]]` holds string, pattern, and file tests. `==` compares for equality with a quoted
 right-hand side when the value may hold glob characters, and an unquoted right-hand side only
-when pattern matching is intended. A regular expression is stored in a variable and used
-unquoted with `=~`. `-z` and `-n` test for emptiness. Numeric comparisons live in `(( ... ))` after untrusted numbers are validated; `<` and
+for pattern matching. Store a regular expression in a variable and use it
+unquoted with `=~`. `-z` and `-n` test for emptiness. Numeric comparisons live in `(( ... ))` after validation of untrusted numbers; `<` and
 `>` inside `[[ ... ]]` compare strings.
 
 ```bash
@@ -107,7 +99,7 @@ if [[ "${version}" =~ ${version_re} ]]; then
 fi
 ```
 
-Arithmetic uses `$(( ... ))` and `(( ... ))`. `(( i++ ))` returns false when the expression is
+Arithmetic uses `$(( ... ))` and `(( ... ))`. `(( i++ ))` returns false when the expression equals
 zero, so under `errexit` increment with `retry_count=$(( retry_count + 1 ))`. Untrusted
 strings never enter `(( ... ))`, `$(( ... ))`, `[[ value -gt n ]]`, array indices, or
 arithmetic `for` expressions: validate with a pattern first. `10#${value}` converts unsigned
@@ -132,7 +124,7 @@ Iterate arguments with `for arg in "$@"; do`, globs directly rather than `ls`, a
 `while IFS= read -r line || [[ -n ${line} ]]; do ... done <"${file}"`, which keeps the last
 unterminated line. A pipe into `while` runs the loop in a subshell, so variables set inside it
 vanish; use process substitution or a redirected file. A here-string with command
-substitution collects all output first, strips trailing newlines, and drops NUL bytes.
+substitution collects all output first, strips trailing newlines, and drops `NUL` bytes.
 Neither form propagates the producer's failure; use a checked temporary file when that status
 matters. Counter loops use `for (( index = 0; index < count; index++ ))`, not `seq`.
 
@@ -150,7 +142,7 @@ done <"${file_list}"
 `IFS= read -r` prevents trimming and backslash handling. Do not save and restore `IFS` with
 `old_ifs="${IFS}"`, which loses the distinction between unset and empty; use a function-local
 `IFS` or a subshell. `read` treats `IFS` as a terminator, so a controlled delimited line
-keeps its trailing empty field only with an appended delimiter. General CSV is parsed by
+keeps its trailing empty field only with an appended delimiter. Parse general CSV with
 application code with a real parser, never `IFS=, read`.
 
 ```bash
@@ -186,8 +178,8 @@ fi
 ## Command substitution
 
 Quote `$(...)`, capture the status at once, and remember that it strips trailing newlines,
-cannot carry binary data, and never builds an argument list. `$(<file)` is fine only when
-stripping trailing newlines is acceptable. When trailing newlines matter, keep them with a
+cannot carry binary data, and never builds an argument list. Use `$(<file)` only when
+the operation allows stripping trailing newlines. When trailing newlines matter, keep them with a
 sentinel:
 
 ```bash
@@ -198,9 +190,8 @@ content="${content_with_sentinel%x}"
 
 ## Pipelines and redirection
 
-Read `PIPESTATUS` immediately when individual statuses matter. Order redirections so the intent is
-visible, `>file 2>&1`, and never close a standard descriptor as a shortcut for `/dev/null`. A
-pipeline never reads from and writes to the same file; a file is rewritten through a
+Read `PIPESTATUS` immediately when individual statuses matter. Order redirections to show the intent, `>file 2>&1`, and never close a standard descriptor as a shortcut for `/dev/null`. A
+pipeline never reads from and writes to the same file; rewrite a file through a
 temporary file and an atomic rename. Parallel `xargs` jobs do not produce ordered, unmixed
 output: write per-job files and combine them, or use a tool that serializes. Check a command
 directly or capture its status in a named variable rather than `(( ! $? )) || die`.

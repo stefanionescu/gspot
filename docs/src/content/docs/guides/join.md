@@ -3,7 +3,7 @@ title: Join a repository
 description: Install the pinned gspot version, checks, and hooks after cloning.
 ---
 
-Use the version recorded in `.gspot/version`. Do not run `init` in a repository that already has `gspot.toml`.
+Use the version recorded in `.gspot/version`. `gspot init` refuses to run where `gspot.toml` exists; use `gspot install`.
 
 ## With a JavaScript package manager
 
@@ -13,33 +13,21 @@ Install app dependencies from the committed lockfile, then run the matching comm
 | ------------ | -------------------------------- | ------------------------- | ----------------------- |
 | npm          | `npm ci`                         | `npx gspot install`       | `npx gspot check`       |
 | pnpm         | `pnpm install --frozen-lockfile` | `pnpm exec gspot install` | `pnpm exec gspot check` |
-| Yarn Classic | `yarn install --frozen-lockfile` | `yarn gspot install`      | `yarn gspot check`      |
-| Yarn Berry   | `yarn install --immutable`       | `yarn gspot install`      | `yarn gspot check`      |
+| Yarn Classic | `yarn install --frozen-lockfile` | `yarn exec gspot install` | `yarn exec gspot check` |
+| Yarn Berry   | `yarn install --immutable`       | `yarn exec gspot install` | `yarn exec gspot check` |
 | Bun          | `bun install --frozen-lockfile`  | `bunx gspot install`      | `bunx gspot check`      |
 
-Without mise, install executable tools. `gspot doctor` names missing requirements.
+Without mise, install the program tools yourself. `gspot doctor` names missing requirements.
 
 ## With mise
 
 ```shell
-mise trust .mise/conf.d/gspot-tools.toml
-mise install
 mise exec -- gspot install
-mise exec -- gspot doctor
 mise exec -- gspot check
 ```
 
-## With a global npm install
+`gspot install` installs the tools and turns on hooks in this clone. If it fails, fix the error and run it again.
+When another hook manager runs your hooks, add the gspot hook lines that install prints.
+See [Git hooks](/guides/hooks/).
 
-On a POSIX shell, install the repository's pin:
-
-```shell
-npm install --global "@gspothq/cli@$(cat .gspot/version)"
-gspot install
-gspot doctor
-gspot check
-```
-
-In PowerShell, read the same pin with `Get-Content .gspot/version` and supply it to `npm install --global`.
-
-`install` prepares required missing or outdated lockfiles in tool projects, then installs the tools and sets up hooks in this clone. If installation fails, repair the registry, credentials, or package manager and run `install` again. Commit any updated lockfiles with the policy. When another hook manager owns the hooks, add the three integration lines printed by `install`. Otherwise, gspot checks will not run on commit or push.
+If `gspot install` changes a lockfile under `.gspot/`, commit that file. If it fails, see [Troubleshooting](/guides/troubleshooting/).

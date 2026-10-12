@@ -1,49 +1,46 @@
----
-title: HTTP
----
-
 # HTTP
 
 Rules for any HTTP service, whatever framework serves it, on top of the security, error, and
 logging rules.
 
-## Boundaries
+## Requests
 
-- Validate the body, query, path parameters, headers, and content type once, at the edge, with a
-  schema. Handlers read the validated value, never the raw request.
+- Validate input once where the request enters the service, with a schema. Handlers read the
+  validated value, never the raw request.
 - Reject unsupported content types on endpoints that take a body. Limit the body size per route,
   and keep the proxy's body limit equal to the application parser's.
-- Handlers adapt transport to domain calls. They own no validation policy, database access,
+- Handlers adapt transport to domain calls. They define no validation policy, database access,
   provider mechanics, caching, or business decision.
 - Middleware validates, authenticates, rate-limits, and attaches context, and makes no feature
   decision.
 
 ## Responses
 
+- One handler formats error responses. Feature code throws and never builds an HTTP error body.
+- Give clients generic, stable messages. Detail stays in server diagnostics.
 - The service documents one success shape and one error shape and keeps both stable.
-- Status codes are precise: 201 for creation, 204 with no body, 4xx for caller errors, and 5xx
+- Use precise status codes: 201 for creation, 204 with no body, 4xx for caller errors, and 5xx
   only for failures the caller cannot fix.
-- The endpoint or module owner maps provider and database shapes into response shapes. Response
-  field names are API names, not storage names, unless the contract is explicitly provider-shaped.
+- The endpoint or module maps provider and database shapes into response shapes. Response
+  use API field names rather than storage names, unless the public interface explicitly uses the provider's format.
 - Escape HTML for its rendering context, and never pre-escape JSON field values.
 
 ## Sessions and transport
 
-- Terminate TLS at the edge owner, and trust forwarding headers only from that edge.
-- A cookie session needs CSRF protection on every state-changing request.
-- When the service owns tokens, a revocation reaches every instance.
+- Terminate TLS at the proxy, and trust forwarding headers only from that proxy.
+- When the service issues tokens, a revocation reaches every instance.
 
 ## Wire names
 
 <!-- level: all -->
 
-- Existing protocol header names stay as they are, and a new header carries no `X-` prefix, as
-  [RFC 6648](https://www.rfc-editor.org/rfc/rfc6648) recommends.
+- Keep existing protocol header names, and a new header carries no `X-` prefix, as
+  [Request for Comments (RFC) 6648](https://www.rfc-editor.org/rfc/rfc6648) recommends.
 
 ## Operations
 
-- Health and readiness endpoints are cheap and call no provider.
+- Keep health and readiness endpoints cheap. Call no provider from them.
 - Broad rate limits sit at the edge, application limits in middleware, and route limits beside
   the route.
 - Either the proxy or the application compresses responses, not both. Under heavy traffic, the
-  reverse proxy owns compression.
+  reverse proxy compresses responses.

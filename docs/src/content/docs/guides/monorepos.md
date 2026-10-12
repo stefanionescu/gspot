@@ -3,34 +3,28 @@ title: Monorepos
 description: Give each scope its own configurations and settings in gspot.toml.
 ---
 
-A scope is a folder with its own configurations and settings. `gspot init`
+A scope holds the configurations and settings for one folder. `gspot init`
 proposes a scope for each folder with a tracked project file, such as `package.json`,
 `pyproject.toml`, or `Package.swift`. Check their paths and configurations in the plan before you accept.
 
 ## Declare scopes
 
-This policy has a root with no configurations and two scopes:
+This `gspot.toml` has two scopes and no configurations at the root:
 
 ```toml title="Two scopes"
-configurations = []
-
-[scope.api]
+[[scope]]
+path = "api"
 configurations = ["typescript", "express", "vitest"]
+limits.function_lines = { value = 80, reason = "The API parser is one state machine." }
 
-[scope.api.limits]
-function_lines = 80
-
-[scope.api.reasons]
-"limits.function_lines" = "The API parser is one state machine."
-
-[scope.ios]
+[[scope]]
+path = "ios"
 configurations = ["swift", "xcode"]
 ```
 
-Use the scope path as the key under `[scope]`. Nested tables belong to that scope.
-`[scope.api.limits]` changes the API limit only. Quote a key that contains slashes.
+Each `[[scope]]` names its folder in `path`. Its settings apply to that folder only.
 
-After you change the scopes, apply the policy, install the tools, and check one scope:
+After you change the scopes, apply the settings, install the tools, and check one scope:
 
 ```bash
 gspot apply
@@ -58,7 +52,7 @@ gspot set limits.function_lines 80 --scope api --reason "The parser is one state
 ```
 
 Root settings apply to every scope. A setting in a scope replaces the root value for that scope
-and the scopes inside it. Authored paths are relative to the scope that declares them. Inherited paths keep their original scope.
+and the scopes inside it. Write paths relative to the repository root. The default paths of a configuration apply inside the scope that selects it.
 
 A list setting adds up: a scope gets the values of its configurations, the root, and every scope that contains it, without repeats. A single-value setting takes the nearest value. If two selected configurations give
 different defaults for the same setting, gspot names both configurations. To decide, set the value at the
@@ -66,17 +60,12 @@ root or in a scope.
 
 ## Files a scope reads
 
-Checks that read project files look inside the scope only. A parent scope does not consume source files owned by a child scope.
+Checks that read project files look inside the scope only. Each child scope checks its own files.
 
 ## TypeScript app and Python API
 
-Given an npm project under `apps/web` and a Python project under `services/api`, initialize with explicit scope choices:
-
-```shell
-gspot init --scope-configurations apps/web=typescript,nextjs services/api=python,fastapi
-```
-
-Review the detected root configurations, then accept the plan. To add a test configuration to the API later:
+Given an npm project under `apps/web` and a Python project under `services/api`, `gspot init` proposes one scope
+for each. Check their configurations in the plan. To add a configuration that init did not detect:
 
 ```shell
 gspot add pytest --scope services/api
@@ -84,16 +73,9 @@ gspot install
 gspot check services/api
 ```
 
-If a project disappears, `apply` preserves authored scope policy and deactivates its absent configuration. When the project returns, its saved settings apply again.
+If a project's files go away, its checks become inactive. `gspot apply` keeps its configurations and settings in gspot.toml. The checks run again when the files come back.
 
-## A policy below the Git root
+## Settings below the Git root
 
-The nearest `gspot.toml` in the current folder or a parent folder is the policy. To use a policy in a subfolder
-from anywhere, pass `-C`:
-
-```bash
-gspot -C api check
-```
-
-Paths you name on the command line are relative to the folder `-C` selects. When a file lands
-in the wrong scope, check its path with `gspot explain` and fix the scope path.
+gspot uses the nearest `gspot.toml` in the current folder or a folder above it.
+To use the one in `api/`, run gspot from there: `cd api && gspot check`.

@@ -1,7 +1,6 @@
-products = ["HTML"]
+allowed_words = ["HTML"]
 [configuration]
 title = "HTML"
-requires = ["format"]
 description = "HTML files: html-validate for structure and accessibility, no inline script or handler, and templates that hold placeholders in place of copy."
 
 [files]
@@ -11,20 +10,27 @@ extensions = [".html", ".htm"]
 name = "html-validate"
 suppression = { marker = "^<!--\\s*\\[?html-validate-disable(?:-next|-block)?(?=\\s|\\]|$)", reason = "(?: -- |: )(?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*\\]?\\s*(?:--!?>)?$" }
 version = "11.6.1"
-min_version = "11.6.1"
 npm = "html-validate"
-replaces = [".htmlvalidate.json", ".htmlvalidate.js", ".htmlvalidate.cjs"]
+[[tool.replace]]
+file = ".htmlvalidate.json"
+shared = false
+
+[[tool.replace]]
+file = ".htmlvalidate.js"
+shared = false
+
+[[tool.replace]]
+file = ".htmlvalidate.cjs"
+shared = false
 
 [[tool_file]]
 target = ".gspot/config/html-validate-source.json"
 tool = "html-validate"
 check = "html/validate"
 rule_keys = ["rules"]
-generated_header = false
 
 [[check]]
 name = "validate"
-title = "Validate HTML"
 example = "An `<img src=\"logo.png\">` element without alternative text reports an accessibility finding under the configured rules. Add meaningful `alt` text, or an empty `alt` value for a decorative image."
 level = "recommended"
 stage = "commit"
@@ -36,7 +42,6 @@ help = "Change the markup the way the rule page says. Turn one rule off with gsp
 
 [[check]]
 name = "scripts"
-title = "Keep executable scripts out of HTML"
 example = "A button using an inline `onclick` attribute reports embedded executable code. Remove the attribute and attach the event listener from a separate script file."
 level = "all"
 stage = "commit"
@@ -46,18 +51,9 @@ help = "Move the script into a file, and attach the handler from that file. Stru
 
 [[check]]
 name = "template-text"
-title = "Use placeholders in HTML templates"
 example = "Text written into a file listed in html.templates reports a literal. Move the text to its content file and use a placeholder in the template."
 level = "all"
 stage = "commit"
 summary = "In the template files named by html.templates, checks that text a person reads is a placeholder and never a literal."
 why = "Copy written into a template is copy no translator and no content file ever sees."
 help = "Replace the text with a placeholder and put the words in the content file. Remove files that are not templates from html.templates."
-
-[[setting]]
-name = "html.templates"
-type = "list"
-items = "path"
-direction = "tightening"
-default = []
-summary = "The HTML files that are templates filled from content; empty turns the copy check off."

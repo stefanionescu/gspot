@@ -1,5 +1,5 @@
 name: docs
-# Release runs use their published tag. Manual runs can build the selected source before publication.
+# Release and manual runs build the published stable release tag.
 on:
     workflow_call:
         inputs:
@@ -7,16 +7,11 @@ on:
                 description: Published stable release tag
                 required: true
                 type: string
-        secrets:
-            CLOUDFLARE_API_TOKEN:
-                required: true
-            CLOUDFLARE_ACCOUNT_ID:
-                required: true
     workflow_dispatch:
         inputs:
             release_tag:
-                description: Published stable release tag (omit to build the selected source)
-                required: false
+                description: Published stable release tag
+                required: true
                 type: string
 permissions:
     contents: read
@@ -29,7 +24,6 @@ jobs:
         timeout-minutes: 60
         steps:
             - name: Verify the published release
-              if: inputs.release_tag != ''
               shell: bash
               run: |
                   set -euo pipefail
@@ -41,16 +35,11 @@ jobs:
             - name: Check out the documentation source
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
-                  ref: ${{ inputs.release_tag || github.ref }}
+                  ref: ${{ inputs.release_tag }}
                   persist-credentials: false
             - name: Prepare docs and CLI
-              uses: ./.github/actions/setup
-              with:
-                  tools: bun node
-                  setup: bun install --frozen-lockfile --filter '@gspothq/{cli,docs}'
-            - name: Name the source commit the documentation links to
-              shell: bash
-              run: printf 'GSPOT_DOCS_REVISION=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+              uses: $/.github/actions/setup
+            - run: bun install --frozen-lockfile --filter @gspothq/docs
             - name: Build the site
               run: mise run build:docs
             - name: Upload the site
@@ -59,29 +48,4 @@ jobs:
                   name: documentation-${{ github.run_id }}
                   path: docs/dist
                   if-no-files-found: error
-                  retention-days: 90
-    deploy:
-        needs: build
-        runs-on: ubuntu-24.04
-        timeout-minutes: 60
-        steps:
-            - name: Check out the documentation deployment settings
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-              with:
-                  ref: ${{ inputs.release_tag || github.ref }}
-                  persist-credentials: false
-            - name: Prepare the documentation workspace
-              uses: ./.github/actions/setup
-              with:
-                  tools: bun node
-                  setup: bun install --frozen-lockfile --filter @gspothq/docs
-            - name: Download the reviewed static build
-              uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-              with:
-                  name: documentation-${{ github.run_id }}
-                  path: docs/dist
-            - name: Deploy the static assets
-              run: mise run deploy:docs
-              env:
-                  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-                  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+                  retention-days: 1

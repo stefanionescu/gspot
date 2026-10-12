@@ -1,0 +1,84 @@
+rules:
+    - id: gspot.javascript.no-dom-html-sinks
+      pattern-either:
+          - pattern: $ELEMENT.innerHTML = $VALUE
+          - pattern: $ELEMENT.outerHTML = $VALUE
+          - pattern: $ELEMENT.insertAdjacentHTML($POSITION, $VALUE)
+          - pattern: document.write($VALUE)
+      message: DOM XSS risk. Use textContent, DOM node creation, or trusted static markup.
+      languages:
+          - javascript
+          - typescript
+      severity: ERROR
+    - id: gspot.javascript.ssrf-web-request-user-input
+      patterns:
+          - pattern-either:
+                - pattern: fetch(req.$PART.$VALUE, ...)
+                - pattern: fetch($URL.searchParams.get(...), ...)
+      message: SSRF risk - web request called with a URL from user input. Validate and
+          allowlist target hosts.
+      languages:
+          - typescript
+          - javascript
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-918
+          category: security
+    - id: gspot.javascript.no-secret-in-log
+      patterns:
+          - pattern-either:
+                - pattern: $LOGGER.$LEVEL(process.env.$VAR)
+                - pattern: $LOGGER.$LEVEL(Deno.env.get($VAR))
+          - metavariable-regex:
+                metavariable: $LEVEL
+                regex: ^(log|trace|debug|info|warn|error|fatal)$
+          - metavariable-regex:
+                metavariable: $VAR
+                regex: .*(KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL).*
+      message: Sensitive environment variable logged. Remove or mask before logging.
+      languages:
+          - typescript
+          - javascript
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-532
+          category: security
+    - id: gspot.javascript.jwt-no-algorithm-none
+      patterns:
+          - pattern: jwt.verify($TOKEN, $SECRET)
+          - pattern-not: 'jwt.verify($TOKEN, $SECRET, {algorithms: ...})'
+      message: Require the expected JWT signing algorithms when verifying a token.
+          Pass an algorithms option that matches the signing contract.
+      languages:
+          - typescript
+          - javascript
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-327
+          category: security
+    - id: gspot.javascript.jwt-no-decode-without-verify
+      pattern: jwt.decode(...)
+      message: jwt.decode() does not verify signatures. Use jwt.verify() instead.
+      languages:
+          - typescript
+          - javascript
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-345
+          category: security
+    - id: gspot.javascript.no-interpolated-exec
+      pattern: execSync(`...${$VAR}...`)
+      message: Template literal interpolation in execSync() is a command injection
+          vector. Use execFileSync() with an argument array instead.
+      languages:
+          - typescript
+          - javascript
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-78
+          category: security

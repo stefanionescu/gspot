@@ -1,21 +1,15 @@
----
-title: SQL Naming
----
-
 # SQL Naming
 
-SQL names are durable infrastructure contracts. Rename them only
+SQL names define durable infrastructure interfaces. Rename them only
 through migrations and contract-aware code changes.
 
 ## SQL case rules
 
 <!-- level: all -->
 
-Rules:
-
 - SQL schemas, tables, columns, functions, function parameters, indexes,
   triggers, constraints, and policies use `lower_snake_case`.
-- Fully qualify grants and function signatures when ambiguity is possible.
+- Fully qualify grants and function signatures when names have more than one possible meaning.
 - Do not use quoted sentence-style identifiers for local policy names.
 - Do not use pluralization or prefixes inconsistently inside one schema.
 
@@ -37,8 +31,6 @@ Follow the migration tool's file names. Name each migration for its durable data
 
 <!-- level: all -->
 
-Rules:
-
 - Table names identify the domain set stored by the relation.
 - Column names identify the value, not the application layer that reads it.
 - Foreign-key columns use the referenced concept plus `_id`.
@@ -59,8 +51,6 @@ Rules:
 
 <!-- level: all -->
 
-Rules:
-
 - SQL function names use verb phrases or domain operation names. These verbs govern function
   names, not migration filenames.
 
@@ -77,15 +67,13 @@ Rules:
 - Do not name functions like arbitrary script tasks.
 
 Use `archive_expired_orders` for a transactional operation that archives
-expired orders. Name its user argument `target_user_id` when `user_id` is
+expired orders. Name its user argument `target_user_id` when `user_id` already names
 already a column in the affected tables. A generic `run` name hides the
 operation, and an unqualified `id` can obscure column ownership.
 
 ## Indexes, constraints, triggers, and policies
 
 <!-- level: all -->
-
-Rules:
 
 - Name constraints and scope them to their table or concept.
 - Name indexes by table plus indexed columns or purpose.

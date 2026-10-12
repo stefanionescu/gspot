@@ -1,7 +1,3 @@
----
-title: Bun
----
-
 # Bun
 
 Rules that hold because the code runs on Bun.

@@ -1,7 +1,3 @@
----
-title: React Hook Form
----
-
 # React Hook Form
 
 ## Form ownership and validation
@@ -17,7 +13,7 @@ title: React Hook Form
 - Subscribe through `useWatch` or `useFormState` near the consumer instead of making the entire form
   rerender for every field. `getValues` reads a snapshot rather than subscribing.
 - Conditional fields distinguish hidden values that remain part of the submission from values that
-  must be removed. The schema follows that choice.
+  need removal. The schema follows that choice.
 
 ## Field arrays
 

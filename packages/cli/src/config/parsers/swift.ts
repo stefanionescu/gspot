@@ -1,36 +1,21 @@
-/** Grammar nodes with executable Swift bodies for functions, accessors, and observers. */
-export const SWIFT_BODY_NODES = [
-    'function_declaration',
-    'init_declaration',
-    'deinit_declaration',
-    'lambda_literal',
-    'computed_getter',
-    'computed_setter',
-    'computed_property',
-    'willset_clause',
-    'didset_clause',
-];
+export const SWIFT_EXTENSION = '.swift';
 
-/** Plain finding labels for anonymous bodies and initializer declarations. */
-export const FUNCTION_NAMES: Record<string, string> = {
-    init_declaration: 'init',
-    deinit_declaration: 'deinit',
-    lambda_literal: 'closure',
-    computed_getter: 'getter',
-    computed_setter: 'setter',
-    computed_property: 'getter',
-    willset_clause: 'willSet observer',
-    didset_clause: 'didSet observer',
-};
+export const SWIFT_IMPORT_NODE = 'import_declaration';
 
-/** Accessor and observer bodies receive the name of their declaring property. */
-export const ACCESSOR_NODES = new Set([
-    'computed_getter',
-    'computed_setter',
-    'computed_property',
-    'willset_clause',
-    'didset_clause',
-]);
+export const SWIFT_IDENTIFIER_NODE = 'identifier';
 
-/** Swift package manifests declare their compiler version in the opening comment. */
-export const SWIFT_TOOLS_VERSION = /^\s*\/\/\s*swift-tools-version\s*:\s*(\d+(?:\.\d+){1,2})\b/u;
+export const SWIFT_ATTRIBUTE_NODE = 'attribute';
+
+export const SWIFT_TYPE_NODE = 'user_type';
+
+export const SWIFT_CALL_NODE = 'call_expression';
+
+export const SWIFT_TEST_MODULES = ['XCTest', 'Testing'] as const;
+
+export const SWIFT_TEST_ATTRIBUTES = ['Test', 'Suite', 'Testing.Test', 'Testing.Suite'] as const;
+
+export const SWIFT_TEST_TARGET_CALLS = ['.testTarget', 'Target.testTarget'] as const;
+
+export const SWIFT_IMPORT_TAG = 'swift-import:';
+
+export const SWIFT_TEST_TARGET_TAG = 'swift-test-target';

@@ -1,25 +1,24 @@
-import { findingAt } from '#cli/checks/finding.ts';
-import { visitParsed } from '#cli/parsers/source/public.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
-import { DEFINITIONS, PACKAGE_FILE } from '#cli/config/checks/language/python.ts';
-import { readPython, disposePython, exportedNames } from '#cli/parsers/source/contracts.ts';
+import { visitParsed } from '#cli/parsers/tree-sitter.ts';
+import { findingAt, byLengthThenName } from '#cli/checks/finding.ts';
+import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import { readPython, disposePython, exportedNames } from '#cli/parsers/python.ts';
+import { INIT_PY, DEFINITIONS, DUNDER_PREFIX, PYTHON_PRIVATE_PREFIX } from '#cli/config/checks/language/python.ts';
 
 /**
  * In a module with __all__: every definition the list leaves out starts with an underscore, and the list holds no such name.
- * @param input the selected scope, files, and policy settings
- * @returns the findings for that check
+ * @param input the selected scope, files, and settings.
+ * @returns the findings for that check.
  */
-export async function privatePrefix(input: CheckInput): Promise<Finding[]> {
-    using parsed = await visitParsed(input, readPython, disposePython);
-    const { modules } = parsed.value;
+export async function pythonPrivatePrefix(input: CheckInput): Promise<Finding[]> {
+    const parsed = await visitParsed(input, readPython, disposePython, input.resources);
+    const { modules } = parsed;
     return modules.flatMap((module) => {
         const exported = exportedNames(module);
         if (exported === undefined) return [];
         const listed = new Set(exported.names);
         const unmarked = module.statements.flatMap((statement) => {
             const name = DEFINITIONS.has(statement.type) ? statement.childForFieldName('name')?.text : undefined;
-            if (name === undefined || listed.has(name) || name.startsWith('_')) return [];
+            if (name === undefined || listed.has(name) || name.startsWith(PYTHON_PRIVATE_PREFIX)) return [];
             return [
                 findingAt(
                     input,
@@ -30,7 +29,7 @@ export async function privatePrefix(input: CheckInput): Promise<Finding[]> {
             ];
         });
         const leaked = exported.names
-            .filter((name) => name.startsWith('_') && !name.startsWith('__'))
+            .filter((name) => name.startsWith(PYTHON_PRIVATE_PREFIX) && !name.startsWith(DUNDER_PREFIX))
             .map((name) =>
                 findingAt(
                     input,
@@ -44,13 +43,13 @@ export async function privatePrefix(input: CheckInput): Promise<Finding[]> {
 }
 
 /**
- * __all__ is the last statement of its module, apart from a main guard.
- * @param input the selected scope, files, and policy settings
- * @returns the findings for that check
+ * Require __all__ as the module's last statement, apart from a main guard.
+ * @param input the selected scope, files, and settings.
+ * @returns the findings for that check.
  */
-export async function exportsAtBottom(input: CheckInput): Promise<Finding[]> {
-    using parsed = await visitParsed(input, readPython, disposePython);
-    const { modules } = parsed.value;
+export async function pythonExportsAtBottom(input: CheckInput): Promise<Finding[]> {
+    const parsed = await visitParsed(input, readPython, disposePython, input.resources);
+    const { modules } = parsed;
     return modules.flatMap((module) => {
         const exported = exportedNames(module);
         if (exported === undefined) return [];
@@ -72,24 +71,23 @@ export async function exportsAtBottom(input: CheckInput): Promise<Finding[]> {
 }
 
 /**
- * A package shows at most a ceiling of names in __all__.
- * @param input the selected scope, files, and policy settings
- * @returns the findings for that check
+ * A package shows at most a limit of names in __all__.
+ * @param input the selected scope, files, and settings.
+ * @returns the findings for that check.
  */
-export async function packageExports(input: CheckInput): Promise<Finding[]> {
-    const ceiling = input.view.limit('index_exports');
-    if (ceiling === undefined) return [];
-    using parsed = await visitParsed(input, readPython, disposePython);
-    const { modules } = parsed.value;
+export async function pythonPackageExports(input: CheckInput): Promise<Finding[]> {
+    const limit = input.selection.view.limit('index_exports');
+    const parsed = await visitParsed(input, readPython, disposePython, input.resources);
+    const { modules } = parsed;
     return modules.flatMap((module) => {
-        const exported = module.path.endsWith(PACKAGE_FILE) ? exportedNames(module) : undefined;
-        if (exported === undefined || exported.names.length <= ceiling) return [];
+        const exported = module.path.endsWith(INIT_PY) ? exportedNames(module) : undefined;
+        if (exported === undefined || exported.names.length <= limit) return [];
         return [
             findingAt(
                 input,
                 { file: module.path, line: exported.statement.startPosition.row + 1 },
                 'package-exports',
-                `The package exports ${String(exported.names.length)} names, over the ceiling of ${String(ceiling)}. Split it.`,
+                `The package exports ${String(exported.names.length)} names, over the limit of ${String(limit)}. Split it.`,
             ),
         ];
     });
@@ -97,18 +95,16 @@ export async function packageExports(input: CheckInput): Promise<Finding[]> {
 
 /**
  * The names in __all__ go shortest first, and alphabetically among names of one length.
- * @param input the selected scope, files, and policy settings
- * @returns the findings for that check
+ * @param input the selected scope, files, and settings.
+ * @returns the findings for that check.
  */
-export async function exportOrder(input: CheckInput): Promise<Finding[]> {
-    using parsed = await visitParsed(input, readPython, disposePython);
-    const { modules } = parsed.value;
+export async function pythonExportOrder(input: CheckInput): Promise<Finding[]> {
+    const parsed = await visitParsed(input, readPython, disposePython, input.resources);
+    const { modules } = parsed;
     return modules.flatMap((module) => {
         const exported = exportedNames(module);
         if (exported === undefined) return [];
-        const sorted = exported.names.toSorted(
-            (left, right) => left.length - right.length || left.localeCompare(right),
-        );
+        const sorted = exported.names.toSorted(byLengthThenName);
         if (sorted.every((name, order) => name === exported.names[order])) return [];
         return [
             findingAt(

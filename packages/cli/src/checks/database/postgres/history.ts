@@ -1,55 +1,48 @@
-import { memo } from '#cli/platform/memo.ts';
 import { findingAt } from '#cli/checks/finding.ts';
+import { memoized } from '#cli/system/file-reads.ts';
 import { FROZEN_NONE } from '#cli/config/parsers/sql.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
-import { MIGRATION_DOWN } from '#cli/config/checks/postgres.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
+import { MIGRATION_DOWN } from '#cli/config/checks/database.ts';
 import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
-import { migrationsOf } from '#cli/checks/database/postgres/public.ts';
-import { getBlobs, getHeadEntries } from '#cli/repository/revisions/public.ts';
+import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
+import { readBlobs, listHeadEntries } from '#cli/repository/revisions/objects.ts';
 
 const COMMITTED_MIGRATIONS_MEMO = { create: () => new Map<string, Promise<Map<string, string>>>() };
 
 async function readCommittedMigrations(input: CheckInput, paths: string[]): Promise<Map<string, string>> {
     if (!input.hasGit) return new Map();
-    const committed = await getHeadEntries(input.root, input.cancelSignal);
+    const committed = await listHeadEntries(input.root, input.cancelSignal);
     const selected = new Set(paths);
     const entries = committed.filter(
         (entry) => selected.has(entry.path) && entry.mode !== SYMLINK_MODE && entry.mode !== GITLINK_MODE,
     );
-    const blobs = await getBlobs(
+    const blobs = await readBlobs(
         input.root,
         entries.map((entry) => entry.hash),
         input.cancelSignal,
     );
     return new Map(
-        entries.map((entry) => {
-            const content = blobs.get(entry.hash);
-            if (content === undefined) throw new Error('A requested Git blob was not returned.');
+        entries.map((entry, index) => {
+            const content = blobs[index] as Buffer;
             return [entry.path, content.toString('utf8')];
         }),
     );
 }
 
 function committedMigrationTexts(input: CheckInput, paths: string[]): Promise<Map<string, string>> {
-    const committedMigrations = memo(input.reads, COMMITTED_MIGRATIONS_MEMO);
-    const key = JSON.stringify(paths);
-    let read = committedMigrations.get(key);
-    if (read === undefined) {
-        read = readCommittedMigrations(input, paths);
-        committedMigrations.set(key, read);
-    }
-    return read;
+    return memoized(input.reads, COMMITTED_MIGRATIONS_MEMO, JSON.stringify(paths), () =>
+        readCommittedMigrations(input, paths),
+    );
 }
 
 /**
  * One finding for a version two files share, a file with no version, and a new file that sorts before a committed one.
- * @param input the check input
- * @returns the findings
+ * @param input the check input.
+ * @returns the findings.
  */
-export async function migrationOrder(input: CheckInput): Promise<Finding[]> {
-    const migrations = await migrationsOf(input);
+export async function postgresMigrationOrder(input: CheckInput): Promise<Finding[]> {
+    const migrations = await readMigrations(input);
     const findings: Finding[] = [];
     const seen = new Map<string, string>();
     for (const migration of migrations) {
@@ -103,13 +96,13 @@ export async function migrationOrder(input: CheckInput): Promise<Finding[]> {
 
 /**
  * One finding for each migration at or before postgres.frozen_through whose text differs from the committed one.
- * @param input the check input
- * @returns the findings
+ * @param input the check input.
+ * @returns the findings.
  */
-export async function migrationsFrozen(input: CheckInput): Promise<Finding[]> {
-    const through = input.view.options('postgres')['frozen_through'];
+export async function postgresEditedMigrations(input: CheckInput): Promise<Finding[]> {
+    const through = input.selection.view.options('postgres')['frozen_through'];
     if (through === FROZEN_NONE) return [];
-    const migrations = await migrationsOf(input);
+    const migrations = await readMigrations(input);
     const texts = await committedMigrationTexts(
         input,
         migrations.map((migration) => migration.path),

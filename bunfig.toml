@@ -6,4 +6,4 @@ exact = true
 scanner = "@socketsecurity/bun-security-scanner"
 
 [test]
-preload = ["./tests/harness/preload.ts"]
+preload = ["./tests/setup/preload.ts"]

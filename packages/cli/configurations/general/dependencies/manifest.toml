@@ -1,6 +1,5 @@
 prefix_collisions = { prefixes = ["package", "pnpm"] }
 
-products = ["osv-scanner"]
 [configuration]
 title = "Dependencies"
 always_selected = true
@@ -19,27 +18,74 @@ brew = "osv-scanner"
 github = { name = "google/osv-scanner", version = "v2.6.0" }
 winget = "Google.OSVScanner"
 scoop = "osv-scanner"
-replaces = ["osv-scanner.toml"]
+[[tool.replace]]
+file = "osv-scanner.toml"
+shared = false
 
 [[tool]]
 name = "syncpack"
 version = "15.3.3"
 npm = "syncpack"
 mise = "npm:syncpack"
-replaces = [".syncpackrc", ".syncpackrc.json", ".syncpackrc.yaml", ".syncpackrc.yml", ".syncpackrc.ts", ".syncpackrc.mjs", ".syncpackrc.js", ".syncpackrc.cjs", "syncpack.config.js", "syncpack.config.cjs", "syncpack.config.mjs", "syncpack.config.ts"]
+[[tool.replace]]
+file = ".syncpackrc"
+shared = false
+
+[[tool.replace]]
+file = ".syncpackrc.json"
+shared = false
+
+[[tool.replace]]
+file = ".syncpackrc.yaml"
+shared = false
+
+[[tool.replace]]
+file = ".syncpackrc.yml"
+shared = false
+
+[[tool.replace]]
+file = ".syncpackrc.ts"
+shared = false
+
+[[tool.replace]]
+file = ".syncpackrc.mjs"
+shared = false
+
+[[tool.replace]]
+file = ".syncpackrc.js"
+shared = false
+
+[[tool.replace]]
+file = ".syncpackrc.cjs"
+shared = false
+
+[[tool.replace]]
+file = "syncpack.config.js"
+shared = false
+
+[[tool.replace]]
+file = "syncpack.config.cjs"
+shared = false
+
+[[tool.replace]]
+file = "syncpack.config.mjs"
+shared = false
+
+[[tool.replace]]
+file = "syncpack.config.ts"
+shared = false
 
 [[tool_file]]
 target = ".gspot/config/osv-scanner.toml"
 tool = "osv-scanner"
 
 [[tool_file]]
+source = "syncpack.json"
 target = ".gspot/config/syncpack.json"
 tool = "syncpack"
-generated_header = false
 
 [[check]]
 name = "osv"
-title = "Scan dependencies for advisories"
 example = "A locked dependency version affected by a published OSV advisory reports the package and advisory. Upgrade to a reviewed fixed version and update the lockfile, then rescan."
 level = "recommended"
 stage = "push"
@@ -55,7 +101,6 @@ help = "Upgrade the package the finding names. When no fix exists, accept the ad
 
 [[check]]
 name = "syncpack"
-title = "Keep one version of each dependency"
 example = "Two workspace manifests declaring different versions of a dependency governed by the same version group report a mismatch. Align both declarations to the reviewed version and update the lockfile."
 level = "all"
 stage = "push"
@@ -70,19 +115,17 @@ help = "Run syncpack fix --config .gspot/config/syncpack.json, or align the vers
 
 [[check]]
 name = "package-json"
-title = "Check package manifests"
-example = "A dependency declared with a range such as `^1.2.3` reports an unpinned version under the exact-version policy. Pin the actual reviewed lockfile version, then update the lockfile through the package manager."
+example = "A repository with both `bun.lock` and `package-lock.json` reports a second lockfile. Delete the lockfile of the package manager the repository does not use."
 level = "all"
 stage = "commit"
 runs = "once"
 files = { filenames = ["package.json"] }
-summary = "Checks every package.json: exact versions, one packageManager across the workspace, a private root, and one kind of lockfile."
-why = "A version range installs a different tree tomorrow, and two package managers produce two trees today."
-help = "Pin the version the lockfile holds, name one packageManager, mark a workspace root private, and delete the lockfile of the manager the repository does not use."
+summary = "Checks every package.json: the root names a packageManager, every package names the same one, a workspace root is private, and only one kind of lockfile exists."
+why = "Two package managers install two different trees."
+help = "Name one packageManager in the root package.json, use it in every package, mark a workspace root private, and delete the other lockfile."
 
 [[check]]
 name = "stale-lockfile"
-title = "Keep lockfiles current"
 example = "Adding a dependency to a package manifest without updating its lockfile reports an outdated lockfile. Run the owning package manager installation, inspect its manifest and lockfile changes, and retain both together."
 level = "recommended"
 stage = "push"
@@ -95,7 +138,6 @@ help = "Run the install of the package manager once and commit the lockfile it w
 
 [[check]]
 name = "bun-release-age"
-title = "Check Bun release age and security scanner"
 example = "A Bun project without the required `[install] minimumReleaseAge` reports a missing installation safeguard. Set it to the seconds named in the finding and configure the required scanner under `[install.security]`."
 level = "all"
 stage = "commit"
@@ -107,33 +149,11 @@ help = "Set [install] minimumReleaseAge in bunfig.toml to the seconds the messag
 
 [[check]]
 name = "lockfile-hosts"
-title = "Check lockfile hosts"
-example = "A locked package URL pointing to a host outside `dependencies.registry_hosts` reports that host. Resolve the package again from the approved registry, or review and explicitly allow the required host."
+example = "A locked package URL pointing to a host outside `dependencies.allowed_registries` reports that host. Resolve the package again from the approved registry, or review and explicitly allow the required host."
 level = "recommended"
 stage = "commit"
 runs = "scope"
 files = { filenames = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock"], kinds = ["source", "generated"] }
 summary = "Checks that npm, pnpm, Yarn, and text Bun lockfile downloads in each project scope use HTTPS and allowed registry hosts."
 why = "A lockfile line that resolves from another host installs code nobody chose, and a review rarely reads lockfiles."
-help = "Install the package from the registry again, or add the host to dependencies.registry_hosts."
-
-[[setting]]
-name = "dependencies.min_release_age_days"
-type = "number"
-direction = "floor"
-default = 7
-summary = "The minimum age in days for releases installed through Bun."
-
-[[setting]]
-name = "dependencies.scanner"
-type = "string"
-default = ""
-summary = "The security scanner Bun names in [install.security]. An empty string requires none."
-
-[[setting]]
-name = "dependencies.registry_hosts"
-type = "list"
-items = "native"
-direction = "loosening"
-default = ["registry.npmjs.org", "registry.yarnpkg.com"]
-summary = "The hosts a lockfile may resolve packages from."
+help = "Install the package from the registry again, or add the host to dependencies.allowed_registries."

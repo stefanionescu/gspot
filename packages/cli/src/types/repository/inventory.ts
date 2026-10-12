@@ -1,27 +1,22 @@
-import type { z } from 'zod';
 import type { Ignore } from 'ignore';
 import type { Dirent } from 'node:fs';
-import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
-import type { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import type { runnerSchema } from '#cli/parsers/schema/contracts.ts';
-import type { fileKindSchema, vendoredSchema, generatedSchema } from '#cli/parsers/schema/inventory.ts';
+import type { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import type { FILE_KINDS } from '#cli/config/repository/inventory.ts';
 
 export type PathIgnore = { base: string; matcher: Ignore };
 
 export type PathExpressions = { includes: string[]; excludes: string[] };
 
-export type RawEntry = { path: string; size: number; executable: boolean; symlink: boolean };
+export type FileEntry = { path: string; size: number; executable: boolean; symlink: boolean };
 
 export type TrackedFile = {
     path: string;
-    prefix: Buffer;
     kind: FileKind;
     kindSource?: string;
     tags: string[];
     executable: boolean;
     size: number;
-    producedBy?: string;
 };
 
 export type Repository = {
@@ -35,20 +30,15 @@ export type Repository = {
 
 export type Tagged = { tags: string[]; binary: boolean };
 
-export type FileKind = z.infer<typeof fileKindSchema>;
+export type FileKind = (typeof FILE_KINDS)[number];
 
-/** A generated or vendored file entry of gspot.toml, with its kind. */
-export type FileDeclaration =
-    | (z.infer<typeof generatedSchema> & { kind: 'generated'; configuration?: string })
-    | (z.infer<typeof vendoredSchema> & { kind: 'vendored' });
+/** A generated path declared by a selected shipped configuration. */
+export type FileDeclaration = { paths: string[]; kind: 'generated'; configuration: string };
 
-export type Verdict = { kind: FileKind; source: string; producedBy?: string };
-
-/** The runners that install and run gspot. */
-export type Runner = z.infer<typeof runnerSchema>;
+export type FileClassification = { kind: FileKind; source: string };
 
 export type Tooling = {
-    toolFiles: ToolFile[];
+    toolFiles: FoundToolFile[];
     hooks: {
         kind: 'githooks' | 'husky' | 'lefthook' | 'simple-git-hooks' | 'pre-commit' | 'hooksPath';
         path: string;
@@ -59,18 +49,16 @@ export type Tooling = {
     rulesDirectories: string[];
     lintFolders: string[];
     lintOnlyManifests: string[];
-    runner: Runner | 'none';
-    runnerFile?: string;
 };
 
 export type ScopeEntry = {
     name: string;
     path: string;
     configurations: string[];
-    source: 'root' | typeof POLICY_FILE | 'project' | 'flag';
+    source: 'root' | typeof SETTINGS_FILE | 'project';
 };
 
-export type ToolFile = {
+export type FoundToolFile = {
     tool: string;
     path: string;
     shared: boolean;
@@ -78,30 +66,29 @@ export type ToolFile = {
     key?: string;
 };
 
-/** Repository state used by module resolution without execution policy. */
-export type ModuleContext = { root: string; reads: ReadCache };
-
-/** The declared tool runner and the file that supplies it. */
-export type RunnerSelection = Pick<Tooling, 'runner' | 'runnerFile'>;
 /** Content evidence for classifying a tracked file prefix. */
 export type ContentPrefix = { isBinary: boolean; firstLine: string };
 /** Directory entries together with inherited and locally authored ignore rules. */
 export type DirectoryContents = { entries: Dirent[]; rules: PathIgnore[] };
-/** A directory waiting to be read with its inherited ignore rules. */
+/** A directory waiting for a read with its inherited ignore rules. */
 export type PendingDirectory = { directory: string; rules: PathIgnore[] };
-
-/** Captured content and location for classifying one inventory entry. */
-export type FileClassification = { root: string; entry: RawEntry; prefix: Buffer; isBinary: boolean };
 
 /** Authored declarations and effective Git attributes used for classification. */
 export type FileClassificationRules = { declarations: FileDeclaration[]; attributes: Repository['attributes'] };
 
 /** What detection reads from a scope's tree once, for every manifest to look at. */
-export type Layout = {
+export type ScopeContents = {
     candidates: TrackedFile[];
     extensionCounts: Map<string, number>;
     shebangs: Set<string>;
     runtimes: Map<string, string>;
     dependencies: Map<string, string>;
     scope: string;
+};
+
+/** The continuous integration fields for lint job discovery. */
+export type CiJob = {
+    script?: string | string[] | undefined;
+    steps?: { run?: string | undefined }[] | undefined;
+    extends?: unknown;
 };

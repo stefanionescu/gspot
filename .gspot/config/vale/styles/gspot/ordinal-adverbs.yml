@@ -1,6 +1,6 @@
 # Adapted from Microsoft.Ordinal; see ../LICENSES.md.
 extends: existence
-message: Don't add -ly to an ordinal number.
+message: 'Do not add -ly to an ordinal number.'
 link: https://learn.microsoft.com/en-us/style-guide/numbers
 level: error
 ignorecase: true

@@ -1,6 +1,6 @@
 export const SHARED_PREFIX = '_';
 
-export const SUPABASE_CONFIG = 'supabase/config.toml';
+export const SUPABASE_CONFIG_TOML = 'supabase/config.toml';
 
 export const MIGRATION_NAME = /^\d{14}_[a-z][a-z\d_]*\.sql$/u;
 
@@ -14,7 +14,23 @@ export const ADMIN_KEY_NAMES = [
     'supabase_secret_key',
     'supabaseSecretKey',
     'sb_secret_',
-];
+] as const;
 
 /** Client languages not represented by the inventory's language tags. */
-export const ADMIN_KEY_EXTENSIONS = ['.kt', '.dart'];
+export const ADMIN_KEY_EXTENSIONS = ['.kt', '.dart'] as const;
+
+export const DENO_CONFIG_FILES = ['deno.json', 'deno.jsonc'] as const;
+
+export const DENO_CONFIG_FLAG = '--config';
+
+export const FILE_URL_PREFIX = 'file://';
+
+export const FUNCTION_ENTRY_FILES = ['index.ts', 'index.tsx'] as const;
+
+export const FUNCTION_ENTRY = /\/index\.tsx?$/u;
+
+export const DENO_LINT_COMMAND = ['deno', 'lint', '--json'] as const;
+
+export const DENO_CHECK_COMMAND = ['deno', 'check', '--quiet'] as const;
+
+export const ADMIN_KEY_TAGS = ['javascript', 'typescript', 'vue', 'svelte', 'astro', 'swift', 'python'] as const;

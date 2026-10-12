@@ -1,17 +1,13 @@
----
-title: Comments
----
-
 # Comments
 
 ## What a comment says
 
 <!-- level: all -->
 
-A comment explains why, not what, and describes the code as it is now.
+A comment explains why, not what, and describes the code in its current form.
 
 Bad: `# Removed the old cache loader.`
-Good: `# Loads cached responses from the configured cache directory.`
+Good: `# Reads cached responses from the configured cache directory.`
 
 A doc comment says what a function does, what its parameters mean, and what it returns.
 
@@ -21,7 +17,7 @@ A doc comment says what a function does, what its parameters mean, and what it r
 
 Write the doc comment that the language check asks for. Add other comments only when a function:
 
-- handles a non-obvious failure
+- handles a failure that its public interface does not explain
 - has concurrency, cancellation, or isolation requirements
 - makes a security or privacy decision
 - encodes a domain invariant such as `idempotent` or `retry-safe`
@@ -32,7 +28,7 @@ Write the doc comment that the language check asks for. Add other comments only 
 
 When you change a function, update its doc comment: summary, parameters, return value, and errors.
 Rewrite or delete a comment that describes behavior the code lacks, or the reason for a decision
-you are undoing.
+you undo.
 
 ## Deferred work
 

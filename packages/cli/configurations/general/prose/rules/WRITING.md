@@ -1,20 +1,16 @@
----
-title: Writing
----
-
 # Writing
 
-Project-authored text follows `ISO 24495-1:2023`, plain language. State the action or result early.
+Write in plain language under `ISO 24495-1`: short sentences and common words. State the action or result early.
 Use familiar words and explain a technical term when the reader needs it.
 
 ## Evidence
 
-Check commands, fields, defaults, limits, and supported versions against their actual owner.
-A measurement is not a guarantee. When evidence is incomplete, narrow the claim. Link external
+Check commands, fields, defaults, limits, and supported versions against the implementation that defines them.
+A measurement does not guarantee future results. When evidence lacks required facts, narrow the claim. Link external
 facts to the primary source; never invent behavior to complete a page.
 
 Preserve exact API identifiers, public messages, official product names, and legal license text.
-Keep private reasoning, temporary acceptance notes, and credentials out of shipped content.
+Keep private reasoning, temporary acceptance notes out of shipped content.
 Examples use fictional people, safe values, and `example.com` addresses.
 
 ## Voice
@@ -32,4 +28,4 @@ machine values retain their required format.
 ## References
 
 See the [Google developer documentation style guide](https://developers.google.com/style)
-for general writing guidance. Project-specific contracts take precedence.
+for general writing guidance. Project-specific requirements take precedence.

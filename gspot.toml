@@ -1,169 +1,338 @@
-#:schema https://generativespotting.com/schema/gspot.schema.json
+#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
 
-# Run gspot apply after changing policy. Use gspot explain <name> to inspect a setting.
+# gspot settings for this repository. Change them with gspot set, unset, ignore, add, and remove.
 
 level = "all"
-configurations = ["typescript", "markdown", "github-actions", "python"]
-runner = "mise"
-
-[scope.docs]
-configurations = ["css", "astro", "zod", "cloudflare", "site"]
-
-[scope.docs.site]
-build_command = ["bun", "--bun", "astro", "build"]
-
-[scope."packages/cli"]
-configurations = ["zod"]
-
-[scope."packages/eslint-plugin"]
-configurations = []
-
-[scope.tests]
-configurations = []
-removed_configurations = ["astro", "jest", "nestjs", "nextjs", "react", "react-dom", "svelte", "vitest", "vue"]
+configurations = ["typescript", "markdown", "github-actions"]
+allowed_words = { value = ["capitalisation", "IIF", "LICENCE", "next-intl", "udid"], reason = "SQLFluff uses capitalisation; ESLint uses IIFEs; tests use LICENCE and Apple’s udid; next-intl names a package." }
 
 [hooks]
 enabled = true
 
-[ci]
-provider = "github"
-setup = ["mise", "run", "setup"]
-
 [naming]
-banned = ["catalog", "catalogue", "corpus", "render", "sync", "synchronize", "materialize", "coerce", "scoped", "bind", "load", "loaded", "loader", "loaders", "loading", "fetch", "resolve", "resolving", "resolution", "probe", "probes", "probed", "probing", "fixture", "fixtures", "shell", "rendered", "renders", "resolved", "resolver", "synced", "bindings", "fetched"]
+banned_words = ["catalog", "catalogue", "corpus", "render", "sync", "synchronize", "materialize", "coerce", "scoped", "bind", "load", "loaded", "loader", "loaders", "loading", "fetch", "resolve", "resolving", "resolution", "probe", "probes", "probed", "probing", "fixture", "fixtures", "shell", "rendered", "renders", "resolved", "resolver", "synced", "bindings", "fetched"]
 
-[[naming.overrides]]
-allowed = ["may_import", "tool_timeout_seconds", "agent_rules", "test_files", "removed_configurations"]
-paths = ["packages/cli/src/types/policy/settings.ts"]
+[[naming.override]]
+paths = ["packages/cli/src/types/settings/**"]
+allowed_names = ["may_import", "tool_timeout_seconds", "test_files", "removed_configurations", "final_newline", "v8r", "ParsedV8r"]
 reason = "These fields carry the gspot.toml key names."
 
-[[naming.overrides]]
-allowed = ["C"]
-paths = ["packages/cli/src/types/commands/program.ts"]
-reason = "Commander names the value of the -C flag after its letter, which Git uses for the same flag."
-
-[[naming.overrides]]
-allow_digits = true
+[[naming.override]]
 paths = ["docs/src/content/docs/404.md"]
+allow_digits = true
 reason = "Starlight routes the HTTP 404 page by this filename."
 
-[[naming.overrides]]
-allowed = ["MD007"]
-paths = ["tests/types/cli/generation/configuration-files.ts"]
-reason = "Markdownlint names its indentation rule MD007. This native configuration key retains its exact API spelling."
-
-[[naming.overrides]]
-allowed = ["with"]
-paths = ["tests/types/cli/generation/ci.ts"]
-reason = "GitHub Actions uses with as the key for action inputs."
-
-[[naming.overrides]]
-allowed = ["rule_id"]
-paths = ["tests/types/tools/generation/parameter-limits.ts"]
+[[naming.override]]
+paths = ["tests/types/tool-output.ts"]
+allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
 
-[[naming.overrides]]
-allowed = ["swift-snapshot-testing", "swift-snapshot-testing.test"]
-categories = ["files"]
-paths = ["tests/cli/checks/library/swift-snapshot-testing.test.ts", "tests/config/cli/checks/library/swift-snapshot-testing.ts", "packages/cli/src/checks/library/swift-snapshot-testing.ts", "packages/cli/src/config/checks/swift-snapshot-testing.ts"]
-reason = "These files test the swift-snapshot-testing library configuration and use its exact public name."
+[[naming.override]]
+paths = ["packages/cli/src/types/settings/**", "packages/cli/src/types/commands/list.ts", "packages/cli/src/types/checks/{database,framework,general,infrastructure,library,platform}.ts", "packages/cli/src/types/repository/selection.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/parsers/output.ts", "packages/cli/src/types/rules.ts"]
+categories = ["properties"]
+cases = ["camel", "upper-snake", "snake"]
+reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
 
-[[naming.overrides]]
-allowed = ["removed_configurations"]
+[[naming.override]]
+paths = ["packages/cli/src/checks/framework/nextjs.ts"]
+allowed_names = ["nextConfig"]
+reason = "This check keeps the Next.js configuration reader name required by the final placement table."
+
+[[naming.override]]
+paths = ["packages/cli/src/checks/framework/site/linkinator-program.ts"]
+allowed_names = ["LinkChecker"]
+reason = "Linkinator exports LinkChecker under this exact name."
+
+[[naming.override]]
+paths = ["packages/cli/src/checks/framework/site/purgecss-program.ts", "docs/src/styles.ts"]
+allowed_names = ["PurgeCSS"]
+reason = "PurgeCSS exports its class under this exact name."
+
+[[naming.override]]
+paths = ["packages/cli/src/checks/general/licenses.ts"]
+allowed_names = ["License", "Name", "Version"]
+reason = "pip-licenses identifies these JSON fields with this exact capitalization."
+
+[[naming.override]]
+paths = ["packages/cli/src/checks/general/prose.ts"]
+allowed_names = ["Check", "Line", "Message", "Span"]
+reason = "Vale identifies these JSON diagnostic fields with this exact capitalization."
+
+[[naming.override]]
+paths = ["packages/cli/src/checks/infrastructure/docker.ts"]
+allowed_names = ["ArtifactName", "PkgName", "Results", "RuleID", "SchemaVersion", "Secrets", "Target", "Title", "Vulnerabilities", "VulnerabilityID"]
+reason = "Trivy identifies these JSON report fields with these exact names."
+
+[[naming.override]]
+paths = ["packages/cli/src/checks/infrastructure/nginx.ts"]
+allowed_names = ["nginxConfigTest"]
+reason = "This check keeps the NGINX configuration test name required by the final placement table."
+
+[[naming.override]]
+paths = ["packages/cli/src/checks/infrastructure/xcode/resources.ts"]
+allowed_names = ["shouldTranslate"]
+reason = "The Xcode string format names its translation control shouldTranslate."
+
+[[naming.override]]
+paths = ["packages/cli/src/checks/language/python/deptry.ts"]
+allowed_names = ["extend_exclude"]
+reason = "deptry names this TOML setting extend_exclude."
+
+[[naming.override]]
+paths = ["packages/cli/src/checks/platform/supabase.ts"]
+allowed_names = ["denoConfigArguments", "readConfigToml"]
+reason = "These readers keep the configuration function names required by the final placement table."
+
+[[naming.override]]
+paths = ["packages/cli/src/checks/testing/swift-tests.ts"]
+allowed_names = ["module_type"]
+reason = "Swift coverage JSON names the module type field module_type."
+
+[[naming.override]]
+paths = ["packages/cli/src/parsers/xcode.ts"]
+allowed_names = ["rootObject"]
+reason = "The Xcode project format names its top-level reference rootObject."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/checks/platform.ts"]
+allowed_names = ["file_path"]
+reason = "The Supabase inventory names its file location field file_path."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/parsers/dependency-files.ts"]
+allowed_names = ["packageManager"]
+reason = "npm names this package.json field packageManager."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/parsers/output.ts"]
+allowed_names = ["Data", "DetectorName", "JsonEnumerator", "SourceMetadata", "Verified", "fixInfo"]
+reason = "These tool report properties retain the exact TruffleHog, Semgrep, markdownlint and typos JSON field names."
+
+[[naming.override]]
+paths = ["packages/cli/src/checks/library/swift-snapshot-testing.ts"]
+allowed_names = ["swift-snapshot-testing"]
+reason = "The final placement retains the official Swift Snapshot Testing library name."
+
+[[naming.override]]
+paths = ["tests/config/swift/snapshots.ts"]
+allowed_names = ["snapshots", "SNAPSHOT_CASES", "SNAPSHOT_REPOSITORY"]
+reason = "The final placement names test data for the Swift SnapshotTesting library."
+
+[[naming.override]]
+paths = ["tests/unit/cli/generation/tool-file-sources/v8r.test.ts", "packages/cli/configurations/language/markdown/markdownlint-cli2.mjs"]
+allow_digits = true
+reason = "These files retain the official v8r and markdownlint-cli2 tool names."
+
+[[naming.override]]
+paths = ["tests/types/ci.ts"]
+allowed_names = ["with"]
+reason = "GitHub Actions calls its action argument record with."
+
+[[naming.override]]
 paths = ["packages/cli/src/types/configurations.ts"]
-reason = "This selection contract uses the public TOML key for manual configuration removals."
+categories = ["properties"]
+allowed_names = ["when"]
+reason = "The shipped configuration manifest format names its selection condition when."
 
-# A CLI layer imports itself and the layers named in its imports_allowed entry. Its config and types files belong to the same layer.
-[[architecture.modules]]
-may_import = ["platform", "commands"]
-name = "main"
-paths = ["packages/cli/src/main.ts"]
+[[naming.override]]
+paths = ["packages/cli/src/config/execution/copy.ts"]
+allowed_names = ["GIT_INDEX_INFO"]
+reason = "The final placement names the arguments for Git --index-info GIT_INDEX_INFO."
 
-[[architecture.modules]]
-may_import = ["platform", "parsers", "configurations", "repository", "policy", "agent-rules", "planning", "generation", "tools", "lifecycle", "execution", "checks", "terminal", "commands"]
-name = "commands"
-paths = ["packages/cli/src/{public.ts,commands/**,config/commands/**,types/commands/**}"]
+[[naming.override]]
+paths = ["packages/cli/src/config/generation/eslint-rules.ts"]
+allowed_names = ["CORE_RULES"]
+reason = "The final placement names the ESLint core lint rules CORE_RULES."
 
-[[architecture.modules]]
-may_import = ["platform", "parsers", "configurations", "repository", "policy", "planning", "generation", "tools", "lifecycle", "execution", "checks"]
-name = "checks"
-paths = ["packages/cli/src/{,config/,types/}checks/**"]
+[[naming.override]]
+paths = ["packages/cli/src/config/tools/find.ts"]
+allowed_names = ["MISE_SHIMS_FOLDER"]
+reason = "The final placement names the actual mise shims folder MISE_SHIMS_FOLDER."
 
-[[architecture.modules]]
-may_import = ["platform", "parsers", "execution", "terminal"]
-name = "terminal"
-paths = ["packages/cli/src/{terminal/**,config/terminal.ts,types/terminal.ts}"]
+[[naming.override]]
+paths = ["packages/cli/src/generation/tool-file-sources/v8r.ts"]
+allowed_names = ["v8r", "v8rToolFile"]
+reason = "The final placement retains the official v8r tool name and its producer v8rToolFile."
 
-[[architecture.modules]]
-may_import = ["platform", "parsers", "configurations", "repository", "policy", "planning", "tools", "lifecycle", "execution"]
-name = "execution"
-paths = ["packages/cli/src/{,config/,types/}execution/**"]
+[[naming.override]]
+paths = ["packages/cli/src/tools/npm/lockfiles.ts"]
+allowed_names = ["resolved"]
+reason = "The npm lockfile format names each package download URL resolved."
 
-[[architecture.modules]]
-may_import = ["platform", "parsers", "configurations", "repository", "policy", "planning", "generation", "tools", "lifecycle"]
-name = "lifecycle"
-paths = ["packages/cli/src/{,config/,types/}lifecycle/**"]
+[[naming.override]]
+paths = ["packages/cli/src/tools/npm/project.ts"]
+allowed_names = ["assertWrapperVersion", "resolveNpmLockfile", "runNpmWrappersOnce"]
+reason = "The final placement keeps these package-manager wrapper and lockfile calculation names."
 
-[[architecture.modules]]
-may_import = ["platform", "parsers", "configurations", "repository", "policy", "agent-rules", "planning", "generation"]
-name = "generation"
-paths = ["packages/cli/src/{,config/,types/}generation/**"]
+[[naming.override]]
+paths = ["packages/cli/src/types/generation/eslint.ts"]
+allowed_names = ["customSyntax"]
+reason = "Stylelint names its parser option customSyntax."
 
-[[architecture.modules]]
-may_import = ["platform", "parsers", "configurations", "repository", "policy", "planning"]
-name = "planning"
-paths = ["packages/cli/src/{planning/**,config/planning.ts,types/planning.ts}"]
-
-[[architecture.modules]]
-may_import = ["platform", "parsers", "configurations", "repository", "policy", "planning", "generation", "tools"]
-name = "tools"
-paths = ["packages/cli/src/{tools/**,config/tools/!(vale).ts,types/tools/**}"]
-
-[[architecture.modules]]
-may_import = ["platform", "parsers", "configurations", "repository", "policy"]
-name = "policy"
-paths = ["packages/cli/src/{,config/,types/}policy/**"]
-
-[[architecture.modules]]
-may_import = ["platform", "parsers", "configurations", "repository", "policy", "agent-rules"]
-name = "agent-rules"
-paths = ["packages/cli/src/{agent-rules/**,config/agent-rules.ts,types/agent-rules.ts}"]
-
-[[architecture.modules]]
-may_import = ["platform", "parsers", "configurations"]
-name = "configurations"
-paths = ["packages/cli/src/{configurations/**,parsers/schema/configurations.ts,config/configurations.ts,config/tools/vale.ts,types/configurations.ts}"]
-
-[[architecture.modules]]
-may_import = ["platform", "parsers", "configurations", "repository"]
-name = "repository"
-paths = ["packages/cli/src/{,config/,types/}repository/**"]
-
-[[architecture.modules]]
-may_import = ["platform", "parsers"]
-name = "parsers"
-paths = ["packages/cli/src/{parsers/*.ts,parsers/!(schema)/**,parsers/schema/!(configurations).ts,parsers/schema/python/**,config/parsers/**,types/parsers/**}"]
-reason = "Tool-output parsing consumes validated configuration declarations to interpret native versions without copying the tool metadata contract."
-
-[[architecture.modules]]
-may_import = ["platform"]
-name = "platform"
-paths = ["packages/cli/src/{,config/,types/}platform/**"]
-
-# The ESLint plugin is one more element, which neither imports the CLI nor is imported by it.
-[[architecture.modules]]
-may_import = ["plugin"]
-name = "plugin"
-paths = ["packages/eslint-plugin/src/**", "packages/eslint-plugin/build.ts"]
+[[naming.override]]
+paths = ["packages/cli/src/types/objects.ts"]
+allowed_names = ["_zod"]
+reason = "Zod names its schema information property _zod."
 
 [architecture.roles]
-config = ["packages/*/src/config/**", "tests/config/**", "scripts/config/**", "docs/src/config/**"]
-env = ["packages/cli/src/platform/public.ts", "tests/harness/environment.ts"]
-runtime = ["packages/*/src/**"]
-scripts = ["packages/*/scripts/**"]
-test_harness = "tests/harness"
-tests = ["**/*.test.*"]
-types = ["packages/*/src/types/**", "tests/types/**", "scripts/types/**", "docs/src/types/**"]
+environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/environment.ts"]
+scripts = ["scripts/**"]
+
+# A module may import itself and the modules in its may_import list.
+[[architecture.module]]
+name = "cli-config"
+paths = ["packages/cli/src/config/**"]
+may_import = []
+
+[[architecture.module]]
+name = "cli-types"
+paths = ["packages/cli/src/types/**"]
+may_import = ["cli-config"]
+
+[[architecture.module]]
+name = "plugin-config"
+paths = ["packages/eslint-plugin/src/config/**"]
+may_import = []
+
+[[architecture.module]]
+name = "plugin-types"
+paths = ["packages/eslint-plugin/src/types/**"]
+may_import = ["plugin-config"]
+
+[[architecture.module]]
+name = "scripts-config"
+paths = ["scripts/config/**"]
+may_import = []
+
+[[architecture.module]]
+name = "scripts-types"
+paths = ["scripts/types/**"]
+may_import = ["scripts-config", "cli-types"]
+
+[[architecture.module]]
+name = "docs-config"
+paths = ["docs/src/config/**"]
+may_import = []
+
+[[architecture.module]]
+name = "docs-types"
+paths = ["docs/src/types/**"]
+may_import = ["docs-config", "cli-types"]
+
+[[architecture.module]]
+name = "tests-config"
+paths = ["tests/config/**"]
+may_import = []
+
+[[architecture.module]]
+name = "tests-types"
+paths = ["tests/types/**"]
+may_import = ["tests-config", "cli-types", "cli-config", "plugin-types"]
+
+[[architecture.module]]
+name = "system"
+paths = ["packages/cli/src/system/**", "packages/cli/src/errors.ts", "packages/cli/src/objects.ts", "packages/cli/src/text.ts"]
+may_import = ["cli-config", "cli-types"]
+
+[[architecture.module]]
+name = "parsers"
+paths = ["packages/cli/src/parsers/**"]
+may_import = ["cli-config", "cli-types", "system"]
+
+[[architecture.module]]
+name = "configurations"
+paths = ["packages/cli/src/configurations/**"]
+may_import = ["cli-config", "cli-types", "system", "parsers"]
+
+[[architecture.module]]
+name = "repository"
+paths = ["packages/cli/src/repository/**"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations"]
+
+[[architecture.module]]
+name = "settings"
+paths = ["packages/cli/src/settings/**"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "ownership", "apply"]
+
+[[architecture.module]]
+name = "rules"
+paths = ["packages/cli/src/rules.ts"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings"]
+
+[[architecture.module]]
+name = "planning"
+paths = ["packages/cli/src/planning/**"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules", "generation"]
+
+[[architecture.module]]
+name = "generation"
+paths = ["packages/cli/src/generation/**"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules", "planning", "tools", "ownership"]
+
+[[architecture.module]]
+name = "tools"
+paths = ["packages/cli/src/tools/**"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules", "planning", "generation"]
+
+[[architecture.module]]
+name = "ownership"
+paths = ["packages/cli/src/ownership/**"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules", "planning", "generation", "tools"]
+
+[[architecture.module]]
+name = "install"
+paths = ["packages/cli/src/install/**"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules", "planning", "generation", "tools", "ownership"]
+
+[[architecture.module]]
+name = "apply"
+paths = ["packages/cli/src/apply/**"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules", "planning", "generation", "tools", "ownership", "install"]
+
+[[architecture.module]]
+name = "execution"
+paths = ["packages/cli/src/execution/**"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules", "planning", "generation", "tools", "ownership", "install", "apply"]
+
+[[architecture.module]]
+name = "terminal"
+paths = ["packages/cli/src/terminal/**"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules", "planning", "generation", "tools", "ownership", "install", "apply", "execution"]
+
+[[architecture.module]]
+name = "checks"
+paths = ["packages/cli/src/checks/**"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules", "planning", "generation", "tools", "ownership", "install", "apply", "execution", "terminal"]
+
+[[architecture.module]]
+name = "commands"
+paths = ["packages/cli/src/commands/**"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules", "planning", "generation", "tools", "ownership", "install", "apply", "execution", "terminal", "checks"]
+
+[[architecture.module]]
+name = "main"
+paths = ["packages/cli/src/main.ts"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules", "planning", "generation", "tools", "ownership", "install", "apply", "execution", "terminal", "checks", "commands"]
+
+[[architecture.module]]
+name = "plugin"
+paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/rules/**"]
+may_import = ["plugin-config", "plugin-types"]
+
+[[architecture.module]]
+name = "scripts"
+paths = ["scripts/*.ts"]
+may_import = ["scripts-config", "scripts-types", "cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules", "planning", "generation", "tools", "ownership", "install", "apply", "execution", "terminal", "checks", "commands", "plugin"]
+
+[[architecture.module]]
+name = "docs"
+paths = ["docs/src/*.*", "docs/src/!(config|types)/**"]
+may_import = ["docs-config", "docs-types", "cli-config", "cli-types", "settings", "configurations", "scripts", "plugin", "commands", "plugin-config", "system"]
+
+[[architecture.module]]
+name = "tests"
+paths = ["tests/{unit,integration,e2e,setup}/**"]
+may_import = ["tests-config", "tests-types", "cli-config", "cli-types", "plugin-config", "plugin-types", "scripts-config", "scripts-types", "docs-config", "docs-types", "system", "parsers", "configurations", "repository", "settings", "rules", "planning", "generation", "tools", "ownership", "install", "apply", "execution", "terminal", "checks", "commands", "main", "plugin", "scripts", "docs"]
 
 [dependencies]
 scanner = "@socketsecurity/bun-security-scanner"
@@ -171,303 +340,181 @@ scanner = "@socketsecurity/bun-security-scanner"
 [licenses]
 allowed = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0"]
 
-[licenses.exceptions."@csstools/selector-specificity@5.0.0"]
-license = "MIT-0"
+[[licenses.allowed_package]]
+name = "@csstools/selector-specificity"
+version = "5.0.0"
 reason = "The CSS tooling dependency uses the MIT No Attribution license; its installed package retains the license text."
 
-[licenses.exceptions."@fontsource-variable/geist-mono@5.3.0"]
-license = "OFL-1.1"
+[[licenses.allowed_package]]
+name = "@fontsource-variable/geist-mono"
+version = "5.3.0"
 reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist-mono.txt."
 
-[licenses.exceptions."@fontsource-variable/geist@5.3.0"]
-license = "OFL-1.1"
+[[licenses.allowed_package]]
+name = "@fontsource-variable/geist"
+version = "5.3.0"
 reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist.txt."
 
-[licenses.exceptions."axe-core@4.13.0"]
-license = "MPL-2.0"
+[[licenses.allowed_package]]
+name = "axe-core"
+version = "4.13.0"
 reason = "The JSX accessibility lint plugin requires this unmodified development dependency. Its installed LICENSE identifies MPL-2.0; it is not included in the gspot package."
 
-[licenses.exceptions."eslint-plugin-sonarjs@4.2.0"]
-license = "LGPL-3.0-only"
+[[licenses.allowed_package]]
+name = "eslint-plugin-sonarjs"
+version = "4.2.0"
 reason = "A lint plugin that runs at development time and is linked dynamically; nothing of it ships in the gspot package."
 
-[licenses.exceptions."lightningcss@1.33.0"]
-license = "MPL-2.0"
+[[licenses.allowed_package]]
+name = "lightningcss"
+version = "1.33.0"
 reason = "A build dependency of the manual site; the license binds changes to its own files, and none are made."
-
-[words]
-"(?-i:PATH)" = "Accepted spelling from this repository's previous prose vocabulary."
-ASCII = "Accepted spelling from this repository's previous prose vocabulary."
-axe = "The npm package and quoted original findings retain the exact axe spelling."
-Bash = "Bash is the proper name of the language described in the shipped rule documents."
-BASH = "Accepted spelling from this repository's previous prose vocabulary."
-BCP = "Accepted spelling from this repository's previous prose vocabulary."
-BOM = "Accepted spelling from this repository's previous prose vocabulary."
-BSD = "Accepted spelling from this repository's previous prose vocabulary."
-capitalisation = "SQLFluff requires the exact capitalisation setting names; original findings retain them."
-CDN = "Accepted spelling from this repository's previous prose vocabulary."
-CORS = "Accepted spelling from this repository's previous prose vocabulary."
-CPU = "Accepted spelling from this repository's previous prose vocabulary."
-CRLF = "Accepted spelling from this repository's previous prose vocabulary."
-CRUD = "Accepted spelling from this repository's previous prose vocabulary."
-CSV = "Accepted spelling from this repository's previous prose vocabulary."
-DDL = "Accepted spelling from this repository's previous prose vocabulary."
-ESM = "Accepted spelling from this repository's previous prose vocabulary."
-facter = "The adopted Vale product rule retains the official Facter name."
-GET = "Accepted spelling from this repository's previous prose vocabulary."
-GNU = "Accepted spelling from this repository's previous prose vocabulary."
-HEAD = "Accepted spelling from this repository's previous prose vocabulary."
-HSTS = "Accepted spelling from this repository's previous prose vocabulary."
-HTTPS = "Accepted spelling from this repository's previous prose vocabulary."
-ICU = "Accepted spelling from this repository's previous prose vocabulary."
-IIF = "The upstream ESLint selector and preserved findings use the exact IIF token."
-INI = "Accepted spelling from this repository's previous prose vocabulary."
-JSX = "Accepted spelling from this repository's previous prose vocabulary."
-JWT = "Accepted spelling from this repository's previous prose vocabulary."
-LFS = "Accepted spelling from this repository's previous prose vocabulary."
-LICENCE = "Original findings retain the exact LICENCE filename quotation."
-MIME = "Accepted spelling from this repository's previous prose vocabulary."
-MIT = "Accepted spelling from this repository's previous prose vocabulary."
-MVVM = "Accepted spelling from this repository's previous prose vocabulary."
-next-intl = "The package name used by the authored internationalization guide."
-NUL = "Accepted spelling from this repository's previous prose vocabulary."
-OCSP = "Accepted spelling from this repository's previous prose vocabulary."
-ODF = "The adopted Vale product rule retains the ODF format abbreviation."
-optin = "The dependency patch retains the upstream Zod optin schema direction."
-ORM = "Accepted spelling from this repository's previous prose vocabulary."
-PEP = "Accepted spelling from this repository's previous prose vocabulary."
-PID = "Accepted spelling from this repository's previous prose vocabulary."
-POSIX = "Accepted spelling from this repository's previous prose vocabulary."
-README = "Accepted spelling from this repository's previous prose vocabulary."
-RFC = "Accepted spelling from this repository's previous prose vocabulary."
-RLS = "Accepted spelling from this repository's previous prose vocabulary."
-RTL = "Accepted spelling from this repository's previous prose vocabulary."
-SCSS = "Accepted spelling from this repository's previous prose vocabulary."
-SDK = "Accepted spelling from this repository's previous prose vocabulary."
-SHA = "Accepted spelling from this repository's previous prose vocabulary."
-SSH = "Accepted spelling from this repository's previous prose vocabulary."
-STDOUT = "Accepted spelling from this repository's previous prose vocabulary."
-SVG = "Accepted spelling from this repository's previous prose vocabulary."
-TCA = "Accepted spelling from this repository's previous prose vocabulary."
-THR = "The prefix of the test-layout finding IDs in findings/, such as THR-005."
-TLS = "Accepted spelling from this repository's previous prose vocabulary."
-TSX = "Accepted spelling from this repository's previous prose vocabulary."
-TTO = "The prefix of the integration-test finding IDs in findings/, such as TTO-006."
-udid = "Original findings quote the native Apple identifier udid."
-UTC = "Accepted spelling from this repository's previous prose vocabulary."
-UTF = "Accepted spelling from this repository's previous prose vocabulary."
-WASM = "Accepted spelling from this repository's previous prose vocabulary."
-XML = "Accepted spelling from this repository's previous prose vocabulary."
 
 [tools.codeql]
 languages = ["javascript-typescript", "actions"]
 
 [tools.commitlint]
-scopes = ["cli", "eslint-plugin", "docs", "root", "hooks", "deps"]
+scopes = ["cli", "eslint-plugin", "docs", "root", "deps"]
 
-[tools.eslint.import_extensions]
-"**/*" = "ts"
+[tools.eslint]
+import_extension = "ts"
 
 [tools.knip]
-entry = ["packages/cli/src/checks/general/site/linkinator.ts", "packages/cli/src/checks/general/site/purgecss.ts", "packages/cli/src/parsers/tool/format.ts", "packages/eslint-plugin/src/rules/public.ts", "scripts/setting-values.ts"]
+ignore_dependencies = { value = ["@fontsource-variable/geist", "@fontsource-variable/geist-mono", "tree-sitter-bash", "tree-sitter-css", "tree-sitter-html", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript"], reason = "The build imports these packages through CSS or copies their grammar files by path." }
+entry = ["scripts/build.ts", "tests/setup/integration.ts", "packages/cli/src/checks/framework/site/linkinator-program.ts", "packages/cli/src/checks/framework/site/purgecss-program.ts", "packages/cli/configurations/language/markdown/markdownlint-cli2.mjs"]
 
-[tools.knip.ignore_dependencies]
-"^@fontsource-variable/" = "The site imports the fonts from docs/src/theme.css, outside the TypeScript import graph."
-"^tree-sitter-" = "The build copies the grammar WASM files from these packages by path; nothing imports them."
+[tools.typos]
+extra = { value = { type = { license_names = { extend-glob = ["gspot.toml"], extend-words = { axe = "axe" } }, zod_types = { extend-glob = ["objects.ts"], extend-words = { optin = "optin" } } } }, reason = "Typos splits the published axe-core license name; Zod names its optional input marker optin." }
 
-[tools.knip.ignore_dependencies."^(?:@darraghor/eslint-plugin-nestjs-typed|@next/eslint-plugin-next|@react-native/eslint-plugin|@typescript-eslint/utils|@vitest/eslint-plugin|bats|eslint-plugin-drizzle|eslint-plugin-expo|eslint-plugin-i18next|eslint-plugin-jest|eslint-plugin-react|eslint-plugin-react-hooks|eslint-plugin-react-native|eslint-plugin-react-refresh|eslint-plugin-svelte|eslint-plugin-testing-library|eslint-plugin-vue|eslint-plugin-vuejs-accessibility|pnpm|std-env|supabase|svelte-eslint-parser|vue-eslint-parser|yarn)$"]
-reason = "Native sandbox commands load these packages from the linked tests installation."
-workspace = "tests"
+[[scope]]
+path = "docs"
+configurations = ["css", "astro", "zod", "cloudflare", "site"]
+site.build_command = ["bun", "--bun", "astro", "build"]
+tools.knip.ignore_dependencies = { value = ["satteri"], reason = "Astro prerender externalizes this native Markdown loader in astro.config.ts. A direct dependency keeps Bun’s package lookup at the installed loader origin; the site build verifies native resolution." }
 
-[tools.knip.ignore_dependencies.satteri]
-reason = "Astro prerender externalizes this native Markdown loader in astro.config.ts. A direct dependency keeps Bun’s package lookup at the installed loader origin; the site build verifies native resolution."
-workspace = "docs"
+[[scope]]
+path = "packages/cli"
+configurations = ["zod"]
+
+[[scope]]
+path = "tests"
+configurations = ["cloudflare"]
+removed_configurations = ["astro", "jest", "nestjs", "nextjs", "react", "react-dom", "svelte", "vitest", "vue"]
+tools.knip.ignore_dependencies = { value = ["@darraghor/eslint-plugin-nestjs-typed", "@next/eslint-plugin-next", "@react-native/eslint-plugin", "@vitest/eslint-plugin", "bats", "eslint-plugin-drizzle", "eslint-plugin-expo", "eslint-plugin-i18next", "eslint-plugin-jest", "eslint-plugin-react", "eslint-plugin-react-hooks", "eslint-plugin-react-native", "eslint-plugin-react-refresh", "eslint-plugin-svelte", "eslint-plugin-testing-library", "eslint-plugin-vue", "eslint-plugin-vuejs-accessibility", "pnpm", "supabase", "svelte-eslint-parser", "vue-eslint-parser", "yarn", "@nestjs/common", "@nestjs/core", "@tanstack/eslint-plugin-query", "eslint-plugin-jsx-a11y", "reflect-metadata", "rxjs", "vue"], reason = "Native sandbox commands load these packages from the linked tests installation." }
 
 [[ignore]]
 check = "dependencies/osv"
-reason = "Checked 2026-10-09: GHSA lists no patched release; http-cache-semantics 4.3.0 is latest. Astro and npm fetch use it in development; the static docs build shares no cached response between users."
 rule = "GHSA-ch52-4w7c-c8xp"
+reason = "As checked on 2026-10-09, http-cache-semantics 4.3.0 has no patched release and is used only in development without sharing cached responses between users."
 until = 2026-11-08
 
 [[ignore]]
 check = "dependencies/osv"
-reason = "Checked 2026-10-09: braces 3.0.3 is latest and GHSA lists no patched release. micromatch uses it in development tools, which expand only repository-authored patterns."
 rule = "GHSA-vfj7-8cjw-p6xm"
+reason = "As checked on 2026-10-09, braces 3.0.3 has no patched release and is used only by development tools to expand patterns written in this repository."
 until = 2026-11-08
 
 [[ignore]]
 check = "docs/lychee"
-paths = ["docs/src/content/docs/**"]
-reason = "The site links are root-relative and resolve once Starlight builds it; its build validates them."
+paths = ["docs/src/content/docs/**", "docs/src/reference/configuration-guides/**"]
+reason = "Starlight builds these source links into site routes; site/linkinator checks their targets in the built site."
 
 [[ignore]]
-check = "docs/lychee"
-paths = ["findings/**"]
-reason = "findings/ quotes target docs text whose root-relative links resolve only in the built site."
-
-[[ignore]]
-check = "docs/stale-paths"
-paths = ["findings/**"]
-reason = "FINDINGS.md and findings/ record an audit, and they name files and folders the cleanup deletes and moves."
-
-[[ignore]]
-check = "docs/stale-paths"
+check = "docs/missing-paths"
 paths = ["packages/cli/configurations/*/*/rules/**"]
-reason = "Shipped agent rules describe consumer projects. Their file paths are examples for those projects."
-
-[[ignore]]
-check = "github-actions/zizmor"
-paths = [".github/workflows/ci.yml", ".github/workflows/database.yml", ".github/workflows/docs.yml", ".github/workflows/release.yml"]
-reason = "Actionlint reads ./ natively. Pull-request jobs run the checked-out setup action. Reusable workflow calls resolve at the same commit."
-rule = "self-repository"
+reason = "Paths in shipped rules are examples for user projects."
 
 [[ignore]]
 check = "javascript/eslint"
-paths = ["packages/cli/src/**", "scripts/**"]
-reason = "These command implementations and repository scripts use synchronous filesystem operations to prepare and publish local files before they return."
-rule = "n/no-sync"
+rule = "@typescript-eslint/no-magic-numbers"
+paths = ["tests/config/**"]
+reason = "These declarations hold fixed test data; giving each literal another constant would duplicate the same data."
 
 [[ignore]]
 check = "javascript/eslint"
-paths = ["packages/eslint-plugin/package.json"]
-reason = "A published library keeps ranges for runtime dependencies and peers."
 rule = "package-json/restrict-dependency-ranges"
+paths = ["packages/eslint-plugin/package.json"]
+reason = "A published library uses ranges for dependencies and peers."
+
+[[ignore]]
+check = "javascript/eslint"
+rule = "package-json/specify-peers-locally"
+paths = ["packages/eslint-plugin/package.json"]
+reason = "The declaration build uses the root workspace TypeScript dependency, so the plugin does not repeat it as a development dependency."
 
 [[ignore]]
 check = "prose/vale"
-paths = ["findings/**"]
-reason = "The findings ledger preserves original quotations and stable record text. Its technical audit terms and historical wording must remain verbatim."
+paths = ["packages/cli/configurations/general/prose/vale/styles/LICENSES.md"]
+reason = "The upstream license notices must keep their exact text."
 
 [[ignore]]
 check = "prose/vale"
-paths = ["packages/cli/configurations/general/prose/styles/LICENSES.md"]
-reason = "This asset reproduces the upstream MIT license notices verbatim. Legal text must retain its exact wording and capitalization."
-
-[[ignore]]
-check = "prose/vale"
-paths = ["tests/config/tools/configurations/general/prose/rules.ts"]
-reason = "These literal negative test vectors deliberately contain the defects detected by the native Vale rules. Preserve their bytes and expected diagnostics."
-
-[[ignore]]
-check = "prose/vale"
-paths = ["packages/cli/configurations/database/postgres/rules/POSTGRES.md", "packages/cli/configurations/framework/express/rules/EXPRESS.md", "packages/cli/configurations/framework/fastapi/rules/FASTAPI.md", "packages/cli/configurations/framework/nextjs/rules/NEXTJS.md", "packages/cli/configurations/framework/react/rules/REACT.md", "packages/cli/configurations/framework/vue/rules/VUE.md", "packages/cli/configurations/general/commits/rules/GIT.md", "packages/cli/configurations/general/engineering/rules/agent/WORKING.md", "packages/cli/configurations/general/engineering/rules/code/ACCESSIBILITY.md", "packages/cli/configurations/general/engineering/rules/code/CLI.md", "packages/cli/configurations/general/engineering/rules/code/CONFIGURATION.md", "packages/cli/configurations/general/engineering/rules/code/LOGGING.md", "packages/cli/configurations/general/engineering/rules/code/TESTING.md", "packages/cli/configurations/general/files/rules/YAML.md", "packages/cli/configurations/general/naming/rules/NAMING-FILES.md", "packages/cli/configurations/general/naming/rules/NAMING.md", "packages/cli/configurations/general/prose/rules/DOCS-CONTENT.md", "packages/cli/configurations/general/prose/rules/DOCS-FORMAT.md", "packages/cli/configurations/general/prose/rules/DOCS-MEDIA.md", "packages/cli/configurations/general/prose/rules/DOCS-SURFACES.md", "packages/cli/configurations/general/prose/rules/DOCS.md", "packages/cli/configurations/general/prose/rules/WRITING.md", "packages/cli/configurations/general/secrets/rules/SECRETS.md", "packages/cli/configurations/language/bash/rules/BASH.md", "packages/cli/configurations/language/bash/rules/LANGUAGE.md", "packages/cli/configurations/language/bash/rules/NAMING.md", "packages/cli/configurations/language/bash/rules/SAFETY.md", "packages/cli/configurations/language/css/rules/NAMING.md", "packages/cli/configurations/language/css/rules/TAILWIND.md", "packages/cli/configurations/language/html/rules/HTML.md", "packages/cli/configurations/language/javascript/rules/NODE.md", "packages/cli/configurations/language/python/rules/DESIGN.md", "packages/cli/configurations/language/python/rules/PYTHON.md", "packages/cli/configurations/language/python/rules/TYPING.md", "packages/cli/configurations/language/swift/rules/NAMING.md", "packages/cli/configurations/language/swift/rules/SWIFT.md", "packages/cli/configurations/language/swift/rules/SWIFTUI.md", "packages/cli/configurations/language/swift/rules/UIKIT.md", "packages/cli/configurations/language/typescript/rules/NAMING.md", "packages/cli/configurations/language/typescript/rules/TYPESCRIPT.md", "packages/cli/configurations/library/drizzle/rules/DRIZZLE.md", "packages/cli/configurations/library/translations/rules/I18N.md", "packages/cli/configurations/library/translations/rules/NEXT-INTL.md", "packages/cli/configurations/library/react-hook-form/rules/REACT-HOOK-FORM.md", "packages/cli/configurations/library/tanstack-query/rules/TANSTACK-QUERY.md", "packages/cli/configurations/library/trpc/rules/TRPC.md", "packages/cli/configurations/library/zod/rules/ZOD.md", "packages/cli/configurations/library/zustand/rules/ZUSTAND.md", "packages/cli/configurations/infra/docker/rules/DOCKER.md", "packages/cli/configurations/infra/nginx/rules/NGINX.md", "packages/cli/configurations/infra/xcode/rules/XCODE.md", "packages/cli/scripts/build.ts", "packages/cli/src/agent-rules/public.ts", "packages/cli/src/checks/framework/public.ts", "packages/cli/src/checks/general/dependencies/lockfile/fresh.ts", "packages/cli/src/checks/general/dependencies/lockfile/hosts.ts", "packages/cli/src/checks/general/naming/public.ts", "packages/cli/src/checks/general/secrets.ts", "packages/cli/src/checks/language/bash/contract.ts", "packages/cli/src/checks/language/bash/safety.ts", "packages/cli/src/checks/language/contracts.ts", "packages/cli/src/checks/language/markdown.ts", "packages/cli/src/checks/language/swift/contracts.ts", "packages/cli/src/checks/language/swift/public.ts", "packages/cli/src/checks/platform/public.ts", "packages/cli/src/commands/check/command.ts", "packages/cli/src/commands/explain/public.ts", "packages/cli/src/commands/ignore.ts", "packages/cli/src/config/checks/general/naming.ts", "packages/cli/src/config/checks/language/bash.ts", "packages/cli/src/config/checks/language/sql.ts", "packages/cli/src/config/commands/init.ts", "packages/cli/src/config/parsers/git.ts", "packages/cli/src/config/platform/locations.ts", "packages/cli/src/config/platform/runtime.ts", "packages/cli/src/config/policy/settings.ts", "packages/cli/src/config/repository/inventory.ts", "packages/cli/src/configurations/contracts.ts", "packages/cli/src/configurations/errors/public.ts", "packages/cli/src/configurations/public.ts", "packages/cli/src/execution/command/contracts.ts", "packages/cli/src/execution/command/public.ts", "packages/cli/src/execution/copy/public.ts", "packages/cli/src/execution/public.ts", "packages/cli/src/generation/contracts.ts", "packages/cli/src/generation/documents/public.ts", "packages/cli/src/generation/eslint/boundaries.ts", "packages/cli/src/generation/tool-files.ts", "packages/cli/src/lifecycle/install/contracts.ts", "packages/cli/src/lifecycle/ownership/claude-file.ts", "packages/cli/src/lifecycle/public.ts", "packages/cli/src/lifecycle/selection/public.ts", "packages/cli/src/parsers/contracts.ts", "packages/cli/src/parsers/naming/swift.ts", "packages/cli/src/parsers/output/contracts.ts", "packages/cli/src/parsers/output/structured/public.ts", "packages/cli/src/parsers/packages/public.ts", "packages/cli/src/parsers/schema/command.ts", "packages/cli/src/parsers/schema/configurations.ts", "packages/cli/src/parsers/schema/contracts.ts", "packages/cli/src/parsers/schema/public.ts", "packages/cli/src/parsers/schema/stylelint.ts", "packages/cli/src/parsers/source/public.ts", "packages/cli/src/parsers/sql/contracts.ts", "packages/cli/src/parsers/tool/contracts.ts", "packages/cli/src/platform/contracts.ts", "packages/cli/src/platform/git/contracts.ts", "packages/cli/src/platform/memo.ts", "packages/cli/src/platform/public.ts", "packages/cli/src/platform/root/contracts.ts", "packages/cli/src/platform/root/public.ts", "packages/cli/src/platform/root/reads.ts", "packages/cli/src/platform/root/writes.ts", "packages/cli/src/policy/comments.ts", "packages/cli/src/policy/defaults.ts", "packages/cli/src/policy/document/contracts.ts", "packages/cli/src/policy/errors/public.ts", "packages/cli/src/policy/normalize.ts", "packages/cli/src/policy/schema/architecture.ts", "packages/cli/src/policy/schema/public.ts", "packages/cli/src/policy/settings/contracts.ts", "packages/cli/src/policy/settings/public.ts", "packages/cli/src/repository/discovery/public.ts", "packages/cli/src/repository/public.ts", "packages/cli/src/tools/npm/contracts.ts", "packages/cli/src/tools/npm/lockfiles.ts", "packages/cli/src/tools/npm/public.ts", "packages/cli/src/tools/public.ts", "packages/cli/src/tools/python/contracts.ts", "packages/cli/src/types/checks/postgres.ts", "packages/cli/src/types/execution/check.ts", "packages/cli/src/types/lifecycle/selection.ts", "packages/cli/src/types/parsers/toml.ts", "packages/cli/src/types/parsers/tool.ts", "packages/cli/src/types/platform/runtime.ts", "packages/cli/src/types/policy/settings.ts", "packages/cli/src/types/tools/install.ts", "tests/cli/checks/general/security.test.ts", "tests/cli/commands/apply.test.ts", "tests/cli/commands/check/refusals.test.ts", "tests/cli/commands/explain/selection.test.ts", "tests/cli/commands/init/replace.test.ts", "tests/cli/commands/set/reasons.test.ts", "tests/cli/commands/reconciliation.test.ts", "tests/cli/commands/remove.test.ts", "tests/cli/execution/fixers/passes.test.ts", "tests/cli/generation/eslint/functions.test.ts", "tests/cli/generation/eslint/parameter-limits.test.ts", "tests/cli/generation/shared-settings.test.ts", "tests/cli/lifecycle/hooks.test.ts", "tests/cli/lifecycle/ownership/installations.test.ts", "tests/cli/lifecycle/ownership/preservation/configuration.test.ts", "tests/cli/parsers/comments.test.ts", "tests/cli/parsers/output/formats.test.ts", "tests/cli/policy/expiry.test.ts", "tests/cli/repository/revisions/changes.test.ts", "tests/cli/tools/inspect/versions.test.ts", "tests/cli/tools/python/project.test.ts", "tests/config/cli/checks/library/trpc.ts", "tests/config/cli/commands/remove.ts", "tests/config/cli/commands/check/verbosity.ts", "tests/config/cli/configurations/select.ts", "tests/config/cli/lifecycle/ownership/preservation/configuration.ts", "tests/config/cli/planning/selection.ts", "tests/config/samples/ownership.ts", "tests/config/tools/configurations/general/commits/hooks.ts", "tests/config/tools/configurations/general/markdown-docs-prose.ts", "tests/config/tools/configurations/general/structure.ts", "tests/config/tools/configurations/language/bash/bats.ts", "tests/config/tools/configurations/language/bash/loops.ts", "tests/config/tools/configurations/language/css.ts", "tests/config/tools/configurations/language/markdown.ts", "tests/config/tools/configurations/language/python/ruff.ts", "tests/config/tools/generation/site-html.ts", "tests/harness/command.ts", "tests/harness/git.ts", "tests/harness/gspot.ts", "tests/harness/install.ts", "tests/harness/migrations.ts", "tests/harness/preload.ts", "tests/harness/repository.ts", "tests/harness/rule-tester.ts", "tests/tools/configurations/cases.test.ts", "tests/tools/configurations/framework/nestjs.test.ts", "tests/tools/configurations/general/codeql.test.ts", "tests/tools/configurations/language/bash/lifecycle.test.ts", "tests/tools/configurations/language/bash/syntax.test.ts", "tests/tools/configurations/language/javascript/projects.test.ts", "tests/tools/configurations/language/python/checks.test.ts", "tests/tools/configurations/language/swift/docs.test.ts", "tests/tools/execution/python-staged.test.ts", "tests/tools/lifecycle/hooks.test.ts", "tests/tools/manifest-flags-in-help.test.ts", "tests/tools/npm/lockfiles.test.ts", "tests/types/cli/policy/schema.ts", "tests/types/harness/check-case.ts", "tests/types/harness/policy.ts", "tests/types/harness/repository.ts"]
-reason = "The repository rule files and source comments use semicolons to join related contract clauses. Preserve that authored contract wording."
-rule = "Google.Semicolons"
-
-[[ignore]]
-check = "prose/vale"
-paths = ["packages/cli/configurations/database/postgres/rules/POSTGRES.md", "packages/cli/configurations/framework/fastapi/rules/FASTAPI.md", "packages/cli/configurations/framework/nestjs/rules/NESTJS.md", "packages/cli/configurations/framework/nextjs/rules/NEXTJS.md", "packages/cli/configurations/framework/react-native/rules/REACT-NATIVE.md", "packages/cli/configurations/framework/react/rules/REACT.md", "packages/cli/configurations/general/dependencies/rules/DEPENDENCIES.md", "packages/cli/configurations/general/engineering/rules/agent/SUPPRESSIONS.md", "packages/cli/configurations/general/engineering/rules/code/CONFIGURATION.md", "packages/cli/configurations/general/engineering/rules/code/HTTP.md", "packages/cli/configurations/general/engineering/rules/code/LOGGING.md", "packages/cli/configurations/general/naming/rules/NAMING-FILES.md", "packages/cli/configurations/general/naming/rules/NAMING.md", "packages/cli/configurations/general/security/rules/SECURITY.md", "packages/cli/configurations/framework/site/rules/SITE.md", "packages/cli/configurations/language/bash/rules/BASH.md", "packages/cli/configurations/language/bash/rules/LANGUAGE.md", "packages/cli/configurations/language/bash/rules/SAFETY.md", "packages/cli/configurations/language/css/rules/CSS.md", "packages/cli/configurations/language/css/rules/NAMING.md", "packages/cli/configurations/language/css/rules/TAILWIND.md", "packages/cli/configurations/language/javascript/rules/JAVASCRIPT.md", "packages/cli/configurations/language/javascript/rules/PLAYWRIGHT.md", "packages/cli/configurations/language/python/rules/FLOW.md", "packages/cli/configurations/language/python/rules/TYPING.md", "packages/cli/configurations/language/sql/rules/NAMING.md", "packages/cli/configurations/language/swift/rules/SWIFT.md", "packages/cli/configurations/language/swift/rules/UIKIT.md", "packages/cli/configurations/library/translations/rules/I18N.md", "packages/cli/configurations/library/translations/rules/NEXT-INTL.md", "packages/cli/configurations/library/react-hook-form/rules/REACT-HOOK-FORM.md", "packages/cli/configurations/library/tanstack-query/rules/TANSTACK-QUERY.md", "packages/cli/configurations/platform/cloudflare/rules/WORKERS.md", "packages/cli/configurations/platform/supabase/rules/SUPABASE.md", "packages/cli/configurations/infra/docker/rules/DOCKER.md", "packages/cli/configurations/infra/nginx/rules/NGINX.md", "packages/cli/configurations/infra/openapi/rules/OPENAPI.md", "packages/cli/configurations/test/swift-tests/rules/XCTEST.md", "packages/cli/src/checks/database/postgres/public.ts", "packages/cli/src/checks/framework/public.ts", "packages/cli/src/checks/general/naming/contracts.ts", "packages/cli/src/checks/general/site/contracts.ts", "packages/cli/src/checks/general/structure/file-lines.ts", "packages/cli/src/checks/language/bash/safety.ts", "packages/cli/src/checks/language/bash/ssh.ts", "packages/cli/src/checks/language/python/deptry.ts", "packages/cli/src/checks/language/python/function-size.ts", "packages/cli/src/commands/check/command.ts", "packages/cli/src/commands/explain/public.ts", "packages/cli/src/config/checks/language/bash.ts", "packages/cli/src/config/checks/postgres.ts", "packages/cli/src/config/generation/eslint.ts", "packages/cli/src/config/parsers/stylelint.ts", "packages/cli/src/config/platform/assets.ts", "packages/cli/src/configurations/contracts.ts", "packages/cli/src/execution/command/contracts.ts", "packages/cli/src/generation/bunfig.ts", "packages/cli/src/generation/eslint/contracts.ts", "packages/cli/src/generation/eslint/public.ts", "packages/cli/src/generation/tool-files.ts", "packages/cli/src/lifecycle/merge/contracts.ts", "packages/cli/src/lifecycle/merge/public.ts", "packages/cli/src/parsers/css.ts", "packages/cli/src/parsers/naming/bash.ts", "packages/cli/src/parsers/naming/public.ts", "packages/cli/src/parsers/naming/python.ts", "packages/cli/src/parsers/naming/swift.ts", "packages/cli/src/parsers/naming/typescript.ts", "packages/cli/src/parsers/packages/public.ts", "packages/cli/src/parsers/schema/configurations.ts", "packages/cli/src/parsers/schema/public.ts", "packages/cli/src/parsers/schema/site.ts", "packages/cli/src/parsers/source/public.ts", "packages/cli/src/parsers/toml/public.ts", "packages/cli/src/parsers/tool/contracts.ts", "packages/cli/src/parsers/tool/public.ts", "packages/cli/src/platform/contracts.ts", "packages/cli/src/platform/root/contracts.ts", "packages/cli/src/platform/root/public.ts", "packages/cli/src/policy/errors/contracts.ts", "packages/cli/src/repository/discovery/contracts.ts", "packages/cli/src/repository/paths/contracts.ts", "packages/cli/src/repository/paths/public.ts", "packages/cli/src/tools/contracts.ts", "packages/cli/src/types/parsers/css.ts", "packages/cli/src/types/platform/managed-blocks.ts", "packages/cli/src/types/platform/paths.ts", "tests/config/cli/generation/config-consumers.ts", "tests/config/cli/generation/html.ts", "tests/config/cli/policy/file.ts", "tests/config/cli/policy/read/settings.ts", "tests/config/harness/npm.ts", "tests/config/samples/nextjs.ts", "tests/harness/migrations.ts", "tests/harness/process.ts", "tests/packages/launcher.test.ts", "tests/plugin/rules/header-first.test.ts"]
-reason = "The repository documents native identifiers, process operations, application concepts and schema vocabulary. Preserve these technical terms rather than applying the Google product word list."
-rule = "Google.WordListCase"
-
-[[ignore]]
-check = "prose/vale"
-paths = ["packages/cli/configurations/general/engineering/rules/code/TESTING.md", "packages/cli/configurations/language/javascript/rules/PLAYWRIGHT.md"]
-reason = "The authored testing rules use the established auto-mocks and auto-retrying terms for native test behavior."
-rule = "gspot.auto-prefixes"
-
-[[ignore]]
-check = "prose/vale"
-paths = ["packages/cli/configurations/language/swift/rules/SWIFT.md", "packages/cli/src/checks/database/postgres/history.ts", "packages/cli/src/checks/database/postgres/public.ts", "packages/cli/src/checks/language/bash/ssh.ts", "packages/cli/src/checks/tool/ansible.ts", "packages/cli/src/config/checks/language/bash.ts", "packages/cli/src/config/checks/language/sql.ts", "packages/cli/src/planning/contracts.ts", "packages/cli/src/platform/contracts.ts", "packages/cli/src/platform/root/reads.ts", "packages/cli/src/repository/contracts.ts", "packages/cli/src/repository/paths/public.ts", "packages/cli/src/tools/contracts.ts", "packages/cli/src/types/execution/check.ts", "tests/harness/rule-tester.ts", "tests/tools/configurations/infra/ansible.test.ts"]
-reason = "The repository documents lowercase configuration IDs, platform values, check statuses and native identifiers. Preserve their exact spelling and the official Objective-C name."
-rule = "gspot.case-sensitive-terms"
-
-[[ignore]]
-check = "prose/vale"
-paths = ["AGENTS.md"]
-reason = "Engineering Guidelines is the managed agent contract heading. This repository preserves the shipped heading when it regenerates AGENTS.md."
-rule = "gspot.gerund-headings"
-
-[[ignore]]
-check = "prose/vale"
-paths = ["packages/cli/configurations/framework/astro/rules/ASTRO.md", "packages/cli/configurations/framework/fastapi/rules/FASTAPI.md", "packages/cli/configurations/framework/nextjs/rules/NEXTJS.md", "packages/cli/configurations/general/commits/rules/GIT.md", "packages/cli/configurations/general/dependencies/rules/DEPENDENCIES.md", "packages/cli/configurations/general/engineering/rules/agent/PLANNING.md", "packages/cli/configurations/general/engineering/rules/agent/TALKING.md", "packages/cli/configurations/general/engineering/rules/agent/WORKING.md", "packages/cli/configurations/general/engineering/rules/code/ERRORS.md", "packages/cli/configurations/general/engineering/rules/code/LOGGING.md", "packages/cli/configurations/general/engineering/rules/code/TESTING.md", "packages/cli/configurations/general/naming/rules/NAMING-FILES.md", "packages/cli/configurations/general/naming/rules/NAMING.md", "packages/cli/configurations/general/prose/rules/DOCS-FORMAT.md", "packages/cli/configurations/general/prose/rules/WRITING.md", "packages/cli/configurations/language/bash/rules/LANGUAGE.md", "packages/cli/configurations/language/bash/rules/SAFETY.md", "packages/cli/configurations/language/css/rules/TAILWIND.md", "packages/cli/configurations/language/python/rules/PYTHON.md", "packages/cli/configurations/language/swift/rules/SWIFT.md", "packages/cli/configurations/library/translations/rules/I18N.md"]
-reason = "The repository rule files retain their authored topic headings and stable subject names. These headings describe engineering concerns rather than user procedures."
-rule = "gspot.gerund-headings"
-
-[[ignore]]
-check = "prose/vale"
-paths = ["packages/cli/configurations/general/engineering/rules/agent/WORKING.md"]
-reason = "The authored working rule asks the agent to consider specific questions before editing. These questions are part of the repository instruction."
-rule = "gspot.question-marks"
-
-[[ignore]]
-check = "prose/vale"
-paths = ["packages/cli/configurations/framework/react/rules/REACT.md", "packages/cli/configurations/language/swift/rules/SWIFT.md", "packages/cli/configurations/language/typescript/rules/NAMING.md", "packages/cli/src/checks/general/docs.ts", "packages/cli/src/checks/language/sql.ts", "packages/cli/src/checks/platform/public.ts", "packages/cli/src/commands/explain/public.ts", "packages/cli/src/configurations/public.ts", "packages/cli/src/parsers/schema/configurations.ts", "packages/cli/src/policy/document/contracts.ts", "packages/cli/src/tools/public.ts", "tests/harness/process.ts"]
-reason = "The repository documents check IDs, source paths and native terms such as async/await and PL/pgSQL. Their slashes carry technical meaning."
-rule = "gspot.slash-alternatives"
-
-[[ignore]]
-check = "prose/vale"
-paths = ["packages/cli/configurations/database/postgres/rules/POSTGRES.md", "packages/cli/configurations/general/dependencies/rules/DEPENDENCIES.md", "packages/cli/configurations/general/engineering/rules/agent/WORKING.md", "packages/cli/configurations/general/engineering/rules/code/ACCESSIBILITY.md", "packages/cli/configurations/general/engineering/rules/code/LOGGING.md", "packages/cli/configurations/general/prose/rules/DOCS-CONTENT.md", "packages/cli/configurations/language/bash/rules/BASH.md", "packages/cli/configurations/language/bash/rules/LANGUAGE.md", "packages/cli/configurations/language/javascript/rules/PLAYWRIGHT.md", "packages/cli/configurations/language/python/rules/DESIGN.md", "packages/cli/configurations/language/python/rules/FLOW.md", "packages/cli/configurations/language/swift/rules/NAMING.md", "packages/cli/configurations/language/swift/rules/SWIFTUI.md", "packages/cli/configurations/language/swift/rules/UIKIT.md", "packages/cli/configurations/language/typescript/rules/NAMING.md", "packages/cli/configurations/library/translations/rules/I18N.md", "packages/cli/configurations/library/react-hook-form/rules/REACT-HOOK-FORM.md", "packages/cli/configurations/library/tanstack-query/rules/TANSTACK-QUERY.md", "packages/cli/configurations/library/zod/rules/ZOD.md", "packages/cli/configurations/library/zustand/rules/ZUSTAND.md", "packages/cli/configurations/platform/supabase/rules/SUPABASE.md", "packages/cli/configurations/infra/xcode/rules/XCODE.md", "packages/cli/src/lifecycle/merge/public.ts", "packages/cli/src/lifecycle/selection/public.ts", "packages/cli/src/platform/memo.ts", "packages/cli/src/policy/comments.ts", "packages/cli/src/repository/public.ts", "packages/cli/src/types/tools/python.ts", "tests/config/cli/commands/init/questions.ts", "tests/config/tools/configurations/language/python/ruff.ts", "tests/harness/docker.ts"]
-reason = "The repository rule files and source comments use adverbs to state execution and ownership constraints, including silently, lazily and deliberately. Removing them changes those constraints."
-rule = "gspot.unneeded-adverbs"
-
-[[ignore]]
-check = "prose/vale"
-paths = ["packages/cli/src/tools/contracts.ts"]
-reason = "The documented ok value is a native check status and must retain its exact spelling."
-rule = "Harper.OkToOkay"
+rule = "gspot.session-identifiers"
+paths = ["tests/config/prose.ts"]
+reason = "The sample for the session-identifier rule is a URL with a session id."
 
 [[ignore]]
 check = "security/codeql"
-paths = ["packages/cli/src/generation/fragments.ts"]
-reason = "JSON.stringify emits whole literals into a standalone ESLint module, never into an HTML script element."
-rule = "js/bad-code-sanitization"
-
-[[ignore]]
-check = "security/codeql"
-paths = ["tests/cli/commands/agents.test.ts", "tests/cli/checks/framework/nextjs.test.ts", "tests/cli/checks/language/swift/build/isolation.test.ts", "tests/tools/npm/project.test.ts", "tests/harness/preservation.ts"]
-reason = "Each test owns its temporary tree and is the only writer; the stat and the read it compares are the assertion."
 rule = "js/file-system-race"
+paths = ["tests/unit/cli/checks/framework/nextjs.test.ts", "tests/unit/cli/checks/language/swift/build/isolation.test.ts", "tests/unit/cli/tools/npm/project/client.test.ts", "tests/unit/cli/tools/npm/project/install.test.ts", "tests/setup/files.ts"]
+reason = "Each test is the only writer in its temporary folder."
 
 [[ignore]]
 check = "security/codeql"
-paths = ["packages/cli/scripts/grammars.ts"]
-reason = "Every downloaded byte is checked against the pinned SHA-256 digest before the cache file is written."
 rule = "js/http-to-file-access"
+paths = ["scripts/build.ts"]
+reason = "The build checks the SHA-256 hash of each download before it writes the file."
 
 [[ignore]]
-check = "security/codeql"
-paths = ["packages/cli/src/checks/tool/public.ts"]
-reason = "Only the leading self-repository marker is translated; later dollar signs are path characters and must stay."
-rule = "js/incomplete-sanitization"
+check = "site/html-validate"
+rule = "element-permitted-content"
+paths = ["docs/**"]
+reason = "Starlight and Expressive Code write this markup."
+
+[[ignore]]
+check = "site/html-validate"
+rule = "no-implicit-button-type"
+paths = ["docs/**"]
+reason = "Starlight and Expressive Code write this markup."
+
+[[ignore]]
+check = "site/html-validate"
+rule = "text-content"
+paths = ["docs/**"]
+reason = "Starlight and Expressive Code write this markup."
+
+[[ignore]]
+check = "site/html-validate"
+rule = "unique-landmark"
+paths = ["docs/**"]
+reason = "Starlight and Expressive Code write this markup."
 
 [[ignore]]
 check = "spelling/typos"
-paths = ["findings/placement/**"]
-reason = "The Name column quotes test titles and sample values verbatim, cut at a fixed length, so cut and British words stay as written."
-
-[[ignore]]
-check = "spelling/typos"
-paths = ["packages/cli/configurations/general/prose/styles/gspot/no-gerunds-in-titles.tengo.eta", "packages/cli/configurations/general/prose/styles/gspot/slash-alternatives.yml.eta"]
-reason = "The adopted native Vale patterns contain intentional regex and word-stem fragments. Preserve their spelling to retain native matching and corrections."
-
-[[ignore]]
-check = "spelling/typos"
-paths = ["packages/cli/configurations/general/prose/styles/gspot/us-english.yml.eta"]
-reason = "The Vale substitution list names the British spellings it corrects."
-
-[[ignore]]
-check = "spelling/typos"
-paths = ["tests/config/samples/spelling.ts"]
+paths = ["tests/config/spelling.ts"]
 reason = "This literal supplies a deliberate misspelling to the spelling checks and their corrections."
 
 [[ignore]]
 check = "structure/lone-files"
-paths = ["docs/src/pages/schema"]
-reason = "Astro maps this directory to the published /schema/gspot.schema.json endpoint; moving the route changes the public schema URL."
+paths = ["docs/src/components/starlight/SiteTitle.astro", "docs/src/pages/index.astro", "tests/config/samples/settings.ts", "tests/integration/database/postgres.test.ts", "tests/unit/cli/checks/testing/swift-tests.test.ts", "tests/unit/cli/parsers/sql/postgres.test.ts", "tests/unit/cli/parsers/toml/document.test.ts"]
+reason = "The final placement keeps each test beside its source topic and keeps Astro components and routes in their framework folders."
 
 [[ignore]]
-check = "structure/prefix-collisions"
+check = "structure/shared-prefixes"
 paths = ["docs/src/content.config.ts"]
 reason = "Astro fixes the name of the content configuration file beside the content folder."
 
 [[ignore]]
-check = "structure/prefix-collisions"
-paths = ["packages/cli/configurations/language/markdown", "packages/cli/configurations/infra/docker"]
+check = "structure/shared-prefixes"
+paths = ["packages/cli/configurations/language/markdown", "packages/cli/configurations/infrastructure/docker"]
 reason = "A configuration template takes the name of the file it writes, and a tool names its own configuration files."
 
 [[ignore]]
-check = "structure/prefix-collisions"
-paths = ["packages/eslint-plugin/src/rules/**", "tests/plugin/rules/**", "tests/config/plugin/rules/**"]
+check = "structure/shared-prefixes"
+paths = ["packages/cli/src/checks/general/gspot/settings-format.ts", "packages/cli/src/checks/general/structure/file-folder-clashes.ts", "packages/cli/src/checks/language/swift/build-folder.ts", "packages/cli/src/config/generation/tool-file-sources.ts", "packages/cli/src/generation/eslint/fragments/react*.ts", "packages/cli/src/generation/tool-file-builders.ts", "packages/cli/src/generation/tool-files.ts", "packages/cli/src/ownership/log-schema.ts", "tests/config/ignore-patterns.ts", "tests/config/swift-tests.ts", "tests/types/tool-files.ts", "tests/unit/cli/checks/general/structure/file-folder-clashes.test.ts", "tests/unit/cli/checks/language/swift/build-folder.test.ts", "tests/unit/cli/generation/tool-files.test.ts"]
+reason = "The final placement names each distinct topic directly; these related topics share a word without sharing one implementation."
+
+[[ignore]]
+check = "structure/shared-prefixes"
+paths = ["packages/eslint-plugin/src/rules/**", "tests/unit/eslint-plugin/**", "tests/config/eslint/**"]
 reason = "ESLint rule ids are the file names, and the ids share their first word by convention."

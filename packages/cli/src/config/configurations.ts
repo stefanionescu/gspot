@@ -1,43 +1,44 @@
-import type { Manifest, MiseBackend } from '#cli/types/configurations.ts';
-import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
+
+export const SOURCE_GROUPS = ['language', 'framework'] as const;
+export const MANIFEST_FILE = 'manifest.toml';
+export const CONFIGURATIONS_FOLDER = 'configurations';
 
 /** The rule assets within each shipped configuration. */
-export const CONFIGURATION_RULES_FOLDER = 'rules';
+export const RULES_FOLDER = 'rules';
 
-/** The fields two configurations may set differently when both declare one setting. */
-export const SETTING_DEFAULT_FIELDS = new Set(['default', 'default_all']);
+export const NAMING_DEFAULTS_FILE = 'configurations/general/naming/defaults.json';
 
-export const SENTENCE_MIN_CHARS = 12;
+/** Display labels for every validated configuration group, in initialization order. */
+export const GROUPS = [
+    'language',
+    'framework',
+    'platform',
+    'database',
+    'testing',
+    'infrastructure',
+    'library',
+    'general',
+] as const;
 
-export const CONFIG_PREFIX = `${CONFIGURATION_DIRECTORY}/`;
-
-export const NAMING_TERMS_FILE = 'configurations/general/naming/policy.json';
-
-/** Display labels for every validated configuration kind, in initialization order. */
-export const CONFIGURATION_LABELS: Record<Manifest['configuration']['kind'], string> = {
+export const GROUP_LABELS = {
     language: 'Languages',
     framework: 'Frameworks',
     platform: 'Platforms',
     database: 'Databases',
-    test: 'Test runners',
-    infra: 'Infrastructure',
+    testing: 'Testing',
+    infrastructure: 'Infrastructure',
     library: 'Libraries',
-    general: 'Repository',
-};
+    general: 'General',
+} as const;
 
-export const MISE_BACKENDS: MiseBackend[] = [
+export const MISE_BACKENDS = [
     { installer: 'mise', prefix: '' },
     { installer: 'npm', prefix: 'npm:' },
     { installer: 'pypi', prefix: 'pipx:' },
     { installer: 'github', prefix: 'github:' },
     { installer: 'cargo', prefix: 'cargo:' },
-];
-
-/** Tool project trees owned and replaced as complete installations. */
-export const INSTALLATION_KINDS = ['npm', 'python', 'vale'] as const;
-
-/** The npm backend that installs the published CLI. */
-export const GSPOT_MISE_TOOL = 'npm:@gspothq/cli';
+] as const;
 
 /** A manifest-owned file list reads the scope's already resolved repository-relative tests. */
 export const TEST_FILES_PLACEHOLDER = '{setting:test_files}';
@@ -48,7 +49,9 @@ export const TOOL_FILE_PLACEHOLDER = /\{tool_file:(?<name>[a-z0-9-]+)\}/gu;
 
 export const POINTER_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
 
-export const WORKSPACE_PREFIX = '{workspace:';
+export const WORKSPACE_PLACEHOLDER = /^\{workspace:(?<name>[^}]+)\}$/u;
+
+export const WHOLE_SETTING_PLACEHOLDER = /^\{setting:(?<name>[a-z\d_.-]+)\}$/u;
 
 export const EXISTING_PLACEHOLDER = /^\{existing:(?<flag>[^:]+):(?<path>[^}]+)\}$/u;
 
@@ -68,26 +71,41 @@ export const MESSAGE_FILE_PLACEHOLDER = '{message_file}';
 
 export const LEVEL_PLACEHOLDER = /\{level:(?<recommended>[^{}:]+):(?<all>[^{}:]+)\}/gu;
 
+export const TARGET_MODULE_PLACEHOLDER = '{target_module}';
+export const TARGET_JSON_PLACEHOLDER = '{target_json}';
+export const RULE_PLACEHOLDER = '{rule}';
+
 export const TARGET_PLACEHOLDER = /\{target(?:_json|_module)?\}/gu;
 
-/** Authored manifest sections follow their dependency and generation order. Nested values stay inline. */
-export const MANIFEST_TABLE_ORDER = [
-    'configuration',
-    'detect',
-    'files',
-    'set',
-    'set_all',
-    'tool',
-    'tool.replace',
-    'tool_file',
-    'check',
-    'setting',
-    'required_eslint_rules',
-    'eslint_rules_off',
-    'ruff_rules',
-    'naming.overrides',
-    'agent_rules',
-];
+export const MAX_EXIT_CODE = 255;
 
-/** Executable runtime required by npm tool projects and their install commands. */
-export const NPM_REQUIRES = ['node'] as const;
+/** Supported configuration levels, in their selection order. */
+export const LEVELS = ['recommended', 'all'] as const;
+
+export const STAGES = ['commit', 'push', 'manual', 'message'] as const;
+
+/** Numeric native floors allow an omitted minor or patch version. */
+export const VERSION_FLOOR = /^(?:\d+|\d+\.\d+|\d+\.\d+\.\d+)$/u;
+
+export const CHECK_RUNS = ['files', 'scope', 'once', 'history'] as const;
+export const CHECK_NEEDS = ['build', 'docker', 'network'] as const;
+export const CHECK_WORKING_DIRECTORIES = ['root', 'scope'] as const;
+export const TOOL_KINDS = ['program', 'library'] as const;
+
+/** Versions the shared build derives from package manifests. */
+export const TOOL_VERSIONS_FILE = 'dist/tool-versions.json';
+
+export const SEMGREP_FOLDER = 'semgrep/';
+export const SEMGREP_TOOL_FILE = {
+    tool: 'semgrep',
+    rule_keys: ['rules'],
+    per_scope: true,
+    when: { configuration: 'security' },
+} as const;
+export const PYTHON_CONFIGURATION = 'python';
+export const NAME_PATTERN = /^[a-z0-9-]+$/u;
+export const PYPI_CONSTRAINT = /^[a-z0-9._-]+(?:[<>!~=]=|[<>])[a-z0-9.*+!_-]+$/iu;
+export const TOOL_BUILDS = OPERATING_SYSTEMS.flatMap(
+    (system) => [system.name, `${system.name}-x64`, `${system.name}-arm64`] as const,
+);
+export const EXTENSION_PATTERN = /^\.[a-z0-9]+$/u;

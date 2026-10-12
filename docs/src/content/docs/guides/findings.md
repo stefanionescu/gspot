@@ -23,7 +23,7 @@ gspot explain bash/bash-syntax
 ```
 
 For a rule inside a tool, name the tool and the rule, such as
-`gspot explain eslint/no-console`. Namespaced ESLint rule IDs work as printed in the report, for example `gspot explain gspot/no-trivial-files` and `gspot explain @typescript-eslint/no-explicit-any`. The output links the rule documentation and shows available policy commands.
+`gspot explain eslint/no-console`. ESLint plugin rules work as the report prints them, for example `gspot explain gspot/no-trivial-files` and `gspot explain @typescript-eslint/no-explicit-any`. The output links the rule's documentation, prints the `gspot ignore <check> --rule <rule> --reason "..."` command that ignores its findings, and names the `tools.<tool>.rules` setting that changes its options.
 
 `gspot explain <setting>` prints the value of a setting, its default, and where the value comes
 from in each scope. `gspot explain ./<path>` lists the checks that read a file and the ignores
@@ -43,18 +43,15 @@ To check some files or folders, name them before the flags, or after `--`:
 gspot check src/app.ts docs
 ```
 
-Paths are relative to the current folder, or to the folder you pass with `-C`. A check that
-reads the whole project still reports findings across the project, even when you name one
-file.
+Write paths relative to the current folder. A check that reads the whole project still reports findings across the project, even when you name one file.
 
-To check files changed after the base of a branch and skip a check for this run:
+To check files changed after the base of a branch:
 
 ```shell
-gspot check --changed --base origin/main
-gspot check --skip security/semgrep
+gspot check --base origin/main
 ```
 
-`--changed` is boolean. `--base` names the comparison reference. `--staged` selects staged files only.
+`--changed` checks the files changed after your upstream branch, or the default branch without an upstream. `--base <branch>` picks another branch. `--staged` checks only staged files.
 
 ## Fix findings automatically
 
@@ -62,24 +59,20 @@ gspot check --skip security/semgrep
 gspot check --fix
 ```
 
-`--fix --dry-run` previews fixes in a copy without writing source files. `--dry-run` requires `--fix`.
+`--fix --dry-run` previews fixes in a copy without writing source files. `--dry-run` turns on `--fix`.
 
-`--fix` runs every fixer that can correct its own findings, such as formatters, import sorters,
-and codemods. Then it runs the checks again. The changes stay in your working tree, unstaged,
-so review them before you commit. If a fixer is missing or fails, the command fails, and the
+`--fix` runs every fixer that can fix its own findings. Formatters and import sorters supply these fixes. Then it runs the checks again. The changes stay in your working tree, unstaged,
+so review them before you commit. If a fixer cannot run or fails, the command fails, and the
 message names the fixer.
 
-To add a fixer for your own command, see [command checks](/guides/command-checks/#add-a-correction-command).
+To add a fixer for your own command, see [command checks](/guides/command-checks/#add-a-fix-command).
 
 ## When a rule does not fit
 
-- To turn a rule off for some paths, [record an ignore](/guides/policy/#ignore-one-finding)
+- To turn a rule off for some paths, [record an ignore](/guides/exclude/#ignore-a-finding)
   with a reason.
-- To change a limit, such as the longest function, [change the setting](/guides/policy/#change-a-limit).
+- To change a limit, such as the longest function, [change the setting](/guides/gspot-toml/#change-a-limit).
 
 ## The report
 
-At the end of a run, gspot prints the failed, missing, errored, and skipped checks, then the
-counts and the time. A skipped check did not run, so it does not count as passed. When a check
-does not run to the end, the report says `incomplete` and the run exits 2. Scripts and CI can
-read the same report as one JSON object from `gspot check --json`.
+The report prints one line per check with its status: `passed`, `failed`, `missing`, `error`, or `skipped`. The `missing` status indicates a tool that needs installation. Then the report prints the totals. A skipped check did not run, so it did not pass. If a check has status `missing` or `error`, or a fixer failed, the summary line ends in the word `incomplete` in parentheses and gspot exits 2. Scripts and CI can read the same report as one JSON object from `gspot check --json`.

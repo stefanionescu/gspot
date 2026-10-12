@@ -1,30 +1,8 @@
-eslint_presets = { recommended = { package = "eslint-plugin-vue", source = "configs.flat/recommended" }, accessibility = { package = "eslint-plugin-vuejs-accessibility", source = "configs.flat/recommended" } }
-eslint_all_rules = [
-    "vue/attribute-hyphenation",
-    "vue/attributes-order",
-    "vue/block-lang",
-    "vue/block-order",
-    "vue/component-api-style",
-    "vue/component-definition-name-casing",
-    "vue/define-emits-declaration",
-    "vue/define-props-declaration",
-    "vue/multi-word-component-names",
-    "vue/one-component-per-file",
-    "vue/order-in-components",
-    "vue/prop-name-casing",
-    "vue/require-default-prop",
-    "vue/this-in-template",
-    "vue/v-bind-style",
-    "vue/v-on-event-hyphenation",
-    "vue/v-on-style",
-    "vue/v-slot-style",
-]
-
 [configuration]
 title = "Vue"
 requires = ["javascript"]
 suggests = ["typescript", "css"]
-description = "ESLint checks Vue templates, scripts, and accessibility. Attribute spelling, component names, declarations, ordering, and default props wait for level all. HTML injection checks run at both levels, and Testing Library rules follow the selected level."
+description = "ESLint checks Vue templates, scripts, and accessibility. Attribute spelling, component names, declarations, ordering, and default props wait for level all. HTML injection checks run at both levels."
 
 [detect]
 dependencies = ["vue"]
@@ -33,16 +11,15 @@ extensions = [".vue"]
 [files]
 extensions = [".vue"]
 
-[set]
-"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
-
 [[tool]]
 name = "eslint-plugin-vue"
 rule_prefix = "vue"
-eslint = { extensions = [".vue"] }
 kind = "library"
 version = "10.11.0"
 npm = "eslint-plugin-vue"
+
+[tool.eslint]
+extensions = [".vue"]
 
 [[tool]]
 name = "vue-eslint-parser"
@@ -62,30 +39,45 @@ name = "vue-tsc"
 version = "3.3.11"
 npm = "vue-tsc"
 
-[[tool_file]]
-source = "stylelint.fragment.json.eta"
-target = ".gspot/config/stylelint.json"
-tool = "stylelint"
-required_tools = ["postcss-html"]
-fragment = true
-per_scope = true
-
 [[check]]
 name = "vue-tsc"
-title = "Check Vue types"
 example = "A component script containing `const count: number = 'one';` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
 level = "recommended"
 stage = "push"
 runs = "scope"
 cwd = "scope"
 tool = "vue-tsc"
-replaces = "typescript/tsc"
-when = { configuration = "typescript" }
-files = { extensions = [".vue"] }
-output = { format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$" }
+instead_of = "typescript/tsc"
 summary = "Type-checks every Vue component and TypeScript file of the scope with the strict compiler options."
 why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Vue checker reads it."
 help = "Read the first error vue-tsc prints and fix that file; later errors are often the same mistake."
 
-[required_eslint_rules]
-vue = ["vue/no-v-html", "vue/require-v-for-key", "vue/no-mutating-props", "vue/no-use-v-if-with-v-for"]
+[check.when]
+configuration = "typescript"
+
+[check.files]
+extensions = [".vue"]
+
+[check.output]
+format = "regex"
+pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"
+
+[eslint]
+all_level_rules = ["vue/no-useless-v-bind", "vue/prefer-true-attribute-shorthand", "vue/attribute-hyphenation", "vue/attributes-order", "vue/block-order", "vue/component-api-style", "vue/component-definition-name-casing", "vue/define-emits-declaration", "vue/define-props-declaration", "vue/multi-word-component-names", "vue/one-component-per-file", "vue/order-in-components", "vue/prop-name-casing", "vue/require-default-prop", "vue/this-in-template", "vue/v-bind-style", "vue/v-on-event-hyphenation", "vue/v-on-style", "vue/v-slot-style"]
+
+[eslint.presets.recommended]
+package = "eslint-plugin-vue"
+source = "configs.flat/recommended"
+
+[eslint.presets.accessibility]
+package = "eslint-plugin-vuejs-accessibility"
+source = "configs.flat/recommended"
+
+[defaults]
+"tools.eslint.import_extension" = "extensionless"
+
+[[tool_file]]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+fragment = true
+required_tools = ["eslint-plugin-vue", "vue-eslint-parser", "eslint-plugin-vuejs-accessibility"]

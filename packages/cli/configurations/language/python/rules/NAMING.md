@@ -1,16 +1,10 @@
----
-title: Python Naming
----
-
 # Python Naming
 
-Python naming follows PEP 8, with the rules below.
+Python naming follows Python Enhancement Proposal (PEP) 8, with the rules below.
 
 ## Command inputs and external names
 
 <!-- level: all -->
-
-Rules:
 
 - CLI flags use lowercase kebab case, such as `--account-name` and
   `--output-dir`.
@@ -22,8 +16,6 @@ Rules:
 
 <!-- level: all -->
 
-Rules:
-
 - Do not create package-level re-export layers only to preserve old names.
 - Keep `__all__` names accurate and ordered according to local lint rules.
 
@@ -33,8 +25,6 @@ hides the contract and provides no collision information.
 ## Python types and dataclasses
 
 <!-- level: all -->
-
-Rules:
 
 - Dataclass names describe the domain value they represent.
 - Field names describe the value inside the owning type without repeating the
@@ -55,11 +45,9 @@ Rules:
 
 <!-- level: all -->
 
-Rules:
-
 - Keep raw provider or CLI names at the boundary.
 - Translate external names into domain names before passing values inward when
-  the external name is not the domain concept.
+  the external name differs from the domain concept.
 - Keep path construction with the code that owns the resource instead of repeating it in
   unrelated operations.
 - Name functions that cross boundaries for the operation they perform.

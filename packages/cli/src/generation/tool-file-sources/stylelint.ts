@@ -1,0 +1,140 @@
+import { z } from 'zod';
+import { readAsset } from '#cli/system/assets.ts';
+import type { Session } from '#cli/types/planning.ts';
+import type { SchemaShape } from '#cli/types/objects.ts';
+import type { Level } from '#cli/types/configurations.ts';
+import { projectDependencies } from '#cli/repository/scopes.ts';
+import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import type { EmitInputs, ToolFileSource } from '#cli/types/generation/files.ts';
+import type { RuleNamesFile, StylelintComponent } from '#cli/types/generation/eslint.ts';
+
+import {
+    TAILWIND_AT_RULES,
+    STYLELINT_BASE_RULES,
+    VUE_STYLELINT_OVERRIDE,
+    STYLELINT_ALL_LEVEL_RULES,
+    STYLELINT_RULE_NAMES_FILE,
+    SVELTE_STYLELINT_OVERRIDE,
+} from '#cli/config/generation/tool-file-sources.ts';
+
+/**
+ * Component parsers need file-specific pseudo-class and function rules.
+ *
+ * @param configurations the selected configuration names.
+ * @param tailwindFunctions the Tailwind functions accepted in component styles.
+ * @param chosen the authored rule options.
+ * @param off the disabled lint rule names.
+ *
+ * @returns the component parser overrides.
+ */
+function componentOverrides(
+    configurations: string[],
+    tailwindFunctions: string[],
+    chosen: Record<string, unknown>,
+    off: string[],
+) {
+    return stylelintComponents(configurations).map((override) => {
+        const { files, ignorePseudoClasses } = override;
+        const functions =
+            override === VUE_STYLELINT_OVERRIDE ? [...VUE_STYLELINT_OVERRIDE.functions, ...tailwindFunctions] : [];
+        const rules: Record<string, unknown> = {
+            'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses }],
+            ...(functions.length === 0
+                ? {}
+                : {
+                      'function-no-unknown': [true, { ignoreFunctions: functions }],
+                      'value-keyword-case': ['lower', { ignoreFunctions: VUE_STYLELINT_OVERRIDE.functions }],
+                      'declaration-property-value-no-unknown': [
+                          true,
+                          { ignoreProperties: { '/.*/': functions.map((name) => String.raw`/\b${name}\(/`) } },
+                      ],
+                  }),
+        };
+        return {
+            files,
+            customSyntax: override.customSyntax,
+            rules: Object.fromEntries(
+                Object.entries(rules).filter(([rule]) => !off.includes(rule) && chosen[rule] === undefined),
+            ),
+        };
+    });
+}
+
+export const ruleNamesFileSchema = z.strictObject({
+    package: z.string().min(1),
+    version: z.string().min(1),
+    source: z.string().min(1),
+    rules: z.array(z.string().min(1)),
+} satisfies SchemaShape<RuleNamesFile>) satisfies z.ZodType<RuleNamesFile>;
+
+/**
+ * Write the stylelint configuration from selected settings.
+ *
+ * @param root0 the values for this generated file.
+ * @param root0.selection the selected scope and its settings.
+ * @param root0.packageManifests the parsed package dependency files.
+ * @param level the selected check level.
+ *
+ * @returns the generated configuration text.
+ */
+export function stylelintToolFile(
+    { selection, packageManifests }: Pick<EmitInputs, 'selection'> & Pick<Session, 'packageManifests'>,
+    level: Level,
+): ToolFileSource {
+    const { rulesOff, configurations } = selection.view;
+    const options = selection.view.options('tools.stylelint');
+    const isAll = level === 'all';
+    const scopeDependencies = Object.keys(projectDependencies(packageManifests, selection.scope.path));
+    const stylelintRuleNames = ruleNamesFileSchema.parse(JSON.parse(readAsset(STYLELINT_RULE_NAMES_FILE))).rules;
+
+    const off = rulesOff('css/stylelint');
+    const activeRules = new Set(
+        [...stylelintRuleNames, 'function-no-unknown'].filter(
+            (rule) => isAll || !new Set<string>(STYLELINT_ALL_LEVEL_RULES).has(rule),
+        ),
+    );
+    const chosen = Object.fromEntries(Object.entries(options.rules).filter(([rule]) => activeRules.has(rule)));
+    const tailwind = scopeDependencies.includes('tailwindcss');
+    const tailwindAtRules = tailwind ? TAILWIND_AT_RULES : [];
+    const tailwindFunctions = tailwind ? ['theme'] : [];
+    const overrides = componentOverrides(configurations, tailwindFunctions, chosen, off);
+    const syntaxRules: Record<string, unknown> = {
+        'at-rule-no-unknown': true,
+        'function-no-unknown': true,
+        'declaration-property-value-no-unknown': true,
+    };
+    if (tailwind) {
+        syntaxRules['at-rule-no-unknown'] = [true, { ignoreAtRules: tailwindAtRules }];
+        syntaxRules['function-no-unknown'] = [true, { ignoreFunctions: tailwindFunctions }];
+        syntaxRules['declaration-property-value-no-unknown'] = [
+            true,
+            { ignoreProperties: { '/.*/': [String.raw`/\btheme\(/`] } },
+        ];
+    }
+    const document = {
+        extends: 'stylelint-config-standard',
+        rules: Object.assign(
+            { ...STYLELINT_BASE_RULES, ...syntaxRules },
+            Object.fromEntries((isAll ? [] : STYLELINT_ALL_LEVEL_RULES).map((rule) => [rule, null])),
+            chosen,
+            Object.fromEntries(off.map((rule) => [rule, null])),
+        ),
+        ...(overrides.length === 0 ? {} : { overrides }),
+    };
+
+    return { content: `${JSON.stringify(document, null, JSON_INDENT)}\n`, document: document };
+}
+
+/**
+ * The component dialects Stylelint reads and the parser each requires.
+ *
+ * @param configurations the selected configuration names.
+ *
+ * @returns the selected component dialects and their parser declarations.
+ */
+export function stylelintComponents(configurations: string[]): StylelintComponent[] {
+    return [
+        ...(configurations.includes('vue') ? [VUE_STYLELINT_OVERRIDE] : []),
+        ...(configurations.includes('svelte') ? [SVELTE_STYLELINT_OVERRIDE] : []),
+    ];
+}

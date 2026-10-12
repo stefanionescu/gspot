@@ -1,0 +1,32 @@
+import type { OwnedFile } from '#cli/types/ownership.ts';
+import type { Generated } from '#cli/types/generation/files.ts';
+import type { FileCopy } from '#cli/types/system/safe-folder.ts';
+
+export type WriteRequest = {
+    generated: Generated;
+    expectedPaths: ReadonlySet<string>;
+    report: ApplyReport;
+    retained: { prose: boolean; packages: boolean; python: boolean };
+    reviewedOriginals?: ReadonlyMap<string, FileCopy | undefined> | undefined;
+    conflictedOutputs?: ReadonlyMap<string, FileCopy>;
+};
+
+export type ApplyReport = {
+    written: string[];
+    unchanged: string[];
+    removed: string[];
+    /** Authored files gspot changed in place: a managed block or tool settings. */
+    updated: string[];
+    notes: string[];
+};
+
+export type ManagedKeys = NonNullable<OwnedFile['keys']>;
+
+/** What one operation proposes for one file: the file now, its record, the outcome, and what to write. */
+
+export type StaleFile = {
+    path: string;
+    kind: 'changed' | 'missing' | 'stray' | 'conflict';
+    diff?: string;
+    rules?: { path: string; added: string[]; removed: string[]; changed: string[] }[];
+};

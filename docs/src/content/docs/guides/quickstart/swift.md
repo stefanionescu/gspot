@@ -1,11 +1,11 @@
 ---
 title: "Quickstart: Swift"
-description: Initialize a Swift project and correct a source finding.
+description: Set up a Swift project and fix a source finding.
 ---
 
-Read [Requirements](/guides/requirements/) and [Install](/guides/install/) first. This example runs on macOS.
+Read [Install](/guides/install/) first. This example runs on macOS.
 
-Replace `<version>` with the exact version from the [npm package page](https://www.npmjs.com/package/@gspothq/cli).
+Replace `<version>` with the version you install, such as `0.1.0`.
 
 ## Create the project
 
@@ -32,7 +32,7 @@ import Testing
 }
 ```
 
-Commit the project before initialization:
+Commit first. See [Install](/guides/install/):
 
 ```shell
 git add -A
@@ -41,23 +41,23 @@ git commit -m "feat: Create the project"
 
 ## Set up gspot
 
-From a clean working tree, initialize and choose mise as the runner:
+Pin gspot in the repository:
 
 ```shell
-mise exec npm:@gspothq/cli@<version> -- gspot init --configurations swift
+mise use node@24 'npm:@gspothq/cli@<version>'
+git add mise.toml
+git commit -m "build: Add gspot"
+mise exec -- gspot init --yes --configurations swift
 ```
 
-Read the plan and accept it. Initialization prepares lockfiles and installs applicable tools. Trust the generated mise file, then prepare and diagnose the setup:
+`init` writes the files and installs nothing. Install the tools and check the setup:
 
 ```shell
-mise trust .mise/conf.d/gspot-tools.toml
-mise install
 mise exec -- gspot install
-mise exec -- gspot doctor
 mise exec -- gspot check
 ```
 
-Resolve findings in the initial project before committing. If the repository also has npm or Python dependency manifests, those select the general `licenses` configuration automatically. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly. The check makes no license comparison until you set an allowed license or exception.
+Fix the findings before you commit.
 
 Format the scaffold's package manifest and rerun the checks:
 
@@ -93,9 +93,9 @@ The check exits nonzero and reports:
 Sources/orders-swift/orders_swift.swift:2:11  force_cast  Force casts should be avoided
 ```
 
-Stage the changed file and attempt a commit to see the pre-commit hook reject it. The report names the file and explains the correction.
+Stage the file and run `git commit`. The pre-commit hook refuses the commit and prints the same finding.
 
-## Correct the source
+## Fix the source
 
 Restore the valid source from the setup commit:
 

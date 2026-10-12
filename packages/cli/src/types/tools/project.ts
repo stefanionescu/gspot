@@ -1,35 +1,93 @@
-import type { ToolOwner } from '#cli/types/tools/install.ts';
-import type { InstallationKind } from '#cli/types/configurations.ts';
+/** The repository and generated Yarn settings used during package lockfile resolution. */
 
-/** Native installation phases, in execution order. */
-export type ToolProjectPlan = { installer: string[][]; lockfile: string[][]; environment: string[][] };
+/** The repository and declared wrappers verified before installing the package project. */
 
-/** Both immutable-input checks, called at the native installer's required verification boundaries. */
-export type ToolProjectGuards = { scratch(message: string): void; source(message: string): void };
+import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
+import type { ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
 
-/** One validated project and its native resolution and installation behavior. */
-export type ToolProject<Parsed, Preparation, Installation> = {
-    manifestPath: string;
-    kind: InstallationKind;
-    additionalPaths: readonly string[];
-    lockfilePrefix: string;
-    installPrefix: string;
-    parse(manifest: string): Parsed;
-    lockfilePath(project: Parsed): string;
-    matches(project: Parsed, lockfile: string | undefined): boolean;
-    current(
-        project: Parsed,
-        recorded: string | undefined,
-        manifest: string,
-        owner: Pick<ToolOwner, 'read'>,
-        preparation: Preparation,
-    ): string | undefined;
-    commands(project: Parsed, runner: string | undefined): ToolProjectPlan;
-    createLockfile(
-        work: string,
-        preparation: Preparation,
-        recorded: string | undefined,
-        project: Parsed,
-    ): Promise<string>;
-    install(work: string, installation: Installation, guards: ToolProjectGuards, project: Parsed): Promise<string>;
+/** One package-manager operation with its repository routing and process limits. */
+export type NpmClientExecution = {
+    root: string;
+    work: string;
+    client: NpmClient;
+    argv: string[];
+    failure: string;
+    timeoutSeconds: number;
+    cancelSignal: AbortSignal | undefined;
+    steps: (readonly string[])[];
+};
+
+/** One uv operation with its private index configuration and diagnostic credentials. */
+export type UvExecution = {
+    work: string;
+    args: readonly string[];
+    executable: string;
+    credentials: string[];
+    cancelSignal: AbortSignal | undefined;
+    timeoutSeconds: number;
+    steps: (readonly string[])[];
+    configFile?: string;
+};
+
+/** The isolated execution and credential-free lockfile output. */
+export type NpmClientRun = {
+    env: Record<string, string>;
+    lockfile: string;
+};
+
+/** Native package operations for a declared manager major. */
+export type NpmClientCommands = { lockfile: string[]; install: string[] };
+
+/** Repository identity and the uv executable used during lockfile preparation. */
+export type PythonPreparation = {
+    root: string;
+    cancelSignal?: AbortSignal | undefined;
+    uvPath: string;
+    timeoutSeconds: number;
+};
+/** The validated uv lockfile of the Python tool project. */
+export type PythonToolLockfile = {
+    version: 1;
+    'requires-python': string;
+    manifest: { constraints: PythonRequirement[] };
+    package: {
+        name: string;
+        version: string;
+        source: Record<string, unknown> & { virtual?: string | undefined };
+        metadata: { 'requires-dist': PythonRequirement[] };
+    }[];
+};
+
+/** A dependency requirement recorded by uv for constraints and root metadata. */
+export type PythonRequirement = { name: string; specifier: string };
+
+/** Authored uv configuration sources, with uv.toml taking precedence over pyproject.toml. */
+export type PythonSettingsSources = { uv: string | undefined; project: string | undefined };
+
+/** Repository index settings and credentials that lockfiles must omit. */
+export type PythonIndexSettings = { settings: Record<string, unknown>; credentials: string[] };
+
+/** Validated npm tool project with the manager and lockfile it declares. */
+export type NpmToolProject = {
+    npmClient: NpmClient;
+    dependencies: Record<string, string>;
+    lockfile: ToolProjectLockfileName;
+    lockfilePath: string;
+};
+
+/** The pyproject.toml generated for gspot Python tools. */
+export type PythonToolProject = {
+    project: { name: string; version: string; 'requires-python': string; dependencies: string[] };
+    tool: { uv: { package: false; 'constraint-dependencies'?: string[] } };
+};
+
+export type StaleLockfile = { path: string; kind?: 'missing' | 'changed' };
+
+/** One package entry in a Bun lockfile. */
+export type BunPackage = [identity: string, address: string, metadata: Record<string, unknown>, integrity: string];
+
+/** The generated npm project file. Read these before package manager and lockfile parsing. */
+export type NpmProjectFile = {
+    private: true;
+    devDependencies: Record<string, string> & { '@next/eslint-plugin-next'?: string | undefined };
 };

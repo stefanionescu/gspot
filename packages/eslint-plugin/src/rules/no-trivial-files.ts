@@ -1,11 +1,21 @@
-import { lintedPath, isIndexFile } from '#plugin/public.ts';
-import { TRIVIAL_STATEMENTS } from '#plugin/config/syntax.ts';
-import { createRule, optionsSchema } from '#plugin/create-rule.ts';
-import type { ImplementedFunction } from '#plugin/types/syntax.ts';
+import { posix } from 'node:path';
+import { normalizePath } from '../paths.ts';
+import { INDEX_BASENAMES } from '../config/paths.ts';
+import type { TrivialFilesOptions } from '../types/rules.ts';
+import { createRule, optionsSchema } from '../create-rule.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { unwrap, totalStatements, hasConstructorState } from '#plugin/syntax.ts';
-import type { ContentCheck, TrivialFilesOptions } from '#plugin/types/no/trivial/files.ts';
-import { FORWARDING_NODES, STRUCTURED_EXPRESSIONS } from '#plugin/config/no/trivial/files.ts';
+import type { ContentCheck, ImplementedFunction } from '../types/syntax.ts';
+import { unwrap, totalStatements, ownsCalculation, hasConstructorState } from '../syntax.ts';
+
+import {
+    SHEBANG,
+    FUNCTIONS,
+    FORWARDING_NODES,
+    FUNCTION_SELECTOR,
+    TRIVIAL_STATEMENTS,
+    MODULE_CALL_SELECTOR,
+    STRUCTURED_EXPRESSIONS,
+} from '../config/syntax.ts';
 
 function ownsTypeShape(annotation: TSESTree.TypeNode): boolean {
     if (annotation.type !== AST_NODE_TYPES.TSTypeReference) return true;
@@ -14,8 +24,8 @@ function ownsTypeShape(annotation: TSESTree.TypeNode): boolean {
     return typeArguments.params.some((parameter) => parameter.type === AST_NODE_TYPES.TSTypeQuery);
 }
 
-// Declarations own their schemas or the implementations they contain.
-function declarationContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {
+// Declarations own their schemas, implementations, or wrapped expressions.
+function implementationContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {
     switch (node.type) {
         case AST_NODE_TYPES.ExportNamedDeclaration: {
             return inspect(node.declaration);
@@ -34,7 +44,7 @@ function declarationContent(node: TSESTree.Node, inspect: ContentCheck): boolean
             return ownsTypeShape(node.typeAnnotation);
         }
         default: {
-            return undefined;
+            return expressionContent(node, inspect);
         }
     }
 }
@@ -110,10 +120,9 @@ function ownsStructuredValue(expression: TSESTree.Node | null): boolean {
 export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
     name: 'no-trivial-files',
     meta: {
-        defaultOptions: [{ maxStatements: TRIVIAL_STATEMENTS, allowIndex: false }],
+        defaultOptions: [{ trivialStatements: TRIVIAL_STATEMENTS, allowIndex: false }],
         type: 'suggestion',
         docs: {
-            title: 'Remove forwarding files',
             example:
                 'A file containing only `export { value } from "./owner";` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. Set `allowIndex: true` to permit an index barrel.',
             level: 'all',
@@ -124,13 +133,13 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
         },
         schema: [
             optionsSchema({
-                maxStatements: {
-                    description: 'Statement limit used when identifying trivial functions in a file.',
+                trivialStatements: {
+                    description: 'Functions with this many statements or fewer are reported.',
                     type: 'integer',
                     minimum: 1,
                 },
                 allowIndex: {
-                    description: 'Allow an index file when it serves the configured library export contract.',
+                    description: 'Allow a file named index that only re-exports.',
                     type: 'boolean',
                 },
             }),
@@ -141,37 +150,59 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
         },
     },
     create(context, [options]) {
-        if (context.sourceCode.text.startsWith('#!')) return {};
-        const file = lintedPath(context);
-        if (file !== undefined && options.allowIndex && isIndexFile(file.absolute)) return {};
-        const max = options.maxStatements;
+        if (context.sourceCode.text.startsWith(SHEBANG)) return {};
+        if (options.allowIndex && INDEX_BASENAMES.has(posix.basename(normalizePath(context.physicalFilename))))
+            return {};
+        const max = options.trivialStatements;
         let hasImplementation = false;
         const substantial: ContentCheck = (expression) => {
             const node = unwrap(expression);
             if (node === null) return false;
+            if (ownsCalculation(node, context.sourceCode.visitorKeys)) return true;
             if (FORWARDING_NODES.has(node.type)) return false;
-            const content = declarationContent(node, substantial) ?? expressionContent(node, substantial);
+            const content = implementationContent(node, substantial);
             if (content !== undefined) return content;
             if (node.type !== AST_NODE_TYPES.CallExpression && node.type !== AST_NODE_TYPES.NewExpression) return true;
             return callContent(node, substantial);
         };
         return {
-            ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression)'(node: ImplementedFunction) {
+            [MODULE_CALL_SELECTOR](node: TSESTree.CallExpression) {
+                if (node.arguments.some((argument) => FUNCTIONS.has(argument.type))) {
+                    hasImplementation = true;
+                    return;
+                }
+                const program = context.sourceCode.parserServices?.program;
+                const mapping = context.sourceCode.parserServices?.esTreeNodeToTSNodeMap;
+                if (program === undefined || program === null || mapping === undefined) return;
+                const checker = program.getTypeChecker();
+                hasImplementation ||= node.arguments.some((argument) => {
+                    if (argument.type === AST_NODE_TYPES.SpreadElement) return false;
+                    const type = checker.getTypeAtLocation(mapping.get(argument));
+                    return checker.isArrayType(type) || checker.isTupleType(type);
+                });
+            },
+            [FUNCTION_SELECTOR](node: ImplementedFunction) {
                 if (
                     node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate ||
                     hasConstructorState(node) ||
+                    ownsCalculation(node.body, context.sourceCode.visitorKeys) ||
                     totalStatements(node, context.sourceCode.visitorKeys) > max ||
                     (node.body.type !== AST_NODE_TYPES.BlockStatement && ownsStructuredValue(node.body))
                 )
                     hasImplementation = true;
             },
             ReturnStatement(node) {
-                if (node.argument !== null && ownsStructuredValue(node.argument)) hasImplementation = true;
+                if (
+                    node.argument !== null &&
+                    (ownsStructuredValue(node.argument) ||
+                        ownsCalculation(node.argument, context.sourceCode.visitorKeys))
+                )
+                    hasImplementation = true;
             },
             'Program:exit'(node) {
                 if (
                     !hasImplementation &&
-                    node.body.length > 0 &&
+                    node.body.some((statement) => statement.type !== AST_NODE_TYPES.EmptyStatement) &&
                     !node.body.some((statement) => substantial(statement))
                 )
                     context.report({ node, messageId: 'trivial' });

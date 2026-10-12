@@ -1,5 +1,8 @@
-products = ["Bun", "Node", "npm", "pnpm", "mise", "Homebrew", "SARIF", "CI", "macOS", "Linux", "Windows", "CSRF", "ASD"]
+allowed_words = ["Bun", "Node", "npm", "pnpm", "mise", "CI", "macOS", "Linux", "Windows", "CSRF", "ASD"]
 [configuration]
 title = "Engineering guidance"
 always_selected = true
-description = "Shared instructions for coding agents, engineering work, and documentation. The agent_rules setting controls their installation."
+description = "Rules on how to work and how to write code. The `[rules]` setting turns them on or off."
+
+[rules]
+"ACCESSIBILITY.md" = { filenames = ["*.html", "*.tsx", "*.jsx", "*.vue", "*.svelte", "*.astro", "*.swift"] }

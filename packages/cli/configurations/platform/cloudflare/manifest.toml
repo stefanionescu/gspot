@@ -1,10 +1,10 @@
-products = ["Cloudflare"]
+allowed_words = ["Cloudflare"]
 generated = ["worker-configuration.d.ts"]
 
 [configuration]
 title = "Cloudflare"
 requires = ["javascript"]
-suggests = ["security"]
+suggests = []
 description = "Cloudflare Pages and Workers: a wrangler configuration that parses and pins its date, headers and redirects files Cloudflare can read, fresh binding types, and the Semgrep rules for workers."
 
 [detect]
@@ -18,19 +18,30 @@ filenames = ["wrangler.toml", "wrangler.json", "wrangler.jsonc", "_headers", "_r
 
 [[tool]]
 name = "wrangler"
+install_hint = "Run: npm install --save-dev wrangler"
 system = true
 version_command = ["--version"]
 min_version = "3.78.3"
 npm = "wrangler"
 
 [[tool]]
-name = "ajv"
+name = "v8r"
+
+[[tool_file]]
+source = "semgrep/cloudflare.yml"
+target = ".gspot/config/semgrep/cloudflare.yml"
+tool = "semgrep"
+rule_keys = ["rules"]
+per_scope = true
+when = { configuration = "security" }
+level = "all"
 
 [[check]]
 name = "wrangler"
-tool = ["wrangler", "ajv"]
+tool = ["wrangler", "v8r"]
+command = ["v8r", "--schema", "{wrangler_schema}", "--ignore-errors", "--output-format", "text", "{files}"]
+output = { format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$" }
 files = { filenames = ["wrangler.toml", "wrangler.json", "wrangler.jsonc"] }
-title = "Validate Wrangler configuration"
 example = "A Wrangler configuration without `compatibility_date` reports the missing date. Add a reviewed date in `YYYY-MM-DD` form, such as `2025-01-31`, and test the Worker against that runtime behavior."
 level = "recommended"
 stage = "commit"
@@ -41,7 +52,6 @@ help = "Add the name and a compatibility_date in the form 2025-01-31."
 
 [[check]]
 name = "headers"
-title = "Parse the headers file"
 example = "An indented `X-Frame-Options: DENY` line before any path in `_headers` reports that the header sits under no path. Put the intended path, such as `/*`, on the preceding unindented line."
 level = "recommended"
 stage = "commit"
@@ -52,7 +62,6 @@ help = "Write each block as a path, then indented lines of a name, a colon, and 
 
 [[check]]
 name = "redirects"
-title = "Parse the redirects file"
 example = "The `_redirects` line `/old /new 999` reports an unsupported redirect status. For an intended permanent redirect, change it to `/old /new 301`."
 level = "recommended"
 stage = "commit"
@@ -65,7 +74,6 @@ help = "Write the rule as source, destination, status."
 name = "stale-types"
 command = ["wrangler", "types", "{file}", "--env-interface", "{setting:cloudflare.types_interface}"]
 generated_paths = [{ pattern = "**/{setting:cloudflare.types_file}" }]
-title = "Keep Worker environment types current"
 example = "A generated Worker environment type file that differs from `wrangler types` output reports drift. Regenerate it using the configured Wrangler project, inspect the changes, and rerun."
 level = "recommended"
 stage = "push"
@@ -77,26 +85,10 @@ help = "Run wrangler types and commit the file."
 
 [[check]]
 name = "security-headers"
-title = "Set security headers"
-example = "A configured response-header block without a required security header reports the missing header. Add that header to every governed path block using the value required by policy."
+example = "A configured response-header block without a required security header reports the missing header. Add that header to every governed path block using the value required by settings."
 level = "recommended"
 stage = "commit"
 runs = "scope"
 summary = "Checks that the headers file sets the content type, referrer, and framing headers for every path."
 why = "A site of files has no server code, so the headers file is the only place these protections can live."
 help = "Add the header to the block for every path."
-
-
-[[setting]]
-name = "cloudflare.types_file"
-type = "string"
-default = "worker-configuration.d.ts"
-summary = "Tracked Worker environment types file, relative to the project scope."
-validation = { path = true }
-
-
-[[setting]]
-name = "cloudflare.types_interface"
-type = "string"
-default = "Env"
-summary = "Environment interface name passed to wrangler types; OpenNext uses CloudflareEnv."

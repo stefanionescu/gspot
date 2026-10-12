@@ -1,5 +1,3 @@
-import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
-
 export const INTEGRITY = /^sha(?:256|384|512)-[A-Za-z0-9+/]+={0,2}$/u;
 
 export const CREDENTIAL_KEY = /(?:_authToken|_auth|_password|key)$/iu;
@@ -15,11 +13,6 @@ export const PACKAGE_SETTING_VARIABLE_PREFIX = 'GSPOT_PACKAGE_SETTING_';
 export const YARN_SETTING_VARIABLE_PREFIX = 'GSPOT_YARN_SETTING_';
 
 // A package that fetches its binary at install time can fail for a reason the package manager does not name.
-export const GITHUB_DOWNLOAD_URL =
-    /https?:\/\/(?:api\.github\.com\/|github\.com\/[^/\s?#]+\/[^/\s?#]+\/releases(?:\/|[?\s]|$))/iu;
-
-export const GITHUB_REFUSAL = /\b(?:HTTP 403|status 403|403 Forbidden|rate limit exceeded)\b/iu;
-
 export const CONNECTION_KEYS = new Set([
     'registry',
     'proxy',
@@ -58,24 +51,41 @@ export const YARN_ENVIRONMENT_SETTINGS = [
         field: 'npmAuthToken',
         defaults: { npmAlwaysAuth: true },
     },
-];
+] as const;
 
 /** Native lockfile resolution runs without committing a tool project installation. */
-export const LOCKFILE_ARGUMENTS: Record<Exclude<PackageInstaller['name'], 'yarn'>, readonly string[]> = {
+export const LOCKFILE_ARGUMENTS = {
     npm: ['npm', 'install', '--package-lock-only', '--no-audit', '--no-fund', '--omit-lockfile-registry-resolved'],
     bun: ['bun', 'install', '--lockfile-only', '--linker', 'hoisted', '--network-concurrency=1'],
     pnpm: ['pnpm', 'install', '--lockfile-only', '--ignore-workspace', '--node-linker=hoisted'],
-};
+} as const;
 
 /** Native installation refuses any change to the recorded lockfile. */
-export const INSTALL_ARGUMENTS: Record<Exclude<PackageInstaller['name'], 'yarn'>, readonly string[]> = {
+export const INSTALL_ARGUMENTS = {
     npm: ['npm', 'ci', '--no-audit', '--no-fund', '--omit-lockfile-registry-resolved'],
     bun: ['bun', 'install', '--frozen-lockfile', '--linker', 'hoisted'],
     pnpm: ['pnpm', 'install', '--frozen-lockfile', '--ignore-workspace', '--node-linker=hoisted'],
-};
+} as const;
 
 /** Yarn Classic and Berry declare different native lockfile operations. */
 export const YARN_ARGUMENTS = {
     classic: { lockfile: ['yarn', 'install'], install: ['yarn', 'install', '--frozen-lockfile'] },
     berry: { lockfile: ['yarn', 'install', '--mode=update-lockfile'], install: ['yarn', 'install', '--immutable'] },
 } as const;
+
+/** Descriptor separator in native Yarn lockfile keys. */
+export const YARN_DESCRIPTOR_SEPARATOR = /,\s*/u;
+
+export const NPMRC_FILE = '.npmrc';
+export const YARN_INSTALL_SETTINGS_FILE = '.yarnrc-install.yml';
+
+export const NODE_TOOL = 'node';
+export const NPM_PROGRAM = 'npm';
+export const NPM_CLIENT_DETECTION = { ignoreArgv: true, ignorePackageJSON: true, includeParentDirs: false } as const;
+export const NPM_SCOPE_REGISTRY_KEY = /^@[^\s:=]+:registry$/u;
+export const REGISTRY_AUTH_KEY = /^\/\/[^\s]+:(?:_authToken|_auth|username|_password|certfile|keyfile)$/u;
+export const CERTIFICATE_KEYS = [':certfile', ':keyfile'] as const;
+export const REGISTRY_ALIASES = ['BUN_CONFIG_REGISTRY', 'YARN_REGISTRY'] as const;
+export const YARN_CONFIG_LIST = ['yarn', 'config', '--json', '--no-defaults'] as const;
+export const YARN_CONFIG_GET = ['yarn', 'config', 'get'] as const;
+export const YARN_SECRET_KEYS = ['npmAuthToken', 'npmAuthIdent'] as const;

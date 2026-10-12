@@ -1,11 +1,12 @@
+import { RULE_URL } from './config/plugin.ts';
 import { ESLintUtils } from '@typescript-eslint/utils';
-import type { RuleDocs } from '#plugin/types/create-rule.ts';
+import type { RuleDocs, DocumentedRuleCreator } from './types/rules.ts';
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 
 /** Create rule modules with their public documentation URL. */
-export const createRule = ESLintUtils.RuleCreator<RuleDocs>(
-    (name) => `https://generativespotting.com/reference/plugin/${name}/`,
-);
+export const createRule = ESLintUtils.RuleCreator<RuleDocs>((name) =>
+    RULE_URL.replace('{name}', name),
+) as DocumentedRuleCreator;
 
 /**
  * An object with the given properties and nothing else.

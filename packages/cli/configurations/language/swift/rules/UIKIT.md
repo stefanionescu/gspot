@@ -1,7 +1,3 @@
----
-title: UIKit
----
-
 # UIKit
 
 ## Framework boundaries
@@ -62,7 +58,7 @@ unavailable only when the component's actual construction contract excludes it.
   not an item across insertions, removals, or asynchronous work.
 - Look up the current item before handling selection. Do not retain an old index path as identity.
 - Configure every reusable cell's visible and accessibility state for its current item.
-- Cancel or replace image work when a cell is reused. Apply a result only when its item identity
+- Cancel or replace image work when the table reuses a cell. Apply a result only when its item identity
   still matches, and keep UI updates on the main actor.
 - Preserve the relationship between cell registration, dequeueing, and the expected cell type.
   Do not force-cast unrelated cells to conceal a registration mismatch.
@@ -87,7 +83,7 @@ behavior that existing registration APIs do not already own.
 ## Diffable data sources
 
 Use diffable data sources when snapshot-based updates fit the screen. Keep item identifiers
-unique and stable across snapshots. Mutable display text is not item identity.
+unique and stable across snapshots. Do not identify an item by mutable display text.
 
 Build each snapshot from a consistent state. Resolve cells and selection through the current
 data source. When you write tests, cover insertion, removal, reordering, and asynchronous refresh

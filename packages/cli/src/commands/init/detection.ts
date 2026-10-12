@@ -1,6 +1,6 @@
-// The header init prints: what it found in the repository, one row per kind.
+// The header init prints: what it found in the repository, one row per group.
+import { GROUP_LABELS } from '#cli/config/configurations.ts';
 import type { DetectionSummary } from '#cli/types/commands/init.ts';
-import { CONFIGURATION_LABELS } from '#cli/config/configurations.ts';
 import { DETECTION_GAP_WIDTH, DETECTION_LABEL_WIDTH } from '#cli/config/commands/init.ts';
 
 function row(label: string, items: string[]): string | undefined {
@@ -15,7 +15,6 @@ function scopesRow(summary: DetectionSummary): string | undefined {
     const sources = new Set(summary.scopes.filter((scope) => scope.path !== '').map((scope) => scope.source));
     let note = 'from gspot.toml';
     if (sources.has('project')) note = 'a project file in each';
-    if (sources.has('flag')) note = 'from --scope-configurations';
     return row('scopes', [...paths, note]);
 }
 
@@ -26,7 +25,6 @@ function toolingRows(summary: DetectionSummary): (string | undefined)[] {
     );
     const lint = tooling.lintFolders.map((folder) => `${folder}/`);
     return [
-        row('runner', tooling.runner === 'none' ? ['none'] : [`${tooling.runner}  ${tooling.runnerFile ?? ''}`]),
         row('hooks', hooks.length === 0 ? ['none'] : hooks),
         row('ci', tooling.ci.length === 0 ? ['none'] : tooling.ci),
         row('agent files', [...tooling.agentFiles, ...tooling.rulesDirectories.map((dir) => `${dir}/`)]),
@@ -34,7 +32,7 @@ function toolingRows(summary: DetectionSummary): (string | undefined)[] {
     ];
 }
 
-function ownershipRows(summary: DetectionSummary): string[] {
+function replaceRows(summary: DetectionSummary): string[] {
     const lines = [row('gspot replaces', summary.owned), row('gspot leaves', summary.unowned)].filter(
         (line) => line !== undefined,
     );
@@ -42,29 +40,29 @@ function ownershipRows(summary: DetectionSummary): string[] {
 }
 
 /**
- * The detection header: tracked files, what each configuration kind was found from, scopes, and tooling.
+ * The detection header: tracked files, the evidence for each configuration group, scopes, and tooling.
  * @param summary what init detected
- * @returns the text, ending with a blank line when tooling was found
+ * @returns the text, ending with a blank line when the repository has tooling
  */
 export function detectionText(summary: DetectionSummary): string {
     const languages = summary.detected
         .filter(
             (evidence) =>
-                evidence.kind === 'language' &&
+                evidence.group === 'language' &&
                 summary.manifests.get(evidence.configuration)?.configuration.always_selected !== true,
         )
         .map((evidence) => `${evidence.configuration} ${evidence.evidence.split(' ', 1)[0] ?? ''}`);
     const rows = [
-        row(CONFIGURATION_LABELS.language.toLowerCase(), languages),
-        ...Object.entries(CONFIGURATION_LABELS)
-            .filter(([kind]) => kind !== 'language' && kind !== 'general')
-            .map(([kind, label]) =>
+        row(GROUP_LABELS.language.toLowerCase(), languages),
+        ...Object.entries(GROUP_LABELS)
+            .filter(([group]) => group !== 'language' && group !== 'general')
+            .map(([group, label]) =>
                 row(
                     label.toLowerCase(),
                     summary.detected
                         .filter(
                             (evidence) =>
-                                evidence.kind === kind &&
+                                evidence.group === group &&
                                 summary.manifests.get(evidence.configuration)?.configuration.always_selected !== true,
                         )
                         .map((evidence) => `${evidence.configuration}  ${evidence.evidence}`),
@@ -81,6 +79,6 @@ export function detectionText(summary: DetectionSummary): string {
         '',
         ...rows,
         '',
-        ...ownershipRows(summary),
+        ...replaceRows(summary),
     ].join('\n');
 }

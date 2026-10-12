@@ -1,0 +1,85 @@
+import { join } from 'node:path/posix';
+import { readText } from '#cli/system/file-reads.ts';
+import type { Session } from '#cli/types/planning.ts';
+import type { Level } from '#cli/types/configurations.ts';
+import { PBXPROJ_NAME } from '#cli/config/parsers/xcode.ts';
+import { projectBuildSettings } from '#cli/parsers/xcode.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
+import { SWIFT_TOOLS_VERSION } from '#cli/config/generation/tool-file-sources.ts';
+import type { EmitInputs, ToolFileSource, SwiftVersionInput } from '#cli/types/generation/files.ts';
+
+import {
+    SWIFTFORMAT_OFF,
+    SWIFTFORMAT_COMMAS,
+    SWIFTFORMAT_OPTIONS,
+    SWIFTFORMAT_ALL_LEVEL_ON,
+    SWIFTFORMAT_RECOMMENDED_OFF,
+} from '#cli/config/generation/swift.ts';
+
+function readSwiftVersion(input: SwiftVersionInput, projectPath: string): string | undefined {
+    const { root, scope, reads } = input;
+    const packageText = readText(root, join(scope, PACKAGE_SWIFT), reads);
+    if (packageText !== undefined) return SWIFT_TOOLS_VERSION.exec(packageText)?.[1];
+    const projectText = projectPath === '' ? undefined : readText(root, join(projectPath, PBXPROJ_NAME), reads);
+    return projectText === undefined ? undefined : projectBuildSettings(projectText).swiftVersion;
+}
+
+/**
+ * Write the swiftformat configuration from selected settings.
+ *
+ * @param root0 the values for this generated file.
+ * @param root0.selection the selected scope and its settings.
+ * @param root0.root the repository root.
+ * @param root0.reads the captured source read cache.
+ * @param level the selected check level.
+ *
+ * @returns the generated configuration text.
+ */
+export function swiftformatToolFile(
+    { selection, root, reads }: Pick<EmitInputs, 'selection'> & Pick<Session, 'root' | 'reads'>,
+    level: Level,
+): ToolFileSource {
+    const { format, rulesOff } = selection.view;
+    const isAll = level === 'all';
+    const version = readSwiftVersion(
+        { root, scope: selection.scope.path, reads },
+        selection.view.options('xcode').project ?? '',
+    );
+    const document = {
+        options: {
+            ...SWIFTFORMAT_OPTIONS,
+            indent: format.indent_style === 'tab' ? 'tab' : format.indent_width,
+            maxwidth: format.print_width,
+            commas: SWIFTFORMAT_COMMAS[format.trailing_commas],
+            linebreaks: format.line_ending,
+            ...(version === undefined ? {} : { swiftversion: version }),
+        },
+        enable: isAll ? SWIFTFORMAT_ALL_LEVEL_ON.filter((rule) => !rulesOff('swift/swiftformat').includes(rule)) : [],
+        disable: [
+            ...new Set([
+                ...Object.keys(SWIFTFORMAT_OFF),
+                ...rulesOff('swift/swiftformat'),
+                ...(isAll ? [] : SWIFTFORMAT_RECOMMENDED_OFF),
+            ]),
+        ],
+        comments: SWIFTFORMAT_OFF,
+    };
+
+    return {
+        content:
+            [
+                ...Object.entries(document.options).map(([option, value]) => `--${option} ${String(value)}`),
+                '',
+                ...document.enable.map((rule) => `--enable ${rule}`),
+                '',
+                ...document.disable.flatMap((rule) => [
+                    ...Object.entries(document.comments)
+                        .filter(([name]) => name === rule)
+                        .map(([, reason]) => reason),
+                    `--disable ${rule}`,
+                ]),
+                '',
+            ].join('\n') + '\n',
+        document: document,
+    };
+}

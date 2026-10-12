@@ -1,6 +1,0 @@
-extends: occurrence
-message: 'A paragraph longer than <%= limit('paragraph_sentences', 'docs') %> sentences. Split it.'
-level: error
-scope: paragraph
-max: <%= limit('paragraph_sentences', 'docs') %>
-token: "[.!?](\\s|$)"

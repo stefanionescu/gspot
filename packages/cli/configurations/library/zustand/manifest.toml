@@ -1,4 +1,5 @@
-products = ["Zustand"]
+allowed_words = ["Zustand"]
+
 [configuration]
 title = "Zustand"
 requires = ["javascript"]
@@ -7,13 +8,11 @@ description = "Zustand stores: a store is created in a store file, and a compone
 [detect]
 dependencies = ["zustand"]
 
-[[tool_file]]
-source = "eslint.fragment.js.eta"
-selectors = [{ selector = "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0]", message = "Pass a selector to the store hook, so the component renders when its slice changes and at no other time." }]
+[[eslint.selectors]]
+selector = "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0]"
+message = "Pass a selector to the store hook, so the component renders when its slice changes and at no other time."
 
-[[setting]]
-name = "architecture.roles.stores"
-type = "list"
-items = "path"
-default = ["**/store.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/stores/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/store/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/*.store.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"]
-summary = "The files that may create a store."
+[[tool_file]]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+fragment = true

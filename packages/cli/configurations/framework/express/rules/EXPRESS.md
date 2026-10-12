@@ -1,7 +1,3 @@
----
-title: Express
----
-
 # Express
 
 Routes, middleware, errors, and body parsing in an Express service, on top of the HTTP rules.
@@ -46,14 +42,14 @@ router.post('/orders', authenticate, validateBody(submitOrderSchema), async (req
   promise and add no wrapper that repeats this. Express 4 needs the project's async handler or an
   explicit `next(error)`.
 - Callback-based asynchronous work passes its errors to `next(error)` in both versions.
-- Error middleware keeps its four-argument signature, even when an argument is unused.
-- When the headers are already sent, error middleware calls `next(error)` instead of writing a
+- Error middleware keeps its four-argument signature, even when the function does not use an argument.
+- After the response sends its headers, error middleware calls `next(error)` instead of writing a
   second response.
 - The not-found handler comes after every route.
 
 ## Body parsing and proxies
 
-Parsing a body is work, so mount a JSON parser with a small default limit, and a larger one only on
+Parsing a body takes work, so mount a JSON parser with a small default limit, and a larger one only on
 the route that needs it.
 
 ```ts
@@ -65,8 +61,8 @@ app.use('/imports', express.json({ limit: '5mb' }), importsRouter);
 app.use(express.json({ limit: '100kb' }));
 ```
 
-Enable `trust proxy` only when the deployment topology is known, set to the proxies whose
-forwarding headers are trusted.
+Enable `trust proxy` only when you know the deployment topology. Select the proxies whose
+forwarding headers you trust.
 
 ## References
 

@@ -12,30 +12,27 @@ node_modules/
 # Local environment
 .env
 .env.*
-!.env.example
+/.sandboxes/
 
 # Logs and crash output
 *.log
-# Grammar files that setup writes
+# Grammar files that the build writes
 /packages/cli/grammars/
 
 # Build output of the workspace packages
 /packages/*/dist/
+/packages/cli/gspot.schema.json
 /docs/dist/
 /docs/.astro/
+
+# Local cleanup findings
+/findings/
 
 # >>> gspot managed >>>
 .gspot/node_modules/
 .gspot/.venv/
 .gspot/vale/
 .gspot/state/
-.gspot/config/vale/styles/Google/
-.gspot/config/vale/styles/Microsoft/
-.gspot/config/vale/styles/write-good/
-.gspot/config/vale/styles/proselint/
-.gspot/config/vale/styles/alex/
-.gspot/config/vale/styles/RedHat/
-.gspot/config/vale/styles/Harper/
-.gspot/config/vale/styles/.vale-config/
-.gspot/config/vale/styles/config/dictionaries/
+.gspot/.npmrc
+.gspot/.yarnrc-install.yml
 # <<< gspot managed <<<

@@ -1,0 +1,71 @@
+rules:
+    - id: gspot.express.raw-query-interpolation
+      patterns:
+          - pattern: $DB.$METHOD(`...${req.$SOURCE.$FIELD}...`, ...)
+          - metavariable-regex:
+                metavariable: $METHOD
+                regex: ^(query|execute|raw|\$queryRawUnsafe)$
+          - metavariable-regex:
+                metavariable: $SOURCE
+                regex: ^(body|query|params)$
+      message: 'SQL injection risk: request data is interpolated into a database call.
+          Use parameterised queries or an ORM.'
+      languages:
+          - typescript
+          - javascript
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-89
+          category: security
+    - id: gspot.express.unvalidated-redirect
+      patterns:
+          - pattern-either:
+                - pattern: res.redirect(req.body.$VALUE)
+                - pattern: res.redirect(req.query.$VALUE)
+                - pattern: res.redirect(req.params.$VALUE)
+      message: 'Open redirect: request data is passed directly to res.redirect().
+          Validate against an allowlist of URLs.'
+      languages:
+          - typescript
+          - javascript
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-601
+          category: security
+    - id: gspot.express.res-send-raw-input
+      patterns:
+          - pattern-either:
+                - pattern: res.send(req.$SOURCE.$FIELD)
+                - pattern: res.send(`...${req.$SOURCE.$FIELD}...`)
+          - metavariable-regex:
+                metavariable: $SOURCE
+                regex: ^(body|query|params)$
+      message: 'Reflected XSS risk: request data is sent as text or HTML. Escape HTML
+          output or use res.json() to send JSON.'
+      languages:
+          - typescript
+          - javascript
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-79
+          category: security
+    - id: gspot.express.no-stack-trace-in-response
+      patterns:
+          - pattern-either:
+                - pattern: 'res.send({..., stack: $ERR.stack, ...})'
+                - pattern: 'res.json({..., stack: $ERR.stack, ...})'
+                - pattern: 'res.status(...).send({..., stack: $ERR.stack, ...})'
+                - pattern: 'res.status(...).json({..., stack: $ERR.stack, ...})'
+      message: Stack traces in API responses leak internal implementation details. Log
+          the stack server-side and return a generic error message.
+      languages:
+          - typescript
+          - javascript
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-209
+          category: security

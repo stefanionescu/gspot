@@ -1,11 +1,11 @@
 ---
 import example from '../../config/example.json';
 import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
-import { version, description } from '#cli-package' with { type: 'json' };
+import { description } from '@gspothq/cli/package.json' with { type: 'json' };
 
 const agentFile = example.agent.files.find((file) => file.path === 'src/utils.ts');
 if (agentFile === undefined) throw new Error('The homepage example has no src/utils.ts.');
-const summary = example.rejected.trimEnd().split('\n').at(-1) ?? '';
+const summary = `${String(new Set(example.findings.map((finding) => finding.check)).size)} checks failed, ${String(example.findings.length)} findings`;
 ---
 
 <section class="home-hero" aria-labelledby="_top">
@@ -18,27 +18,14 @@ const summary = example.rejected.trimEnd().split('\n').at(-1) ?? '';
             <a href="/reference/commands/">View commands</a>
         </nav>
         <p>
-            Choose the setup for your repository. <a href="/guides/requirements/">Check requirements first.</a>
+            Follow the Install steps, including the commit before init.{' '}
+            <a href="/guides/install/#what-you-need">Check requirements first.</a>
         </p>
-        <Tabs>
-            <TabItem label="package.json">
-                <Code
-                    code={
-                        'npm install --save-dev --save-exact @gspothq/cli\ngit add package.json package-lock.json\ngit commit -m "build: Add gspot"\nnpx gspot init'
-                    }
-                    lang="sh"
-                    frame="none"
-                />
-            </TabItem>
-            <TabItem label="mise">
-                <Code code={`mise exec npm:@gspothq/cli@${version} -- gspot init`} lang="sh" frame="none" />
-                <p>Choose mise as the runner. It pins the npm CLI and required executable tools.</p>
-            </TabItem>
-            <TabItem label="Global">
-                <Code code={`npm install --global @gspothq/cli@${version}\ngspot init`} lang="sh" frame="none" />
-                <p>One CLI version serves this machine. Match each repository's pin.</p>
-            </TabItem>
-        </Tabs>
+        <Code
+            code={`${example.commands.install}\n# Commit package.json and the lockfile before init.\n${example.commands.init}\n${example.commands.install_tools}\n${example.commands.check}`}
+            lang="sh"
+            frame="none"
+        />
     </div>
     <section class="hero-demo" aria-labelledby="hero-example">
         <div class="demo-heading">
@@ -46,17 +33,7 @@ const summary = example.rejected.trimEnd().split('\n').at(-1) ?? '';
             <span>Findings excerpt · TypeScript · level all</span>
         </div>
         <Tabs>
-            <TabItem label="1. Set up">
-                <Code
-                    code={`${example.commands.install}\ngit add package.json package-lock.json\ngit commit -m "build: Add gspot"\n${example.commands.init}\n${example.commands.level}\nnpx gspot install\nnpx gspot doctor`}
-                    lang="sh"
-                    frame="none"
-                />
-                <p class="demo-note">
-                    Install gspot, accept the plan, and select level <code>all</code> conventions.
-                </p>
-            </TabItem>
-            <TabItem label="2. Commit">
+            <TabItem label="Commit">
                 <Code code={agentFile.content.trimEnd()} lang="typescript" title={agentFile.path} wrap />
                 <Code code={`git commit -m "${example.agent.message}"`} lang="sh" frame="none" />
                 <ul class="demo-findings">
@@ -74,8 +51,8 @@ const summary = example.rejected.trimEnd().split('\n').at(-1) ?? '';
                 </ul>
                 <p class="demo-status">{summary}</p>
             </TabItem>
-            <TabItem label="3. Fix">
-                <ul class="demo-corrections">
+            <TabItem label="Fix">
+                <ul class="demo-fixes">
                     <li>
                         Delete <code>src/utils.ts</code>.
                     </li>
@@ -84,10 +61,10 @@ const summary = example.rejected.trimEnd().split('\n').at(-1) ?? '';
                     </li>
                 </ul>
                 <Code code={`git commit -m "${example.agent.message}"`} lang="sh" frame="none" />
-                <p class="demo-status">{example.passed}</p>
+                <p class="demo-status">{example.passed.replace(/, [\d.]+s(?= \(|$)/u, '')}</p>
             </TabItem>
         </Tabs>
-        <a class="demo-guide" href="/guides/quickstart/typescript/">
+        <a class="demo-guide" href="/guides/quickstart/javascript-typescript/">
             Run the TypeScript example <span aria-hidden="true">→</span>
         </a>
     </section>

@@ -1,15 +1,9 @@
----
-title: Python Flow
----
-
 # Python Flow
-
-Exceptions, assertions, comparisons, control flow, iteration, strings, logging, and resources.
 
 ## Exceptions and error handling
 
 Use explicit validation for external inputs and required preconditions. Avoid exceptions for
-ordinary branching when the value can be checked directly.
+ordinary branching when code can check the value directly.
 
 The following module accepts only bounded positive decimal integers and preserves the original
 conversion error.
@@ -55,9 +49,9 @@ Keep assertions in tests. Use explicit validation for required application check
 
 ## Boolean logic and comparisons
 
-Compare singleton values with `is None`, `is not None`, `is True`, or `is False` when identity is
-the intended contract. Use truth-value testing only when all falsy values mean the same thing.
-An empty collection, zero, and a missing value are not interchangeable by default.
+Compare singleton values with `is None`, `is not None`, `is True`, or `is False` when the check concerns
+identity. Use truth-value testing only when all falsy values mean the same thing.
+Do not treat an empty collection, zero, and a missing value as interchangeable by default.
 
 Use `==` for value equality. Use membership tests for supported containers, and avoid chained
 comparisons whose repeated values have side effects. Keep evaluation order and short-circuit
@@ -88,7 +82,7 @@ Use f-strings for ordinary value interpolation. Preserve formatting required by 
 and keep logging arguments separate from the message when the logging API formats them lazily.
 Use efficient joining for a sequence of strings instead of repeatedly growing a large string.
 
-Formatting is not validation or escaping. Use parameterized database queries, argument arrays
+Formatting neither validates nor escapes values. Use parameterized database queries, argument arrays
 for subprocesses, and the appropriate encoder for HTML, JSON, or another output format.
 
 ## Files and stateful resources

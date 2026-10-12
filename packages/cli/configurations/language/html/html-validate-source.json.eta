@@ -1,7 +1,0 @@
-<%
-const document = {
-    extends: ['html-validate:recommended'],
-    rules: htmlRules('html/validate'),
-};
-recordRules(document);
-%><%~ json(document) %>

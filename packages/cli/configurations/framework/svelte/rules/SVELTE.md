@@ -1,7 +1,3 @@
----
-title: Svelte
----
-
 # Svelte
 
 These rules cover Svelte 5 components, runes, props and events, markup, and data loading in SvelteKit.
@@ -10,24 +6,23 @@ These rules cover Svelte 5 components, runes, props and events, markup, and data
 
 <!-- level: all -->
 
-- Keep markup declarative. Move an expression longer than one operator into a `$derived` value.
-- Do not reach into a child with `bind:this` to change its state. Pass a prop or a callback.
+- Use `$derived` for values used in markup.
+- Pass a prop or callback instead of changing state through `bind:this`.
 
 ## Runes and reactivity
 
 - Use `$state` for a value that changes and `$derived` for a value computed from others.
-- Do not copy a prop or a derived value into `$state` and sync it by hand.
-- An `$effect` is for work outside Svelte: a request, a timer, storage, the DOM. It is not for deriving state.
+- Use `$effect` for work outside Svelte: a request, a timer, storage, the DOM. Do not use it to derive state.
 - An `$effect` that starts something returns a function that stops it.
 - Keep derived expressions free of side effects. Do not mutate state while computing a derivation.
-- A mutable `$derived` value can be temporarily overridden for optimistic UI in Svelte 5.25 and later.
+- Temporarily override a mutable `$derived` value for optimistic UI only in Svelte 5.25 and later.
   Reconcile it with the authoritative result and restore the prior value when the operation fails.
 - Do not mix runes with `$:` statements or `export let` inside one component.
   Components using different supported modes can coexist during a migration.
 
 ## Props and events
 
-- Declare props through `$props()` with a type. A prop with no sensible default is required.
+- Declare props through `$props()` with a type. Require a prop when it has no sensible default.
 - Never mutate a prop object. Call a callback prop, or use `$bindable` for a two-way value.
 
 ### Callback naming
@@ -42,9 +37,8 @@ Name a callback prop for what happened: `onsave`, `onclose`.
 - Code under `$lib/server` and in `+page.server` files stays on the server. Do not import it from a component.
 - Read a secret from `$env/static/private` or `$env/dynamic/private`, and only on the server.
 - A form posts to a form action and works with JavaScript off. Enhance it, do not replace it.
-- Validate what a `load` function or an action receives before it reaches a database or another service.
 
-## Accessibility and tests
+## Accessibility
 
 - Fix the compiler's accessibility warnings. Suppress one only with a reason.
 

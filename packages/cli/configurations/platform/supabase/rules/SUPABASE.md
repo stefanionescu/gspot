@@ -1,11 +1,7 @@
----
-title: Supabase
----
-
 # Supabase
 
 Layout, database access, storage, Edge Functions, configuration, and secrets of a Supabase
-project, on top of the Postgres rules. Supabase's API roles are `anon`, `authenticated`, and
+project, on top of the Postgres rules. Supabase uses the API roles `anon`, `authenticated`, and
 `service_role`.
 
 ## Layout and migrations
@@ -17,7 +13,7 @@ project, on top of the Postgres rules. Supabase's API roles are `anon`, `authent
 
 - `[api].schemas` in `config.toml` lists the schemas the Data API exposes. Treat those schemas as
   externally reachable.
-- RLS with no policy denies access through the API roles. Use that choice for tables that clients
+- row level security (RLS) with no policy denies access through the API roles. Use that choice for tables that clients
   must not read.
 - Roles Supabase creates for auth, cron, or storage stay scoped to the functions and schemas they need.
 - Each policy chooses `TO anon`, `TO authenticated`, or `TO service_role` deliberately. The service
@@ -38,9 +34,9 @@ Choose the Supabase connection mode for the workload.
 
 A separate migration credential holds schema privileges. The application role holds only what
 runtime needs
-([connection modes](https://supabase.com/docs/guides/database/connecting-to-postgres)). Postgres.js
+See [connection modes](https://supabase.com/docs/guides/database/connecting-to-postgres). Postgres.js
 uses the transaction pooler's supported configuration.
-Connection, idle, and query timeouts are explicit. Budget connections across instances and
+Set explicit connection, idle, and query timeouts. Budget connections across instances and
 workers. With Postgres.js through transaction pooling, set `prepare: false` and confirm the setting
 after a driver or pooler change.
 
@@ -58,22 +54,19 @@ existing. Check replay through the chosen runner. See
 
 ## Storage
 
-- Bucket definitions live in migrations and are mirrored in `config.toml`. A change to `public`,
+- Define buckets in migrations and mirror them in `config.toml`. A change to `public`,
   `file_size_limit`, or `allowed_mime_types` updates both in the same change.
 - Bucket restrictions enforce file size and MIME type, not only application validation.
-- RLS policies on `storage.objects` and `storage.buckets` control access. The `storage` schema is
-  service-owned metadata: migrations add only policies, indexes for RLS or validation, triggers,
+- RLS policies on `storage.objects` and `storage.buckets` control access. The service controls metadata in the `storage` schema: migrations add only policies, indexes for RLS or validation, triggers,
   and bucket configuration. Object rows change only through the Storage API.
 
 ### Storage names
 
 <!-- level: all -->
 
-Rules:
-
 - Storage buckets use `lower_snake_case`.
-- Storage object keys are stable and explicit.
-- User-controlled key segments must be validated and bounded before use.
+- Use stable, explicit storage object keys.
+- Validate user-controlled key segments and limit their length before use.
 - Do not embed secrets, provider tokens, raw user text, or private identifiers in
   object keys.
 - Do not use display text as storage identity.
@@ -87,22 +80,22 @@ Rules:
 ## Edge functions
 
 - Each deployable function lives under `functions/<function-name>/` in the CLI's functions root,
-  with a `[functions.<name>]` entry whose `entrypoint` is relative to the configuration file.
+  with a `[functions.<name>]` entry whose `entrypoint` starts from the configuration file directory.
   Shared code lives in `functions/_shared/`, which Supabase never deploys.
-- A function folder is kebab-case and names the callable operation, not its technology:
+- Name a function folder in kebab-case for its callable operation, not its technology:
   `submit-order`, never `SubmitOrder` or `provider_handler`. The folder, configuration entry, and
   deployed name match.
 - Edge Functions run on Deno, and the Deno rules hold.
 - Keep `verify_jwt = true` for user-authenticated functions. Set it to `false` only when the function
-  is public and harmless, verifies a provider webhook signature, checks a service secret, or takes
+  exposes only public, harmless behavior, verifies a provider webhook signature, checks a service secret, or takes
   a Vault secret from cron.
-- A publishable or secret API key is not a user JWT and never travels as
+- A publishable or secret API key differs from a user JSON Web Token (JWT). Never send that key as
   `Authorization: Bearer <key>`. Forward the caller's `Authorization` header to the Supabase
   client, so RLS runs as the user.
 - A service-role client serves only admin operations that cannot run as a user, on a path that
   code and tests make explicit.
 - Keep handlers small: parsing, validation, responses, provider calls, and database operations move
-  into local modules as complexity grows. JSON responses, `OPTIONS`, and CORS go through one helper
+  into local modules as complexity grows. JSON responses, `OPTIONS`, and Cross-Origin Resource Sharing (CORS) go through one helper
   in `functions/_shared/`.
 - Functions have runtime, CPU, memory, bundle-size, and log-rate limits, so long CPU-heavy work
   runs elsewhere. Raw Supabase errors that expose credentials stay out of logs.
@@ -111,9 +104,12 @@ Rules:
 
 ## Configuration and secrets
 
-- `config.toml` is the desired local and remote configuration. Ask the user before changing signup,
-  anonymous sign-in, providers, hooks, JWT expiry, or password policy unless the task already
-  authorizes it. Write the reason in the commit when a commit is authorized.
+`config.toml` defines the desired local and remote configuration.
+
+Ask the user before changing signup, anonymous sign-in, providers, hooks, JWT expiry, or password policy.
+Also ask before weakening auth settings, row-level security, grants, or `verify_jwt`.
+Proceed when the task already authorizes the change. Write the reason in the commit when the user authorizes a commit.
+
 - Service keys, Edge secrets, Vault values, database URLs, and provider API keys stay backend-only.
   They never appear in app code, checked-in files, logs, migration comments, tests, or test data.
 - Local secrets live in ignored env files or the caller's environment.
@@ -121,8 +117,6 @@ Rules:
   tokens from `vault.decrypted_secrets` at call time, never from its SQL.
 - A change to a cron target's auth updates the Vault secret, the function's check, and the cron
   SQL together.
-- Ask the user before weakening auth settings, RLS, grants, or `verify_jwt` unless the task already
-  authorizes it. Write the reason in the commit when a commit is authorized.
 
 ## References
 

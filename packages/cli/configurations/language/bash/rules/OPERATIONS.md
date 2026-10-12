@@ -1,10 +1,4 @@
----
-title: Bash Operations
----
-
 # Bash Operations
-
-Module ownership, deployment and publishing, remote commands, state, and retries.
 
 ## Module ownership and visibility
 
@@ -21,7 +15,7 @@ Each file owns one cohesive responsibility, and the directory supplies the famil
 Deployment, publishing, and long-running scripts separate validation, planning, confirmation,
 execution, readiness checks, and cleanup.
 
-- Fail before any work when a required input, command, file, host, or secret is missing.
+- Fail before any work when the script lacks a required input, command, file, host, or secret.
 - Name the target explicitly: never infer production, a remote, a host, or an artifact from a
   branch name without a confirmation or a CI contract.
 - A destructive or remote action asks for confirmation unless CI owns the guard.
@@ -54,7 +48,7 @@ into one remote shell string, so local quoting does not keep remote argument bou
 host, user, service, and path values before using them, never build a remote command from user
 input, and give every remote call that can hang a timeout.
 
-Good, for a remote login shell that is Bash:
+Good, for a remote Bash login shell:
 
 ```bash
 printf -v remote_command 'bash -- %q %q %q' "${remote_script}" "${dir}" "${service}"

@@ -1,6 +1,5 @@
-import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
-import type { Choice, InitAnswers } from '#cli/types/commands/init.ts';
-import { GITHUB_WORKFLOW, GITLAB_INCLUDE_LABEL } from '#cli/config/generation/ci.ts';
+import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
+import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 
 export const COLUMN_GAP = 2;
 
@@ -12,60 +11,55 @@ export const REASON_WIDTH = 12;
 export const HOOKS_ROW = {
     path: HOOKS_DIRECTORY,
     note: 'gspot install points core.hooksPath here; a repository that already runs hooks gets the lines to add instead',
-};
-
-export const CI_SETUP = {
-    commands: ['gspot install', 'gspot check'],
-};
-
-export const JSON_SCHEMA_URL = 'https://generativespotting.com/schema/gspot.schema.json';
-
-export const SCHEMA_LINE = `#:schema ${JSON_SCHEMA_URL}`;
-
-export const TEMPLATE_HEAD = new Set(['template', 'selection', 'configurations']);
-
-export const RUNNER_CHOICES: Choice<InitAnswers['runner']>[] = [
-    { value: 'mise', label: 'mise' },
-    { value: 'bun', label: 'bun' },
-    { value: 'npm', label: 'npm' },
-    { value: 'pnpm', label: 'pnpm' },
-    { value: 'yarn', label: 'yarn' },
-    { value: 'none', label: 'none' },
-];
-
-export const CI_CHOICES: Choice<InitAnswers['ci']>[] = [
-    { value: 'github', label: GITHUB_WORKFLOW },
-    { value: 'gitlab', label: GITLAB_INCLUDE_LABEL },
-    { value: 'none', label: 'no workflow' },
-];
-
-export const ALREADY_INSTALLED =
-    'This repository already has a gspot.toml. Run `gspot doctor` to inspect its setup and see suggested commands.\n';
+} as const;
 
 export const DETECTION_LABEL_WIDTH = 20;
 
 export const DETECTION_GAP_WIDTH = 3;
 
-export const PREFACE = `${SCHEMA_LINE}
-
-# The policy of this repository under gspot. Every setting has a command that writes it:
-# gspot set, ignore, add, remove. Run gspot explain <anything> for what it means.
-
-`;
+export const PREFACE_BODY =
+    '# gspot settings for this repository. Change them with gspot set, unset, ignore, add, and remove.\n\n';
 
 /** The shared attributes row in every initialization plan. */
 export const ATTRIBUTES_ROW = {
     path: '.gitattributes',
     note: 'managed generated-file classification and LF line endings',
-};
+} as const;
 
-/** Native SDK roots select the corresponding xcodebuild platform at initialization. */
-export const XCODE_DESTINATIONS = new Map<string | undefined, string>([
-    ['iphoneos', 'generic/platform=iOS Simulator'],
-    ['iphonesimulator', 'generic/platform=iOS Simulator'],
-    ['macosx', 'platform=macOS'],
-    ['watchos', 'generic/platform=watchOS Simulator'],
-    ['watchsimulator', 'generic/platform=watchOS Simulator'],
-    ['xros', 'generic/platform=visionOS Simulator'],
-    ['xrsimulator', 'generic/platform=visionOS Simulator'],
-]);
+export const PRETTIER_DEFAULTS = { tabWidth: 2, printWidth: 80, singleQuote: false } as const;
+
+export const EDITORCONFIG_FILE = '.editorconfig';
+
+export const PRETTIER_FILES = [
+    '.prettierrc',
+    '.prettierrc.json',
+    '.prettierrc.js',
+    '.prettierrc.cjs',
+    '.prettierrc.mjs',
+    'prettier.config.js',
+    'prettier.config.cjs',
+    'prettier.config.mjs',
+] as const;
+
+/** Instructions for the CI files shown in the initialization plan. */
+export const CI_FILE_NOTES = {
+    [GITHUB_WORKFLOW]: 'check workflow',
+    [GITLAB_WORKFLOW]: `add include: [{ local: ${GITLAB_WORKFLOW} }] to .gitlab-ci.yml`,
+} as const;
+
+export const NO_CONFIGURATIONS = 'none';
+
+export const REMOTE_URL_SCHEME = /^(?:https?|ssh):\/\//u;
+export const REMOTE_URL_USER = /^[^@/]+@/u;
+
+export const EDITORCONFIG_NUMBER = /^\d+$/u;
+export const PRETTIER_JSON_FILES = ['.prettierrc', '.prettierrc.json'] as const;
+
+export const EDITORCONFIG_COMMENT = /^\s*[#;]/u;
+
+/** Initialization answers before a reusable template supplies its choices. */
+export const INIT_TEMPLATE_DEFAULTS = {
+    hooks: { enabled: true },
+    rules: { enabled: true },
+    ci: undefined,
+} as const;

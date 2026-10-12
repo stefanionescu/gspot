@@ -1,37 +1,30 @@
-import { compact } from '#cli/platform/contracts.ts';
-import { emptyResult } from '#cli/execution/report.ts';
-import { readSource } from '#cli/platform/root/public.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
-import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { CheckResult } from '#cli/types/execution/check.ts';
-import { runCheckCommand } from '#cli/execution/command/public.ts';
+import { readSource } from '#cli/system/file-reads.ts';
+import { type CheckResult } from '#cli/types/execution/check.ts';
+import { runCommandGroups } from '#cli/execution/command/check.ts';
+import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
+import { BATS_TAG, DEFAULT_DIALECT, SHELLCHECK_DIALECT_FLAG } from '#cli/config/repository/inventory.ts';
 
 /**
  * Preserve each script's shebang and supply a dialect only for scripts without one.
- * @param session the source inventory and native tool context
- * @param planned the ShellCheck command and selected files
- * @returns findings from every dialect group, with shared native failure handling
+ * @param session the source inventory and tool context.
+ * @param planned the ShellCheck command and selected files.
+ * @returns findings from every dialect group, with shared failure handling.
  */
-export async function shellcheck(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
+export async function shellcheck(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const groups = Map.groupBy(planned.files, (file) => {
+        if (file.path.endsWith(`.${BATS_TAG}`) || file.path.endsWith(`.${DEFAULT_DIALECT}`)) return undefined;
         if (readSource(session.root, file.path, session.reads).toString('utf8').startsWith('#!')) return undefined;
-        return file.tags.includes('bats') ? 'bats' : 'bash';
+        return DEFAULT_DIALECT;
     });
-    const result = emptyResult(planned);
-    for (const [dialect, files] of groups) {
-        const checked = await runCheckCommand(
-            session,
-            { ...planned, files },
-            compact({
-                command:
-                    dialect === undefined ? undefined : planned.check.command?.toSpliced(1, 0, `--shell=${dialect}`),
-            }),
-        );
-        result.findings.push(...checked.findings);
-        result.duration += checked.duration;
-        if (!['passed', 'failed'].includes(checked.status))
-            return { ...checked, fileCount: result.fileCount, duration: result.duration, findings: result.findings };
-        if (checked.status === 'failed') result.status = 'failed';
-    }
-    return result;
+    return runCommandGroups(
+        session,
+        planned,
+        [...groups].map(([dialect, files]) => ({
+            files,
+            command:
+                dialect === undefined
+                    ? (planned.check.command as string[])
+                    : (planned.check.command as string[]).toSpliced(1, 0, `${SHELLCHECK_DIALECT_FLAG}${dialect}`),
+        })),
+    );
 }

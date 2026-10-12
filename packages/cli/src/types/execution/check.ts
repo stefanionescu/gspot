@@ -1,29 +1,33 @@
-import type { z } from 'zod';
-import type { Finding } from '#cli/types/parsers/output.ts';
-import type { ReadCache } from '#cli/types/platform/reads.ts';
-import type { Defined } from '#cli/types/platform/runtime.ts';
-import type { ToolSearch } from '#cli/types/tools/install.ts';
-import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { resultSchema } from '#cli/parsers/schema/contracts.ts';
+import type { ToolSearch } from '#cli/types/tools/find.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
+import type { IgnoreEntry } from '#cli/types/settings/file.ts';
+import type { CHECK_STATUSES } from '#cli/config/execution/run.ts';
+import type { PushInput } from '#cli/types/repository/revisions.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
-import type { PlanOptions, StageFilter, PlannedCheck } from '#cli/types/planning.ts';
+import type { SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts';
+import type { Session, PlanOptions, StageFilter, PlannedCheck } from '#cli/types/planning.ts';
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
-import type { ScopeView, PolicyFile, IgnoreEntry, ScopeSelection } from '#cli/types/policy/settings.ts';
 
-export type SuppressionComment = {
-    file: string;
-    line: number;
-    form: string;
-    reasonForm: string;
-    reason?: string;
-    forbidden: boolean;
+/** A built-in fix publishes through the same repository or disposable-copy boundary as command fixes. */
+type BuiltInFix = (planned: PlannedCheck, root: string) => FixResult | Promise<FixResult>;
+
+type RunReportOptions = PlanOptions & {
+    stage: StageFilter;
+    onResult?: (result: CheckResult) => void;
+    isDryRun: boolean;
+    comparison?: NonNullable<RunReport['comparison']>;
+    /** Working-tree changes omitted when this run reads staged content. */
+    unstagedChanges?: number;
 };
 
-/** Execution callbacks, keyed by the declared check ID. */
-export type BuiltInChecks = Record<string, { run: Executable['run']; fix?: BuiltInFix }>;
+/** The completion status of a check. */
+type CheckStatus = (typeof CHECK_STATUSES)[number];
 
-/** A native correction publishes through the same repository or disposable-copy boundary as command fixes. */
-export type BuiltInFix = (planned: PlannedCheck, root: string) => FixResult | Promise<FixResult>;
+/** Execution callbacks, keyed by the declared check ID. */
+export type BuiltInChecks = Record<
+    string,
+    { run: RunnableCheck['run']; fix?: BuiltInFix } & Pick<CheckRunOptions, 'arguments' | 'configurationFiles'>
+>;
 
 export type FixResult = { check: string; changed: string[] } & (
     | { status: 'changed' | 'unchanged' | 'skipped' }
@@ -35,31 +39,31 @@ export type FixRun = { result: FixResult; originals: Map<string, Buffer | undefi
 
 export type FixReport = { results: FixResult[]; changed: string[]; diffs: string[] };
 
-export type RunReportOptions = PlanOptions & {
-    stage: StageFilter;
-    onResult?: (result: CheckResult) => void;
-    isDryRun: boolean;
-    comparison?: NonNullable<RunReport['comparison']>;
-    /** Working-tree changes omitted when this run reads staged content. */
-    unstagedChanges?: number;
-};
-
-export type Executable = {
+export type RunnableCheck = {
     check: PlannedCheck;
-    run: (session: ToolSession, planned: PlannedCheck, options?: CheckRunOptions) => Promise<CheckResult>;
+    arguments?: CheckRunOptions['arguments'];
+    configurationFiles?: CheckRunOptions['configurationFiles'];
+    run: (session: Session, planned: PlannedCheck, options?: CheckRunOptions) => Promise<CheckResult>;
 };
 
-/** Selected staged paths and optional command or workspace supplied by a check. */
-export type CheckRunOptions = { staged?: Set<string>; command?: string[]; workspace?: string };
+/** Selected staged paths and optional command or scratch root supplied by a check. */
+export type CheckRunOptions = {
+    staged?: Set<string>;
+    command?: string[];
+    scratchRoot?: string;
+    arguments?: ((input: CheckInput) => string[]) | undefined;
+    configurationFiles?: ((input: CheckInput) => string[]) | undefined;
+};
 
-export type Pass = {
-    session: ToolSession;
+export type RunState = {
+    session: Session;
     options: RunOptions;
     staged: Set<string> | undefined;
     uses: Map<IgnoreEntry, IgnoreUse>;
 };
 
 export type RunOptions = RunReportOptions & {
+    push?: PushInput | undefined;
     checks: BuiltInChecks;
     fix: boolean;
     cancelSignal?: AbortSignal;
@@ -74,38 +78,44 @@ export type CheckOutcome = { findings: Finding[]; files: string[] };
 export type BuiltInCheck = (input: CheckInput) => Finding[] | CheckOutcome | Promise<Finding[] | CheckOutcome>;
 
 export type CheckInput = {
+    generatedPaths: () => ReadonlySet<string>;
+    timeoutSeconds: number;
     /** Inventory-owned source paths of this project's declared workspace dependencies. */
     dependencyFiles: () => string[];
     index: Repository['index'];
     installedRoot?: string;
-    policyFiles: PolicyFile;
+    settingsFile: SettingsFile;
     selection: ScopeSelection;
     manifests: Map<string, Manifest>;
     inspections: ToolSearch['inspections'];
+    miseBinPaths?: string[];
     scopeEntries: ScopeEntry[];
     attributes: Repository['attributes'];
     hasGit: boolean;
     reads: ReadCache;
-    resources?: DisposableStack;
+    resources: DisposableStack;
     cancelSignal?: AbortSignal;
-    scopeRoot: string;
-    repositoryFiles?: TrackedFile[];
+    repositoryFiles: TrackedFile[];
     /** Every effective scope selection supplied by the open session. */
     selections: ScopeSelection[];
     root: string;
-    scope: string;
-    view: ScopeView;
     check: CheckDeclaration;
     /** Planner-selected files; scope checks exclude every nested scope. */
     files: TrackedFile[];
     staged?: Set<string>;
 };
 
-/** A result status validated by the execution report schema. */
-export type CheckStatus = z.output<typeof resultSchema>['status'];
-
-export type CheckResult = Defined<Omit<z.infer<typeof resultSchema>, 'findings'>> & {
-    findings: Finding[];
+export type CheckResult = {
+    check: string;
+    scope: string;
+    status: CheckStatus;
+    fileCount: number;
+    files?: readonly string[];
+    duration: number;
+    findings: readonly Finding[];
+    note?: string;
+    reproduce?: string;
+    command?: readonly string[];
 };
 
 /** The run report as check --json prints it. */
@@ -115,9 +125,9 @@ export type RunReport = {
     stage: StageFilter;
     started: string;
     duration: number;
-    checks: CheckResult[];
-    ignores: { check: string; rule?: string; paths?: string[]; reason?: string; matched: number }[];
-    skips: {
+    checks: readonly CheckResult[];
+    ignores: readonly { check: string; rule?: string; paths?: readonly string[]; reason?: string; matched: number }[];
+    skips: readonly {
         check: string;
         cause: NonNullable<PlannedCheck['skip']>['cause'];
     }[];
@@ -126,12 +136,12 @@ export type RunReport = {
     /** Whether the run read only part of the repository: the staged files, a change set, or named paths. */
     partial: boolean;
     /** The checks that failed, with the checks whose fixer failed although the check passed. */
-    failed: string[];
+    failed: readonly string[];
     exitCode: number;
 };
 
 export type ReportInput = {
-    session: ToolSession;
+    session: Session;
     options: RunReportOptions;
     started: Date;
     planned: PlannedCheck[];
@@ -142,10 +152,30 @@ export type ReportInput = {
 };
 
 /** Checks and fixer outcomes prepared for the subsequent execution pass. */
-export type ReplannedFixResult = { executables: Executable[]; fixes: FixReport | undefined };
+export type ReplannedFixResult = { executables: RunnableCheck[]; fixes: FixReport | undefined };
 
-/** Findings retained after policy ignores and the matches credited to their authored entries. */
+/** Findings retained after settings ignores and the matches credited to their written entries. */
 export type IgnoredFindings = { kept: Finding[]; uses: IgnoreUse[] };
 
 /** A preview fixes a disposable copy and reports differences. */
 export type FixOptions = { isDryRun: boolean; checks: BuiltInChecks };
+
+export type ReproduceOptions = {
+    push?: PushInput;
+    messageFile?: string;
+    staged?: boolean;
+};
+
+export type Finding = {
+    check: string;
+    file: string;
+    message: string;
+    fixable: boolean;
+    line?: number | undefined;
+    column?: number;
+    rule?: string;
+    help?: string;
+};
+
+/** Where a finding points: the file, and the line and column when the check knows them. */
+export type FindingPlace = Pick<Finding, 'file' | 'line' | 'column'>;

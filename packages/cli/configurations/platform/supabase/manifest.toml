@@ -1,8 +1,8 @@
-products = ["Supabase"]
+allowed_words = ["Supabase"]
 [configuration]
 title = "Supabase"
 requires = ["postgres", "javascript"]
-suggests = ["typescript", "security"]
+suggests = ["typescript"]
 description = "A Supabase project: a project file that parses, edge functions under Deno, and migrations named as the CLI names them. Every storage bucket has a policy, and privileged keys stay in their allowed files."
 
 [detect]
@@ -11,10 +11,6 @@ project_files = ["supabase/config.toml"]
 
 [files]
 paths = ["supabase/config.toml", "supabase/functions/**", "supabase/seed.sql"]
-
-[set]
-"postgres.client_schemas" = ["public"]
-"tools.squawk.assume_in_transaction" = true
 
 [[tool]]
 name = "deno"
@@ -37,7 +33,6 @@ scoop = "supabase"
 
 [[check]]
 name = "project-file"
-title = "Validate the Supabase project"
 example = "A function entry in `supabase/config.toml` naming a function absent from the repository reports a stale function configuration. Restore the function source or remove its obsolete configuration table."
 level = "recommended"
 stage = "commit"
@@ -48,7 +43,6 @@ help = "Correct the file at the place the message names, or remove the table of 
 
 [[check]]
 name = "migration-names"
-title = "Name migrations by timestamp"
 example = "A Supabase migration named `add_users.sql` lacks the required timestamp prefix. Create it with `supabase migration new add_users`, then move the intended SQL into the generated migration file."
 level = "recommended"
 stage = "commit"
@@ -59,7 +53,6 @@ help = "Create the migration with supabase migration new `<name>`, which writes 
 
 [[check]]
 name = "storage-policies"
-title = "Give every bucket a policy"
 example = "A declared storage bucket with no matching policy on `storage.objects` reports missing access policy. Add a migration defining the intended access policy for that bucket and rerun."
 level = "recommended"
 stage = "commit"
@@ -70,7 +63,6 @@ help = "Add a policy on storage.objects for the bucket in a migration."
 
 [[check]]
 name = "service-role-key"
-title = "Contain privileged Supabase keys"
 example = "A client source reading a Supabase secret or service-role key reports an administrative-key boundary finding. Move privileged operations and the key read to a server-only path, exposing only the required server operation to the client."
 level = "recommended"
 stage = "commit"
@@ -81,7 +73,6 @@ help = "Move code to edge functions or tests, or run gspot ignore supabase/servi
 
 [[check]]
 name = "deno-lint"
-title = "Lint edge functions"
 example = "An Edge Function declaring `var greeting = \"hello\";` reports `no-var`. Use `const greeting = \"hello\";` when the value does not change, then rerun with the pinned Deno tool available."
 level = "recommended"
 stage = "commit"
@@ -93,7 +84,6 @@ help = "Change the code the way the rule says; deno lint --rules explains each o
 
 [[check]]
 name = "deno-check"
-title = "Type check edge functions"
 example = "An Edge Function assigning a string to a number-typed variable reports a Deno type error. Correct the value or type to match the intended contract, then rerun."
 level = "recommended"
 stage = "push"
@@ -107,7 +97,6 @@ help = "Fix the first error Deno prints; later ones are often the same mistake."
 name = "stale-types"
 command = ["supabase", "gen", "types", "typescript", "--local", "{each:--schema:supabase.schemas}"]
 generated_paths = [{ stdout = "{setting:supabase.types_file}" }]
-title = "Keep Supabase database types current"
 example = "A database types file that differs from the configured local Supabase schema reports drift. With the local database ready, regenerate using `supabase gen types typescript --local`, write the output to the configured file, and rerun."
 level = "recommended"
 stage = "push"
@@ -118,22 +107,6 @@ summary = "Compares supabase.types_file with the types the CLI writes from the l
 why = "Stale types let code compile against a column the database dropped."
 help = "Run supabase gen types typescript --local and write the output to the file."
 
-[[setting]]
-name = "supabase.schemas"
-type = "list"
-items = "string"
-default = ["public"]
-summary = "The database schemas to include in generated types."
-
-[[setting]]
-name = "supabase.types_file"
-type = "path"
-path_role = "destination"
-default = ""
-summary = "The committed database types file, relative to the scope; empty turns the comparison off."
-
-[[setting]]
-name = "supabase.functions_folder"
-type = "path"
-default = "supabase/functions"
-summary = "The folder relative to the scope that holds one folder for each edge function."
+[defaults]
+"postgres.client_schemas" = ["public"]
+"tools.squawk.assume_in_transaction" = true

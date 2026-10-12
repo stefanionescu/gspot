@@ -1,9 +1,9 @@
-import type { OwnedCheck } from '#cli/types/configurations.ts';
 import type { FileKind } from '#cli/types/repository/inventory.ts';
-import type { SettingEntry, RepositoryDefinition } from '#cli/types/policy/settings.ts';
+import type { CommandCheck, SettingEntry } from '#cli/types/settings/values.ts';
+import type { Manifest, ConfigurationCheck } from '#cli/types/configurations.ts';
 
 export type Explanation = {
-    kind: 'check' | 'tool-rule' | 'configuration' | 'setting' | 'path';
+    kind: 'check' | 'lint-rule' | 'configuration' | 'setting' | 'path';
     subject: string;
     text: string;
     data: Record<string, unknown>;
@@ -12,7 +12,7 @@ export type Explanation = {
 export type PathExplanation = {
     path: string;
     scope: string;
-    /** The kind of the file: source, generated, vendored, or binary. The explanation's own kind is path. */
+    /** The kind of the file: source, generated, vendored, or binary. The explanation uses the path kind. */
     fileKind: FileKind;
     fileKindSource?: string;
     tags: string[];
@@ -27,24 +27,23 @@ export type SettingScope = { scope: string; shipped: unknown; effective: Setting
 
 export type ConfigurationExplanation = {
     name: string;
-    kind: string;
+    group: Manifest['configuration']['group'];
     title: string;
     description: string;
     requires: string[];
     tools: string[];
     checks: { check: string; stage: string }[];
     settings: string[];
-    agentRules: string[];
-    auto: boolean;
+    rules: string[];
+    alwaysSelected: boolean;
 };
 
-export type Found = OwnedCheck | { check: RepositoryDefinition; configuration: undefined };
+export type Found = ConfigurationCheck | { check: CommandCheck; configuration: undefined };
 
 export type CheckFacts = {
     source: string;
     settings: string[];
-    agentRules: string[];
+    rules: string[];
     crashPattern: string | undefined;
-    minVersions: Record<string, string> | undefined;
-    versionRequirements: string[];
+    minVersions: Record<string, string>;
 };

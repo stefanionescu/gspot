@@ -1,9 +1,0 @@
-<%~ yaml({
-    extends: 'existence',
-    message: "Heading '%s' inventories the tree. Document behavior and ownership instead.",
-    level: 'error',
-    ignorecase: true,
-    scope: 'heading',
-    nonword: true,
-    tokens: [...new Set([...prose.bannedHeadings, ...settings['docs.banned_headings']])].map((heading) => `(?:\\b|^)${RegExp.escape(heading)}(?:\\b|$)`),
-}) %>

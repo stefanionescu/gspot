@@ -25,22 +25,17 @@ for (const path of process.argv.slice(2)) {
 }
 ```
 
-Add the check to `gspot.toml`. For a new repository, this is the complete policy. In an
-existing policy, add the named check and its output table:
+Add the check to `gspot.toml` as a `[[command_check]]` record:
 
-```toml title="Note checker policy"
-configurations = []
-
-[check."project/notes"]
+```toml
+[[command_check]]
+name = "notes"
 command = ["node", "scripts/check-notes.mjs", "{files}"]
 paths = ["notes/**"]
 stage = "commit"
 summary = "Finds unfinished FIXME notes."
-help = "Replace each FIXME note with the completed instruction."
-
-[check."project/notes".output]
-format = "regex"
-pattern = '^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$'
+help = "Replace each FIXME note with the finished instruction."
+output = { format = "regex", pattern = '^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$' }
 ```
 
 Save this note under the example filename:
@@ -49,17 +44,17 @@ Save this note under the example filename:
 FIXME: document the deployment command.
 ```
 
-Apply the policy and run the check:
+Apply the settings and run the check:
 
 ```bash
 gspot apply
-gspot check --only project/notes
+gspot check --only notes
 ```
 
 The check exits with `1` and reports a finding on the note's first line. Replace it with
 the finished instruction:
 
-```text title="Corrected note"
+```text title="Fixed note"
 Run the deployment command documented in the release guide.
 ```
 
@@ -67,7 +62,7 @@ Run the same check again. It exits with `0` and reports no findings.
 
 ## How the command runs
 
-`command` is a list of arguments, and gspot runs it without a shell. `{files}` expands to the
+`command` lists arguments; gspot runs them without a shell. `{files}` expands to the
 selected files, one argument each. File names with spaces need no extra quoting. To run the
 command once for each file, use `{file}` instead. Then a regular expression match without a `file` group
 uses the file of that run.
@@ -79,49 +74,26 @@ run.
 
 ## Read the output
 
-`[check."project/notes".output]` decides how the output becomes findings:
+`output` decides how the output becomes findings:
 
 - `format = "regex"` matches each line. The groups `file`, `line`, and `message` fill the
   finding.
-- Set `format = "json"` for JSON output, then map fields under `[check."project/notes".output.fields]`. Use `items` or `children` for nested results:
+- Set `format = "json"` for JSON output, then map fields under `output`. Use `items` or `children` for nested results:
 
     ```toml
-    [check."project/notes".output]
-    format = "json"
-    [check."project/notes".output.fields]
-    message = "message"
+    output = { format = "json", fields = { message = "message" } }
     ```
 
-- `sarif`, `grouped`, `lines`, and `none` support other output contracts described in the [policy reference](/reference/gspot-toml/#check).
-- `format = "semgrep"` reads Semgrep JSON.
-- `format = "trufflehog-json"` reads TruffleHog JSON without exposing secret values.
-- `format = "typos"` reads the JSON of typos. It turns byte offsets into character columns.
-- `format = "markdownlint"` reads the results of markdownlint.
-- `format = "knip"` reads Knip JSON and preserves issue categories and source positions.
+gspot also reads the JSON of Semgrep, TruffleHog, typos, markdownlint, and Knip; see the [gspot.toml reference](/reference/gspot-toml/#command_check).
 
 Malformed output counts as a failed run, exit code `2`. The
-[policy reference](/reference/gspot-toml/#check) lists every field.
+[gspot.toml reference](/reference/gspot-toml/#command_check) lists every field.
 
-## Count failures in the output
+## Add a fix command
 
-Some tools print a summary and always exit with `0`. For those, set `finding_count_pattern` on the check.
-With `finding_count_pattern = "FAILED"`, each match in stdout or stderr is a failure. Use it only for a
-tool that works this way.
+To let `gspot check --fix` fix the findings, set `fix` to a list of arguments.
+`--fix` runs every fixer, then runs them again on the files that changed, so a formatter
+reads what another fixer wrote. Then it runs the checks again. The fix commands change your working tree, not the staging area.
 
-## Add a correction command
-
-To let `gspot check --fix` correct the findings, set `fix` to a list of arguments.
-`--fix` runs every correction, then runs them again on the files that changed, so a formatter
-sees what a codemod wrote. Then it runs the checks again. The corrections change your working
-tree, not the staging area.
-
-A correction that exits with one of the check's `exit_codes` left findings in place.
+If the fix command exits with one of the `exit_codes`, gspot reports remaining findings.
 Other nonzero exits count as a failed run.
-
-When a tool uses its findings exit code for crashes too, set `crash_pattern` to a regular
-expression that matches its crash messages. A match counts as a failed run, whatever the exit
-code.
-
-## Native exclusions
-
-Set `ignore_file = ".exampleignore"` on the check to read ordered gitignore patterns from that scope-relative file. Saved `[[ignore]]` exclusions still apply. Include the ignore file in Git with your check policy.

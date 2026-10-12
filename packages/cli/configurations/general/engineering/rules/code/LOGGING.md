@@ -1,17 +1,12 @@
----
-title: Logging
----
-
 # Logging
 
 ## One logger
 
 <!-- level: all -->
 
-- One logger owner per process, configured at the entrypoint: level, format, redaction, transports.
-- Feature code obtains a logger from that owner. It never instantiates, configures, or adds transports.
-- `print` is for a CLI's own output.
-- A service logs to stdout. A command-line tool logs to stderr. Configure other transports at the logger.
+- One logging module per process, configured at the entrypoint: level, format, redaction, transports.
+- Feature code obtains a logger from that module. It never instantiates, configures, or adds transports.
+- A service logs to stdout. Configure other transports at the logger.
 
 ## Levels
 
@@ -21,32 +16,33 @@ title: Logging
 - `info`: normal lifecycle events and status.
 - `warn`: degraded, retryable, or unexpected but survivable conditions.
 - `error`: an operation failed and no caller recovered.
-- `fatal`: the process or a major owner is unusable and is shutting down.
+- `fatal`: the process cannot go on and stops.
 - Do not add custom levels.
 
 ## Structure
 
-- The message string is stable, human-readable, and describes the event. Values go in structured fields, never interpolated into the message.
+- Write a stable, human-readable message string that describes the event. Values go in structured fields, never interpolated into the message.
 - Preserve declared event names and field keys. Before you rename one, tell the user because
   dashboards and alerts may read it.
-- Include the request trace when one is available.
+- Include the request trace when the request provides one.
 - Use stable names for request IDs, correlation IDs, provider request IDs, operation IDs, resource IDs, and safe user IDs. Propagate them to provider calls when supported.
-- Put an error object in the field the logger serializes errors from, so stack and cause are kept.
+- Put an error object in the field the logger serializes errors from, so the logger keeps the stack and cause.
 - Summarize: counts, IDs, statuses, provider names, durations. No large, deeply nested, or expensive-to-compute fields.
-- Do not compute expensive log arguments when the level is disabled.
+- Do not compute expensive log arguments when the logger disables the level.
 
 ### Field naming
 
 <!-- level: all -->
 
-Use `lower_snake_case` for new event names and field keys unless an existing operational contract defines their spelling.
+Use `lower_snake_case` for new event names and field keys unless an existing logging interface defines their spelling.
 
-## Never log
+## Sensitive values
 
-- Secrets, tokens, passwords, cookies, authorization headers, connection strings.
+Follow the secrets rules for values that must never reach logs.
+
 - Personal data, raw user content, full request or response bodies, provider payloads, database rows.
 
-Redaction lives in the logger owner. When a new sensitive key can reach logs, update the redaction list; do not filter at one call site.
+Redaction lives in the logging module. When a new sensitive key can reach logs, update the redaction list; do not filter at one call site.
 
 ```ts
 // Bad.
@@ -55,3 +51,5 @@ logger.info({ headers: req.headers }, 'Incoming request');
 // Good.
 logger.info({ path: req.path, method: req.method, requestId }, 'Incoming request');
 ```
+
+A logging test asserts the fields and redaction, not that the logger ran.

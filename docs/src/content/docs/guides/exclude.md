@@ -1,29 +1,21 @@
 ---
-title: Exclude files
-description: Declare excluded, generated, vendored, and test paths without hiding unrelated findings.
+title: Exclude files and ignore findings
+description: Exclude files, mark generated and copied files, and ignore findings without hiding unrelated problems.
 ---
 
-Inventory declarations and ignores have different effects. `exclude` removes paths before source content is read. `generated` and `vendored` describe files that do not belong to authored source checks. An `[[ignore]]` accepts findings for a named check. It can accept one rule, a set of paths, or both.
+gspot reads the files Git tracks, plus untracked files that `.gitignore` does not hide.
+Hide files with `.gitignore`, mark generated and copied files in `.gitattributes`, ignore a finding, or allow a name.
 
-## Exclude build output
+## Mark generated and copied files
 
-```shell
-gspot set exclude "build/**" "dist/**"
+Mark files a tool writes as `linguist-generated` and files copied from another project as `linguist-vendored`:
+
+```text
+src/generated/** linguist-generated
+vendor/** linguist-vendored
 ```
 
-Patterns are relative to the repository root. Keep the list narrow so authored source remains checked.
-
-## Generated and vendored files
-
-Record the generator or upstream owner along with its paths. The [policy reference](/reference/gspot-toml/#generated) shows the accepted fields. Use `generated` for reproducible output and `vendored` for upstream files. Exported templates retain these declarations. Review their paths in each destination.
-
-## Test files
-
-```shell
-gspot set test_files "tests/**/*.test.ts"
-```
-
-`test_files` identifies test files for test-specific rules. It does not exclude those files. A scope can declare its own test patterns.
+gspot does not check these files as your own code.
 
 ## Ignore a finding
 
@@ -31,18 +23,28 @@ gspot set test_files "tests/**/*.test.ts"
 gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results to the terminal."
 ```
 
-The command writes an `[[ignore]]` entry and applies the policy. Add `--rule <id>` to accept one rule instead of the whole check. Every ignore needs a reason.
+Every ignore needs a reason. Leave out `--rule` to ignore the whole check.
+Add `--paths` to select files. Add `--until YYYY-MM-DD` for an ignore that ends at 00:00 UTC on that date.
+The saved record remains for review. To ignore a dependency advisory, use
+`gspot ignore dependencies/osv --rule <advisory ID> --reason "..."` with the advisory's ID and your reason.
 
-For a naming convention rather than a check exclusion, use `[[naming.overrides]]`:
+To remove the ignore:
 
-```toml
-[[naming.overrides]]
-paths = ["migrations/**"]
-categories = ["file"]
-allow_digits = true
-reason = "Migration filenames begin with their numeric version."
+```shell
+gspot unignore javascript/eslint --rule no-console --paths "scripts/**"
 ```
 
-## Native ignore files
+`gspot check --verbose` prints each applied ignore, its reason, and the number of findings it matched.
 
-A command check can declare `ignore_file = ".exampleignore"`. The file holds ordered gitignore patterns, including `!` patterns that include an excluded path again. gspot combines that file with saved check exclusions. See [command checks](/guides/command-checks/).
+## Allow a name
+
+```toml
+[[naming.override]]
+paths = ["migrations/**"]
+categories = ["files"]
+allow_digits = true
+reason = "Migration file names start with their version number."
+```
+
+Every naming override needs a reason. To allow specific names, use `allowed_names`.
+See the [gspot.toml reference](/reference/gspot-toml/) for accepted fields.

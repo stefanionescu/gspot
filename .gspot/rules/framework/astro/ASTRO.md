@@ -1,7 +1,3 @@
----
-title: Astro
----
-
 # Astro
 
 These rules cover Astro components, islands, markup, routing, and the data a page loads.
@@ -23,19 +19,18 @@ These rules cover Astro components, islands, markup, routing, and the data a pag
 - Ship HTML by default. Add a `client:` directive only to a component that needs the browser.
 - Pick the most deferred directive that works: `client:visible` or `client:idle` before `client:load`.
 - `client:only` names the framework of the component, such as `client:only="react"`.
-- The props of an island are serialized, so pass it plain data. A function or a class instance does not survive the trip.
+- Astro serializes island props, so pass plain data. A function or a class instance does not survive the trip.
 
 ## Markup
 
 - Load a local image through `astro:assets`.
-- A `<script>` without attributes is bundled into a module. Keep `is:inline` for code that must run before the page renders.
+- Astro bundles a `<script>` without attributes into a module. Keep `is:inline` for code that must run before the page renders.
 
 ## Routing and data
 
 - A page under `src/pages/` names its route by its path. A dynamic route of a static site exports `getStaticPaths`.
 - Load content through a content collection with a schema, so a missing field fails the build.
-- Read a secret on the server only, from a variable without the `PUBLIC_` prefix. Every visitor sees a `PUBLIC_` variable.
-- Validate what an endpoint or an action receives before it reaches a database or another service.
+- Read a secret on the server only, from a variable without the `PUBLIC_` prefix. Every visitor can read a `PUBLIC_` variable.
 
 ## References
 

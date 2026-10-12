@@ -1,23 +1,10 @@
-products = ["DOM"]
-eslint_presets = { recommended = { package = "eslint-plugin-svelte", source = "configs.recommended" } }
-eslint_all_rules = [
-    "svelte/block-lang",
-    "svelte/no-dom-manipulating",
-    "svelte/require-event-dispatcher-types",
-]
 
-naming.path_containers = [
-    { open = "[", close = "]", category = "path_parameters" },
-    { open = "(", close = ")", category = "directories" },
-    { open = "@", close = "", category = "directories" },
-    { open = "_", close = "", category = "directories" },
-]
 
 [configuration]
 title = "Svelte"
 requires = ["javascript"]
 suggests = ["typescript", "css"]
-description = "ESLint checks Svelte markup and scripts. DOM manipulation and event-dispatcher typing rules run at level all; HTML injection checks run at both levels. Testing Library rules check test files."
+description = "ESLint checks Svelte markup and scripts. DOM manipulation and event-dispatcher typing rules run at level all; HTML injection checks run at both levels."
 
 [detect]
 dependencies = ["svelte"]
@@ -27,16 +14,15 @@ extensions = [".svelte"]
 extensions = [".svelte"]
 filenames = ["svelte.config.js", "svelte.config.ts"]
 
-[set]
-"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
-
 [[tool]]
 name = "eslint-plugin-svelte"
 rule_prefix = "svelte"
-eslint = { extensions = [".svelte"] }
 kind = "library"
 version = "3.23.0"
 npm = "eslint-plugin-svelte"
+
+[tool.eslint]
+extensions = [".svelte"]
 
 [[tool]]
 name = "svelte-eslint-parser"
@@ -54,29 +40,44 @@ name = "prettier-plugin-svelte"
 kind = "library"
 version = "4.1.1"
 npm = "prettier-plugin-svelte"
-prettier = { entry = "plugin.js", extensions = [".svelte"], overrides = [{ files = "*.svelte", options = { embeddedLanguageFormatting = "auto" } }] }
 
-[[tool_file]]
-source = "stylelint.fragment.json.eta"
-target = ".gspot/config/stylelint.json"
-tool = "stylelint"
-required_tools = ["postcss-html"]
-fragment = true
-per_scope = true
+[tool.prettier]
+entry = "plugin.js"
+extensions = [".svelte"]
+
+[[tool.prettier.overrides]]
+files = "*.svelte"
+
+[tool.prettier.overrides.options]
+embeddedLanguageFormatting = "auto"
 
 [[check]]
 name = "svelte-check"
 tool = "svelte-check"
-title = "Check Svelte components"
 example = "A component containing `<img src={source} />` reports `a11y_missing_attribute`. Give the image a text alternative, such as `<img src={source} alt={caption} />`."
 level = "recommended"
 stage = "push"
 runs = "scope"
-replaces = "typescript/tsc"
-files = { extensions = [".svelte"] }
+instead_of = "typescript/tsc"
 summary = "Runs svelte-check over the scope: the warnings of the Svelte compiler, its accessibility warnings, and the types of every component and TypeScript file."
 why = "The TypeScript compiler cannot read a component file, and the Svelte compiler warns about markup that no browser reports."
 help = "Read the warning or error svelte-check prints for the file and fix it there; a warning fails the check as an error does."
 
-[required_eslint_rules]
-svelte = ["svelte/no-at-html-tags", "svelte/require-each-key", "svelte/no-target-blank"]
+[check.files]
+extensions = [".svelte"]
+
+[eslint]
+all_level_rules = ["svelte/no-useless-mustaches", "svelte/prefer-const", "svelte/no-dom-manipulating", "svelte/require-event-dispatcher-types"]
+
+[eslint.presets.recommended]
+package = "eslint-plugin-svelte"
+source = "configs.recommended"
+
+[defaults]
+"tools.eslint.import_extension" = "extensionless"
+
+[[tool_file]]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+fragment = true
+required_tools = ["eslint-plugin-svelte", "svelte-eslint-parser"]

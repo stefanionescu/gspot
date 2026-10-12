@@ -5,8 +5,21 @@ The documentation site uses Astro Starlight.
 ## Setup
 
 Run `mise run setup` from the repository root. Use `mise run serve:docs` to preview the site and
-`mise run build:docs` to build it. Reference pages come from the CLI contracts in
-`docs/src/content/reference/`.
+`mise run build:docs` to build it. Write the pages in `src/content/docs/` by hand. The code in `src/reference/` builds the reference pages
+at build time from the CLI's commands, its configuration manifests, the gspot.toml schema, and the ESLint plugin
+rules. Do not write reference pages by hand.
+
+## Deployment
+
+The `docs` workflow builds the published stable release tag and keeps its site artifact for one day.
+Download that run's `documentation-<run-id>` artifact into `docs/dist` in a checkout of the same release tag.
+Use the authenticated Cloudflare account, then run this command from `docs/`:
+
+```shell
+bun run wrangler deploy
+```
+
+Wrangler deploys the artifact to the `gspot-docs` Worker at `generativespotting.com`.
 
 ## Asset licenses
 

@@ -3,80 +3,115 @@ title: Install gspot
 description: Choose an installation method for your repository and prepare its checks.
 ---
 
-Read the [requirements](/guides/requirements/) first. Choose one installation method:
+## What you need
 
-| Repository                                         | Install method                                               | Prefix for later commands                                     |
-| -------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------- |
-| Has `package.json`                                 | Exact development dependency in its declared package manager | `npx gspot`, `pnpm exec gspot`, `yarn gspot`, or `bunx gspot` |
-| Python, Swift, or another repository using mise    | Install the npm CLI through mise                             | `mise exec -- gspot`                                          |
-| Uses neither a JavaScript package manager nor mise | Exact global npm installation                                | `gspot` on `PATH`                                             |
+Use Git and Node.js 24.2 or newer. Bun can install and start gspot, but the checks run on Node.js.
+Use your package manager for a repository with `package.json`, or mise for another repository.
 
-Commands in the guides start with `gspot`. Add the prefix from this table for your installation.
+Program tools such as Gitleaks, typos, and ShellCheck need mise on both paths.
+Without mise, `gspot install` installs npm tools and Python tools when `PATH` includes uv.
+It names each missing program, including uv, and exits 0. A check with a missing program exits 2;
+`gspot doctor` lists the missing tools.
 
-Replace `<version>` with the exact version from the [npm package page](https://www.npmjs.com/package/@gspothq/cli).
+Run `gspot init --dry-run` to see which tools your repository needs. gspot installs only what its checks and fixers need. File types count too: Markdown files in a Python repository still need Node.js for the Markdown checks.
+
+| Tools                                                                        | What you need                                                                                           |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| npm tools, such as ESLint or markdownlint                                    | Node.js and the project's npm, pnpm, Yarn, or Bun package manager. With no declaration, gspot uses npm. |
+| Python tools, such as Ruff or yamllint                                       | uv; gspot pins Python 3.13.16 and lets uv download it when needed.                                      |
+| Program tools: command-line programs such as ShellCheck, Gitleaks, and typos | mise, or the exact pinned tools on `PATH`. `gspot doctor` lists missing tools.                          |
+| Project commands, such as Jest, Vitest, Next.js, or Swift builds             | Your project's runtime, dependencies, and build tools.                                                  |
+
+### Operating system limits
+
+Swift needs its toolchain. SwiftFormat supports macOS and Linux. Xcode checks and XCTest coverage need macOS with Xcode selected by `xcode-select`. Container checks can need a running Docker daemon. Some scans and generators need network access. Each [check page](/reference/checks/) lists its operating systems and other requirements.
+
+The Bash checks need Bash 4.4 or newer. macOS comes with Bash 3.2, so install a newer Bash.
+
+## Choose how to install
+
+| Repository                         | Install gspot as                                  | Start later commands with                                          |
+| ---------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------ |
+| Has `package.json`                 | a dev dependency, pinned to one version           | `npx gspot`, `pnpm exec gspot`, `yarn exec gspot`, or `bunx gspot` |
+| Any other, such as Python or Swift | an npm package that mise pins in your `mise.toml` | `mise exec -- gspot`                                               |
+
+The guides write commands as `gspot ...`. Add the start from this table.
 
 ## Repository with package.json
-
-For npm:
 
 ```shell
 npm install --save-dev --save-exact @gspothq/cli
 git add package.json package-lock.json
 git commit -m "build: Add gspot"
 npx gspot init
+npx gspot install
+npx gspot check
 ```
 
-Commit the dependency and lockfile first. `init` requires a clean working tree so Git history keeps the files it replaces.
+| Package manager | Add gspot                                       | Then run                                                                   |
+| --------------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
+| pnpm            | `pnpm add --save-dev --save-exact @gspothq/cli` | `pnpm exec gspot init`, `pnpm exec gspot install`, `pnpm exec gspot check` |
+| Yarn            | `yarn add --dev --exact @gspothq/cli`           | `yarn exec gspot init`, `yarn exec gspot install`, `yarn exec gspot check` |
+| Bun             | `bun add --dev --exact @gspothq/cli`            | `bunx gspot init`, `bunx gspot install`, `bunx gspot check`                |
 
-Use the matching install and run commands for another package manager:
+Commit `package.json` and the lockfile before `init`.
 
-| Manager               | Install                                         | Initialize             |
-| --------------------- | ----------------------------------------------- | ---------------------- |
-| pnpm                  | `pnpm add --save-dev --save-exact @gspothq/cli` | `pnpm exec gspot init` |
-| Yarn Classic or Berry | `yarn add --dev --exact @gspothq/cli`           | `yarn gspot init`      |
-| Bun                   | `bun add --dev --exact @gspothq/cli`            | `bunx gspot init`      |
-
-Commit that manager's manifest and lockfile before initialization.
-
-## Repository using mise
-
-In a clean Git repository, run:
+## Repository without package.json
 
 ```shell
-mise exec npm:'@gspothq/cli@<version>' -- gspot init
-```
-
-Choose mise at the runner question. The generated mise file pins the CLI through the npm backend (`npm:@gspothq/cli`) and pins required executable tools. Trust the file before installing its tools:
-
-```shell
-mise trust .mise/conf.d/gspot-tools.toml
-mise install
+mise use node@24 'npm:@gspothq/cli@<version>'
+git add mise.toml
+git commit -m "build: Add gspot"
+mise exec -- gspot init
 mise exec -- gspot install
-mise exec -- gspot doctor
+mise exec -- gspot check
 ```
 
-## Global npm installation
+Replace `<version>` with the version you install, such as `0.1.0`. `mise use` pins Node.js and gspot in your
+`mise.toml`, the same way a dev dependency pins gspot in `package.json`.
 
-Install the exact version you intend to use:
+## Read the plan
 
-```shell
-npm install --global '@gspothq/cli@<version>'
-gspot init
+Commit your work first: `gspot init` stops when your work has uncommitted changes, so that Git keeps a copy of every file it replaces.
+Run `gspot init --dry-run` to read the plan before accepting it. The plan names existing tool files it replaces, such as `.eslintrc.json`, `.prettierrc`, `ruff.toml`, `.stylelintrc.json`, `typos.toml`, and `.shellcheckrc`. `init` deletes those files and writes its own tool files; it does not read settings out of them. Move settings you still need into `gspot.toml` with `gspot set` and `gspot ignore`. A tool without a tool file can run as a [command check](/guides/command-checks/).
+
+### What init leaves alone
+
+gspot leaves your application settings and your text outside managed blocks alone. Tool sections in shared files, such as `[tool.ruff]` in `pyproject.toml` or `prettier` in `package.json`, stay in place. The plan names each section; the generated tool files take over. Delete the section when you have moved its settings.
+
+If Husky, Lefthook, or your own hooks folder already runs your Git hooks, gspot leaves them alone and prints three gspot hook lines for you to add. See [Git hooks](/guides/hooks/). Until you add them, gspot checks do not run on commit or push.
+
+The list under `no longer runs` in the plan names folders of lint scripts and dependency files that list only lint tools. Check that nothing else uses them, then delete them.
+
+## Install the tools and check
+
+`init` shows a plan: the files it replaces, the configurations, the tools, the Git hooks, and CI. It prints
+"Continue?" and writes the files when you accept; `--yes` accepts without asking. It installs nothing and runs no
+check, and it ends with `run gspot install`. `gspot install` installs the tools and installs Git hooks when `hooks.enabled = true`.
+
+`gspot check` runs the checks. `init` proposes Git hooks and detects your CI provider; its plan shows the choices it writes. When you use a template, its hook and CI settings supply those choices.
+
+Fix the findings, review the generated files, and commit. If `gspot install` fails, see [Troubleshooting](/guides/troubleshooting/).
+
+## How hooks start gspot
+
+When the root `package.json` lists `@gspothq/cli`, the Git hooks start gspot through your package manager:
+
+```text title="Hook start commands by package manager"
+npm: npm exec --no -- gspot
+pnpm: pnpm exec gspot
+Yarn: yarn exec gspot
+Bun: bun run --no-install gspot
 ```
 
-A global install supplies one version per machine. Repositories pin their own version in `.gspot/version`. Use mise or local dependencies when repositories need different versions.
+Otherwise, they run `mise exec -- gspot`.
 
-## Accept and verify the setup
+## Private registries
 
-Read the plan, including files to replace, configuration choices, tool requirements, hooks, and CI. After acceptance, initialization resolves required lockfiles before writing the configuration. It then installs the applicable tools. With `--no-install`, it writes the setup without resolving lockfiles. Run `gspot install` later.
+The npm, pnpm, Yarn, and Bun installs of gspot use the registry settings of your repository and your environment. uv
+reads Python package indexes from `uv.toml` or `[tool.uv]` in `pyproject.toml`.
 
-`gspot install` prepares new lockfiles and tool environments before replacing the installed tool files. If it fails, repair the reported error and run `gspot install` again. Use `--refresh-lockfiles` when you intend to resolve declared tool pins again.
+Keep credentials in environment variables or your user settings, never in `gspot.toml` or a lockfile. Each
+teammate gives their own credentials when they run `gspot install`.
 
-Then run:
-
-```shell
-gspot doctor
-gspot check
-```
-
-Resolve the findings, review the generated files, and commit the setup. Initialization itself runs no check. After cloning an existing setup, follow [Join a repository](/guides/join/).
+Cloned a repository that already uses gspot? See [Join a repository](/guides/join/).

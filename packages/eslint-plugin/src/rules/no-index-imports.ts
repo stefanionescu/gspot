@@ -1,10 +1,11 @@
 import { posix } from 'node:path';
+import { createRule } from '../create-rule.ts';
 import { ASTUtils } from '@typescript-eslint/utils';
-import { createRule } from '#plugin/create-rule.ts';
-import type { ImportSource } from '#plugin/types/imports.ts';
+import { INDEX_BASENAMES } from '../config/paths.ts';
+import { IMPORT_SELECTOR } from '../config/syntax.ts';
+import type { ImportSource } from '../types/syntax.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { MODULE_MOCK_METHODS } from '#plugin/config/no/index-imports.ts';
-import { INDEX_BASENAMES, INTERNAL_PREFIXES } from '#plugin/config/files.ts';
+import { INTERNAL_PREFIXES, MODULE_MOCK_METHODS } from '../config/imports.ts';
 
 export const noIndexImports = createRule<[], 'index'>({
     name: 'no-index-imports',
@@ -13,11 +14,10 @@ export const noIndexImports = createRule<[], 'index'>({
         type: 'suggestion',
         docs: {
             level: 'all',
-            title: 'No index imports',
             example:
                 'The import `import { a } from "./index.js";` reports `index`. If `a.js` declares the value, use `import { a } from "./a.js";`.',
             description:
-                'Finds an import that names an index file instead of the module that declares the value, including module paths in Vitest and Jest mocks.',
+                'Finds an import that names an index file instead of the module that declares the value, including module paths in Vitest and Jest mocks. Folder imports such as ./lib are not reported.',
             why: 'An index import pulls in everything behind the barrel and hides which module the value comes from.',
             fix: 'Import from the leaf module directly.',
         },
@@ -37,7 +37,7 @@ export const noIndexImports = createRule<[], 'index'>({
             context.report({ node, messageId: 'index', data: { source } });
         };
         return {
-            'ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression'(node: ImportSource) {
+            [IMPORT_SELECTOR](node: ImportSource) {
                 check(node.source);
             },
             CallExpression(node) {
@@ -48,8 +48,9 @@ export const noIndexImports = createRule<[], 'index'>({
                 )
                     return;
                 const framework = node.callee.object.name;
-                if (framework !== 'vi' && framework !== 'jest') return;
-                if (MODULE_MOCK_METHODS[framework].has(node.callee.property.name)) check(node.arguments[0]);
+                if (!Object.hasOwn(MODULE_MOCK_METHODS, framework)) return;
+                if (MODULE_MOCK_METHODS[framework as keyof typeof MODULE_MOCK_METHODS].has(node.callee.property.name))
+                    check(node.arguments[0]);
             },
         };
     },

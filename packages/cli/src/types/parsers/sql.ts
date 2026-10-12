@@ -1,4 +1,4 @@
-import type { Node, ParseResult } from '@pgsql/types';
+import type { Node } from '@pgsql/types';
 
 /** Source span and kind of one PostgreSQL literal or psql client token. */
 export type SqlToken = {
@@ -15,11 +15,6 @@ export type PreparedSql = { text: string; variables: SqlRange[] };
 
 /** PostgreSQL payload fields indexed by their native node kind. */
 export type SqlNodeFields = { [Entry in Node as keyof Entry]: Entry[keyof Entry] };
-
-/** The result of a parse: the tree, or the error. */
-export type SqlParse =
-    | { tree: ParseResult; error: undefined }
-    | { tree: undefined; error: { text: string; offset: number } };
 
 /** A statement retains the relation between its native kind and payload. */
 export type SqlStatementView<Kind extends keyof SqlNodeFields = keyof SqlNodeFields> = {

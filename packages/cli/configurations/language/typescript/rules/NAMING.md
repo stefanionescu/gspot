@@ -1,18 +1,12 @@
----
-title: TypeScript Naming
----
-
 # TypeScript Naming
 
-TypeScript naming follows the project rules here. Google TypeScript guidance is
+TypeScript naming follows the project rules here. Use Google TypeScript guidance as
 a strong default for many language choices. The rules below deliberately override some of it, and
 say so where they do.
 
 ## TypeScript files and modules
 
 <!-- level: all -->
-
-Rules:
 
 - File names describe the primary exported type, function, route, or cohesive
   capability.
@@ -21,18 +15,9 @@ Rules:
 - Do not create files named only for generic reuse.
 - Keep generated file names only when generator-owned.
 
-| Avoid                      | Prefer                        | Meaning                     |
-| -------------------------- | ----------------------------- | --------------------------- |
-| `UserService.ts`           | `user-repository.ts`          | User persistence.           |
-| `userHelpers.ts`           | `email-address-validation.ts` | Email validation.           |
-| `utils.ts`                 | `session-token-verifier.ts`   | Session token verification. |
-| `ReportReaderContainer.ts` | `report-reader.ts`            | Report reading.             |
-
 ## TypeScript variables
 
 <!-- level: all -->
-
-Rules:
 
 - Use meaningful, pronounceable names.
 - Use the same vocabulary for the same concept.
@@ -55,8 +40,6 @@ Name a reused daily timer duration `MILLISECONDS_PER_DAY` and define it as
 
 <!-- level: all -->
 
-Rules:
-
 - Function names say what they do.
 - Prefer two or fewer parameters.
 - Use an options object for many arguments, multiple same-type arguments,
@@ -64,25 +47,22 @@ Rules:
 - Do not use boolean flags to choose separate behaviors.
 - Prefer a positive predicate name plus `!` at the call site over a negative
   predicate function.
-- Use async/await in names only when distinguishing from a blocking counterpart
-  is necessary. Normally the return type communicates async.
+- Use async/await in names only to distinguish from a blocking counterpart. Normally the return type communicates async.
 - Name functions by domain work, not implementation mechanics.
 
 ## TypeScript types
 
 <!-- level: all -->
 
-Rules:
-
 - Use unions and discriminated unions for alternatives.
 - Use interfaces only when a framework contract, declaration merging, or
   `implements` relationship makes an interface the clearest tool.
 - Do not encode optionality in an alias name.
-- Use optional fields and parameters for values that may be omitted.
+- Use optional fields and parameters for values callers can omit.
 - Avoid return-type-only generics. When using an existing return-type-only
   generic API, specify the generic explicitly.
-- Name index keys meaningfully if an index signature is needed.
-- Prefer `Map` when key/value behavior is the point.
+- Name index keys meaningfully when the type needs an index signature.
+- Prefer `Map` for key/value operations.
 
 Name a coffee response union `CoffeeResponse`; put `| undefined` on an
 operation that can return no response. Name a user index `UsersById` and its

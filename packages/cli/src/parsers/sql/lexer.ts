@@ -1,5 +1,7 @@
 // Tokenize PostgreSQL literals and mask psql client syntax without shifting source positions.
+// Scans SQL tokens while preserving their source positions.
 import type { SqlRange, SqlToken, PreparedSql } from '#cli/types/parsers/sql.ts';
+import { WORD_CHARACTER, IDENTIFIER_START, DOLLAR_TAG_BLOCKER } from '#cli/config/parsers/sql.ts';
 
 // The index of the first stop character at or after from, or the text length.
 function lineEnd(text: string, from: number, stops: string): number {
@@ -30,9 +32,9 @@ function escapedStringEnd(text: string, from: number): number {
 
 // The index past an identifier that starts at from, or from when none starts there.
 function identifierEnd(text: string, from: number): number {
-    if (!/[A-Za-z_]/u.test(text[from] ?? '')) return from;
+    if (!IDENTIFIER_START.test(text[from] ?? '')) return from;
     let end = from + 1;
-    while (/\w/u.test(text[end] ?? '')) end += 1;
+    while (WORD_CHARACTER.test(text[end] ?? '')) end += 1;
     return end;
 }
 
@@ -49,13 +51,13 @@ function variableEnd(text: string, at: number): number {
 
 // An E'' string, whose E must start a word.
 function escapedStringAt(text: string, at: number): Omit<SqlToken, 'start'> | undefined {
-    if (text[at + 1] !== "'" || /\w/u.test(text[at - 1] ?? '')) return undefined;
+    if (text[at + 1] !== "'" || WORD_CHARACTER.test(text[at - 1] ?? '')) return undefined;
     return { end: escapedStringEnd(text, at + "E'".length), kind: 'other' };
 }
 
 // A dollar-quote tag, which cannot continue an identifier or a number.
 function dollarAt(text: string, at: number): Omit<SqlToken, 'start'> | undefined {
-    if (/[\p{L}\p{N}_$]/u.test(text[at - 1] ?? '')) return undefined;
+    if (DOLLAR_TAG_BLOCKER.test(text[at - 1] ?? '')) return undefined;
     const end = identifierEnd(text, at + 1);
     return text[end] === '$' ? { end: end + 1, kind: 'dollar' } : undefined;
 }
@@ -126,8 +128,8 @@ function replacement(kind: Omit<SqlToken, 'start'>['kind'], lexeme: string): str
 
 /**
  * Read SQL strings, comments, and client syntax without interpreting quoted bodies as source.
- * @param text the authored SQL
- * @returns tokens with their original UTF-16 boundaries
+ * @param text the SQL source.
+ * @returns tokens with their original UTF-16 boundaries.
  */
 export function* sqlTokens(text: string): Generator<SqlToken> {
     let at = 0;
@@ -145,8 +147,8 @@ export function* sqlTokens(text: string): Generator<SqlToken> {
 
 /**
  * Prepare client-side psql syntax without changing SQL lexeme positions or quoted bodies.
- * @param text the authored SQL with client commands and substitutions
- * @returns parser text and substitution ranges in original UTF-16 coordinates
+ * @param text the SQL source with client commands and substitutions.
+ * @returns parser text and substitution ranges in original UTF-16 coordinates.
  */
 export function maskPsqlSyntax(text: string): PreparedSql {
     const variables: SqlRange[] = [];

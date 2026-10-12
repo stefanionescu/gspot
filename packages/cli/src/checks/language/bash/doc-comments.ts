@@ -1,15 +1,15 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
-import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { getScriptIndex } from '#cli/checks/language/contracts.ts';
+import { readScripts } from '#cli/checks/language/bash/scripts.ts';
+import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 
 import {
     WORD,
     VAGUE_WORDS,
-    ENTRY_FUNCTIONS,
+    MAIN_FUNCTION,
     BASH_DOC_SECTIONS,
-    SHELLCHECK_DIRECTIVE,
+    LEADING_UNDERSCORES,
+    SHELLCHECK_TOOL_COMMENT,
 } from '#cli/config/checks/language/bash.ts';
 
 function blockAbove(lines: string[], start: number): string[] {
@@ -19,17 +19,17 @@ function blockAbove(lines: string[], start: number): string[] {
         index -= 1;
         const trimmed = (lines[index] ?? '').trim();
         if (!trimmed.startsWith('#')) break;
-        if (!SHELLCHECK_DIRECTIVE.test(trimmed)) block.unshift(trimmed);
+        if (!SHELLCHECK_TOOL_COMMENT.test(trimmed)) block.unshift(trimmed);
     }
     return block;
 }
 
 function isMeaningful(name: string, summary: string): boolean {
-    const nameWords = new Set(name.replace(/^_+/u, '').split('_'));
+    const nameWords = new Set(name.replace(LEADING_UNDERSCORES, '').split('_'));
     const words = summary
         .matchAll(WORD)
         .map((match) => match[0].toLowerCase())
-        .filter((word) => !VAGUE_WORDS.includes(word))
+        .filter((word) => !new Set<string | undefined>(VAGUE_WORDS).has(word))
         .toArray();
     return words.some((word) => !nameWords.has(word));
 }
@@ -60,18 +60,18 @@ function docFinding(entry: ScriptFunction, block: string[]): Required<Pick<Findi
 
 /**
  * One finding per function without a summary line, with a vague summary, or with doc sections out of order.
- * @param input the check context
- * @returns the findings
+ * @param input the check context.
+ * @returns the findings.
  */
-export const docComments: BuiltInCheck = async (input) => {
-    const index = await getScriptIndex(input);
-    return index.files.flatMap((file) => {
+export async function bashDocComments(input: CheckInput): Promise<Finding[]> {
+    const index = await readScripts(input);
+    return index.flatMap((file) => {
         return file.functions.flatMap((entry) => {
-            if (ENTRY_FUNCTIONS.includes(entry.name)) return [];
+            if (entry.name === MAIN_FUNCTION) return [];
             const found = docFinding(entry, blockAbove(file.lines, entry.start));
             return found === undefined
                 ? []
                 : [findingAt(input, { file: file.path, line: entry.start }, found.rule, found.message)];
         });
     });
-};
+}

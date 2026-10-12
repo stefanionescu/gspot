@@ -5,7 +5,6 @@ description = "Checks the files that Git tracks and their storage."
 
 [[check]]
 name = "large-files"
-title = "Keep large files out of git"
 example = "A tracked `notes/big.txt` containing 1,100 KiB exceeds the default 1,024 KiB ceiling and reports `size`. Remove accidental content or store a required large file through Git LFS. Generated and vendored classifications must describe the actual file ownership."
 level = "recommended"
 stage = "commit"
@@ -16,7 +15,6 @@ help = "Track the file with git lfs, classify it with gspot set generated `<path
 
 [[check]]
 name = "tracked-files"
-title = "Keep local and installed files out of Git"
 example = "A tracked .env or node_modules/example/index.js reports tracked-file. Add its path to .gitignore and run git rm --cached on that file, preserving its local contents."
 level = "recommended"
 stage = "commit"
@@ -24,10 +22,3 @@ runs = "once"
 summary = "Checks tracked files against the paths that selected configurations declare untracked."
 why = "Machine-local values and installed packages belong outside shared Git history."
 help = "Add the reported file or folder to .gitignore and remove it from the index with git rm --cached."
-
-[[setting]]
-name = "limits.file_kb"
-type = "number"
-direction = "ceiling"
-default = 1024
-summary = "The largest file Git may track, in kilobytes. Larger files need Git LFS or a generated or vendored entry."

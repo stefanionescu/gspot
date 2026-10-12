@@ -1,56 +1,54 @@
 import type { StageFilter } from '#cli/types/planning.ts';
-import type { CommandResult, OutputOptions } from '#cli/types/terminal.ts';
+import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { RunReport, CheckResult } from '#cli/types/execution/check.ts';
 import type { PushInput, StagedPaths, ChangedPaths, PushSelection } from '#cli/types/repository/revisions.ts';
 
-export type Checked = PushReport['revisions'][number];
-
-export type CheckCommandResult = CommandResult & { report?: RunReport };
+type Checked = { hash: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport };
 
 /** The push report: one run report for every distinct tree that Git's pre-push input names. */
-export type PushReport = {
+type PushReport = {
     canceled?: { pendingRefs: string[] };
-    revisions: { hash: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport }[];
+    revisions: Checked[];
     skipped: PushSelection['skipped'];
     exitCode: number;
 };
 
 /** The selected index paths when present, and the count of unstaged changes. */
-export type StagedSelection = StagedPaths | { staged: undefined; unstaged: number };
+type StagedFiles = StagedPaths | { staged: undefined; unstaged: number };
 
-export type Selections = {
+type RunFilters = {
     paths: string[] | undefined;
     changed: ChangedPaths | undefined;
-    staging: StagedSelection;
+    staging: StagedFiles;
     stage: StageFilter;
 };
 
-/** The flags of check, as commander parses them. */
-export type CheckFlags = {
-    only?: string[];
-    staged?: true;
-    changed?: true;
-    base: string;
-    fix?: true;
-    dryRun?: true;
-    hook?: 'pre-commit' | 'pre-push' | 'commit-msg';
-    skip: string[];
-    messageFile?: string;
-};
-
-export type CheckOptions = {
-    hook?: CheckFlags['hook'];
+type CheckOptions = {
+    hook?: (typeof CHECK_HOOKS)[number];
     onResult?: (result: CheckResult) => void;
     cwd: string;
     only?: string[];
     paths: string[];
     staged: boolean;
     push?: PushInput;
-    changed?: string;
+    base?: string;
     fix: boolean;
     isDryRun: boolean;
     stage?: StageFilter;
-    skips: string[];
     messageFile?: string;
-    verbosity: OutputOptions['verbosity'];
+    verbose: boolean;
 };
+
+/** What a copy stands for: the staged index or a pushed commit, and the repository whose tools it runs. */
+type RevisionSource = {
+    commits?: string[];
+    historyComplete?: boolean;
+    content: 'index' | 'commit';
+    installedRoot: string;
+    reference: string;
+    reportRoot?: string;
+    staged?: StagedPaths;
+    changed?: string[];
+};
+
+export type { PushReport, RunFilters, CheckOptions, RevisionSource };

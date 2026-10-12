@@ -1,19 +1,19 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { getScriptIndex } from '#cli/checks/language/contracts.ts';
-import { ENTRY_FUNCTIONS } from '#cli/config/checks/language/bash.ts';
+import { readScripts } from '#cli/checks/language/bash/scripts.ts';
+import { MAIN_FUNCTION } from '#cli/config/checks/language/bash.ts';
+import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 
 /**
  * One finding per function that no script references, outside the entry functions.
- * @param input the check context
- * @returns the findings
+ * @param input the check context.
+ * @returns the findings.
  */
-export const unusedFunctions: BuiltInCheck = async (input) => {
-    const index = await getScriptIndex(input);
-    const referenced = new Set(index.files.flatMap((file) => file.references.keys().toArray()));
-    return index.files.flatMap((file) => {
+export async function bashUnusedFunctions(input: CheckInput): Promise<Finding[]> {
+    const index = await readScripts(input);
+    const referenced = new Set(index.flatMap((file) => file.references.keys().toArray()));
+    return index.flatMap((file) => {
         return file.functions
-            .filter((entry) => !ENTRY_FUNCTIONS.includes(entry.name) && !referenced.has(entry.name))
+            .filter((entry) => entry.name !== MAIN_FUNCTION && !referenced.has(entry.name))
             .map((entry) =>
                 findingAt(
                     input,
@@ -23,4 +23,4 @@ export const unusedFunctions: BuiltInCheck = async (input) => {
                 ),
             );
     });
-};
+}

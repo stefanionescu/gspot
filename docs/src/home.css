@@ -91,8 +91,7 @@
 }
 
 .demo-findings p,
-.demo-note,
-.demo-corrections,
+.demo-fixes,
 .demo-status {
     font-size: 0.8125rem;
     line-height: 1.6;
@@ -102,12 +101,11 @@
     margin-block: 0.25rem;
 }
 
-.demo-findings span,
-.demo-note {
+.demo-findings span {
     color: var(--sl-color-gray-2);
 }
 
-.demo-corrections {
+.demo-fixes {
     padding-inline-start: 1.25rem;
     margin-block: 0 1rem;
 }
@@ -212,4 +210,27 @@
         grid-column: 2;
         grid-row: 1;
     }
+}
+
+.content-panel:has(.landing) {
+    border: 0;
+    padding-block: 0;
+}
+
+main:has(.landing) {
+    padding-block: 0;
+}
+
+.sl-markdown-content:has(.landing) {
+    margin-block-start: 0;
+}
+
+.landing {
+    max-width: 1200px;
+    min-width: 0;
+}
+
+.landing > *,
+.landing :is(p, ul, li, h2, h3, div, section, nav, footer) {
+    margin-block: 0;
 }

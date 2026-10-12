@@ -1,36 +1,40 @@
 ---
 title: Coding agents
-description: Write agent rules and preserve authored content.
+description: Write rules and preserve your own text.
 ---
 
-gspot writes Markdown agent rules that describe what its checks look for. The check results decide whether code passes.
+gspot writes rules: Markdown files that tell coding agents how to write code that passes its checks. The checks
+still decide whether code passes.
 
-## Agent rules and instruction files
+## Rules for agents
 
-With `agent_rules.enabled = true`, gspot writes selected rules under `.gspot/rules/` and a managed block in `AGENTS.md`. The selection follows applicable configurations and the chosen level. Conditional agent rules are written only when their inputs match.
+When `rules.enabled = true`, gspot writes the rules that fit your languages, frameworks, and level
+under `.gspot/rules/`, and a managed block in `AGENTS.md` that lists them. gspot preserves your own text outside the block.
 
-[Codex reads `AGENTS.md`](https://developers.openai.com/codex/guides/agents-md). Other agents have their own instruction-file conventions. [Claude Code reads `CLAUDE.md`](https://code.claude.com/docs/en/memory), so an `AGENTS.md` file alone does not ensure Claude Code loads it.
+[Codex reads `AGENTS.md`](https://developers.openai.com/codex/guides/agents-md).
+[Claude Code reads `CLAUDE.md`](https://code.claude.com/docs/en/memory), not `AGENTS.md`. To give Claude Code the
+rules, put this line in your `CLAUDE.md`:
 
-When agent rules are enabled, initialization and apply move authored text from `CLAUDE.md` to the end of `AGENTS.md`, under `Other instructions`, and remove `CLAUDE.md`. Review this move in the plan. Configure your agent to load `AGENTS.md` when its default file differs.
-
-Apart from this move, gspot changes only its managed blocks in instruction files. Authored content outside the blocks stays in place. To add an additional supported instruction file:
-
-```shell title="Additional instruction file"
-gspot set agent_rules.instruction_files .github/copilot-instructions.md
+```text
+@AGENTS.md
 ```
 
-Paths are relative to the repository root. gspot writes the block to `AGENTS.md` and the files you list. Review the plan before applying it.
+gspot never changes `CLAUDE.md`.
 
-## Resolve findings
+To write the block into another instruction file too, run this example:
 
-The managed block names the selected rules and the command to run before committing. Change policy with `gspot set` or `gspot ignore`. After a hand edit of `gspot.toml`, run `gspot apply`. Generated files under `.gspot/` are not edited by hand.
-
-Run the check with your [runner's prefix](/guides/install/) and read each finding's `help:` line. When you accept a finding, record the required reason in policy.
-
-## Turn off agent rules
-
-```shell
-gspot set agent_rules.enabled false
+```shell title="Example instruction file"
+gspot set rules.instruction_files .github/copilot-instructions.md
 ```
 
-This removes generated agent rules and managed instruction blocks. gspot deletes an instruction file it created unless you edited it. Authored instruction content remains yours.
+Write paths relative to the repository root.
+
+## Instructions in the block
+
+The block lists the rules, gives the command to run before committing, and says how to change settings. Do not edit
+files under `.gspot/`. To keep a finding, add an ignore with a reason: run `gspot ignore`.
+
+## Turn rules off
+
+Run `gspot set rules.enabled false`. This deletes the rules and the managed blocks gspot wrote. gspot also deletes
+an instruction file it created, unless you edited it. Your own text stays.

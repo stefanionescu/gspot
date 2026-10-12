@@ -1,8 +1,7 @@
-products = ["taplo", "yamllint", "JSON", "TOML", "YAML"]
+allowed_words = ["JSON", "TOML", "YAML"]
 [configuration]
 title = "JSON, YAML, TOML, and XML files"
 always_selected = true
-requires = ["format"]
 description = "Checks JSON, YAML, TOML, XML, and related formats. Its tool files configure the tools that read these files."
 
 [files]
@@ -17,7 +16,13 @@ brew = "taplo"
 cargo = "taplo-cli"
 # No npm pin: the npm build of Taplo checks no file on Windows, so every platform takes the native release.
 github = { name = "tamasfe/taplo", version = "0.10.0" }
-replaces = ["taplo.toml", ".taplo.toml"]
+[[tool.replace]]
+file = "taplo.toml"
+shared = false
+
+[[tool.replace]]
+file = ".taplo.toml"
+shared = false
 
 [[tool]]
 name = "yamllint"
@@ -25,7 +30,17 @@ version = "1.38.0"
 mise = "pipx:yamllint"
 pypi = "yamllint"
 brew = "yamllint"
-replaces = [".yamllint", ".yamllint.yml", ".yamllint.yaml"]
+[[tool.replace]]
+file = ".yamllint"
+shared = false
+
+[[tool.replace]]
+file = ".yamllint.yml"
+shared = false
+
+[[tool.replace]]
+file = ".yamllint.yaml"
+shared = false
 
 [[tool]]
 name = "v8r"
@@ -64,11 +79,10 @@ tool = "v8r"
 
 [[check]]
 name = "taplo"
-title = "Parse TOML files"
 example = "The TOML line `enabled =` lacks a value and reports a parse error. Use `enabled = true` when the setting is a boolean."
 level = "recommended"
 stage = "commit"
-command = ["taplo", "check", "--config", "{tool_file:taplo}", "--colors", "never", "--no-schema", "{files}"]
+command = ["taplo", "check", "--config", "{tool_file:taplo}", "--colors", "never", "{files}"]
 files = { extensions = [".toml"] }
 output = { format = "regex", pattern = "^\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)$", message = "The file does not parse as TOML." }
 summary = "Parses every TOML file with taplo; the schema check runs at push through v8r."
@@ -77,7 +91,6 @@ help = "Fix the line taplo names."
 
 [[check]]
 name = "taplo-format"
-title = "Format TOML files"
 example = "The TOML assignment `enabled=true` differs from the configured formatter output. Run the formatter to obtain `enabled = true` and rerun."
 level = "recommended"
 stage = "commit"
@@ -91,7 +104,6 @@ help = "Run gspot check --fix."
 
 [[check]]
 name = "yamllint"
-title = "Lint YAML files"
 example = "Two `enabled` keys in the same YAML mapping report a duplicate-key finding. Keep the one intended value and remove the duplicate."
 level = "recommended"
 stage = "commit"
@@ -104,42 +116,26 @@ help = "Fix the line yamllint names, or set the rule's options with gspot set to
 
 [[check]]
 name = "v8r"
-title = "Validate file schemas"
 example = "A governed JSON file with a string where its selected schema requires a boolean reports a schema mismatch. Replace the value with the intended boolean and rerun against the same schema."
 level = "recommended"
 stage = "push"
 needs = ["network"]
-command = ["v8r", "--ignore-errors", "--output-format", "text", "{files}"]
+command = ["v8r", "--output-format", "text", "{files}"]
 env = { V8R_CONFIG_FILE = "{tool_file:v8r}" }
 files = { extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"] }
 output = { format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$" }
 summary = "Validates every tool file that has a known schema against it: package.json, tsconfig.json, mise, workflows and the rest of the SchemaStore catalog."
 why = "A key the schema refuses is a setting that never applies, and nobody finds out until the behavior it was meant to change does not change."
-help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schemas."
+help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schema."
 
 [[check]]
 name = "xmllint"
-title = "Validate XML"
 example = "The XML text `<settings><enabled>true</settings>` has mismatched tags. Close the child element as `<enabled>true</enabled>` before closing `settings`."
 level = "recommended"
 stage = "commit"
 command = ["xmllint", "--noout", "{files}"]
-files = { extensions = [".xml"] }
+files = { extensions = [".xml", ".storyboard", ".xib"] }
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$" }
 summary = "Parses every XML file with xmllint."
 why = "Malformed XML is refused by the reader at the worst moment."
 help = "Fix the line xmllint names."
-
-[[setting]]
-name = "tools.yamllint.rules"
-off_values = ["disable"]
-type = "table"
-direction = "rule-options"
-default = {}
-summary = "Native option tables for active YAML rules. The level decides which rules run, and formatting width comes from [format]. Ignore a finding with gspot ignore files/yamllint --rule `<rule>` --reason `<why>`."
-
-[[setting]]
-name = "tools.v8r.schemas"
-type = "table"
-default = {}
-summary = "File patterns mapped to schema URLs, for files the SchemaStore catalog does not know; each entry has a pattern and a schema."

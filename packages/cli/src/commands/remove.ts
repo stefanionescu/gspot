@@ -1,95 +1,108 @@
-// Remove authored configuration choices through the policy transaction.
-import { compact } from '#cli/platform/contracts.ts';
-import { GspotError } from '#cli/platform/public.ts';
-import { printResult } from '#cli/terminal/public.ts';
-import { savePolicy } from '#cli/commands/contracts.ts';
-import { assertVersionPin } from '#cli/lifecycle/public.ts';
-import { policySchema } from '#cli/policy/schema/public.ts';
-import type { CommandResult } from '#cli/types/terminal.ts';
-import type { Program } from '#cli/types/commands/program.ts';
-import type { Mutation } from '#cli/types/policy/settings.ts';
-import { defaultValue } from '#cli/policy/schema/contracts.ts';
-import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import { commandHelp, commandRoot } from '#cli/commands/public.ts';
-import type { RemoveOptions } from '#cli/types/commands/remove.ts';
-import { getScopeTable, preparePolicy } from '#cli/policy/document/contracts.ts';
-import { requireChain, configurationManifests } from '#cli/configurations/public.ts';
+import { compact } from '#cli/objects.ts';
+import { GspotError } from '#cli/errors.ts';
+import { printResult } from '#cli/terminal/print.ts';
+import { parseSettings } from '#cli/settings/read.ts';
+import { findScopeTable } from '#cli/settings/edit.ts';
+import { type Command } from '@commander-js/extra-typings';
+import { trimTrailingSlashes } from '#cli/system/paths.ts';
+import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import type { Mutation } from '#cli/types/settings/file.ts';
+import { type CommandResult } from '#cli/types/terminal.ts';
+import { type Manifest } from '#cli/types/configurations.ts';
+import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { type ConfigurationsOptions } from '#cli/types/commands/save-settings.ts';
+import { saveSettings, startSettingsEdit, refuseAlwaysSelected } from '#cli/commands/save-settings.ts';
 
 /**
  * gspot remove: drops configurations from the root list or from one scope's list.
  * @param options the parsed flags
  * @returns the command result
  */
-async function removeCommand(options: RemoveOptions): Promise<CommandResult> {
-    const root = findRoot(options.cwd);
-    const input = preparePolicy(root);
-    assertVersionPin(root, input.table['runner']);
+async function removeCommand(options: ConfigurationsOptions): Promise<CommandResult> {
+    const { root, input } = await startSettingsEdit(options.cwd);
+    parseSettings(input.text, root);
     const manifests = configurationManifests();
-    const general = options.configurations.find((id) => manifests.get(id)?.configuration.kind === 'general');
-    if (general !== undefined)
-        throw new GspotError('policy', [
-            `The ${general} configuration follows repository inputs and the selected level. Change coverage with gspot set level, or record a check exception with gspot ignore and a reason.`,
-        ]);
-    const mutation: Mutation = (raw) => {
-        const holder = getScopeTable(raw, options.scope);
-        const list = policySchema.shape.configurations.unwrap().parse(holder['configurations'] ?? []);
-        const rootConfigurations = policySchema.shape.configurations.unwrap().parse(raw['configurations'] ?? []);
-        const kept = [...new Set([...rootConfigurations, ...list])].filter(
-            (id) => !options.configurations.includes(id),
-        );
-        for (const configuration of options.configurations) {
-            const chain = kept
-                .map((id) => requireChain(configuration, id, manifests))
-                .find((found) => found !== undefined);
-            if (chain)
-                throw new GspotError('policy', [
-                    `Cannot remove \`${configuration}\`: ${chain.join(' requires ')}. Remove \`${chain[0] ?? configuration}\` first, or keep \`${configuration}\`.`,
-                ]);
-        }
+    refuseAlwaysSelected(options.configurations, manifests);
+    const written = findScopeTable(input.table, options.scope);
+    const current = settingsSchema.shape.configurations.parse(written['configurations']);
+    const rootConfigurations = settingsSchema.shape.configurations.parse(input.table['configurations']);
+    const kept = [...new Set([...rootConfigurations, ...current])].filter((id) => !options.configurations.includes(id));
+    for (const configuration of options.configurations) {
+        const chain = kept.map((id) => requireChain(configuration, id, manifests)).find((found) => found !== undefined);
+        if (chain)
+            throw new GspotError('arguments', [
+                `Cannot remove \`${configuration}\`: ${chain.join(' requires ')}. Remove \`${chain[0] as string}\` first, or keep \`${configuration}\`.`,
+            ]);
+    }
+    if (!options.configurations.some((name) => current.includes(name))) {
+        return { text: 'nothing to remove\n', json: { changed: false }, exitCode: 0 };
+    }
+    const mutation: Mutation = (written) => {
+        const scopeTable = findScopeTable(written, options.scope);
+        const list = settingsSchema.shape.configurations.parse(scopeTable['configurations']);
         const removed = options.configurations.filter((id) => list.includes(id));
         if (removed.length === 0) return;
-        holder['configurations'] = list.filter((id) => !removed.includes(id));
-        holder['removed_configurations'] = [
+        scopeTable['configurations'] = list.filter((id) => !removed.includes(id));
+        scopeTable['removed_configurations'] = [
             ...new Set([
-                ...defaultValue(policySchema.shape.removed_configurations, holder['removed_configurations']),
+                ...settingsSchema.shape.removed_configurations.parse(scopeTable['removed_configurations']),
                 ...removed,
             ]),
         ];
     };
     const where = options.scope === undefined ? '' : ` from scope ${options.scope}`;
     const description = `removed ${options.configurations.join(', ')}${where}`;
-    const result = await savePolicy(root, {
+    const result = await saveSettings(root, {
         input,
         change: mutation,
         summary: description,
-        isDryRun: options.isDryRun,
     });
     return result.exitCode === 0 && !result.json.changed ? { ...result, text: 'nothing to remove\n' } : result;
 }
 
 /**
- * Registers remove.
- * @param program the commander program
+ * Register the remove command.
+ * @param program the command program
  */
-export function registerRemove(program: Program): void {
+function registerRemove(program: Command): void {
     program
         .command('remove')
-        .argument('<configuration...>', 'Built-in configuration names to remove')
-        .summary('Remove configurations')
-        .description(
-            'Remove configurations from the root selection or from one scope, apply the policy. Run gspot install when the remaining configuration needs tools. gspot refuses to remove a configuration that another selected configuration requires. --dry-run prints the change and writes nothing.',
-        )
-        .addHelpText('after', commandHelp('remove'))
-        .option('--scope <path>', 'Remove the configuration from this scope')
-        .option('--dry-run', 'Print the change and write nothing')
-        .action(async (configurations, flags, command) => {
+        .argument('<configuration...>', COMMAND_HELP.remove.arguments['configuration'])
+        .summary(COMMAND_HELP.remove.summary)
+        .description(COMMAND_HELP.remove.description)
+        .option('--scope <path>', COMMAND_HELP.remove.options['--scope <path>'], trimTrailingSlashes)
+        .action(async (configurations, flags) => {
             printResult(
                 await removeCommand({
-                    cwd: commandRoot(command),
+                    cwd: process.cwd(),
                     configurations: configurations,
-                    isDryRun: flags.dryRun === true,
                     ...compact({ scope: flags.scope }),
                 }),
             );
         });
 }
+
+/**
+ * The chain of requirements from one configuration to another, without revisiting a declaration.
+ * @param target the required configuration.
+ * @param from the configuration the chain starts at.
+ * @param manifests every configuration manifest.
+ * @returns the configuration names along the chain from the starting configuration to the target, or undefined when no chain exists.
+ */
+function requireChain(target: string, from: string, manifests: Map<string, Manifest>): string[] | undefined {
+    const seen = new Set<string>();
+    function search(current: string): string[] | undefined {
+        if (current === target) return [current];
+        if (seen.has(current)) return undefined;
+        seen.add(current);
+        for (const required of manifests.get(current)?.configuration.requires ?? []) {
+            const rest = search(required);
+            if (rest !== undefined) return [current, ...rest];
+        }
+        return undefined;
+    }
+    return search(from);
+}
+
+export { registerRemove };

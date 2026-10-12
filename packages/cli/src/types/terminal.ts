@@ -1,8 +1,5 @@
-/** The selected output detail, JSON format, and terminal color. */
-export type OutputOptions = { verbosity: 'quiet' | 'normal' | 'verbose'; json: boolean; color: boolean };
-
-/** Raw verbosity flags before quiet takes precedence. */
-export type VerbosityFlags = { quiet?: true; verbose?: true };
+/** The selected JSON format and terminal color. */
+export type OutputOptions = { json: boolean; color: boolean };
 
 export type Columns = { scope: number; check: number };
 
@@ -11,6 +8,3 @@ export type CommandResult<Json = unknown> = { text: string; json: Json; exitCode
 
 /** A command failure emitted as one JSON object. */
 export type CommandFailureJson = { error: string; message: string };
-
-/** A progress destination supplied by a terminal or captured test output. */
-export type ProgressStream = { isTTY?: boolean; write(text: string): unknown };

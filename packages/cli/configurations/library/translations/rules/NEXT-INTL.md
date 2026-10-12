@@ -1,20 +1,16 @@
----
-title: next-intl
----
-
 # next-intl
 
-Rules for `next-intl` in a Next.js App Router application. The locale, catalog, and RTL rules that
-hold for any framework are in the shared i18n rules; these add what the library dictates.
+Rules for `next-intl` in a Next.js App Router application. The locale, catalog, and right-to-left (RTL) rules that
+hold for any framework appear in the shared translation rules; these add what the library dictates.
 
 ## Configuration
 
 - One request configuration module owns locale resolution, message loading, time zone, and the
   `now` reference. It validates the candidate locale against the supported list before building a
   catalog import path. Nothing else resolves a locale.
-- The routing definition (locales, default locale, prefix strategy, pathnames) lives in one module
+- Define routing in one module: locales, default locale, prefix strategy, and pathnames
   that both the proxy and the navigation helpers import.
-- Use the library's navigation helpers (`Link`, `redirect`, `usePathname`, `useRouter`) for every
+- Use the library's navigation helpers such as `Link`, `redirect`, `usePathname`, `useRouter` for every
   internal link so locale prefixes and alternate metadata stay correct. Never `next/link` directly
   in a localized route.
 

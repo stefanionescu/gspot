@@ -1,41 +1,31 @@
-products = ["Next.js", "RPC"]
-eslint_presets = { recommended = { package = "@next/eslint-plugin-next", source = "configs.core-web-vitals" }, refresh = { package = "eslint-plugin-react-refresh", source = "configs.next" } }
-eslint_all_rules = [
-    "@next/next/next-script-for-ga",
-    "@next/next/no-html-link-for-pages",
-    "@next/next/no-img-element",
-    "@next/next/no-page-custom-font",
-]
-
+route_files = ["page", "layout", "template", "default", "loading", "error", "not-found", "global-error", "route", "middleware", "proxy"]
+allowed_words = ["Next.js"]
 generated = ["next-env.d.ts"]
 
-naming.path_containers = [
-    { open = "[", close = "]", category = "path_parameters" },
-    { open = "(", close = ")", category = "directories" },
-    { open = "@", close = "", category = "directories" },
-    { open = "_", close = "", category = "directories" },
-]
+[[naming.override]]
+paths = ["**/app/**", "**/pages/**"]
+categories = ["files"]
+allowed_names = ["instrumentation", "sitemap", "robots", "manifest", "opengraph-image", "icon", "apple-icon", "_app", "_document", "_error", "404", "500"]
+reason = "Next.js names these files."
+
+[[naming.override]]
+paths = ["**"]
+languages = ["typescript", "javascript"]
+categories = ["functions", "methods", "variables"]
+allowed_names = ["getStaticProps", "getServerSideProps", "generateMetadata", "generateStaticParams", "generateViewport"]
+reason = "Next.js discovers these data and metadata exports by name."
 
 [configuration]
 title = "Next.js"
-requires = ["typescript", "react"]
+requires = ["typescript", "react", "react-dom"]
 suggests = ["css"]
 description = "A Next.js app: the framework and hooks rules of ESLint, and server code marked as server only. Route segments serve one thing, and the configuration turns no build check off."
-
-notes = '''
-Next.js buildsrun at `all` when the selected scope contains an `app/`, `src/app/`,
-`pages/`, or `src/pages/` tree. The project must provide a supported Next.js executable
-and the dependencies its build needs. `recommended` retains the Next.js type check.
-'''
 
 [detect]
 dependencies = ["next"]
 
 [files]
-paths = ["**/next.config.js", "**/next.config.mjs", "**/next.config.ts", "next.config.js", "next.config.mjs", "next.config.ts"]
-
-[set]
-"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
+paths = ["**/next.config.js", "**/next.config.mjs", "**/next.config.ts"]
 
 [[tool]]
 name = "next"
@@ -50,19 +40,14 @@ kind = "library"
 version = "16.3.8"
 npm = "@next/eslint-plugin-next"
 
-[[tool_file]]
-source = "eslint.fragment.js.eta"
-selectors = [{ selector = "ExportAllDeclaration", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "index-only" }, ignores = ["**/index.*", "**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"] }, { selector = "ExportNamedDeclaration[source]", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "index-only" }, ignores = ["**/index.*", "**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"] }, { selector = "ExportNamedDeclaration[declaration=null]", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "index-only" }, ignores = ["**/index.*", "**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"] }]
-
 [[check]]
 name = "tsc"
 tool = "next"
-title = "Check Next.js types"
 example = "The TypeScript declaration `const count: number = \"one\";` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
 level = "recommended"
 stage = "push"
 runs = "scope"
-replaces = "typescript/tsc"
+instead_of = "typescript/tsc"
 summary = "Has Next.js write its types, then type-checks the app with the strict compiler options."
 why = "A fresh clone holds no next-env.d.ts and no route types, so a plain tsc run fails on imports the framework resolves."
 help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
@@ -70,10 +55,8 @@ help = "Read the first error tsc prints and fix that file; later errors are ofte
 [[check]]
 name = "build"
 tool = "next"
-title = "Build the Next.js app"
 example = "A Next.js page importing a nonexistent component fails the project build. Restore the component or correct the import path and rerun the configured build."
 level = "all"
-files = { paths = ["**/app/**", "**/pages/**"] }
 stage = "push"
 runs = "scope"
 needs = ["build"]
@@ -81,20 +64,21 @@ summary = "Builds the app with next build at all when its scope contains an app 
 why = "Some mistakes show only at build time: a server import in a client file, or a page that cannot be prerendered."
 help = "Run next build and read the first error it prints."
 
+[check.files]
+paths = ["**/app/**", "**/pages/**"]
+
 [[check]]
 name = "route-segments"
-title = "Keep pages and route handlers apart"
 example = "A Next.js segment containing both `page.tsx` and `route.ts` reports conflicting route ownership. Move the route handler into a separate segment, such as `api`, and update its callers."
 level = "recommended"
 stage = "commit"
 runs = "once"
 summary = "Checks that no route segment holds both a page and a route handler."
-why = "One address is served by one file, and the framework refuses the build when a segment holds two."
+why = "This commit check finds route conflicts before next build and also runs at recommended, where the build check does not."
 help = "Move the route handler into a segment of its own, such as an api folder."
 
 [[check]]
 name = "next-config"
-title = "Check Next.js configuration"
 example = "Setting `typescript.ignoreBuildErrors` to `true` in Next.js configuration reports a disabled type gate. Remove the switch and correct the type errors before building."
 level = "recommended"
 stage = "commit"
@@ -105,7 +89,6 @@ help = "Remove the switch, and read the secret on the server."
 
 [[check]]
 name = "version-pairs"
-title = "Keep paired packages on one version"
 example = "Different installed versions of `next` and its lint package report an alignment finding. Install the same version of both and update the lockfile with the package manager."
 level = "recommended"
 stage = "commit"
@@ -114,23 +97,23 @@ summary = "Checks that Next.js and its lint packages use the same installed vers
 why = "A lint package a version behind flags what the framework allows and allows what it removed."
 help = "Move both packages to the same version."
 
-[required_eslint_rules]
-tsx = ["@next/next/no-html-link-for-pages", "@next/next/no-async-client-component"]
+[eslint]
+all_level_rules = ["@next/next/next-script-for-ga", "@next/next/no-html-link-for-pages", "@next/next/no-img-element", "@next/next/no-page-custom-font"]
 
-[[eslint_rules_off]]
+[eslint.presets.recommended]
+package = "@next/eslint-plugin-next"
+source = "configs.core-web-vitals"
+
+[eslint.presets.refresh]
+package = "eslint-plugin-react-refresh"
+source = "configs.next"
+
+[[eslint.rules_off]]
 rules = ["gspot/no-trivial-files"]
-files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
 reason = "Next.js discovers route files by name, so each file can hold one export in its own folder."
 
-[[naming.overrides]]
-paths = ["**/app/**", "**/pages/**"]
-categories = ["files"]
-allowed = ["page", "layout", "loading", "error", "global-error", "not-found", "route", "template", "default", "middleware", "instrumentation", "proxy", "sitemap", "robots", "manifest", "opengraph-image", "icon", "apple-icon", "_app", "_document", "_error", "404", "500"]
-reason = "Next.js names these files."
-
-[[naming.overrides]]
-paths = ["**"]
-languages = ["typescript", "javascript"]
-categories = ["functions", "methods", "variables"]
-allowed = ["getStaticProps", "getServerSideProps", "generateMetadata", "generateStaticParams", "generateViewport"]
-reason = "Next.js discovers these data and metadata exports by name."
+[[tool_file]]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+fragment = true
+required_tools = ["@next/eslint-plugin-next"]

@@ -1,21 +1,14 @@
-products = ["tRPC"]
+allowed_words = ["tRPC"]
+
 [configuration]
 title = "tRPC"
 requires = ["javascript"]
-description = "tRPC routers: every procedure validates its input, and client code imports the declared server module as a type only."
+description = "tRPC routers: every procedure validates its input, and client code imports the declared server module as a type only. Name your server module `server` in `[[architecture.module]]`."
 
 [detect]
 dependencies = ["@trpc/server"]
 
-[[tool_file]]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-fragment = true
-selectors = [{ selector = "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))", message = "Give the procedure an input schema before its resolver, even when the input is nothing.", role = "routers" }]
-
-[[setting]]
-name = "architecture.roles.routers"
-type = "list"
-items = "path"
-default = ["**/routers/**", "**/*router*.ts", "**/trpc/**"]
-summary = "The files that declare tRPC procedures."
+[[eslint.selectors]]
+selector = "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))"
+message = "Give the procedure an input schema before its resolver, even when the input is nothing."
+role = "routers"

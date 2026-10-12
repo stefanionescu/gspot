@@ -1,7 +1,3 @@
----
-title: Tailwind CSS
----
-
 # Tailwind CSS
 
 ## Generated styles

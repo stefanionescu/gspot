@@ -5,12 +5,12 @@ ignorecase: true
 scope: heading
 nonword: true
 tokens:
-  - (?:\b|^)\x70roject\x20structure(?:\b|$)
-  - (?:\b|^)\x70roject\x20layout(?:\b|$)
-  - (?:\b|^)\x72epository\x20layout(?:\b|$)
-  - (?:\b|^)\x72epository\x20structure(?:\b|$)
-  - (?:\b|^)\x64irectory\x20structure(?:\b|$)
-  - (?:\b|^)\x66older\x20structure(?:\b|$)
-  - (?:\b|^)\x66ile\x20map(?:\b|$)
-  - (?:\b|^)\x63odebase\x20map(?:\b|$)
-  - (?:\b|^)\x73ource\x20tree(?:\b|$)
+  - (?:\b|^)project structure(?:\b|$)
+  - (?:\b|^)project layout(?:\b|$)
+  - (?:\b|^)repository layout(?:\b|$)
+  - (?:\b|^)repository structure(?:\b|$)
+  - (?:\b|^)directory structure(?:\b|$)
+  - (?:\b|^)folder structure(?:\b|$)
+  - (?:\b|^)file map(?:\b|$)
+  - (?:\b|^)codebase map(?:\b|$)
+  - (?:\b|^)source tree(?:\b|$)

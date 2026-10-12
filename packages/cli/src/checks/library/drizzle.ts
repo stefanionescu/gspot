@@ -1,18 +1,18 @@
 import ts from 'typescript';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/platform/root/public.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
-import { typescriptNodes } from '#cli/parsers/source/contracts.ts';
+import { readSource } from '#cli/system/file-reads.ts';
+import { typescriptNodes } from '#cli/parsers/typescript.ts';
+import { TYPESCRIPT_SOURCE } from '#cli/config/checks/library.ts';
+import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 
 /**
  * One finding for each table that references another and has no relations entry anywhere in the scope.
- * @param input the check input
- * @returns the findings
+ * @param input the check input.
+ * @returns the findings.
  */
-export function relations(input: CheckInput): Finding[] {
+export function drizzleRelations(input: CheckInput): Finding[] {
     const files = input.files
-        .filter((file) => file.kind === 'source' && /\.tsx?$/u.test(file.path))
+        .filter((file) => file.kind === 'source' && TYPESCRIPT_SOURCE.test(file.path))
         .map(({ path }) => {
             const text = readSource(input.root, path, input.reads).toString('utf8');
             const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);

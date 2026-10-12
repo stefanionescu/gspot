@@ -1,6 +1,0 @@
-extends: existence
-message: "Possessive on a product or code name: '%s'. Rephrase with 'of' or 'the'."
-level: error
-nonword: true
-tokens:
-    - <%~ json(`\\b(?:${prose.products.map(RegExp.escape).join('|')})'s\\b`) %>

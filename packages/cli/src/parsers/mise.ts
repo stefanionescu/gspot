@@ -1,21 +1,20 @@
+// Reads mise tasks and tool pins.
+import { z } from 'zod';
 import { parse } from 'smol-toml';
-import { isRecord } from '#cli/platform/contracts.ts';
-import { miseTasksSchema, miseToolsSchema, miseTaskAliasSchema } from '#cli/parsers/schema/mise.ts';
+import { isRecord } from '#cli/objects.ts';
+import type { SchemaShape } from '#cli/types/objects.ts';
+
+const miseTasksSchema = z.object({ tasks: z.record(z.string(), z.unknown()).default({}) } satisfies SchemaShape<{
+    tasks: Record<string, unknown>;
+}>);
+const miseTaskAliasSchema = z.object({
+    alias: (z.union([z.string(), z.array(z.string())]) satisfies z.ZodType<string | string[]>).optional(),
+} satisfies SchemaShape<{ alias?: string | string[] | undefined }>);
 
 /**
- * Parse the tool keys declared in an authored mise document.
- * @param text the mise.toml contents
- * @returns the declared tool keys
- */
-export function parseMiseToolKeys(text: string): Set<string> {
-    const config = miseToolsSchema.parse(parse(text));
-    return new Set(Object.keys(config.tools));
-}
-
-/**
- * Read task names and aliases from an authored mise document.
- * @param text the mise TOML contents
- * @returns task names and the aliases explicitly declared for them
+ * Read task names and aliases from a mise document.
+ * @param text the mise TOML contents.
+ * @returns task names and the aliases explicitly declared for them.
  */
 export function parseMiseTasks(text: string): string[] {
     const { tasks } = miseTasksSchema.parse(parse(text));

@@ -1,10 +1,6 @@
----
-title: Python Packaging
----
-
 # Python Packaging
 
-Deployment installs, lockfiles, and hash checking.
+Deployment installs and lockfiles.
 
 ## Package installation security
 
@@ -28,12 +24,8 @@ when the task includes dependency maintenance.
 
 <!-- level: all -->
 
-Rules:
-
 - Keep packages shallow and purposeful.
 - Flatten packages that contain only `__init__.py` and one other module.
-- Do not create single-file packages.
-- Do not use dynamic imports for lazy loading.
 - Do not use package `__init__.py` files to hide expensive imports.
 - Keep `__init__.py` files small and import-stable.
 - Barrel `__init__.py` files may contain imports and `__all__`.
@@ -54,4 +46,4 @@ src/
     accounts.py
 ```
 
-Keep helper scripts that are not meant to be imported outside the package import path.
+Keep helper scripts that nobody imports outside the package import path.

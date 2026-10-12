@@ -1,0 +1,14 @@
+export const JSON_INDENT = 4;
+export const ESLINT_RULE_NAMES_FILE = 'configurations/language/javascript/eslint-rule-names.json';
+export const ESLINT_RULE_NAMES_MODULE = 'eslint/use-at-your-own-risk';
+export const ESLINT_RUNTIME_NAMES_FILE = 'configurations/language/javascript/eslint-runtime-names.json';
+export const ESLINT_RUNTIME_NAMES_MODULE = 'globals';
+export const STYLELINT_RULE_NAMES_MODULE = 'stylelint-config-standard';
+export const TESTS_FOLDER = 'tests';
+export const ESLINT_PACKAGE = 'eslint';
+export const STYLELINT_PACKAGE = 'stylelint';
+export const PACKAGE_JSON_FILE = 'package.json';
+export const PRETTIER_JSON_PARSER = 'json';
+export const STYLE_SAMPLE_FILE = 'capture.css';
+export const PRESET_BLOCK_KEYS = ['files', 'ignores', 'basePath', 'rules'] as const;
+export const BUN_INSTALL = ['bun', 'install'] as const;

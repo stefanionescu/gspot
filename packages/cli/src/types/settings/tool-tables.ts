@@ -1,0 +1,221 @@
+import type { JsonValue } from '#cli/types/parsers/json.ts';
+import type { ReasonValue } from '#cli/types/settings/file.ts';
+import type { RULE_CONDITIONS, IMPORT_EXTENSIONS, DOCSTRING_CONVENTIONS } from '#cli/config/settings/schema.ts';
+
+type WrittenTools = {
+    codeql?: { languages?: string[] | undefined } | undefined;
+    hadolint?: { trusted_registries?: string[] | undefined } | undefined;
+    nginx?: { image?: string | undefined } | undefined;
+    ruff?: { docstring_convention?: (typeof DOCSTRING_CONVENTIONS)[number] | undefined } | undefined;
+    semgrep?: { registry_packs?: string[] | undefined; rule_files?: string[] | undefined } | undefined;
+    sqlfluff?: { dialect?: string | undefined } | undefined;
+    svgo?: { min_saving_percent?: ReasonValue<number> | undefined } | undefined;
+    swiftlint?: { always_keep_imports?: string[] | undefined } | undefined;
+    trivy?: { severity?: string[] | undefined } | undefined;
+    eslint?:
+        | {
+              extra?: { value: Record<string, unknown>; reason: string } | undefined;
+              import_extension?: (typeof IMPORT_EXTENSIONS)[number] | undefined;
+              restricted_imports?: { name: string; message: string }[] | undefined;
+              rules?:
+                  | Record<
+                        string,
+                        | unknown[]
+                        | [string | number | boolean | null | JsonValue[] | Record<string, JsonValue>, ...JsonValue[]]
+                    >
+                  | undefined;
+              override?:
+                  | {
+                        paths: string[];
+                        rules?:
+                            | Record<
+                                  string,
+                                  | unknown[]
+                                  | [
+                                        string | number | boolean | null | JsonValue[] | Record<string, JsonValue>,
+                                        ...JsonValue[],
+                                    ]
+                              >
+                            | undefined;
+                        runtime?: string | undefined;
+                    }[]
+                  | undefined;
+          }
+        | undefined;
+    commitlint?:
+        | {
+              types?: string[] | undefined;
+              scopes?: string[] | undefined;
+              rules?: Record<string, [(typeof RULE_CONDITIONS)[number], (JsonValue | undefined)?]> | undefined;
+          }
+        | undefined;
+    yamllint?:
+        | {
+              rules?:
+                  | {
+                        indentation?:
+                            | {
+                                  level?: 'error' | undefined;
+                                  ignore?: unknown;
+                                  'ignore-from-file'?: unknown;
+                                  spaces?: 'consistent' | undefined;
+                              }
+                            | undefined;
+                    }
+                  | undefined;
+          }
+        | undefined;
+    markdownlint?: { rules?: Record<string, Record<string, JsonValue>> | undefined } | undefined;
+    stylelint?:
+        | {
+              rules?:
+                  | Record<
+                        string,
+                        | true
+                        | string
+                        | number
+                        | { severity?: 'error' | undefined }
+                        | [
+                              true | string | number | { severity?: 'error' | undefined } | JsonValue[],
+                              ({ severity?: 'error' | undefined } | undefined)?,
+                          ]
+                    >
+                  | undefined;
+          }
+        | undefined;
+    squawk?: { assume_in_transaction?: boolean | undefined } | undefined;
+    prettier?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
+    'editorconfig-checker'?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
+    typos?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
+    shellcheck?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
+    knip?:
+        | {
+              extra?: { value: Record<string, unknown>; reason: string } | undefined;
+              entry?: string[] | undefined;
+              ignore_dependencies?: ReasonValue<string[]> | undefined;
+          }
+        | undefined;
+    purgecss?: { safelist?: ReasonValue<string[]> | undefined } | undefined;
+    v8r?: { schema?: { paths: string[]; url: string }[] | undefined } | undefined;
+    taplo?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
+};
+
+type ParsedCodeql = { languages: string[] };
+
+type ParsedHadolint = { trusted_registries: string[] };
+
+type ParsedNginx = { image: string };
+
+type ParsedRuff = { docstring_convention?: (typeof DOCSTRING_CONVENTIONS)[number] | undefined };
+
+type ParsedSemgrep = { registry_packs: string[]; rule_files: string[] };
+
+type ParsedSqlfluff = { dialect: string };
+
+type ParsedSvgo = { min_saving_percent: number };
+
+type ParsedSwiftlint = { always_keep_imports: string[] };
+
+type ParsedTrivy = { severity: string[] };
+
+type ParsedEslint = {
+    extra?: Record<string, unknown> | undefined;
+    import_extension: (typeof IMPORT_EXTENSIONS)[number];
+    restricted_imports: { name: string; message: string }[];
+    rules: Record<
+        string,
+        unknown[] | [string | number | boolean | null | JsonValue[] | Record<string, JsonValue>, ...JsonValue[]]
+    >;
+    override: {
+        paths: string[];
+        rules?:
+            | Record<
+                  string,
+                  | unknown[]
+                  | [string | number | boolean | null | JsonValue[] | Record<string, JsonValue>, ...JsonValue[]]
+              >
+            | undefined;
+        runtime?: string | undefined;
+    }[];
+};
+
+type ParsedCommitlint = {
+    types: string[];
+    scopes: string[];
+    rules: Record<string, [(typeof RULE_CONDITIONS)[number], (JsonValue | undefined)?]>;
+};
+
+type ParsedYamllint = {
+    rules: {
+        indentation?:
+            | {
+                  level?: 'error' | undefined;
+                  ignore?: unknown;
+                  'ignore-from-file'?: unknown;
+                  spaces?: 'consistent' | undefined;
+              }
+            | undefined;
+    };
+};
+
+type ParsedMarkdownlint = { rules: Record<string, Record<string, JsonValue>> };
+
+type ParsedStylelint = {
+    rules: Record<
+        string,
+        | true
+        | string
+        | number
+        | { severity?: 'error' | undefined }
+        | [
+              true | string | number | { severity?: 'error' | undefined } | JsonValue[],
+              ({ severity?: 'error' | undefined } | undefined)?,
+          ]
+    >;
+};
+
+type ParsedSquawk = { assume_in_transaction: boolean };
+
+type ParsedPrettier = { extra?: Record<string, unknown> | undefined };
+
+type ParsedEditorconfigChecker = { extra?: Record<string, unknown> | undefined };
+
+type ParsedTypos = { extra?: Record<string, unknown> | undefined };
+
+type ParsedShellcheck = { extra?: Record<string, unknown> | undefined };
+
+type ParsedKnip = { extra?: Record<string, unknown> | undefined; entry: string[]; ignore_dependencies: string[] };
+
+type ParsedPurgecss = { safelist: string[] };
+
+type ParsedV8r = { schema: { paths: string[]; url: string }[] };
+
+type ParsedTaplo = { extra?: Record<string, unknown> | undefined };
+
+type ParsedTools = {
+    codeql?: ParsedCodeql | undefined;
+    hadolint?: ParsedHadolint | undefined;
+    nginx?: ParsedNginx | undefined;
+    ruff?: ParsedRuff | undefined;
+    semgrep?: ParsedSemgrep | undefined;
+    sqlfluff?: ParsedSqlfluff | undefined;
+    svgo?: ParsedSvgo | undefined;
+    swiftlint?: ParsedSwiftlint | undefined;
+    trivy?: ParsedTrivy | undefined;
+    eslint?: ParsedEslint | undefined;
+    commitlint?: ParsedCommitlint | undefined;
+    yamllint?: ParsedYamllint | undefined;
+    markdownlint?: ParsedMarkdownlint | undefined;
+    stylelint?: ParsedStylelint | undefined;
+    squawk?: ParsedSquawk | undefined;
+    prettier?: ParsedPrettier | undefined;
+    'editorconfig-checker'?: ParsedEditorconfigChecker | undefined;
+    typos?: ParsedTypos | undefined;
+    shellcheck?: ParsedShellcheck | undefined;
+    knip?: ParsedKnip | undefined;
+    purgecss?: ParsedPurgecss | undefined;
+    v8r?: ParsedV8r | undefined;
+    taplo?: ParsedTaplo | undefined;
+};
+
+export type { ParsedTools, WrittenTools };

@@ -1,42 +1,16 @@
-name: Prepare repository
-description: Install pinned tools and dependencies and build the parsers and plugin.
-inputs:
-    tools:
-        description: Mise tools to install, or all repository pins.
-        default: all
-    setup:
-        description: Commands to prepare the selected workspace.
-        default: mise run setup
-    native-tests:
-        description: Install host shell and XML commands used by native tool tests.
-        default: 'false'
+name: Set up mise and caches
+description: Install mise, Bun, and Node, and restore the Bun and uv download caches.
 runs:
     using: composite
     steps:
-        - name: Install mise and the pinned tools
-          uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
           with:
               version: '2026.10.7'
-              install_args: ${{ inputs.tools != 'all' && inputs.tools || '' }}
-        - name: Restore the package caches
-          uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+              install_args: bun node
+        - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
           with:
               path: |
                   ~/.bun/install/cache
                   ~/.cache/uv
                   ~/AppData/Local/uv/cache
               key: packages-${{ runner.os }}-${{ hashFiles('mise.toml', 'bun.lock', '.gspot/bun.lock', '.gspot/uv.lock') }}
-              restore-keys: packages-${{ runner.os }}-
-        - name: Install Linux XML tools and zsh
-          if: runner.os == 'Linux' && inputs.native-tests == 'true'
-          shell: bash
-          run: sudo apt-get update && sudo apt-get install --yes libxml2-utils zsh
-        - name: Install Bash 5 on macOS
-          if: runner.os == 'macOS' && inputs.native-tests == 'true'
-          shell: bash
-          run: brew install bash
-        - name: Set up the repository
-          shell: bash
-          env:
-              SETUP_COMMAND: ${{ inputs.setup }}
-          run: bash --noprofile --norc -e -o pipefail -c "$SETUP_COMMAND"

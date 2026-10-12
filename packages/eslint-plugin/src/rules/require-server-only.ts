@@ -1,5 +1,6 @@
-import { createRule } from '#plugin/create-rule.ts';
+import { createRule } from '../create-rule.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { SERVER_DIRECTIVE, SERVER_ONLY_MODULE } from '../config/nextjs.ts';
 
 export const requireServerOnly = createRule<[], 'missing'>({
     name: 'require-server-only',
@@ -8,7 +9,6 @@ export const requireServerOnly = createRule<[], 'missing'>({
         type: 'problem',
         docs: {
             level: 'none',
-            title: 'Mark server modules explicitly',
             example:
                 'A selected server module containing `export const secret = 1;` reports `missing`. With the `server-only` package installed, add `import "server-only";` before that declaration.',
             description: 'Checks that a selected server module imports "server-only" or declares "use server".',
@@ -27,7 +27,7 @@ export const requireServerOnly = createRule<[], 'missing'>({
                     node.body.some(
                         (statement) =>
                             statement.type === AST_NODE_TYPES.ExpressionStatement &&
-                            statement.directive === 'use server',
+                            statement.directive === SERVER_DIRECTIVE,
                     )
                 )
                     return;
@@ -35,7 +35,7 @@ export const requireServerOnly = createRule<[], 'missing'>({
                     node.body.some(
                         (statement) =>
                             statement.type === AST_NODE_TYPES.ImportDeclaration &&
-                            statement.source.value === 'server-only',
+                            statement.source.value === SERVER_ONLY_MODULE,
                     )
                 )
                     return;

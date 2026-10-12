@@ -1,39 +1,7 @@
-products = ["CSS"]
+allowed_words = ["CSS"]
 [configuration]
 title = "CSS"
-requires = ["format"]
 description = "CSS files and the style blocks of Vue and Svelte components: Stylelint with the standard rules, Prettier for layout, and CSS module classes that are both defined and used. SCSS receives formatting only."
-
-notes = '''
-## Stylesheet rule options
-
-Stylelint options apply only to rules active at the selected level:
-
-```toml
-[tools.stylelint.rules]
-color-hex-length = "long"
-number-max-precision = 0
-```
-
-This requires long hexadecimal colors at both levels. The precision option applies at `all`, where the rule runs.
-Severity stays `error`. Ignore a finding with `gspot ignore css/stylelint --rule <rule> --reason "<why>"`.
-Project-specific WebKit properties can use the native `ignoreProperties` option of `property-no-vendor-prefix`.
-At-rule exceptions use the native options of `at-rule-no-unknown`:
-
-```toml
-[tools.stylelint.rules]
-at-rule-no-unknown = [true, { ignoreAtRules = ["container"] }]
-```
-
-Vue and Svelte own their component style parsers and syntax exemptions. Plain CSS receives
-neither framework's exemptions. Tailwind directives and `theme()` require a declared
-`tailwindcss` dependency in the nearest containing npm project. The HTML parser package is
-installed only when Stylelint consumes a selected framework's component styles.
-
-Native value validation exempts declarations containing `theme()` or Vue's `v-bind()`. Other
-declarations still receive value checks.
-Vue variables inside `v-bind()` retain their case. CSS keywords still require lowercase.
-'''
 
 [detect]
 extensions = [".css", ".vue", ".svelte"]
@@ -45,9 +13,46 @@ extensions = [".css"]
 name = "stylelint"
 suppression = { marker = "^(?:/\\*|//)\\s*stylelint-disable(?:-next-line|-line)?(?=\\s|$)", reason = " -- (?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*(?:\\*/)?$" }
 version = "16.23.1"
-min_version = "16.0.0"
 npm = "stylelint"
-replaces = [".stylelintrc", ".stylelintrc.json", ".stylelintrc.js", ".stylelintrc.cjs", ".stylelintrc.mjs", ".stylelintrc.yml", ".stylelintrc.yaml", "stylelint.config.js", "stylelint.config.cjs", "stylelint.config.mjs"]
+[[tool.replace]]
+file = ".stylelintrc"
+shared = false
+
+[[tool.replace]]
+file = ".stylelintrc.json"
+shared = false
+
+[[tool.replace]]
+file = ".stylelintrc.js"
+shared = false
+
+[[tool.replace]]
+file = ".stylelintrc.cjs"
+shared = false
+
+[[tool.replace]]
+file = ".stylelintrc.mjs"
+shared = false
+
+[[tool.replace]]
+file = ".stylelintrc.yml"
+shared = false
+
+[[tool.replace]]
+file = ".stylelintrc.yaml"
+shared = false
+
+[[tool.replace]]
+file = "stylelint.config.js"
+shared = false
+
+[[tool.replace]]
+file = "stylelint.config.cjs"
+shared = false
+
+[[tool.replace]]
+file = "stylelint.config.mjs"
+shared = false
 
 [[tool.replace]]
 file = "package.json"
@@ -62,12 +67,6 @@ version = "39.0.0"
 npm = "stylelint-config-standard"
 
 [[tool]]
-name = "stylelint-config-recommended"
-kind = "library"
-version = "17.0.0"
-npm = "stylelint-config-recommended"
-
-[[tool]]
 name = "postcss-html"
 kind = "library"
 version = "2.0.0"
@@ -78,13 +77,11 @@ target = ".gspot/config/stylelint.json"
 tool = "stylelint"
 rule_keys = ["rules"]
 per_scope = true
-generated_header = false
 pointer = { path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\"\n}\n" }
 
 [[check]]
 name = "stylelint"
-tool = ["stylelint", "stylelint-config-standard", "stylelint-config-recommended"]
-title = "Lint stylesheets"
+tool = ["stylelint", "stylelint-config-standard"]
 example = "The declaration `color: #ggg` uses an invalid hexadecimal color and reports a Stylelint finding. Replace it with a valid intended color such as `#abc`."
 level = "recommended"
 stage = "commit"
@@ -97,24 +94,5 @@ summary = "Lints every stylesheet with the standard stylelint rules: unknown pro
 why = "A browser skips a declaration it cannot read without a word, so a typo in a property ships as a missing style."
 help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore css/stylelint --rule `<name>` --reason \"`<why>`\"."
 
-[[check]]
-name = "module-classes"
-title = "Match CSS module classes to their use"
-example = "A CSS module class referenced by source code but absent from the stylesheet reports a missing class. Define the intended class or correct the source reference to the existing class name."
-level = "recommended"
-stage = "push"
-runs = "scope"
-files = { extensions = [".css", ".ts", ".tsx", ".js", ".jsx"] }
-summary = "For every CSS module, checks that the code uses each class it defines, and that each class the code reads is defined."
-why = "A class the code reads and the stylesheet lacks is undefined at run time, and the element silently loses its style."
-help = "Delete the class nobody reads, or define the class the code reads."
-
-[[setting]]
-name = "tools.stylelint.rules"
-type = "table"
-direction = "rule-options"
-default = {}
-summary = "Native options for Stylelint rules active at recommended or all. Severity remains error; accept a finding with gspot ignore css/stylelint --rule `<rule>` --reason `<why>`."
-
-[agent_rules]
+[rules]
 "TAILWIND.md" = { dependencies = ["tailwindcss"] }

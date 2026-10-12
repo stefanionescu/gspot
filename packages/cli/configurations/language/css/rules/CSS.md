@@ -1,7 +1,3 @@
----
-title: CSS
----
-
 # CSS
 
 ## Correctness and accessibility

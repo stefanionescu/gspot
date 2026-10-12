@@ -14,7 +14,13 @@ mise = "lychee"
 brew = "lychee"
 cargo = "lychee"
 github = { name = "lycheeverse/lychee", version = "lychee-v0.24.2" }
-replaces = ["lychee.toml", ".lycheeignore"]
+[[tool.replace]]
+file = "lychee.toml"
+shared = false
+
+[[tool.replace]]
+file = ".lycheeignore"
+shared = false
 
 [[tool_file]]
 target = ".gspot/config/lychee.toml"
@@ -23,7 +29,6 @@ per_scope = true
 
 [[check]]
 name = "lychee"
-title = "Check local documentation links"
 example = "The Markdown link `[Setup](missing.md)` reports a missing local target when `missing.md` does not exist. Point it at the actual setup guide or add the intended document."
 level = "recommended"
 stage = "commit"
@@ -35,7 +40,6 @@ help = "Point the link at the file or heading that exists, or delete it."
 
 [[check]]
 name = "lychee-external"
-title = "Check external documentation links"
 example = "A documentation link returning HTTP 404 reports a broken external destination. Replace it with a verified current URL or remove the obsolete link, then rerun with network access."
 level = "recommended"
 stage = "manual"
@@ -44,21 +48,10 @@ command = ["lychee", "--config", "{tool_file:lychee}", "--root-dir", "{root}", "
 output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
 summary = "Checks every external link over the network."
 why = "An external link rots on its own schedule; this run says which ones did."
-help = "Update or remove the link, or exclude the URL pattern with a reason under links.allowed_urls."
+help = "Update or remove the link, or exclude the URL pattern with a reason under docs.allowed_urls."
 
 [[check]]
-name = "headings"
-title = "Check documentation headings"
-example = "A document section using a heading banned by the configured documentation policy reports that heading. Replace the section with content that answers a reader task and give it a descriptive heading, or delete the unnecessary section."
-level = "all"
-stage = "commit"
-summary = "Finds a heading from the banned list, such as Project structure or Source tree."
-why = "An inventory heading promises a map that goes stale; the reader wanted an explanation."
-help = "Replace the section with prose that explains, or delete it."
-
-[[check]]
-name = "stale-paths"
-title = "Check the paths and tasks docs name"
+name = "missing-paths"
 example = "A documented repository path that no longer exists reports a stale reference. Update the path and any associated command to the current owner, then verify the procedure from its stated working directory."
 runs = "once"
 level = "recommended"
@@ -69,7 +62,6 @@ help = "Fix the path or the task name. Give an example code block a title= attri
 
 [[check]]
 name = "required-files"
-title = "Require a README and a license"
 example = "A configured scope without `README.md` reports the missing README. Add one that explains its purpose and setup. The repository root also needs a license when license presence is required."
 level = "all"
 stage = "commit"
@@ -79,40 +71,9 @@ help = "Write the README; the docs rule files say what goes in it."
 
 [[check]]
 name = "readme-shape"
-title = "Check the shape of each README"
 example = "A README with more H2 headings than limits.docs.headings_before_contents reports a missing Contents section. Add the section. A scope-root README also needs an opening paragraph and a section named install, setup, start, or requirements."
 level = "all"
 stage = "commit"
 summary = "Checks the shape of every README: an opening paragraph, a Contents list when long, a section on getting started."
 why = "A README with the right shape answers what this is and how to start before the reader scrolls."
 help = "Add the missing section or paragraph. For an accepted exception, run gspot ignore docs/readme-shape --paths `<glob>` --reason \"`<why>`\"."
-
-[[setting]]
-name = "docs.banned_headings"
-type = "list"
-items = "string"
-direction = "tightening"
-default = []
-summary = "Headings this repository bans beyond the shipped list."
-
-[[setting]]
-name = "docs.require_license"
-type = "boolean"
-direction = "floor"
-default = true
-summary = "Whether the root must carry a LICENSE file."
-
-[[setting]]
-name = "limits.docs.headings_before_contents"
-type = "number"
-direction = "ceiling"
-default = 6
-summary = "How many H2 headings a README may have before it needs a Contents list."
-
-[[setting]]
-name = "links.allowed_urls"
-type = "list"
-items = "string"
-direction = "loosening"
-default = []
-summary = "Allowed URL patterns, each with a reason."

@@ -1,20 +1,5 @@
 {
-    "extends": "../tsconfig.json",
-    "compilerOptions": {
-        "baseUrl": "..",
-        "jsx": "preserve",
-        "module": "ESNext",
-        "moduleResolution": "Bundler",
-        "types": ["bun"],
-        "allowJs": true
-    },
-    "include": [
-        ".astro/types.d.ts",
-        "../packages/cli/src/types/parsers/pg.d.ts",
-        "../packages/cli/src/types/platform/assets.ts",
-        "../packages/cli/src/types/checks/general/spdx.d.ts",
-        "src/**/*",
-        "astro.config.ts"
-    ],
+    "extends": ["../tsconfig.json", "astro/tsconfigs/strict"],
+    "include": [".astro/types.d.ts", "src/**/*", "astro.config.ts", "../packages/cli/src/types/**/*.d.ts"],
     "exclude": ["dist"]
 }

@@ -1,7 +1,3 @@
----
-title: Git
----
-
 # Git
 
 ## Working with uncommitted changes
@@ -13,23 +9,23 @@ change overwrites or contradicts one.
 ## Commits
 
 - Commit only when the user asks.
-- One change per commit. A rename and a behavior change are two commits.
+- One change per commit. Put a rename and a behavior change in two commits.
 - The body says what changed and why.
-- Footers reference issues (`Refs: #123`, `Closes: #123`) and breaking changes (`BREAKING CHANGE: ...`).
+- Footers reference issues with `Refs: #123` or `Closes: #123`, and breaking changes with `BREAKING CHANGE: ...`.
 - Never bypass hooks with `--no-verify`.
 
 ## Branches
 
-- Branch names are `<type>/<kebab-summary>`, such as `feat/order-export` or `fix/session-expiry`.
+- Name branches `<type>/<kebab-summary>`, such as `feat/order-export` or `fix/session-expiry`.
 - Never force-push a protected branch. Force-push your own branch only after a rebase you performed.
 - Rebase onto the default branch before opening a pull request; do not merge the default branch into a feature branch.
 
-## What is never committed
+## Files to keep out of commits
 
-- Editor state (`.vscode/`, `.idea/`, `xcuserdata/`), except settings the team commits on purpose.
+- Editor state such as `.vscode/`, `.idea/`, or `xcuserdata/`, except settings the team commits on purpose.
 
 ## Pull requests
 
-- The title is the commit subject when the branch has one commit, otherwise a sentence for the whole change.
-- The description states what changed, why, and how it was verified. It links the issue.
+- Use the commit subject as the title when the branch has one commit. Otherwise, write a sentence for the whole change.
+- The description states what changed, why, and which checks verified it. It links the issue.
 - A pull request does one thing. Unrelated fixes found on the way go in a separate branch.

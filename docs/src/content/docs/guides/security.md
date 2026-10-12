@@ -3,7 +3,7 @@ title: Security
 description: The security checks gspot runs, and how to run Semgrep, the Swift security rules, and CodeQL.
 ---
 
-Five configurations carry security checks. Select the ones your repository needs:
+These configurations hold security checks. gspot always selects `secrets`, `dependencies`, and `security`. It selects `docker` and `github-actions` when it finds their files:
 
 | Configuration    | Checks                                                                                                                                                                                    | Stage                                                       |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
@@ -14,37 +14,36 @@ Five configurations carry security checks. Select the ones your repository needs
 | `docker`         | Trivy checks the container configuration and an image you name.                                                                                                                           | See the [Docker checks](/reference/configurations/docker/). |
 | `github-actions` | zizmor finds unsafe GitHub Actions workflows, and pinact checks that every action is pinned.                                                                                              | Commit (zizmor), push (pinact)                              |
 
-A check whose tool is missing fails, and `gspot explain <check>` prints what the check needs.
+If a tool cannot run, the check shows `missing` and the run ends as incomplete with exit code 2. `gspot explain <check>` prints what the check needs.
 
 If gspot finds a real secret, revoke or rotate it first, then remove it from the code. Deleting
 the line leaves the secret in Git history.
 
 ## Semgrep
 
-With the `security` configuration, run the shipped rules and your own:
+Run the shipped rules and your own:
 
 ```shell
 gspot check --only security/semgrep
 ```
 
 Add your rule files with `tools.semgrep.rule_files`. To run public rule packs, list them in
-`tools.semgrep.registry` and run:
+`tools.semgrep.registry_packs` and run:
 
 ```shell
 gspot check --only security/semgrep-registry
 ```
 
 The rule packs need network access. To turn a rule off for some paths, record an ignore with a
-reason. See [`gspot.toml`](/guides/policy/#ignore-one-finding).
+reason. See [Ignore a finding](/guides/exclude/#ignore-a-finding).
 
 ## Swift security rules
 
-With the `security` and `swift` configurations, Semgrep also runs an iOS rule pack at the push stage, over
-Swift sources and plist files. The [swift configuration](/reference/configurations/swift/) lists what it checks.
+Semgrep also runs the Swift security lint rules that gspot ships with the `swift` configuration. These rules check Swift sources and plist files. The [swift configuration](/reference/configurations/swift/) lists what it checks.
 
 ## CodeQL
 
-With the `security` configuration, set the languages, install, and scan:
+Set the languages, install, and scan:
 
 ```shell
 gspot set tools.codeql.languages python
@@ -54,4 +53,4 @@ gspot check --only security/codeql
 
 CodeQL scans a copy of your sources, and the findings name paths in your repository. The
 `security` configuration pins the CodeQL CLI and its query packs. The first scan downloads the packs. When
-the analysis fails or its report cannot be read, the check exits with `2`.
+the analysis fails or gspot cannot read its report, the check exits with `2`.

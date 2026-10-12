@@ -1,21 +1,65 @@
+// Selects positional repository paths and refuses unknown check IDs.
 // Checking one tree: the working tree, or a copy of the index or of a pushed commit.
-import { readPolicy } from '#cli/policy/public.ts';
-import { runText } from '#cli/terminal/contracts.ts';
-import { note, warn } from '#cli/terminal/public.ts';
-import { openSession } from '#cli/commands/public.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
-import type { StageFilter } from '#cli/types/planning.ts';
-import { assertVersionPin } from '#cli/lifecycle/public.ts';
-import { compact, codeList } from '#cli/platform/contracts.ts';
-import type { ToolSession } from '#cli/types/tools/session.ts';
-import { hookStatus } from '#cli/lifecycle/install/contracts.ts';
-import type { RevisionSource } from '#cli/types/execution/copy.ts';
-import { executeRun, reproduceLine } from '#cli/execution/public.ts';
-import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
-import { getStaged, getChanged } from '#cli/repository/revisions/public.ts';
-import { selectedPaths, refuseUnknownChecks } from '#cli/commands/check/arguments.ts';
-import type { FixReport, RunReport, RunOptions } from '#cli/types/execution/check.ts';
-import type { Selections, CheckOptions, CheckCommandResult } from '#cli/types/commands/check.ts';
+import { codeList } from '#cli/text.ts';
+import { compact } from '#cli/objects.ts';
+import { GspotError } from '#cli/errors.ts';
+import { resolve, relative } from 'node:path';
+import { executeRun } from '#cli/execution/run.ts';
+import { hookStatus } from '#cli/install/hooks.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
+import { warn, colors } from '#cli/terminal/print.ts';
+import { openSession } from '#cli/commands/session.ts';
+import { runText } from '#cli/terminal/check-report.ts';
+import { toPosix, isInside } from '#cli/system/paths.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
+import type { CommandResult } from '#cli/types/terminal.ts';
+import { assertVersionPin } from '#cli/apply/version-pin.ts';
+import type { Session, StageFilter } from '#cli/types/planning.ts';
+import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
+import { unknownCheckMessage } from '#cli/configurations/unknown-names.ts';
+import type { RunReport, FixReport, RunOptions } from '#cli/types/execution/check.ts';
+import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
+import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
+
+// The repository files a selector names: the file itself, or everything under a folder.
+function matchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
+    const selector = toPosix(relative(session.root, resolve(options.cwd, path)));
+    if (!isInside(selector)) throw new GspotError('arguments', [`Path ${path} is outside this repository.`]);
+    const matches = candidates.filter((file) => isInScope(file, selector));
+    if (matches.length === 0) throw new GspotError('arguments', [`Path ${path} matches no repository files.`]);
+    return matches;
+}
+
+/**
+ * Selects tracked and changed repository files through positional paths.
+ * @param session the open session
+ * @param options the parsed flags
+ * @param changed the staged or changed paths, which can name deleted files
+ * @returns the selected paths, or none when the caller gave no path
+ */
+function pathArguments(session: Session, options: CheckOptions, changed: string[]): string[] {
+    if (options.paths.length === 0) return [];
+    const candidates = [...new Set([...session.repository.files.map((file) => file.path), ...changed])];
+    const selected = new Set(options.paths.flatMap((path) => matchingFiles(session, options, path, candidates)));
+    return [...selected];
+}
+
+/**
+ * Refuses an --only check no selected configuration runs here.
+ * @param session the open session
+ * @param only the checks named on the command line
+ */
+function refuseUnknownChecks(session: Session, only: string[] | undefined): void {
+    const known = new Set([
+        ...session.scopes.flatMap((scope) =>
+            scope.selected.flatMap((manifest) => manifest.checks.map((check) => check.name)),
+        ),
+        ...Object.values(session.settingsFile.settings.check).map((check) => check.name),
+    ]);
+    const unknown = only?.find((check) => !known.has(check));
+    if (unknown !== undefined) throw new GspotError('arguments', [unknownCheckMessage(unknown, [...known])]);
+}
 
 function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string {
     const failures = fixes.results.filter((result) => result.status === 'failed');
@@ -27,7 +71,7 @@ function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string 
         return `${fixes.diffs.join('\n')}\n${verdict}\n\n${text}`;
     }
     if (count === 0) {
-        note('no fixer changed anything');
+        process.stderr.write(`${colors.cyan('[info]')} no fixer changed anything\n`);
         return text;
     }
     const shown = codeList(fixes.changed);
@@ -35,11 +79,12 @@ function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string 
     return text;
 }
 
-// Warns when the configured hooks are not installed in the clone the report is published to.
-function warnAboutHooks(session: ToolSession, revision: RevisionSource | undefined): void {
+// Warns when the clone receiving the report lacks the configured hooks.
+function warnAboutHooks(session: Session, revision: RevisionSource | undefined): void {
     if (revision?.content === 'commit') return;
     const hooks = hookStatus({
-        policy: session.policyFiles.policy,
+        runner: session.startRunner,
+        settings: session.settingsFile.settings,
         repository: {
             root: revision?.reportRoot ?? session.root,
             hasGit: revision?.reportRoot !== undefined || session.repository.hasGit,
@@ -50,62 +95,50 @@ function warnAboutHooks(session: ToolSession, revision: RevisionSource | undefin
 
 // The changed set a run compares against: the revision's paths, the --changed ref, or nothing for a whole push.
 async function changedSet(
-    session: ToolSession,
+    session: Session,
     options: CheckOptions,
     signal: AbortSignal,
     revision: RevisionSource | undefined,
 ): Promise<ChangedPaths | undefined> {
-    if (revision?.content === 'commit' && session.policyFiles.policy.hooks?.push_files === 'all') return undefined;
     if (revision?.changed !== undefined) return { reference: revision.reference, paths: revision.changed };
-    return options.changed === undefined ? undefined : getChanged(session.root, options.changed, signal);
+    return options.base === undefined ? undefined : readChangedPaths(session.root, options.base, signal);
 }
 
 // The staged set a run narrows to: the revision's, the index when asked, or nothing.
 async function stagedSet(
-    session: ToolSession,
+    session: Session,
     options: CheckOptions,
     signal: AbortSignal,
     revision: RevisionSource | undefined,
-): Promise<Selections['staging']> {
+): Promise<RunFilters['staging']> {
     if (revision?.staged !== undefined) return revision.staged;
-    return options.staged ? getStaged(session.root, signal) : { staged: undefined, unstaged: 0 };
-}
-
-// A pushed commit is reproduced through the push options, not through the copy the check ran in.
-function rewriteReproductions(checks: RunReport['checks'], options: CheckOptions): void {
-    for (const check of checks)
-        if (check.reproduce !== undefined) check.reproduce = reproduceLine(check.check, check.scope, options);
-}
-
-function buildResult(options: CheckOptions, outcome: Awaited<ReturnType<typeof executeRun>>): CheckCommandResult {
-    const reportText = runText(outcome.report, options.verbosity, options.hook);
-    const text = outcome.fixes ? reportFixes(outcome.fixes, options.isDryRun, reportText) : reportText;
-    return { text, json: outcome.report, report: outcome.report, exitCode: outcome.report.exitCode };
+    return options.staged ? readStagedPaths(session.root, signal) : { staged: undefined, unstaged: 0 };
 }
 
 // What the run narrows to: the changed set, the staged set, and the stage.
-async function selectionsFor(
-    session: ToolSession,
+async function runFilters(
+    session: Session,
     options: CheckOptions,
     signal: AbortSignal,
     revision: RevisionSource | undefined,
-): Promise<Selections> {
+): Promise<RunFilters> {
     const changed = await changedSet(session, options, signal, revision);
     const staging = await stagedSet(session, options, signal, revision);
     const stage: StageFilter = options.stage ?? 'all';
-    const paths = selectedPaths(session, options, [...(staging.staged ?? []), ...(changed?.paths ?? [])]);
+    const paths = pathArguments(session, options, [...(staging.staged ?? []), ...(changed?.paths ?? [])]);
     return { changed, staging, stage, paths: paths.length === 0 ? undefined : paths };
 }
 
 // Runs the selected checks and formats their results.
 async function runSelected(
-    session: ToolSession,
+    session: Session,
     options: CheckOptions,
     signal: AbortSignal,
     revision: RevisionSource | undefined,
-    selections: Selections,
-): Promise<CheckCommandResult> {
+    selections: RunFilters,
+): Promise<CommandResult<RunReport>> {
     const { changed, staging, stage, paths } = selections;
+    const { paths: changedPaths, commits: changedCommits } = changed ?? { paths: undefined, commits: undefined };
     let comparison: RunOptions['comparison'];
     if (revision !== undefined) comparison = { content: revision.content, reference: revision.reference };
     else if (changed !== undefined) comparison = { content: 'working-tree', reference: changed.reference };
@@ -113,25 +146,30 @@ async function runSelected(
         checks: BUILT_IN_CHECKS,
         ...compact({
             stage,
-            skips: options.skips,
             fix: options.fix,
             isDryRun: options.isDryRun,
             onResult: options.onResult,
             staged: staging.staged,
-            changed: changed?.paths,
+            changed: changedPaths,
             comparison,
             only: options.only,
             paths,
             messageFile: options.messageFile,
+            push: options.push,
             // A --changed run checks the commit messages and history after the merge base, not the whole history.
-            commits: revision === undefined ? changed?.commits : revision.commits,
+            commits: revision === undefined ? changedCommits : revision.commits,
             historyComplete: revision?.historyComplete,
         }),
         unstagedChanges: staging.unstaged,
         cancelSignal: signal,
     });
-    if (options.push !== undefined) rewriteReproductions(outcome.report.checks, options);
-    return buildResult(options, outcome);
+    const reportText = runText(outcome.report, options.verbose, options.hook);
+    const text = outcome.fixes ? reportFixes(outcome.fixes, options.isDryRun, reportText) : reportText;
+    return {
+        text: options.isDryRun ? `${text}Dry run: nothing was written.\n` : text,
+        json: { ...outcome.report, ...compact({ fixes: outcome.fixes }) },
+        exitCode: outcome.report.exitCode,
+    };
 }
 
 /**
@@ -139,7 +177,7 @@ async function runSelected(
  * @param root the tree to check: the repository, or a copy of a revision.
  * @param options the parsed flags.
  * @param signal cancellation for the run.
- * @param revision what the copy stands for, when the root is one.
+ * @param revision what the copy stands for, when the root contains a copy.
  * @returns the text, the run report, and the exit code.
  */
 export async function checkTree(
@@ -147,15 +185,12 @@ export async function checkTree(
     options: CheckOptions,
     signal: AbortSignal,
     revision?: RevisionSource,
-): Promise<CheckCommandResult> {
-    const policyFiles = readPolicy(root);
-    assertVersionPin(root, policyFiles.policy.runner);
-    const session = await openSession(root, policyFiles);
-    if (revision !== undefined) {
-        session.installedRoot = revision.installedRoot;
-    }
+): Promise<CommandResult<RunReport>> {
+    await assertVersionPin(root);
+    const settingsFile = readSettings(root);
+    const session = await openSession(root, settingsFile, { installedRoot: revision?.installedRoot ?? root });
     refuseUnknownChecks(session, options.only);
     warnAboutHooks(session, revision);
-    const selections = await selectionsFor(session, options, signal, revision);
+    const selections = await runFilters(session, options, signal, revision);
     return runSelected(session, options, signal, revision, selections);
 }

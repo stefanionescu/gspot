@@ -1,10 +1,4 @@
-products = ["Zod"]
-eslint_all_rules = [
-    "zod/no-any-schema",
-    "zod/no-native-enum",
-    "zod/prefer-meta-last",
-    "zod/prefer-strict-object",
-]
+allowed_words = ["Zod"]
 
 [configuration]
 title = "Zod"
@@ -20,3 +14,12 @@ rule_prefix = "zod"
 kind = "library"
 version = "4.12.0"
 npm = "eslint-plugin-zod"
+
+[eslint]
+all_level_rules = ["zod/no-any-schema", "zod/no-native-enum", "zod/prefer-meta-last", "zod/prefer-strict-object"]
+
+[[tool_file]]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+fragment = true
+required_tools = ["eslint-plugin-zod"]

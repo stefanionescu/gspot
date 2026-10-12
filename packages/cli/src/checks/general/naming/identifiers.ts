@@ -1,125 +1,99 @@
-import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/platform/root/public.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
-import { isOwned } from '#cli/repository/selection/public.ts';
-import type { Identifier } from '#cli/types/parsers/naming.ts';
-import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import { isInScope, pathMatcher } from '#cli/repository/paths/public.ts';
-import type { CheckInput, BuiltInCheck } from '#cli/types/execution/check.ts';
-import { everyTable, harnessFolders } from '#cli/policy/settings/contracts.ts';
-import { CASE_NAMES, nameFindings } from '#cli/checks/general/naming/public.ts';
-import type { NamingSource, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
+import { posix } from 'node:path';
+import { stemOf } from '#cli/system/paths.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
+import { sqlIdentifiers } from '#cli/checks/general/naming/sql.ts';
+import { REST_SEGMENT } from '#cli/config/checks/general/naming.ts';
+import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
+import { bashIdentifiers } from '#cli/checks/general/naming/bash.ts';
+import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
+import { swiftIdentifiers } from '#cli/checks/general/naming/swift.ts';
+import { pythonIdentifiers } from '#cli/checks/general/naming/python.ts';
+import { createIdentifier } from '#cli/checks/general/naming/declarations.ts';
+import type { Identifier, PathContainer } from '#cli/types/checks/general.ts';
+import { typescriptIdentifiers } from '#cli/checks/general/naming/typescript.ts';
 
-import {
-    declaredNames,
-    identifiersOf,
-    fileIdentifier,
-    effectivePolicy,
-    directoryIdentifiers,
-} from '#cli/checks/general/naming/contracts.ts';
-
-function sourceFiles(input: CheckInput): NamingSource[] {
-    const languages = input.selection.selected.filter((manifest) => manifest.configuration.kind === 'language');
-    return input.files
-        .filter((file) => file.kind === 'source')
-        .map((file) => ({
-            file,
-            language: languages.find((manifest) => isOwned(manifest.files, file))?.configuration.name,
-        }))
-        .filter((entry): entry is NamingSource => entry.language !== undefined);
+function segmentName(segment: string, containers: PathContainer[]): Pick<Identifier, 'name' | 'category'> | undefined {
+    const bracket = containers.find((entry) => segment.startsWith(entry.open) && segment.endsWith(entry.close));
+    if (bracket === undefined) return undefined;
+    const inner = segment.slice(bracket.open.length, segment.length - bracket.close.length);
+    return { name: inner.replace(REST_SEGMENT, ''), category: bracket.category };
 }
 
-function findingsFor(input: CheckInput, policy: EffectivePolicy, identifiers: Identifier[]): Finding[] {
-    const isTestFile = pathMatcher(input.view.test_files);
-    return identifiers.flatMap((identifier) =>
-        nameFindings(identifier, {
-            check: input.check,
-            policy,
-            isTestFile: isTestFile(identifier.file),
-        }),
-    );
+/**
+ * The file's own name as an identifier: the stem for most languages, the whole base name for a SQL migration.
+ * @param path the file path.
+ * @param language the language configuration the file belongs to.
+ * @param containers the selected configurations’ path punctuation.
+ * @returns the identifier.
+ */
+export function fileIdentifier(path: string, language: string, containers: PathContainer[]): Identifier {
+    const base = posix.basename(path);
+    const name = language === 'sql' && base.endsWith(SQL_EXTENSION) ? base : stemOf(base);
+    const named = segmentName(
+        name,
+        containers.filter((container) => container.category !== 'directories'),
+    ) ?? { name, category: 'files' };
+    return createIdentifier({ file: path, language }, { line: 1, column: 1, ...named });
 }
 
-async function identifierFindings(input: CheckInput, policy: EffectivePolicy): Promise<Finding[]> {
-    const findings: Finding[] = [];
-    for (const { file, language } of sourceFiles(input)) {
-        const text = readSource(input.root, file.path, input.reads).toString('utf8');
-        const identifiers = await identifiersOf(file.path, text, language, input);
-        findings.push(...findingsFor(input, policy, identifiers));
+/**
+ * Every directory on a file's path as an identifier, from the top down. Skip dot folders.
+ * @param path the file path.
+ * @param language the language configuration the file belongs to.
+ * @param containers the selected configurations’ path punctuation.
+ * @returns the identifiers.
+ */
+export function directoryIdentifiers(path: string, language: string, containers: PathContainer[]): Identifier[] {
+    const segments = path.split('/').slice(0, -1);
+    return segments.flatMap((segment, index) => {
+        const named = segment.startsWith('.')
+            ? undefined
+            : (segmentName(segment, containers) ?? { name: segment, category: 'directories' });
+        if (named === undefined || named.name === '') return [];
+        const directory = segments.slice(0, index + 1).join('/');
+        return [createIdentifier({ file: path, language }, { line: 1, column: 1, ...named, directory })];
+    });
+}
+
+/**
+ * The identifiers a file declares, or none when no extractor reads its language.
+ * @param file the file path.
+ * @param text the file text.
+ * @param language the language configuration the file belongs to.
+ * @param context optional execution reads and syntax tree resources.
+ * @returns the identifiers in document order.
+ */
+export async function identifiersOf(
+    file: string,
+    text: string,
+    language: string,
+    context?: Pick<CheckInput, 'reads' | 'resources'>,
+): Promise<Identifier[]> {
+    if (language === 'sql') return sqlIdentifiers(file, text, context?.reads);
+    const grammar = grammarFor(file, language);
+    if (grammar === undefined) return [];
+    const tree = await parseSource(grammar, text, context);
+    try {
+        let identifiers: Identifier[];
+        switch (grammar) {
+            case 'bash': {
+                identifiers = bashIdentifiers(tree.rootNode, file);
+                break;
+            }
+            case 'swift': {
+                identifiers = swiftIdentifiers(tree.rootNode, file);
+                break;
+            }
+            case 'python': {
+                identifiers = pythonIdentifiers(tree.rootNode, file);
+                break;
+            }
+            default: {
+                identifiers = typescriptIdentifiers(tree.rootNode, file, language);
+            }
+        }
+        return identifiers.toSorted((left, right) => left.line - right.line || left.column - right.column);
+    } finally {
+        tree.delete();
     }
-    return findings;
 }
-
-function pathIdentifiers(input: CheckInput): Identifier[] {
-    const harnesses = new Set(harnessFolders(input.policyFiles.policy, input.scope));
-    const containers = input.selection.selected.flatMap((manifest) => manifest.naming?.path_containers ?? []);
-    const seen = new Set<string>();
-    return sourceFiles(input).flatMap(({ file, language }) => {
-        const all = [
-            fileIdentifier(file.path, language, containers),
-            ...directoryIdentifiers(file.path, language, containers),
-        ];
-        return all.filter((identifier) => {
-            if (identifier.directory !== undefined && harnesses.has(identifier.directory)) return false;
-            const key = JSON.stringify([identifier.directory ?? identifier.file, identifier.language, identifier.name]);
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        });
-    });
-}
-
-// Reports root and scope entries in gspot.toml that match no file or name.
-async function policyFindings(input: CheckInput): Promise<Finding[]> {
-    const policy = input.policyFiles.policy;
-    const files = await declaredNames(input);
-    const layers = everyTable(policy).flatMap(({ table, scope = '' }) =>
-        table.naming === undefined ? [] : [{ scope, naming: table.naming }],
-    );
-    return layers.flatMap(({ scope, naming }) => {
-        const scopeFiles = files.filter((file) => isInScope(file.path, scope));
-        const names = new Set(scopeFiles.flatMap((file) => file.names));
-        const unused = Object.keys(naming.allowed)
-            .filter((name) => !names.has(name))
-            .map((name) => `naming.allowed names "${name}", which no identifier in this scope carries.`);
-        const dead = naming.overrides
-            .filter((rule) => {
-                const matches = pathMatcher(rule.paths);
-                return scopeFiles.every((file) => !matches(file.path));
-            })
-            .map((rule) => `A [[naming.overrides]] entry matches no file: ${rule.paths.join(', ')}.`);
-        const cases = naming.overrides
-            .flatMap((rule) => rule.case ?? [])
-            .filter((name) => !CASE_NAMES.includes(name))
-            .map(
-                (name) =>
-                    `A [[naming.overrides]] entry names the case "${name}", which is not one of ${CASE_NAMES.join(', ')}.`,
-            );
-        return [...unused, ...dead, ...cases].map((text) =>
-            findingAt(input, { file: POLICY_FILE }, 'stale-entry', scope === '' ? text : `${text} (scope ${scope})`),
-        );
-    });
-}
-
-// One naming analysis: the effective naming policy of the scope, then the analysis.
-function namingCheck(
-    analysis: (input: CheckInput, policy: EffectivePolicy) => Finding[] | Promise<Finding[]>,
-): BuiltInCheck {
-    return (input) => {
-        const policy = effectivePolicy(
-            input.selection.view,
-            input.policyFiles.policy,
-            input.scope,
-            input.selection.selected,
-        );
-        return analysis(input, policy);
-    };
-}
-
-export const namingIdentifiers: BuiltInCheck = namingCheck(identifierFindings);
-
-export const namingPaths: BuiltInCheck = namingCheck((input, policy) =>
-    findingsFor(input, policy, pathIdentifiers(input)),
-);
-
-export const namingPolicy: BuiltInCheck = namingCheck(policyFindings);

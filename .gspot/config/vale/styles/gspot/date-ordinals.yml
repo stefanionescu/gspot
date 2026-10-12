@@ -1,6 +1,6 @@
 # Adapted from Microsoft.DateNumbers; see ../LICENSES.md.
 extends: existence
-message: Don't use ordinal numbers for dates.
+message: 'Write the day of a date as a plain number, not an ordinal.'
 link: https://learn.microsoft.com/en-us/style-guide/numbers#numbers-in-dates
 level: error
 nonword: true

@@ -1,0 +1,423 @@
+{
+    "groups": {
+        "containers": {
+            "terms": [
+                "core",
+                "common",
+                "generic",
+                "misc",
+                "stuff",
+                "thing",
+                "things",
+                "details",
+                "info",
+                "object",
+                "taxonomy",
+                "tmp",
+                "temp"
+            ]
+        },
+        "roles": {
+            "terms": [
+                "helper",
+                "helpers",
+                "util",
+                "utils",
+                "manager",
+                "handler",
+                "processor",
+                "wrapper",
+                "shim",
+                "shims",
+                "support"
+            ]
+        },
+        "marketing": {
+            "terms": [
+                "advanced",
+                "enhanced",
+                "improved",
+                "intelligent",
+                "smart",
+                "modern",
+                "robust",
+                "seamless",
+                "ultimate",
+                "comprehensive",
+                "optimized",
+                "reusable",
+                "custom",
+                "final",
+                "latest",
+                "old",
+                "new",
+                "legacy",
+                "plus",
+                "combined"
+            ]
+        },
+        "defensive": {
+            "terms": [
+                "ensure",
+                "maybe",
+                "likely",
+                "should",
+                "if needed",
+                "ifneeded",
+                "if available",
+                "ifavailable",
+                "if changed",
+                "ifchanged",
+                "if possible",
+                "ifpossible",
+                "or throw",
+                "orthrow",
+                "waitfor",
+                "with retries",
+                "transient",
+                "belt and suspenders",
+                "fallback",
+                "load bearing",
+                "load-bearing",
+                "loadbearing"
+            ]
+        },
+        "conjunctions": {
+            "terms": ["and", "or", "with", "when", "what", "whatever", "once", "plus"]
+        },
+        "tests": {
+            "terms": [
+                "test case",
+                "testcase",
+                "under test",
+                "undertest",
+                "edge case",
+                "edge cases",
+                "snapshot",
+                "snapshots",
+                "actual"
+            ]
+        },
+        "folders": {
+            "terms": ["common", "core", "helper", "helpers", "util", "utils", "support", "misc", "shared"]
+        }
+    },
+    "reserved": {
+        "config": [
+            "directories",
+            "packages",
+            "files",
+            "modules",
+            "variables",
+            "constants",
+            "parameters",
+            "properties",
+            "attributes",
+            "enum_cases"
+        ]
+    },
+    "languages": {
+        "typescript": {
+            "acronyms": "word",
+            "categories": {
+                "files": {
+                    "cases": ["kebab"]
+                },
+                "directories": {
+                    "cases": ["kebab"]
+                },
+                "types": {
+                    "cases": ["pascal"]
+                },
+                "classes": {
+                    "cases": ["pascal"]
+                },
+                "functions": {
+                    "cases": ["camel"]
+                },
+                "methods": {
+                    "cases": ["camel"]
+                },
+                "parameters": {
+                    "cases": ["camel"]
+                },
+                "variables": {
+                    "cases": ["camel", "upper-snake"]
+                },
+                "constants": {
+                    "cases": ["camel", "upper-snake"]
+                },
+                "properties": {
+                    "cases": ["camel", "upper-snake"]
+                },
+                "routes": {
+                    "cases": ["kebab"]
+                },
+                "path_parameters": {
+                    "cases": ["camel"]
+                },
+                "operation_ids": {
+                    "cases": ["camel"]
+                },
+                "enum_cases": {
+                    "cases": ["pascal", "camel"]
+                }
+            }
+        },
+        "javascript": {
+            "acronyms": "word",
+            "categories": {
+                "files": {
+                    "cases": ["kebab"]
+                },
+                "directories": {
+                    "cases": ["kebab"]
+                },
+                "types": {
+                    "cases": ["pascal"]
+                },
+                "classes": {
+                    "cases": ["pascal"]
+                },
+                "functions": {
+                    "cases": ["camel"]
+                },
+                "methods": {
+                    "cases": ["camel"]
+                },
+                "parameters": {
+                    "cases": ["camel"]
+                },
+                "variables": {
+                    "cases": ["camel", "upper-snake"]
+                },
+                "constants": {
+                    "cases": ["camel", "upper-snake"]
+                },
+                "properties": {
+                    "cases": ["camel", "upper-snake"]
+                },
+                "routes": {
+                    "cases": ["kebab"]
+                }
+            }
+        },
+        "python": {
+            "acronyms": "lower",
+            "categories": {
+                "files": {
+                    "cases": ["snake"]
+                },
+                "directories": {
+                    "cases": ["snake"]
+                },
+                "modules": {
+                    "cases": ["snake"]
+                },
+                "packages": {
+                    "cases": ["snake"]
+                },
+                "type_aliases": {
+                    "cases": ["pascal"]
+                },
+                "variables": {
+                    "cases": ["snake", "upper-snake"]
+                },
+                "constants": {
+                    "cases": ["upper-snake"]
+                },
+                "attributes": {
+                    "cases": ["snake", "upper-snake"]
+                },
+                "properties": {
+                    "cases": ["snake"]
+                }
+            }
+        },
+        "swift": {
+            "acronyms": "initialism",
+            "categories": {
+                "files": {
+                    "cases": ["pascal", "pascal-extension"]
+                },
+                "directories": {
+                    "cases": ["pascal"]
+                },
+                "functions": {
+                    "cases": ["camel"]
+                },
+                "methods": {
+                    "cases": ["camel"]
+                }
+            }
+        },
+        "bash": {
+            "acronyms": "lower",
+            "categories": {
+                "files": {
+                    "cases": ["kebab", "snake"]
+                },
+                "directories": {
+                    "cases": ["kebab", "snake"]
+                },
+                "functions": {
+                    "cases": ["snake"]
+                },
+                "variables": {
+                    "cases": ["snake", "upper-snake"]
+                },
+                "constants": {
+                    "cases": ["upper-snake"]
+                }
+            }
+        },
+        "sql": {
+            "acronyms": "lower",
+            "categories": {
+                "files": {
+                    "cases": ["timestamp-snake", "snake"]
+                },
+                "directories": {
+                    "cases": ["snake"]
+                },
+                "functions": {
+                    "cases": ["snake"]
+                },
+                "parameters": {
+                    "cases": ["snake"]
+                },
+                "schemas": {
+                    "cases": ["snake"]
+                },
+                "tables": {
+                    "cases": ["snake"]
+                },
+                "columns": {
+                    "cases": ["snake"]
+                },
+                "indexes": {
+                    "cases": ["snake"]
+                },
+                "triggers": {
+                    "cases": ["snake"]
+                },
+                "policies": {
+                    "cases": ["snake"]
+                }
+            }
+        }
+    },
+    "allowed_names": [
+        "setTimeout",
+        "clearTimeout",
+        "setInterval",
+        "clearInterval",
+        "setImmediate",
+        "queueMicrotask",
+        "structuredClone",
+        "URLSearchParams",
+        "console",
+        "document",
+        "window",
+        "navigator",
+        "localStorage",
+        "sessionStorage",
+        "CustomEvent",
+        "HTMLElement",
+        "XMLHttpRequest",
+        "toJSON",
+        "toString",
+        "valueOf",
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "HEAD",
+        "OPTIONS",
+        "NODE_ENV",
+        "CI",
+        "HOME",
+        "PATH",
+        "PWD",
+        "TMPDIR",
+        "TERM",
+        "SHELL",
+        "USER",
+        "LANG",
+        "NO_COLOR",
+        "FORCE_COLOR",
+        "GITHUB_TOKEN",
+        "GITHUB_ACTIONS",
+        "GITHUB_SHA",
+        "GITHUB_REF"
+    ],
+    "allow_digits": false,
+    "allow_repeated_words": false,
+    "override": [
+        {
+            "paths": ["**"],
+            "categories": ["variables", "parameters"],
+            "reason": "Loop and lambda positions take single letters.",
+            "allowed_names": ["_", "i", "j", "k", "x", "y", "n"]
+        },
+        {
+            "paths": ["**"],
+            "categories": ["directories"],
+            "reason": "Tools name these directories.",
+            "allowed_names": ["node_modules", "__pycache__", "__tests__", "__mocks__"]
+        },
+        {
+            "paths": ["**"],
+            "languages": ["typescript", "javascript"],
+            "categories": ["parameters", "variables"],
+            "ignored_prefix": "^_+"
+        },
+        {
+            "paths": ["**/.githooks/**", "**/.gspot/hooks/**", "**/.husky/**", "**/hooks/**"],
+            "categories": ["files"],
+            "reason": "git names its hooks.",
+            "allowed_names": [
+                "pre-commit",
+                "pre-push",
+                "commit-msg",
+                "post-checkout",
+                "post-merge",
+                "pre-rebase",
+                "prepare-commit-msg"
+            ]
+        },
+        {
+            "paths": ["**/e2e/**"],
+            "categories": ["directories", "files"],
+            "allow_digits": true
+        },
+        {
+            "paths": ["**/migrations/**"],
+            "categories": ["files"],
+            "allow_digits": true
+        }
+    ],
+    "path_containers": [
+        {
+            "open": "[",
+            "close": "]",
+            "category": "path_parameters"
+        },
+        {
+            "open": "(",
+            "close": ")",
+            "category": "directories"
+        },
+        {
+            "open": "@",
+            "close": "",
+            "category": "directories"
+        },
+        {
+            "open": "_",
+            "close": "",
+            "category": "directories"
+        }
+    ]
+}

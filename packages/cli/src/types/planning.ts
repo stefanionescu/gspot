@@ -1,34 +1,44 @@
-import type { z } from 'zod';
-import type { ToolPin } from '#cli/types/parsers/tool.ts';
-import type { ReadCache } from '#cli/types/platform/reads.ts';
-import type { allowlistSchema } from '#cli/parsers/schema/licenses.ts';
-import type { PolicyFile, ScopeSelection } from '#cli/types/policy/settings.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
+import type { ToolInspection } from '#cli/types/tools/find.ts';
+import type { StartRunner } from '#cli/types/generation/files.ts';
+import type { ParsedLicenses } from '#cli/types/checks/general.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
-import type { PackageManifest, PackageInstaller } from '#cli/types/parsers/packages.ts';
-import type { Manifest, ParsedCheck, CheckDeclaration } from '#cli/types/configurations.ts';
+import type { SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts';
+import type { NpmClient, DependencyFile } from '#cli/types/parsers/dependency-files.ts';
+import type { Manifest, ParsedCheck, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
-/** Policy, repository inventory, and selected configurations shared by planning and generation. */
+/** Settings, repository inventory, and selected configurations shared by planning and generation. */
 export type Session = {
+    generatedPaths: () => ReadonlySet<string>;
+    /** Settings-enabled checks across supported operating systems, planned once at session creation. */
+    configuredChecks: PlannedCheck[];
+    neededToolManifests: Manifest[];
+    timeoutSeconds: number;
     root: string;
-    /** The verified working installation when the source is a revision copy. */
+    uvPath: string;
+    cwd?: string;
+    inspections: Map<string, ToolInspection>;
+    miseBinPaths?: string[];
+    startRunner: StartRunner;
+    /** The verified working installation for a revision copy. */
     installedRoot?: string;
     reads: ReadCache;
-    resources?: DisposableStack;
-    packageInstaller: () => PackageInstaller | undefined;
-    cancelSignal?: AbortSignal;
+    resources: DisposableStack;
+    npmClient: () => NpmClient | undefined;
+    cancelSignal?: AbortSignal | undefined;
     version: string;
-    policyFiles: PolicyFile;
+    settingsFile: SettingsFile;
     manifests: Map<string, Manifest>;
     repository: Repository;
     /** Package manifests parsed from this session's source inventory. */
-    packageManifests: PackageManifest[];
+    packageManifests: DependencyFile[];
     scopes: ScopeSelection[];
 };
 
 export type Skip = PlannedCheck['skip'];
 
-/** The platform name and architecture a run is on. */
-export type Host = { platform: string; arch: string };
+/** The operating system name and architecture for a run. */
+export type System = { platform: string; arch: string };
 
 export type PlanOptions = {
     includeUnsupported?: boolean;
@@ -40,7 +50,6 @@ export type PlanOptions = {
     only?: string[];
     /** Root-relative paths selected by positional file and directory arguments. */
     paths?: string[];
-    skips: string[];
     messageFile?: string;
 };
 
@@ -55,17 +64,17 @@ export type PlanInputs = {
     platform: string;
     narrow: Set<string> | undefined;
     children: string[];
-    projects: PackageManifest[];
+    projects: DependencyFile[];
 };
 
 export type Stage = ParsedCheck['stage'];
 
-/** Saved selection state, with an enabling setting only when it is required. */
-export type SelectionStatus =
+/** Saved selection state, with an enabling setting only when it must exist. */
+export type SettingsSkip =
     | { cause: 'level' | 'ignore' | 'condition'; note: string }
     | { cause: 'setting'; note: string; setting: string };
-/** A declared native ignore source and its ordered path matcher. */
-export type NativeIgnore = { file: string; matches: (path: string) => boolean };
+/** A declared tool ignore source and its ordered path matcher. */
+export type ToolIgnore = { file: string; matches: (path: string) => boolean };
 
 export type PlannedCheck = {
     commits?: string[];
@@ -73,7 +82,7 @@ export type PlannedCheck = {
     check: CheckDeclaration;
     manifest?: Manifest;
     files: TrackedFile[];
-    tool?: ToolPin;
+    tool?: ToolDeclaration;
     skip?: {
         cause: 'level' | 'flag' | 'platform' | 'replaced' | 'setting' | 'condition' | 'ignore' | 'inputs';
         note: string;
@@ -85,10 +94,10 @@ export type PlannedCheck = {
 
 export type StageFilter = Stage | 'all';
 
-/** A selected installed consumer and the effective license policy governing its report. */
+/** A selected installed consumer and the effective license settings governing its report. */
 export type LicenseProject = {
     manifest: string;
     selection: ScopeSelection;
-    configuration: z.output<typeof allowlistSchema>;
-    skip: SelectionStatus | undefined;
+    configuration: ParsedLicenses;
+    skip: SettingsSkip | undefined;
 };

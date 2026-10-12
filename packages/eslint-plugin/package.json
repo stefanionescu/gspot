@@ -12,18 +12,12 @@
         "directory": "packages/eslint-plugin"
     },
     "type": "module",
-    "main": "./dist/plugin.cjs",
-    "types": "./dist/rules/public.d.ts",
+    "sideEffects": false,
     "exports": {
         ".": {
-            "types": "./dist/rules/public.d.ts",
-            "import": "./dist/plugin.js",
-            "require": "./dist/plugin.cjs"
+            "types": "./dist/plugin.d.ts",
+            "default": "./dist/plugin.js"
         }
-    },
-    "imports": {
-        "#plugin/*": "./src/*",
-        "#plugin-package": "./package.json"
     },
     "files": [
         "dist"
@@ -34,16 +28,19 @@
     },
     "devDependencies": {
         "@types/picomatch": "4.0.2",
-        "eslint": "9.39.5",
-        "typescript": "5.9.3"
+        "eslint": "9.39.5"
     },
     "peerDependencies": {
         "eslint": ">=9.38.0",
         "typescript": ">=4.8.4 <6.1.0"
     },
-    "sideEffects": false,
     "author": "Stefan Ionescu",
     "engines": {
-        "node": ">=22"
+        "node": ">=22.12"
+    },
+    "peerDependenciesMeta": {
+        "typescript": {
+            "optional": true
+        }
     }
 }

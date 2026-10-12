@@ -1,9 +1,24 @@
-import type { z } from 'zod';
-import type { pbxprojSchema } from '#cli/parsers/schema/xcode.ts';
+type ProjectRoot = ProjectEntry & { mainGroup: string };
 
-export type ProjectRoot = ProjectEntry & { mainGroup: string };
-
-export type ProjectEntry = z.infer<typeof pbxprojSchema>['objects'][string];
+export type ProjectEntry = {
+    isa: string;
+    buildSettings?: { SDKROOT?: string | undefined; SWIFT_VERSION?: string | undefined } | undefined;
+    name?: string | undefined;
+    path?: string | undefined;
+    sourceTree?: string | undefined;
+    children?: string[] | undefined;
+    fileRef?: string | undefined;
+    files?: string[] | undefined;
+    buildPhases?: string[] | undefined;
+    fileSystemSynchronizedGroups?: string[] | undefined;
+    exceptions?: string[] | undefined;
+    membershipExceptions?: string[] | undefined;
+    target?: string | undefined;
+    productType?: string | undefined;
+    mainGroup?: string | undefined;
+    targets?: string[] | undefined;
+    projectDirPath?: string | undefined;
+};
 
 export type ProjectMetadata = { objects: Record<string, ProjectEntry>; root: ProjectEntry };
 

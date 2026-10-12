@@ -1,9 +1,18 @@
+const SWIFT_FUNCTION_NODES = ['function_declaration', 'protocol_function_declaration'] as const;
+
+const TYPESCRIPT_FUNCTION_NODES = [
+    'function_declaration',
+    'generator_function_declaration',
+    'function_expression',
+] as const;
+
+const TYPESCRIPT_METHOD_NODES = ['method_definition', 'method_signature', 'abstract_method_signature'] as const;
 export const DIGIT = /\d/u;
 
 export const VERB_CATEGORIES = new Set(['functions', 'methods', 'variables']);
 
 /** The identifier categories a setting can narrow to; every other category borrows the limits of one of these. */
-export const CATEGORY_PARENTS: Record<string, string> = {
+export const CATEGORY_PARENTS = {
     classes: 'types',
     type_aliases: 'types',
     exceptions: 'types',
@@ -13,7 +22,7 @@ export const CATEGORY_PARENTS: Record<string, string> = {
     enum_cases: 'properties',
     modules: 'files',
     packages: 'directories',
-};
+} as const;
 
 export const SEPARATORS = /[^A-Za-z0-9]+/u;
 
@@ -25,7 +34,7 @@ export const PASCAL_WORD = /^[A-Z][A-Za-z]*$/u;
 
 export const UPPER_WORD = /^[A-Z]+$/u;
 
-export const TIMESTAMP = /^\d+$/u;
+export const DIGITS_ONLY = /^\d+$/u;
 
 /** The digits of a migration timestamp, YYYYMMDDHHMMSS. */
 export const MIGRATION_DIGITS = 14;
@@ -62,4 +71,129 @@ export const NUMERIC_WORDS = new Set([
     'float64',
 ]);
 
-export const NUMBER_PART = /^\d+$/u;
+export const NAMED_CATEGORIES = [
+    'schemas',
+    'tables',
+    'columns',
+    'indexes',
+    'triggers',
+    'policies',
+    'functions',
+    'parameters',
+    'classes',
+    'exceptions',
+    'methods',
+    'variables',
+    'constants',
+    'attributes',
+    'type_aliases',
+    'types',
+    'properties',
+    'enum_cases',
+    'files',
+    'directories',
+    'modules',
+    'packages',
+    'path_parameters',
+] as const;
+
+export const CATEGORY_LABELS = {
+    schemas: 'schema',
+    tables: 'table',
+    columns: 'column',
+    indexes: 'index',
+    triggers: 'trigger',
+    policies: 'policy',
+    functions: 'function',
+    parameters: 'parameter',
+    classes: 'class',
+    exceptions: 'exception',
+    methods: 'method',
+    variables: 'variable',
+    constants: 'constant',
+    attributes: 'attribute',
+    type_aliases: 'type alias',
+    types: 'type',
+    properties: 'property',
+    enum_cases: 'enum case',
+    files: 'file',
+    directories: 'directory',
+    modules: 'module',
+    packages: 'package',
+    path_parameters: 'path parameter',
+} as const;
+
+export const PYTHON_PARAMETER_NODES = new Set([
+    'identifier',
+    'typed_parameter',
+    'default_parameter',
+    'typed_default_parameter',
+]);
+
+export const PYTHON_SPLAT_NODES = new Set(['list_splat_pattern', 'dictionary_splat_pattern']);
+
+export const PYTHON_IMPLICIT_PARAMETERS = new Set(['self', 'cls']);
+
+export const PYTHON_CONSTANT = /^_?[A-Z][A-Z\d_]*$/u;
+
+export const PYTHON_EXCEPTION_BASE = /(?:Error|Exception|Warning)\b/u;
+
+export const SWIFT_TYPE_NODES = ['class_declaration', 'protocol_declaration', 'typealias_declaration'] as const;
+
+export const SWIFT_MEMBER_PARENTS = new Set(['class_body', 'protocol_body', 'enum_class_body']);
+
+export const TYPESCRIPT_PARAMETER_NODES = ['required_parameter', 'optional_parameter'] as const;
+
+export const TYPESCRIPT_DECLARATIONS = [
+    [TYPESCRIPT_FUNCTION_NODES, 'functions'],
+    [TYPESCRIPT_METHOD_NODES, 'methods'],
+    [['class_declaration', 'abstract_class_declaration'], 'classes'],
+    [['interface_declaration', 'type_alias_declaration', 'enum_declaration'], 'types'],
+    [['public_field_definition', 'property_signature'], 'properties'],
+    [['enum_assignment'], 'enum_cases'],
+] as const;
+
+export const TYPESCRIPT_NAME_NODES = new Set([
+    'identifier',
+    'property_identifier',
+    'private_property_identifier',
+    'type_identifier',
+    'shorthand_property_identifier_pattern',
+]);
+
+export const TYPESCRIPT_PATTERN_FIELDS = {
+    pair_pattern: 'value',
+    object_assignment_pattern: 'left',
+    assignment_pattern: 'left',
+} as const;
+
+export const TYPESCRIPT_PATTERN_LISTS = new Set(['rest_pattern', 'object_pattern', 'array_pattern']);
+
+/** The names accepted by case validation, in their display order. */
+export const CASE_NAMES = [
+    'camel',
+    'pascal',
+    'pascal-extension',
+    'kebab',
+    'snake',
+    'upper-snake',
+    'timestamp-snake',
+] as const;
+
+export const ACRONYM_STYLES = ['word', 'initialism', 'lower'] as const;
+
+export const REST_SEGMENT = /^\.\.\./u;
+export const DIGIT_RUNS = /\d+/gu;
+export const LAST_EXTENSION = /\.[^.]*$/u;
+export const TEST_TERM_GROUP = 'tests';
+export const DIGIT_BOUNDARY = /(?<=\D)(?=\d)|(?<=\d)(?=\D)/u;
+export const SWIFTLINT_PARENTS = ['types', 'variables'] as const;
+export const RUFF_CATEGORIES = ['classes', 'exceptions'] as const;
+
+export const SWIFT_NAME_QUOTE = '`';
+export const SWIFT_CALLABLE_NODES = [...SWIFT_FUNCTION_NODES, 'init_declaration'] as const;
+export const TYPESCRIPT_CALLABLE_NODES = [
+    ...TYPESCRIPT_FUNCTION_NODES,
+    ...TYPESCRIPT_METHOD_NODES,
+    'arrow_function',
+] as const;

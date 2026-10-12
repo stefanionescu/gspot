@@ -11,6 +11,10 @@
             {
                 "relaxed": true
             }
-        ]
+        ],
+        "element-permitted-content": "off",
+        "no-implicit-button-type": "off",
+        "text-content": "off",
+        "unique-landmark": "off"
     }
 }

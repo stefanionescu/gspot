@@ -6,8 +6,10 @@ description = "React Hook Form: a form validates through a resolver, and a regis
 [detect]
 dependencies = ["react-hook-form"]
 
-[[tool_file]]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-fragment = true
-selectors = [{ selector = "CallExpression[callee.name='useForm']:not(:has(Property[key.name='resolver']))", message = "Give useForm a resolver, so the schema that types the form also validates it." }, { selector = "JSXOpeningElement:has(JSXSpreadAttribute CallExpression[callee.name=register]):has(JSXAttribute[name.name=value]):not(:has([name.name=type]>[value=/^(checkbox|radio)$/]))", message = "Drop value or use Controller." }]
+[[eslint.selectors]]
+selector = "CallExpression[callee.name='useForm']:not(:has(Property[key.name='resolver']))"
+message = "Give useForm a resolver, so the schema that types the form also validates it."
+
+[[eslint.selectors]]
+selector = "JSXOpeningElement:has(JSXSpreadAttribute CallExpression[callee.name=register]):has(JSXAttribute[name.name=value]):not(:has([name.name=type]>[value=/^(checkbox|radio)$/]))"
+message = "Drop value or use Controller."

@@ -1,12 +1,3 @@
-eslint_presets = { dom = { package = "eslint-plugin-testing-library", source = "configs.flat/dom" }, angular = { package = "eslint-plugin-testing-library", source = "configs.flat/angular" }, react = { package = "eslint-plugin-testing-library", source = "configs.flat/react" }, vue = { package = "eslint-plugin-testing-library", source = "configs.flat/vue" }, svelte = { package = "eslint-plugin-testing-library", source = "configs.flat/svelte" }, marko = { package = "eslint-plugin-testing-library", source = "configs.flat/marko" } }
-eslint_all_rules = [
-    "testing-library/no-container",
-    "testing-library/no-node-access",
-    "testing-library/no-render-in-lifecycle",
-    "testing-library/prefer-screen-queries",
-    "testing-library/render-result-naming-convention",
-]
-
 [configuration]
 title = "Testing Library"
 requires = ["javascript"]
@@ -21,3 +12,36 @@ rule_prefix = "testing-library"
 kind = "library"
 version = "7.16.2"
 npm = "eslint-plugin-testing-library"
+
+[eslint]
+all_level_rules = ["testing-library/no-container", "testing-library/no-node-access", "testing-library/no-render-in-lifecycle", "testing-library/prefer-screen-queries", "testing-library/render-result-naming-convention"]
+
+[eslint.presets.dom]
+package = "eslint-plugin-testing-library"
+source = "configs.flat/dom"
+
+[eslint.presets.angular]
+package = "eslint-plugin-testing-library"
+source = "configs.flat/angular"
+
+[eslint.presets.react]
+package = "eslint-plugin-testing-library"
+source = "configs.flat/react"
+
+[eslint.presets.vue]
+package = "eslint-plugin-testing-library"
+source = "configs.flat/vue"
+
+[eslint.presets.svelte]
+package = "eslint-plugin-testing-library"
+source = "configs.flat/svelte"
+
+[eslint.presets.marko]
+package = "eslint-plugin-testing-library"
+source = "configs.flat/marko"
+
+[[tool_file]]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+fragment = true
+required_tools = ["eslint-plugin-testing-library"]

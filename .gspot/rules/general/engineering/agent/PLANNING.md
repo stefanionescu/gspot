@@ -1,7 +1,3 @@
----
-title: Planning
----
-
 # Planning
 
 ## Complete change content
@@ -35,7 +31,7 @@ Good:
 ## Order and detail
 
 One step holds one change. Order the steps so each one builds on finished work. Change
-a shared contract before its callers, and move an owner before the imports that point at it.
+a shared interface before its callers, and move a module before the imports that point at it.
 Generated output follows the source that produces it, and cleanup follows the last caller.
 
 Say why the steps run in that order, and name the constraints and assumptions that affect them.
@@ -43,5 +39,4 @@ Mention an edge case only when it belongs to the requested work.
 
 ## Verification steps
 
-A plan verifies the requested change. Add tests when the user asks or a check requires them, and
-update tests that the change breaks. Run `gspot check --staged` before an authorized commit.
+A plan verifies the requested change.

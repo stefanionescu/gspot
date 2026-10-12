@@ -1,22 +1,23 @@
 import { Query, type Node } from 'web-tree-sitter';
-import { readSource } from '#cli/platform/root/public.ts';
-import { parseSource } from '#cli/parsers/source/public.ts';
-import { isToolProjectPath } from '#cli/repository/paths/public.ts';
+import { readSource } from '#cli/system/file-reads.ts';
+import { isInGspotFolder } from '#cli/repository/selectors.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
+import type { SourceInput } from '#cli/types/parsers/tree-sitter.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { HOUSE_QUERIES } from '#cli/config/checks/general/structure.ts';
-import type { CountedLanguage } from '#cli/types/parsers/statements.ts';
-import type { HouseSource, HouseSourceInput } from '#cli/types/checks/general/structure.ts';
+import { parseSource, visitParsed } from '#cli/parsers/tree-sitter.ts';
+import type { CountedLanguage, ConventionSource } from '#cli/types/checks/general.ts';
+import { CONVENTION_QUERIES, LANGUAGE_BY_EXTENSION } from '#cli/config/checks/general/structure.ts';
 
-// Preserve native inventory selection, including extensionless shell sources.
+// Keep the selected source files, including shell scripts without extensions.
 function sourceLanguage(file: TrackedFile): CountedLanguage | undefined {
-    if (file.path.endsWith('.py')) return 'python';
-    if (file.path.endsWith('.swift')) return 'swift';
+    for (const [extension, language] of Object.entries(LANGUAGE_BY_EXTENSION))
+        if (file.path.endsWith(extension)) return language;
     return file.tags.includes('shell') ? 'bash' : undefined;
 }
 
-// Each grammar's one query supplies all four readers with the same native captures.
-function captureSource(source: HouseSource): void {
-    const query = new Query(source.tree.language, HOUSE_QUERIES[source.language]);
+// Each grammar's query supplies both readers with the same captures.
+function captureSource(source: ConventionSource): void {
+    const query = new Query(source.tree.language, CONVENTION_QUERIES[source.language]);
     try {
         for (const { name, node } of query.captures(source.tree.rootNode)) {
             const nodes = source.captures.get(name) ?? [];
@@ -29,16 +30,18 @@ function captureSource(source: HouseSource): void {
 }
 
 /**
- * Read native convention captures for selected Bash, Python, and Swift sources.
- * @param input the scope-owned inventory and source reads
- * @returns observations whose native trees remain owned until their readers finish
+ * Read convention captures for selected Bash, Python, and Swift sources.
+ * @param input the scope-owned inventory and source reads.
+ * @returns observations whose syntax trees stay available until their readers finish.
  */
-export async function readHouseSources(input: HouseSourceInput): Promise<HouseSource[]> {
-    const sources: HouseSource[] = [];
+async function readConventionSources(
+    input: Omit<SourceInput, 'files'> & Pick<CheckInput, 'files' | 'selection'>,
+): Promise<ConventionSource[]> {
+    const sources: ConventionSource[] = [];
     try {
-        for (const file of input.files.filter((entry) => entry.kind === 'source' && !isToolProjectPath(entry.path))) {
+        for (const file of input.files.filter((entry) => entry.kind === 'source' && !isInGspotFolder(entry.path))) {
             const language = sourceLanguage(file);
-            if (language === undefined || !input.view.configurations.includes(language)) continue;
+            if (language === undefined || !input.selection.view.configurations.includes(language)) continue;
             const tree = await parseSource(
                 language,
                 readSource(input.root, file.path, input.reads).toString('utf8'),
@@ -50,15 +53,24 @@ export async function readHouseSources(input: HouseSourceInput): Promise<HouseSo
         }
         return sources;
     } catch (error) {
-        disposeHouseSources(sources);
+        disposeConventionSources(sources);
         throw error;
     }
 }
 
 /**
- * Release native trees after all convention readers have finished.
- * @param sources the shared parsed observations
+ * Release syntax trees after all convention readers have finished.
+ * @param sources the shared parsed observations.
  */
-export function disposeHouseSources(sources: HouseSource[]): void {
+function disposeConventionSources(sources: ConventionSource[]): void {
     for (const source of sources) source.tree.delete();
+}
+
+/**
+ * Share convention captures until both structure checks finish.
+ * @param input the check context and syntax tree resources.
+ * @returns the captured convention sources.
+ */
+export function conventionSources(input: CheckInput): Promise<ConventionSource[]> {
+    return visitParsed(input, readConventionSources, disposeConventionSources, input.resources);
 }

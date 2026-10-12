@@ -1,5 +1,5 @@
 ---
-import type { FeatureProps as Props } from '#docs/src/types/components.ts';
+import type { FeatureProps as Props } from '#docs/src/types/home.ts';
 
 const { title, description, features }: Props = Astro.props;
 ---
@@ -10,9 +10,6 @@ const { title, description, features }: Props = Astro.props;
     <ul class="features">
         {features.map((feature) => (
             <li>
-                <div class="illustration">
-                    <img src={feature.image} alt="" width="640" height="432" loading="lazy" />
-                </div>
                 <div class="feature-copy">
                     <h3>{feature.title}</h3>
                     <p>{feature.description}</p>
@@ -29,9 +26,7 @@ const { title, description, features }: Props = Astro.props;
     .feature-section h2 { margin: 0 0 8px; font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 500; }
     .section-description { max-width: 64ch; font-size: 1.125rem; color: var(--sl-color-gray-2); margin: 0; }
     .features { margin: 32px 0 0; display: grid; list-style: none; padding: 0; gap: 32px 24px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    li { display: grid; grid-template-rows: subgrid; grid-row: span 4; gap: 0; margin: 0; min-width: 0; }
-    .illustration { margin-bottom: 24px; aspect-ratio: 40/27; overflow: hidden; border: 1px solid var(--sl-color-gray-5); border-radius: 6px; background: #0B1020; }
-    .illustration img { width: 100%; height: 100%; object-fit: contain; }
+    li { display: grid; grid-template-rows: subgrid; grid-row: span 3; gap: 0; margin: 0; min-width: 0; }
     .features .feature-copy { margin: 0; display: grid; grid-template-rows: subgrid; grid-row: span 3; gap: 0; }
     .feature-copy h3 { margin: 0; font-size: 1.0625rem; font-weight: 550; }
     .feature-copy p { margin: 8px 0 12px; font-size: 0.9375rem; color: var(--sl-color-gray-2); line-height: 1.7; }

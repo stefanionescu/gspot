@@ -3,59 +3,51 @@ title: CI
 description: Run checks in GitHub Actions, GitLab, or an existing pipeline.
 ---
 
-Choose CI during initialization:
+`gspot init` proposes CI from the provider it finds. A template supplies its CI choice; when the template leaves CI out, it stays off. To turn CI on later, run `gspot set ci.enabled true`. For GitLab, also run `gspot set ci.provider gitlab`.
+`gspot set` writes the workflow file.
 
-```shell
-gspot init --ci github
-gspot init --ci gitlab
-```
+For GitHub, gspot writes `.github/workflows/gspot.yml`. For GitLab, it writes `.gitlab/ci/gspot.yml`. Include that
+file in your pipeline:
 
-GitHub receives a workflow. Include the generated GitLab tool file in your pipeline:
-
-```yaml title="GitLab pipeline include"
+```yaml
 include:
   - local: .gitlab/ci/gspot.yml
 ```
 
-The jobs check files changed after the pull or merge request base, or after the previous push. A first push without a base checks the whole tree. To check every file on every run:
+The job checks the files changed after the pull or merge request base, or after the previous push. The first push of
+a branch checks every file.
 
-```shell
-gspot set ci.files all
-```
+On GitHub, the job runs on Linux. To add other operating systems, run
+`gspot set ci.operating_systems linux macos windows`. To replace a list you wrote, run `gspot unset ci.operating_systems` first. Pick only systems where your checks can run; for example,
+Xcode checks need macOS. On pushes to the default branch, a separate job runs the manual checks your configurations select.
 
-GitHub can run operating-system jobs selected with `ci.platforms`:
+## Tools
 
-```shell
-gspot set ci.platforms linux macos windows --replace
-```
+Each GitHub job installs mise, runs the npm version pinned in the generated workflow, and gspot installs its tools. The GitLab job
+expects mise on the CI machine. To prepare the project before gspot installs its tools, set one command, for
+example `gspot set ci.setup_command npm ci`. The job runs it before `gspot install` and stops if it fails. gspot
+quotes each argument, so spaces, quotes, and `$` reach the command as plain text.
 
-Select platforms that support the applicable checks. Manual checks run when selected by the generated job.
-
-## Tool setup
-
-The generated mise job installs the committed tool pins. Without mise, install executable tools and required Python runtimes on your runner. Use your own pipeline when those prerequisites are not supplied by the generated job.
-
-When initialization detects an existing lint job, Bitbucket Pipelines, Jenkins, CircleCI, Azure Pipelines, or Buildkite, it prints integration steps instead of creating a second pipeline. Preserve your existing job and add gspot after its tool setup.
-
-To prepare the project before gspot installs its tools, declare one command and its arguments:
-
-```shell
-gspot set ci.setup npm ci
-gspot apply
-```
-
-Both providers run this command after runtime setup and before `gspot install` and `gspot doctor`. A nonzero exit stops the job. Arguments retain spaces and shell characters as literal values. Omit `ci.setup` when the job needs no project preparation.
+If gspot finds an existing lint job, or Bitbucket Pipelines, Jenkins, CircleCI, Azure Pipelines, or Buildkite,
+`init` writes no workflow. Add the steps of "Your own pipeline" to that pipeline.
 
 ## Your own pipeline
 
-Install project dependencies and the executable and Python requirements reported by `doctor`. On a POSIX shell:
+Install mise and your project's runtime. Then install your dependencies and run gspot with the start command your
+repository uses. See [Install gspot](/guides/install/). With npm:
 
 ```shell
-npm install --global "@gspothq/cli@$(cat .gspot/version)"
-gspot install
-gspot doctor
-gspot check
-gspot check --only security/codeql
+npm ci
+npm exec --no -- gspot install
+npm exec --no -- gspot check
 ```
 
-Name only manual checks your policy selects. Preserve nonzero exit codes. `gspot check --json` writes a machine-readable report. Do not save `.gspot/state/`, installed dependencies, or credentials as CI artifacts or caches.
+With mise, run `mise exec -- gspot install`, then `mise exec -- gspot check`.
+
+Run manual checks by name, for example `npm exec --no -- gspot check --only security/codeql`. Keep the exit code of gspot: `1` means
+findings, and `2` means the run did not finish; a missing program gives exit 2, and the report names it. `gspot
+check --json` prints the report as JSON. Do not cache or upload `.gspot/state/`, installed tools, or credentials.
+
+## Turn CI off
+
+Run `gspot set ci.enabled false`.

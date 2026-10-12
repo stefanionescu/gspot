@@ -1,16 +1,76 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { createRule, optionsSchema } from '#plugin/create-rule.ts';
-import { ENVIRONMENT_ALLOWED } from '#plugin/config/environment.ts';
-import type { ClientEnvOptions } from '#plugin/types/environment.ts';
-import { environmentNames, environmentReads } from '#plugin/environment.ts';
+import { createRule, optionsSchema } from '../create-rule.ts';
+import type { RuleContext, ClientEnvOptions } from '../types/rules.ts';
+import { PUBLIC_PREFIXES, CLIENT_DIRECTIVE } from '../config/nextjs.ts';
+import { ENVIRONMENT_HOSTS, ENVIRONMENT_ALLOWED } from '../config/environment.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+// Undeclared hosts have no local binding; direct member reads and destructuring use the same property test.
+function directEnvironmentAccess(identifier: TSESTree.Identifier): TSESTree.Node[] {
+    const hosts: readonly string[] = ENVIRONMENT_HOSTS;
+    if (!hosts.includes(identifier.name)) return [];
+    const { parent } = identifier;
+    if (parent.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(parent) === 'env') return [parent];
+    if (parent.type !== AST_NODE_TYPES.VariableDeclarator || parent.id.type !== AST_NODE_TYPES.ObjectPattern) return [];
+    return parent.id.properties.filter(
+        (property) => property.type === AST_NODE_TYPES.Property && ASTUtils.getPropertyName(property) === 'env',
+    );
+}
+
+/**
+ * Find environment access through global hosts, aliases, destructuring, and import.meta.
+ * @param context the rule context and effective source scopes.
+ * @param inspect the rule's decision for each environment access.
+ * @returns listeners that find environment access once.
+ */
+function environmentListeners(context: RuleContext, inspect: (node: TSESTree.Node) => void): TSESLint.RuleListener {
+    return {
+        MemberExpression(node) {
+            if (
+                node.object.type === AST_NODE_TYPES.MetaProperty &&
+                node.object.meta.name === 'import' &&
+                node.object.property.name === 'meta' &&
+                ASTUtils.getPropertyName(node) === 'env'
+            )
+                inspect(node);
+        },
+        'Program:exit'(node) {
+            const scope = context.sourceCode.getScope(node);
+            for (const reference of scope.through) {
+                if (reference.resolved !== null) continue;
+                for (const access of directEnvironmentAccess(reference.identifier as TSESTree.Identifier))
+                    inspect(access);
+            }
+            const tracker = new ASTUtils.ReferenceTracker(scope);
+            const trace = Object.fromEntries(
+                ENVIRONMENT_HOSTS.map((host) => [host, { env: { [ASTUtils.ReferenceTracker.READ]: true } }]),
+            );
+            for (const reference of tracker.iterateGlobalReferences(trace)) inspect(reference.node);
+        },
+    };
+}
+
+/**
+ * Read the statically named variables taken from an environment object. An empty list means the whole object or a dynamic key.
+ * @param node the environment access.
+ * @returns variable names used directly or through destructuring.
+ */
+function environmentNames(node: TSESTree.Node): (string | null)[] {
+    const { parent } = node;
+    if (parent?.type === AST_NODE_TYPES.MemberExpression && parent.object === node)
+        return [ASTUtils.getPropertyName(parent)];
+    if (parent?.type === AST_NODE_TYPES.VariableDeclarator && parent.id.type === AST_NODE_TYPES.ObjectPattern)
+        return parent.id.properties.map((property) =>
+            property.type === AST_NODE_TYPES.RestElement ? null : ASTUtils.getPropertyName(property),
+        );
+    return [];
+}
 
 export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
     name: 'no-client-env',
     meta: {
-        defaultOptions: [{ isClient: false, publicPrefixes: ['NEXT_PUBLIC_'], allowed: ENVIRONMENT_ALLOWED }],
+        defaultOptions: [{ isClient: false, publicPrefixes: PUBLIC_PREFIXES, allowed: ENVIRONMENT_ALLOWED }],
         type: 'problem',
         docs: {
-            title: 'Keep private environment values on the server',
             example:
                 'In a module beginning with `"use client"`, `const key = process.env.SECRET;` reports `private`. Move the secret read and the work that needs it to a server module. A genuinely public URL can use `process.env.NEXT_PUBLIC_URL` in the client. Never rename a secret to make it public. See [Next.js environment variables](https://nextjs.org/docs/app/guides/environment-variables).',
             level: 'recommended',
@@ -48,7 +108,7 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
         const publicText = [...prefixes.map((prefix) => `${prefix}*`), ...allowed].join(', ');
         let isClient = options.isClient;
         return {
-            ...environmentReads(context, (node) => {
+            ...environmentListeners(context, (node) => {
                 if (!isClient) return;
                 const names = environmentNames(node);
                 if (
@@ -64,7 +124,8 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
             Program(node) {
                 isClient ||= node.body.some(
                     (statement) =>
-                        statement.type === AST_NODE_TYPES.ExpressionStatement && statement.directive === 'use client',
+                        statement.type === AST_NODE_TYPES.ExpressionStatement &&
+                        statement.directive === CLIENT_DIRECTIVE,
                 );
             },
         };

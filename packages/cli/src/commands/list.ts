@@ -1,38 +1,39 @@
-import { compact } from '#cli/platform/contracts.ts';
-import { printResult } from '#cli/terminal/public.ts';
-import type { Session } from '#cli/types/planning.ts';
-import { Argument } from '@commander-js/extra-typings';
-import type { CommandResult } from '#cli/types/terminal.ts';
-import { selectionStatus } from '#cli/planning/contracts.ts';
-import { everyManifest } from '#cli/configurations/public.ts';
-import type { Program } from '#cli/types/commands/program.ts';
-import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/list.ts';
-import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
-import { everyTable, listSettings } from '#cli/policy/settings/contracts.ts';
-import { commandHelp, commandRoot, openSession } from '#cli/commands/public.ts';
-import type { SettingsListing, SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
+import { compact, isRecord } from '#cli/objects.ts';
+import { printResult } from '#cli/terminal/print.ts';
+import { settingsSkip } from '#cli/planning/skips.ts';
+import { type Session } from '#cli/types/planning.ts';
+import { openSession } from '#cli/commands/session.ts';
+import { findRoot } from '#cli/repository/find-root.ts';
+import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { type CommandResult } from '#cli/types/terminal.ts';
+import { assertVersionPin } from '#cli/apply/version-pin.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import { Argument, type Command } from '@commander-js/extra-typings';
+import { KEY_GAP, LIST_KINDS, VALUE_WIDTH } from '#cli/config/commands/list.ts';
+import { type Settings, type ScopeSelection } from '#cli/types/settings/values.ts';
+import { everyTable, listSettings, writtenSetting } from '#cli/settings/inherit.ts';
+import { type SettingsListJson, type ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 function scopeTag(scope: string | undefined): string {
     return scope === undefined || scope === '' ? '' : `  [scope ${scope}]`;
 }
 
 function buildSettingsResult(session: Session): CommandResult {
-    const { rows, extras } = buildSettingRows(session.policyFiles.policy, session.scopes);
+    const { settings: rows, extras } = buildSettingRows(session.settingsFile.settings, session.scopes);
     const displayed = rows.filter(
-        (row) => row.scope === '' || row.source.startsWith(`[scope.${JSON.stringify(row.scope)}]`),
+        (row) => row.scope === '' || (row.origin === 'scope' && row.originScope === row.scope),
     );
     const width = Math.max(...displayed.map((row) => row.key.length)) + KEY_GAP;
     const lines = displayed.map((row) => {
         const value = row.value === undefined ? 'unset' : JSON.stringify(row.value);
         const shortened = value.length > VALUE_WIDTH ? `${value.slice(0, VALUE_WIDTH - 1)}…` : value;
-        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${row.direction ?? ''}  ${row.source}${scopeTag(row.scope)}`;
+        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${row.reason_needed ?? ''}  ${row.source}${scopeTag(row.scope)}`;
     });
     if (extras.length > 0) {
-        lines.push('', 'extra tables gspot does not check');
-        for (const verbatim of extras)
+        lines.push('', 'extra tool options (gspot passes them on unchecked)');
+        for (const extra of extras)
             lines.push(
-                `  tools.${verbatim.tool}.verbatim  ${verbatim.keys.join(', ')}  ${verbatim.reason ?? ''}${scopeTag(verbatim.scope)}`,
+                `  tools.${extra.tool}.extra  ${extra.keys.join(', ')}  ${extra.reason ?? ''}${scopeTag(extra.scope)}`,
             );
     }
     return { text: `${lines.join('\n')}\n`, json: { settings: rows, extras } satisfies SettingsListJson, exitCode: 0 };
@@ -48,7 +49,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
                 ? manifest.checks.map((check) => ({
                       name: check.name,
                       scope: scope.scope.path,
-                      state: statusLabel(selectionStatus(session.policyFiles.policy, scope, check)),
+                      state: statusLabel(settingsSkip(session.settingsFile.settings, scope, check)),
                   }))
                 : [],
         ),
@@ -76,42 +77,44 @@ function buildConfigurationsResult(session: Session): CommandResult {
 }
 
 /**
- * Every setting per scope, plus each authored verbatim tool-options table.
- * @param policy the parsed repository policy
+ * Every setting per scope, plus each written extra tool options table.
+ * @param settings the parsed repository settings
  * @param scopes the effective settings for each scope
- * @returns the rows and the verbatim tables
+ * @returns the rows and the extra tables
  */
-function buildSettingRows(policy: Policy, scopes: ScopeSelection[]): SettingsListing {
-    const extras = everyTable(policy).flatMap(({ table, scope = '' }) =>
-        (table.tools === undefined ? [] : Object.entries(table.tools)).flatMap(([tool, { verbatim }]) =>
-            verbatim === undefined
-                ? []
-                : [
+function buildSettingRows(settings: Settings, scopes: ScopeSelection[]): SettingsListJson {
+    const extras = everyTable(settings).flatMap(({ table, scope = '' }) =>
+        (table.tools === undefined ? [] : Object.entries(table.tools)).flatMap(([tool, { extra }]) =>
+            isRecord(extra)
+                ? [
                       compact({
                           tool,
-                          keys: Object.keys(verbatim),
-                          reason: table.reasons?.[`tools.${tool}.verbatim`],
+                          keys: Object.keys(extra),
+                          reason: writtenSetting(table, `tools.${tool}.extra`)?.reason,
                           scope,
                       }),
-                  ],
+                  ]
+                : [],
         ),
     );
     const rows = scopes.flatMap((selection) => {
         const scope = selection.scope.path;
-        return listSettings(selection.surface, policy, scope)
-            .filter((entry) => scope === '' || !entry.source.startsWith('configuration'))
+        return listSettings(selection.known, settings, scope)
+            .filter((entry) => scope === '' || entry.origin !== 'configuration')
             .map((entry) => ({
                 key: entry.key,
                 value: entry.value,
                 source: entry.source,
-                direction: entry.declaration.direction,
+                origin: entry.origin,
+                ...compact({ originScope: entry.originScope }),
+                reason_needed: entry.declaration.reason_needed,
                 scope,
             }));
     });
-    return { rows, extras };
+    return { settings: rows, extras };
 }
 
-function statusLabel(status: ReturnType<typeof selectionStatus>): string {
+function statusLabel(status: ReturnType<typeof settingsSkip>): string {
     if (status === undefined) return 'on';
     return status.cause === 'setting' ? `waits for ${status.setting}` : `off (${status.cause})`;
 }
@@ -120,19 +123,18 @@ function statusLabel(status: ReturnType<typeof selectionStatus>): string {
  * List configurations and effective settings without executing checks or mutating the project.
  * @param program the command-line program
  */
-export function registerList(program: Program): void {
+export function registerList(program: Command): void {
     program
         .command('list')
-        .summary('List configurations, checks, and settings')
-        .description(
-            'List the selected and available configurations. Each check has one row with its state in each scope that selects its configuration. gspot list settings shows root values and the settings each scope changes. Long values are shortened; --json retains complete values and inherited settings. list changes nothing and runs no check.',
-        )
-        .addHelpText('after', commandHelp('list'))
+        .summary(COMMAND_HELP.list.summary)
+        .description(COMMAND_HELP.list.description)
         .addArgument(
-            new Argument('[kind]', 'List configurations or effective settings').choices(['configurations', 'settings']),
+            new Argument('[what]', COMMAND_HELP.list.arguments.what).choices(LIST_KINDS).default('configurations'),
         )
-        .action(async (kind, _flags, command) => {
-            const session = await openSession(findRoot(commandRoot(command)));
+        .action(async (kind) => {
+            const root = findRoot(process.cwd());
+            await assertVersionPin(root);
+            const session = await openSession(root);
             printResult(kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session));
         });
 }

@@ -1,79 +1,42 @@
-[settings]
-# Repository tasks run the CLI source, so mise does not install the published package.
-disable_tools = ["npm:@gspothq/cli"]
-
-# `mise run` does not install missing tools. Run `mise install` first.
-[settings.task]
-run_auto_install = false
-
-# Hooks run `mise exec -- gspot`. The launcher in scripts/ runs the source CLI.
-[env]
-_.path = ["{{config_root}}/scripts"]
-
-# gspot-tools.toml pins the applicable repository tools. Test suites install the remaining manifest pins.
 [tools]
 bun = "1.4.2"
-[tasks."install:checks"]
-description = "Install locked repository checks with the current workspace plugin."
-run = "bun scripts/plugin.ts install"
+node = "24.20.0"
 
 [tasks.setup]
-description = "Install locked dependencies, write grammars, build the plugin, and generate Astro types."
-run = ["bun install --frozen-lockfile", "bun packages/cli/scripts/grammars.ts"]
-depends_post = ["generate:docs", "build:plugin"]
+description = "Install the locked packages and write the docs site types."
+run = ["bun install --frozen-lockfile", "bun --cwd {{config_root}}/docs --bun astro sync"]
 
-[tasks."pin:eslint-presets"]
-description = "Refresh shipped ESLint preset data from the installed test packages."
-run = "bun scripts/eslint-presets.ts"
-
-[tasks."check:pins"]
-description = "Check that every tool pin of the configuration manifests exists in its registry."
-run = "bun scripts/pins.ts"
-
-[tasks."build:cli"]
-description = "Build the CLI package; run setup first to copy the grammars."
-run = "bun packages/cli/scripts/build.ts"
-
-[tasks."build:plugin"]
-description = "Build the standalone ESLint plugin and include its license."
-run = "bun packages/eslint-plugin/build.ts"
+[tasks.build]
+description = "Build both npm packages: the CLI with its grammar files, and the ESLint plugin."
+run = "bun scripts/build.ts"
 
 [tasks.test]
-description = "Run deterministic CLI and plugin tests."
-run = "bun scripts/plugin.ts cli"
+description = "Run the unit tests."
+depends = ["build"]
+run = '''bun test --timeout {{ exec(command="bun --eval \"import { TEST_TIMEOUT_MS } from './tests/config/processes.ts'; console.log(TEST_TIMEOUT_MS)\"") }} tests/unit'''
 
-[tasks."test:tools"]
-description = "Run native compatibility tests with the selected tools installed."
-run = "bun scripts/plugin.ts test"
+[tasks."test:integration"]
+description = "Run gspot with the pinned tools installed, on sample repositories."
+depends = ["build"]
+run = '''bun test --timeout {{ exec(command="bun --eval \"import { TEST_TIMEOUT_MS } from './tests/config/processes.ts'; console.log(TEST_TIMEOUT_MS)\"") }} --preload ./tests/setup/preload.ts --preload ./tests/setup/integration.ts tests/integration'''
 
-[tasks."test:package"]
-description = "Build and pack the CLI with the plugin, then test installed consumers."
-run = "bun scripts/plugin.ts package"
+[tasks."test:e2e"]
+description = "Install both packed npm packages in a new project and test them there."
+depends = ["build"]
+run = '''bun test --timeout {{ exec(command="bun --eval \"import { TEST_TIMEOUT_MS } from './tests/config/processes.ts'; console.log(TEST_TIMEOUT_MS)\"") }} --preload ./tests/setup/preload.ts --preload ./tests/setup/integration.ts tests/e2e'''
 
-[tasks."generate:docs"]
-description = "Generate Astro content and TypeScript metadata."
-dir = "{{config_root}}/docs"
-run = "bun --bun astro sync"
+[tasks."update:rule-lists"]
+description = "Copy the rule lists of the pinned linter packages into packages/cli/configurations. Run after changing a linter version."
+run = "bun scripts/update-rule-lists.ts"
 
 [tasks."build:docs"]
-description = "Build the documentation site."
+description = "Build the docs site."
+depends = ["build"]
 dir = "{{config_root}}/docs"
 run = "bun --bun astro build"
 
 [tasks."serve:docs"]
-description = "Generate references and serve the documentation locally."
+description = "Serve the docs site on your computer."
+depends = ["build"]
 dir = "{{config_root}}/docs"
 run = "bun --bun astro dev"
-
-[tasks."check:release"]
-description = "Validate the release tag and plugin pin."
-run = "bun scripts/release.ts"
-
-[tasks."test:database"]
-description = "Run the native Supabase database tests."
-run = "bun scripts/plugin.ts test -- tests/tools/configurations/platform/supabase.test.ts"
-
-[tasks."deploy:docs"]
-description = "Deploy the reviewed documentation build."
-dir = "{{config_root}}/docs"
-run = "bun run wrangler deploy"

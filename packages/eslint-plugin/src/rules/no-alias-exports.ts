@@ -1,5 +1,5 @@
-import { unwrap } from '#plugin/syntax.ts';
-import { createRule } from '#plugin/create-rule.ts';
+import { unwrap } from '../syntax.ts';
+import { createRule } from '../create-rule.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isAlias(node: TSESTree.Expression | null): boolean {
@@ -16,7 +16,6 @@ export const noAliasExports = createRule<[], 'alias'>({
         type: 'suggestion',
         docs: {
             level: 'all',
-            title: 'No exported alias constants',
             example:
                 'The declaration `export const a = b;` reports `alias`. Remove `a` and update its consumers to use `b` from its owner. A declaration that owns a value, such as `export const a = 1;`, does not report this finding.',
             description: 'Finds an exported constant that only renames another value.',

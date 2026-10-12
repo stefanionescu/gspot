@@ -1,2 +1,2 @@
-/** A validated JSON document or its syntax and schema error. */
-export type JsonDocument<T> = { data: T; error?: never } | { data?: never; error: string };
+/** A value JSON can encode without conversion. */
+export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };

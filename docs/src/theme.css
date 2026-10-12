@@ -1,13 +1,11 @@
 @import '@fontsource-variable/geist/index.css';
 @import '@fontsource-variable/geist-mono/index.css';
-@import './home.css';
 @import './navigation.css';
 
 :root {
     color-scheme: dark;
 
     --brand-cobalt: #2457ff;
-    --brand-tangerine: #ff7a1a;
     --sl-color-white: #fafafa;
     --sl-color-gray-1: #e5e5e5;
     --sl-color-gray-2: #c4c4c4;
@@ -58,11 +56,6 @@
     color: var(--sl-color-black);
 }
 
-body {
-    font-size: 1rem;
-    line-height: 1.75;
-}
-
 h1,
 h2,
 h3 {
@@ -82,8 +75,7 @@ h3 {
 }
 
 a,
-button,
-:where(.sl-markdown-content, .landing) summary {
+button {
     transition:
         color 120ms ease,
         background-color 120ms ease,
@@ -125,28 +117,13 @@ button,
     border-color: var(--sl-color-gray-5);
 }
 
-.starlight-aside {
-    border-radius: 8px;
-    border-inline-start-width: 2px;
+.sl-markdown-content th {
+    background: var(--sl-color-gray-6);
 }
 
 .expressive-code {
     margin-block: 1.5rem;
     min-width: 0;
-}
-
-.sl-markdown-content details,
-.landing details {
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 8px;
-    padding: 1rem;
-}
-
-:where(.sl-markdown-content, .landing) summary {
-    cursor: pointer;
-    min-height: 44px;
-    align-content: center;
-    color: var(--sl-color-white);
 }
 
 html:not([data-has-sidebar]) .sl-container {
@@ -179,32 +156,15 @@ html:not([data-has-sidebar]) h1 {
     }
 
     a,
-    button,
-    summary {
+    button {
         transition: none;
     }
-}
 
-.sl-markdown-content th {
-    background: var(--sl-color-gray-6);
-}
-
-.content-panel:has(.landing) {
-    border: 0;
-    padding-block: 0;
-}
-
-main:has(.landing) {
-    padding-block: 0;
-}
-
-.sl-markdown-content:has(.landing) {
-    margin-block-start: 0;
-}
-
-/* Homepage components own their spacing independently of article typography. */
-:where(.sl-markdown-content .landing) :where(p, ul, li, h2, h3, div, section, nav, footer) {
-    margin-top: 0;
+    .expressive-code .copy button,
+    .expressive-code .copy button > div,
+    .expressive-code .copy .feedback {
+        transition: none;
+    }
 }
 
 /* Copy controls sit at the center of the code block or its title bar. */
@@ -248,12 +208,4 @@ main:has(.landing) {
     align-items: center;
     padding-block: 0;
     margin-block: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .expressive-code .copy button,
-    .expressive-code .copy button > div,
-    .expressive-code .copy .feedback {
-        transition: none;
-    }
 }

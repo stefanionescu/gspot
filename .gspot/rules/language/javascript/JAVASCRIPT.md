@@ -1,11 +1,9 @@
----
-title: JavaScript
----
-
 # JavaScript
 
 Keep development tooling out of production runtime imports. Keep inputs and side effects explicit.
-Validate values received from users, files, environment variables, or external services.
+Validate external values where the program receives them, before sending them to a database or another service.
+These values include HTTP bodies, query strings, route params, headers, environment variables, and database rows.
+Also validate remote procedure call results, provider responses, file input, generated data sources, webhooks, and scheduled-job payloads.
 If a check and this file disagree, tell the user.
 
 ## Runtime
@@ -34,13 +32,12 @@ imports rare and explain their required effect. Browser code imports no server i
 ## Values
 
 - Use frozen objects or plain constant objects for fixed value sets.
-- Parse strings, numbers, booleans, dates, and URLs received from outside the program explicitly.
 - Avoid truthiness checks when `0`, `''`, `false`, `null`, and `undefined` mean different things.
 - Use `null` for a meaningful domain value and `undefined` for missing object properties.
 - Use `??` when only `null` and `undefined` require a fallback. Do not use `||` when an empty
-  string, zero, or false is valid.
+  string, zero, or false has a valid meaning.
 - Name regular expressions after the value or contract they validate.
-- Check indexed reads when a value may be absent.
+- Check indexed reads when a value can have no result.
 
 ## Objects and functions
 
@@ -54,7 +51,7 @@ A function that mutates its input names and documents that effect.
 - Use an options object for several related arguments.
 - Do not add optional parameters to hide a broken caller contract.
 - Use early returns when they make missing-value and error handling clearer.
-- Keep constructors simple. Add inheritance only for a real runtime relationship.
+- Keep constructors small. Add inheritance only for a real runtime relationship.
 - Use decorators only where a framework requires them.
 
 ## Asynchronous work

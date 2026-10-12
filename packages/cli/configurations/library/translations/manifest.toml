@@ -1,7 +1,3 @@
-eslint_all_rules = [
-    "i18next/no-literal-string",
-]
-
 [configuration]
 title = "Translations"
 requires = ["javascript"]
@@ -18,28 +14,27 @@ version = "6.1.5"
 npm = "eslint-plugin-i18next"
 
 [[check]]
-name = "locales"
-title = "Check message files"
+name = "messages"
 example = "If the base locale defines `welcome` but another required locale does not, the check reports the missing key. Add the translated message with matching interpolation arguments."
 level = "recommended"
 stage = "push"
 runs = "scope"
-when = { dependencies = ["next-intl"] }
 summary = "Checks next-intl JSON/ICU message files under translations.messages_folder: each message parses, none is empty, no key holds a dot, and every locale holds every key of the base."
-why = "A key missing in one locale shows the key itself, or another language, in the middle of a translated screen."
+why = "This check compares every locale with the base locale, so missing keys and different interpolation arguments are found across files."
 help = "Correct the message, or add the missing key to the locale."
 
-[[setting]]
-name = "translations.messages_folder"
-type = "path"
-default = ""
-summary = "The folder of `<locale>`.json message files, relative to its scope."
+[check.when]
+dependencies = ["next-intl"]
+setting = "translations.messages_folder"
 
-[[setting]]
-name = "translations.base_locale"
-type = "string"
-default = "en"
-summary = "The locale whose message keys every other locale must contain."
+[rules."NEXT-INTL.md"]
+dependencies = ["next-intl"]
 
-[agent_rules]
-"NEXT-INTL.md" = { dependencies = ["next-intl"] }
+[eslint]
+all_level_rules = ["i18next/no-literal-string"]
+
+[[tool_file]]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+fragment = true
+required_tools = ["eslint-plugin-i18next"]

@@ -3,7 +3,7 @@
 ESLint rules for private environment reads in client code, trivial files and functions,
 and the layout of imports and files. The
 [gspot](https://github.com/stefanionescu/gspot) CLI sets this plugin up for you. You can also
-use it on its own with Node.js 22 or newer and ESLint 9.38.0 or newer.
+use it on its own with Node.js 22.12 or newer and ESLint 9.38.0 or newer.
 
 ## Contents
 
@@ -32,21 +32,13 @@ export default [gspot.configs.recommended];
 
 `recommended` turns on `gspot/no-client-env` as an error.
 
-`gspot.configs.all` also turns on the rules selected at level `all`. The CLI supplies
-project options where they apply.
+`gspot.configs.all` also turns on the house-style rules: header-first, import-boundaries,
+no-alias-exports, no-index-imports, no-trivial-files and no-trivial-functions.
 
 ## Example: a private variable in client code
 
-Declare the runtime globals that your code uses. For this example, declare `process` in
-`eslint.config.mjs`:
-
-```javascript
-import gspot from '@gspothq/eslint-plugin';
-
-export default [gspot.configs.recommended, {
-    languageOptions: { globals: { process: 'readonly' } },
-}];
-```
+The rule detects direct environment reads without declared globals. Declare runtime globals
+only to detect aliases such as `const host = process`.
 
 This client module reads a private environment variable:
 
@@ -67,11 +59,10 @@ The corrected module has no finding. Your server still needs to answer `/api/sea
 
 ## Rule reference
 
-The [generated rule reference](https://generativespotting.com/reference/plugin/) lists each
-rule's preset, options, defaults, and examples. It identifies rules that need project options
-before they report findings.
+The [generated rule reference](https://generativespotting.com/reference/eslint-plugin/) lists each
+rule's level, options, defaults, and examples.
 
-Repository-relative paths start at `settings.gspot.root`, or at the working directory of
+`import-boundaries` reads folder paths from the repository root. Paths start at `settings.gspot.root`, or at the working directory of
 ESLint when you omit the setting:
 
 ```javascript
@@ -100,10 +91,9 @@ export default [{
 ```
 
 `projectService` provides the type information that `no-trivial-functions` needs to exempt
-methods declared by an interface or base class. That rule is part of `gspot.configs.all`.
+methods declared by an interface or base class. `gspot.configs.all` includes that rule.
 
-The [rule reference](https://generativespotting.com/reference/plugin/) lists every
-rule with its options and examples. The package ships ECMAScript and CommonJS modules with
+The package ships ECMAScript modules with
 TypeScript declarations, and `gspot.rules` holds each rule.
 
 ## License

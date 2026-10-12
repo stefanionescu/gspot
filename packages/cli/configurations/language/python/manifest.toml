@@ -1,20 +1,11 @@
-basedpyright_options = { recommended = { typeCheckingMode = "recommended", reportPropertyTypeMismatch = "error", reportMissingTypeStubs = "none", reportImportCycles = "none", reportUnusedClass = "error", reportUnusedFunction = "error", reportDuplicateImport = "error", reportWildcardImportFromLibrary = "none", reportUntypedFunctionDecorator = "error", reportUntypedClassDecorator = "error", reportUntypedBaseClass = "error", reportUntypedNamedTuple = "error", reportTypeCommentUsage = "none", reportPrivateImportUsage = "none", reportDeprecated = "error", reportMissingSuperCall = "none", reportUnknownParameterType = "error", reportUnknownArgumentType = "error", reportUnknownLambdaType = "error", reportUnknownVariableType = "error", reportUnknownMemberType = "error", reportMissingParameterType = "none", reportMissingTypeArgument = "none", reportInvalidTypeVarUse = "error", reportCallInDefaultInitializer = "none", reportUnnecessaryIsInstance = "error", reportUnnecessaryCast = "error", reportUnnecessaryComparison = "error", reportUnnecessaryContains = "error", reportImplicitStringConcatenation = "none", reportInvalidStubStatement = "error", reportIncompleteStub = "error", reportUnsupportedDunderAll = "error", reportUnusedCallResult = "none", reportUnusedCoroutine = "error", reportUnusedExpression = "error", reportUnnecessaryTypeIgnoreComment = "error", reportMatchNotExhaustive = "error", reportImplicitOverride = "none", reportUnreachable = "error", reportAny = "none", reportExplicitAny = "none", reportPrivateLocalImportUsage = "none", reportImplicitRelativeImport = "none", reportUnusedParameter = "none", reportUnannotatedClassAttribute = "none", reportIncompatibleUnannotatedOverride = "error", reportInvalidAbstractMethod = "error", reportSelfClsDefault = "error", reportEmptyAbstractUsage = "error" }, all = { typeCheckingMode = "all" } }
-products = ["Python", "Ruff", "basedpyright"]
-untracked_files = ["**/{.venv,venv}/**"]
+allowed_words = ["Python", "Ruff"]
 
-ignored_folders = [".venv/"]
-
-dockerignore = [".venv"]
+ignored_folders = [".venv", "venv"]
 
 [configuration]
 title = "Python"
-requires = ["format"]
-suggests = ["naming"]
+suggests = []
 description = "Python sources: Ruff for lint and layout, basedpyright for types, import contracts, docstrings that match signatures, unused dependencies, and dead code."
-
-notes = '''
-An explicit `[tool.pydoclint]` style in `pyproject.toml` takes precedence. Otherwise, pydoclint follows the project Ruff pydocstyle convention, then `tools.ruff.docstring_convention` when it is `google` or `numpy`. Without a declared style, gspot detects Google or NumPy sections in source docstrings. Other conventions do not select a pydoclint style. If neither a declaration nor the source selects a style, pydoclint uses its native default.
-'''
 
 [detect]
 extensions = [".py"]
@@ -27,19 +18,25 @@ filenames = ["pyproject.toml", "setup.cfg", ".importlinter"]
 
 [[tool]]
 name = "uv"
-version = "0.12.13"
+version = "0.12.22"
 mise = "uv"
 
 [[tool]]
 name = "ruff"
 rule_url = "https://docs.astral.sh/ruff/rules/{rule}/"
-suppression = { inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)", reason = "#[^#]*# ?(?<reason>\\S.*)" }
+suppression = { inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)", reason = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)[^#]*# ?(?<reason>\\S.*)" }
 version = "0.16.8"
 min_version = "0.9.0"
 mise = "ruff"
 pypi = "ruff"
 brew = "ruff"
-replaces = ["ruff.toml", ".ruff.toml"]
+[[tool.replace]]
+file = "ruff.toml"
+shared = false
+
+[[tool.replace]]
+file = ".ruff.toml"
+shared = false
 
 [[tool.replace]]
 file = "pyproject.toml"
@@ -51,9 +48,10 @@ name = "basedpyright"
 suppression = { marker = "\\b(?:type|pyright): ?ignore\\b", reason = "#[^#]*# ?(?<reason>\\S.*)" }
 version = "1.40.1"
 min_version = "1.20.0"
-mise = "pipx:basedpyright"
-pypi = "basedpyright"
-replaces = ["pyrightconfig.json"]
+npm = "basedpyright"
+[[tool.replace]]
+file = "pyrightconfig.json"
+shared = false
 
 [[tool.replace]]
 file = "pyproject.toml"
@@ -104,11 +102,9 @@ target = ".gspot/config/basedpyrightconfig.json"
 tool = "basedpyright"
 pointer = { path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}" }
 per_scope = true
-generated_header = false
 
 [[check]]
 name = "ruff"
-title = "Lint Python files"
 example = "The expression `eval(user_input)` reports S307 when that rule is selected. Replace dynamic evaluation with parsing and explicit operations appropriate to the input contract."
 level = "recommended"
 stage = "commit"
@@ -123,7 +119,6 @@ help = "Run gspot check --fix for the rules that fix themselves. Turn one rule o
 
 [[check]]
 name = "ruff-format"
-title = "Format Python files"
 example = "The Python assignment `value=1` differs from Ruff formatting. Format the file so the assignment becomes `value = 1`, then rerun."
 level = "recommended"
 stage = "commit"
@@ -146,7 +141,6 @@ help = "Run gspot check --fix."
 
 [[check]]
 name = "basedpyright"
-title = "Check Python types"
 example = "The annotated assignment `count: int = \"one\"` reports an incompatible value type. Use `count: int = 1` when the value is a number, or correct the annotation if the contract requires text."
 level = "recommended"
 stage = "push"
@@ -162,7 +156,6 @@ help = "Fix the type, or narrow it where the value arrives. Accept a file that n
 
 [[check]]
 name = "import-linter"
-title = "Check import contracts"
 example = "A module importing from a layer forbidden by the configured import contract reports that dependency. Move the shared behavior to an allowed owner and update the import, then rerun against the same contract."
 level = "recommended"
 stage = "commit"
@@ -183,7 +176,6 @@ help = "Move the import to the side the contract allows, or change the contract.
 
 [[check]]
 name = "pydoclint"
-title = "Match docstrings to their functions"
 example = "A function docstring describing parameter `name` when its signature accepts `path` reports a signature mismatch. Document `path` and its actual meaning, removing the obsolete parameter entry."
 level = "recommended"
 stage = "commit"
@@ -197,7 +189,6 @@ help = "Bring the docstring in line with the signature."
 
 [[check]]
 name = "deptry"
-title = "Match imports to declared dependencies"
 example = "A module importing a third-party package absent from the project dependencies reports an undeclared dependency. Declare that dependency and update its lockfile with the project package manager, or remove the unused import."
 level = "recommended"
 stage = "push"
@@ -213,7 +204,6 @@ help = "Declare the dependency, or remove the one nothing imports. Turn one rule
 
 [[check]]
 name = "pyproject"
-title = "Validate Python project metadata"
 example = "The project metadata `version = 7` in `pyproject.toml` reports an invalid version value. Use a valid version string, such as `version = \"1.0.0\"`, and rerun before updating the lockfile."
 level = "recommended"
 stage = "commit"
@@ -228,8 +218,7 @@ help = "Correct the key the message names."
 
 [[check]]
 name = "pip-installs"
-title = "Keep dependencies in pyproject.toml"
-example = "An authored `requirements.txt` beside a locked Python project creates a second dependency owner. Export that file from the lockfile, declare it generated, and use the locked installation command."
+example = "A `requirements.txt` written by hand beside a locked Python project creates a second dependency owner. Export that file from the lockfile, declare it generated, and use the locked installation command."
 level = "all"
 stage = "commit"
 runs = "scope"
@@ -241,13 +230,12 @@ files = { filenames = [
     "source",
     "generated",
 ] }
-summary = "Checks that pyproject.toml owns every dependency: no hand-kept requirements file, and no pip install outside the allowed paths."
+summary = "Checks that pyproject.toml lists every dependency: no hand-kept requirements file and no pip install. To accept one file, ignore its finding with gspot ignore."
 why = "Two owners of the dependency list drift apart, and the image installs what the lockfile never saw."
 help = "Export the requirements file from the lockfile and declare it generated, and replace pip install with the locked install. Accept a reviewed path with gspot ignore python/pip-installs --paths `<glob>` --reason \"`<why>`\"."
 
 [[check]]
 name = "function-size"
-title = "Limit Python function lines"
 example = "A Python function exceeding the configured code-line ceiling reports a length finding. Extract a distinct operation with its own responsibility and verify the remaining function and extracted operation."
 level = "all"
 stage = "commit"
@@ -259,7 +247,6 @@ help = "Move one job of the function into a function of its own."
 
 [[check]]
 name = "placeholder-docstrings"
-title = "Replace placeholder docstrings"
 example = "A function whose docstring merely repeats its name reports a placeholder description. Replace the docstring with the behavior, inputs, and consequential effects that the name does not explain."
 level = "all"
 stage = "commit"
@@ -271,7 +258,6 @@ help = "Say what the function does that its name does not, or for whom it exists
 
 [[check]]
 name = "private-prefix"
-title = "Prefix private Python names"
 example = "A file-local function with no leading underscore and no public export reports a naming finding. Add the underscore and update its local callers, or declare the actual public contract in the export list."
 level = "all"
 stage = "commit"
@@ -283,7 +269,6 @@ help = "Add the underscore, or list the name in the export list."
 
 [[check]]
 name = "exports-at-bottom"
-title = "Put the export list last"
 example = "A module with `__all__` before later declarations reports an export-list position finding. Move the export list after those declarations."
 level = "all"
 stage = "commit"
@@ -294,8 +279,7 @@ why = "A reader looks for the public surface in one place."
 help = "Move the export list to the end of the module."
 
 [[check]]
-name = "lazy-exports"
-title = "Find lazy exports"
+name = "module-getattr"
 example = "A package exposing names through module-level `__getattr__` reports lazy exports. Import the intended public names explicitly and list them in `__all__`."
 level = "all"
 stage = "commit"
@@ -307,7 +291,6 @@ help = "Import the names and list them."
 
 [[check]]
 name = "package-exports"
-title = "Limit package exports"
 example = "A package export list larger than its configured limit reports the export count. Split unrelated public responsibilities into separate packages or remove unnecessary exports and update consumers."
 level = "all"
 stage = "commit"
@@ -319,20 +302,18 @@ help = "Split the package, or export fewer names."
 
 [[check]]
 name = "export-order"
-title = "Order the export list"
 example = "An `__all__` list whose names are not ordered shortest first reports the sorted order. Reorder the list."
 level = "all"
 stage = "commit"
 runs = "scope"
 files = { extensions = [".py"] }
 summary = "Checks that the names in the export list go shortest first, alphabetically among names of one length."
-why = "One order for every export list means a reader never searches it."
+why = "Ruff RUF022 sorts alphabetically; gspot turns it off and sorts shortest first, then alphabetically among names of one length."
 help = "Reorder the names shortest first."
 
 [[check]]
 name = "singletons"
-title = "Find module singletons"
-example = "A module-level service instance created during import reports a singleton finding when it is not allowed by policy. Construct it in the application entry point and pass the instance to consumers."
+example = "A module-level service instance created during import reports a singleton finding when settings do not allow it. Construct it in the application entry point and pass the instance to consumers."
 level = "all"
 stage = "commit"
 runs = "scope"
@@ -340,13 +321,6 @@ files = { extensions = [".py"] }
 summary = "Finds objects built at import time and kept in a module variable."
 why = "Every importer shares the one instance, and no test gets a fresh one."
 help = "Build the object where the program starts, and pass it in. Accept a reviewed composition file with gspot ignore python/singletons --paths `<glob>` --reason \"`<why>`\"."
-
-[[setting]]
-name = "tools.ruff.docstring_convention"
-type = "string"
-default = ""
-summary = "The Ruff pydocstyle convention carried from project configuration, also used by pydoclint when it has no explicit style."
-validation = { enum = ["", "google", "numpy", "pep257"] }
 
 [ruff_rules]
 recommended = [
@@ -571,25 +545,25 @@ all = [
     "TRY",
 ]
 
-[[naming.overrides]]
+[[naming.override]]
 paths = ["**/__init__.py", "**/__main__.py"]
 categories = ["files"]
-allowed = ["__init__", "__main__"]
+allowed_names = ["__init__", "__main__"]
 reason = "Python names these files."
 languages = ["python"]
 
-[[naming.overrides]]
+[[naming.override]]
 paths = ["**"]
 languages = ["python"]
 categories = ["methods"]
-allowed = ["setUp", "setUpClass", "tearDown", "tearDownClass"]
+allowed_names = ["setUp", "setUpClass", "tearDown", "tearDownClass"]
 reason = "unittest discovers its lifecycle methods by these names."
 
-[[naming.overrides]]
+[[naming.override]]
 paths = ["**"]
 languages = ["python"]
 categories = ["functions", "methods", "variables", "constants", "attributes"]
-allowed = [
+allowed_names = [
     "__init__",
     "__main__",
     "__all__",
@@ -639,7 +613,7 @@ allowed = [
 ]
 reason = "Python defines these special methods and attributes."
 
-[[naming.overrides]]
+[[naming.override]]
 paths = ["**"]
 languages = ["python"]
 categories = ["functions", "variables", "constants", "methods", "attributes"]

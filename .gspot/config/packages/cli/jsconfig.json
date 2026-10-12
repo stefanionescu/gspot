@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "checkJs": true,
+        "allowJs": true,
+        "strict": true,
+        "noEmit": true,
+        "maxNodeModuleJsDepth": 0,
+        "jsx": "preserve"
+    },
+    "include": [
+        "../../../../packages/cli/**/*.js",
+        "../../../../packages/cli/**/*.mjs",
+        "../../../../packages/cli/**/*.cjs",
+        "../../../../packages/cli/**/*.jsx"
+    ],
+    "extends": "../../../../packages/cli/tsconfig.json",
+    "files": ["../../../../packages/cli/src/types/global.d.ts"]
+}

@@ -1,26 +1,24 @@
-import { isDeepStrictEqual } from 'node:util';
-import { GspotError } from '#cli/platform/public.ts';
-import { printResult } from '#cli/terminal/public.ts';
-import { savePolicy } from '#cli/commands/contracts.ts';
-import { readPolicyTable } from '#cli/policy/public.ts';
-import { knownChecks } from '#cli/configurations/public.ts';
-import { assertVersionPin } from '#cli/lifecycle/public.ts';
-import type { CommandResult } from '#cli/types/terminal.ts';
-import type { Program } from '#cli/types/commands/program.ts';
-import { preparePolicy } from '#cli/policy/document/contracts.ts';
-import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import { commandHelp, commandRoot } from '#cli/commands/public.ts';
-import { reasonDiagnostic } from '#cli/policy/errors/contracts.ts';
-import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
-import { compact, quoteArgument } from '#cli/platform/contracts.ts';
-import { unknownCheckDiagnostic } from '#cli/configurations/errors/public.ts';
-import { emitPolicy, mergeIgnore, parseExpiryDate } from '#cli/policy/document/public.ts';
-import type { Policy, Mutation, TomlTable, CapturedPolicyEdit } from '#cli/types/policy/settings.ts';
+import { compact } from '#cli/objects.ts';
+import { GspotError } from '#cli/errors.ts';
+import { quoteArgument } from '#cli/text.ts';
+import { printResult } from '#cli/terminal/print.ts';
+import { parseSettings } from '#cli/settings/read.ts';
+import { type Command } from '@commander-js/extra-typings';
+import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { type CommandResult } from '#cli/types/terminal.ts';
+import type { TomlTable } from '#cli/types/settings/file.ts';
+import { reasonError } from '#cli/settings/errors/reasons.ts';
+import { type Settings } from '#cli/types/settings/values.ts';
+import { knownChecks } from '#cli/configurations/manifests.ts';
+import { type IgnoreOptions } from '#cli/types/commands/save-settings.ts';
+import { unknownCheckMessage } from '#cli/configurations/unknown-names.ts';
+import { saveSettings, startSettingsEdit } from '#cli/commands/save-settings.ts';
+import { mergeIgnore, emitSettings, parseExpiryDate } from '#cli/settings/file.ts';
 
-function assertKnownCheck(checkName: string, policy: Policy): void {
-    const known = knownChecks(Object.values(policy.check));
+function assertKnownCheck(checkName: string, settings: Settings): void {
+    const known = knownChecks(Object.values(settings.check));
     if (known.includes(checkName)) return;
-    throw new GspotError('selection', [unknownCheckDiagnostic(checkName, known)]);
+    throw new GspotError('arguments', [unknownCheckMessage(checkName, known)]);
 }
 
 function buildReasonHint(options: IgnoreOptions): string {
@@ -30,120 +28,59 @@ function buildReasonHint(options: IgnoreOptions): string {
     return `gspot ignore ${quoteArgument(options.check)}${rule}${paths} --reason "..."`;
 }
 
-function buildIgnore(options: IgnoreOptions): TomlTable {
-    const entry: TomlTable = { check: options.check };
-    if (options.rule !== undefined) {
-        entry['rule'] = options.rule;
-    }
-    if (options.paths !== undefined && options.paths.length > 0) {
-        entry['paths'] = options.paths;
-    }
-    if (options.reason !== undefined) {
-        entry['reason'] = options.reason;
-    }
-    if (options.until !== undefined) entry['until'] = parseExpiryDate(options.until);
-    return entry;
-}
-
-async function deleteIgnore(root: string, options: IgnoreOptions, input: CapturedPolicyEdit): Promise<CommandResult> {
-    const selector = {
-        check: options.check,
-        rule: options.rule,
-        ...compact({
-            reason: options.reason,
-            until: options.until === undefined ? undefined : parseExpiryDate(options.until),
-        }),
-    };
-    const removed = new Set(options.paths);
-    const hasMatchingRemoval = (entry: TomlTable): boolean => {
-        if (!Object.entries(selector).every(([key, value]) => isDeepStrictEqual(entry[key], value))) return false;
-        const paths = entry['paths'] as string[] | undefined;
-        return removed.size === 0
-            ? paths === undefined || paths.length === 0
-            : paths?.some((path) => removed.has(path)) === true;
-    };
-    const ignores = (input.table['ignore'] as TomlTable[] | undefined) ?? [];
-    const removedCount = ignores.filter((entry) => hasMatchingRemoval(entry)).length;
-    const noun = removedCount === 1 ? 'entry' : 'entries';
-    const summary =
-        removedCount === 0
-            ? 'nothing to remove: no matching ignore entry'
-            : `removed ${String(removedCount)} ignore ${noun} for ${options.check}`;
-    const mutation: Mutation = (raw) => {
-        const kept = ignores.filter((entry) => {
-            if (!hasMatchingRemoval(entry)) return true;
-            if (removed.size === 0) return false;
-            const paths = entry['paths'] as string[];
-            const remaining = paths.filter((path) => !removed.has(path));
-            entry['paths'] = remaining;
-            return remaining.length > 0;
-        });
-        if (kept.length === 0) Reflect.deleteProperty(raw, 'ignore');
-        else raw['ignore'] = kept;
-    };
-    const committed = await savePolicy(root, { input, change: mutation, summary, isDryRun: options.isDryRun });
-    return !committed.json.changed && committed.exitCode === 0 ? { ...committed, text: `${summary}\n` } : committed;
-}
-
 /**
- * Previews or writes an ignore addition or removal.
+ * Write an ignore with its reason.
  * @param options the parsed flags
  * @returns the command result
  */
 async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
-    const root = findRoot(options.cwd);
-    const input = preparePolicy(root);
-    assertVersionPin(root, input.table['runner']);
-    const { policy } = readPolicyTable(input.table, root);
-    assertKnownCheck(options.check, policy);
-    if (!options.remove) {
-        const diagnostic = reasonDiagnostic(`gspot ignore ${options.check}`, options.reason, buildReasonHint(options));
-        if (diagnostic !== undefined) throw new GspotError('policy', diagnostic);
-    }
-    if (options.remove) {
-        // Effective policy omits invalid ignores; removal can repair the authored entries too.
-        return await deleteIgnore(root, options, input);
-    }
+    const { root, input } = await startSettingsEdit(options.cwd);
+    const settings = parseSettings(input.text, root);
+    assertKnownCheck(options.check, settings);
+    const diagnostic = reasonError(`gspot ignore ${options.check}`, options.reason, buildReasonHint(options));
+    if (diagnostic !== undefined) throw new GspotError('settings', diagnostic);
     const list = (input.table['ignore'] as TomlTable[] | undefined) ?? [];
-    const saved = mergeIgnore(list, buildIgnore(options));
-    const result = await savePolicy(root, {
+    let saved: TomlTable = {};
+    const result = await saveSettings(root, {
         input,
-        change: (raw) => {
-            raw['ignore'] = list;
+        change: (written) => {
+            saved = mergeIgnore(
+                list,
+                compact({
+                    check: options.check,
+                    rule: options.rule,
+                    paths: options.paths,
+                    reason: options.reason,
+                    until: options.until === undefined ? undefined : parseExpiryDate(options.until),
+                }),
+            );
+            written['ignore'] = list;
         },
-        summary: options.isDryRun ? 'Ignore proposed.' : 'Ignore saved.',
-        isDryRun: options.isDryRun,
+        summary: `Saved the ignore for ${options.check}.`,
     });
-    const written = emitPolicy('', { ignore: [saved] }).trimEnd();
+    const written = emitSettings('', { ignore: [saved] }).trimEnd();
     return result.exitCode === 0 && result.json.changed ? { ...result, text: `${written}\n${result.text}` } : result;
 }
 
 /**
- * Registers ignore.
- * @param program the commander program
+ * Register the ignore command.
+ * @param program the command program
  */
-export function registerIgnore(program: Program): void {
+export function registerIgnore(program: Command): void {
     program
         .command('ignore')
-        .argument('<check>', 'Check ID to ignore or restore')
-        .summary('Ignore a check or a rule')
-        .description(
-            'Turn off a check, or one of its rules, for some paths or everywhere. The ignore goes into gspot.toml, and gspot applies the policy. Every report lists the ignores, and --verbose prints each reason. --dry-run prints the change and writes nothing.',
-        )
-        .addHelpText('after', commandHelp('ignore'))
-        .option('--paths <glob...>', 'Apply the ignore to these paths only; without it, everywhere')
-        .option('--rule <rule>', 'Turn off one rule of the check')
-        .option('--reason <text>', 'Say why; required when adding an ignore')
-        .option('--until <date>', 'Stop applying this ignore on YYYY-MM-DD (UTC)')
-        .option('--remove', 'Delete the matching ignore entries')
-        .option('--dry-run', 'Print the change and write nothing')
-        .action(async (check, flags, command) => {
+        .argument('<check>', COMMAND_HELP.ignore.arguments['check'])
+        .summary(COMMAND_HELP.ignore.summary)
+        .description(COMMAND_HELP.ignore.description)
+        .requiredOption('--reason <text>', COMMAND_HELP.ignore.options['--reason <text>'])
+        .option('--rule <rule>', COMMAND_HELP.ignore.options['--rule <rule>'])
+        .option('--paths <glob...>', COMMAND_HELP.ignore.options['--paths <glob...>'])
+        .option('--until <date>', COMMAND_HELP.ignore.options['--until <date>'])
+        .action(async (check, flags) => {
             printResult(
                 await ignoreCommand({
-                    cwd: commandRoot(command),
+                    cwd: process.cwd(),
                     check,
-                    remove: flags.remove === true,
-                    isDryRun: flags.dryRun === true,
                     ...compact({ paths: flags.paths, rule: flags.rule, reason: flags.reason, until: flags.until }),
                 }),
             );

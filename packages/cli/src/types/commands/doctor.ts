@@ -1,5 +1,5 @@
-import type { ToolInspection } from '#cli/types/tools/install.ts';
-import type { ConfigurationSuggestion } from '#cli/types/configurations.ts';
+import type { ToolInspection } from '#cli/types/tools/find.ts';
+import type { ConfigurationSuggestion } from '#cli/types/repository/selection.ts';
 
 export type SuggestionRow = { path: string; note: string; command: string };
 
@@ -8,8 +8,7 @@ export type Suggestions = {
     suggested: ConfigurationSuggestion[];
     undetected: ConfigurationSuggestion[];
     unowned: SuggestionRow[];
-    authored: SuggestionRow[];
-    duplicateMisePins: { tool: string; version: string; places: string[]; command: string }[];
+    written: SuggestionRow[];
 };
 
 export type DoctorReport = {
@@ -18,12 +17,7 @@ export type DoctorReport = {
     suggestions: Suggestions;
     hooks: string;
     ci: string;
-    rules: { files: number };
+    ruleFiles: number;
     version: { running: string; pinned?: string };
     exitCode: number;
 };
-
-export type SuggestionKey = 'detected' | 'suggested' | 'undetected' | 'unowned' | 'authored';
-
-/** One suggestion category and the title printed in the doctor report. */
-export type SuggestionSection = { key: SuggestionKey; title: string };

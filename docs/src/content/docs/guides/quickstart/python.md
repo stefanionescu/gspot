@@ -1,11 +1,11 @@
 ---
 title: "Quickstart: Python"
-description: Initialize a Python project and correct a source finding.
+description: Set up a Python project and fix a source finding.
 ---
 
-Read [Requirements](/guides/requirements/) and [Install](/guides/install/) first.
+Read [Install](/guides/install/) first.
 
-Replace `<version>` with the exact version from the [npm package page](https://www.npmjs.com/package/@gspothq/cli).
+Replace `<version>` with the version you install, such as `0.1.0`.
 
 ## Create the project
 
@@ -20,19 +20,19 @@ git commit -m "feat: Create the project"
 
 ## Set up gspot
 
-From a clean working tree, initialize and choose mise as the runner:
+Pin gspot in the repository:
 
 ```shell
-mise exec npm:@gspothq/cli@<version> -- gspot init --configurations python
+mise use node@24 'npm:@gspothq/cli@<version>'
+git add mise.toml
+git commit -m "build: Add gspot"
+mise exec -- gspot init --yes --configurations python
 ```
 
-Read the plan and accept it. Initialization prepares lockfiles and installs applicable tools. Trust the generated mise file, then prepare and diagnose the setup:
+`init` writes the files and installs nothing. Install the tools and check the setup:
 
 ```shell
-mise trust .mise/conf.d/gspot-tools.toml
-mise install
 mise exec -- gspot install
-mise exec -- gspot doctor
 mise exec -- gspot check
 ```
 
@@ -43,7 +43,7 @@ mise exec -- gspot check --fix
 mise exec -- gspot check
 ```
 
-`pyproject.toml` selects the general `licenses` configuration automatically. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly. The `licenses/allowed` check makes no license comparison until you set an allowed license or exception.
+To scan dependency licenses, list allowed licenses first. See [Dependency licenses](/guides/dependency-licenses/).
 
 ```shell
 git add -A
@@ -71,9 +71,9 @@ The check exits nonzero and reports:
 src/orders_python/__init__.py:3:1  invalid-syntax  unexpected EOF while parsing
 ```
 
-Stage the invalid file and attempt a commit to see the pre-commit hook reject it. The report names the file and explains the correction.
+Stage the file and run `git commit`. The pre-commit hook refuses the commit and prints the same finding.
 
-## Correct the source
+## Fix the source
 
 Restore the valid source from the setup commit:
 

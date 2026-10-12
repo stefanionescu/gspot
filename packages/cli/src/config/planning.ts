@@ -12,3 +12,9 @@ export const COVERAGE_FLAGS = new Set([
     '--coverage.thresholds.functions',
     '--coverage.thresholds.statements',
 ]);
+
+export const FLAG_VALUE = /=.*/su;
+export const LICENSES_CONFIGURATION = 'licenses';
+export const STYLELINT_TOOL = 'stylelint';
+
+export const TOOL_IGNORE_ARGUMENT = '--ignore-path';

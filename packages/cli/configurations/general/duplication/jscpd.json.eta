@@ -1,9 +1,0 @@
-{
-    "mode": "strict",
-    "minLines": <%= settings['limits.duplication.min_lines'] %>,
-    "minTokens": <%= settings['limits.duplication.min_tokens'] %>,
-    "reporters": ["console"],
-    "absolute": true,
-    "gitignore": true,
-    "ignore": <%= json(["**/.gspot/**", "**/*.md", "**/*.mdx", ...ignoresFor('duplication/jscpd').filter((entry) => entry.rule === undefined).flatMap((entry) => entry.paths)], 0) %>
-}

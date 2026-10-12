@@ -1,12 +1,17 @@
 [configuration]
 title = "Express"
 requires = ["javascript"]
-suggests = ["security", "openapi"]
+suggests = ["openapi"]
 description = "An Express service: the Semgrep rules for request handling, an OpenAPI document that lints and matches its source."
 
 [detect]
 dependencies = ["express"]
 
+[[eslint.selectors]]
+selector = "CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]"
+message = "A message a client reads names no identifier; put the value in its own field."
+
 [[tool_file]]
-source = "eslint.fragment.js.eta"
-selectors = [{ selector = "CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]", message = "A message a client reads names no identifier; put the value in its own field." }]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+fragment = true

@@ -1,7 +1,3 @@
----
-title: Drizzle
----
-
 # Drizzle
 
 These decisions cover Drizzle with PostgreSQL. Use the adapter and APIs of the installed release.
@@ -40,7 +36,7 @@ network calls and irreversible effects outside. Retry only bounded serialization
 deadlocks, and publish success or invalidation after commit. Use a durable outbox when an external
 effect must follow the commit.
 
-Review generated SQL for unintended drops, renames, constraints, grants, RLS, and provider-owned
+Review generated SQL for unintended drops, renames, constraints, grants, row level security (RLS), and provider-owned
 objects. Keep one authoritative migration history; push schema changes only in disposable local
 experiments. Reads that must observe a write or current permissions stay on the primary.
 

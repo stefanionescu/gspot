@@ -1,0 +1,126 @@
+rules:
+    - id: gspot.swift.keychain-accessible-always
+      pattern: kSecAttrAccessibleAlways
+      message: This Keychain class permits access regardless of device lock state.
+          Choose an accessibility class that matches when the item must be
+          available.
+      languages:
+          - swift
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-922
+          category: security
+    - id: gspot.swift.no-secrets-in-userdefaults
+      patterns:
+          - pattern-either:
+                - pattern: 'UserDefaults.$INSTANCE.set($VALUE, forKey: $KEY)'
+                - pattern: 'UserDefaults(...).set($VALUE, forKey: $KEY)'
+                - pattern: 'UserDefaults(...)!.set($VALUE, forKey: $KEY)'
+                - patterns:
+                      - pattern: '$DEFAULTS.set($VALUE, forKey: $KEY)'
+                      - pattern-either:
+                            - pattern-inside: |-
+                                  let $DEFAULTS = UserDefaults.$INSTANCE
+                                  ...
+                            - pattern-inside: |-
+                                  var $DEFAULTS = UserDefaults.$INSTANCE
+                                  ...
+                            - pattern-inside: |-
+                                  let $DEFAULTS = UserDefaults(...)!
+                                  ...
+                            - pattern-inside: |-
+                                  var $DEFAULTS = UserDefaults(...)!
+                                  ...
+                            - pattern-inside: |-
+                                  let $DEFAULTS: UserDefaults = ...
+                                  ...
+                            - pattern-inside: |-
+                                  var $DEFAULTS: UserDefaults = ...
+                                  ...
+                            - pattern-inside: 'func $FUNCTION(..., $DEFAULTS: UserDefaults, ...) { ... }'
+          - metavariable-regex:
+                metavariable: $KEY
+                regex: (?i).*(token|password|secret|credential).*
+      message: Sensitive data stored in UserDefaults (unencrypted plist). Use the
+          Keychain for tokens, passwords, and credentials.
+      languages:
+          - swift
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-312
+          category: security
+    - id: gspot.swift.no-secrets-in-plist
+      patterns:
+          - pattern-either:
+                - pattern: Bundle.main.infoDictionary?[$KEY]
+                - pattern: 'Bundle.main.object(forInfoDictionaryKey: $KEY)'
+          - metavariable-regex:
+                metavariable: $KEY
+                regex: .*(Secret|Password|PrivateKey).*
+      message: 'Reading secrets from Info.plist: plist values are not encrypted. Use
+          the Keychain or environment-injected configuration.'
+      languages:
+          - swift
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-312
+          category: security
+    - id: gspot.swift.weak-hash-algorithm
+      pattern-either:
+          - pattern: Insecure.MD5
+          - pattern: Insecure.SHA1
+          - pattern: CC_MD5(...)
+          - pattern: CC_SHA1(...)
+      message: Weak hash algorithm (MD5/SHA1). Use SHA-256 or stronger from CryptoKit.
+      languages:
+          - swift
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-328
+          category: security
+    - id: gspot.swift.log-sensitive-data
+      patterns:
+          - pattern-either:
+                - patterns:
+                      - pattern-either:
+                            - pattern: print("...\($SECRET)...")
+                            - pattern: print($SECRET)
+                            - pattern: NSLog("...\($SECRET)...")
+                            - pattern: NSLog($FORMAT, ..., $SECRET, ...)
+                            - pattern: os_log("...\($SECRET)...", ...)
+                            - pattern: os_log($FORMAT, ..., $SECRET, ...)
+                      - metavariable-regex:
+                            metavariable: $SECRET
+                            regex: (?i)^(?:[a-z_][a-z0-9_]*\.)*[a-z0-9_]*(?:token|password|secret|credential)[a-z0-9_]*$
+                - patterns:
+                      - pattern-either:
+                            - patterns:
+                                  - pattern: $LOGGER.$LEVEL($SECRET)
+                                  - metavariable-regex:
+                                        metavariable: $SECRET
+                                        regex: (?i)^(?:[a-z_][a-z0-9_]*\.)*[a-z0-9_]*(?:token|password|secret|credential)[a-z0-9_]*$
+                            - patterns:
+                                  - pattern: $LOGGER.$LEVEL("...\($SECRET)...")
+                                  - pattern: $LOGGER.$LEVEL($MESSAGE)
+                                  - metavariable-regex:
+                                        metavariable: $SECRET
+                                        regex: (?i)^(?:[a-z_][a-z0-9_]*\.)*[a-z0-9_]*(?:token|password|secret|credential)[a-z0-9_]*$
+                                  - metavariable-regex:
+                                        metavariable: $MESSAGE
+                                        regex: (?is)^".*(?<!\\)\\\(\s*(?:[a-z_][a-z0-9_]*\.)*[a-z0-9_]*(?:token|password|secret|credential)[a-z0-9_]*\s*(?:,\s*privacy:\s*\.public)?\s*\)
+                      - metavariable-regex:
+                            metavariable: $LEVEL
+                            regex: ^(trace|debug|info|notice|warning|warn|error|fault|critical|log)$
+      message: Potentially logging sensitive data. Redact tokens, passwords, and
+          credentials before logging.
+      languages:
+          - swift
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-532
+          category: security

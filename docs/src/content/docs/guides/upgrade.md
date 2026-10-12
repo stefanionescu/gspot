@@ -3,41 +3,31 @@ title: Upgrade gspot
 description: Install a new CLI version and regenerate the repository pin and configuration.
 ---
 
-Start with a clean working tree and read the release notes. Keep the previous commit so you can restore its policy and lockfiles if verification fails.
+Commit first, so you can go back. Read the [release notes](https://github.com/stefanionescu/gspot/releases) of the
+version you pick, and use that version, such as `1.2.0`, in place of `<version>` below.
 
-Replace `<version>` with the exact version from the [npm package page](https://www.npmjs.com/package/@gspothq/cli).
-
-## Install the new version
-
-For npm, install the intended exact version, for example:
+## With a package manager
 
 ```shell
 npm install --save-dev --save-exact '@gspothq/cli@<version>'
+npx gspot apply
+npx gspot install
+npx gspot check
 ```
 
-Use the equivalent exact install with pnpm, Yarn, or Bun. With a global installation, use `npm install --global '@gspothq/cli@<version>'`.
+With pnpm, Yarn, or Bun, use that package manager's exact install command and start command
+See [Install gspot](/guides/install/).
 
-For mise, first run the new version explicitly so the old repository pin does not choose the old executable:
+## With mise
 
 ```shell
-mise exec npm:'@gspothq/cli@<version>' -- gspot apply --dry-run
-mise exec npm:'@gspothq/cli@<version>' -- gspot apply
+mise use npm:@gspothq/cli@<version>
+mise exec -- gspot apply
+mise exec -- gspot install
+mise exec -- gspot check
 ```
 
-Use the release you reviewed. `apply` updates `.gspot/version` and the generated mise pin from the running CLI.
-
-## Regenerate and verify
-
-With the new version and the prefix for your runner:
-
-```shell
-gspot apply --dry-run
-gspot apply
-gspot install
-gspot doctor
-gspot check
-```
-
-Review the policy, generated files, tool requirements, and lockfile changes. An edited generated file is reported instead of overwritten. Move its settings into `gspot.toml` and move the edited generated file aside before regenerating it.
-
-Commit the updated CLI dependency, policy, generated files, and lockfiles together. Teammates then follow [Join a repository](/guides/join/).
+`gspot apply` writes the new version to `.gspot/version` and to the `#:schema` line of `gspot.toml`, and updates the
+generated files. Review the diff, fix any findings, and commit `package.json` and its lockfile, or `mise.toml`,
+`gspot.toml`, and the files in `.gspot/` together. Teammates then run `gspot install`. See
+[Join a repository](/guides/join/).

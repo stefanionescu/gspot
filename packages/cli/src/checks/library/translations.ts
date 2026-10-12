@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/platform/root/public.ts';
+import { readSource } from '#cli/system/file-reads.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
-import type { Finding } from '#cli/types/parsers/output.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
+import { MESSAGE_FILE_SUFFIX } from '#cli/config/checks/library.ts';
+import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 
 // Every message of a file by its dotted key: a nested table adds its key to the path of what it holds.
 function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
@@ -15,7 +15,7 @@ function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
     return new Map(pairs);
 }
 
-// The keys that hold a dot: a dot is how a nested key is written, so one inside a key names two places.
+// The keys that hold a dot: nested keys use dots, so one inside a key names two places.
 function dottedKeys(value: unknown): string[] {
     if (value === null || typeof value !== 'object') return [];
     return Object.entries(value).flatMap(([key, entry]) => [...(key.includes('.') ? [key] : []), ...dottedKeys(entry)]);
@@ -32,27 +32,29 @@ function translationMessage(text: string): string | undefined {
 }
 
 /**
- * The findings of the message files under the folder the policy names. With no folder named the check passes.
- * @param input the check input
- * @returns the findings
+ * The findings of the message files under the folder the settings name.
+ * @param input the check input.
+ * @returns the findings.
  */
-export function locales(input: CheckInput): Finding[] {
-    const { messages_folder: directory, base_locale: base } = input.view.options('translations');
+export function translationsMessages(input: CheckInput): Finding[] {
+    const options = input.selection.view.options('translations');
+    const directory = options.messages_folder as string;
+    const base = options.base_locale;
     const files = input.files
         .map((file) => file.path)
-        .filter((path) => path.startsWith(`${directory}/`) && path.endsWith('.json'));
+        .filter((path) => path.startsWith(`${directory}/`) && path.endsWith(MESSAGE_FILE_SUFFIX));
     const raw = new Map(
         files.map((path) => [path, JSON.parse(readSource(input.root, path, input.reads).toString('utf8')) as unknown]),
     );
     const messagesByPath = new Map([...raw].map(([path, value]) => [path, flattenMessages(value)]));
-    const baseline = [...messagesByPath].find(([path]) => posix.basename(path) === `${base}.json`);
+    const baseline = [...messagesByPath].find(([path]) => posix.basename(path) === `${base}${MESSAGE_FILE_SUFFIX}`);
     if (baseline === undefined)
         return [
             findingAt(
                 input,
-                { file: posix.join(directory, `${base}.json`), line: 1 },
+                { file: posix.join(directory, `${base}${MESSAGE_FILE_SUFFIX}`), line: 1 },
                 'base-locale',
-                `The base locale ${base}.json is missing from ${directory}. Restore it or choose the intended base locale.`,
+                `The base locale ${base}${MESSAGE_FILE_SUFFIX} is missing from ${directory}. Restore it or choose the intended base locale.`,
             ),
         ];
     const baseMessages = baseline[1];

@@ -1,6 +1,6 @@
 extends: occurrence
-message: 'A sentence longer than 30 words. Split it.'
-level: error
 scope: sentence
+token: \b\w+\b
+message: A sentence longer than 30 words. Split it.
+level: error
 max: 30
-token: "\\b\\w+\\b"

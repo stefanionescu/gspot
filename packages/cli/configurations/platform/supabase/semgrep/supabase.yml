@@ -1,0 +1,60 @@
+rules:
+    - id: gspot.supabase.postgrest-filter-interpolation
+      patterns:
+          - pattern-either:
+                - pattern: $CLIENT.or(`...${$VAR}...`, ...)
+                - pattern: $CLIENT.filter($COLUMN, "in", `...${$VAR}...`, ...)
+                - pattern: $CLIENT.textSearch($COLUMN, `...${$VAR}...`, ...)
+          - pattern-not: '$CLIENT.textSearch(..., {..., type: "plain", ...})'
+          - pattern-not: '$CLIENT.textSearch(..., {..., type: "phrase", ...})'
+          - pattern-not: '$CLIENT.textSearch(..., {..., type: "websearch", ...})'
+      message: An interpolated value enters raw PostgREST filter syntax. Escape it for
+          the operator or use a typed filter.
+      languages:
+          - typescript
+          - javascript
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-20
+          category: security
+    - id: gspot.supabase.edge-cors-wildcard-with-credentials
+      pattern: '{..., "Access-Control-Allow-Origin": "*", ...,
+          "Access-Control-Allow-Credentials": "true", ...}'
+      message: Wildcard origins cannot be used with credentialed requests. List the
+          permitted origins.
+      languages:
+          - typescript
+          - javascript
+      severity: ERROR
+      paths:
+          include:
+              - /supabase/functions/**
+      metadata:
+          cwe:
+              - CWE-346
+          category: security
+    - id: gspot.supabase.edge-unvalidated-json-body
+      patterns:
+          - pattern: await req.json()
+          - pattern-not-inside: |-
+                const $BODY = await req.json()
+                ...
+                $SCHEMA.parse($BODY)
+          - pattern-not-inside: |-
+                const $BODY = await req.json()
+                ...
+                $SCHEMA.safeParse($BODY)
+      message: Request body consumed without schema validation. Use zod or similar to
+          validate the parsed JSON.
+      languages:
+          - typescript
+          - javascript
+      severity: ERROR
+      paths:
+          include:
+              - /supabase/functions/**
+      metadata:
+          cwe:
+              - CWE-20
+          category: security

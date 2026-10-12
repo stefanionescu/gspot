@@ -1,5 +1,3 @@
-import type { OutputSpec } from '#cli/types/parsers/output.ts';
-
 export const DEFAULT_PATTERN = String.raw`^(?<file>[^:\s][^:]*):(?<line>\d+):(?:(?<column>\d+):)?\s*(?<message>.*)$`;
 
 export const DEFAULT_FILE_PATTERN = String.raw`^(?<file>[^\s].*):$`;
@@ -12,12 +10,32 @@ export const LEADING_DOT_SLASH = /^\.\//u;
 
 export const TRAILING_PAREN_RULE = /\((?<rule>[a-z0-9_:/@.-]+)\)$/u;
 
-export const DEFAULT_OUTPUT_FORMAT: OutputSpec = { format: 'regex', pattern: DEFAULT_PATTERN };
+export const DEFAULT_OUTPUT_FORMAT = { format: 'regex', pattern: DEFAULT_PATTERN } as const;
 
 /** The native Semgrep source parsing diagnostic exit code. */
 export const SEMGREP_PARSE_EXIT = 3;
 
 /** Knip JSON categories and the meaning retained in every finding. */
+export const KNIP_ISSUE_CATEGORIES = [
+    'binaries',
+    'catalog',
+    'catalogReferences',
+    'cycles',
+    'dependencies',
+    'devDependencies',
+    'duplicates',
+    'enumMembers',
+    'exports',
+    'files',
+    'namespaceMembers',
+    'nsExports',
+    'nsTypes',
+    'optionalPeerDependencies',
+    'types',
+    'unlisted',
+    'unresolved',
+] as const;
+
 export const KNIP_ISSUE_MESSAGES = {
     binaries: 'Unlisted binary',
     catalog: 'Unused catalog entry',
@@ -37,3 +55,14 @@ export const KNIP_ISSUE_MESSAGES = {
     unlisted: 'Unlisted dependency',
     unresolved: 'Unresolved import',
 } as const;
+
+export const MARKDOWNLINT_SEVERITIES = ['error', 'warning'] as const;
+
+export const OUTPUT_FILE_TYPES = ['path', 'link', 'history'] as const;
+
+export const MISSING_PATH_CODES = ['ENOENT', 'ENOTDIR'] as const;
+export const FILE_GROUP = '(?<file>';
+export const SARIF_SOURCE_ROOT = '%SRCROOT%';
+export const SEMGREP_PARSE_ERRORS = ['ParseError', 'PartialParsing'] as const;
+export const SEMGREP_PARSE_RULE = 'parse-error';
+export const JSON_START = /[[{]/u;

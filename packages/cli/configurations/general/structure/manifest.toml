@@ -1,14 +1,13 @@
 [configuration]
 title = "Structure"
 always_selected = true
-description = "The structural rules no standard linter ships, over every language: wrappers, barrels, lone files, private-first order, and the size limits."
+description = "The structural rules no standard linter ships, over every language: wrappers, barrels, lone files, and the size limits."
 
 [files]
 languages = true
 
 [[check]]
 name = "lone-files"
-title = "Find folders with one file"
 example = "With the TypeScript configuration at level `all`, `feature/only.ts` reports `lone-file` when it is the folder's only code file. Move it beside related files and update references, or keep the folder when a second substantial file belongs to that feature. Adding `feature/second.ts` makes this folder contain two code files."
 runs = "scope"
 level = "all"
@@ -18,20 +17,17 @@ why = "A folder of one file adds a level to every path and promises siblings tha
 help = "Move the file up beside its neighbors, or use gspot ignore structure/lone-files with paths and a reason."
 
 [[check]]
-name = "prefix-collisions"
-title = "Find files that share a prefix"
+name = "shared-prefixes"
 example = "Sibling files `asset-card.ts`, `asset-list.ts`, and `asset-row.ts` share a repeated prefix. Move them into `asset/` with names `card.ts`, `list.ts`, and `row.ts`, then update imports."
 runs = "scope"
 level = "all"
 stage = "commit"
-limit = "limits.prefix_collisions"
 summary = "Finds sibling files that share a name prefix, like asset-card, asset-list and asset-row in one folder."
 why = "Files that share a prefix are one concept split by suffix; they belong in a folder named after the prefix."
 help = "Move the files into a folder named after the shared prefix, or allow the set with a reason."
 
 [[check]]
-name = "stem-collisions"
-title = "Find files that collide with folders"
+name = "file-folder-clashes"
 example = "Sibling entries `report.ts` and `report/` have the same stem and report a collision. Rename the file or directory after its distinct responsibility and update every reference."
 runs = "scope"
 level = "all"
@@ -41,30 +37,7 @@ why = "An import of ./turn names both, and a reader cannot tell which one loads.
 help = "Rename the file or the folder so their stems differ."
 
 [[check]]
-name = "folder-names"
-title = "Name folders after what they hold"
-example = "A folder containing `helpers/first.sh` and `helpers/second.sh` reports `container-name` because `helpers` does not name its responsibility. Rename the folder after the operation it owns, such as `deployment`, and update every source path. A required ecosystem name needs a specific allowance."
-level = "all"
-stage = "commit"
-summary = "Finds a folder named after a container word like common, core, helpers or utils, or after a language."
-why = "A folder with no owner collects everything nobody wanted to place, and grows until nobody reads it."
-help = "Name the folder after what it holds, or use gspot ignore structure/folder-names with paths and a reason."
-
-[[check]]
-name = "config-logic"
-title = "Keep configuration modules declarative"
-example = "A module in the configuration role that contains executable application logic reports a purity finding. Move that logic into its source owner and retain the literal configuration in the configuration module."
-level = "all"
-stage = "commit"
-runs = "once"
-summary = "Checks that every module under the config role holds literals only: no function, no control flow, no call, no value import from outside the config roots."
-why = "A configuration module with logic in it is code nobody tests, hidden where reviewers expect a table."
-help = "Move the logic into a module under src and keep the literal in the config module, or take the folder out of the config role."
-
-
-[[check]]
 name = "file-lines"
-title = "Limit source file lines"
 example = "A Python, Bash, or SQL source file above its language's code-line ceiling reports its count. Split independent responsibilities into their owners and rerun the check."
 level = "all"
 stage = "commit"
@@ -75,237 +48,23 @@ why = "A long file hides independent responsibilities from the reader."
 help = "Split the file by its responsibility, or raise its limits.`<language>`.file_lines with a reason."
 
 [[check]]
-name = "test-placement"
-title = "Keep the harness in its declared folder"
-example = "With architecture.roles.test_harness = 'tests/support', tests/unit/builders.ts beside order.spec.ts reports misplaced. Move builders.ts to tests/support. Tests, declarations, and assertion modules may stay."
-runs = "scope"
-level = "all"
-stage = "commit"
-summary = "Finds support files beside JavaScript and TypeScript tests outside their declared harness."
-why = "Keep shared setup in its declared folder and assertions with tests."
-help = "Move support into the declared test harness, or use gspot ignore structure/test-placement with paths and a reason."
-
-[[check]]
-name = "private-before-public"
-title = "Declare private members first"
-example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
-summary = "Checks private declaration order, including Bash entrypoints."
-why = "Keep each responsibility in its declared owner."
-help = "Correct the finding. To record an exception, run `gspot ignore structure/private-before-public --paths <file> --reason \"<why>\"`."
-
-[[check]]
-name = "import-comments"
-title = "Keep prose outside import blocks"
-example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
-summary = "Checks comments among native import and source statements."
-why = "Keep each responsibility in its declared owner."
-help = "Correct the finding. To record an exception, run `gspot ignore structure/import-comments --paths <file> --reason \"<why>\"`."
-
-[[check]]
 name = "trivial-functions"
-title = "Inline unnecessary functions"
-example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
+example = "A Bash function that only calls another function reports its declaration. Inline that call into its callers and remove the forwarding function."
 level = "all"
 stage = "commit"
 runs = "scope"
 files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
-summary = "Checks function statement floors and trivial source files."
-why = "Keep each responsibility in its declared owner."
-help = "Correct the finding. To record an exception, run `gspot ignore structure/trivial-functions --paths <file> --reason \"<why>\"`."
+summary = "Finds functions with too few statements and files that only forward to other code."
+why = "A function of one statement makes the reader jump for nothing."
+help = "Inline a forwarding function at its calls and delete it. Split independent statements into the files that use them."
 
 [[check]]
-name = "env-owner"
-title = "Read environment values in their declared owner"
-example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
+name = "env-reads"
+example = "A Python file outside architecture.roles.environment_readers that reads os.environ reports that read. Move it into a declared environment reader and pass its value to callers."
 level = "all"
 stage = "commit"
 runs = "scope"
 files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
-summary = "Checks native environment reads against architecture.roles.env."
-why = "Keep each responsibility in its declared owner."
-help = "Correct the finding. To record an exception, run `gspot ignore structure/env-owner --paths <file> --reason \"<why>\"`."
-
-[[setting]]
-name = "limits.file_lines"
-type = "number"
-direction = "ceiling"
-default = 300
-languages = ["typescript", "javascript", "python", "swift"]
-summary = "File ceilings are 140 for Bash, 400 for SQL, and 300 otherwise. JavaScript and TypeScript count all lines; Python, Bash, SQL, and Swift skip comment-only lines."
-
-[[setting]]
-name = "limits.function_lines"
-type = "number"
-direction = "ceiling"
-default = 60
-languages = ["typescript", "javascript", "python", "swift", "bash"]
-summary = "The most lines one function may have."
-
-[[setting]]
-name = "limits.function_parameters"
-type = "number"
-direction = "ceiling"
-default = 7
-languages = ["typescript", "javascript", "python", "swift", "sql"]
-summary = "The most parameters one function may take."
-
-[[setting]]
-name = "limits.cognitive_complexity"
-type = "number"
-direction = "ceiling"
-default = 8
-languages = ["typescript", "javascript"]
-summary = "How hard a function is to follow, by the sonarjs cognitive score."
-
-[[setting]]
-name = "limits.cyclomatic_complexity"
-type = "number"
-direction = "ceiling"
-default = 8
-languages = ["typescript", "javascript", "python", "swift"]
-summary = "How many paths run through one function."
-
-[[setting]]
-name = "limits.nesting"
-type = "number"
-direction = "ceiling"
-default = 3
-languages = ["typescript", "javascript"]
-summary = "How deep blocks may nest inside one function."
-
-[[setting]]
-name = "limits.python.branches"
-type = "number"
-direction = "ceiling"
-default = 8
-languages = ["python"]
-summary = "The most branches one function may have."
-
-[[setting]]
-name = "limits.python.returns"
-type = "number"
-direction = "ceiling"
-default = 4
-languages = ["python"]
-summary = "The most return statements one function may have."
-
-[[setting]]
-name = "limits.statements"
-type = "number"
-direction = "ceiling"
-default = 30
-languages = ["typescript", "javascript"]
-summary = "The most statements one function may have."
-
-[[setting]]
-name = "limits.callback_nesting"
-type = "number"
-direction = "ceiling"
-default = 3
-languages = ["typescript", "javascript"]
-summary = "How deep callbacks may nest."
-
-[[setting]]
-name = "limits.index_exports"
-type = "number"
-direction = "ceiling"
-default = 20
-languages = ["typescript", "javascript", "python"]
-summary = "The most re-exports one index file may hold."
-
-[[setting]]
-name = "limits.prefix_collisions"
-type = "number"
-direction = "ceiling"
-default = 2
-summary = "The number of siblings sharing a name prefix that makes a finding."
-
-[[setting]]
-name = "limits.min_function_statements"
-type = "number"
-direction = "floor"
-default = 2
-languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
-summary = "Functions with this many statements or fewer are reported. Any whole number of 1 or more works, and a higher number reports more functions. Set it for one language under limits.`<language>`."
-validation = { integer = true, minimum = 1, message = "Use a whole number of statements, 1 or more." }
-
-
-[[setting]]
-name = "limits.bash.file_lines"
-type = "number"
-direction = "ceiling"
-default = 140
-summary = "The most code lines a shell script may have."
-
-[[setting]]
-name = "limits.bash.function_lines"
-type = "number"
-direction = "ceiling"
-default = 40
-summary = "The most code lines one shell function may have."
-
-[[setting]]
-name = "limits.bash.branches"
-type = "number"
-direction = "ceiling"
-default = 8
-summary = "The most branches one shell function may have."
-
-[[setting]]
-name = "limits.bash.nesting"
-type = "number"
-direction = "ceiling"
-default = 3
-summary = "How deep blocks may nest in one shell function."
-
-[[setting]]
-name = "limits.bash.assignments"
-type = "number"
-direction = "ceiling"
-default = 8
-summary = "The most variable assignments one shell function may make."
-
-[[setting]]
-name = "limits.swift.type_lines"
-type = "number"
-direction = "ceiling"
-default = 300
-summary = "The most lines one Swift type body may have."
-
-[[setting]]
-name = "limits.swift.closure_lines"
-type = "number"
-direction = "ceiling"
-default = 60
-summary = "The most lines one Swift closure may have."
-
-[[setting]]
-name = "structure.reexports"
-type = "string"
-direction = "tightening"
-default = "none"
-summary = "Whether re-exports are allowed: none, or index-only for libraries with barrels."
-validation = { enum = ["none", "index-only"] }
-
-[[setting]]
-name = "architecture.roles"
-type = "table"
-direction = "tightening"
-default = {}
-summary = "Which modules or paths play the types, tests, test_harness, config, env, and runtime roles for the import direction rules, plus roles declared by selected configurations, such as scripts and stores. Those configurations provide their role defaults."
-
-[[setting]]
-name = "architecture.modules"
-type = "list"
-items = { name = "string", paths = { type = "list", items = "path" }, may_import = { type = "list", items = "string", optional = true }, reason = { type = "string", optional = true } }
-direction = "tightening"
-default = []
-summary = "Which module may import which; a module imports itself and the modules in its may_import list"
+summary = "Finds environment reads outside the files listed in architecture.roles.environment_readers."
+why = "Environment reads spread through the code hide which settings a program needs."
+help = "Move the environment read into a file listed in architecture.roles.environment_readers, then pass the value to callers."

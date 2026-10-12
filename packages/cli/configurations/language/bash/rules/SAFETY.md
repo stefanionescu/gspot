@@ -1,22 +1,15 @@
----
-title: Bash Safety
----
-
 # Bash Safety
-
-Calling commands, processes and privilege, structured data, network, secrets, temporary files,
-portability, and debugging.
 
 ## Calling commands
 
-Commands are fixed names with argument arrays, never strings built from input, and a script
-never passes untrusted input to a shell. `bash -lc` is forbidden in repository scripts, and a
+Use fixed command names with argument arrays, never strings built from input, and a script
+never passes untrusted input to a shell. Never use `bash -lc` in repository scripts, and a
 function that runs a caller-supplied command takes the command and its arguments after
 `shift` and invokes `"$@"`.
 
 Check uncommon commands with `command -v` before a long-running, destructive, publishing, or
 error-handling path depends on them. Prefer builtins and parameter expansion to external
-commands for simple string and arithmetic work, and pass files directly rather than through
+commands for string and arithmetic work, and pass files directly rather than through
 `cat`. Never run `su -c` without the target user.
 
 ```bash
@@ -35,13 +28,13 @@ require_command() {
 
 ## Processes and privilege
 
-Process names are advisory, never an authorization boundary. Stop and restart paths stop only
-PIDs recorded by the owning script family, found through the service manager, a PID file, or
-`pgrep -x`, never `ps | grep`. A script that starts background jobs saves each PID, waits for
+Treat process names as advisory information, never authorization. Stop and restart paths stop only
+process ids recorded by the owning script family, found through the service manager, a `PID` file, or
+`pgrep -x`, never `ps | grep`. A script that starts background jobs saves each `PID`, waits for
 each, captures each status, and writes per-job output to separate files. It bounds its
 fan-out and kills owned children on `INT`, `TERM`, and `EXIT`. `sudo command > file` redirects
 as the current user, and a glob in `sudo command /path/*` expands before `sudo` runs.
-Privileged writes go through `sudo tee`, and a privileged shell string is a fixed literal
+Privileged writes go through `sudo tee`, and keep a privileged shell string as a fixed literal
 with no input.
 
 ```bash
@@ -75,13 +68,13 @@ run_remote_checks() {
 
 ## Structured data
 
-Simple string edits use parameter expansion. JSON goes through `jq`, and YAML through `yq` or
-a project-owned parser. JSON, YAML, XML, HTML, plist, and xcodebuild output are never parsed
-with ad hoc `grep | sed | awk` unless the input is controlled and the format trivial.
-Prefer machine output modes (JSON, NUL, explicit format flags) and never parse process lists,
+Use parameter expansion for string edits. JSON goes through `jq`, and YAML through `yq` or
+a project-owned parser. Never parse JSON, YAML, XML, HTML, plist, or xcodebuild output
+with ad hoc `grep | sed | awk` unless the script controls the input and the format has no complex structure.
+Prefer machine output modes such as JSON, `NUL`, or explicit format flags and never parse process lists,
 pretty tables, progress bars, or localized text by fixed field numbers. Quote `tr` character
 classes and pin `LC_ALL=C` when converting case. macOS and GNU `sed -i` differ; a committed
-script rewrites through a temporary file unless it is documented as platform-specific.
+script rewrites through a temporary file unless its documentation restricts it to one platform.
 
 ```bash
 # get_service_url: Prints a required nonempty service URL from JSON configuration.
@@ -97,9 +90,9 @@ get_service_url() {
 ## Network
 
 Downloads use `curl --fail --show-error --silent --location` into an explicit file, with
-tool-native timeouts (`--connect-timeout` plus `--max-time`, SSH `ConnectTimeout`) rather
-than GNU `timeout`, which macOS lacks. Executable content is downloaded, verified against an
-independently obtained checksum or signature, and only then run.
+tool-native timeouts such as `--connect-timeout` plus `--max-time`, or SSH `ConnectTimeout`, rather
+than GNU `timeout`, which macOS lacks. Download executable content, verify it against an
+independently obtained checksum or signature, and only then run it.
 
 ```bash
 installer="${work_dir}/install.sh"
@@ -140,17 +133,17 @@ require_env() {
 ## Temporary files, locks, and cleanup
 
 Temporary paths come from `mktemp` or `mktemp -d` under the system or an explicit project
-temp directory, never from predictable names, and cleanup is registered right after creation.
-Downloaded, copied, or generated content lands in a temporary file, is validated by the real
-parser, and replaces the destination with `mv`. The file keeps the restrictive permissions
-`mktemp` gave it unless deployment needs others. Failed artifacts are removed unless the script
-documents keeping them. Locks are acquired atomically with a `mkdir` lock directory holding
-the owner PID or with `noclobber` redirection, never with a `test` followed by a create.
+temp directory, never from predictable names. Register cleanup immediately after creation.
+Put downloaded, copied, or generated content in a temporary file, validate it with the real
+parser, and replace the destination with `mv`. The file keeps the restrictive permissions
+`mktemp` gave it unless deployment needs others. Remove failed artifacts unless the script
+documents keeping them. Acquire locks atomically with a `mkdir` lock directory holding
+the owner `PID` or with `noclobber` redirection, never with a `test` followed by a create.
 
-Stop commands remove only what the script created. A cleanup path from
-input or persistent state is validated against its owner root. It rejects empty values, `/`,
-the repository root, `$HOME`, symlinks, and anything outside the owner. A `mktemp -d` result
-is kept exactly and never widened to its neighbors. `|| true` never follows a destructive
+Stop commands remove only what the script created. Validate a cleanup path from
+input or persistent state against its permitted root. Reject empty values, `/`,
+the repository root, `$HOME`, symlinks, and anything outside the owner. Keep a `mktemp -d` result
+exactly. Never widen the path to its neighbors. `|| true` never follows a destructive
 command or a required installation, publishing, build, or runtime command.
 
 ```bash
@@ -194,7 +187,7 @@ remove_build_dir() {
 macOS and BSD
 differ from GNU in `sed`, `date`, `readlink`, `mktemp`, `stat`, `xargs`, and `grep`; keep a
 platform-specific branch with the operation that owns it. Handle `realpath` and `date`
-parsing differences. `/bin/bash` on macOS is not a modern Bash,
+parsing differences. macOS `/bin/bash` uses an old Bash version,
 Linux-only utilities need checks in macOS-compatible scripts, and CI does not share the
 developer's `PATH`. Symlink-aware absolute paths come from `pwd -P` after `cd`, or from
 product-owned application code.
@@ -211,18 +204,19 @@ reduce to the smallest reproducing block, and expose invisible characters with
 only while diagnosing, never around secrets, and never commit broad tracing, `trap DEBUG`, or stepping
 code. Bash 4.4 supports `BASH_XTRACEFD`. A debug helper preserves the status it diagnoses.
 
-Common causes follow. `unexpected EOF` is an unmatched quote, an unterminated here document,
-a missing `fi`, `done`, or `esac`, or a CRLF ending hiding the delimiter. `too many arguments`
-is an unquoted expansion inside `[ ... ]`. `event not found` is interactive history expansion
-of `!`. A command behaving differently is an alias, function, builtin, or `PATH` collision,
-found with `type -a`. Failure before the shebang is a BOM or CRLF.
+Common causes follow. `unexpected EOF` indicates an unmatched quote, an unterminated here document,
+a missing `fi`, `done`, or `esac`, or a CRLF ending hiding the delimiter.
+
+`too many arguments` indicates an unquoted expansion inside `[ ... ]`. `event not found` indicates interactive history expansion
+of `!`. Use `type -a` to find an alias, function, builtin, or `PATH` collision when a command behaves differently.
+Failure before the shebang indicates a byte order mark (BOM) or CRLF.
 
 ## Refactoring existing scripts
 
-Read the whole script and its sourced libraries, identify the caller contract (local, CI,
-remote host, package script), and preserve behavior before changing style. Fix quoting and
+Read the whole script and its sourced libraries, identify the caller interface: local, CI,
+remote host, or package script, and preserve behavior before changing style. Fix quoting and
 argument arrays near the touched logic, and add explicit checks around dangerous commands.
 Share a helper across the script family only when it has a real shared contract. Do not
 convert a large script in one pass or change shebangs across a family without verifying the
-runtime. Run the narrow shell lint and format command before the broader checks. A script
-that is too complex moves its logic into application code, called directly.
+runtime. Run the narrow shell lint and format command before the broader checks. Move complex script
+logic into application code and call it directly.

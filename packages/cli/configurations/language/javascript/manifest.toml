@@ -1,277 +1,13 @@
-prefix_collisions = { prefixes = ["jsconfig", "eslint", "vite", "playwright"] }
+allowed_words = ["JavaScript", "ESLint"]
+ignored_folders = ["node_modules", "bower_components"]
 
-products = ["JavaScript", "ESLint", "knip"]
-untracked_files = ["**/{node_modules,bower_components}/**"]
-
-eslint_presets = { eslint = { package = "@eslint/js", source = "configs.recommended" }, sonar = { package = "eslint-plugin-sonarjs", source = "configs.recommended" }, unicorn = { package = "eslint-plugin-unicorn", source = "configs.recommended" }, packageJson = { package = "eslint-plugin-package-json", source = "configs.recommended" }, prettier = { package = "eslint-config-prettier", source = "" }, gspot = { package = "@gspothq/eslint-plugin", source = "configs.recommended" }, gspotAll = { package = "@gspothq/eslint-plugin", source = "configs.all" } }
-eslint_all_rules = [
-    "complexity",
-    "import-x/exports-last",
-    "jsdoc/no-types",
-    "jsdoc/require-description",
-    "jsdoc/require-jsdoc",
-    "jsdoc/require-param",
-    "jsdoc/require-param-description",
-    "jsdoc/require-returns",
-    "jsdoc/require-returns-description",
-    "max-depth",
-    "max-lines",
-    "max-lines-per-function",
-    "max-nested-callbacks",
-    "max-params",
-    "max-statements",
-    "n/no-process-exit",
-    "n/prefer-global/buffer",
-    "n/prefer-global/console",
-    "n/prefer-global/process",
-    "n/prefer-global/url",
-    "n/prefer-global/url-search-params",
-    "n/prefer-promises/dns",
-    "n/prefer-promises/fs",
-    "no-console",
-    "no-param-reassign",
-    "package-json/repository-shorthand",
-    "package-json/require-attribution",
-    "package-json/require-description",
-    "package-json/require-exports",
-    "package-json/require-files",
-    "package-json/require-name",
-    "package-json/require-repository",
-    "package-json/require-sideEffects",
-    "package-json/require-type",
-    "package-json/require-version",
-    "package-json/sort-collections",
-    "security/detect-child-process",
-    "security/detect-possible-timing-attacks",
-    "sonarjs/bitwise-operators",
-    "sonarjs/class-name",
-    "sonarjs/cognitive-complexity",
-    "sonarjs/constructor-for-side-effects",
-    "sonarjs/fixme-tag",
-    "sonarjs/hooks-before-test-cases",
-    "sonarjs/max-switch-cases",
-    "sonarjs/no-clear-text-protocols",
-    "sonarjs/no-commented-code",
-    "sonarjs/no-default-utility-imports",
-    "sonarjs/no-fixed-wait-in-tests",
-    "sonarjs/no-global-this",
-    "sonarjs/no-hardcoded-ip",
-    "sonarjs/no-identical-functions",
-    "sonarjs/no-inverted-boolean-check",
-    "sonarjs/no-labels",
-    "sonarjs/no-nested-assignment",
-    "sonarjs/no-nested-conditional",
-    "sonarjs/no-nested-functions",
-    "sonarjs/no-nested-switch",
-    "sonarjs/no-nested-template-literals",
-    "sonarjs/no-os-command-from-path",
-    "sonarjs/no-same-line-conditional",
-    "sonarjs/no-selector-parameter",
-    "sonarjs/no-small-switch",
-    "sonarjs/no-undefined-argument",
-    "sonarjs/parameterized-tests",
-    "sonarjs/prefer-default-last",
-    "sonarjs/prefer-immediate-return",
-    "sonarjs/prefer-native-lodash-alternative",
-    "sonarjs/prefer-object-literal",
-    "sonarjs/prefer-promise-shorthand",
-    "sonarjs/prefer-read-only-props",
-    "sonarjs/prefer-regexp-exec",
-    "sonarjs/prefer-single-boolean-return",
-    "sonarjs/prefer-specific-assertions",
-    "sonarjs/prefer-type-guard",
-    "sonarjs/prefer-while",
-    "sonarjs/pseudo-random",
-    "sonarjs/public-static-readonly",
-    "sonarjs/publicly-writable-directories",
-    "sonarjs/regex-complexity",
-    "sonarjs/todo-tag",
-    "sonarjs/use-type-alias",
-    "unicorn/better-dom-traversing",
-    "unicorn/catch-error-name",
-    "unicorn/consistent-assert",
-    "unicorn/consistent-compound-words",
-    "unicorn/consistent-date-clone",
-    "unicorn/consistent-destructuring",
-    "unicorn/consistent-empty-array-spread",
-    "unicorn/consistent-function-scoping",
-    "unicorn/consistent-json-file-read",
-    "unicorn/consistent-template-literal-escape",
-    "unicorn/custom-error-definition",
-    "unicorn/dom-node-dataset",
-    "unicorn/expiring-todo-comments",
-    "unicorn/explicit-length-check",
-    "unicorn/filename-case",
-    "unicorn/import-style",
-    "unicorn/isolated-functions",
-    "unicorn/no-anonymous-default-export",
-    "unicorn/no-array-for-each",
-    "unicorn/no-array-from-fill",
-    "unicorn/no-array-method-this-argument",
-    "unicorn/no-array-reduce",
-    "unicorn/no-array-reverse",
-    "unicorn/no-array-sort",
-    "unicorn/no-await-expression-member",
-    "unicorn/no-blob-to-file",
-    "unicorn/no-canvas-to-image",
-    "unicorn/no-confusing-array-splice",
-    "unicorn/no-document-cookie",
-    "unicorn/no-empty-file",
-    "unicorn/no-exports-in-scripts",
-    "unicorn/no-for-loop",
-    "unicorn/no-hex-escape",
-    "unicorn/no-immediate-mutation",
-    "unicorn/no-invalid-file-input-accept",
-    "unicorn/no-keyword-prefix",
-    "unicorn/no-magic-array-flat-depth",
-    "unicorn/no-named-default",
-    "unicorn/no-negated-condition",
-    "unicorn/no-negation-in-equality-check",
-    "unicorn/no-nested-ternary",
-    "unicorn/no-new-array",
-    "unicorn/no-null",
-    "unicorn/no-process-exit",
-    "unicorn/no-single-promise-in-promise-methods",
-    "unicorn/no-static-only-class",
-    "unicorn/no-this-assignment",
-    "unicorn/no-typeof-undefined",
-    "unicorn/no-unnecessary-array-flat-depth",
-    "unicorn/no-unnecessary-array-splice-count",
-    "unicorn/no-unnecessary-nested-ternary",
-    "unicorn/no-unnecessary-slice-end",
-    "unicorn/no-unreadable-array-destructuring",
-    "unicorn/no-unreadable-iife",
-    "unicorn/no-unused-properties",
-    "unicorn/no-useless-switch-case",
-    "unicorn/no-useless-undefined",
-    "unicorn/prefer-add-event-listener",
-    "unicorn/prefer-array-find",
-    "unicorn/prefer-array-flat",
-    "unicorn/prefer-array-flat-map",
-    "unicorn/prefer-array-index-of",
-    "unicorn/prefer-array-last-methods",
-    "unicorn/prefer-array-some",
-    "unicorn/prefer-at",
-    "unicorn/prefer-bigint-literals",
-    "unicorn/prefer-blob-reading-methods",
-    "unicorn/prefer-class-fields",
-    "unicorn/prefer-classlist-toggle",
-    "unicorn/prefer-date-now",
-    "unicorn/prefer-default-parameters",
-    "unicorn/prefer-dom-node-append",
-    "unicorn/prefer-dom-node-remove",
-    "unicorn/prefer-dom-node-text-content",
-    "unicorn/prefer-event-target",
-    "unicorn/prefer-export-from",
-    "unicorn/prefer-get-or-insert-computed",
-    "unicorn/prefer-global-this",
-    "unicorn/prefer-import-meta-properties",
-    "unicorn/prefer-includes",
-    "unicorn/prefer-includes-over-repeated-comparisons",
-    "unicorn/prefer-iterator-concat",
-    "unicorn/prefer-iterator-to-array-at-end",
-    "unicorn/prefer-keyboard-event-key",
-    "unicorn/prefer-logical-operator-over-ternary",
-    "unicorn/prefer-math-abs",
-    "unicorn/prefer-math-min-max",
-    "unicorn/prefer-math-trunc",
-    "unicorn/prefer-modern-dom-apis",
-    "unicorn/prefer-modern-math-apis",
-    "unicorn/prefer-module",
-    "unicorn/prefer-native-coercion-functions",
-    "unicorn/prefer-negative-index",
-    "unicorn/prefer-number-properties",
-    "unicorn/prefer-object-from-entries",
-    "unicorn/prefer-optional-catch-binding",
-    "unicorn/prefer-prototype-methods",
-    "unicorn/prefer-query-selector",
-    "unicorn/prefer-queue-microtask",
-    "unicorn/prefer-reflect-apply",
-    "unicorn/prefer-regexp-test",
-    "unicorn/prefer-response-static-json",
-    "unicorn/prefer-set-has",
-    "unicorn/prefer-set-size",
-    "unicorn/prefer-simple-condition-first",
-    "unicorn/prefer-single-call",
-    "unicorn/prefer-split-limit",
-    "unicorn/prefer-spread",
-    "unicorn/prefer-string-match-all",
-    "unicorn/prefer-string-pad-start-end",
-    "unicorn/prefer-string-raw",
-    "unicorn/prefer-string-repeat",
-    "unicorn/prefer-string-replace-all",
-    "unicorn/prefer-string-slice",
-    "unicorn/prefer-string-starts-ends-with",
-    "unicorn/prefer-string-trim-start-end",
-    "unicorn/prefer-structured-clone",
-    "unicorn/prefer-switch",
-    "unicorn/prefer-ternary",
-    "unicorn/prefer-top-level-await",
-    "unicorn/prefer-type-error",
-    "unicorn/prevent-abbreviations",
-    "unicorn/relative-url-style",
-    "unicorn/require-passive-events",
-    "unicorn/require-post-message-target-origin",
-    "unicorn/string-content",
-    "unicorn/try-complexity",
-]
-
-ignored_folders = ["node_modules/"]
-
-dockerignore = ["node_modules"]
-
-# Where a dead-code scan starts when no framework names its own entries.
-entry = ["src/main.{ts,js}", "src/index.{ts,js}"]
+[prefix_collisions]
+prefixes = ["jsconfig", "eslint", "playwright"]
 
 [configuration]
 title = "JavaScript"
-suggests = ["naming", "format"]
+suggests = []
 description = "ESLint with the shipped rule set over every JavaScript file, type checking through JSDoc, and knip for dead code."
-
-notes = '''
-gspot translates policy settings into plugin rule options:
-
-| Policy setting | Plugin rule | Rule option |
-| --- | --- | --- |
-| `architecture.roles.env` | `n/no-process-env`, `no-restricted-properties`, `no-restricted-syntax` | owner path exclusions |
-| `tools.eslint.import_extensions` | `n/file-extension-in-import` | native import style |
-| `limits.index_exports` | `barrel-files/avoid-barrel-files` | `amountOfExportsToConsiderModuleAsBarrel` |
-| `structure.reexports = "index-only"` | core re-export selectors and `no-trivial-files` | index exemptions |
-
-Environment ownership and barrel limits apply at level `all`. Barrel limits apply when index re-exports are allowed. See the [standalone plugin reference](/reference/plugin/) for the rule options.
-
-## JavaScript runtimes
-
-ESLint gives each file one runtime. Ordinary modules use Node.js built-ins; `.cjs` and `.cts`
-files also receive CommonJS globals. React, Vue, Svelte, and Vite application sources use
-browser globals. React Native sources use native globals. Build scripts retain Node.js.
-Next.js sources retain Node.js by default because server components can use its APIs.
-
-Use `tools.eslint.runtimes` to declare another runtime for a file selector:
-
-```toml title="Runtime choices in gspot.toml"
-[tools.eslint.runtimes]
-"src/client/**" = "browser"
-"src/workers/**" = "worker"
-"src/service-worker.js" = "service-worker"
-```
-
-Selectors are relative to the scope that authors the setting. Inherited selectors keep that
-origin. A scope can add or replace selectors. Later selectors take precedence when they overlap.
-A child scope reads its own settings and framework defaults. Use an explicit `node` selector
-for server code inside a browser or native project.
-
-Runtime names follow the pinned [globals package](https://github.com/sindresorhus/globals);
-`service-worker` names its service-worker
-set. Web Workers and service workers have different APIs. Browser and native files do not
-receive Node.js rules. React Native retains the `process` and `require` globals its
-runtime supports, and does not receive Node.js globals such as `Buffer` and `__dirname`.
-Unknown runtime names fail policy validation before tool files are emitted.
-
-JavaScript checks inherit an authored `jsconfig.json` first and `tsconfig.json` otherwise. The TypeScript fallback keeps compiler settings and declarations while selecting JavaScript sources for this check. An authored JSX setting remains in force; otherwise the generated project uses `jsx: "preserve"`. Scopes without either project file use Bundler resolution when an extensionless import style matches a JavaScript source file. Ambient types come from the source project, including authored custom roots.
-
-For compiler selection, see [TypeScript details](/reference/configurations/typescript/#details).
-'''
 
 [detect]
 project_files = ["package.json"]
@@ -285,15 +21,70 @@ eslint_plugins = true
 
 [[tool]]
 name = "eslint"
-refused_options = [{ paths = ["rules", "overrides", "extends"], message = "ESLint rule selection comes from level recommended or all. Use tools.eslint.rules and tools.eslint.overrides for native options, or gspot ignore javascript/eslint --rule <rule> --reason <why> to accept a finding." }]
 rule_url = "https://eslint.org/docs/latest/rules/{rule}"
 crash_pattern = "^(?:Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:)"
 diagnostic_header_pattern = "^(?:Oops!|ESLint: )"
-suppression = { marker = "^(?:/\\*\\s*eslint-disable(?:-next-line|-line)?|//\\s*eslint-disable-(?:next-)?line)(?=\\s|$)", reason = " -- (?<reason>\\S.*)" }
 version = "9.39.5"
 npm = "eslint"
-min_version = "9.38.0"
-replaces = ["eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", "eslint.config.ts", "eslint.config.mts", "eslint.config.cts", ".eslintrc", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.json", ".eslintrc.yml", ".eslintrc.yaml", ".eslintignore"]
+[[tool.replace]]
+file = "eslint.config.js"
+shared = false
+
+[[tool.replace]]
+file = "eslint.config.mjs"
+shared = false
+
+[[tool.replace]]
+file = "eslint.config.cjs"
+shared = false
+
+[[tool.replace]]
+file = "eslint.config.ts"
+shared = false
+
+[[tool.replace]]
+file = "eslint.config.mts"
+shared = false
+
+[[tool.replace]]
+file = "eslint.config.cts"
+shared = false
+
+[[tool.replace]]
+file = ".eslintrc"
+shared = false
+
+[[tool.replace]]
+file = ".eslintrc.js"
+shared = false
+
+[[tool.replace]]
+file = ".eslintrc.cjs"
+shared = false
+
+[[tool.replace]]
+file = ".eslintrc.json"
+shared = false
+
+[[tool.replace]]
+file = ".eslintrc.yml"
+shared = false
+
+[[tool.replace]]
+file = ".eslintrc.yaml"
+shared = false
+
+[[tool.replace]]
+file = ".eslintignore"
+shared = false
+
+[[tool.refused_options]]
+paths = ["rules", "overrides", "extends"]
+message = "ESLint rule selection comes from level recommended or all. Use tools.eslint.rules and tools.eslint.override for native options, or gspot ignore javascript/eslint --rule <rule> --reason <why> to accept a finding."
+
+[tool.suppression]
+marker = "^(?:/\\*\\s*eslint-disable(?:-next-line|-line)?|//\\s*eslint-disable-(?:next-)?line)(?=\\s|$)"
+reason = " -- (?<reason>\\S.*)"
 
 [[tool.replace]]
 file = "package.json"
@@ -310,9 +101,8 @@ npm = "@eslint/js"
 name = "@gspothq/eslint-plugin"
 rule_prefix = "gspot"
 kind = "library"
-version = "0.1.0"
 npm = "@gspothq/eslint-plugin"
-rule_url = "https://generativespotting.com/reference/plugin/{rule}/"
+rule_url = "https://generativespotting.com/reference/eslint-plugin/{rule}/"
 
 [[tool]]
 name = "eslint-plugin-sonarjs"
@@ -320,7 +110,6 @@ rule_prefix = "sonarjs"
 kind = "library"
 version = "4.2.0"
 npm = "eslint-plugin-sonarjs"
-min_version = "3.0.0"
 
 [[tool]]
 name = "eslint-plugin-unicorn"
@@ -329,7 +118,6 @@ rule_url = "https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs
 kind = "library"
 version = "65.0.1"
 npm = "eslint-plugin-unicorn"
-min_version = "63.0.0"
 
 [[tool]]
 name = "eslint-plugin-security"
@@ -358,7 +146,6 @@ rule_prefix = "n"
 kind = "library"
 version = "18.3.0"
 npm = "eslint-plugin-n"
-min_version = "17.24.0"
 
 [[tool]]
 name = "eslint-plugin-jsdoc"
@@ -366,7 +153,6 @@ rule_prefix = "jsdoc"
 kind = "library"
 version = "64.3.9"
 npm = "eslint-plugin-jsdoc"
-min_version = "50.8.0"
 
 [[tool]]
 name = "eslint-plugin-regexp"
@@ -374,7 +160,6 @@ rule_prefix = "regexp"
 kind = "library"
 version = "3.3.0"
 npm = "eslint-plugin-regexp"
-min_version = "2.10.0"
 
 [[tool]]
 name = "eslint-plugin-import-x"
@@ -384,11 +169,10 @@ version = "4.17.1"
 npm = "eslint-plugin-import-x"
 
 [[tool]]
-name = "@eslint-community/eslint-plugin-eslint-comments"
-rule_prefix = "@eslint-community/eslint-comments"
+name = "picomatch"
 kind = "library"
-version = "4.8.0"
-npm = "@eslint-community/eslint-plugin-eslint-comments"
+version = "4.0.7"
+npm = "picomatch"
 
 [[tool]]
 name = "eslint-import-resolver-typescript"
@@ -398,12 +182,16 @@ npm = "eslint-import-resolver-typescript"
 
 [[tool]]
 name = "eslint-plugin-boundaries"
-when = [{ setting = "architecture.modules" }, { setting = "architecture.roles", level = "all" }, { setting = "test_files", level = "all" }]
 rule_prefix = "boundaries"
 kind = "library"
 version = "7.2.0"
 npm = "eslint-plugin-boundaries"
-min_version = "5.0.0"
+
+[[tool.when]]
+setting = "architecture.module"
+
+[[tool.when]]
+level = "all"
 
 [[tool]]
 name = "eslint-plugin-package-json"
@@ -428,30 +216,60 @@ npm = "globals"
 name = "knip"
 version = "6.35.1"
 npm = "knip"
-min_version = "5.85.0"
-replaces = ["knip.json", "knip.jsonc", ".knip.json", ".knip.jsonc", "knip.ts", "knip.js", "knip.config.js", "knip.config.ts"]
+[[tool.replace]]
+file = "knip.json"
+shared = false
+
+[[tool.replace]]
+file = "knip.jsonc"
+shared = false
+
+[[tool.replace]]
+file = ".knip.json"
+shared = false
+
+[[tool.replace]]
+file = ".knip.jsonc"
+shared = false
+
+[[tool.replace]]
+file = "knip.ts"
+shared = false
+
+[[tool.replace]]
+file = "knip.js"
+shared = false
+
+[[tool.replace]]
+file = "knip.config.js"
+shared = false
+
+[[tool.replace]]
+file = "knip.config.ts"
+shared = false
 
 [[tool]]
 name = "tsc"
-suppression = { marker = "@ts-(?:ignore|expect-error|nocheck)\\b", reason = "@ts-(?:ignore|expect-error|nocheck):?\\s+(?<reason>\\S.*)" }
+install_hint = "Run: npm install --save-dev typescript"
 system = true
 version = "5.9.3"
 npm = "typescript"
 version_command = ["--version"]
 
-[[tool]]
-name = "typescript"
-kind = "library"
-version = "5.9.3"
-npm = "typescript"
+[tool.suppression]
+marker = "@ts-(?:ignore|expect-error|nocheck)\\b"
+reason = "@ts-(?:ignore|expect-error|nocheck):?\\s+(?<reason>\\S.*)"
 
 [[tool_file]]
 target = ".gspot/config/eslint.config.mjs"
+required_tools = ["@eslint/js", "@gspothq/eslint-plugin", "eslint-plugin-sonarjs", "eslint-plugin-unicorn", "eslint-plugin-security", "eslint-plugin-barrel-files", "eslint-plugin-perfectionist", "eslint-plugin-n", "eslint-plugin-jsdoc", "eslint-plugin-regexp", "eslint-plugin-import-x", "eslint-import-resolver-typescript", "eslint-plugin-boundaries", "eslint-plugin-package-json", "eslint-config-prettier", "globals", "picomatch"]
 scope_fragments = true
 tool = "eslint"
 rule_keys = ["rules"]
-pointer = { path = "eslint.config.mjs", body = "export { default } from {target_module};" }
-selectors = [{ selector = "ExportAllDeclaration", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "none" } }, { selector = "ExportNamedDeclaration[source]", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "none" } }, { selector = "ExportNamedDeclaration[declaration=null]", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "none" } }, { selector = "ExportAllDeclaration", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "index-only" }, ignores = ["**/index.*"] }, { selector = "ExportNamedDeclaration[source]", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "index-only" }, ignores = ["**/index.*"] }, { selector = "ExportNamedDeclaration[declaration=null]", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "index-only" }, ignores = ["**/index.*"] }]
+
+[tool_file.pointer]
+path = "eslint.config.mjs"
+body = "export { default } from {target_module};"
 
 [[tool_file]]
 target = ".gspot/config/jsconfig.json"
@@ -462,11 +280,9 @@ per_scope = true
 [[tool_file]]
 target = ".gspot/config/knip.json"
 tool = "knip"
-generated_header = false
 
 [[check]]
 name = "eslint"
-title = "Lint JavaScript and TypeScript"
 tool = ["eslint", "node"]
 example = "The declaration `const unused = 1;` reports no-unused-vars. Delete the variable."
 level = "recommended"
@@ -474,116 +290,104 @@ stage = "commit"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{tool_file:eslint}", "--format", "json", "{files}"]
 fix = ["eslint", "--fix", "--config", "{tool_file:eslint}", "{files}"]
 exit_codes = [1]
-files = { extensions = [".js", ".jsx", ".mjs", ".cjs"], filenames = ["package.json"], tags = ["shebang:node"], eslint_plugins = true }
-output = { format = "json", children = "messages", fields = { file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message", fixable = "fix" } }
 summary = "Runs the shipped ESLint rules on JavaScript, TypeScript, component files, and package.json."
 why = "ESLint catches mistakes and dead code the runtime accepts: unused code, unsafe patterns, functions that only forward."
-help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain `<rule>` links the rule documentation."
+help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> links the rule documentation."
+
+[check.files]
+extensions = [".js", ".jsx", ".mjs", ".cjs"]
+filenames = ["package.json"]
+tags = ["shebang:node"]
+eslint_plugins = true
+
+[check.output]
+format = "json"
+children = "messages"
+
+[check.output.fields]
+file = "filePath"
+line = "line"
+column = "column"
+rule = "ruleId"
+message = "message"
+fixable = "fix"
 
 [[check]]
 name = "tsc"
-title = "Check JavaScript types"
 example = "With JavaScript type checking enabled, passing a number to a JSDoc parameter declared as `string` reports a type error. Pass the intended string value or correct the documented parameter contract."
 level = "recommended"
 stage = "push"
 runs = "scope"
 cwd = "scope"
 tool = "tsc"
-files = { extensions = [".js", ".mjs", ".cjs", ".jsx"] }
-output = { format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$" }
 summary = "Type-checks plain JavaScript through its JSDoc comments."
 why = "A JavaScript file with a wrong call crashes at run time; the checker sees it first when the types are written down."
 help = "Add or fix the JSDoc type that the error names."
 
+[check.files]
+extensions = [".js", ".mjs", ".cjs", ".jsx"]
+
+[check.output]
+format = "regex"
+pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"
+
 [[check]]
 name = "knip"
-title = "Find unused JavaScript code"
-example = "An exported declaration that no selected entry point uses reports an unused export. Remove the export or declaration and update consumers. If the file is dynamically loaded, add its entry point with gspot set tools.knip.entry."
+example = "An exported declaration that no selected entry point uses reports an unused export. Remove the export or declaration and update consumers. If the file is dynamically loaded, add its entry point in tools.knip.extra with a reason."
 level = "recommended"
 stage = "push"
 runs = "scope"
 command = ["knip", "--config", "{tool_file:knip}", "--no-progress", "--reporter", "json", "{workspace:--workspace}"]
 cwd = "root"
-output = { format = "knip" }
 summary = "Finds files, exports, and dependencies nothing uses."
 why = "Dead code is read, maintained, and shipped for nobody."
-help = "Delete what knip names, or add a knip entry point with gspot set tools.knip.entry if the file is loaded in a way knip cannot see."
+help = "Delete what knip names, or add a knip entry point in tools.knip.extra with a reason if the file is loaded in a way knip cannot see."
 
-[[setting]]
-name = "tools.eslint.rules"
-type = "table"
-direction = "rule-options"
-default = {}
-summary = "Native option arrays by ESLint rule ID, without a severity. Options apply only where the selected level enables the rule. Accept findings with gspot ignore --rule."
+[check.output]
+format = "knip"
 
-[[setting]]
-name = "tools.eslint.overrides"
-type = "list"
-items = "native"
-direction = "rule-options"
-default = []
-summary = "Rule options for selected paths, in order. A scope's overrides apply inside that scope only. Explicit ignores apply last."
-
-[[setting]]
-name = "tools.eslint.import_extensions"
-type = "table"
-default = { "**/*" = "js" }
-summary = "Import suffix by path pattern: js for compiled ESM, ts for Deno and Bun, extensionless for bundled code."
-
-[[setting]]
-name = "architecture.roles.scripts"
-type = "list"
-items = "path"
-default = ["scripts/**", "**/*.config.{js,mjs,cjs,ts}"]
-summary = "Globs for script files: they may print to the console and call process.exit."
-
-[[setting]]
-name = "tools.eslint.runtimes"
-type = "table"
-default = {}
-summary = "The runtime per scoped file selector, using names from globals; service-worker selects service-worker APIs. Framework application sources use their runtime, build scripts use Node.js, and authored selectors override those defaults."
-
-[[setting]]
-name = "tools.eslint.node_version"
-type = "string"
-default = ""
-summary = "Override the Node version checked by the n plugin. When unset, the plugin reads each source file's package engines."
-
-[[setting]]
-name = "tools.eslint.restricted_imports"
-type = "list"
-items = { name = "string", message = "string" }
-direction = "tightening"
-default = []
-summary = "Imports this repository refuses, each with a name, and a message."
-
-[[setting]]
-name = "tools.knip.entry"
-type = "list"
-items = "path"
-default = []
-summary = "Entry points knip starts from beyond the ones the framework configuration declares."
-
-[[setting]]
-name = "tools.knip.ignore_dependencies"
-type = "table"
-direction = "loosening"
-default = {}
-summary = "Dependencies knip does not report as unused, each with a reason: packages only a spawned command uses. A name that looks like a regular expression matches as one; an entry with workspace applies to that package.json workspace alone."
-
-[required_eslint_rules]
-js = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity", "import-x/exports-last"]
-
-[[naming.overrides]]
+[[naming.override]]
 paths = ["**"]
 languages = ["typescript", "javascript"]
 categories = ["functions", "methods"]
 ignored_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
-[agent_rules]
-"PLAYWRIGHT.md" = { dependencies = ["@playwright/test", "playwright"] }
-"NODE.md" = { runtimes = ["node"], absent_dependencies = ["react-native", "expo"] }
-"DENO.md" = { runtimes = ["deno"] }
-"COMPONENTS.md" = { dependencies = ["astro", "svelte", "vue", "react"] }
-"BUN.md" = { filenames = ["bun.lock", "bun.lockb", "bunfig.toml"] }
+[rules."PLAYWRIGHT.md"]
+dependencies = ["@playwright/test", "playwright"]
+
+[rules."NODE.md"]
+runtimes = ["node"]
+absent_dependencies = ["react-native", "expo"]
+
+[rules."DENO.md"]
+runtimes = ["deno"]
+
+[rules."COMPONENTS.md"]
+dependencies = ["astro", "svelte", "vue", "react"]
+
+[rules."BUN.md"]
+filenames = ["bun.lock", "bun.lockb", "bunfig.toml"]
+
+[eslint]
+all_level_rules = ["import-x/first", "import-x/newline-after-import", "barrel-files/avoid-barrel-files", "perfectionist/sort-imports", "perfectionist/sort-named-imports", "perfectionist/sort-exports", "perfectionist/sort-named-exports", "complexity", "import-x/exports-last", "jsdoc/no-types", "jsdoc/require-description", "jsdoc/require-jsdoc", "jsdoc/require-param", "jsdoc/require-param-description", "jsdoc/require-returns", "jsdoc/require-returns-description", "max-depth", "max-lines", "max-lines-per-function", "max-nested-callbacks", "max-params", "max-statements", "n/no-process-exit", "n/prefer-global/buffer", "n/prefer-global/console", "n/prefer-global/process", "n/prefer-global/url", "n/prefer-global/url-search-params", "n/prefer-promises/dns", "n/prefer-promises/fs", "no-console", "no-param-reassign", "package-json/repository-shorthand", "package-json/require-attribution", "package-json/require-description", "package-json/require-exports", "package-json/require-files", "package-json/require-name", "package-json/require-repository", "package-json/require-sideEffects", "package-json/require-type", "package-json/require-version", "package-json/sort-collections", "security/detect-child-process", "security/detect-possible-timing-attacks", "sonarjs/bitwise-operators", "sonarjs/class-name", "sonarjs/cognitive-complexity", "sonarjs/constructor-for-side-effects", "sonarjs/fixme-tag", "sonarjs/hooks-before-test-cases", "sonarjs/max-switch-cases", "sonarjs/no-clear-text-protocols", "sonarjs/no-commented-code", "sonarjs/no-default-utility-imports", "sonarjs/no-fixed-wait-in-tests", "sonarjs/no-global-this", "sonarjs/no-hardcoded-ip", "sonarjs/no-identical-functions", "sonarjs/no-inverted-boolean-check", "sonarjs/no-labels", "sonarjs/no-nested-assignment", "sonarjs/no-nested-conditional", "sonarjs/no-nested-functions", "sonarjs/no-nested-switch", "sonarjs/no-nested-template-literals", "sonarjs/no-os-command-from-path", "sonarjs/no-same-line-conditional", "sonarjs/no-selector-parameter", "sonarjs/no-small-switch", "sonarjs/no-undefined-argument", "sonarjs/parameterized-tests", "sonarjs/prefer-default-last", "sonarjs/prefer-immediate-return", "sonarjs/prefer-native-lodash-alternative", "sonarjs/prefer-object-literal", "sonarjs/prefer-promise-shorthand", "sonarjs/prefer-read-only-props", "sonarjs/prefer-regexp-exec", "sonarjs/prefer-single-boolean-return", "sonarjs/prefer-specific-assertions", "sonarjs/prefer-type-guard", "sonarjs/prefer-while", "sonarjs/pseudo-random", "sonarjs/public-static-readonly", "sonarjs/publicly-writable-directories", "sonarjs/regex-complexity", "sonarjs/todo-tag", "sonarjs/use-type-alias", "unicorn/better-dom-traversing", "unicorn/catch-error-name", "unicorn/consistent-assert", "unicorn/consistent-compound-words", "unicorn/consistent-date-clone", "unicorn/consistent-empty-array-spread", "unicorn/consistent-function-scoping", "unicorn/consistent-json-file-read", "unicorn/consistent-template-literal-escape", "unicorn/dom-node-dataset", "unicorn/expiring-todo-comments", "unicorn/explicit-length-check", "unicorn/isolated-functions", "unicorn/no-anonymous-default-export", "unicorn/no-array-for-each", "unicorn/no-array-from-fill", "unicorn/no-array-method-this-argument", "unicorn/no-array-reduce", "unicorn/no-array-reverse", "unicorn/no-array-sort", "unicorn/no-await-expression-member", "unicorn/no-blob-to-file", "unicorn/no-canvas-to-image", "unicorn/no-confusing-array-splice", "unicorn/no-document-cookie", "unicorn/no-empty-file", "unicorn/no-exports-in-scripts", "unicorn/no-for-loop", "unicorn/no-hex-escape", "unicorn/no-immediate-mutation", "unicorn/no-magic-array-flat-depth", "unicorn/no-named-default", "unicorn/no-negated-condition", "unicorn/no-negation-in-equality-check", "unicorn/no-nested-ternary", "unicorn/no-new-array", "unicorn/no-process-exit", "unicorn/no-single-promise-in-promise-methods", "unicorn/no-static-only-class", "unicorn/no-this-assignment", "unicorn/no-typeof-undefined", "unicorn/no-unnecessary-array-flat-depth", "unicorn/no-unnecessary-array-splice-count", "unicorn/no-unnecessary-nested-ternary", "unicorn/no-unnecessary-slice-end", "unicorn/no-unreadable-array-destructuring", "unicorn/no-unreadable-iife", "unicorn/no-useless-switch-case", "unicorn/prefer-add-event-listener", "unicorn/prefer-array-find", "unicorn/prefer-array-flat", "unicorn/prefer-array-flat-map", "unicorn/prefer-array-index-of", "unicorn/prefer-array-last-methods", "unicorn/prefer-array-some", "unicorn/prefer-at", "unicorn/prefer-bigint-literals", "unicorn/prefer-blob-reading-methods", "unicorn/prefer-class-fields", "unicorn/prefer-classlist-toggle", "unicorn/prefer-date-now", "unicorn/prefer-default-parameters", "unicorn/prefer-dom-node-append", "unicorn/prefer-dom-node-remove", "unicorn/prefer-dom-node-text-content", "unicorn/prefer-event-target", "unicorn/prefer-get-or-insert-computed", "unicorn/prefer-global-this", "unicorn/prefer-includes", "unicorn/prefer-includes-over-repeated-comparisons", "unicorn/prefer-iterator-to-array-at-end", "unicorn/prefer-keyboard-event-key", "unicorn/prefer-logical-operator-over-ternary", "unicorn/prefer-math-abs", "unicorn/prefer-math-min-max", "unicorn/prefer-math-trunc", "unicorn/prefer-modern-dom-apis", "unicorn/prefer-modern-math-apis", "unicorn/prefer-module", "unicorn/prefer-native-coercion-functions", "unicorn/prefer-negative-index", "unicorn/prefer-number-properties", "unicorn/prefer-object-from-entries", "unicorn/prefer-optional-catch-binding", "unicorn/prefer-prototype-methods", "unicorn/prefer-query-selector", "unicorn/prefer-queue-microtask", "unicorn/prefer-reflect-apply", "unicorn/prefer-regexp-test", "unicorn/prefer-response-static-json", "unicorn/prefer-set-has", "unicorn/prefer-set-size", "unicorn/prefer-simple-condition-first", "unicorn/prefer-single-call", "unicorn/prefer-split-limit", "unicorn/prefer-spread", "unicorn/prefer-string-match-all", "unicorn/prefer-string-pad-start-end", "unicorn/prefer-string-raw", "unicorn/prefer-string-repeat", "unicorn/prefer-string-replace-all", "unicorn/prefer-string-slice", "unicorn/prefer-string-starts-ends-with", "unicorn/prefer-string-trim-start-end", "unicorn/prefer-structured-clone", "unicorn/prefer-switch", "unicorn/prefer-ternary", "unicorn/prefer-top-level-await", "unicorn/prefer-type-error", "unicorn/relative-url-style", "unicorn/require-passive-events"]
+
+[eslint.presets.eslint]
+package = "@eslint/js"
+source = "configs.recommended"
+
+[eslint.presets.sonar]
+package = "eslint-plugin-sonarjs"
+source = "configs.recommended"
+
+[eslint.presets.unicorn]
+package = "eslint-plugin-unicorn"
+source = "configs.recommended"
+
+[eslint.presets.packageJson]
+package = "eslint-plugin-package-json"
+source = "configs.recommended"
+
+[eslint.presets.prettier]
+package = "eslint-config-prettier"
+source = ""

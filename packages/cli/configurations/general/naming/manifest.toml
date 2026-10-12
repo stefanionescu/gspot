@@ -1,4 +1,3 @@
-products = ["DTO"]
 [configuration]
 title = "Naming"
 always_selected = true
@@ -9,117 +8,28 @@ languages = true
 
 [[check]]
 name = "identifiers"
-title = "Check identifier names"
-example = "With the JavaScript and naming configurations at level `all`, `export const userHelper = 1;` reports the banned term `helper`. Rename the declaration to `command` and update its references. A legitimate required name needs an exact allowance with a reason."
+example = "`export const userHelper = 1;` reports the banned term `helper`. Rename it after what it holds, such as `userCount`."
 level = "all"
 stage = "commit"
-summary = "Checks every identifier against the naming policy: banned terms, case, length, and word count."
+summary = "Checks every identifier against the naming settings: banned terms, case, length, and word count."
 why = "Names such as `enhancedHandler`, `ensureConfigIfNeeded`, and `utils` do not explain the value or behavior a reader needs to understand."
-help = "Rename after what the thing is or does. Set naming.allowed to an entry with name and reason, or adjust a ceiling with gspot set naming.`<language>`.max_words."
+help = "Rename after what the thing is or does. Write the exact names under allowed_names in a [[naming.override]] record with a reason, or adjust a ceiling with gspot set naming.`<language>`.max_words."
 
 [[check]]
 name = "paths"
-title = "Check file and folder names"
-example = "With the JavaScript and naming configurations at level `all`, `utils/format.js` reports the banned term `utils`. Rename the folder to `app`, then update imports and other references."
+example = "`utils/format.js` reports `utils`. Move it into the folder of the feature it serves, such as `invoices/format.js`."
 level = "all"
 stage = "commit"
 summary = "Checks every file stem and folder name against the language's case rules and the banned terms."
 why = "A file named `enhanced-utils.ts` is a home for code nobody placed; the case rule keeps imports predictable."
-help = "Rename the file or folder, or add a path rule under [[naming.overrides]] with a reason."
+help = "Rename the file or folder, or add a path rule under [[naming.override]] with a reason."
 
 [[check]]
-name = "policy"
-title = "Validate naming policy"
-example = "A naming allowance for an identifier that no selected source contains reports an unmatched policy entry. Remove the obsolete allowance or correct it to the exact required identifier and scope."
+name = "settings"
+example = "A naming allowance for an identifier that no selected source contains reports an unmatched settings entry. Remove the obsolete allowance or correct it to the exact required identifier and scope."
 level = "recommended"
 stage = "commit"
 runs = "once"
-summary = "Checks that the naming settings in gspot.toml are valid and that every allowed name and path rule matches something."
-why = "An allowed name that matches nothing is a leftover, and a path rule that matches nothing hides a typo."
+summary = "Reports allowed names that no selected source uses."
+why = "An allowed name that nothing uses hides an obsolete exception."
 help = "Remove the entry that matches nothing, or fix its name or path."
-
-[[setting]]
-name = "naming.banned"
-type = "list"
-items = "string"
-direction = "tightening"
-default = []
-summary = "Words this repository bans in identifiers, beyond the shipped groups."
-
-[[setting]]
-name = "naming.allowed"
-type = "table"
-direction = "loosening"
-default = {}
-summary = "Exact identifiers allowed despite the policy, each with a reason."
-
-[[setting]]
-name = "naming.reserved"
-type = "table"
-direction = "tightening"
-default = {}
-summary = "Terms restricted to identifier categories, such as properties or directories."
-
-[[setting]]
-name = "naming.max_chars"
-type = "number"
-direction = "ceiling"
-default = 35
-languages = ["typescript", "javascript", "python", "bash"]
-categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
-summary = "The most characters one identifier may have."
-
-[[setting]]
-name = "naming.max_words"
-type = "number"
-direction = "ceiling"
-default = 4
-languages = ["typescript", "javascript", "python", "bash"]
-categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
-summary = "The most words one identifier may have."
-
-[[setting]]
-name = "naming.case"
-type = "list"
-items = "string"
-direction = "loosening"
-languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
-categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
-default = []
-summary = "The case patterns one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-extension (String+Format.swift) and timestamp-snake (20260103120000_create_users.sql). Ruff owns the case of Python classes, functions, and parameters, and SwiftLint owns Swift types, variables, parameters, and enum cases; these settings choose the case for every other category."
-
-[[setting]]
-name = "naming.swift.max_chars"
-type = "number"
-direction = "ceiling"
-default = 40
-languages = ["swift"]
-categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
-summary = "The most characters one Swift identifier may have."
-
-[[setting]]
-name = "naming.swift.max_words"
-type = "number"
-direction = "ceiling"
-default = 5
-languages = ["swift"]
-categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
-summary = "The most words one Swift identifier may have."
-
-[[setting]]
-name = "naming.sql.max_chars"
-type = "number"
-direction = "ceiling"
-default = 55
-languages = ["sql"]
-categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
-summary = "The most characters one SQL identifier may have."
-
-[[setting]]
-name = "naming.sql.max_words"
-type = "number"
-direction = "ceiling"
-default = 7
-languages = ["sql"]
-categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
-summary = "The most words one SQL identifier may have."

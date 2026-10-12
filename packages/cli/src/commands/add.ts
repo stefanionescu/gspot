@@ -1,81 +1,75 @@
-// Add authored configuration choices through the policy transaction.
-import { compact } from '#cli/platform/contracts.ts';
-import { GspotError } from '#cli/platform/public.ts';
-import { printResult } from '#cli/terminal/public.ts';
-import { savePolicy } from '#cli/commands/contracts.ts';
-import { assertVersionPin } from '#cli/lifecycle/public.ts';
-import { policySchema } from '#cli/policy/schema/public.ts';
-import type { CommandResult } from '#cli/types/terminal.ts';
-import type { AddOptions } from '#cli/types/commands/add.ts';
-import type { Program } from '#cli/types/commands/program.ts';
-import type { Mutation } from '#cli/types/policy/settings.ts';
-import { defaultValue } from '#cli/policy/schema/contracts.ts';
-import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import { commandHelp, commandRoot } from '#cli/commands/public.ts';
-import { configurationManifests } from '#cli/configurations/public.ts';
-import { unknownConfigurations } from '#cli/configurations/errors/public.ts';
-import { getScopeTable, preparePolicy } from '#cli/policy/document/contracts.ts';
+// Add written configuration choices through the settings transaction.
+import { compact } from '#cli/objects.ts';
+import { GspotError } from '#cli/errors.ts';
+import { printResult } from '#cli/terminal/print.ts';
+import { parseSettings } from '#cli/settings/read.ts';
+import { findScopeTable } from '#cli/settings/edit.ts';
+import { type Command } from '@commander-js/extra-typings';
+import { trimTrailingSlashes } from '#cli/system/paths.ts';
+import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import type { Mutation } from '#cli/types/settings/file.ts';
+import { type CommandResult } from '#cli/types/terminal.ts';
+import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { unknownConfigurations } from '#cli/configurations/unknown-names.ts';
+import { type ConfigurationsOptions } from '#cli/types/commands/save-settings.ts';
+import { saveSettings, startSettingsEdit, refuseAlwaysSelected } from '#cli/commands/save-settings.ts';
 
 /**
  * gspot add: appends configurations to the root list or to one scope's list.
  * @param options the parsed flags
  * @returns the command result
  */
-async function addCommand(options: AddOptions): Promise<CommandResult> {
-    const root = findRoot(options.cwd);
-    const input = preparePolicy(root);
-    assertVersionPin(root, input.table['runner']);
+async function addCommand(options: ConfigurationsOptions): Promise<CommandResult> {
+    const { root, input } = await startSettingsEdit(options.cwd);
+    parseSettings(input.text, root);
     const manifests = configurationManifests();
     const [unavailable] = unknownConfigurations(
         options.configurations.map((name) => ({ name })),
         manifests,
     );
-    if (unavailable !== undefined) throw new GspotError('policy', [unavailable.message]);
-    const general = options.configurations.find((id) => manifests.get(id)?.configuration.kind === 'general');
-    if (general !== undefined)
-        throw new GspotError('policy', [
-            `The ${general} configuration follows repository inputs and the selected level. Change coverage with gspot set level, or record a check exception with gspot ignore and a reason.`,
-        ]);
-    const mutation: Mutation = (raw) => {
-        const holder = getScopeTable(raw, options.scope);
-        const list = policySchema.shape.configurations.unwrap().parse(holder['configurations'] ?? []);
-        for (const id of options.configurations) if (!list.includes(id)) list.push(id);
-        holder['configurations'] = list;
-        const removed = defaultValue(policySchema.shape.removed_configurations, holder['removed_configurations']);
-        if (holder['removed_configurations'] !== undefined)
-            holder['removed_configurations'] = removed.filter((id) => !options.configurations.includes(id));
+    if (unavailable !== undefined) throw new GspotError('arguments', [unavailable.message]);
+    refuseAlwaysSelected(options.configurations, manifests);
+    const scopeTable = findScopeTable(input.table, options.scope);
+    const current = settingsSchema.shape.configurations.unwrap().parse(scopeTable['configurations'] ?? []);
+    const removed = settingsSchema.shape.removed_configurations.parse(scopeTable['removed_configurations']);
+    if (options.configurations.every((name) => current.includes(name) && !removed.includes(name))) {
+        return { text: 'nothing to add\n', json: { changed: false }, exitCode: 0 };
+    }
+    const mutation: Mutation = (written) => {
+        const scopeTable = findScopeTable(written, options.scope);
+        const list = settingsSchema.shape.configurations.unwrap().parse(scopeTable['configurations'] ?? []);
+        for (const name of options.configurations) if (!list.includes(name)) list.push(name);
+        scopeTable['configurations'] = list;
+        const removed = settingsSchema.shape.removed_configurations.parse(scopeTable['removed_configurations']);
+        if (scopeTable['removed_configurations'] !== undefined)
+            scopeTable['removed_configurations'] = removed.filter((name) => !options.configurations.includes(name));
     };
     const where = options.scope === undefined ? '' : ` to scope ${options.scope}`;
     const description = `added ${options.configurations.join(', ')}${where}`;
-    return await savePolicy(root, {
+    return await saveSettings(root, {
         input,
         change: mutation,
         summary: description,
-        isDryRun: options.isDryRun,
     });
 }
 
 /**
- * Registers add.
- * @param program the commander program
+ * Register the add command.
+ * @param program the command program
  */
-export function registerAdd(program: Program): void {
+export function registerAdd(program: Command): void {
     program
         .command('add')
-        .argument('<configuration...>', 'Built-in configuration names to add')
-        .summary('Add configurations')
-        .description(
-            'Add configurations to the root selection or to one scope, apply the policy. Run gspot install when the change needs tools. Configurations they require are selected too; gspot.toml lists only the names you give. --dry-run prints the change and writes nothing.',
-        )
-        .addHelpText('after', commandHelp('add'))
-        .option('--scope <path>', 'Add the configurations to this scope')
-        .option('--dry-run', 'Print the change and write nothing')
-        .action(async (configurations, flags, command) => {
+        .argument('<configuration...>', COMMAND_HELP.add.arguments['configuration'])
+        .summary(COMMAND_HELP.add.summary)
+        .description(COMMAND_HELP.add.description)
+        .option('--scope <path>', COMMAND_HELP.add.options['--scope <path>'], trimTrailingSlashes)
+        .action(async (configurations, flags) => {
             printResult(
                 await addCommand({
-                    cwd: commandRoot(command),
+                    cwd: process.cwd(),
                     configurations: configurations,
-                    isDryRun: flags.dryRun === true,
                     ...compact({ scope: flags.scope }),
                 }),
             );

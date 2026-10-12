@@ -1,4 +1,4 @@
-import { main } from '#cli/public.ts';
-import { PROGRAM_ARGUMENT_OFFSET } from '#cli/config/platform/runtime.ts';
+import { main } from '#cli/commands/program.ts';
+import { PROCESS_ARGUMENTS_START } from '#cli/config/system/processes.ts';
 
-process.exitCode = await main(process.argv.slice(PROGRAM_ARGUMENT_OFFSET));
+process.exitCode = await main(process.argv.slice(PROCESS_ARGUMENTS_START));

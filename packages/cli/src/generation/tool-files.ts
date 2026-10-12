@@ -1,42 +1,47 @@
 // The selected tool files in one scope, with the pointers that lead tools to them.
-import { fragmentInputs } from '#cli/generation/fragments.ts';
-import { targetInScope } from '#cli/repository/paths/public.ts';
-import { emitTarget } from '#cli/generation/compilation/public.ts';
-import type { CapturedRules } from '#cli/types/generation/rules.ts';
-import { isConfigurationSelected } from '#cli/configurations/public.ts';
-import type { GeneratedToolFile, ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { fillTarget, bodyPointer, collectRules, pointerPaths } from '#cli/generation/documents/contracts.ts';
+import { parse as parseYaml } from 'yaml';
+import { join, dirname } from 'node:path/posix';
+import { headerFor } from '#cli/generation/headers.ts';
+import { targetInScope } from '#cli/repository/scopes.ts';
+import { collectRules } from '#cli/generation/rule-capture.ts';
+import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
+import { emitTarget } from '#cli/generation/tool-file-builders.ts';
+import { TOOL_FILE_REFERENCE } from '#cli/config/generation/files.ts';
+import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import { isConfigurationSelected } from '#cli/configurations/select.ts';
+import { bodyPointer, pointerPaths } from '#cli/generation/pointers.ts';
+import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
+import { prettierPlugins, prettierConfiguration } from '#cli/generation/formatting.ts';
 
 import type {
     Generated,
     EmitInputs,
+    WholeToolFile,
     EmitConsumers,
     GeneratedFile,
     ToolFileInputs,
+    ToolFileTarget,
 } from '#cli/types/generation/files.ts';
 
-// Root and directory pointers share native body or Eta emission with target placeholders.
+// Root and directory pointers use their body or generated formatter settings.
 function pointerFiles(context: ToolFileInputs, toolFile: ToolFileDeclaration, target: string): GeneratedFile[] {
     const { pointer } = toolFile;
-    const { inputs, manifest } = context;
+    const { session, selection } = context;
     if (pointer === undefined) return [];
     return pointerPaths(context, toolFile).map((path) =>
-        pointer.template === undefined
-            ? bodyPointer(pointer, path, target, inputs.version)
-            : {
+        toolFile.target.endsWith('/prettier.json')
+            ? {
                   path,
                   kind: 'pointer',
-                  content: fillTarget(
-                      emitTarget(`${manifest.dir}/${pointer.template}`, path, inputs, toolFile.generated_header),
-                      path,
-                      target,
-                  ),
-              },
+                  content: `${headerFor(path)}export default ${JSON.stringify(prettierConfiguration({ settings: session.settingsFile.settings, format: selection.view.format, extra: selection.view.extra('prettier'), plugins: [...prettierPlugins(session.scopes.flatMap(({ selected }) => selected)).values()], targetPath: path }), null, JSON_INDENT)};\n`,
+              }
+            : bodyPointer(pointer, path, target),
     );
 }
 
 // Scoped targets require their dependency in the same scope; repository-wide targets use the full selection.
 function isTargetEnabled(toolFile: ToolFileDeclaration, context: EmitInputs, consumers: EmitConsumers): boolean {
+    if (toolFile.level === 'all' && context.session.settingsFile.settings.level !== 'all') return false;
     const needed = toolFile.per_scope ? consumers.scope : consumers.repository;
     const constraints = [
         [toolFile.tool, needed.tools],
@@ -53,54 +58,112 @@ function isTargetEnabled(toolFile: ToolFileDeclaration, context: EmitInputs, con
 // Emits one tool file target: its file, its nested copies, and its pointer.
 function emitToolFile(
     context: ToolFileInputs,
-    toolFile: GeneratedToolFile,
+    toolFile: WholeToolFile,
     target: string,
     generated: Generated,
     fragmentPaths: ReadonlySet<string>,
 ): void {
-    const { scopes, selection, manifest } = context;
-    const payload: CapturedRules = {};
+    const { manifest } = context;
     const paths = toolFile.rule_keys;
-    const capture = { recorded: false };
-    const inputs = {
-        ...context.inputs,
-        ...(paths === undefined
-            ? {}
-            : {
-                  recordRules: (document: unknown) => {
-                      Object.assign(payload, collectRules(paths, document));
-                      capture.recorded = true;
-                  },
-              }),
-    };
-    Object.assign(inputs, fragmentInputs(scopes, selection, toolFile, inputs));
-    const file: GeneratedFile = {
-        path: target,
-        content: emitTarget(`${manifest.dir}/${toolFile.source}`, target, inputs, toolFile.generated_header),
-        kind: 'tool_file',
-        ...(paths === undefined ? {} : { ruleData: payload }),
-    };
-    if (paths !== undefined && !capture.recorded)
-        throw new Error(`The Eta source for ${target} did not provide its declared rule data.`);
-    if (
-        target.endsWith('/.semgrepignore') &&
-        generated.files.some((entry) => entry.path === '.semgrepignore' && entry.content === file.content)
-    )
-        return;
+    const emitted = emitTarget(`${manifest.dir}/${toolFile.source}`, target, context);
+    const file: GeneratedFile = { path: target, content: emitted.content, kind: 'tool_file' };
+    if (paths !== undefined) {
+        const content = emitted.content;
+        let document: unknown = emitted.document;
+        if (document === undefined)
+            document = content.trimStart().startsWith('{') ? JSON.parse(content) : parseYaml(content);
+        file.capturedRules = collectRules(paths, document);
+    }
     generated.files.push(
         file,
-        ...pointerFiles({ ...context, inputs }, toolFile, target).filter(
+        ...pointerFiles(context, toolFile, target).filter(
             (pointer) => toolFile.pointer?.directories !== undefined || !fragmentPaths.has(pointer.path),
         ),
     );
 }
 
+// Sibling references keep their scopeTargets files together when one differs from the root.
+function relatedToolFiles(scopeTargets: ToolFileTarget[], files: Map<string, GeneratedFile>): ToolFileTarget[][] {
+    const references = new Map(
+        scopeTargets.map(({ target }) => [
+            target,
+            new Set(
+                [...(files.get(target) as GeneratedFile).content.matchAll(TOOL_FILE_REFERENCE)].map((match) =>
+                    join(dirname(target), (match.groups as Record<string, string>)['path'] as string),
+                ),
+            ),
+        ]),
+    );
+    const groups = scopeTargets.map((entry) => [entry]);
+    for (let index = 0; index < groups.length; index++) {
+        const group = groups[index] as ToolFileTarget[];
+        for (let other = index + 1; other < groups.length; ) {
+            if (
+                group.some((entry) =>
+                    (groups[other] as ToolFileTarget[]).some(
+                        (peer) =>
+                            (references.get(entry.target) as Set<string>).has(peer.target) ||
+                            (references.get(peer.target) as Set<string>).has(entry.target),
+                    ),
+                )
+            ) {
+                group.push(...(groups.splice(other, 1)[0] as ToolFileTarget[]));
+                other = index + 1;
+            } else other++;
+        }
+    }
+    return groups;
+}
+
+// Remove identical root copies, then resolve retained pointers from the emitted paths.
+function deduplicateToolFiles(scope: string, targets: ToolFileTarget[], generated: Generated): void {
+    const files = new Map(generated.files.map((file) => [file.path, file]));
+    const scopeTargets = targets.filter(
+        ({ toolFile, target }) =>
+            !toolFile.fragment && toolFile.per_scope && target !== toolFile.target && files.has(target),
+    );
+    const groups = relatedToolFiles(scopeTargets, files);
+    const fragmentPaths = new Set(targets.flatMap(({ pointers }) => pointers.map(({ path }) => path)));
+    const skipped = new Set(
+        groups
+            .filter((group) =>
+                group.every(
+                    ({ toolFile, target }) =>
+                        files.get(toolFile.target)?.content === (files.get(target) as GeneratedFile).content,
+                ),
+            )
+            .flatMap((group) =>
+                group.flatMap(({ toolFile, target, owner }) => [
+                    target,
+                    ...pointerFiles(owner, toolFile, target)
+                        .map(({ path }) => path)
+                        .filter(
+                            (path) =>
+                                !fragmentPaths.has(path) &&
+                                toolFile.pointer !== undefined &&
+                                files.has(toolFile.pointer.path),
+                        ),
+                ]),
+            ),
+    );
+    generated.files = generated.files.filter(({ path }) => !skipped.has(path));
+    const available = new Set(generated.files.map(({ path }) => path));
+    for (const { toolFile, owner } of targets) {
+        if (!toolFile.per_scope) continue;
+        for (const pointer of pointerFiles(owner, toolFile, targetInScope(scope, toolFile, available))) {
+            const index = generated.files.findIndex(({ path }) => path === pointer.path);
+            if (index !== -1) generated.files[index] = pointer;
+        }
+    }
+}
+
 /**
  * Emits the selected tool files in one scope, each target once across scopes.
- * @param context the repository, resolved scope, and template inputs
- * @param generated the generated the files are added to
- * @param seen the targets already emitted
- * @param consumers the applicable checks and the tools they require
+ *
+ * @param context the repository, resolved scope, and template inputs.
+ * @param generated the generated destination list.
+ * @param seen the targets already emitted.
+ * @param consumers the applicable checks and the tools they require.
  */
 export function emitToolFiles(
     context: EmitInputs,
@@ -109,20 +172,28 @@ export function emitToolFiles(
     consumers: EmitConsumers,
 ): void {
     const { selection } = context;
-    const targets = selection.selected.flatMap((manifest) => {
+    const targets: ToolFileTarget[] = selection.selected.flatMap((manifest) => {
         const owner = { ...context, manifest };
-        return manifest.toolFiles.map((toolFile) => ({
-            toolFile,
-            owner,
-            pointers:
-                toolFile.fragment && toolFile.pointer?.directories !== undefined
-                    ? pointerFiles(owner, toolFile, targetInScope(selection.scope.path, toolFile))
-                    : [],
-        }));
+        return manifest.toolFiles.map((toolFile) => {
+            let target = toolFile.target;
+            if (selection.scope.path !== '' && toolFile.per_scope) {
+                target = toolFile.target.startsWith(TOOL_FILE_PREFIX)
+                    ? join(TOOL_FILE_PREFIX, selection.scope.path, toolFile.target.slice(TOOL_FILE_PREFIX.length))
+                    : join(selection.scope.path, toolFile.target);
+            }
+            return {
+                toolFile,
+                target,
+                owner,
+                pointers:
+                    toolFile.fragment && toolFile.pointer?.directories !== undefined
+                        ? pointerFiles(owner, toolFile, target)
+                        : [],
+            };
+        });
     });
-    for (const { toolFile, owner, pointers } of targets) {
+    for (const { toolFile, target, owner, pointers } of targets) {
         if (!isTargetEnabled(toolFile, context, consumers)) continue;
-        const target = targetInScope(selection.scope.path, toolFile);
         if (toolFile.fragment) {
             generated.files.push(...pointers);
             continue;
@@ -136,4 +207,5 @@ export function emitToolFiles(
         );
         emitToolFile(owner, toolFile, target, generated, fragmentPaths);
     }
+    deduplicateToolFiles(selection.scope.path, targets, generated);
 }

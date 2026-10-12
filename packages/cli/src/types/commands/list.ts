@@ -1,18 +1,18 @@
-import type { SettingDeclaration } from '#cli/types/configurations.ts';
+import type { SettingEntry } from '#cli/types/settings/values.ts';
+import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 
-export type SettingRow = {
+type SettingRow = {
     key: string;
     value: unknown;
     source: string;
-    direction: SettingDeclaration['direction'];
+    origin: SettingEntry['origin'];
+    originScope?: string;
+    reason_needed: SettingDeclaration['reason_needed'];
     scope: string;
 };
 
-/** One `[tools.<tool>.verbatim]` table: the keys it sets and why. */
-export type ExtraRow = { tool: string; keys: string[]; reason?: string; scope: string };
-
-/** The settings listing. */
-export type SettingsListing = { rows: SettingRow[]; extras: ExtraRow[] };
+/** One `[tools.<tool>.extra]` table: the keys it sets and why. */
+type ExtraRow = { tool: string; keys: string[]; reason?: string; scope: string };
 
 /** The JSON response of selected and available configurations. */
 export type ConfigurationsListJson = {
@@ -20,5 +20,5 @@ export type ConfigurationsListJson = {
     available: { name: string; description: string }[];
 };
 
-/** Effective settings and authored native option extensions printed by list settings. */
+/** Effective settings and authored extra options printed by list settings. */
 export type SettingsListJson = { settings: SettingRow[]; extras: ExtraRow[] };

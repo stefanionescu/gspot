@@ -12,7 +12,6 @@ kinds = ["source", "binary"]
 
 [[check]]
 name = "recording"
-title = "Disable snapshot recording"
 example = "A snapshot test left in recording mode reports a recording finding. Inspect and retain the intended reference images, remove the recording flag, and rerun in comparison mode."
 level = "recommended"
 stage = "commit"
@@ -23,7 +22,6 @@ help = "Take the recording flag out, and commit the references it wrote after lo
 
 [[check]]
 name = "references"
-title = "Validate snapshot references"
 example = "A snapshot reference folder whose corresponding test file no longer exists reports unused references. Delete the unused references, or rename the folder to match the renamed test file."
 level = "all"
 stage = "commit"

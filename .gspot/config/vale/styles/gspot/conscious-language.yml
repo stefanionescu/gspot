@@ -11,3 +11,6 @@ swap:
     master(?! broker| boot record): primary|source|initiator|requester|controller|host|director|supplier
     slave(?! broker): secondary|replica|responder|device|worker|proxy|performer|consumer|child
     whitelist: allowlist
+    (?:demilitarized zone|DMZ): perimeter network
+    spirit animal: role model
+    mans: operates

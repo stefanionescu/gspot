@@ -1,0 +1,175 @@
+// Bun creates isolated Python sandboxes and serves their authenticated package index.
+import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { createFileTree } from 'testdirs';
+import { commitAll } from '#tests/setup/git.ts';
+import { zipArchive } from '#tests/setup/files.ts';
+import { ZIP_LAYOUT } from '#tests/config/files.ts';
+import { runCommand } from '#tests/setup/processes.ts';
+import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { settingsText } from '#tests/setup/settings.ts';
+import { gitignoreBlock } from '#cli/generation/files.ts';
+import { useEnvironment } from '#tests/setup/environment.ts';
+
+import {
+    PYTHON_INDEX_NAME,
+    RUFF_VERSION_OUTPUT,
+    PYTHON_SANDBOX_FILES,
+    UV_PROJECT_VARIABLES,
+    PYTHON_SANDBOX_IGNORES,
+    PYTHON_INDEX_CREDENTIALS,
+} from '#tests/config/python/tool-project.ts';
+
+/** Creates an authored Python project, generated lockfile, and isolated uv environment selectors. */
+async function createPythonSandbox(
+    root: string,
+    options: { indexFile: 'pyproject.toml' | 'uv.toml'; indexUrl?: string },
+): Promise<{
+    root: string;
+    rootProject: Buffer<ArrayBuffer>;
+    rootConfiguration: Buffer<ArrayBuffer>;
+    [Symbol.asyncDispose](): Promise<void>;
+}> {
+    const { indexFile, indexUrl } = options;
+    await createFileTree(root, {
+        '.gitignore': `${gitignoreBlock()}\n.venv/\n`,
+        'gspot.toml': settingsText(['python'], {
+            ignore: { checks: PYTHON_SANDBOX_IGNORES, reason: 'This test exercises the pinned Ruff installation.' },
+            level: 'recommended',
+        }),
+        ...PYTHON_SANDBOX_FILES,
+    });
+    const resources = new AsyncDisposableStack();
+    resources.use(
+        useEnvironment(
+            Object.fromEntries<string | undefined>([
+                ['UV_DEFAULT_INDEX', undefined],
+                ...UV_PROJECT_VARIABLES.map(
+                    (name) => [name, name === 'UV_PROJECT_ENVIRONMENT' ? join(root, '.venv') : root] as const,
+                ),
+            ]),
+        ),
+    );
+    try {
+        const indexPrefix = indexFile === 'pyproject.toml' ? 'tool.uv.' : '';
+        const index =
+            indexUrl === undefined
+                ? ''
+                : `[[${indexPrefix}index]]\nname = "${PYTHON_INDEX_NAME}"\nurl = "${indexUrl}"\ndefault = true\n`;
+        const authored = indexFile === 'pyproject.toml' ? await readFile(join(root, indexFile), 'utf8') : '';
+        await writeFile(join(root, indexFile), authored + index);
+        const rootProject = await readFile(join(root, 'pyproject.toml'));
+        const rootConfiguration = await readFile(join(root, indexFile));
+        commitAll(root);
+        const applied = await spawnGspot(root, ['apply']);
+        if (applied.code !== 0) throw new Error(`Python sandbox apply failed: ${applied.stdout}${applied.stderr}`);
+        return {
+            root,
+            rootProject,
+            rootConfiguration,
+            async [Symbol.asyncDispose]() {
+                await resources.disposeAsync();
+            },
+        };
+    } catch (error) {
+        await resources.disposeAsync();
+        throw error;
+    }
+}
+
+/**
+ * Serve a wheel with the installed Ruff executable and a relocatable console entry point.
+ * @param work the temporary folder receiving the wheel.
+ * @returns an authenticated registry serving the wheel.
+ */
+async function createPythonIndex(
+    work: string,
+): Promise<AsyncDisposable & { version: string; url: string; readonly requests: number }> {
+    const binary = Bun.which('ruff');
+    if (binary === null) throw new Error('Ruff is unavailable on PATH.');
+    const inspected = await runCommand([binary, '--version'], { cwd: work });
+    if (inspected.code !== 0) throw new Error(`Ruff version failed: ${inspected.stderr}`);
+    const version = RUFF_VERSION_OUTPUT.exec(inspected.stdout.trim())?.groups?.['version'];
+    if (version === undefined) throw new Error('Ruff version output is invalid.');
+    const wheel = `ruff-${version}-py3-none-any.whl`;
+    const entries = await wheelEntries(binary, version);
+    const archive = zipArchive(
+        entries.map(
+            ([name, data]) =>
+                [name, data, name.endsWith('/ruff') ? ZIP_LAYOUT.unix.executable : ZIP_LAYOUT.unix.regular] as const,
+        ),
+    );
+    const digest = createHash('sha256').update(archive).digest('hex');
+    const { user, password } = PYTHON_INDEX_CREDENTIALS;
+    const credentials = `${user}:${password}`;
+    const authentication = `Basic ${Buffer.from(credentials).toString('base64')}`;
+    let requests = 0;
+    const server = Bun.serve({
+        hostname: '127.0.0.1',
+        port: 0,
+        fetch(request) {
+            requests += 1;
+            if (request.headers.get('authorization') !== authentication)
+                return new Response('Authentication required', { status: 401 });
+            if (new URL(request.url).pathname.endsWith('.whl')) return new Response(archive);
+            return new Response(`<a href="/${wheel}#sha256=${digest}">${wheel}</a>`, {
+                headers: { 'content-type': 'text/html' },
+            });
+        },
+    });
+    return {
+        version,
+        get requests() {
+            return requests;
+        },
+        url: `http://${user}:${password}@127.0.0.1:${String(server.port)}/simple`,
+        async [Symbol.asyncDispose]() {
+            await server.stop(true);
+        },
+    };
+}
+
+/** Build the wheel metadata and executable entries, including their integrity record. */
+async function wheelEntries(binary: string, version: string): Promise<Array<[string, Buffer]>> {
+    const metadata = `ruff-${version}.dist-info`;
+    const entries: Array<[string, Buffer]> = [
+        [`ruff-${version}.data/scripts/ruff`, Buffer.from(await Bun.file(binary).bytes())],
+        [
+            'gspot_marker.py',
+            Buffer.from(`def main():
+ import sys
+ print(sys.prefix)
+`),
+        ],
+        [
+            `${metadata}/entry_points.txt`,
+            Buffer.from('[console_scripts]\ngspot-relocation-marker = gspot_marker:main\n'),
+        ],
+        [
+            `${metadata}/METADATA`,
+            Buffer.from(`Metadata-Version: 2.1
+Name: ruff
+Version: ${version}
+`),
+        ],
+        [
+            `${metadata}/WHEEL`,
+            Buffer.from(`Wheel-Version: 1.0
+Generator: gspot
+Root-Is-Purelib: false
+Tag: py3-none-any
+`),
+        ],
+    ];
+    const record = entries
+        .map(
+            ([name, data]) =>
+                `${name},sha256=${createHash('sha256').update(data).digest('base64url')},${String(data.length)}\r\n`,
+        )
+        .join('');
+    entries.push([`${metadata}/RECORD`, Buffer.from(`${record}${metadata}/RECORD,,\r\n`)]);
+    return entries;
+}
+
+export { createPythonIndex, createPythonSandbox };

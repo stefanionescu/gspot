@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
-import { visitParsedSources } from '#cli/parsers/source/public.ts';
-import { RECORDING_MODES, RECORDING_NAMES } from '#cli/config/checks/swift-snapshot-testing.ts';
+import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
+import { SWIFT_TEST_TAG } from '#cli/config/repository/inventory.ts';
+import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import { RECORDING_MODES, RECORDING_NAMES, REFERENCE_FOLDER } from '#cli/config/checks/library.ts';
 
 function recordingEnabled(node: Node): boolean {
     const fields = node.type === 'assignment' ? { name: 'target', value: 'result' } : { name: 'name', value: 'value' };
@@ -17,13 +17,11 @@ function recordingEnabled(node: Node): boolean {
 
 /**
  * One finding for each snapshot test left in a recording mode.
- * @param input the check input
- * @returns the findings
+ * @param input the check input.
+ * @returns the findings.
  */
 export async function recording(input: CheckInput): Promise<Finding[]> {
-    const files = input.files
-        .filter((file) => file.kind === 'source' && file.tags.includes('swift-test'))
-        .map((file) => ({ path: file.path, grammar: 'swift' as const }));
+    const files = input.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
     const findings: Finding[] = [];
     await visitParsedSources({ ...input, files }, (source) => {
         for (const node of source.rootNode.descendantsOfType([
@@ -46,16 +44,16 @@ export async function recording(input: CheckInput): Promise<Finding[]> {
 }
 
 /**
- * Report snapshot references whose sibling Swift test source is absent.
- * @param input the source and reference files
- * @returns the orphan reference findings
+ * Report snapshot references whose sibling Swift test source does not exist.
+ * @param input the source and reference files.
+ * @returns the orphan reference findings.
  */
 export function references(input: CheckInput): Finding[] {
-    const owners = new Set(input.files.filter((file) => file.tags.includes('swift-test')).map((file) => file.path));
+    const owners = new Set(input.files.filter((file) => file.tags.includes(SWIFT_TEST_TAG)).map((file) => file.path));
     return input.files.flatMap(({ path }): Finding[] => {
         const folder = posix.dirname(path);
         const base = posix.dirname(folder);
-        if (posix.basename(base) !== '__Snapshots__') return [];
+        if (posix.basename(base) !== REFERENCE_FOLDER) return [];
         const owner = posix.join(posix.dirname(base), `${posix.basename(folder)}.swift`);
         return owners.has(owner)
             ? []

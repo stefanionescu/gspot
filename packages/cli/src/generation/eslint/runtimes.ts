@@ -1,37 +1,47 @@
-import { compact } from '#cli/platform/contracts.ts';
-import { rolePaths } from '#cli/policy/settings/contracts.ts';
-import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import { literalGlob } from '#cli/repository/selectors.ts';
+import { globSelectors } from '#cli/generation/eslint/files.ts';
+import { joinScope, nestedScopes } from '#cli/repository/scopes.ts';
+import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { EslintContext, EslintRuntimeBlock } from '#cli/types/generation/eslint.ts';
-import { MISE_SCRIPT_PATH, ESLINT_BROWSER_CONFIGURATIONS } from '#cli/config/generation/eslint.ts';
-import { inScope, literalGlob, nestedScopes, pathExpressions } from '#cli/repository/paths/public.ts';
+
+import {
+    COMMONJS_FILES,
+    MISE_SCRIPT_PATH,
+    NEXTJS_CONFIGURATION,
+    ESLINT_SETTINGS_TABLE,
+    REACT_NATIVE_CONFIGURATION,
+    ESLINT_BROWSER_CONFIGURATIONS,
+} from '#cli/config/generation/eslint.ts';
 
 function frameworkRuntime(configurations: string[]): string | undefined {
-    if (configurations.includes('react-native')) return 'react-native';
-    if (configurations.includes('nextjs')) return undefined;
+    if (configurations.includes(REACT_NATIVE_CONFIGURATION)) return 'react-native';
+    if (configurations.includes(NEXTJS_CONFIGURATION)) return undefined;
     return ESLINT_BROWSER_CONFIGURATIONS.some((name) => configurations.includes(name)) ? 'browser' : undefined;
 }
 
 /**
- * Select script paths, including Mise task files only for repositories that use that runner.
- * @param context the policy and resolved project selection
- * @param context.policy the selected repository runner
- * @param context.selection the resolved project scope
- * @returns repository-relative paths whose files use script rules
+ * Select your own script paths and mise task files in the selected scope.
+ *
+ * @param context the selected project.
+ * @param context.selection the selected project scope.
+ *
+ * @returns repository-relative paths whose files use script rules.
  */
-export function scriptPaths({ policy, selection }: Pick<EslintContext, 'policy' | 'selection'>): string[] {
-    const scripts = rolePaths(selection.view.roles, 'scripts');
-    return policy.runner === 'mise' ? [...scripts, inScope(selection.scope.path, MISE_SCRIPT_PATH)] : scripts;
+export function scriptPaths({ selection }: Pick<EslintContext, 'selection'>): string[] {
+    const scripts = selection.view.roles['scripts'];
+    return [...scripts, joinScope(literalGlob(selection.scope.path), MISE_SCRIPT_PATH)];
 }
 
 /**
- * Resolve one runtime per file from scoped framework defaults and authored runtime declarations.
- * More specific scopes and later authored selectors take precedence. Build scripts retain Node.js
- * unless an authored runtime explicitly selects them.
- * @param policy the selected repository runner
- * @param scopes the resolved configurations and settings of every project scope
- * @returns runtime declarations in increasing precedence order
+ * Resolve one runtime per file from scoped framework defaults and your own runtime declarations.
+ * More specific scopes and your later selectors take precedence. Build scripts retain Node.js
+ * unless your own runtime explicitly selects them.
+ *
+ * @param scopes the selected configurations and settings of every project scope.
+ *
+ * @returns runtime declarations in increasing precedence order.
  */
-export function runtimeBlocks(policy: Policy, scopes: ScopeSelection[]): EslintRuntimeBlock[] {
+export function runtimeBlocks(scopes: ScopeSelection[]): EslintRuntimeBlock[] {
     const blocks: EslintRuntimeBlock[] = [];
     for (const selection of scopes.toSorted((left, right) => left.scope.path.length - right.scope.path.length)) {
         const scope = selection.scope.path;
@@ -39,38 +49,30 @@ export function runtimeBlocks(policy: Policy, scopes: ScopeSelection[]): EslintR
             scopes.map((entry) => entry.scope.path),
             scope,
         ).map((path) => `!${literalGlob(path)}/**`);
-        const prefix = inScope(scope, '');
-        const tool = selection.view.values['tools.eslint'];
-        const version = compact({
-            nodeVersion: tool?.node_version,
-        });
+        const prefix = joinScope(literalGlob(scope), '');
+        const tool = selection.view.values[ESLINT_SETTINGS_TABLE];
         blocks.push(
-            { scope, ...version, runtime: 'node', ...pathExpressions([`${prefix}**/*`, ...children]) },
-            { scope, ...version, runtime: 'commonjs', ...pathExpressions([`${prefix}**/*.{cjs,cts}`, ...children]) },
+            { scope, runtime: 'node', ...globSelectors([`${prefix}**/*`, ...children]) },
+            { scope, runtime: 'commonjs', ...globSelectors([`${prefix}${COMMONJS_FILES}`, ...children]) },
         );
         const runtime = frameworkRuntime(selection.view.configurations);
         if (runtime !== undefined) {
-            const scripts = scriptPaths({ policy, selection });
+            const scripts = scriptPaths({ selection });
             blocks.push({
                 scope,
-                ...version,
                 runtime,
-                ...pathExpressions([
+                ...globSelectors([
                     `${prefix}**/*`,
-                    `!${prefix}**/*.{cjs,cts}`,
+                    `!${prefix}${COMMONJS_FILES}`,
                     ...scripts.map((path) => `!${path}`),
                     ...children,
                 ]),
             });
         }
-        blocks.push(
-            ...(tool?.runtimes === undefined ? [] : Object.entries(tool.runtimes)).map(([glob, runtime]) => ({
-                scope,
-                ...version,
-                runtime,
-                ...pathExpressions([glob, ...children]),
-            })),
-        );
+        for (const override of tool?.override ?? []) {
+            if (override.runtime === undefined) continue;
+            blocks.push({ scope, runtime: override.runtime, ...globSelectors([...override.paths, ...children]) });
+        }
     }
     return blocks;
 }

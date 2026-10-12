@@ -1,7 +1,3 @@
----
-title: React
----
-
 # React
 
 Rules that hold for any React application: Next.js, Vite, Expo, or a library. The framework file
@@ -19,7 +15,7 @@ adds routing, server components, and caching on top of these.
 
 - Compose downward: a component imports children and shared primitives, never its parent, its
   section, or its route.
-- Domain-neutral primitives (button, input, dialog, popover, tooltip) live in the shared UI owner
+- Domain-neutral primitives such as button, input, dialog, popover, and tooltip live in the shared UI owner
   and take values and callbacks. They never fetch or import a feature.
 - Keep a component small enough that its JSX reads as one screen region. Extract by visual
   responsibility, not by line count.
@@ -30,7 +26,7 @@ adds routing, server components, and caching on top of these.
 ## Hooks
 
 - Every custom hook starts with `use` and owns one concern.
-- Memoize (`useMemo`, `useCallback`, `memo`) when a measurement shows expensive work or a
+- Memoize such as `useMemo`, `useCallback`, `memo` when a measurement shows expensive work or a
   consumer needs a stable reference, not by default.
 
 ## Effects and state
@@ -43,7 +39,7 @@ adds routing, server components, and caching on top of these.
 - Give each state value one owner: URL state for navigation, query cache for server snapshots, form/local
   state for editing, and client store for truly shared client state.
 
-- Reset private state across identity and tenant changes; server stores are request-scoped.
+- Reset private state across identity and tenant changes; give each request its own server stores.
 
 - Handle every promise by awaiting, returning, or explicitly catching failure. A `void` expression
   alone does not handle rejection. Retries need a retry-safe operation and bounded policy.
@@ -57,11 +53,8 @@ adds routing, server components, and caching on top of these.
   not erase a successful result. Revoked access removes stale private content.
 - Capture the resource identity when work starts. A superseded request must not overwrite the
   currently selected resource.
-- An optimistic update defines how to merge the confirmed result and undo a failed operation.
-  Preserve later confirmed changes during rollback. Use operation IDs or versions when writes can
-  overlap, and test two overlapping edits.
-- A mutation's completion covers its required cache updates. Treat a committed write and a failed
-  refresh as separate outcomes rather than retrying the write.
+- An optimistic update defines how to confirm or undo the operation.
+- Present the result of a save separately from the result of a refresh.
 
 ## URL state
 
@@ -74,7 +67,7 @@ adds routing, server components, and caching on top of these.
 - One synchronization path compares values before writing, so store-to-URL and URL-to-store updates
   never loop.
 - Keep unrelated query parameters and fragments. Use the installed router or the History API to replace history for transient edits and to push an entry when back navigation restores the previous state.
-- Hash values are browser-only and never shape the server-rendered snapshot.
+- Read hash values only in the browser. Never use them to shape the server-rendered snapshot.
 
 ## Hydration and browser synchronization
 
@@ -94,23 +87,22 @@ UI updates after hydration. Fix the mismatch instead of hiding warnings globally
   exception. Keep that exception local to the affected node.
 - Do not mutate React-owned DOM to coordinate application state. Controlled state, refs, and
   third-party imperative APIs have explicit ownership boundaries.
-- Treat a hydration warning as a bug until its source and acceptable exception are identified. A
+- Treat a hydration warning as a bug until you identify its source and justify an exception. A
   development-only warning can reveal a production race.
 
 ## Lists and keys
 
-- Keys are stable IDs, never indices.
-- Virtualize a list only when it can grow without bound. Subscribe rows by entity ID so one
-  row's update does not rerender the list.
+- Use stable IDs for keys, never indices.
+- Virtualize a list only when it can grow without bound. Subscribe to the data each row needs.
 
 ## Forms and inputs
 
-- An input is controlled or uncontrolled, never both. Choose per form and keep it.
-- Validate input against the declared contract and expose its errors to the user. When a form
-  library is selected, use its supported validation and state APIs.
-- Submission goes through one owner that awaits the real save and reports pending state from it.
+- Keep each input controlled or uncontrolled, never both. Choose per form and keep it.
+- Validate input against the declared contract and expose its errors to the user. When the application uses a form
+  library, use its supported validation and state APIs.
+- A form awaits the save and reports its result.
 
 ## Accessibility
 
-- Interactive elements are native elements (`button`, `a`, `input`) or carry the matching role,
+- Use native interactive elements such as `button`, `a`, and `input`, or give each element the matching role,
   keyboard handling, and focus management.

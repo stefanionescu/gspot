@@ -1,19 +1,19 @@
-import { join } from 'node:path';
-import { PurgeCSS } from 'purgecss';
-import { fileURLToPath } from 'node:url';
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
-import starlightLlmsTxt from 'starlight-llms-txt';
+import { purgeStyles } from './src/styles.ts';
+import { mkdir, copyFile } from 'node:fs/promises';
 import { SIDEBAR } from './src/config/navigation.ts';
-import { mkdir, copyFile, writeFile } from 'node:fs/promises';
-import { description } from '#cli-package' with { type: 'json' };
+import { description } from '@gspothq/cli/package.json' with { type: 'json' };
+import { LOGO, SITE_URL, SOCIAL_IMAGE, FONT_PACKAGES, REPOSITORY_URL, SOCIAL_IMAGE_SIZE } from './src/config/site.ts';
 
 export default defineConfig({
-    site: 'https://generativespotting.com',
-    // Lower CLI syntax for Vite and keep the Markdown native loader at its installed package origin.
+    site: SITE_URL,
     vite: {
         resolve: { tsconfigPaths: true },
+        // Compile imported CLI code down to ES2022.
         oxc: { target: 'es2022' },
+        // Astro uses a compiled Node.js add-on for Markdown. Bun must find it in docs/node_modules,
+        // so the package lists it as a dependency and keeps Vite from bundling it.
         environments: { prerender: { resolve: { external: ['satteri'] } } },
     },
     integrations: [
@@ -23,7 +23,7 @@ export default defineConfig({
                 'astro:build:done': async ({ dir }) => {
                     const licenses = new URL('licenses/', dir);
                     await mkdir(licenses, { recursive: true });
-                    for (const font of ['geist', 'geist-mono']) {
+                    for (const font of FONT_PACKAGES) {
                         await copyFile(
                             new URL(`node_modules/@fontsource-variable/${font}/LICENSE`, import.meta.url),
                             new URL(`${font}.txt`, licenses),
@@ -34,62 +34,41 @@ export default defineConfig({
         },
         starlight({
             title: 'gspot',
-            favicon: '/brand/identity/mark/light.svg',
+            favicon: LOGO,
             head: [
                 {
                     tag: 'meta',
                     attrs: {
                         property: 'og:image',
-                        content: 'https://generativespotting.com/brand/identity/social.png',
+                        content: `${SITE_URL}${SOCIAL_IMAGE}`,
                     },
                 },
-                { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
-                { tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+                { tag: 'meta', attrs: { property: 'og:image:width', content: String(SOCIAL_IMAGE_SIZE.width) } },
+                { tag: 'meta', attrs: { property: 'og:image:height', content: String(SOCIAL_IMAGE_SIZE.height) } },
                 { tag: 'meta', attrs: { property: 'og:image:alt', content: 'The gspot logo.' } },
-                { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
-                {
-                    tag: 'meta',
-                    attrs: {
-                        name: 'twitter:image',
-                        content: 'https://generativespotting.com/brand/identity/social.png',
-                    },
-                },
             ],
             components: {
-                Header: './src/components/starlight/Header.astro',
                 SiteTitle: './src/components/starlight/SiteTitle.astro',
-                Search: './src/components/starlight/Search.astro',
             },
             expressiveCode: { defaultProps: { frame: 'code' } },
             editLink: { baseUrl: 'https://github.com/stefanionescu/gspot/edit/main/docs/' },
             description,
             customCss: ['./src/theme.css'],
-            social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/stefanionescu/gspot' }],
-            plugins: [starlightLlmsTxt()],
-            sidebar: SIDEBAR,
+            social: [{ icon: 'github', label: 'GitHub', href: REPOSITORY_URL }],
+            sidebar: SIDEBAR.map((group) =>
+                'items' in group
+                    ? {
+                          ...group,
+                          items: group.items.map((item) =>
+                              'items' in item ? { ...item, items: [...item.items] } : item,
+                          ),
+                      }
+                    : group,
+            ),
         }),
         {
-            name: 'unused-css',
-            hooks: {
-                'astro:build:done': async ({ dir }) => {
-                    const output = fileURLToPath(dir);
-                    const styles = await new PurgeCSS().purge({
-                        css: [join(output, '**/*.css')],
-                        content: [join(output, '**/*.html'), join(output, '**/*.js')],
-                        defaultExtractor: (content) =>
-                            (content.match(/[\w/:-]+/g) ?? []).map((token) => {
-                                let end = token.length;
-                                while (token[end - 1] === ':') end--;
-                                return token.slice(0, end);
-                            }),
-                        safelist: { standard: [/^:[\w-]+$/u] },
-                    });
-                    for (const style of styles) {
-                        if (style.file === undefined) throw new Error('PurgeCSS returned no stylesheet path.');
-                        await writeFile(style.file, style.css);
-                    }
-                },
-            },
+            name: 'styles',
+            hooks: { 'astro:build:done': ({ dir }) => purgeStyles(dir) },
         },
     ],
 });

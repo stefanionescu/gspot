@@ -1,7 +1,3 @@
----
-title: Zod
----
-
 # Zod
 
 Check the installed release and its consumers before choosing an API. Put a runtime schema with
@@ -12,7 +8,7 @@ second handwritten contract.
 
 Parse values at the boundary that receives them and pass the parsed result inward. Static types,
 a constructed validator, and successful client validation do not validate a server request.
-An invalid provider response is an integration failure, not invalid user input. A valid identifier
+An invalid provider response shows an integration failure, not invalid user input. A valid identifier
 proves no access.
 
 Choose thrown or returned validation issues to match the boundary. Async checks need async parsing;
@@ -28,8 +24,8 @@ undefined, null, and empty input distinct. Defaults do not silently turn absence
 Normalize only where the contract permits it; never trim signed values, passwords, or exact-byte
 identifiers. Coercion must not turn an empty required number into zero.
 
-Response fields are projected before return. A loose object schema is not a privacy boundary.
-Request-specific state is passed to validation, not captured in a process-wide schema.
+Select response fields before returning them. A loose object schema does not protect private data.
+Pass request-specific state to validation. Do not capture it in a process-wide schema.
 
 See [schema APIs](https://zod.dev/api).
 

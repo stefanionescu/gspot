@@ -1,17 +1,20 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { getScriptIndex } from '#cli/checks/language/contracts.ts';
-import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES } from '#cli/config/checks/language/bash.ts';
+import { readScripts } from '#cli/checks/language/bash/scripts.ts';
+import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import { SAFETY_PATTERNS, ALL_LEVEL_SAFETY_PATTERNS } from '#cli/config/checks/language/bash.ts';
 
 /**
  * One finding per unsafe process kill or removal; all also reports discarded failures.
- * @param input the check context
- * @returns the findings
+ * @param input the check context.
+ * @returns the findings.
  */
-export const safety: BuiltInCheck = async (input) => {
-    const rules = [...(input.policyFiles.policy.level === 'all' ? SAFETY_LINE_RULES : []), ...SAFETY_OWNER_RULES];
-    const index = await getScriptIndex(input);
-    return index.files.flatMap((file) =>
+export async function bashSafety(input: CheckInput): Promise<Finding[]> {
+    const rules = [
+        ...(input.settingsFile.settings.level === 'all' ? ALL_LEVEL_SAFETY_PATTERNS : []),
+        ...SAFETY_PATTERNS,
+    ];
+    const index = await readScripts(input);
+    return index.flatMap((file) =>
         file.code.flatMap((code, position) => {
             const isCleanup = file.temporaryPaths.some((temporary) => temporary.cleanupLines.includes(position + 1));
             return rules
@@ -22,4 +25,4 @@ export const safety: BuiltInCheck = async (input) => {
                 );
         }),
     );
-};
+}

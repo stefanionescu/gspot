@@ -1,17 +1,10 @@
-products = ["DTO"]
-prefix_collisions = { kinds = ["controller", "service", "module", "guard", "pipe", "filter", "interceptor", "middleware", "decorator", "gateway", "resolver", "repository", "entity", "dto", "strategy", "provider"] }
-
-eslint_presets = { recommended = { package = "@darraghor/eslint-plugin-nestjs-typed", source = "configs.flatRecommended" }, noSwagger = { package = "@darraghor/eslint-plugin-nestjs-typed", source = "configs.flatNoSwagger" } }
-eslint_all_rules = [
-    "@darraghor/nestjs-typed/api-operation-summary-description-capitalized",
-]
-
-compiler_options = { experimentalDecorators = true, emitDecoratorMetadata = true }
+[prefix_collisions]
+kinds = ["controller", "service", "module", "guard", "pipe", "filter", "interceptor", "middleware", "decorator", "gateway", "resolver", "repository", "entity", "dto", "strategy", "provider"]
 
 [configuration]
 title = "NestJS"
 requires = ["typescript"]
-suggests = ["security"]
+suggests = []
 description = "A NestJS service: the compiler options decorators need, the NestJS plugin rules for providers, routes, and DTOs, and no circular modules."
 
 [detect]
@@ -28,19 +21,32 @@ kind = "library"
 version = "7.5.5"
 npm = "@darraghor/eslint-plugin-nestjs-typed"
 
-[[tool_file]]
-source = "eslint.fragment.js.eta"
-selectors = [{ selector = "CallExpression[callee.name='forwardRef']", message = "forwardRef papers over two modules that import each other. Move what both need into a third module." }, { selector = "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))", message = "Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }." }]
+[eslint]
+all_level_rules = ["@darraghor/nestjs-typed/api-operation-summary-description-capitalized"]
 
-[required_eslint_rules]
-ts = ["@typescript-eslint/no-extraneous-class", "no-restricted-syntax"]
+[eslint.presets.recommended]
+package = "@darraghor/eslint-plugin-nestjs-typed"
+source = "configs.flatRecommended"
 
-[[eslint_rules_off]]
+[eslint.presets.noSwagger]
+package = "@darraghor/eslint-plugin-nestjs-typed"
+source = "configs.flatNoSwagger"
+
+[[eslint.rules_off]]
 rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
 files = ["**/*.module.ts"]
 reason = "A Nest module is an empty decorated class that registers providers and controllers, which is the shape Nest asks for."
 
-[[eslint_rules_off]]
-rules = ["class-methods-use-this"]
-files = ["**/*.{ts,tsx,mts,cts,vue,svelte}"]
-reason = "NestJS invokes decorated instance methods through dependency injection even when they do not access instance state."
+[[eslint.selectors]]
+selector = "CallExpression[callee.name='forwardRef']"
+message = "forwardRef papers over two modules that import each other. Move what both need into a third module."
+
+[[eslint.selectors]]
+selector = "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))"
+message = "Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }."
+
+[[tool_file]]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+fragment = true
+required_tools = ["@darraghor/eslint-plugin-nestjs-typed"]

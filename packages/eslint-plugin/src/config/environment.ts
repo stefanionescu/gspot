@@ -1,4 +1,3 @@
-export const ENVIRONMENT_HOSTS = ['process', 'Bun', 'Deno'];
+export const ENVIRONMENT_HOSTS = ['process', 'Bun', 'Deno'] as const;
 
-/** Runtime mode is public configuration in both environment rules. */
-export const ENVIRONMENT_ALLOWED = ['NODE_ENV'];
+export const ENVIRONMENT_ALLOWED = ['NODE_ENV'] as const;

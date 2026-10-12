@@ -1,12 +1,10 @@
-products = ["Swift", "SwiftLint", "SwiftFormat", "Periphery", "DTO"]
-untracked_files = ["**/{Pods,DerivedData,.build}/**"]
+allowed_words = ["Swift", "SwiftLint", "SwiftFormat", "Periphery"]
 
-ignored_folders = [".build/", "DerivedData/", "Pods/"]
+ignored_folders = [".build", "DerivedData", "Pods"]
 
 [configuration]
 title = "Swift"
-requires = ["format"]
-suggests = ["naming"]
+suggests = []
 description = "Swift sources: SwiftLint with stable rules selected by level and analyzer rules, SwiftFormat, a build, and Periphery for dead code."
 
 [detect]
@@ -21,38 +19,52 @@ filenames = ["Package.swift", "Package.resolved"]
 name = "swiftlint"
 rule_url = "https://realm.github.io/SwiftLint/{rule}.html"
 suppression = { marker = "\\bswiftlint:disable\\b", reason = " - (?<reason>\\S.*)" }
-platforms = ["macos", "linux"]
+builds = ["macos", "linux"]
 version = "0.63.2"
 min_version = "0.57.0"
 mise = "swiftlint"
 brew = "swiftlint"
 github = { name = "realm/SwiftLint", version = "0.63.2" }
 version_command = ["version"]
-replaces = [".swiftlint.yml", ".swiftlint.yaml"]
+[[tool.replace]]
+file = ".swiftlint.yml"
+shared = false
+
+[[tool.replace]]
+file = ".swiftlint.yaml"
+shared = false
 
 [[tool]]
 name = "swiftformat"
 suppression = { marker = "\\bswiftformat:disable\\b", reason = " - (?<reason>\\S.*)" }
-platforms = ["macos", "linux"]
+builds = ["macos", "linux"]
 version = "0.61.1"
 min_version = "0.54.0"
 # The GitHub release ships an app bundle beside the executable, which mise skips.
 mise = { name = "swiftformat", version = "0.61.1", options = { no_app = true, rename_exe = "swiftformat" } }
 brew = "swiftformat"
 github = { name = "nicklockwood/SwiftFormat", version = "0.61.1" }
-replaces = [".swiftformat"]
+[[tool.replace]]
+file = ".swiftformat"
+shared = false
 
 [[tool]]
 name = "periphery"
 suppression = { marker = "\\bperiphery:ignore\\b", reason = " - (?<reason>\\S.*)" }
-platforms = ["macos"]
+builds = ["macos"]
 version = "3.6.0"
 min_version = "3.0.0"
 mise = "periphery"
 brew = "periphery"
 github = { name = "peripheryapp/periphery", version = "3.6.0" }
 version_command = ["version"]
-replaces = [".periphery.yml", ".periphery.yaml"]
+[[tool.replace]]
+file = ".periphery.yml"
+shared = false
+
+[[tool.replace]]
+file = ".periphery.yaml"
+shared = false
 
 [[tool]]
 name = "swift"
@@ -60,6 +72,7 @@ system = true
 
 [[tool]]
 name = "xcodebuild"
+install_hint = "install Xcode from the App Store"
 system = true
 
 [[tool_file]]
@@ -82,7 +95,6 @@ per_scope = true
 
 [[check]]
 name = "swiftlint"
-title = "Lint Swift files"
 example = "The forced cast `value as! NSString` reports `force_cast`. Use a conditional cast and handle the failed conversion, or change the input contract so no cast is required."
 level = "recommended"
 stage = "commit"
@@ -90,7 +102,6 @@ tool = "swiftlint"
 command = ["swiftlint", "lint", "--strict", "--quiet", "--no-cache", "--reporter", "json", "{files}"]
 fix = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
 cwd = "scope"
-nested_config_file = ".swiftlint.yml"
 files = { extensions = [".swift"] }
 output = { format = "json", fields = { file = "file", line = "line", column = "character", rule = "rule_id", message = "reason" } }
 summary = "Lints Swift files with the scoped and nested SwiftLint configurations, treating warnings as errors."
@@ -99,7 +110,6 @@ help = "Run gspot check --fix for the rules that fix themselves. Turn one rule o
 
 [[check]]
 name = "swiftformat"
-title = "Format Swift files"
 example = "A declaration beginning `func   greeting` reports `consecutiveSpaces`. Run the configured formatter to obtain `func greeting`, inspect the diff, and rerun."
 level = "recommended"
 stage = "commit"
@@ -114,72 +124,41 @@ help = "Run gspot check --fix."
 
 [[check]]
 name = "build"
-title = "Build the Swift project"
 example = "A Swift assignment of a string to an `Int` variable fails compilation. Correct the value or declared type and rerun with the required compiler and project settings available."
 level = "recommended"
 stage = "push"
 runs = "scope"
 needs = ["build"]
-platforms = ["macos", "linux"]
+operating_systems = ["macos", "linux"]
 summary = "Builds the package or Xcode scheme incrementally to report compiler errors."
 why = "Swift has no type check without a build, so the build is the type check."
 help = "Fix the first compiler error; later ones are often the same mistake."
 
 [[check]]
 name = "swiftlint-analyze"
-title = "Analyze Swift compiler output"
 example = "An import unused by the compiled Swift sources reports an analyzer finding. Remove the import and rerun the build-backed analysis. A missing build log does not establish a clean result."
 level = "recommended"
 stage = "manual"
 runs = "scope"
 needs = ["build"]
-platforms = ["macos"]
+operating_systems = ["macos"]
 tool = "swiftlint"
 summary = "Runs the SwiftLint analyzer rules over the compiler log of the build: unused imports and captured variables."
 why = "These rules need the compiler's view of the code, which a file-by-file lint does not have."
-help = "Remove what the rule names. Keep an import the analyzer misjudges under tools.swiftlint.keep_imports."
+help = "Remove what the rule names. Keep an import the analyzer misjudges under tools.swiftlint.always_keep_imports."
 
 [[check]]
 name = "periphery"
-title = "Find unused Swift declarations"
 example = "A declaration with no references in the selected compiled project reports unused code. Delete the unused declaration and rebuild before rerunning. Runtime-only references require a specific documented exception."
 level = "recommended"
 stage = "push"
 runs = "scope"
 needs = ["build"]
-platforms = ["macos"]
 tool = "periphery"
 summary = "Scans the built project for declarations nothing uses."
 why = "Dead code is read, maintained, and migrated by people who cannot tell it is dead."
 help = "Delete the declaration, or mark it with a periphery:ignore comment that says who uses it."
 
-[[setting]]
-name = "tools.swiftlint.keep_imports"
-type = "list"
-items = "string"
-default = []
-summary = "Imports the analyzer keeps although it sees no use of them."
-
-[[setting]]
-name = "swift.xcode_project"
-type = "path"
-default = ""
-summary = "The Xcode project or workspace, relative to the scope; defaults to the detected project, otherwise the Swift package."
-validation = { path = true }
-
-
-[[setting]]
-name = "swift.xcode_scheme"
-type = "string"
-default = ""
-summary = "The shared scheme the build, the analyzer, and Periphery use."
-
-[[setting]]
-name = "swift.xcode_destination"
-type = "string"
-default = "generic/platform=iOS Simulator"
-summary = "The xcodebuild destination."
-
-[agent_rules]
+[rules]
 "SWIFTUI.md" = { tags = ["swift-import:SwiftUI"] }
 "UIKIT.md" = { tags = ["swift-import:UIKit"] }

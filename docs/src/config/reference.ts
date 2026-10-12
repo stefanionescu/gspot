@@ -1,56 +1,27 @@
-/** Introduce setting inheritance and the reason requirements of each direction. */
-export const SETTINGS_INTRO = `Settings exposed by \`gspot set\` and \`gspot list settings\`, with defaults from their owners. Any limit can be set for one language as \`limits.<language>.<name>\`. A scope inherits the root and every scope that contains it: scalar values replace inherited values, and lists add to them. Command argument lists replace inherited arguments intact. See [monorepos](/guides/monorepos/).
-
-The "Loosens when" column describes which changes weaken enforcement and need an entry in \`[reasons]\`. A blank cell means neither direction weakens enforcement:
-
-- \`tightening\`: increasing or enabling the value strengthens enforcement.
-- \`loosening\`: increasing or enabling the value weakens enforcement.
-- \`floor\`: lowering the minimum weakens enforcement.
-- \`ceiling\`: raising the maximum weakens enforcement.
-- \`rule-options\`: the individual rule's value determines whether enforcement becomes weaker.
+/** Intro text of the gspot.toml reference. */
+export const GSPOT_TOML_INTRO = `Every table and key of \`gspot.toml\`, with its default. A value that loosens a check is written
+\`{ value = ..., reason = "..." }\`. Any limit can be set for one language as \`limits.<language>.<name>\`.
+A scope inherits the root and every scope that contains it: a single value replaces the inherited one, and a list adds to it.
+A command (a list of arguments) replaces the inherited one as a whole. Every path is relative to the repository root.
+Editors can use the JSON Schema that the \`#:schema\` line names to check the file as you type; gspot checks it fully when it runs.
+See [Monorepos](/guides/monorepos/).
 
 `;
 
-/** The files that register commands with dedicated command folders. */
-export const COMMAND_OWNERS: Record<string, string> = {
-    init: 'commands/init/public.ts',
-    doctor: 'commands/doctor/public.ts',
-    check: 'commands/check/command.ts',
-    apply: 'commands/public.ts',
-    install: 'commands/contracts.ts',
-    export: 'commands/contracts.ts',
-    explain: 'commands/explain/public.ts',
-};
-
-/** Configuration groups in the public index. */
-export const CONFIGURATION_GROUPS: [string, string][] = [
-    ['language', 'Languages'],
-    ['framework', 'Frameworks'],
-    ['test', 'Test runners'],
-    ['infra', 'Infrastructure'],
-    ['library', 'Libraries'],
-    ['platform', 'Platforms'],
-    ['database', 'Databases'],
-    ['general', 'General'],
-];
-
-/** Labels for the conditions that select configurations and agent rules. */
+/** Labels for the conditions that select configurations and rules. */
 export const DETECTION_LABELS = {
     extensions: 'file extensions',
     filenames: 'filenames',
     dependencies: 'dependencies',
     shebangs: 'script interpreters',
     runtimes: 'JavaScript runtimes',
-    tags: 'file tags',
+    tags: 'files marked',
     paths: 'file paths',
     project_files: 'project files',
-};
+} as const;
 
-/** Formatting used for published JSON examples and the schema endpoint. */
-export const REFERENCE_JSON_INDENT = 2;
-
-/** Plain labels for JSON schema types presented in policy tables. */
-export const SCHEMA_TYPE_LABELS: Record<string, string> = { array: 'List', object: 'Table' };
+/** Plain labels for JSON schema types presented in settings tables. */
+export const SCHEMA_TYPE_LABELS = { array: 'List', object: 'Table' } as const;
 
 /** Labels for the manifest check run frequency. */
 export const CHECK_RUN_LABELS = {
@@ -58,4 +29,18 @@ export const CHECK_RUN_LABELS = {
     scope: 'once per scope',
     files: 'per file',
     history: 'once for pushed history',
-};
+} as const;
+
+export const REFERENCE_FOLDERS = {
+    commands: 'commands',
+    configurations: 'configurations',
+    checks: 'checks',
+    eslintPlugin: 'eslint-plugin',
+} as const;
+export const REFERENCE_COLLECTION_NAME = 'gspot-reference';
+export const REFERENCE_IDS_KEY = 'reference-ids';
+export const PAGES_FOLDER = 'src/content/docs';
+/** Preserve Markdown code while escaping markup in generated reference text. */
+export const MARKDOWN_ESCAPES = /(?<!`)(?<delimiter>`+)(?!`)[\s\S]+?(?<!`)\k<delimiter>(?!`)|[<>]/gu;
+
+export const HTML_BRACKET_ENTITIES: Readonly<Record<string, string>> = { '<': '&lt;', '>': '&gt;' };

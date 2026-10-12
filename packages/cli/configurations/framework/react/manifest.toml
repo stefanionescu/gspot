@@ -1,22 +1,13 @@
-products = ["React", "DOM"]
-eslint_presets = { recommended = { package = "eslint-plugin-react", source = "configs.flat.recommended" }, jsx = { package = "eslint-plugin-react", source = "configs.flat.jsx-runtime" }, hooks = { package = "eslint-plugin-react-hooks", source = "configs.flat.recommended-latest" }, refresh = { package = "eslint-plugin-react-refresh", source = "configs.recommended" } }
-eslint_all_rules = [
-    "react/display-name",
-    "react/no-array-index-key",
-    "react/prop-types",
-]
+allowed_words = ["React"]
 
 [configuration]
 title = "React"
 requires = ["javascript"]
 suggests = ["typescript", "css", "react-dom"]
-description = "React components: the recommended React and hooks rules as errors, component files that keep their state on a reload, and the Testing Library rules over test files."
+description = "React components: the recommended React and hooks rules as errors, component files that keep their state on a reload."
 
 [detect]
 dependencies = ["react"]
-
-[set]
-"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
 
 [[tool]]
 name = "eslint-plugin-react-hooks"
@@ -41,7 +32,6 @@ npm = "eslint-plugin-react-refresh"
 
 [[check]]
 name = "version-pairs"
-title = "Keep React packages on one version"
 example = "Different installed versions of react and react-dom report an alignment finding. Install the same version of both and update the lockfile with the package manager."
 level = "recommended"
 stage = "commit"
@@ -50,30 +40,54 @@ summary = "Checks that react and react-dom use the same installed version."
 why = "React and its DOM renderer ship together and expect matching versions."
 help = "Install the same version of react and react-dom."
 
-[required_eslint_rules]
-jsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "react/jsx-key", "react/no-danger"]
-tsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "react/jsx-key", "react/no-danger"]
+[[naming.override]]
+paths = ["**/*.tsx", "**/*.jsx"]
+categories = ["files"]
+cases = ["pascal", "kebab"]
+reason = "A component file takes the component's name."
 
-[[eslint_rules_off]]
+[[naming.override]]
+paths = ["**/*.tsx", "**/*.jsx"]
+categories = ["functions"]
+cases = ["pascal", "camel"]
+reason = "A function that returns JSX is a component and takes a capital."
+
+[[naming.override]]
+paths = ["**"]
+languages = ["typescript", "javascript"]
+categories = ["functions", "methods", "variables"]
+allowed_names = ["useSyncExternalStore", "getSnapshot", "getServerSnapshot"]
+reason = "React defines these subscription and snapshot callback names."
+
+[eslint]
+all_level_rules = ["react/self-closing-comp", "react/display-name", "react/no-array-index-key", "react/prop-types"]
+
+[eslint.presets.recommended]
+package = "eslint-plugin-react"
+source = "configs.flat.recommended"
+
+[eslint.presets.jsx]
+package = "eslint-plugin-react"
+source = "configs.flat.jsx-runtime"
+
+[eslint.presets.hooks]
+package = "eslint-plugin-react-hooks"
+source = "configs.flat.recommended-latest"
+
+[eslint.presets.refresh]
+package = "eslint-plugin-react-refresh"
+source = "configs.recommended"
+
+[[eslint.rules_off]]
 rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
 files = ["**/*.tsx", "**/*.jsx"]
 reason = "React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks for."
 
-[[naming.overrides]]
-paths = ["**/*.tsx", "**/*.jsx"]
-categories = ["files"]
-case = ["pascal", "kebab"]
-reason = "A component file takes the component's name."
+[defaults]
+"tools.eslint.import_extension" = "extensionless"
 
-[[naming.overrides]]
-paths = ["**/*.tsx", "**/*.jsx"]
-categories = ["functions"]
-case = ["pascal", "camel"]
-reason = "A function that returns JSX is a component and takes a capital."
-
-[[naming.overrides]]
-paths = ["**"]
-languages = ["typescript", "javascript"]
-categories = ["functions", "methods", "variables"]
-allowed = ["useSyncExternalStore", "getSnapshot", "getServerSnapshot"]
-reason = "React defines these subscription and snapshot callback names."
+[[tool_file]]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+fragment = true
+required_tools = ["eslint-plugin-react-hooks", "eslint-plugin-react", "eslint-plugin-react-refresh"]

@@ -70,3 +70,8 @@
         min-height: 2.75rem;
     }
 }
+
+site-search button[data-open-modal] {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+}

@@ -1,0 +1,324 @@
+import { z } from 'zod';
+import type { SchemaShape } from '#cli/types/objects.ts';
+import { trimTrailingSlashes } from '#cli/system/paths.ts';
+import { rulesSchema } from '#cli/settings/schema/rules.ts';
+import type { Settings } from '#cli/types/settings/values.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
+import { SETTINGS_DESCRIPTIONS } from '#cli/config/settings/values.ts';
+import { architectureSchema } from '#cli/settings/schema/architecture.ts';
+import { SCHEMA_FILE, SCHEMA_URL_PREFIX } from '#cli/config/settings/file.ts';
+import { toolsSchema as publicToolsSchema } from '#cli/settings/schema/tools.ts';
+import { DEFAULT_VALUES, RECORD_DESCRIPTIONS } from '#cli/config/settings/defaults.ts';
+import { namingSchema, configurationTableSchemas } from '#cli/settings/schema/tables.ts';
+import type { WrittenScope, ParsedSettings, WrittenSettings } from '#cli/types/settings/file.ts';
+
+import {
+    levelSchema,
+    commandSchema,
+    commandCheckFields,
+    operatingSystemSchema,
+} from '#cli/configurations/schema/parts.ts';
+import {
+    CI_PROVIDERS,
+    ALLOWED_WORD,
+    LEVEL_SUMMARY,
+    ALL_LEVEL_SUMMARY,
+    SETTINGS_EXAMPLES,
+    JSON_SCHEMA_DIALECT,
+    DEFAULT_TEST_PATTERNS,
+} from '#cli/config/settings/schema.ts';
+import {
+    reasonValue,
+    formatSchema,
+    relativePath,
+    relativePaths,
+    nonemptyPaths,
+    localDateSchema,
+    settingsJsonSchema,
+    unwrapSettingSchema,
+} from '#cli/settings/schema/parts.ts';
+
+const ignoreSchema = z.strictObject({
+    check: z.string().describe(RECORD_DESCRIPTIONS.ignore_check),
+    rule: z.string().optional().describe(RECORD_DESCRIPTIONS.ignore_rule),
+    paths: relativePaths.optional().describe(RECORD_DESCRIPTIONS.ignore_paths),
+    reason: z
+        .string({ error: 'needs a reason. Add `reason = "..."` to this entry.' })
+        .describe(RECORD_DESCRIPTIONS.ignore_reason),
+    until: localDateSchema
+        .optional()
+        .meta({ description: 'Stop applying this ignore on this date, in YYYY-MM-DD format (UTC).' }),
+} satisfies SchemaShape<NonNullable<ParsedSettings['ignore']>[number], NonNullable<WrittenSettings['ignore']>[number]>);
+
+const commandCheckSchema = z.strictObject({
+    ...commandCheckFields,
+    name: z.string().min(1).describe(RECORD_DESCRIPTIONS.command_check_name),
+    command: commandCheckFields.command.unwrap().describe('The executable and arguments to run on selected files.'),
+    paths: nonemptyPaths.meta({ description: 'Repository-relative glob patterns selecting inputs.' }),
+    stage: commandCheckFields.stage
+        .exclude(['message'])
+        .meta({ description: 'The earliest stage that runs this check.' }),
+    help: commandCheckFields.help.meta({ description: 'Instructions for resolving findings.' }),
+    fix: commandCheckFields.fix.describe('The executable and arguments that correct findings.'),
+    exit_codes: commandCheckFields.exit_codes.describe(
+        'Nonzero statuses that mean findings from command and fix. Other nonzero statuses mean execution failure.',
+    ),
+    summary: commandCheckFields.summary.meta({ description: 'A short description shown in check listings.' }),
+    output: commandCheckFields.output.describe('The parser and location patterns used to read findings.'),
+} satisfies SchemaShape<
+    NonNullable<ParsedSettings['command_check']>[number],
+    NonNullable<WrittenSettings['command_check']>[number]
+>);
+
+const hooksSchema = z.strictObject({
+    enabled: z.boolean().default(false).describe('Install and run the configured Git hooks.'),
+} satisfies SchemaShape<NonNullable<Settings['hooks']>, NonNullable<WrittenSettings['hooks']>>);
+
+const { structure: rootStructure, ...scopeTables } = configurationTableSchemas;
+const rootBody = {
+    ...scopeTables,
+    tools: publicToolsSchema.optional(),
+};
+
+const scopeBody = {
+    ...rootBody,
+    docs: configurationTableSchemas.docs.unwrap().omit({ banned_headings: true }).optional() satisfies z.ZodType<
+        NonNullable<ParsedSettings['scope']>[number]['docs'],
+        WrittenScope['docs']
+    >,
+    coverage: z
+        .strictObject({
+            lines: configurationTableSchemas.coverage.unwrap().shape.lines,
+            branches: configurationTableSchemas.coverage.unwrap().shape.branches,
+            functions: configurationTableSchemas.coverage.unwrap().shape.functions,
+            statements: configurationTableSchemas.coverage.unwrap().shape.statements,
+        } satisfies SchemaShape<
+            NonNullable<NonNullable<ParsedSettings['scope']>[number]['coverage']>,
+            NonNullable<WrittenScope['coverage']>
+        >)
+        .optional(),
+    licenses: configurationTableSchemas.licenses
+        .unwrap()
+        .omit({ allowed_package: true })
+        .optional() satisfies z.ZodType<
+        NonNullable<ParsedSettings['scope']>[number]['licenses'],
+        WrittenScope['licenses']
+    >,
+    site: configurationTableSchemas.site.unwrap().omit({ size_limit: true }).optional() satisfies z.ZodType<
+        NonNullable<ParsedSettings['scope']>[number]['site'],
+        WrittenScope['site']
+    >,
+    naming: namingSchema.omit({ override: true }).optional() satisfies z.ZodType<
+        NonNullable<ParsedSettings['scope']>[number]['naming'],
+        WrittenScope['naming']
+    >,
+    architecture: z
+        .strictObject({
+            roles: architectureSchema.shape.roles,
+        } satisfies SchemaShape<
+            NonNullable<NonNullable<ParsedSettings['scope']>[number]['architecture']>,
+            NonNullable<WrittenScope['architecture']>
+        >)
+        .optional(),
+    format: formatSchema.omit({ override: true }).optional() satisfies z.ZodType<
+        NonNullable<ParsedSettings['scope']>[number]['format'],
+        WrittenScope['format']
+    >,
+    tools: (
+        publicToolsSchema.omit({ v8r: true }) satisfies z.ZodType<
+            Omit<NonNullable<ParsedSettings['tools']>, 'v8r'>,
+            Omit<NonNullable<WrittenSettings['tools']>, 'v8r'>
+        >
+    )
+        .extend({
+            eslint: publicToolsSchema.shape.eslint.unwrap().omit({ override: true }).optional() satisfies z.ZodType<
+                NonNullable<NonNullable<ParsedSettings['scope']>[number]['tools']>['eslint'],
+                NonNullable<WrittenScope['tools']>['eslint']
+            >,
+        } satisfies SchemaShape<
+            Pick<NonNullable<NonNullable<ParsedSettings['scope']>[number]['tools']>, 'eslint'>,
+            Pick<NonNullable<WrittenScope['tools']>, 'eslint'>
+        >)
+        .optional(),
+};
+
+const ciFields = {
+    enabled: z.boolean().default(false).describe(SETTINGS_DESCRIPTIONS['ci.enabled']),
+    provider: z.enum(CI_PROVIDERS).default('github').describe(SETTINGS_DESCRIPTIONS['ci.provider']),
+    setup_command: commandSchema.optional().describe(SETTINGS_DESCRIPTIONS['ci.setup_command']),
+    operating_systems: z
+        .array(operatingSystemSchema)
+        .min(1)
+        .default(['linux'])
+        .describe('The operating systems of the CI jobs. GitHub only; refused with provider = "gitlab".'),
+} satisfies SchemaShape<NonNullable<Settings['ci']>, NonNullable<WrittenSettings['ci']>>;
+
+const ciSchema = z
+    .strictObject({
+        ...ciFields,
+        operating_systems: ciFields.operating_systems
+            .unwrap()
+            .optional()
+            .meta({
+                description: ciFields.operating_systems.description,
+                default: ciFields.operating_systems.parse(undefined),
+            }),
+    } satisfies SchemaShape<
+        Omit<NonNullable<Settings['ci']>, 'operating_systems'> &
+            Pick<NonNullable<WrittenSettings['ci']>, 'operating_systems'>,
+        NonNullable<WrittenSettings['ci']>
+    >)
+    .superRefine((ci, context) => {
+        if (ci.provider === 'gitlab' && ci.operating_systems !== undefined)
+            context.addIssue({
+                code: 'custom',
+                path: ['operating_systems'],
+                message: 'ci.operating_systems is GitHub only. Remove it when ci.provider is "gitlab".',
+            });
+    })
+    .transform((ci) => ({
+        ...ci,
+        operating_systems: ci.operating_systems ?? ciFields.operating_systems.parse(undefined),
+    }))
+    .meta({
+        allOf: [
+            {
+                if: { properties: { provider: { const: 'gitlab' } }, required: ['provider'] },
+                // eslint-disable-next-line unicorn/no-thenable -- reason: JSON Schema defines this conditional keyword.
+                then: { not: { required: ['operating_systems'] } },
+            },
+        ],
+    }) satisfies z.ZodType<NonNullable<Settings['ci']>, NonNullable<WrittenSettings['ci']>>;
+
+/** The [hooks], [ci], and [rules] fields as dotted settings; fields without defaults allow omission. */
+export const tableSettingSchemas = Object.fromEntries(
+    Object.entries({ hooks: hooksSchema.shape, ci: ciFields, rules: rulesSchema.shape }).flatMap(([section, fields]) =>
+        Object.entries<z.ZodType>(fields).map(
+            ([key, field]) =>
+                [
+                    `${section}.${key}`,
+                    field.safeParse(undefined).success ? field : field.optional().describe(field.description ?? ''),
+                ] as const,
+        ),
+    ),
+);
+
+/** One scope record: its path, configuration choices, and settings tables. */
+export const scopeSchema = z.strictObject({
+    path: relativePath.describe(SETTINGS_DESCRIPTIONS['scope.path']),
+    configurations: z.array(z.string()).default([]).describe(SETTINGS_DESCRIPTIONS['scope.configurations']),
+    removed_configurations: z.array(z.string()).default([]).describe(SETTINGS_DESCRIPTIONS['scope.configurations']),
+    test_files: z.array(relativePath).optional().describe(SETTINGS_DESCRIPTIONS['scope.test_files']),
+    ...scopeBody,
+} satisfies SchemaShape<NonNullable<ParsedSettings['scope']>[number], WrittenScope>) satisfies z.ZodType<
+    NonNullable<ParsedSettings['scope']>[number],
+    WrittenScope
+>;
+
+/** Top-level gspot.toml keys shown by gspot list settings and the settings reference. */
+export const rootSettingSchemas = {
+    level: levelSchema.default('recommended').meta({
+        description: `${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY}`,
+    }),
+    allowed_words: reasonValue(
+        z.array(z.string().regex(ALLOWED_WORD, 'Use a plain word, without a regular expression pattern.')),
+    )
+        .default([])
+        .meta({
+            reason_needed: 'adding',
+            description: 'Words accepted beyond the shipped spelling list; adding needs a reason.',
+        }),
+    tool_timeout_seconds: z
+        .number()
+        .int()
+        .positive()
+        .default(DEFAULT_VALUES.tool_timeout_seconds)
+        .describe(
+            'The time limit in seconds for every tool command, including installation and version reads. Root only.',
+        ),
+    test_files: z
+        .array(relativePath)
+        .default(() => [...DEFAULT_TEST_PATTERNS])
+        .meta({
+            description: 'Test files where applicable linters relax rules intended for production source.',
+        }),
+};
+
+export const settingsSchema = z
+    .strictObject({
+        ...rootSettingSchemas,
+        configurations: z.array(z.string()).default([]).describe(SETTINGS_DESCRIPTIONS.configurations),
+        removed_configurations: z.array(z.string()).default([]).describe(SETTINGS_DESCRIPTIONS.removed_configurations),
+        scope: z.array(scopeSchema).optional(),
+        ...rootBody,
+        ignore: z.array(ignoreSchema).optional(),
+        command_check: z.array(commandCheckSchema).optional(),
+        structure: rootStructure,
+        hooks: hooksSchema.optional(),
+        ci: ciSchema.optional(),
+        rules: rulesSchema.prefault({}),
+    } satisfies SchemaShape<ParsedSettings, WrittenSettings>)
+    .superRefine((written, context) => {
+        const records = [
+            {
+                key: 'scope',
+                field: 'path',
+                names: (written.scope ?? []).map((entry) => trimTrailingSlashes(entry.path)),
+            },
+            {
+                key: 'command_check',
+                field: 'name',
+                names: (written.command_check ?? []).map((entry) => entry.name),
+            },
+        ];
+        for (const { key, field, names } of records) {
+            const seen = new Set<string>();
+            for (const [index, name] of names.entries()) {
+                if (seen.has(name))
+                    context.addIssue({
+                        code: 'custom',
+                        path: [key, index, field],
+                        message: `Two [[${key}]] records name ${name}. Keep one.`,
+                    });
+                seen.add(name);
+            }
+        }
+    })
+    .meta({ examples: SETTINGS_EXAMPLES }) satisfies z.ZodType<ParsedSettings, WrittenSettings>;
+
+/**
+ * Write the editor schema for the version of gspot that owns these settings.
+ * @returns the JSON Schema document
+ */
+export function buildJsonSchema(): Record<string, unknown> {
+    return {
+        $schema: JSON_SCHEMA_DIALECT,
+        $id: `${SCHEMA_URL_PREFIX}${packageManifest.version}/${SCHEMA_FILE}`,
+        title: 'gspot.toml',
+        description: 'The settings of gspot for one repository.',
+        ...settingsJsonSchema(settingsSchema),
+    };
+}
+
+/**
+ * Locate one setting in the handwritten root, configuration, and tool schemas.
+ * @param key the dotted setting key
+ * @returns its authoritative schema, or undefined when the key names no setting
+ */
+export function settingSchema(key: string): z.ZodType | undefined {
+    const direct = Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).find(([name]) => name === key);
+    if (direct !== undefined) return direct[1];
+    const parts = key.split('.');
+    const table = parts.shift();
+    let schema: z.ZodType | undefined;
+    if (table === 'tools') {
+        const tool = parts.shift();
+        schema = Object.entries(publicToolsSchema.shape).find(([name]) => name === tool)?.[1];
+    } else schema = Object.entries(configurationTableSchemas).find(([name]) => name === table)?.[1];
+    for (const part of parts) {
+        if (schema !== undefined) schema = unwrapSettingSchema(schema);
+        if (!(schema instanceof z.ZodObject)) return undefined;
+        schema = schema.shape[part] as z.ZodType | undefined;
+    }
+    return schema;
+}

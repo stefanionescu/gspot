@@ -1,7 +1,3 @@
----
-title: React Native
----
-
 # React Native
 
 These rules cover React Native and Expo apps: components, lists, styles, navigation, native data, and releases.
@@ -9,7 +5,7 @@ The React rules apply first. These add what a phone changes.
 
 ## Components and touch
 
-- Give every touch target a size of at least 44 points on iOS or 48 dp on Android, with `hitSlop` where the drawing is smaller.
+- Give every touch target a size of at least 44 points on iOS or 48 dp on Android, with `hitSlop` where the drawing takes less space.
 - Do not read `Dimensions` at module load. Use `useWindowDimensions`, which follows rotation and split view.
 - Respect the safe area on every screen, through the safe area context.
 
@@ -26,7 +22,7 @@ The React rules apply first. These add what a phone changes.
 
 <!-- level: all -->
 
-- Branch on `Platform.OS` in one place for one concern. A component full of platform checks is two components.
+- Branch on `Platform.OS` in one place for one concern. Split a component full of platform checks into two components.
 
 ## Navigation and state
 
@@ -37,9 +33,9 @@ The React rules apply first. These add what a phone changes.
 
 ## Native data and secrets
 
-- Nothing in the bundle is secret. A key that ships in the app belongs to everyone who downloads it.
+- The bundle holds no secret. A key that ships in the app belongs to everyone who downloads it.
 - Ask for a permission at the moment the feature needs it, and handle the refusal.
-- Validate a deep link before it navigates or acts. A link is input from outside.
+- Validate a deep link before it navigates or acts. A link supplies input from outside.
 
 ## Performance
 

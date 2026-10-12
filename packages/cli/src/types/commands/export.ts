@@ -1,5 +1,5 @@
-/** The destination and preview choice of a template export. */
-export type ExportOptions = { cwd: string; file: string; isDryRun: boolean };
+/** The destination of a template export. */
+export type ExportOptions = { cwd: string; file: string };
 
-/** The authored template preview and repository-local command warnings. */
-export type ExportJson = { file: string; leftOut: string[]; warnings: string[]; text?: string };
+/** The written template destination and repository-local command warnings. */
+export type ExportJson = { file: string; leftOut: string[]; warnings: string[] };

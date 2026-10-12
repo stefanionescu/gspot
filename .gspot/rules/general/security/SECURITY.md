@@ -1,14 +1,10 @@
----
-title: Security
----
-
 # Security
 
 ## Input
 
-- Validate every value that crosses a trust boundary before use: request bodies, query strings,
+- Validate every value that enters from outside the program before use: request bodies, query strings,
   path parameters, headers, cookies, environment, files, provider responses, queue messages,
-  command-line arguments. A type annotation is not validation.
+  command-line arguments. A type annotation does not validate input.
 - Bound every input: size, length, count, depth, rate.
 - Reject unknown fields in request bodies that create or change data.
 
@@ -16,16 +12,16 @@ title: Security
 
 - No SQL, shell, file path, URL, HTML, regex, dynamic import, or template built by string
   concatenation with untrusted input. Use parameters, argument arrays, path joins against a fixed
-  root with traversal checks, URL builders, and escaping owned by the sink.
+  root with traversal checks, URL builders, and escaping for the output format.
 - No `eval`, `new Function`, string timers, `exec` with a shell, or reflection driven by input.
-- Deserialize only formats that cannot execute (JSON, not pickle or YAML with custom tags).
+- Deserialize only formats that cannot execute, such as JSON. Do not deserialize pickle or YAML with custom tags.
 
 ## Web sinks
 
-- Render untrusted content as text. When HTML is required, sanitize it in one module and add a
+- Render untrusted content as text. When the page requires HTML, sanitize it in one module and add a
   suppression with the reason there.
 - Reject executable script URLs and untrusted inline code.
-- Send security headers: HSTS, `X-Content-Type-Options: nosniff`, frame policy, referrer policy,
+- Send security headers: HTTP Strict Transport Security (HSTS), `X-Content-Type-Options: nosniff`, frame policy, referrer policy,
   and a Content Security Policy that the application's own scripts satisfy.
 
 ## Redirects and outbound requests
@@ -37,9 +33,9 @@ title: Security
 ## Authentication and authorization
 
 - Identity comes from a verified server-side session or token. A client-supplied user ID, role,
-  or tenant is data, never authority.
-- Authorization runs where data is read or changed, for every entry point (HTTP, RPC, job,
-  webhook), and rechecks ownership even when a parent already checked it.
+  or tenant provides data, never authority.
+- Authorize every operation that reads or changes data, through each HTTP, RPC, job,
+  and webhook entry point. Recheck access to the resource even when a parent already checked it.
 - Compare secrets, signatures, and tokens in constant time.
 - Generate tokens, nonces, and reset codes with the platform's cryptographic random source.
 - Hash passwords with a current, slow, salted algorithm through a maintained library. Use one
@@ -47,9 +43,10 @@ title: Security
 - Verify webhook signatures against the raw body before decoding, and handle replay with an
   idempotency key.
 - Cookies that carry sessions: `HttpOnly`, `Secure`, `SameSite`, explicit `Max-Age`, non-default
-  name. Writes never happen on GET.
+  name. Writes never happen on `GET`. A cookie session needs CSRF protection on every
+  state-changing request.
 
-## Secrets and disclosure
+## Builds
 
 - No default credentials, sample admin users, debug endpoints, or auth bypasses in any build.
 

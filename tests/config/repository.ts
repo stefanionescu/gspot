@@ -1,0 +1,301 @@
+/** Selected and unselected paths for the native repository index contract. */
+export const TRACKED_PATTERNS = {
+    indexOnly: ['.env.'],
+    refused: [
+        '.env',
+        '.env.local',
+        '.env.example.local',
+        'nested/.dev.vars.production',
+        'node_modules/.env.example',
+        'bower_components/package/index.js',
+        'python/.venv/lib/package.py',
+        'python/nested/venv/lib/package.py',
+        'python/deep/.venv/lib/package.py',
+        'swift/Pods/Library/source.swift',
+        'swift/DerivedData/output.bin',
+        'swift/.build/output.bin',
+        'sibling/node_modules/package/index.js',
+        'sibling/.dev.vars',
+    ],
+    allowed: [
+        '.env.example',
+        '.env.template',
+        '.env.sample',
+        '.dev.vars.example',
+        'nested/.env.example',
+        'nested/.env.template',
+        'nested/.env.sample',
+        'nested/.dev.vars.example',
+        'python/node_modules/package/index.js',
+        'swift/node_modules/package/index.js',
+        'sibling/.venv/lib/package.py',
+        '.venv/lib/package.py',
+        '.build/output.bin',
+        'python/source.py',
+    ],
+    scopes: `[[scope]]
+path = "python"
+configurations = ["python"]
+removed_configurations = ["javascript"]
+[[scope]]
+path = "python/deep"
+[[scope]]
+path = "swift"
+configurations = ["swift"]
+removed_configurations = ["javascript"]
+[[scope]]
+path = "sibling"
+`,
+} as const;
+
+export const GENERATED_LAUNCHERS = {
+    gradlew: '#!/bin/sh\nbroken (\n',
+    'android/gradlew.bat': '@echo off\r\n',
+    mvnw: '#!/bin/sh\nbroken (\n',
+    'server/mvnw.cmd': '@echo off\r\n',
+} as const;
+
+/** Each source names its malformed-input diagnostic and a supported direct alias. */
+export const ALIAS_FILES = [
+    {
+        path: 'package.json',
+        diagnostic: 'package.json is not valid JSON.',
+        valid: '{"imports":{"#app/*":"./src/*"}}',
+    },
+    {
+        path: 'tsconfig.json',
+        diagnostic: 'Cannot read TypeScript configuration {PATH}',
+        valid: '{"compilerOptions":{"paths":{"#app/*":["./src/*"]}}}',
+    },
+] as const;
+
+/** Conflicting root and child declarations prove scope ownership and compiler precedence. */
+export const ALIAS_PROJECT = {
+    'package.json': '{"imports":{"#app/*":"./src/*","#root/*":"./root/*","#shared/*":"./package/*"}}',
+    'tsconfig.json': '{"compilerOptions":{"paths":{"@root/*":["./typed/*"],"#shared/*":["./compiler/*"]}}}',
+    'web/package.json': '{"imports":{"#app/*":"./src/*","#shared/*":"./package/*"}}',
+    'web/tsconfig.json': '{"compilerOptions":{"paths":{"@web/*":["./typed/*"],"#shared/*":["./compiler/*"]}}}',
+} as const;
+
+export const DECLARATION_FILES = {
+    'next-env.d.ts': '/// <reference types="next" />\n',
+    'worker-configuration.d.ts': '/// <reference types="@cloudflare/workers-types" />\n',
+    'handwritten.d.ts': '/// <reference types="next" />\n',
+    'app/next-env.d.ts': '/// <reference types="next" />\n',
+    'app/worker-configuration.d.ts': '/// <reference types="@cloudflare/workers-types" />\n',
+    'app/handwritten.d.ts': '/// <reference types="@cloudflare/workers-types" />\n',
+} as const;
+
+export const GENERATED_SELECTIONS = [
+    { configurations: ['nextjs', 'cloudflare'], tables: '', generated: ['next-env.d.ts', 'worker-configuration.d.ts'] },
+    {
+        configurations: ['javascript'],
+        tables: '[[scope]]\npath = "app"\nconfigurations = ["nextjs", "cloudflare"]',
+        generated: ['app/next-env.d.ts', 'app/worker-configuration.d.ts'],
+    },
+    { configurations: ['javascript'], tables: '', generated: [] },
+    {
+        configurations: ['nextjs', 'cloudflare'],
+        tables: '[[scope]]\npath = "app"',
+        generated: ['next-env.d.ts', 'worker-configuration.d.ts', 'app/next-env.d.ts', 'app/worker-configuration.d.ts'],
+    },
+    {
+        configurations: ['nextjs', 'cloudflare'],
+        tables: '[[scope]]\npath = "app"\nremoved_configurations = ["nextjs", "cloudflare"]',
+        generated: ['next-env.d.ts', 'worker-configuration.d.ts'],
+    },
+] as const;
+
+export const ATTRIBUTE_FILES = {
+    '.gitattributes': `*.pb.go linguist-generated
+api/*.pb.go -linguist-generated
+*.ts linguist-generated
+api/*.false.ts linguist-generated=false
+api/*.unspecified.ts !linguist-generated
+*.vendor.js linguist-vendored
+api/*.vendor.js -linguist-vendored
+*.dat binary
+notes.dat text
+auto.dat text=auto
+raw.txt binary
+banner.js text
+`,
+    'nested/.gitattributes': '*.ts -linguist-generated\n',
+    'generated.pb.go': 'package generated\n',
+    'api/source.pb.go': 'package api\n',
+    'api/source.false.ts': 'export {};\n',
+    'api/source.unspecified.ts': 'export {};\n',
+    'nested/source.ts': 'export {};\n',
+    'shared.vendor.js': 'export {};\n',
+    'api/source.vendor.js': 'export {};\n',
+    'raw.dat': 'opaque bytes\n',
+    'notes.dat': 'authored text\n',
+    'auto.dat': 'opaque bytes\n',
+    'raw.txt': 'opaque bytes\n',
+    'banner.js': '// @generated by a compiler\nexport {};\n',
+    'untouched.md': 'authored notes\n',
+} as const;
+
+export const ATTRIBUTE_KINDS = {
+    '.gitattributes': 'source',
+    'nested/.gitattributes': 'source',
+    'generated.pb.go': 'generated',
+    'api/source.pb.go': 'source',
+    'api/source.false.ts': 'source',
+    'api/source.unspecified.ts': 'source',
+    'nested/source.ts': 'source',
+    'shared.vendor.js': 'vendored',
+    'api/source.vendor.js': 'source',
+    'raw.dat': 'binary',
+    'notes.dat': 'source',
+    'auto.dat': 'binary',
+    'raw.txt': 'binary',
+    'banner.js': 'generated',
+    'untouched.md': 'source',
+} as const;
+
+export const CLEARED_ATTRIBUTE_KINDS = {
+    '.gitattributes': 'source',
+    'nested/.gitattributes': 'source',
+    'generated.pb.go': 'source',
+    'api/source.pb.go': 'source',
+    'api/source.false.ts': 'source',
+    'api/source.unspecified.ts': 'source',
+    'nested/source.ts': 'source',
+    'shared.vendor.js': 'source',
+    'api/source.vendor.js': 'source',
+    'raw.dat': 'binary',
+    'notes.dat': 'binary',
+    'auto.dat': 'binary',
+    'raw.txt': 'source',
+    'banner.js': 'generated',
+    'untouched.md': 'source',
+} as const;
+
+export const PACKAGE_FIELDS = {
+    name: 'example-package',
+    dependencies: { next: '16.0.0' },
+    'simple-git-hooks': null,
+    customSettings: { enabled: true },
+} as const;
+
+/** npm project boundaries separate framework-specific dependency contracts. */
+export const PROJECT_DEPENDENCY_FILES = {
+    'package.json': '{"dependencies":{"@nestjs/swagger":"11.2.3"}}',
+    'app/package.json': '{"devDependencies":{"tailwindcss":"4.1.13"}}',
+    'other/package.json': '{"dependencies":{"next":"16.3.5"}}',
+    'empty/package.json': '{"private":true}',
+    '.gspot/package.json': '{"dependencies":{"tailwindcss":"4.1.13"}}',
+} as const;
+
+export const PROJECT_DEPENDENCY_SCOPES = [
+    { scope: '', dependencies: { '@nestjs/swagger': '11.2.3' } },
+    { scope: 'application', dependencies: { '@nestjs/swagger': '11.2.3' } },
+    { scope: 'app', dependencies: { tailwindcss: '4.1.13' } },
+    { scope: 'app/styles', dependencies: { tailwindcss: '4.1.13' } },
+    { scope: 'other', dependencies: { next: '16.3.5' } },
+    { scope: 'empty', dependencies: {} },
+    { scope: 'empty/src', dependencies: {} },
+] as const;
+
+/** Distinct native Python manifest forms retain their own input and expected dependency behavior. */
+export const INVALID_PYTHON_DEPENDENCIES = [
+    { name: 'Poetry numeric dependency', path: 'pyproject.toml', source: '[tool.poetry.dependencies]\nFastAPI = 7\n' },
+    {
+        name: 'Poetry boolean group dependency',
+        path: 'pyproject.toml',
+        source: '[tool.poetry.group.web.dependencies]\nFastAPI = false\n',
+    },
+    { name: 'Pipfile numeric dependency', path: 'Pipfile', source: '[packages]\nFastAPI = 7\n' },
+] as const;
+
+/** Invalid authored fields remain manifest-reader errors. */
+export const INVALID_DEPENDENCY_FILES = [
+    ['package.json', '{"dependencies":{"typescript":7}}'],
+    ['package.json', '{"scripts":{"lint":false}}'],
+    ['package.json', '{"workspaces":[7]}'],
+    ['pyproject.toml', '[project'],
+    ['pyproject.toml', '[project]\ndependencies = [7]\n'],
+] as const;
+
+/** Each workspace declaration carries its native malformed-input diagnostic. */
+export const INVALID_WORKSPACE_FILES = [
+    { path: 'pnpm-workspace.yaml', parseError: 'Flow map must end with a }' },
+    { path: 'lerna.json', parseError: "JSON Parse error: Expected '}'" },
+    {
+        path: 'rush.json',
+        parseError: 'Unexpected end of input at 1:2',
+    },
+] as const;
+
+/** Paths retain literal Unicode, punctuation, and empty root or scope prefixes. */
+export const SCOPE_PATHS = [
+    { scope: '', path: '', repositoryPath: '' },
+    { scope: '', path: 'README.md', repositoryPath: 'README.md' },
+    { scope: 'app', path: '', repositoryPath: 'app/' },
+    { scope: 'app', path: 'package.json', repositoryPath: 'app/package.json' },
+    { scope: 'packages/app', path: 'src/main.ts', repositoryPath: 'packages/app/src/main.ts' },
+    { scope: 'apps/日本語 [web]', path: 'src/hello world.ts', repositoryPath: 'apps/日本語 [web]/src/hello world.ts' },
+] as const;
+
+/** Interpreter cases distinguish shell dialects from JavaScript runtime evidence. */
+export const SHEBANGS = [
+    { name: 'Bash', source: '#!/usr/bin/env bash', tags: ['shell', 'executable', 'text', 'shebang:shell', 'bash'] },
+    { name: 'POSIX shell', source: '#!/bin/sh', tags: ['shell', 'executable', 'text', 'shebang:shell', 'sh'] },
+    {
+        name: 'Bun',
+        source: '#!/usr/bin/env -S bun run',
+        tags: ['javascript', 'node', 'executable', 'text', 'shebang:node', 'runtime:bun'],
+    },
+    { name: 'Python', source: '#!/usr/bin/python3', tags: ['python', 'executable', 'text', 'shebang:python'] },
+    { name: 'plain text', source: 'plain text', tags: ['text'] },
+] as const;
+
+export const PROJECT_FILE_FOLDERS = [
+    ['api/package.json', 'package.json', 'api'],
+    ['package.json', 'package.json', ''],
+    ['services/billing/requirements-dev.txt', 'requirements*.txt', 'services/billing'],
+    ['ios/App.xcodeproj/project.pbxproj', '*.xcodeproj', 'ios'],
+    ['apps/web/supabase/config.toml', 'supabase/config.toml', 'apps/web'],
+    ['supabase/config.toml', 'supabase/config.toml', ''],
+] as const;
+
+export const NOT_PROJECT_FILES = [
+    ['api/package-lock.json', 'package.json'],
+    ['docs/supabase.md', 'supabase/config.toml'],
+    ['ios/App.xcworkspace/contents.xcworkspacedata', '*.xcodeproj'],
+    ['requirements.txt.bak', 'requirements*.txt'],
+] as const;
+
+export const WORKSPACE_DECLARATIONS = [
+    { 'package.json': '{"workspaces":["packages/*"]}' },
+    { 'package.json': '{"workspaces":{"packages":["packages/*"]}}' },
+    { 'package.json': '{}', 'pnpm-workspace.yaml': 'packages: ["packages/*"]' },
+    { 'package.json': '{}', 'lerna.json': '{"packages":["packages/*"]}' },
+    {
+        'rush.json':
+            '{"projects":[{"packageName":"api","projectFolder":"packages/api"},{"packageName":"lint","projectFolder":"packages/lint"}]}',
+    },
+] as const;
+
+export const LICENSE_FILES = [
+    'LICENSE',
+    'LICENSE.md',
+    'LICENSE-MIT',
+    'COPYING.txt',
+    'LICENCE.rst',
+    'NOTICE',
+    'NOTICE.txt',
+] as const;
+
+export const LICENSE_LIKE_SOURCES = ['license-lockfiles.test.ts', 'license.ts', 'licenses.json', 'notice.py'] as const;
+
+export const LARGE_FILE_SETTINGS = `[limits]
+file_kilobytes = 1
+[[scope]]
+path = "app"
+`;
+export const LARGE_FILE_ATTRIBUTES = `lfs.bin filter=lfs
+data/** linguist-generated
+vendor/** linguist-vendored
+`;

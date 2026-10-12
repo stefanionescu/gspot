@@ -1,10 +1,7 @@
-// Lockfile parsers reject any merge-marker prefix; generated files require the token separator.
-const CONFLICT_MARKER_SOURCE = '^(?:<{7}|={7}|>{7})';
-
 export const UNSUPPORTED_ENTRY =
     'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.';
 
-/** Full SHA-1 and SHA-256 object IDs are supported across listings, reports, and push selection. */
+/** Support full Git object hashes across listings, reports, and push selection. */
 export const HASH_SOURCE = '(?:[a-f0-9]{40}|[a-f0-9]{64})';
 
 export const HASH_PATTERN = new RegExp(`^${HASH_SOURCE}$`, 'u');
@@ -21,6 +18,9 @@ export const TREE_ENTRY = new RegExp(
     'u',
 );
 
-export const CONFLICT_MARKER_PREFIX = new RegExp(CONFLICT_MARKER_SOURCE, 'mu');
+export const ATTRIBUTE_FIELDS = 3;
 
-export const CONFLICT_MARKERS = new RegExp(`${CONFLICT_MARKER_SOURCE}(?: |$)`, 'mu');
+export const ATTRIBUTE_LINE = /^("(?:[^"\\]|\\.)*"|\S+)(?:\s+|$)/u;
+export const LEADING_SLASH = /^\//u;
+export const BINARY_ATTRIBUTES = { diff: 'unset', merge: 'unset', text: 'unset' } as const;
+export const BINARY_MACRO = 'binary';

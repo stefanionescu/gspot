@@ -1,2 +1,0 @@
-<% const words = [...new Set(prose.products)].toSorted((a, b) => a.localeCompare(b)); -%>
-<%~ words.join("\n") %>

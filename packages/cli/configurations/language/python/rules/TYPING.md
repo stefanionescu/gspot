@@ -1,11 +1,4 @@
----
-title: Python Typing
----
-
 # Python Typing
-
-Annotations, `Any`, generics, aliases, protocols, and suppressions. Module and interface rules
-are in the Python file.
 
 ## Annotations
 
@@ -32,63 +25,63 @@ def group_records[Key: Hashable](records: Iterable[tuple[Key, str]]) -> dict[Key
 
 The type parameter syntax needs Python 3.12; `Key` connects input keys to output keys, and
 `Hashable` states the dictionary-key requirement. A variable annotation appears where the
-inferred type is unclear or impossible, such as an empty collection, not on every
+compiler cannot infer a clear type, such as an empty collection, not on every
 intermediate value.
 
 `typing.Annotated` attaches framework or validation metadata to a real type, real type
-first. The default stays an ordinary parameter default and is never duplicated in the
+first. The default stays an ordinary parameter default and never repeats in the
 metadata object. Arbitrary string metadata never replaces a domain type or validator. A
 FastAPI query field reads `Annotated[str | None, Query(max_length=50)] = None`.
 
 ## Any, object, and shapes
 
-`object` is the type of a value that can be anything when the function only uses operations
-every object has, such as passing it to `str()`. It is also the type of an ignored callback
-result. `Any` is reserved for a type that cannot be expressed, a correct type that makes the
-API unreasonable, or a value that intentionally escapes checking. It is never a shortcut; a
+Use `object` for a value of any type when the function only uses operations
+every object has, such as passing it to `str()`. Also use it for an ignored callback
+result. Reserve `Any` for a type the type system cannot express, a correct type that makes the
+API unreasonable, or a value that intentionally escapes checking. Never use it as a shortcut; a
 protocol, type variable, overload, or small value object models the contract first.
 
-Arguments take protocols and abstract collections from `collections.abc` (`Iterable`,
-`Sequence`, `Mapping`, `Callable`) and `object` for any value. Concrete implementations return
-concrete types (`list`, `dict`, a dataclass). Protocols and abstract base classes choose
+Arguments take protocols and abstract collections from `collections.abc`, such as `Iterable`,
+`Sequence`, `Mapping`, or `Callable`, and `object` for any value. Concrete implementations return
+concrete types such as `list`, `dict`, or a dataclass. Protocols and abstract base classes choose
 return types by the promised interface. A union return that forces callers into an immediate
 `isinstance()` branch becomes separate functions, a tagged dataclass, a protocol, or a small
 hierarchy with a common contract.
 
-Numeric APIs take `float` where integers are valid. Text is `str` and binary is `bytes`.
+Use `float` for numeric APIs that also accept integers. Use `str` for text and `bytes` for binary data.
 `AnyStr` ties several annotations to one text or binary type.
 
 A `Path | None = None` input handles its `None` branch
 before calling path methods, and the default path belongs to the configuration owner. Generic
-types name their parameters (`Sequence[int]`). A bare `Sequence` or `dict` exists only when
-the element type is intentionally unconstrained and says so with `Any`. A `TypeVar` connects
+types name their parameters, such as `Sequence[int]`. A bare `Sequence` or `dict` exists only when
+the element type intentionally accepts any type and says so with `Any`. A `TypeVar` connects
 input and output types when that relationship matters, as `Key` does above.
 
 ## Aliases, variables, and forward references
 
 A type alias names a complex repeated type in CapWords, with a leading underscore when
 internal. It uses a `type` statement when the Python version supports it and the module
-already uses it, or `TypeAlias` where changing syntax is unrelated churn. `MetricMap` for
-`Mapping[str, float]` is an alias; `Path = pathlib.Path` is a class alias and `errno.EEXIST` a
-value, and neither is a typing contract.
+already uses it, or `TypeAlias` where a syntax change falls outside the task. `MetricMap` for
+`Mapping[str, float]` names an alias; `Path = pathlib.Path` names a class alias and `errno.EEXIST` a
+value, and neither defines a typing interface.
 
 ### Type variable naming
 
 <!-- level: all -->
 
-A private unconstrained type variable may be `_T` or `_P`; a public or constrained one has a
+A private unconstrained type variable can use `_T` or `_P`; a public or constrained one has a
 descriptive name such as `Key`, with `_co` and `_contra` for variance, and no public
-single-letter `T` or `P`. `ParamSpec` forwards a callable's parameters, and a `Callable` is
+single-letter `T` or `P`. `ParamSpec` forwards a callable's parameters, and declare a `Callable` with
 bound to the signature its consumer needs rather than left bare.
 
 ### Forward references
 
 `from __future__ import annotations` handles forward references and stays as the project's
 convention even where newer Python defers evaluation. String annotations exist only where
-future annotations are unavailable or a type-checking-only import needs them. A
+the runtime does not provide future annotations or a type-checking-only import needs them. A
 `TYPE_CHECKING` import avoids a runtime import only when the runtime does not need the
 symbol. Validators and frameworks that evaluate annotations need the real import. A type-only circular
-import is design pressure to move the shared contract.
+import signals a need to move the shared contract.
 
 ```python
 @dataclass(frozen=True)
@@ -114,9 +107,9 @@ class Node:
         return names
 ```
 
-## Protocols and suppressions
+## Protocols
 
-A structural interface is a narrow `typing.Protocol` placed near the consumer and defining
+Define a structural interface with a narrow `typing.Protocol` near the consumer, with
 only what that consumer needs; implementations satisfy it without importing or subclassing
 it. `@runtime_checkable` exists only for a real `isinstance()` need, and an abstract base
 class serves nominal identity, runtime instantiation checks, or a standard-library contract,

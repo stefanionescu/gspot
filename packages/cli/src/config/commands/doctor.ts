@@ -1,19 +1,14 @@
-import type { Colors } from 'picocolors/types';
-import type { ToolInspection } from '#cli/types/tools/install.ts';
-import type { SuggestionSection } from '#cli/types/commands/doctor.ts';
-import { GITHUB_WORKFLOW, GITLAB_INCLUDE_LABEL } from '#cli/config/generation/ci.ts';
-
 export const COLUMN_WIDTHS = { label: 9, path: 40, name: 34, note: 30 } as const;
 
 export const VERSION_GAP = 4;
 
-export const SUGGESTION_SECTIONS: SuggestionSection[] = [
+export const SUGGESTION_SECTIONS = [
     { key: 'detected', title: 'detected, not selected' },
     { key: 'suggested', title: 'suggested, not selected' },
-    { key: 'undetected', title: 'selected, not detected' },
+    { key: 'undetected', title: 'selected, but no matching files found' },
     { key: 'unowned', title: 'configuration not owned' },
-    { key: 'authored', title: 'existing lint jobs' },
-];
+    { key: 'written', title: 'existing lint jobs' },
+] as const;
 
 export const HEADER_BYTES = 600;
 
@@ -23,10 +18,7 @@ export const TOOL_STATE_COLORS = {
     missing: 'red',
     outdated: 'red',
     newer: 'red',
-    host: 'dim',
-} as const satisfies Record<ToolInspection['state'], keyof Colors>;
-
-export const CI_REPORT_PATHS = { github: GITHUB_WORKFLOW, gitlab: GITLAB_INCLUDE_LABEL };
+    system: 'dim',
+} as const;
 
 /** Doctor reports stale choices without changing the saved setup. */
-export const STALE_SETUP_WARNING = 'The saved setup is stale: {details}. Run: gspot apply\n';

@@ -1,7 +1,3 @@
----
-title: TanStack Query
----
-
 # TanStack Query
 
 Use the integration and release the project has. Query data stays in its cache; do not copy it
@@ -26,7 +22,7 @@ An optimistic rollback reverses only its own change; restoring a whole snapshot 
 success. Reconcile with the committed response, then invalidate affected lists and aggregates.
 A committed write stays successful when its refresh fails.
 
-Required cache updates belong to an owner that sees every completion, not a per-call callback
+Required cache updates belong to code that receives every completion, not a per-call callback
 that can disappear on unmount. Retry a write only under an idempotency contract.
 
 See [optimistic updates](https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates).
@@ -34,7 +30,7 @@ See [optimistic updates](https://tanstack.com/query/latest/docs/framework/react/
 ## Display and freshness
 
 Distinguish first load, background refresh, and next-page loading. Keep useful data visible during
-a refresh and expose its failure separately. A placeholder is display data, not a record ready
+a refresh and expose its failure separately. A placeholder supplies display data, not a record ready
 for editing. Reset placeholders and pagination when identity or filters change.
 
 Choose freshness from the resource's risk. Never disable refetching globally to conceal duplicate

@@ -1,4 +1,5 @@
-import type { Policy, FormatSettings } from '#cli/types/policy/settings.ts';
+import type { Settings } from '#cli/types/settings/values.ts';
+import type { FormatSettings } from '#cli/types/settings/file.ts';
 
 export type JsonFormat = { width: number; indent: number };
 
@@ -19,7 +20,7 @@ export type ScopeFormat = { scope: string; paths: string[]; format: Partial<Form
 
 export type EditorconfigOverride = { path: string; options: Record<string, string | number | boolean> };
 
-export type NativeOverride<Options> = {
+export type ExtraOverride<Options> = {
     files: string | string[];
     excludeFiles?: string | string[] | undefined;
     options: Options;
@@ -30,9 +31,9 @@ export type PrettierPluginOptions = { plugins?: string[] };
 
 /** Effective formatting choices and authored overrides for one generated Prettier config file. */
 export type PrettierInput = {
-    policy: Policy;
+    settings: Settings;
     format: FormatSettings;
     targetPath: string;
-    verbatim: Record<string, unknown> | undefined;
+    extra: Record<string, unknown> | undefined;
     plugins: PrettierPlugin[];
 };

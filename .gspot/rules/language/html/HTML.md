@@ -1,15 +1,11 @@
----
-title: HTML
----
-
 # HTML
 
 ## Document
 
-- `<html lang="...">` names the page language; `dir` is set when the language is right-to-left.
+- `<html lang="...">` names the page language; set `dir` for a right-to-left language.
 - One `<title>` that names the page, a `<meta name="viewport">`, and a `<meta charset="utf-8">`
   first in `<head>`.
-- Landmarks (`header`, `nav`, `main`, `footer`, `aside`) structure the page. One `main`.
+- Landmarks such as `header`, `nav`, `main`, `footer`, and `aside` structure the page. One `main`.
 
 ## Elements
 
@@ -28,4 +24,4 @@ title: HTML
 <!-- level: all -->
 
 - A template stays declarative: no logic beyond conditionals and loops the engine provides.
-- Generated HTML is deterministic: the same inputs produce byte-identical output.
+- Generate deterministic HTML: the same inputs produce byte-identical output.

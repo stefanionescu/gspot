@@ -1,73 +1,58 @@
 ---
 title: Reuse templates
-description: Export portable policy and initialize another repository from it.
+description: Export portable settings and set up another repository from them.
 ---
 
-A template is an exported setup another repository can reuse. It carries authored configuration choices, settings, command checks, paths, ignores, declarations, and integrations.
+A template copies your gspot.toml, without scopes, for use in another repository.
 
 ## Export
 
 ```shell
-gspot export team.template.toml
+gspot export gspot.template.toml
 ```
 
-A template carries every `gspot.toml` entry except scopes, including command checks. Empty authored tables stay in the export. It copies authored values without adding defaults. The destination's `gspot/unmatched-paths` check reports carried paths that match no tracked file or folder. Review path choices for the destination. Commands that name local executables produce a warning.
+A template carries every `gspot.toml` entry except scopes, including command checks. Empty tables you wrote stay in the export. It copies only what you wrote, not the defaults. The destination's `gspot/unused-entries` check reports carried paths that match no tracked file or folder. Review path choices for the destination. Commands that name local executables produce a warning.
 
-A template carries hooks, CI, agent-rule, and runner settings, but no generated hook scripts, lockfiles, or installed tools. `hooks.enabled` controls hook setup.
+A template carries the hooks, CI, and rules settings, but no hook scripts, lockfiles, or installed tools.
+Export can write anywhere, but not over `gspot.toml` or a file gspot generates.
 
-Export writes these template fields:
+## Set up another repository
 
-```toml
-template = "team"
-selection = "exact"
-configurations = ["typescript", "markdown"]
-```
-
-`exact` keeps the template's language and framework choices during initialization. Change
-`selection` to `detect` to add configurations detected in the destination. Both
-selections include automatic general checks at the chosen level. An empty exact list omits
-language and framework choices. It still includes general checks.
-
-Template configurations stay selected even when no files match them. Use `gspot remove`
-to drop a language or framework choice.
-
-Export can write outside the repository atomically. It refuses `gspot.toml` and generated file destinations. Use `gspot export team.template.toml --dry-run` to print the template without writing it.
-
-## Initialize another repository
-
-In a clean destination repository, preview and initialize from the template:
+In the destination repository, read the plan and set up gspot from the template:
 
 ```shell title="Use a local team template"
-gspot init --from ../team.template.toml --dry-run --yes
-gspot init --from ../team.template.toml --yes
-gspot doctor
+gspot init --from ../gspot.template.toml --dry-run
+gspot init --from ../gspot.template.toml --yes
+gspot install
 gspot check
 ```
 
-`init` validates the template and writes its policy into the destination's `gspot.toml`. It records the template name and sha256 in one comment line, rather than a `template` key:
+`init` validates the template and writes its settings into the destination's `gspot.toml`. It records the template source and sha256 in one comment line, rather than a `template` key:
 
 ```toml
-# Copied from template team, sha256 <SHA256>.
+# Copied from template ../gspot.template.toml, sha256 <SHA256>.
 ```
 
-`<SHA256>` is the digest of the copied template. Init does not keep a live connection to the source. Editing the source template later leaves existing consumers unchanged.
+`<SHA256>` contains the digest of the copied template. Init does not keep a live connection to the source. Later edits to the template do not change repositories that used it.
 
-Local paths, HTTPS URLs, and `github:owner/repository[/path][@ref]` are supported. A GitHub source without a path reads `gspot.template.toml`. Set `GITHUB_TOKEN` for a private GitHub source.
+Use local paths, HTTPS URLs, or `github:owner/repository[/path][@ref]`. A GitHub source without a path reads `gspot.template.toml`. Set `GITHUB_TOKEN` for a private GitHub source.
 
 ## Customize and reuse
 
-In repository A, record an accepted ESLint finding and export its policy:
+In repository A, ignore an ESLint finding and export its settings:
 
 ```shell title="Repository A"
 gspot ignore javascript/eslint --rule no-console --paths 'scripts/**' --reason 'These scripts print command output.'
-gspot export team.template.toml
+gspot export gspot.template.toml
 ```
 
-Copy `team.template.toml` to a clean repository B, then initialize it:
+Copy `gspot.template.toml` to repository B, then set up gspot:
 
 ```shell title="Repository B"
-gspot init --from team.template.toml --yes
+gspot init --from gspot.template.toml --yes
+gspot install
+gspot check
 ```
 
-The copied policy keeps the reviewed ignore and configuration choices. Check carried paths
+The copied settings keep the reviewed ignore and configuration choices. Check carried paths
 against repository B's files and remove choices that repository B does not need.

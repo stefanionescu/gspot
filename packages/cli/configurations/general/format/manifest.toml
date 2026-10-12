@@ -1,7 +1,7 @@
-products = ["Prettier"]
-generated = ["prettier.config.mjs"]
+allowed_words = ["Prettier"]
 
 [configuration]
+always_selected = true
 title = "Format"
 description = "One [format] block every formatter reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint."
 
@@ -14,7 +14,81 @@ name = "prettier"
 crash_pattern = "\\[error\\] (?:No parser|Cannot find|Invalid)"
 version = "3.8.1"
 npm = "prettier"
-replaces = [".prettierrc", ".prettierrc.json", ".prettierrc.yml", ".prettierrc.yaml", ".prettierrc.json5", ".prettierrc.js", "prettier.config.js", ".prettierrc.ts", "prettier.config.ts", ".prettierrc.mjs", "prettier.config.mjs", ".prettierrc.mts", "prettier.config.mts", ".prettierrc.cjs", "prettier.config.cjs", ".prettierrc.cts", "prettier.config.cts", ".prettierrc.toml", ".prettierignore"]
+[[tool.replace]]
+file = ".prettierrc"
+shared = false
+
+[[tool.replace]]
+file = ".prettierrc.json"
+shared = false
+
+[[tool.replace]]
+file = ".prettierrc.yml"
+shared = false
+
+[[tool.replace]]
+file = ".prettierrc.yaml"
+shared = false
+
+[[tool.replace]]
+file = ".prettierrc.json5"
+shared = false
+
+[[tool.replace]]
+file = ".prettierrc.js"
+shared = false
+
+[[tool.replace]]
+file = "prettier.config.js"
+shared = false
+
+[[tool.replace]]
+file = ".prettierrc.ts"
+shared = false
+
+[[tool.replace]]
+file = "prettier.config.ts"
+shared = false
+
+[[tool.replace]]
+file = ".prettierrc.mjs"
+shared = false
+
+[[tool.replace]]
+file = "prettier.config.mjs"
+shared = false
+
+[[tool.replace]]
+file = ".prettierrc.mts"
+shared = false
+
+[[tool.replace]]
+file = "prettier.config.mts"
+shared = false
+
+[[tool.replace]]
+file = ".prettierrc.cjs"
+shared = false
+
+[[tool.replace]]
+file = "prettier.config.cjs"
+shared = false
+
+[[tool.replace]]
+file = ".prettierrc.cts"
+shared = false
+
+[[tool.replace]]
+file = "prettier.config.cts"
+shared = false
+
+[[tool.replace]]
+file = ".prettierrc.toml"
+shared = false
+
+[[tool.replace]]
+file = ".prettierignore"
+shared = false
 
 [[tool.replace]]
 file = "package.json"
@@ -34,40 +108,31 @@ npm = { name = "editorconfig-checker", version = "7.0.0" }
 mise = { name = "npm:editorconfig-checker", version = "7.0.0" }
 brew = "editorconfig-checker"
 github = { name = "editorconfig-checker/editorconfig-checker", version = "v3.4.0" }
-replaces = [".editorconfig"]
+[[tool.replace]]
+file = ".editorconfig"
+shared = false
 
 [[tool_file]]
-source = "editorconfig.eta"
 target = ".editorconfig"
 tool = ["editorconfig-checker", "prettier"]
 
 [[tool_file]]
 target = ".gspot/config/prettier.json"
 tool = "prettier"
-generated_header = false
-pointer = { path = "prettier.config.mjs", template = "pointer.mjs.eta", when = { configuration = "javascript" } }
+pointer = { path = "prettier.config.mjs", when = { configuration = "javascript" } }
 
 [[tool_file]]
-source = "prettierignore.eta"
-target = ".gspot/config/prettierignore"
-tool = "prettier"
-
-[[tool_file]]
-source = "prettierignore.eta"
 target = ".prettierignore"
 tool = "prettier"
-when = { configuration = "javascript" }
 
 [[check]]
 name = "prettier"
-title = "Format code and documents"
 example = "A selected JavaScript file containing `const value={enabled:true};` differs from the configured Prettier output. Run the formatter and retain its spacing and wrapping changes before rerunning."
 level = "recommended"
 stage = "commit"
-ignore_file = ".gspot/config/prettierignore"
-command = ["prettier", "--check", "--config", "{tool_file:prettier}", "--ignore-path", ".gspot/config/prettierignore", "--log-level", "warn", "{files}"]
+command = ["prettier", "--check", "--config", "{tool_file:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
 exit_codes = [1]
-fix = ["prettier", "--write", "--config", "{tool_file:prettier}", "--ignore-path", ".gspot/config/prettierignore", "--log-level", "warn", "{files}"]
+fix = ["prettier", "--write", "--config", "{tool_file:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
 output = { format = "regex", pattern = "^\\[warn\\] (?<file>[^\\s].*[^\\s.])$", message = "This file is not formatted the way Prettier formats it." }
 summary = "Checks that every file Prettier formats is already formatted that way."
 why = "Formatting by hand differs by editor; one formatter keeps diffs about the change and not the spacing."
@@ -75,7 +140,6 @@ help = "Run gspot check --fix to format every file, or prettier --write on one f
 
 [[check]]
 name = "editorconfig-checker"
-title = "Check EditorConfig formatting"
 example = "A file containing CRLF line endings when `.editorconfig` requires LF reports a line-ending finding. Save it with LF endings and rerun. Use the exact configured indentation and final-newline settings as well."
 level = "recommended"
 stage = "commit"
@@ -86,62 +150,3 @@ output = { format = "grouped", file_pattern = "^(?<file>.+):$", pattern = "^\\s+
 summary = "Checks line endings, final newlines and trailing whitespace in every file against .editorconfig."
 why = "These rules cover the files no formatter touches, so a stray tab or missing newline never lands in a diff. Indentation is the formatters' job and is not checked here."
 help = "Fix the line the checker names; most editors apply .editorconfig on save."
-
-[[setting]]
-name = "format.indent_style"
-type = "string"
-default = "space"
-summary = "What one indent level is made of: space or tab."
-validation = { enum = ["space", "tab"] }
-
-[[setting]]
-name = "format.indent_width"
-type = "number"
-default = 4
-summary = "Spaces per indent level."
-
-[[setting]]
-name = "format.print_width"
-type = "number"
-default = 120
-summary = "The line width formatters wrap at."
-
-[[setting]]
-name = "format.line_ending"
-type = "string"
-default = "lf"
-summary = "The line ending every file uses: lf or crlf."
-validation = { enum = ["lf", "crlf"] }
-
-[[setting]]
-name = "format.final_newline"
-type = "boolean"
-default = true
-summary = "Whether every file ends with a newline."
-
-[[setting]]
-name = "format.quotes"
-type = "string"
-default = "single"
-summary = "single or double, for the languages where a formatter chooses."
-validation = { enum = ["single", "double"] }
-
-[[setting]]
-name = "format.trailing_commas"
-type = "string"
-default = "all"
-summary = "Where trailing commas go: all, es5, or none."
-validation = { enum = ["all", "es5", "none"] }
-
-[[setting]]
-name = "format.semicolons"
-type = "boolean"
-default = true
-summary = "Whether JavaScript and TypeScript statements end with semicolons."
-
-[[setting]]
-name = "format.overrides"
-type = "list"
-items = "native"
-default = []
-summary = "Formatting options for selected paths, in order. A scope's overrides apply inside that scope only."

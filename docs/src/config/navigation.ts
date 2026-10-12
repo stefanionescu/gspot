@@ -1,18 +1,15 @@
-import type { Sidebar } from '../types/components.ts';
+import { REFERENCE_FOLDERS } from './reference.ts';
 
-/** Navigation follows the reader's setup, daily use, and configuration tasks. */
-export const SIDEBAR: Sidebar = [
+export const SIDEBAR = [
     {
         label: 'Get started',
         collapsed: false,
         items: [
             { label: 'What gspot does', slug: 'guides/overview' },
-            { label: 'Requirements', slug: 'guides/requirements' },
             { label: 'Install', slug: 'guides/install' },
-            { label: 'Quickstart: TypeScript', slug: 'guides/quickstart/typescript' },
+            { label: 'Quickstart: JavaScript and TypeScript', slug: 'guides/quickstart/javascript-typescript' },
             { label: 'Quickstart: Python', slug: 'guides/quickstart/python' },
             { label: 'Quickstart: Swift', slug: 'guides/quickstart/swift' },
-            { label: 'Add to an existing repository', slug: 'guides/existing-repository' },
             { label: 'Join a repository', slug: 'guides/join' },
         ],
     },
@@ -30,13 +27,12 @@ export const SIDEBAR: Sidebar = [
         label: 'Configure',
         collapsed: false,
         items: [
-            { label: 'gspot.toml', slug: 'guides/policy' },
-            { label: 'Exclude files', slug: 'guides/exclude' },
+            { label: 'gspot.toml', slug: 'guides/gspot-toml' },
+            { label: 'Exclude files and ignore findings', slug: 'guides/exclude' },
             { label: 'Monorepos', slug: 'guides/monorepos' },
-            { label: 'Runners', slug: 'guides/runners' },
-            { label: 'Generated files', slug: 'guides/generated-files' },
             { label: 'Command checks', slug: 'guides/command-checks' },
             { label: 'Reuse templates', slug: 'guides/templates' },
+            { label: 'Generated files', slug: 'guides/generated-files' },
             { label: 'Upgrade gspot', slug: 'guides/upgrade' },
             { label: 'Remove gspot', slug: 'guides/remove' },
         ],
@@ -55,17 +51,28 @@ export const SIDEBAR: Sidebar = [
         label: 'Reference',
         collapsed: true,
         items: [
-            { label: 'Commands', collapsed: true, items: [{ autogenerate: { directory: 'reference/commands' } }] },
+            {
+                label: 'Commands',
+                collapsed: true,
+                items: [{ autogenerate: { directory: `reference/${REFERENCE_FOLDERS.commands}` } }],
+            },
             {
                 label: 'Configurations',
                 collapsed: true,
-                items: [{ autogenerate: { directory: 'reference/configurations' } }],
+                items: [{ autogenerate: { directory: `reference/${REFERENCE_FOLDERS.configurations}` } }],
             },
-            { label: 'Checks', collapsed: true, items: [{ autogenerate: { directory: 'reference/checks' } }] },
-            { label: 'ESLint plugin', collapsed: true, items: [{ autogenerate: { directory: 'reference/plugin' } }] },
-            { label: 'Settings', slug: 'reference/settings' },
-            { label: 'gspot.toml schema', slug: 'reference/gspot-toml' },
-            { label: 'Exit codes and environment variables', slug: 'reference/runtime' },
+            {
+                label: 'Checks',
+                collapsed: true,
+                items: [{ autogenerate: { directory: `reference/${REFERENCE_FOLDERS.checks}` } }],
+            },
+            {
+                label: 'ESLint plugin',
+                collapsed: true,
+                items: [{ autogenerate: { directory: `reference/${REFERENCE_FOLDERS.eslintPlugin}` } }],
+            },
+            { label: 'gspot.toml reference', slug: 'reference/gspot-toml' },
+            { label: 'Exit codes and environment variables', slug: 'reference/exit-codes' },
         ],
     },
-];
+] as const;

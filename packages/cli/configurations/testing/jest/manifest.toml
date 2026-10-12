@@ -1,0 +1,54 @@
+[configuration]
+title = "Jest"
+requires = ["javascript", "coverage"]
+description = "Jest test rules and coverage floors for repository-owned test suites."
+
+[detect]
+dependencies = ["jest"]
+filenames = ["jest.config.*"]
+
+[files]
+paths = ["{setting:test_files}", "**/jest.config.*"]
+
+[[tool]]
+name = "jest"
+system = true
+
+[[tool]]
+name = "eslint-plugin-jest"
+rule_prefix = "jest"
+kind = "library"
+version = "29.16.6"
+npm = "eslint-plugin-jest"
+
+[[check]]
+name = "coverage"
+example = "Jest reports `coverage threshold for lines (90%) not met: 85%`. Add tests for the lines its report marks uncovered."
+level = "recommended"
+stage = "push"
+runs = "scope"
+cwd = "scope"
+tool = "jest"
+command = ["jest", "--ci", "--rootDir={root}/{scope}", "--coverage", "--coverageReporters=text-summary", "--coverageThreshold={\"global\":{\"lines\":{setting:coverage.lines},\"branches\":{setting:coverage.branches},\"functions\":{setting:coverage.functions},\"statements\":{setting:coverage.statements}}}"]
+run_in_copy = true
+exit_codes = [1]
+crash_pattern = "^No tests found|^  ● Test suite failed to run"
+summary = "Runs Jest in a disposable source copy and checks all four coverage floors."
+why = "A coverage floor keeps new code from arriving untested."
+help = "Correct failed tests and cover the reported branches, functions, lines, and statements."
+
+[check.files]
+extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]
+
+[check.output]
+format = "regex"
+pattern = "^Jest: \"global\" (?<message>coverage threshold for .+ not met: .+)$"
+
+[eslint]
+all_level_rules = ["jest/prefer-strict-equal"]
+
+[[tool_file]]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+fragment = true
+required_tools = ["eslint-plugin-jest"]

@@ -1,4 +1,3 @@
-products = ["DOM"]
 [configuration]
 title = "Static Site"
 requires = ["html"]
@@ -16,7 +15,9 @@ extensions = [".svg"]
 name = "linkinator"
 version = "8.1.0"
 npm = "linkinator"
-replaces = ["linkinator.config.json"]
+[[tool.replace]]
+file = "linkinator.config.json"
+shared = false
 
 [[tool]]
 name = "svgo"
@@ -34,10 +35,8 @@ per_scope = true
 tool = "html-validate"
 check = "site/html-validate"
 rule_keys = ["rules"]
-generated_header = false
 
 [[tool_file]]
-source = "purgecss.config.mjs.eta"
 target = ".gspot/config/purgecss.config.mjs"
 per_scope = true
 tool = "purgecss"
@@ -45,7 +44,6 @@ check = "site/purgecss"
 
 [[check]]
 name = "build"
-title = "Build the site"
 example = "If the configured site build imports a missing template, the build check reports the command failure. Correct the template import or restore the template, then rerun the same configured build."
 level = "recommended"
 stage = "push"
@@ -57,7 +55,6 @@ help = "Run the build command by hand and fix what it prints. Name the command u
 
 [[check]]
 name = "build-reproducible"
-title = "Check reproducible site builds"
 example = "A build that embeds the current timestamp produces different bytes across repeated builds. Remove the timestamp from built files or derive it from a stable declared input, then rerun the reproducibility check."
 level = "all"
 stage = "push"
@@ -70,7 +67,6 @@ help = "Take the timestamp, the random value, or the unordered list out of the b
 [[check]]
 name = "html-validate"
 tool = "html-validate"
-title = "Validate built HTML"
 example = "A template emitting `<img src=\"logo.png\">` without alternative text can produce an accessibility finding in the built HTML. Add meaningful `alt` text in the template, or `alt=\"\"` for a decorative image, and rebuild."
 level = "recommended"
 stage = "push"
@@ -83,7 +79,6 @@ help = "Fix the template or the content that writes the markup the rule names."
 [[check]]
 name = "purgecss"
 tool = "purgecss"
-title = "Find unused selectors"
 example = "A built stylesheet containing `.unused-banner` that no scanned HTML or script uses reports an unused selector. Delete the unused rule. For a class added at runtime, declare the actual class in the configured safelist with a reason."
 level = "recommended"
 stage = "push"
@@ -96,7 +91,6 @@ help = "Delete the rule, or list a name a script adds at run time under tools.pu
 [[check]]
 name = "linkinator"
 tool = "linkinator"
-title = "Check internal site links"
 example = "A built page linking to `/missing/` reports a missing destination when no such page exists. Point the source link at an existing page or add the intended page, then rebuild."
 level = "recommended"
 stage = "push"
@@ -109,7 +103,6 @@ help = "Fix the link, or the page it points at."
 [[check]]
 name = "linkinator-external"
 tool = "linkinator"
-title = "Check external site links"
 example = "A built link to an external URL that responds with HTTP 404 reports a link failure. Replace it with the verified destination or remove the obsolete link, then rerun with network access."
 level = "recommended"
 stage = "manual"
@@ -117,24 +110,22 @@ runs = "scope"
 needs = ["network"]
 summary = "Follows every link of the built site, the ones that leave it included."
 why = "Other sites move their pages, and a link nobody rechecks rots."
-help = "Update the link, or allow its URL under links.allowed_urls with a reason."
+help = "Update the link, or allow its URL under docs.allowed_urls with a reason."
 
 [[check]]
 name = "size"
-title = "Check site size limits"
 example = "A built page larger than its configured byte ceiling reports its measured size. Remove unused assets or reduce the page payload, rebuild, and rerun to verify it fits the ceiling."
 level = "recommended"
-when = { setting = "site.max_kilobytes" }
+when = { setting = "site.size_limit" }
 stage = "push"
 runs = "scope"
 needs = ["build"]
-summary = "Sums the compressed weight of the built paths each ceiling in site.max_kilobytes names."
+summary = "Sums the compressed weight of the built paths each ceiling in site.size_limit names."
 why = "Weight arrives a kilobyte at a time, and only a ceiling notices."
 help = "Remove what the page does not need, or raise the ceiling with a reason."
 
 [[check]]
 name = "sitemap"
-title = "Match the sitemap to the built pages"
 example = "A sitemap entry for `/removed/` with no corresponding built page reports a stale entry. Remove that entry from the sitemap source and rebuild. Add missing public pages to the sitemap instead of excluding them without a reason."
 level = "recommended"
 stage = "push"
@@ -142,11 +133,10 @@ runs = "scope"
 needs = ["build"]
 summary = "Compares the sitemap with the built pages: every listed route is a page, and every page is listed."
 why = "A page outside the sitemap is found late by search engines, and a listed page that does not exist costs trust with them."
-help = "Add the page to the sitemap, remove the dead entry, or leave a page out under site.sitemap_exclude."
+help = "Add the page to the sitemap, remove the dead entry, or leave a page out under site.allowed_unlisted_pages."
 
 [[check]]
-name = "dead-assets"
-title = "Find unused assets"
+name = "unused-assets"
 example = "An image in the build folder that no built page or stylesheet references reports an unused asset. Remove it from the source asset set and rebuild."
 level = "all"
 stage = "push"
@@ -159,7 +149,6 @@ help = "Delete the file."
 [[check]]
 name = "svgo"
 tool = "svgo"
-title = "Optimize SVG assets"
 example = "An SVG containing removable editor metadata differs from optimized output. Run the configured SVGO formatter on its source, inspect the result, and rebuild before checking again."
 level = "recommended"
 stage = "commit"
@@ -171,7 +160,6 @@ help = "Run svgo over the file."
 
 [[check]]
 name = "webmanifest"
-title = "Validate the web app manifest"
 example = "A web manifest referencing `icon-192.png` reports a missing icon when no such file sits beside the manifest. Add the icon to the build or correct the manifest path, then rebuild."
 level = "recommended"
 stage = "commit"
@@ -180,51 +168,3 @@ files = { extensions = [".webmanifest", ".html", ".htm", ".json"] }
 summary = "Checks that the web manifest parses, names the app, and lists icons that exist."
 why = "A manifest with a missing icon installs an app with a blank tile."
 help = "Correct the manifest, or add the icon."
-
-[[setting]]
-name = "tools.svgo.min_saving_percent"
-type = "number"
-direction = "ceiling"
-default = 10
-default_all = 0
-summary = "Report an SVG when optimization saves more than this percentage of its UTF-8 bytes."
-validation = { minimum = 0, maximum = 100 }
-
-[[setting]]
-name = "site.build_command"
-type = "list"
-items = "string"
-default = ["npm", "run", "build"]
-summary = "The build script run by the repository package manager, unless an authored command replaces it."
-
-[[setting]]
-name = "site.build_folder"
-type = "path"
-path_role = "destination"
-default = "dist"
-summary = "The folder the build writes."
-validation = { path = true }
-
-
-[[setting]]
-name = "site.max_kilobytes"
-type = "list"
-items = { paths = { type = "list", items = "string" }, kb = { type = "number", validation = { minimum = 0, integer = true } } }
-direction = "tightening"
-default = []
-summary = "Weight ceilings: the built paths, and the most kilobytes they may weigh compressed."
-
-[[setting]]
-name = "site.sitemap_exclude"
-type = "list"
-items = "string"
-direction = "loosening"
-default = ["404.html"]
-summary = "Built pages the sitemap leaves out on purpose."
-
-[[setting]]
-name = "tools.purgecss.safelist"
-type = "table"
-direction = "loosening"
-default = {}
-summary = "Class names a script adds at run time: the names and the reason."

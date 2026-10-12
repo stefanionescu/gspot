@@ -1,21 +1,60 @@
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { ValueOperand, ImplementedFunction } from '#plugin/types/syntax.ts';
+import type { ImplementedFunction } from './types/syntax.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     WRAPPERS,
     FUNCTIONS,
     TYPE_ONLY,
+    COMPARISON_OPERATORS,
     EXECUTABLE_DECLARATIONS,
     NON_EXECUTABLE_STATEMENTS,
-} from '#plugin/config/syntax.ts';
+} from './config/syntax.ts';
 
-// Read syntax children through the parser visitor keys. Metadata and parent links are excluded.
+// Read syntax children through the parser visitor keys. Exclude metadata and parent links.
 function childNodes(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): TSESTree.Node[] {
     return (visitorKeys[node.type] ?? []).flatMap((key) => {
         const child: unknown = node[key as keyof TSESTree.Node];
         if (Array.isArray(child)) return child.filter((item: unknown) => item !== null) as TSESTree.Node[];
         return child !== null && typeof child === 'object' ? [child as TSESTree.Node] : [];
     });
+}
+
+// Only values that depend on an expression count as calculations; literal and identity returns stay trivial.
+function constructsDynamicValue(node: TSESTree.Node): boolean {
+    switch (node.type) {
+        case AST_NODE_TYPES.ConditionalExpression:
+        case AST_NODE_TYPES.LogicalExpression: {
+            return true;
+        }
+        case AST_NODE_TYPES.BinaryExpression: {
+            return COMPARISON_OPERATORS.has(node.operator);
+        }
+        case AST_NODE_TYPES.TemplateLiteral: {
+            return node.expressions.length > 0;
+        }
+        case AST_NODE_TYPES.ObjectExpression: {
+            return node.properties.some(
+                (property) =>
+                    property.type === AST_NODE_TYPES.SpreadElement || property.value.type !== AST_NODE_TYPES.Literal,
+            );
+        }
+        case AST_NODE_TYPES.ArrayExpression: {
+            return node.elements.some((element) => element !== null && element.type !== AST_NODE_TYPES.Literal);
+        }
+        default: {
+            return false;
+        }
+    }
+}
+
+// Compositions transform an earlier operation's result rather than forwarding one call unchanged.
+function combinesOperations(node: TSESTree.CallExpression): boolean {
+    return (
+        (node.callee.type === AST_NODE_TYPES.MemberExpression &&
+            node.callee.object.type === AST_NODE_TYPES.CallExpression &&
+            node.callee.object.callee.type === AST_NODE_TYPES.MemberExpression) ||
+        node.arguments.some((argument) => unwrap(argument)?.type === AST_NODE_TYPES.CallExpression)
+    );
 }
 
 /**
@@ -60,6 +99,22 @@ export function hasConstructorState(node: ImplementedFunction): boolean {
  */
 export function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
     let value = node;
-    while (value !== null && WRAPPERS.has(value.type)) value = (value as ValueOperand).expression;
+    const canUnwrap = ASTUtils.isNodeOfTypes(WRAPPERS.map((type) => AST_NODE_TYPES[type]));
+    while (value !== null && canUnwrap(value)) value = value.expression;
     return value;
+}
+
+/**
+ * Detect constructed data, predicate selection, and composed operations. Exclude constants and plain forwarding.
+ * @param node the function body or returned expression
+ * @param visitorKeys the parser's child keys
+ * @returns whether the expression constructs data, selects a value, or combines operations
+ */
+export function ownsCalculation(
+    node: TSESTree.Node,
+    visitorKeys: Readonly<Record<string, readonly string[]>>,
+): boolean {
+    if (constructsDynamicValue(node)) return true;
+    if (node.type === AST_NODE_TYPES.CallExpression && combinesOperations(node)) return true;
+    return childNodes(node, visitorKeys).some((child) => ownsCalculation(child, visitorKeys));
 }

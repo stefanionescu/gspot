@@ -1,18 +1,11 @@
----
-title: TypeScript
----
-
 # TypeScript
 
 TypeScript checks static types. JavaScript and runtime rules cover modules and execution.
 
 ## Philosophy
 
-TypeScript makes contracts explicit at compile time; it is not a runtime validation layer.
-Types describe values after they cross a trusted boundary, and Zod, custom guards, or
-database constraints prove unknown input before it is treated as typed data. Plain values,
-small functions, discriminated unions, and clear module boundaries beat type gymnastics
-harder to read than the runtime behavior.
+TypeScript makes types explicit at compile time. Plain values, small functions, discriminated
+unions, and clear modules keep types easier to read than elaborate type transformations.
 
 ## Files and modules
 
@@ -22,46 +15,37 @@ and constants. Infer schema types from their authored schemas.
 
 ## Values and shapes
 
-User input, environment values, and provider responses are parsed explicitly, never coerced. `as const` fixes a value set when it improves precision without obscuring
-the runtime shape. Grouped data is an object literal, annotated rather than cast when its
-contract matters, and destructured where that names the fields in use. `T[]` serves simple
+`as const` fixes a value set when it improves precision without obscuring
+the runtime shape. Represent grouped data with an object literal. Annotate rather than cast when the type matters,
+and destructure where that names the fields in use. `T[]` serves
 arrays and `Array<T>` or `ReadonlyArray<T>` complex element types; `readonly` marks a
-contract, not decoration. With `noUncheckedIndexedAccess`, an indexed read is optional and is
-narrowed before use.
+contract, not decoration. With `noUncheckedIndexedAccess`, an indexed read can have no value;
+narrow it before use.
 
-Untrusted values are `unknown` plus narrowing. Casts give way to runtime narrowing, typed
+Use `unknown` plus narrowing for untrusted values. Casts give way to runtime narrowing, typed
 helpers, or fixing the source type.
-Known variants are discriminated unions.
+Represent known variants with discriminated unions.
 
-Absence is precise: `property?: T` and
-`property: T | undefined` are different contracts under `exactOptionalPropertyTypes`. A
-nullable alias gets a name only when the union is an owned domain contract. Nullability is
-added at the usage boundary where absence belongs to that contract. External empty strings,
-missing fields, and nulls are normalized at the runtime boundary.
+Describe absence precisely: `property?: T` and
+`property: T | undefined` define different types under `exactOptionalPropertyTypes`. A
+nullable alias gets a name only when the domain defines the union. Add nullability
+where the public interface allows absence. Normalize external empty strings,
+missing fields, and nulls where they enter the program.
 
 ## Functions and classes
 
-Annotate callback parameters when inference is unclear, rely on inference for local details,
+Annotate callback parameters when inference does not give a clear type, rely on inference for local details,
 and keep generics minimal. A discriminated union or options object replaces overloads when
 clearer. Make a parameter optional only for an optional input.
-
-## Runtime boundaries
-
-Untrusted input is validated with Zod or a custom runtime check at the boundary that receives
-it. That covers HTTP bodies, query strings, route params, headers, and environment variables.
-It also covers unvalidated database rows and RPC results, provider responses, file input,
-generated data sources, webhooks, and scheduled-job payloads. Typed values pass inward; raw `unknown` or
-request-shaped values never spread through domain code.
 
 ## Errors and async work
 
 `Promise.all` serves bounded independent fan-out. Order, rate limits, or failure isolation
 call for sequential `await`. Large fan-out, provider calls, and batch work use platform
-concurrency utilities. A detached promise is intentional, logged,
-and supervised, and no rejection is swallowed.
+concurrency utilities. Detach a promise only deliberately. Log and supervise it; never swallow a rejection.
 
-This fragment assumes the message and provider types, persistence functions, and lock operations
-are already declared by their owners.
+This fragment uses the message and provider types, persistence functions, and lock operations
+that their modules declare.
 
 ```ts
 // Bad: forEach does not wait for async callbacks.

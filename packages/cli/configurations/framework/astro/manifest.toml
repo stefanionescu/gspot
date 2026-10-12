@@ -1,17 +1,4 @@
-eslint_presets = { recommended = { package = "eslint-plugin-astro", source = "configs.flat/recommended" }, accessibility = { package = "eslint-plugin-astro", source = "configs.flat/jsx-a11y-recommended" } }
-eslint_all_rules = [
-    "astro/no-unused-css-selector",
-    "astro/prefer-class-list-directive",
-    "astro/prefer-object-class-list",
-    "astro/prefer-split-class-list",
-]
 
-naming.path_containers = [
-    { open = "[", close = "]", category = "path_parameters" },
-    { open = "(", close = ")", category = "directories" },
-    { open = "@", close = "", category = "directories" },
-    { open = "_", close = "", category = "directories" },
-]
 
 [configuration]
 title = "Astro"
@@ -27,16 +14,15 @@ extensions = [".astro"]
 extensions = [".astro"]
 filenames = ["astro.config.mjs", "astro.config.ts"]
 
-[set]
-"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
-
 [[tool]]
 name = "eslint-plugin-astro"
 rule_prefix = "astro"
-eslint = { extensions = [".astro"] }
 kind = "library"
 version = "1.7.0"
 npm = "eslint-plugin-astro"
+
+[tool.eslint]
+extensions = [".astro"]
 
 [[tool]]
 name = "eslint-plugin-jsx-a11y"
@@ -52,11 +38,19 @@ name = "prettier-plugin-astro"
 kind = "library"
 version = "1.0.1"
 npm = "prettier-plugin-astro"
-prettier = { entry = "dist/index.js", extensions = [".astro"], overrides = [{ files = "*.astro", options = { parser = "astro" } }] }
+
+[tool.prettier]
+entry = "dist/index.js"
+extensions = [".astro"]
+
+[[tool.prettier.overrides]]
+files = "*.astro"
+
+[tool.prettier.overrides.options]
+parser = "astro"
 
 [[check]]
 name = "astro-check"
-title = "Check Astro components"
 example = "A component whose frontmatter holds `const count: number = 'three';` reports `ts(2322)`. Give the value the declared type, such as `const count: number = 3;`."
 level = "recommended"
 stage = "push"
@@ -64,16 +58,38 @@ runs = "scope"
 cwd = "scope"
 command = ["astro-check", "astro", "check", "--minimumSeverity", "warning", "--minimumFailingSeverity", "warning"]
 exit_codes = [1]
-files = { extensions = [".astro"] }
-output = { format = "regex", pattern = "^(?<file>[^:\\s][^:]*\\.astro):(?<line>\\d+):(?<column>\\d+) - (?:error|warning) (?<rule>[a-z-]+\\(\\d+\\)): (?<message>.*)$" }
 summary = "Runs astro check over the scope: the type errors and warnings of every Astro component."
 why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Astro checker reads it."
 help = "Read the first error astro check prints and fix that component; later errors are often the same mistake."
 
-[required_eslint_rules]
-astro = ["astro/valid-compile", "astro/no-set-html-directive", "astro/jsx-a11y/alt-text"]
+[check.files]
+extensions = [".astro"]
 
-[[eslint_rules_off]]
+[check.output]
+format = "regex"
+pattern = "^(?<file>[^:\\s][^:]*\\.astro):(?<line>\\d+):(?<column>\\d+) - (?:error|warning) (?<rule>[a-z-]+\\(\\d+\\)): (?<message>.*)$"
+
+[eslint]
+all_level_rules = ["astro/no-unused-css-selector", "astro/prefer-class-list-directive", "astro/prefer-object-class-list", "astro/prefer-split-class-list"]
+
+[eslint.presets.recommended]
+package = "eslint-plugin-astro"
+source = "configs.flat/recommended"
+
+[eslint.presets.accessibility]
+package = "eslint-plugin-astro"
+source = "configs.flat/jsx-a11y-recommended"
+
+[[eslint.rules_off]]
 rules = ["gspot/no-trivial-files"]
 files = ["**/*.astro", "**/*.astro/*.ts", "**/*.astro/*.js"]
 reason = "A component is markup, never a file that only forwards: a script that only imports a module is how Astro bundles client code, and Astro reads the props of a component from the Props type in its own frontmatter."
+
+[defaults]
+"tools.eslint.import_extension" = "extensionless"
+
+[[tool_file]]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+fragment = true
+required_tools = ["eslint-plugin-astro", "eslint-plugin-jsx-a11y"]

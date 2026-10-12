@@ -1,0 +1,228 @@
+import { join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { fileMode } from '#cli/system/safe-folder/reads.ts';
+import { isWindows } from '#tests/setup/operating-systems.ts';
+import { OWNERSHIP_REFUSAL } from '#tests/config/generated-files.ts';
+import { identify, applyPlans, openOwnershipLog } from '#cli/ownership/log.ts';
+import { chmod, lstat, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
+import { planBlock, planDeletion, planManagedKeys, planReplacement, planRestoration } from '#cli/ownership/plans.ts';
+
+{
+    test('a link that points outside the repository is refused, even when it is unchanged', async () => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, { 'project/.keep': '', outside: 'authored' });
+        const project = join(directory.path, 'project');
+        await symlink('../outside', join(project, 'tool'));
+        {
+            using log = openOwnershipLog(project);
+
+            const attributes = await lstat(join(project, 'tool'));
+            const mode = attributes.mode & 0o7777;
+            expect(() => {
+                applyPlans(log, [
+                    planReplacement(log, {
+                        path: 'tool',
+                        next: {
+                            bytes: Buffer.from('../outside'),
+                            mode,
+                            isLink: true,
+                        },
+                        kind: 'tool_file',
+                    }),
+                ]);
+            }).toThrow('"../outside" is not a safe repository-relative path. Choose a path inside the repository.');
+            expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
+            expect(await readlink(join(project, 'tool'))).toBe('../outside');
+            expect(await readFile(join(directory.path, 'outside'), 'utf8')).toBe('authored');
+        }
+    });
+}
+{
+    test('a planned key edit writes nothing and refuses a later edit', async () => {
+        await using directory = await testdir();
+        const original = 'extends = "./authored.json"\nstrict = true\n';
+        await createFileTree(directory.path, { 'config.toml': original });
+        {
+            using log = openOwnershipLog(directory.path);
+
+            const plan = planManagedKeys(log, 'config.toml', [{ path: ['extends'], value: './managed.json' }], true);
+            expect(await readFile(join(directory.path, 'config.toml'), 'utf8')).toBe(original);
+            expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
+            const edited = 'extends = "./authored.json"\nstrict = false\n';
+            await writeFile(join(directory.path, 'config.toml'), edited);
+            expect(() => {
+                applyPlans(log, [plan]);
+            }).toThrow('Destination changed during the operation: config.toml');
+            expect(await readFile(join(directory.path, 'config.toml'), 'utf8')).toBe(edited);
+            expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
+        }
+    });
+
+    test.each(['replacement', 'block'] as const)(
+        '%s plans refuse a file edited after planning and do not record it',
+        async (kind) => {
+            await using directory = await testdir();
+            await createFileTree(directory.path, { 'config.txt': 'authored\n' });
+            await chmod(join(directory.path, 'config.txt'), 0o640);
+            {
+                using log = openOwnershipLog(directory.path);
+
+                const plan =
+                    kind === 'replacement'
+                        ? planReplacement(log, {
+                              path: 'config.txt',
+                              next: { bytes: Buffer.from('replacement\n'), mode: 0o444 },
+                              kind: 'tool_file',
+                              canReplace: true,
+                          })
+                        : planBlock(log, 'config.txt', 'managed content', 'hash');
+                expect(log.files.read('config.txt')).toStrictEqual({
+                    bytes: Buffer.from('authored\n'),
+                    mode: fileMode({ mode: 0o640 }),
+                });
+                await writeFile(join(directory.path, 'config.txt'), 'edited after plan\n');
+                expect(() => {
+                    applyPlans(log, [plan]);
+                }).toThrow('Destination changed during the operation: config.txt');
+                expect(log.state.files).toStrictEqual([]);
+                expect(log.state.pending?.map((entry) => entry.path)).toStrictEqual(['config.txt']);
+                expect(log.files.read('config.txt')).toStrictEqual({
+                    bytes: Buffer.from('edited after plan\n'),
+                    mode: fileMode({ mode: 0o640 }),
+                });
+            }
+        },
+    );
+
+    test('a batch writes the files before an edited one and refuses the edited one', async () => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, { 'first.txt': 'original first', 'last.txt': 'original last' });
+        {
+            using log = openOwnershipLog(directory.path);
+
+            const plans = ['first.txt', 'last.txt'].map((path) =>
+                planReplacement(log, {
+                    path,
+                    next: { bytes: Buffer.from('replacement'), mode: 0o644 },
+                    kind: 'tool_file',
+                    canReplace: true,
+                }),
+            );
+            await writeFile(join(directory.path, 'last.txt'), 'authored after plan');
+            expect(() => {
+                applyPlans(log, plans);
+            }).toThrow('Destination changed during the operation: last.txt');
+            expect(await readFile(join(directory.path, 'first.txt'), 'utf8')).toBe('replacement');
+            expect(await readFile(join(directory.path, 'last.txt'), 'utf8')).toBe('authored after plan');
+            expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
+        }
+    });
+
+    test('a file gspot does not own refuses the whole batch and leaves every file as it was', async () => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, { 'owned.txt': 'original', 'authored.txt': 'keep authored' });
+        {
+            using log = openOwnershipLog(directory.path);
+
+            applyPlans(log, [
+                planReplacement(log, {
+                    path: 'owned.txt',
+                    next: { bytes: Buffer.from('installed'), mode: 0o644 },
+                    kind: 'tool_file',
+                    canReplace: true,
+                }),
+            ]);
+            const plans = ['owned.txt', 'authored.txt'].map((path) =>
+                planReplacement(log, {
+                    path,
+                    next: { bytes: Buffer.from('replacement'), mode: 0o644 },
+                    kind: 'tool_file',
+                }),
+            );
+            expect(() => {
+                applyPlans(log, plans);
+            }).toThrow(`These files were not overwritten by gspot: authored.txt${OWNERSHIP_REFUSAL}`);
+            expect(await readFile(join(directory.path, 'owned.txt'), 'utf8')).toBe('installed');
+            expect(await readFile(join(directory.path, 'authored.txt'), 'utf8')).toBe('keep authored');
+            expect(() => {
+                applyPlans(log, [planRestoration(log, '.gspot/unowned')]);
+            }).toThrow(`These files were not overwritten by gspot: .gspot/unowned${OWNERSHIP_REFUSAL}`);
+        }
+    });
+
+    test('reviewed matching bytes refresh the record without rewriting the file', async () => {
+        await using directory = await testdir();
+        const path = 'config.txt';
+        const next = { bytes: Buffer.from('installed\n'), mode: fileMode({ mode: 0o644 }) };
+        {
+            using log = openOwnershipLog(directory.path);
+            applyPlans(log, [planReplacement(log, { path, next, kind: 'tool_file' })]);
+            await writeFile(join(directory.path, path), 'reviewed\n');
+            const reviewed = log.files.read(path)!;
+            const request = { path, next: reviewed, kind: 'tool_file' as const };
+            expect(() => {
+                applyPlans(log, [planReplacement(log, request)]);
+            }).toThrow(`These files were not overwritten by gspot: ${request.path}${OWNERSHIP_REFUSAL}`);
+            expect(log.entryFor(path)?.written).toStrictEqual(identify(next));
+            const plan = planReplacement(log, { ...request, expected: reviewed, canReplace: true });
+            await writeFile(join(directory.path, path), 'intervening edit\n');
+            applyPlans(log, [plan]);
+            expect(log.files.read(path)?.bytes.toString('utf8')).toBe('intervening edit\n');
+            expect(log.entryFor(path)?.written).toStrictEqual(identify(reviewed));
+            await writeFile(join(directory.path, path), reviewed.bytes);
+            applyPlans(log, [plan]);
+            expect(log.files.read(path)).toStrictEqual(reviewed);
+            expect(log.entryFor(path)?.written).toStrictEqual(identify(reviewed));
+            expect(planReplacement(log, request).entry).toBeUndefined();
+        }
+        using reopened = openOwnershipLog(directory.path);
+        expect(reopened.entryFor(path)?.written).toStrictEqual(identify(reopened.files.read(path)!));
+    });
+
+    for (const { name, change } of [
+        { name: 'bytes', change: (path: string) => writeFile(path, '{"semi":true}\n') },
+        { name: 'mode', change: (path: string) => chmod(path, 0o600) },
+        { name: 'removed', change: (path: string) => unlink(path) },
+    ]) {
+        // Windows does not preserve the POSIX permission-bit edit in the mode row.
+        test.skipIf(name === 'mode' && isWindows)(
+            `stale replace ${name} refuses replacement and retirement, then a fresh read succeeds`,
+            async () => {
+                await using directory = await testdir();
+                const path = join(directory.path, 'authored.json');
+                await writeFile(path, '{"semi":false}\n', { mode: 0o640 });
+                {
+                    using log = openOwnershipLog(directory.path);
+
+                    const read = log.files.read('authored.json')!;
+                    await change(path);
+                    const edited = log.files.read('authored.json');
+                    expect(() => planDeletion(log, 'authored.json', read)).toThrow(
+                        'authored.json changed after gspot read it. Run the command again.',
+                    );
+                    expect(() => {
+                        applyPlans(log, [
+                            planReplacement(log, {
+                                path: 'authored.json',
+                                next: { bytes: Buffer.from('{}\n'), mode: 0o444 },
+                                kind: 'tool_file',
+                                canReplace: true,
+                                expected: read,
+                            }),
+                        ]);
+                    }).toThrow('Destination changed during the operation: authored.json');
+                    expect(log.files.read('authored.json')).toStrictEqual(edited);
+                    await writeFile(path, read.bytes);
+                    await chmod(path, read.mode);
+                }
+                {
+                    using log = openOwnershipLog(directory.path);
+                    const refreshed = log.files.read('authored.json')!;
+                    applyPlans(log, [planDeletion(log, 'authored.json', refreshed)]);
+                    expect(log.files.read('authored.json')).toBeUndefined();
+                }
+            },
+        );
+    }
+}
