@@ -4,12 +4,12 @@ import { isRecord } from '#cli/objects.ts';
 import { GspotError } from '#cli/errors.ts';
 import { contentDigest } from '#cli/text.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
 import { templateSchema } from '#cli/settings/schema/templates.ts';
 import { emitSettings, parseTomlText } from '#cli/settings/file.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { unknownConfigurations } from '#cli/configurations/unknown-names.ts';
 import type { Template, ExportedTemplate } from '#cli/types/settings/file.ts';
+import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 
 import {
     RAW_HOST,
@@ -31,7 +31,9 @@ function githubRawUrl(source: string): string {
 
 async function downloadText(url: string): Promise<string> {
     const token =
-        new URL(url).origin === new URL(RAW_HOST).origin ? environmentVariables()[GITHUB_TOKEN_VARIABLE] : undefined;
+        new URL(url).origin === new URL(RAW_HOST).origin
+            ? environmentVariable(environmentVariables(), GITHUB_TOKEN_VARIABLE)
+            : undefined;
     const headers = token === undefined ? {} : { Authorization: `Bearer ${token}` };
     const response = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS), headers });
     if (!response.ok) throw new GspotError('template', [`The template at ${url} answered ${String(response.status)}.`]);

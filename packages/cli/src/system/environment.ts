@@ -33,18 +33,34 @@ export function miseHome(): string {
 }
 
 /**
- * The environment for spawning tools, with Windows names normalized to uppercase.
+ * The environment for spawning tools, with Windows identities merged without changing their spelling.
  * @param overrides tool variables that replace or remove inherited values.
  * @returns the variables as strings.
  */
 export function environmentVariables(overrides?: Record<string, string | undefined>): Record<string, string> {
-    const variables = new Map<string, string>();
-    for (const [key, value] of Object.entries({ ...process.env, ...overrides })) {
+    const variables = new Map<string, [string, string]>();
+    const entries = Object.entries(process.env);
+    if (overrides !== undefined) entries.push(...Object.entries(overrides));
+    for (const [key, value] of entries) {
         const name = process.platform === 'win32' ? key.toUpperCase() : key;
         if (value === undefined) variables.delete(name);
-        else variables.set(name, value);
+        else variables.set(name, [key, value]);
     }
-    return Object.fromEntries(variables);
+    return Object.fromEntries(variables.values());
+}
+
+/**
+ * Read one environment value using the system's variable-name identity.
+ * @param variables the environment to read.
+ * @param name the variable name.
+ * @returns its value when present.
+ */
+export function environmentVariable(variables: Record<string, string | undefined>, name: string): string | undefined {
+    const key =
+        process.platform === 'win32'
+            ? Object.keys(variables).find((candidate) => candidate.toUpperCase() === name.toUpperCase())
+            : name;
+    return key === undefined ? undefined : variables[key];
 }
 
 /**

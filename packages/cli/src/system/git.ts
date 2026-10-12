@@ -4,7 +4,7 @@ import { GspotError } from '#cli/errors.ts';
 import { TRAILING_NEWLINE } from '#cli/config/text.ts';
 import { run, runBlocking } from '#cli/system/processes.ts';
 import { realPath } from '#cli/system/safe-folder/reads.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
+import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 import type { StdoutRead, SpawnResult, SpawnOptions, ByteSpawnResult } from '#cli/types/system/processes.ts';
 
 import type {
@@ -53,7 +53,7 @@ function sourceGitEnvironment(
 ): GitSource {
     const env = Object.fromEntries(
         GIT_PATH_VARIABLES.flatMap((name) => {
-            const value = inherited[name];
+            const value = environmentVariable(inherited, name);
             return value === undefined ? [] : [[name, resolve(origin, value)]];
         }),
     );
@@ -63,7 +63,11 @@ function sourceGitEnvironment(
     const bare = source.stdout.slice(0, line);
     if (bare !== 'true' && bare !== 'false') throw new GspotError('git', 'Git did not report a valid repository kind.');
     const directory = gitLine(source.stdout.slice(line + 1));
-    if (bare === 'false' && inherited['GIT_DIR'] !== undefined && inherited[GIT_WORK_TREE_VARIABLE] === undefined) {
+    if (
+        bare === 'false' &&
+        environmentVariable(inherited, GIT_DIR_VARIABLE) !== undefined &&
+        environmentVariable(inherited, GIT_WORK_TREE_VARIABLE) === undefined
+    ) {
         const worktree = runBlocking(['git', ...GIT_TOP_LEVEL_ARGV], {
             cwd: origin,
             env: { ...env, ...overrides },
@@ -104,9 +108,10 @@ export function gitEnvironment(
 ): GitEnvironment {
     const inherited = environmentVariables();
     if (
-        !Object.keys(inherited).some(
-            (name) => name.startsWith(GIT_VARIABLE_PREFIX) && !GIT_NONLOCAL_ENVIRONMENT_NAME.test(name),
-        )
+        !Object.keys(inherited).some((key) => {
+            const name = process.platform === 'win32' ? key.toUpperCase() : key;
+            return name.startsWith(GIT_VARIABLE_PREFIX) && !GIT_NONLOCAL_ENVIRONMENT_NAME.test(name);
+        })
     )
         return { env: explicit };
     const origin = process.cwd();
@@ -119,15 +124,18 @@ export function gitEnvironment(
         sourceMetadata = { metadata };
     }
     const { metadata } = sourceMetadata;
-    if (!metadata.some((name) => inherited[name] !== undefined)) return { env: explicit };
+    if (!metadata.some((name) => environmentVariable(inherited, name) !== undefined)) return { env: explicit };
     const isolated = Object.fromEntries(metadata.map((name) => [name, undefined]));
     if (argv[0] === GIT_EXECUTABLE && argv[1] === GIT_CLONE_COMMAND) return { env: { ...isolated, ...explicit } };
-    const overrides = Object.fromEntries(Object.entries(explicit).filter(([name]) => !metadata.includes(name)));
+    const overrides = Object.fromEntries(
+        Object.entries(explicit).filter(
+            ([name]) => !metadata.includes(process.platform === 'win32' ? name.toUpperCase() : name),
+        ),
+    );
     const source = (sourceMetadata.source ??= sourceGitEnvironment(inherited, origin, {}));
     if ('failure' in source) return source;
     return targetGitEnvironment(root, source, { isolated, overrides, explicit });
 }
-
 /**
  * Distinguishes an absent work tree from broken Git metadata after a failed command.
  * @param inspection the work-tree probe result.
@@ -136,7 +144,6 @@ export function gitEnvironment(
 export function isOutsideGit(inspection: SpawnResult): boolean {
     return inspection.code === NOT_REPOSITORY_CODE && inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE);
 }
-
 /**
  * Run Git without a time limit and wait for its result.
  * @param root the working directory.
@@ -153,7 +160,6 @@ export function runGitBlocking(
     if ('failure' in selected) return selected.failure;
     return runBlocking(['git', ...argv], { ...options, env: selected.env, cwd: root });
 }
-
 /**
  * Runs Git with cancellation.
  * @param root the working directory.
@@ -172,7 +178,6 @@ export async function runGit(
     if ('failure' in selected) return selected.failure;
     return run(['git', ...argv], { ...options, env: selected.env, cwd: root }, output);
 }
-
 /**
  * Runs Git with cancellation and keeps output bytes for paths and objects.
  * @param root the working directory.
@@ -191,7 +196,6 @@ export async function runGitForBytes(
     });
     return { ...result, stdout: Buffer.concat(chunks) };
 }
-
 /**
  * Reads a Git configuration value, distinguishing an unset key from a failed command.
  * @param root the working directory.
@@ -206,7 +210,6 @@ export function readGitSetting(root: string, key: string): string | undefined {
         `Git configuration ${key} failed in ${root} (exit ${String(result.code)}): ${result.stderr.trim()}`,
     );
 }
-
 /**
  * The folder Git runs hooks from: core.hooksPath when set, otherwise the hooks folder of the Git directory.
  * @param root the repository root.
@@ -217,7 +220,6 @@ export function hooksDirectory(root: string): string {
     if (result.code !== 0) throw new Error(`Cannot read the Git hooks folder: ${result.stderr.trim()}`);
     return resolve(root, gitLine(result.stdout));
 }
-
 /**
  * What a Git command prints, or the selection error it failed with.
  * @param root the repository root.
@@ -233,7 +235,6 @@ export async function gitText(root: string, argv: readonly string[], options: Gi
         ]);
     return result.stdout;
 }
-
 /**
  * A Git command's output as its non-empty lines.
  * @param root the repository root.
@@ -245,7 +246,6 @@ export async function gitLines(root: string, argv: readonly string[], options: G
     const text = await gitText(root, argv, options);
     return text.split('\n').filter((line) => line !== '');
 }
-
 /**
  * The paths a null-separated Git listing names.
  * @param root the repository root.
@@ -257,7 +257,6 @@ export async function gitPaths(root: string, argv: readonly string[], options: G
     const text = await gitText(root, argv, options);
     return text.split('\0').filter((path) => path !== '');
 }
-
 /**
  * Whether a shallow clone cuts repository history.
  * @param root the repository root.
@@ -268,7 +267,6 @@ export async function isShallow(root: string, options: GitOptions = {}): Promise
     const answer = await gitText(root, [...GIT_SHALLOW_ARGV], options);
     return answer.trim() === 'true';
 }
-
 /**
  * The path from Git's top level to the project root, with a trailing slash.
  * @param root the repository directory.
@@ -281,7 +279,6 @@ export function gitPrefix(root: string, hasGit: boolean): string {
     if (result.code !== 0) throw new GspotError('git', `Cannot find the hook directory: ${result.stderr.trim()}`);
     return gitLine(result.stdout);
 }
-
 /**
  * Remove the final newline from a Git result while preserving the value's other bytes.
  * @param text Git's printed value.

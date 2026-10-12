@@ -5,8 +5,8 @@ import { execa, execaSync } from 'execa';
 import { MS_PER_SECOND } from '#cli/config/units.ts';
 import type { ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
-import { environmentVariables } from '#cli/system/environment.ts';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
+import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 
 import type {
     StdoutRead,
@@ -34,8 +34,9 @@ import {
 function commandOptions(options: SpawnOptions, executable: string, readStdout?: Exclude<StdoutRead, 'utf8'>) {
     const env = environmentVariables(options.env);
     // A selected tool's launcher must find its sibling runtime and commands before unrelated tools on the executable search path.
-    if (isAbsolute(executable) && env['PATH'] !== undefined)
-        env['PATH'] = [dirname(executable), env['PATH']].filter((value) => value !== '').join(delimiter);
+    const path = Object.keys(env).find((name) => (process.platform === 'win32' ? name.toUpperCase() : name) === 'PATH');
+    if (isAbsolute(executable) && path !== undefined)
+        env[path] = [dirname(executable), env[path]].filter((value) => value !== '').join(delimiter);
     return {
         cwd: options.cwd,
         env,
@@ -57,7 +58,9 @@ function missingExecutable(executable: string, cwd: string): boolean {
     const path = resolve(cwd, executable);
     // Windows names an executable without its extension; the spawn shim tries each PATHEXT entry in turn.
     const extensions =
-        process.platform === 'win32' ? (environmentVariables()['PATHEXT'] ?? PATHEXT_DEFAULT).split(';') : [];
+        process.platform === 'win32'
+            ? (environmentVariable(environmentVariables(), 'PATHEXT') ?? PATHEXT_DEFAULT).split(';')
+            : [];
     return [path, ...extensions.map((extension) => path + extension.toLowerCase())].every(
         (candidate) => statSync(candidate, { throwIfNoEntry: false }) === undefined,
     );

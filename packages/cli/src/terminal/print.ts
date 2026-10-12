@@ -1,6 +1,6 @@
 import pc from 'picocolors';
 import { RESULT_JSON_INDENT } from '#cli/config/terminal.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
+import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 import type { CommandResult, OutputOptions, CommandFailureJson } from '#cli/types/terminal.ts';
 
 let options: OutputOptions = { json: false, color: false };
@@ -17,7 +17,7 @@ export const colors = pc.createColors(false);
  * @returns whether to paint
  */
 export function isColorAllowed(): boolean {
-    const noColor = environmentVariables()['NO_COLOR'];
+    const noColor = environmentVariable(environmentVariables(), 'NO_COLOR');
     if (noColor !== undefined && noColor !== '') return false;
     return process.stderr.isTTY && process.stdout.isTTY;
 }

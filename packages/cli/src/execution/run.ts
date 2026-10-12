@@ -11,12 +11,12 @@ import { createReadCache } from '#cli/system/file-reads.ts';
 import { fileDeclarations } from '#cli/repository/select.ts';
 import type { IgnoreEntry } from '#cli/types/settings/file.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { DOCKER_TOOL } from '#cli/config/checks/infrastructure/docker.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { emptyResult, reproduceLine, buildRunReport } from '#cli/execution/report.ts';
+import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 import { RAN_STATUSES, JOBS_VARIABLE, FAILED_STATUSES } from '#cli/config/execution/run.ts';
 
 import type {
@@ -120,7 +120,7 @@ function settleResult(pass: RunState, check: PlannedCheck, result: CheckResult):
 
 // Runs every active check under the job limit and reports each result as it settles.
 async function runChecks(pass: RunState, executables: RunnableCheck[]): Promise<CheckResult[]> {
-    const wanted = Number(environmentVariables()[JOBS_VARIABLE] ?? '');
+    const wanted = Number(environmentVariable(environmentVariables(), JOBS_VARIABLE) ?? '');
     const jobs = Number.isSafeInteger(wanted) && wanted > 0 ? wanted : availableParallelism();
     const limiter = pLimit(jobs);
     // runOne catches check errors; these rejections cover ignore matching and onResult callbacks before resource disposal.

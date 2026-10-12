@@ -7,13 +7,13 @@ import type { ScopeView } from '#cli/types/settings/values.ts';
 import { checkCompanions } from '#cli/planning/needed-tools.ts';
 import { runTool, toolTimeoutSeconds } from '#cli/tools/run.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/find.ts';
 import { executionFailure } from '#cli/execution/command/output.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { ToolRunOptions, ToolAvailability } from '#cli/types/tools/run.ts';
+import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 
 import type {
     CheckTool,
@@ -97,7 +97,13 @@ export function companionEnvironment(
         .filter((path) => path !== undefined)
         .map((path) => dirname(path));
     if (directories.length === 0) return env;
-    return { ...env, PATH: [...directories, env['PATH'] ?? environmentVariables()['PATH'] ?? ''].join(delimiter) };
+    return {
+        ...env,
+        PATH: [
+            ...directories,
+            environmentVariable(env, 'PATH') ?? environmentVariable(environmentVariables(), 'PATH') ?? '',
+        ].join(delimiter),
+    };
 }
 
 /**
