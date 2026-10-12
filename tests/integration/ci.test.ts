@@ -1,19 +1,19 @@
 import { test, expect } from 'bun:test';
-import { join, delimiter } from 'node:path';
 import { gitOutput } from '#tests/setup/git.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
 import type { CiDocument } from '#tests/types/ci.ts';
+import { join, dirname, delimiter } from 'node:path';
 import { runCommand } from '#tests/setup/processes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildInitArguments } from '#tests/setup/init.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import type { SpawnOutcome } from '#tests/types/processes.ts';
 import { CLI_MAIN, runGspot } from '#tests/setup/run-gspot.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
 import { sandboxPath, installToolProjects } from '#tests/setup/install.ts';
 import { CI_SETTINGS, GITLAB_PIPELINE, GITHUB_PIPELINE } from '#tests/config/ci.ts';
+import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 
 function commitCiSource(root: string, text: string): string {
     gitOutput(root, ['add', '-A']);
@@ -77,7 +77,10 @@ if (args[0] === 'exec' && args.some((arg) => arg.startsWith('npm:@gspothq/cli@')
     const child = Bun.spawnSync([process.execPath, ${JSON.stringify(CLI_MAIN)}, ...args.slice(separator + 2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
     process.exit(child.exitCode);
 }
-const child = Bun.spawnSync([${JSON.stringify(nativeMise)}, ...args], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
+const env = { ...process.env };
+const path = Object.keys(env).find((name) => (process.platform === 'win32' ? name.toUpperCase() : name) === 'PATH');
+env[path] = ${JSON.stringify(dirname(nativeMise) + delimiter)} + env[path];
+const child = Bun.spawnSync([${JSON.stringify(nativeMise)}, ...args], { env, stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
 process.exit(child.exitCode);
 `,
     );
@@ -99,7 +102,7 @@ async function runCiJob(
     return await runCommand(['bash', '-e', '-c', script.join('\n')], {
         cwd: root,
         env: {
-            PATH: `${directory}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
+            PATH: `${directory}${delimiter}${environmentVariable(environmentVariables(), 'PATH') ?? ''}`,
             CI_COMMIT_BEFORE_SHA: comparison,
             CI_MERGE_REQUEST_DIFF_BASE_SHA: '',
             GSPOT_CI_BASE: comparison,

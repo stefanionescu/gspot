@@ -18,13 +18,13 @@ import { installNpmTools } from '#cli/tools/npm/project.ts';
 import type { OwnershipLog } from '#cli/types/ownership.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import type { SandboxSettings } from '#tests/types/sandbox.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
 import { installPythonTools } from '#cli/tools/python/project.ts';
 import { toolProjectLockfile } from '#cli/parsers/tool-project.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 import { testModules, installedModules } from '#tests/setup/modules.ts';
 import type { LockedInputs, ToolProjectFiles } from '#tests/types/npm.ts';
+import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/e2e.ts';
 import { open, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
@@ -65,9 +65,11 @@ export async function installRuntimes(root: string): Promise<void> {
 
 /** Resolve the installed test package executables before system tools. */
 export function toolsPath(): string {
-    return [join(testModules, '.bin'), join(installedModules, '.bin'), environmentVariables()['PATH'] ?? ''].join(
-        delimiter,
-    );
+    return [
+        join(testModules, '.bin'),
+        join(installedModules, '.bin'),
+        environmentVariable(environmentVariables(), 'PATH') ?? '',
+    ].join(delimiter);
 }
 
 /** Resolve the integration preload command before installed tools. */
@@ -274,7 +276,7 @@ export async function installCompiler(root: string, folder = join(root, 'node_mo
     const kind = isWindows ? 'junction' : 'dir';
     await symlink(await realpath(join(installedModules, 'typescript')), join(folder, 'typescript'), kind);
     await symlink(await realpath(join(installedModules, '.bin')), join(folder, '.bin'), kind);
-    return [join(folder, '.bin'), environmentVariables()['PATH'] ?? ''].join(delimiter);
+    return [join(folder, '.bin'), environmentVariable(environmentVariables(), 'PATH') ?? ''].join(delimiter);
 }
 
 /** Captures the generated manifest, lockfile, and ownership bytes before an installation journey. */

@@ -13,12 +13,12 @@ import { openOwnershipLog } from '#cli/ownership/log.ts';
 import type { InstallJson } from '#cli/types/install.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
 import { preparePythonLockfile } from '#cli/tools/python/project.ts';
 import { chmod, readFile, realpath, writeFile } from 'node:fs/promises';
 import { virtualEnvironmentExecutable } from '#cli/system/executables.ts';
 import { createPythonIndex, createPythonSandbox } from '#tests/setup/python.ts';
 import { writeLockedInputs, expectRefusedInstall } from '#tests/setup/install.ts';
+import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 import { PYTHON_PROJECTS, PYTHON_INSTALL_STEPS } from '#tests/config/python/tool-project.ts';
 
 test.each([...PYTHON_PROJECTS])(
@@ -40,7 +40,7 @@ test.each([...PYTHON_PROJECTS])(
         expect(lockfile.toString('utf8')).not.toContain('synthetic-uv-password');
         const brokenUv = await fakeTool(artifacts.path, 'bin/uv', 'process.exitCode = 87;');
         const command = await spawnGspot(repository.path, ['install', '--json'], {
-            PATH: [brokenUv, environmentVariables()['PATH'] ?? ''].join(delimiter),
+            PATH: [brokenUv, environmentVariable(environmentVariables(), 'PATH') ?? ''].join(delimiter),
             MISE_TRUSTED_CONFIG_PATHS: repository.path,
         });
         expect(command.code, command.stdout + command.stderr).toBe(0);

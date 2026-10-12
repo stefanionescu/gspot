@@ -8,8 +8,8 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { hookFiles, startRunner } from '#cli/generation/hooks.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
 import { HOOK_CASES, HOOK_PROGRAM, START_COMMANDS } from '#tests/config/hooks.ts';
+import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 
 test('a repository at the Git top level gets hooks that change no folder', async () => {
     await using sandbox = await testdir();
@@ -50,7 +50,9 @@ test.each(START_COMMANDS)(
                 ['git', '-c', `core.hooksPath=${sandbox.path}`, 'hook', 'run', name, '--', ...argv],
                 {
                     cwd: sandbox.path,
-                    env: { PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}` },
+                    env: {
+                        PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariable(environmentVariables(), 'PATH') ?? ''}`,
+                    },
                 },
             );
             expect(result.code, result.stdout + result.stderr).toBe(0);

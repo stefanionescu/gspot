@@ -9,8 +9,8 @@ import { settingsText } from '#tests/setup/settings.ts';
 import type { Pipeline } from '#cli/types/generation/ci.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
 import type { GithubWorkflow, GitlabPipeline } from '#tests/types/ci.ts';
+import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 
 import {
     SETUP_CASES,
@@ -116,7 +116,7 @@ test.each(SETUP_CASES)(
         const result = await runCommand(['bash', '-e', '-c', script.join('\n')], {
             cwd: sandbox.path,
             env: {
-                PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
+                PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariable(environmentVariables(), 'PATH') ?? ''}`,
                 GSPOT_COMMAND_LOG: commands,
                 GSPOT_SETUP_ARGUMENTS: argumentsPath,
                 GSPOT_SETUP_EXIT: String(setupExit),
