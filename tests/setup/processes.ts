@@ -6,7 +6,7 @@ import type { CapturedChild, CapturedProcess } from '#tests/types/processes.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { EXIT_POLL_MS, READY_POLL_MS, TEST_TIMEOUT_MS } from '#tests/config/processes.ts';
 
-// Bun runs these suites serially; the preload opens and disposes one timeout for each test.
+// Bun runs each file's tests serially; the preload opens and disposes one timeout for each test.
 let timeoutAt: number | undefined;
 
 /**
