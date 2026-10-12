@@ -18,19 +18,18 @@ async function expectReplacedFiles(root: string, output: string): Promise<void> 
     expect((JSON.parse(output) as InitJson).plan?.delete.map(({ path }) => path)).toStrictEqual([
         'prettier.config.mjs',
         '.editorconfig',
-        'CLAUDE.md',
     ]);
     expect({
         settings: await pathExists(join(root, 'gspot.toml')),
         formatter: await pathExists(join(root, 'prettier.config.mjs')),
         instructions: await pathExists(join(root, 'CLAUDE.md')),
-    }).toStrictEqual({ settings: true, formatter: false, instructions: false });
+    }).toStrictEqual({ settings: true, formatter: false, instructions: true });
+    expect(await readFile(join(root, 'CLAUDE.md'), 'utf8')).toBe(STARTING_FILES['CLAUDE.md']);
     const agents = await readFile(join(root, 'AGENTS.md'), 'utf8');
     expect({
         teamNotes: agents.startsWith('# Team notes\n'),
         ruleLink: agents.includes('WORKING.md'),
-        otherInstructions: agents.endsWith('## Other instructions\n\n# Claude notes\n\nRun the tests.\n'),
-    }).toStrictEqual({ teamNotes: true, ruleLink: true, otherInstructions: true });
+    }).toStrictEqual({ teamNotes: true, ruleLink: true });
 }
 
 // Windows does not deliver POSIX SIGTERM to the child process group.
