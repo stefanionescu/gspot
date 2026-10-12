@@ -45,11 +45,16 @@ import math
 TOTAL: int = "one"
 `;
 
+const RUFF_RULE_ARGUMENTS = ['rule', '--all', '--output-format', 'json'] as const;
+const RUFF_FORMAT_ARGUMENTS = ['format', '--check', '--no-cache'] as const;
+
 export {
     VERSION_SOURCE,
     FUNCTION_SOURCE,
     RUFF_RULE_SOURCE,
     RUFF_FORMAT_CASES,
     RUFF_VERSION_CASES,
+    RUFF_RULE_ARGUMENTS,
+    RUFF_FORMAT_ARGUMENTS,
     DUPLICATE_IMPORT_SOURCE,
 };

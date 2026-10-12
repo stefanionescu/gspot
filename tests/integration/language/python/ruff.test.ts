@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
+import { test, expect } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
-import { test, expect, beforeAll } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
@@ -14,6 +14,7 @@ import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { toolsPath, installToolProjects } from '#tests/setup/install.ts';
+import { virtualEnvironmentExecutable } from '#cli/system/executables.ts';
 
 import {
     VERSION_SOURCE,
@@ -21,22 +22,10 @@ import {
     RUFF_RULE_SOURCE,
     RUFF_FORMAT_CASES,
     RUFF_VERSION_CASES,
+    RUFF_RULE_ARGUMENTS,
+    RUFF_FORMAT_ARGUMENTS,
     DUPLICATE_IMPORT_SOURCE,
 } from '#tests/config/ruff.ts';
-
-let previewCodes: string[];
-
-beforeAll(() => {
-    const result = runCommandBlocking(['ruff', 'rule', '--all', '--output-format', 'json'], {
-        cwd: process.cwd(),
-        env: { PATH: toolsPath() },
-    });
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const rules = z
-        .array(z.object({ code: z.string().nullable(), preview: z.boolean() }))
-        .parse(JSON.parse(result.stdout));
-    previewCodes = rules.flatMap(({ code, preview }) => (code !== null && preview ? [code] : []));
-});
 
 test('Ruff selects the pytest lint rules and scope limits only in the scope that selects pytest', async () => {
     await using sandbox = await testdir();
@@ -95,14 +84,20 @@ test.each([...LEVELS])('Ruff at level %s reports correctness, and print calls on
         'sample.py': RUFF_RULE_SOURCE,
     });
     await installToolProjects(sandbox.path);
-    const session = await openSession(sandbox.path);
-    using log = openOwnershipLog(sandbox.path);
-    writeGeneratedFiles(session, emitAll(session), log);
+    const resultRules = runCommandBlocking(
+        [virtualEnvironmentExecutable(join(sandbox.path, '.gspot/.venv'), 'ruff'), ...RUFF_RULE_ARGUMENTS],
+        { cwd: sandbox.path },
+    );
+    expect(resultRules.code, resultRules.stdout + resultRules.stderr).toBe(0);
+    const rules = z
+        .array(z.object({ code: z.string().nullable(), preview: z.boolean() }))
+        .parse(JSON.parse(resultRules.stdout));
+    const previewCodes = new Set(rules.flatMap(({ code, preview }) => (code !== null && preview ? [code] : [])));
     const command = ['check', 'sample.py', '--only', 'python/ruff', '--json'];
     const config = z
         .object({ lint: z.object({ select: z.array(z.string()) }) })
         .parse(parse(await Bun.file(join(sandbox.path, '.gspot/config/ruff.toml')).text()));
-    expect(config.lint.select.filter((code) => previewCodes.includes(code))).toStrictEqual([]);
+    expect(config.lint.select.filter((code) => previewCodes.has(code))).toStrictEqual([]);
     const options = { cwd: sandbox.path, env: { PATH: toolsPath() } };
     const result = await spawnGspot(sandbox.path, command, options.env);
     expect(result.code, result.stdout + result.stderr).toBe(1);
@@ -136,9 +131,6 @@ test('python/function-size is the only function size limit, and Ruff reports no 
         'sample.py': FUNCTION_SOURCE,
     });
     await installToolProjects(sandbox.path);
-    const session = await openSession(sandbox.path);
-    using log = openOwnershipLog(sandbox.path);
-    writeGeneratedFiles(session, emitAll(session), log);
     const checked = await spawnGspot(sandbox.path, ['check', 'sample.py', '--only', 'python/ruff', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect((JSON.parse(checked.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
@@ -167,9 +159,6 @@ line_ending = "lf"
         'app/sample.py': 'VALUE = "example"\n',
     });
     await installToolProjects(sandbox.path);
-    const session = await openSession(sandbox.path);
-    using log = openOwnershipLog(sandbox.path);
-    writeGeneratedFiles(session, emitAll(session), log);
     for (const { file, formatted } of RUFF_FORMAT_CASES) {
         const options = { cwd: sandbox.path, env: { PATH: toolsPath() } };
         const fixed = await spawnGspot(
@@ -179,7 +168,10 @@ line_ending = "lf"
         );
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, file)).text()).toBe(formatted);
-        const editor = runCommandBlocking(['ruff', 'format', '--check', '--no-cache', file], options);
+        const editor = runCommandBlocking(
+            [virtualEnvironmentExecutable(join(sandbox.path, '.gspot/.venv'), 'ruff'), ...RUFF_FORMAT_ARGUMENTS, file],
+            options,
+        );
         expect(editor.code, editor.stdout + editor.stderr).toBe(0);
     }
 });

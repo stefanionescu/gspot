@@ -1,4 +1,4 @@
-// Bun preloads this module once before registering integration and end-to-end tests.
+// Bun preloads this module in each isolated integration and end-to-end test file.
 // Installs the pinned tools and packed commands for the integration and e2e suites.
 import { testdir } from 'testdirs';
 import { afterAll } from 'bun:test';
@@ -52,9 +52,7 @@ afterAll(async () => {
     await resources.disposeAsync();
 });
 try {
-    resources.use(
-        useEnvironment({ GSPOT_TEST_RUN_FOLDER: work.path, BUN_INSTALL_CACHE_DIR: join(work.path, 'bun-cache') }),
-    );
+    resources.use(useEnvironment({ GSPOT_TEST_RUN_FOLDER: work.path }));
     await packPackages(
         work.path,
         [
