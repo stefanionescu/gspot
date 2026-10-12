@@ -1,8 +1,10 @@
 import type { SqlFile } from '#cli/types/parsers/sql.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import type { ScriptSyntax } from '#cli/types/parsers/bash.ts';
 import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import type { FENCE_PARSERS } from '#cli/config/checks/language/markdown.ts';
+import type { TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 
 /** How an analysis reports one finding in one file. */
 export type ScriptReport = (line: number, rule: string, text: string) => void;
@@ -68,3 +70,11 @@ export type FenceSyntaxError = { line: number; message: string };
 export type PythonDocstringStyle = 'google' | 'numpy' | 'sphinx';
 
 export type ParsedHtml = { templates: string[] };
+
+/** Referenced compiler projects whose outputs stay inside the caller-owned scratch copy. */
+export type TypeScriptReferenceCopy = {
+    root: string;
+    scratchRoot: string;
+    reads: ReadCache;
+    projects: Map<string, TypeScriptConfiguration>;
+};

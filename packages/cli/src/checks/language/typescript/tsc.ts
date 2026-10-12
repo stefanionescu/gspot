@@ -17,7 +17,6 @@ import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { type TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
 import { readTsconfig, projectSources, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
-import { runTsc, appendBuildMetadata, restoreCommandPaths } from '#cli/checks/language/typescript/project.ts';
 
 import {
     JSCONFIG_FILE,
@@ -25,6 +24,28 @@ import {
     JSCONFIG_TSBUILDINFO,
     JAVASCRIPT_TSC_COMMAND,
 } from '#cli/config/parsers/tsconfig.ts';
+import {
+    runTsc,
+    appendBuildMetadata,
+    restoreCommandPaths,
+    writeReferenceProjects,
+} from '#cli/checks/language/typescript/project.ts';
+
+/**
+ * Collect each compiler project's inherited configurations and resolved source dependencies.
+ * @param session the captured repository and run reads.
+ * @param projects the project scopes and parsed configurations.
+ * @returns repository-relative compiler inputs for the scratch copy.
+ */
+function compilerInputs(session: Session, projects: Iterable<readonly [string, TypeScriptConfiguration]>): string[] {
+    return [...projects]
+        .flatMap(([scope, config]) => [
+            ...config.configurationFiles,
+            ...projectSources(session.root, scope, session.reads, config).map((source) => source.fileName),
+        ])
+        .map((path) => toPosix(relative(session.root, path)))
+        .filter(isInside);
+}
 
 /**
  * Select the source files and type declaration folders for one scope.
@@ -72,14 +93,31 @@ export async function tsc(session: Session, planned: PlannedCheck): Promise<Chec
             .map((file) => file.path),
         session.reads,
     );
-    const references = (project?.config.projectReferences ?? []).length > 0;
+    const references = (project?.config.projectReferences ?? []).length > 0 ? project : undefined;
+    const prerequisites =
+        references === undefined
+            ? []
+            : compilerInputs(
+                  session,
+                  [...references.projects].map(([path, config]) => [
+                      toPosix(relative(session.root, dirname(path))),
+                      config,
+                  ]),
+              );
     using source =
-        references && project !== undefined
-            ? await copyIntoScratch(checkCopyInputs(checkInput(session, planned)))
-            : scratchFolder();
-    const scratchSession = references
-        ? { ...session, root: source.path, reads: createReadCache(source.path) }
-        : session;
+        references === undefined
+            ? scratchFolder()
+            : await copyIntoScratch(checkCopyInputs(checkInput(session, planned), prerequisites));
+    if (references !== undefined) {
+        writeReferenceProjects({
+            root: session.root,
+            scratchRoot: source.path,
+            reads: session.reads,
+            projects: references.projects,
+        });
+    }
+    const scratchSession =
+        references === undefined ? session : { ...session, root: source.path, reads: createReadCache(source.path) };
     const result = await runTsc(scratchSession, planned, source.path);
     return restoreCommandPaths(result, source.path, session.root);
 }
@@ -101,12 +139,7 @@ export async function javascriptTsc(session: Session, planned: PlannedCheck): Pr
         ...scopeCompilerProject(session, scope, generated),
     };
     if (project.fileNames.length === 0) return { ...emptyResult(planned), fileCount: 0 };
-    const prerequisites = [
-        ...project.configurationFiles,
-        ...projectSources(session.root, scope, session.reads, project).map((source) => source.fileName),
-    ]
-        .map((path) => toPosix(relative(session.root, path)))
-        .filter(isInside);
+    const prerequisites = compilerInputs(session, [[scope, project]]);
     using folder = await copyIntoScratch(checkCopyInputs(checkInput(session, planned), [target, ...prerequisites]));
     const scratch = folder.path;
     const generatedPath = join(scratch, target);

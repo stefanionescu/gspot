@@ -181,6 +181,14 @@ configurations = ["typescript"]
 `,
         }),
     });
+    await writeFile(
+        join(sandbox.path, 'tsconfig.json'),
+        JSON.stringify({ files: [], references: [{ path: join(sandbox.path, 'app') }] }),
+    );
+    await writeFile(
+        join(sandbox.path, 'app/tsconfig.json'),
+        JSON.stringify({ extends: join(sandbox.path, 'config/base.json'), include: ['src/**/*.ts'] }),
+    );
     await installCompiler(sandbox.path);
     commitAll(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply']);

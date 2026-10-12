@@ -39,7 +39,7 @@ jobs:
                   persist-credentials: false
             - name: Prepare docs and CLI
               uses: $/.github/actions/setup
-            - run: bun install --frozen-lockfile --filter @gspothq/docs
+            - run: bun install --frozen-lockfile --filter @gspothq/workspace --filter @gspothq/docs
             - name: Build the site
               run: mise run build:docs
             - name: Upload the site

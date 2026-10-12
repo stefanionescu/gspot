@@ -9,6 +9,7 @@ import { readTsconfig } from '#cli/parsers/tsconfig.ts';
 import { installedModules } from '#tests/setup/modules.ts';
 import { createReadCache } from '#cli/system/file-reads.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
+import { installToolProjects } from '#tests/setup/install.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { prepareInstalledSandbox } from '#tests/setup/sandbox.ts';
 import workspacePackage from '#root-package' with { type: 'json' };
@@ -39,15 +40,17 @@ const resources = new AsyncDisposableStack();
 let installedSandbox: Sandbox;
 
 beforeAll(async () => {
-    const dependencies = {
-        next: nextManifest.version,
-        ...NEXT_PACKAGE.dependencies,
-        react: reactManifest.version,
-        'react-dom': reactDomManifest.version,
-        typescript: workspacePackage.devDependencies.typescript,
-        '@types/react': testsPackage.devDependencies['@types/react'],
-        '@types/node': workspacePackage.devDependencies['@types/node'],
-    };
+    const dependencies = Object.fromEntries(
+        Object.entries({
+            next: nextManifest.version,
+            ...NEXT_PACKAGE.dependencies,
+            react: reactManifest.version,
+            'react-dom': reactDomManifest.version,
+            typescript: workspacePackage.devDependencies.typescript,
+            '@types/react': testsPackage.devDependencies['@types/react'],
+            '@types/node': workspacePackage.devDependencies['@types/node'],
+        }).toSorted(([left], [right]) => left.localeCompare(right)),
+    );
     const scenario: InstalledSandboxPlan = {
         ...NEXTJS_SANDBOX,
         dependencies,
@@ -110,6 +113,7 @@ test('nextjs/build builds the app at level all and is not run at level recommend
         await Bun.write(page, NEXT_PAGE);
         const all = await spawnGspot(root, ['set', 'level', 'all'], environment);
         expect(all.code, all.stdout + all.stderr).toBe(0);
+        await installToolProjects(root);
         const passed = await checked(installedSandbox, ['nextjs/build'], 0);
         expect(passed.checks).toMatchObject([{ check: 'nextjs/build', status: 'passed', findings: [] }]);
         expect(await Bun.file(join(root, 'tsconfig.json')).text()).toBe(compiler);
@@ -117,7 +121,7 @@ test('nextjs/build builds the app at level all and is not run at level recommend
     } finally {
         await Bun.write(page, NEXT_PAGE);
         await Bun.write(join(root, 'gspot.toml'), settings);
-        await spawnGspot(root, ['apply'], environment);
+        await installToolProjects(root);
     }
 });
 test('the i18n rules reject literal markup', async () => {

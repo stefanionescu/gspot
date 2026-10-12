@@ -125,7 +125,7 @@ export const NEXT_MESSAGES = {
 } as const;
 
 export const NEXTJS_SANDBOX = {
-    configurations: ['nextjs'],
+    configurations: ['nextjs', 'translations'],
     tsconfig: {
         compilerOptions: {
             ...STRICT_COMPILER_OPTIONS,

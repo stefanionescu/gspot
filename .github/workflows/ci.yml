@@ -40,5 +40,5 @@ jobs:
               with:
                   persist-credentials: false
             - uses: $/.github/actions/setup
-            - run: bun install --frozen-lockfile --filter @gspothq/docs
+            - run: bun install --frozen-lockfile --filter @gspothq/workspace --filter @gspothq/docs
             - run: mise run build:docs

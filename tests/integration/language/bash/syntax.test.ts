@@ -12,7 +12,7 @@ import { isMacos, isWindows } from '#tests/setup/operating-systems.ts';
 import { SYNTAX_FILES, SYNTAX_CASES, BATS_MINIMUM_FILES } from '#tests/config/bash/tools.ts';
 
 // This check uses the Bash version supplied by macOS.
-test.skipIf(!isMacos)('with macOS Bash 3.2, bash-syntax runs and bats-syntax reports Bash 4.4 as missing', async () => {
+test.skipIf(!isMacos)('macOS Bash 3.2 is refused until Bash 4.4 or newer is available', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...BATS_MINIMUM_FILES,
@@ -26,10 +26,11 @@ test.skipIf(!isMacos)('with macOS Bash 3.2, bash-syntax runs and bats-syntax rep
     const applied = await spawnGspot(sandbox.path, ['apply'], stock);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const syntax = await spawnGspot(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json'], stock);
-    expect(syntax.code, syntax.stdout + syntax.stderr).toBe(0);
+    expect(syntax.code, syntax.stdout + syntax.stderr).toBe(2);
     expect((JSON.parse(syntax.stdout) as RunReport).checks).toMatchObject([
-        { check: 'bash/bash-syntax', status: 'passed', fileCount: 1, findings: [] },
+        { check: 'bash/bash-syntax', status: 'missing', fileCount: 1, findings: [] },
     ]);
+    expect((JSON.parse(syntax.stdout) as RunReport).checks[0]?.note).toContain('bash 3.2.57 is below 4.4.0');
     const blocked = await spawnGspot(sandbox.path, ['check', '--only', 'bash/bats-syntax', '--json'], stock);
     expect(blocked.code, blocked.stdout + blocked.stderr).toBe(2);
     const requirement = (JSON.parse(blocked.stdout) as RunReport).checks[0];
@@ -41,8 +42,13 @@ test.skipIf(!isMacos)('with macOS Bash 3.2, bash-syntax runs and bats-syntax rep
     expect((JSON.parse(doctor.stdout) as DoctorReport).tools.find((tool) => tool.name === 'bash')).toMatchObject({
         state: 'outdated',
         found: '3.2.57',
-        floor: '4.4',
+        floor: '4.4.0',
     });
+    const ready = await spawnGspot(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json'], available);
+    expect(ready.code, ready.stdout + ready.stderr).toBe(0);
+    expect((JSON.parse(ready.stdout) as RunReport).checks).toMatchObject([
+        { check: 'bash/bash-syntax', status: 'passed', fileCount: 1, findings: [] },
+    ]);
     const parsed = await spawnGspot(sandbox.path, ['check', '--only', 'bash/bats-syntax', '--json'], available);
     expect(parsed.code, parsed.stdout + parsed.stderr).toBe(1);
     expect((JSON.parse(parsed.stdout) as RunReport).checks[0]?.findings).toMatchObject([

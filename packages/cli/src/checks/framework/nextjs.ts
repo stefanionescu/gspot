@@ -264,7 +264,7 @@ export async function nextjsTsc(session: Session, planned: PlannedCheck): Promis
 export async function nextjsBuild(input: CheckInput): Promise<Finding[]> {
     using scratchFolder = await copyIntoScratch(checkCopyInputs(input));
     const scratch = scratchFolder.path;
-    const scratchInput = { ...input, root: scratch };
+    const scratchInput = { ...input, root: scratch, installedRoot: scratch };
     const cwd = join(scratchInput.root, scratchInput.selection.scope.path);
     const manifest = readJson(
         joinScope(input.selection.scope.path, 'package.json'),

@@ -1,17 +1,20 @@
-import type ts from 'typescript';
-import { toPosix } from '#cli/system/paths.ts';
+import ts from 'typescript';
+import assert from 'node:assert/strict';
 import { memo } from '#cli/system/file-reads.ts';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join, dirname, relative } from 'node:path';
 import { emptyResult } from '#cli/execution/report.ts';
 import { coveredInputs } from '#cli/planning/checks.ts';
+import { toPosix, isInside } from '#cli/system/paths.ts';
+import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
-import { readTsconfigProject } from '#cli/parsers/tsconfig.ts';
+import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { type CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import type { TsconfigInput } from '#cli/types/generation/typescript.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { TSBUILDINFO_FLAG } from '#cli/config/checks/language/typescript.ts';
+import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
+import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
+import type { TypeScriptReferenceCopy } from '#cli/types/checks/language.ts';
+import type { TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 import { DOT_GSPOT, TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { buildTsconfig, requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 
@@ -23,8 +26,72 @@ import {
     TSCONFIG_TSBUILDINFO,
     TYPESCRIPT_TSCONFIG_CHECK,
 } from '#cli/config/parsers/tsconfig.ts';
+import {
+    TSBUILDINFO_FLAG,
+    TSC_REFERENCE_BUNDLE,
+    TSC_CONFIG_INPUT_PATHS,
+    TSC_PATHS_BASE_REQUIRED,
+    TSC_COMPILER_INPUT_PATHS,
+    TSC_CONFIGURATION_REQUIRED,
+    TSC_REFERENCE_OUTPUT_FOLDER,
+} from '#cli/config/checks/language/typescript.ts';
 
 const CHECKED_PROJECTS = { create: () => new Map<string, string>() };
+
+/**
+ * Move repository-owned absolute compiler paths into their captured tree.
+ * @param value one configured path or an array of paths.
+ * @param input the source and scratch roots.
+ * @returns the updated paths.
+ */
+function copiedCompilerPath(value: unknown, input: TypeScriptReferenceCopy): unknown {
+    if (Array.isArray(value)) return value.map((path: unknown) => copiedCompilerPath(path, input));
+    if (typeof value !== 'string' || !isAbsolute(value) || !isInside(relative(input.root, value))) return value;
+    return join(input.scratchRoot, relative(input.root, value));
+}
+
+/**
+ * Preserve compiler inputs while keeping reference resolution and outputs in the owned tree.
+ * @param input the captured configuration and its source and scratch roots.
+ * @returns the configuration for the native compiler in the scratch copy.
+ */
+function referenceTsconfig(
+    input: TypeScriptReferenceCopy & { path: string; config: TypeScriptConfiguration },
+): Record<string, unknown> {
+    const { root, scratchRoot, path, config } = input;
+    const output = join(scratchRoot, DOT_GSPOT, TSC_REFERENCE_OUTPUT_FOLDER, relative(root, path));
+    const paths =
+        config.options.paths === undefined
+            ? undefined
+            : Object.fromEntries(
+                  Object.entries(config.options.paths).map(([name, aliases]) => {
+                      const base = config.options.baseUrl ?? config.options['pathsBasePath'];
+                      assert.ok(typeof base === 'string', TSC_PATHS_BASE_REQUIRED);
+                      return [name, aliases.map((alias) => copiedCompilerPath(resolve(base, alias), input))];
+                  }),
+              );
+    return {
+        ...config.raw,
+        ...Object.fromEntries(
+            TSC_CONFIG_INPUT_PATHS.map((name) => [name, copiedCompilerPath(config.raw[name], input)]),
+        ),
+        references: config.projectReferences?.map((reference) => ({
+            ...reference,
+            path: join(scratchRoot, relative(root, ts.resolveProjectReferencePath(reference))),
+        })),
+        compilerOptions: {
+            ...config.raw.compilerOptions,
+            ...Object.fromEntries(
+                TSC_COMPILER_INPUT_PATHS.map((name) => [name, copiedCompilerPath(config.options[name], input)]),
+            ),
+            ...(paths === undefined ? {} : { paths }),
+            outDir: output,
+            ...(config.options.declarationDir === undefined ? {} : { declarationDir: output }),
+            ...(config.options.outFile === undefined ? {} : { outFile: join(output, TSC_REFERENCE_BUNDLE) }),
+            tsBuildInfoFile: join(output, TSCONFIG_TSBUILDINFO),
+        },
+    };
+}
 
 /**
  * Keep incremental metadata inside the caller's scratch folder.
@@ -142,4 +209,28 @@ export function writeTsconfig(input: TsconfigInput): string {
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, JSON.stringify(buildTsconfig(input)));
     return target;
+}
+
+/**
+ * Keep declarations, bundles, and incremental metadata of reference builds in their scratch copy.
+ * @param input the captured reference graph and its owned copy.
+ * @returns after replacing only the copied compiler configurations.
+ */
+export function writeReferenceProjects(input: TypeScriptReferenceCopy): void {
+    const { root, scratchRoot, projects, reads } = input;
+    const configurations = new Map([
+        ...projects,
+        ...[...projects.values()].flatMap((config) =>
+            config.extendedConfigurationFiles.map((path) => {
+                const parsed = readTsconfig(root, path, reads);
+                assert.ok(parsed !== undefined, TSC_CONFIGURATION_REQUIRED);
+                return [path, parsed] as const;
+            }),
+        ),
+    ]);
+    for (const [path, config] of configurations) {
+        const target = join(scratchRoot, relative(root, path));
+        chmodSync(target, PRIVATE_FILE);
+        writeFileSync(target, JSON.stringify(referenceTsconfig({ ...input, path, config })));
+    }
 }

@@ -6,17 +6,23 @@ import { runGspot } from '#tests/setup/run-gspot.ts';
 import { sandboxPath } from '#tests/setup/install.ts';
 import { testModules } from '#tests/setup/modules.ts';
 import { runCommand } from '#tests/setup/processes.ts';
+import { settingsText } from '#tests/setup/settings.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
 import { COMMITLINT_FILES, COMMITLINT_PACKAGE, COMMITLINT_EXECUTABLE } from '#tests/config/commitlint.ts';
 
 test.each([...COMMITLINT_FILES])('init replaces your commitlint file $file', async ({ file, source }) => {
     await using sandbox = await testdir();
+    await using template = await testdir({ 'gspot.toml': settingsText([], { level: 'all' }) });
     await createFileTree(sandbox.path, { [file]: source, 'message.txt': 'special: authored contract\n' });
     commitAll(sandbox.path);
     const execution = { cwd: sandbox.path, env: { PATH: sandboxPath() } };
     const before = await runCommand([join(testModules, COMMITLINT_EXECUTABLE), '--edit', 'message.txt'], execution);
     expect(before.code, before.stdout + before.stderr).toBe(0);
-    const initialized = await runGspot(sandbox.path, buildInitArguments(['none']), execution.env);
+    const initialized = await runGspot(
+        sandbox.path,
+        [...buildInitArguments(['none']), '--from', join(template.path, 'gspot.toml')],
+        execution.env,
+    );
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(await Bun.file(join(sandbox.path, file)).exists()).toBe(false);
     const command = [
@@ -38,6 +44,7 @@ test.each(['', 'app'])(
     'commitlint reads the generated config through the package.json field gspot writes, in %s',
     async (scope) => {
         await using sandbox = await testdir();
+        await using template = await testdir({ 'gspot.toml': settingsText([], { level: 'all' }) });
         const { packageFile, messageFile, cwd } = {
             packageFile: posix.join(scope, 'package.json'),
             messageFile: posix.join(scope, 'message.txt'),
@@ -52,7 +59,11 @@ test.each(['', 'app'])(
         const command = [join(testModules, COMMITLINT_EXECUTABLE), '--edit', join(sandbox.path, messageFile)];
         const before = await runCommand(command, execution);
         expect(before.code, before.stdout + before.stderr).toBe(0);
-        const initialized = await runGspot(sandbox.path, buildInitArguments(['none']), execution.env);
+        const initialized = await runGspot(
+            sandbox.path,
+            [...buildInitArguments(['none']), '--from', join(template.path, 'gspot.toml')],
+            execution.env,
+        );
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const target =
             scope === '' ? './.gspot/config/commitlint.config.cjs' : '../.gspot/config/commitlint.config.cjs';

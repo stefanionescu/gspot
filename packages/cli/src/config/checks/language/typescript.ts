@@ -1,3 +1,9 @@
 export const TSBUILDINFO_FLAG = '--tsBuildInfoFile';
 export const TYPESCRIPT_TSC_CHECK = 'typescript/tsc';
 export const TSC_TOOL = 'tsc';
+export const TSC_REFERENCE_OUTPUT_FOLDER = 'typescript';
+export const TSC_REFERENCE_BUNDLE = 'output.js';
+export const TSC_CONFIG_INPUT_PATHS = ['extends', 'files', 'include', 'exclude'] as const;
+export const TSC_COMPILER_INPUT_PATHS = ['baseUrl', 'rootDir', 'rootDirs', 'typeRoots'] as const;
+export const TSC_PATHS_BASE_REQUIRED = 'The compiler did not supply the TypeScript paths base.';
+export const TSC_CONFIGURATION_REQUIRED = 'A captured TypeScript configuration is missing.';

@@ -76,15 +76,15 @@ test("Vale's heading-case rule accepts a reviewed product name and reports title
     await createFileTree(directory.path, {
         'gspot.toml': settingsText(['prose'], {
             level: 'all',
-            tables: 'allowed_words = { value = ["Microsoft Edge"], reason = "The guide names this browser." }\n',
+            tables: 'allowed_words = { value = ["Microsoft", "Edge"], reason = "The guide names this browser." }\n',
         }),
         'guide.md': `# Guide
 
-## HTTP edge rules
+## HTTP request rules
 
 ## Microsoft Edge settings
 
-## HTTP Edge Rules
+## HTTP Request Rules
 `,
     });
     await installToolProjects(directory.path);

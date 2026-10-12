@@ -45,7 +45,7 @@ const DOUBLE_JS = `// A plain JavaScript file that doubles a number.
  * @param {number} value the value
  * @returns {number} twice the value
  */
-function twice(value) {
+export function twice(value) {
     return value * 2;
 }
 
@@ -54,8 +54,8 @@ export const wrong = twice(3);
 `;
 
 const CHECK_SCRIPT = `// The receipt of one order.
-import { wrong } from './orders/double.js';
 import { orderTotal } from './orders/total.js';
+import { twice, wrong } from './orders/double.js';
 import { receiptOptions } from './orders/receipt.js';
 
 const formatter = new Intl.NumberFormat('en-US', receiptOptions);
@@ -65,7 +65,7 @@ const total = orderTotal([{ price: 2, quantity: 3 }], 'EUR');
 export const receipt = formatter.format(total.amount);
 
 /** Twice the sample result. */
-export const doubled = wrong + wrong;
+export const doubled = twice(wrong);
 `;
 
 const TYPESCRIPT_SANDBOX = {

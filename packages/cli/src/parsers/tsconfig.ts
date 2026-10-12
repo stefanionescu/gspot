@@ -55,8 +55,9 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
     const raw: unknown = source.config;
     const authored = typeScriptConfigSchema.parse(raw);
     const configurationFiles = [path];
-    const parsed = ts.parseJsonConfigFileContent(
-        authored,
+    const sourceFile: ts.TsConfigSourceFile = ts.parseJsonText(path, text);
+    const parsed = ts.parseJsonSourceFileConfigFileContent(
+        sourceFile,
         {
             ...host,
             readFile: (file) => {
@@ -75,7 +76,12 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
     );
     if (errors.length > 0)
         throw new Error(errors.map((error) => ts.flattenDiagnosticMessageText(error.messageText, '\n')).join('\n'));
-    return { ...parsed, raw: authored, configurationFiles };
+    return {
+        ...parsed,
+        raw: authored,
+        configurationFiles,
+        extendedConfigurationFiles: sourceFile.extendedSourceFiles ?? [],
+    };
 }
 
 /**
