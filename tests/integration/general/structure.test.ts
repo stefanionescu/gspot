@@ -1,8 +1,7 @@
-import { basename } from 'node:path';
 import { test, expect } from 'bun:test';
+import { join, basename } from 'node:path';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { toolsPath } from '#tests/setup/install.ts';
 import { knownSettings } from '#cli/settings/view.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
@@ -12,7 +11,9 @@ import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { hasToolBuild } from '#tests/setup/operating-systems.ts';
 import type { ParameterFinding } from '#tests/types/tool-output.ts';
+import { toolsPath, installToolProjects } from '#tests/setup/install.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { virtualEnvironmentExecutable } from '#cli/system/executables.ts';
 import { runCommand, runCommandBlocking } from '#tests/setup/processes.ts';
 import { PARAMETER_LIMIT_TOOLS } from '#tests/config/structure/parameters.ts';
 import { RUFF_SUPPRESSIONS, VALE_SUPPRESSIONS } from '#tests/config/suppressions.ts';
@@ -24,8 +25,10 @@ test('suppression detection agrees with Ruff on every noqa comment form and plac
         'gspot.toml': settingsText(['python'], { level: 'all' }),
         ...Object.fromEntries(RUFF_SUPPRESSIONS.map(({ source }, index) => [paths[index]!, source])),
     });
+    await installToolProjects(sandbox.path);
+    const ruff = virtualEnvironmentExecutable(join(sandbox.path, '.gspot/.venv'), 'ruff');
     const native = await runCommand(
-        ['ruff', 'check', '--isolated', '--select', 'F401', '--output-format', 'json', ...paths],
+        [ruff, 'check', '--isolated', '--select', 'F401', '--output-format', 'json', ...paths],
         { cwd: sandbox.path, env: { PATH: toolsPath() } },
     );
     expect(native.code, native.stdout + native.stderr).toBe(1);
@@ -131,9 +134,19 @@ for (const scenario of PARAMETER_LIMIT_TOOLS.filter(
                 [scenario.file]: scenario.source,
             });
             const session = await openSession(directory.path);
-            using log = openOwnershipLog(directory.path);
-            writeGeneratedFiles(session, emitAll(session), log);
-            const result = runCommandBlocking(scenario.command, {
+            {
+                using log = openOwnershipLog(directory.path);
+                writeGeneratedFiles(session, emitAll(session), log);
+            }
+            if (language === 'python') await installToolProjects(directory.path);
+            const command =
+                language === 'python'
+                    ? [
+                          virtualEnvironmentExecutable(join(directory.path, '.gspot/.venv'), 'ruff'),
+                          ...scenario.command.slice(1),
+                      ]
+                    : scenario.command;
+            const result = runCommandBlocking(command, {
                 cwd: directory.path,
             });
             const findings = JSON.parse(result.stdout) as ParameterFinding[];

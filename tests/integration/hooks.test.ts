@@ -17,7 +17,7 @@ import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import { INDEX_COMMAND, SAMPLE_COMMAND } from '#tests/config/hooks.ts';
 import { settingsText, reportingCheck } from '#tests/setup/settings.ts';
 import { runGspot, spawnGspot, checkReport } from '#tests/setup/run-gspot.ts';
-import { toolsPath, sandboxPath, createInstallationRegistry } from '#tests/setup/install.ts';
+import { toolsPath, sandboxPath, installRuntimes, createInstallationRegistry } from '#tests/setup/install.ts';
 
 // A fresh clone installs immutable tools and rejects then accepts a real staged commit.
 async function expectCloneHooks(source: string, environment: Record<string, string>): Promise<void> {
@@ -25,6 +25,7 @@ async function expectCloneHooks(source: string, environment: Record<string, stri
     const clone = join(cloneRoot.path, 'clone');
     const cloned = git(source, ['clone', '--quiet', '--no-local', source, clone]);
     expect(cloned.code, cloned.stdout + cloned.stderr).toBe(0);
+    await installRuntimes(clone);
     const uninstalled = await checkReport(clone, ['check', '--only', 'bash/shellcheck', '--json']);
     expect(uninstalled.code, uninstalled.stdout + uninstalled.stderr).toBe(0);
     expect(uninstalled.report).toMatchObject({
@@ -55,6 +56,7 @@ async function expectCloneHooks(source: string, environment: Record<string, stri
 test('installed and freshly cloned repositories enforce staged findings through real commits', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
+    await installRuntimes(sandbox.path);
     commitAll(sandbox.path);
     const initialized = await spawnGspot(sandbox.path, buildInitArguments(['bash']));
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
@@ -136,6 +138,7 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
         }),
         'src/kept.txt': 'clean\n',
     });
+    await installRuntimes(main);
     commitAll(main);
     {
         using log = openOwnershipLog(main);
@@ -152,12 +155,11 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const formatted = await runGspot(main, ['check', '--only', 'gspot/settings-format', '--fix']);
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
-    const prepared = await runGspot(main, ['install'], registry.environment);
-    expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+    expect(await runGspot(main, ['install'], registry.environment)).toMatchObject({ code: 0 });
     commitAll(main);
     gitOutput(main, ['worktree', 'add', '-q', '-b', 'topic', linked]);
-    const installed = await runGspot(linked, ['install'], registry.environment);
-    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    await installRuntimes(linked);
+    expect(await runGspot(linked, ['install'], registry.environment)).toMatchObject({ code: 0 });
     await Bun.write(join(linked, 'src/added.txt'), 'DEFECT\n');
     gitOutput(linked, ['add', 'src/added.txt']);
     const blocked = git(linked, ['commit', '-qm', 'Defect'], environment);
@@ -186,6 +188,7 @@ command = ${JSON.stringify([process.execPath, '-e', INDEX_COMMAND])}
 `,
         'nested config/source.txt': 'invalid\n',
     });
+    await installRuntimes(sandbox.path);
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
     {
         using log = openOwnershipLog(project);

@@ -4,6 +4,7 @@ import { expect } from 'bun:test';
 import { testdir } from 'testdirs';
 import { createHash } from 'node:crypto';
 import { join, delimiter } from 'node:path';
+import { parse, stringify } from 'smol-toml';
 import { emitAll } from '#cli/generation/files.ts';
 import { rejection } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
@@ -28,9 +29,11 @@ import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/e
 import { open, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 import {
+    MISE_TRUST,
     HTTP_REDIRECT,
     REGISTRY_HOST,
     NPM_PACK_FLAGS,
+    PINNED_TOOLS_FILE,
     UPSTREAM_REGISTRY,
     GSPOT_PACKAGE_SCOPE,
     PACKED_PACKAGES_FILE,
@@ -50,6 +53,15 @@ const packedPackagesSchema = z.array(
         peerDependencies: z.record(z.string(), z.string()).optional(),
     } satisfies SchemaShape<PackedPackage>),
 );
+
+/** Give real hook repositories the same authored runtime pins as this repository. */
+export async function installRuntimes(root: string): Promise<void> {
+    const runtimeSettings = parse(await readFile(join(import.meta.dir, '../..', PINNED_TOOLS_FILE), 'utf8'));
+    const tools = z.record(z.string(), z.string()).parse(runtimeSettings['tools']);
+    await writeFile(join(root, PINNED_TOOLS_FILE), stringify({ tools }));
+    const trusted = await runCommand([...MISE_TRUST, PINNED_TOOLS_FILE], { cwd: root });
+    if (trusted.code !== 0) throw new Error(`Sandbox runtime trust failed: ${trusted.stdout}${trusted.stderr}`);
+}
 
 /** Resolve the installed test package executables before system tools. */
 export function toolsPath(): string {

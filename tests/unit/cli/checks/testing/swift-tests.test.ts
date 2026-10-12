@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { executeRun } from '#cli/execution/run.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -7,7 +7,7 @@ import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { containing } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { useOperatingSystem } from '#tests/setup/operating-systems.ts';
+import * as environment from '#cli/system/environment.ts';
 import { buildFolder } from '#cli/checks/language/swift/build-folder.ts';
 import { checkReport, buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
@@ -71,7 +71,7 @@ test('the shared coverage limit applies to every source target without overridin
     test.each([...XCTEST_FAILURES])(
         'XCTest coverage classifies $failure and passes after the fix',
         async ({ settings, build, coverage, code, status, produced, note }) => {
-            using _system = useOperatingSystem('darwin');
+            using _system = spyOn(environment, 'currentOperatingSystem').mockReturnValue('macos');
             await using sandbox = await testdir();
             await using _cache = await isolateCompilerCache();
             await createFileTree(sandbox.path, {
@@ -110,7 +110,7 @@ test('the shared coverage limit applies to every source target without overridin
     );
 
     test('XCTest coverage refuses an external result link and removes a previous result bundle', async () => {
-        using _system = useOperatingSystem('darwin');
+        using _system = spyOn(environment, 'currentOperatingSystem').mockReturnValue('macos');
         await using sandbox = await testdir();
         await using outside = await testdir();
         await using _cache = await isolateCompilerCache();

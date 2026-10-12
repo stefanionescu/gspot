@@ -1,7 +1,7 @@
 // Bun creates isolated Python sandboxes and serves their authenticated package index.
-import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { createFileTree } from 'testdirs';
+import { join, basename } from 'node:path';
 import { commitAll } from '#tests/setup/git.ts';
 import { zipArchive } from '#tests/setup/files.ts';
 import { ZIP_LAYOUT } from '#tests/config/files.ts';
@@ -11,6 +11,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
 import { gitignoreBlock } from '#cli/generation/files.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
+import { installToolProjects } from '#tests/setup/install.ts';
+import { virtualEnvironmentExecutable } from '#cli/system/executables.ts';
 
 import {
     PYTHON_INDEX_NAME,
@@ -86,8 +88,9 @@ async function createPythonSandbox(
 async function createPythonIndex(
     work: string,
 ): Promise<AsyncDisposable & { version: string; url: string; readonly requests: number }> {
-    const binary = Bun.which('ruff');
-    if (binary === null) throw new Error('Ruff is unavailable on PATH.');
+    await using source = await createPythonSandbox(work, { indexFile: 'uv.toml' });
+    await installToolProjects(source.root);
+    const binary = virtualEnvironmentExecutable(join(work, '.gspot/.venv'), 'ruff');
     const inspected = await runCommand([binary, '--version'], { cwd: work });
     if (inspected.code !== 0) throw new Error(`Ruff version failed: ${inspected.stderr}`);
     const version = RUFF_VERSION_OUTPUT.exec(inspected.stdout.trim())?.groups?.['version'];
@@ -97,7 +100,11 @@ async function createPythonIndex(
     const archive = zipArchive(
         entries.map(
             ([name, data]) =>
-                [name, data, name.endsWith('/ruff') ? ZIP_LAYOUT.unix.executable : ZIP_LAYOUT.unix.regular] as const,
+                [
+                    name,
+                    data,
+                    name.endsWith(`/${basename(binary)}`) ? ZIP_LAYOUT.unix.executable : ZIP_LAYOUT.unix.regular,
+                ] as const,
         ),
     );
     const digest = createHash('sha256').update(archive).digest('hex');
@@ -134,7 +141,7 @@ async function createPythonIndex(
 async function wheelEntries(binary: string, version: string): Promise<Array<[string, Buffer]>> {
     const metadata = `ruff-${version}.dist-info`;
     const entries: Array<[string, Buffer]> = [
-        [`ruff-${version}.data/scripts/ruff`, Buffer.from(await Bun.file(binary).bytes())],
+        [`ruff-${version}.data/scripts/${basename(binary)}`, Buffer.from(await Bun.file(binary).bytes())],
         [
             'gspot_marker.py',
             Buffer.from(`def main():

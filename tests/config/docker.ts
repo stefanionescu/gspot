@@ -1,6 +1,8 @@
 // Trivy uses this configured exit code when an image report contains findings.
 export const TRIVY_FINDINGS_EXIT = 10;
 
+export const TRIVY_CONFIG_PATH = '.gspot/config/trivy.yml';
+
 export const VALID_REPORT =
     '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}';
 

@@ -14,6 +14,7 @@ import { planBlock, planDeletion, planManagedKeys, planReplacement, planRestorat
         await createFileTree(directory.path, { 'project/.keep': '', outside: 'authored' });
         const project = join(directory.path, 'project');
         await symlink('../outside', join(project, 'tool'));
+        const target = await readlink(join(project, 'tool'));
         {
             using log = openOwnershipLog(project);
 
@@ -24,16 +25,18 @@ import { planBlock, planDeletion, planManagedKeys, planReplacement, planRestorat
                     planReplacement(log, {
                         path: 'tool',
                         next: {
-                            bytes: Buffer.from('../outside'),
+                            bytes: Buffer.from(target),
                             mode,
                             isLink: true,
                         },
                         kind: 'tool_file',
                     }),
                 ]);
-            }).toThrow('"../outside" is not a safe repository-relative path. Choose a path inside the repository.');
+            }).toThrow(
+                `${JSON.stringify(target)} is not a safe repository-relative path. Choose a path inside the repository.`,
+            );
             expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
-            expect(await readlink(join(project, 'tool'))).toBe('../outside');
+            expect(await readlink(join(project, 'tool'))).toBe(target);
             expect(await readFile(join(directory.path, 'outside'), 'utf8')).toBe('authored');
         }
     });

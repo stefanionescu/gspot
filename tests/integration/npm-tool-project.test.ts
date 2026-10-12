@@ -13,10 +13,10 @@ import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 import { toolProjectLockfile } from '#cli/parsers/tool-project.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { createNpmClientSandbox } from '#tests/setup/npm-clients.ts';
 import { NPM_CLIENT_ROWS, NPM_REGISTRY_TOKEN } from '#tests/config/npm.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
+import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import type { ToolProjectFiles, NpmClientSandbox } from '#tests/types/npm.ts';
 import { writeLockedInputs, readToolProjectFiles } from '#tests/setup/install.ts';
 
@@ -163,6 +163,8 @@ test.each([...NPM_CLIENT_ROWS])(
         // A reinstall replaces an edited installed file with the locked one, and the tool stays ready.
         const readmePath = join(root, '.gspot/node_modules/prettier/README.md');
         const readme = await readFile(readmePath);
+        // Replace the file so native package-manager hardlinks do not edit its shared cache.
+        await unlink(readmePath);
         await writeFile(readmePath, 'authored later');
         const reinstalled = await installTools(session, log, emitAll(session));
         expect(reinstalled.exitCode, reinstalled.note).toBe(0);

@@ -18,6 +18,7 @@ import { containing, textContaining } from '#tests/setup/matchers.ts';
 import {
     DOCKER_CASES,
     DOCKER_SANDBOX,
+    TRIVY_CONFIG_PATH,
     ALPINE_DOCKERFILE,
     DEBIAN_DOCKERFILE,
     TRIVY_SCOPE_SETTINGS,
@@ -143,10 +144,11 @@ test.skipIf(!isLinux)(
             'gspot.toml': settingsText(['docker']),
             'compose.yaml': `services: {app: {image: "${tags[0]}"}}\n`,
             'payload.pem': privateKey,
-            '.gspot/config/trivy.yml': 'severity: [HIGH, CRITICAL]\n',
         });
         const awaitedCommand = await spawnGspot(sandbox.path, ['apply']);
-        expect(awaitedCommand.code).toBe(0);
+        expect(awaitedCommand.code, awaitedCommand.stdout + awaitedCommand.stderr).toBe(0);
+        const configPath = join(sandbox.path, TRIVY_CONFIG_PATH);
+        const configuration = await Bun.file(configPath).text();
         const command = ['check', '--only', 'docker/trivy-image', '--json'];
         try {
             await importImage(sandbox.path, tags[0], privateKey);
@@ -158,13 +160,13 @@ test.skipIf(!isLinux)(
             expect(findings).toMatchObject([
                 { file: 'compose.yaml', line: 1, rule: 'secret', message: textContaining('private-key') },
             ]);
-            await Bun.write(join(sandbox.path, '.gspot/config/trivy.yml'), 'severity: [');
+            await Bun.write(configPath, 'severity: [');
             const broken = await spawnGspot(sandbox.path, command);
             expect(broken.code, broken.stdout + broken.stderr).toBe(2);
             expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([
                 { status: 'error', note: textContaining('Trivy could not scan') },
             ]);
-            await Bun.write(join(sandbox.path, '.gspot/config/trivy.yml'), 'severity: [HIGH, CRITICAL]\n');
+            await Bun.write(configPath, configuration);
             await Bun.write(join(sandbox.path, 'compose.yaml'), `services: {app: {image: "${tags[1]}"}}\n`);
             const corrected = await spawnGspot(sandbox.path, command);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
