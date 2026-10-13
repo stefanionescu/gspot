@@ -60,7 +60,7 @@ Platforms:
 
 - `.gspot/rules/platform/cloudflare/CLOUDFLARE.md`
 
-Run `mise exec -- gspot check --staged` before you commit. To change gspot.toml, use `mise exec -- gspot set`, `mise exec -- gspot unset`, `mise exec -- gspot ignore`, or `mise exec -- gspot unignore`. After you edit gspot.toml by hand, run `mise exec -- gspot apply`. Never edit files under `.gspot/`, or these generated files: `.editorconfig`, `.markdownlint-cli2.mjs`, `.prettierignore`, `.semgrepignore`, `bunfig.toml`, `docs/.stylelintrc.json`, `eslint.config.mjs`, `prettier.config.mjs`. Change `gspot.toml` and run `mise exec -- gspot apply` instead.
+Run `mise exec -- gspot check --staged` before you commit. To change gspot.toml, use `mise exec -- gspot set`, `mise exec -- gspot unset`, `mise exec -- gspot ignore`, or `mise exec -- gspot unignore`. After you edit gspot.toml by hand, run `mise exec -- gspot apply`. Never edit files under `.gspot/`, or these generated files: `.editorconfig`, `.github/workflows/gspot.yml`, `.markdownlint-cli2.mjs`, `.prettierignore`, `.semgrepignore`, `bunfig.toml`, `docs/.stylelintrc.json`, `eslint.config.mjs`, `prettier.config.mjs`. Change `gspot.toml` and run `mise exec -- gspot apply` instead.
 
 <!-- <<< gspot managed <<< -->
 

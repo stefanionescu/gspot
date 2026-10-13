@@ -1,6 +1,6 @@
 # ![gspot](docs/assets/readme/banner/light.svg#gh-light-mode-only)![gspot](docs/assets/readme/banner/dark.svg#gh-dark-mode-only)
 
-[![npm: unreleased](docs/assets/readme/badges/npm.svg)](#install)
+[![npm: 0.1.1](docs/assets/readme/badges/npm.svg)](https://www.npmjs.com/package/@gspothq/cli/v/0.1.1)
 [![Documentation source](docs/assets/readme/badges/docs.svg)](docs/src/content/docs/guides/overview.md)
 [![License: Apache-2.0](docs/assets/readme/badges/license.svg)](LICENSE.md)
 
@@ -8,7 +8,7 @@ gspot lints AI-generated code and installs rules for AI coding agents.
 
 ## Status
 
-gspot has no npm release yet.
+Get the [gspot CLI](https://www.npmjs.com/package/@gspothq/cli/v/0.1.1) and [ESLint plugin](https://www.npmjs.com/package/@gspothq/eslint-plugin/v/0.1.1) from npm at `0.1.1`.
 
 ## Requirements
 

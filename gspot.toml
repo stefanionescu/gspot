@@ -1,4 +1,4 @@
-#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
+#:schema https://unpkg.com/@gspothq/cli@0.1.1/gspot.schema.json
 
 # gspot settings for this repository. Change them with gspot set, unset, ignore, add, and remove.
 
@@ -7,6 +7,10 @@ configurations = ["typescript", "markdown", "github-actions"]
 allowed_words = { value = ["capitalisation", "IIF", "LICENCE", "next-intl", "udid"], reason = "SQLFluff uses capitalisation; ESLint uses IIFEs; tests use LICENCE and Apple’s udid; next-intl names a package." }
 
 [hooks]
+enabled = true
+
+[ci]
+setup_command = ["mise", "run", "setup"]
 enabled = true
 
 [naming]

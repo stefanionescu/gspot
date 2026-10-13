@@ -1,6 +1,7 @@
 [tools]
 bun = "1.4.3"
 node = "24.20.0"
+"npm:@gspothq/cli" = { version = "0.1.1", allow_low_downloads = "true" }
 
 [tasks.setup]
 description = "Install the locked packages, build both npm packages, and write the docs site types."
@@ -40,3 +41,6 @@ description = "Serve the docs site on your computer."
 depends = ["build"]
 dir = "{{config_root}}/docs"
 run = "bun --bun astro dev"
+
+[settings.task]
+run_auto_install = false
