@@ -1,11 +1,11 @@
 @import '@fontsource-variable/geist/index.css';
 @import '@fontsource-variable/geist-mono/index.css';
-@import './navigation.css';
 
 :root {
     color-scheme: dark;
 
     --brand-cobalt: #2457ff;
+    --brand-tangerine: #ff7a1a;
     --sl-color-white: #fafafa;
     --sl-color-gray-1: #e5e5e5;
     --sl-color-gray-2: #c4c4c4;
@@ -56,6 +56,11 @@
     color: var(--sl-color-black);
 }
 
+body {
+    font-size: 1rem;
+    line-height: 1.75;
+}
+
 h1,
 h2,
 h3 {
@@ -75,7 +80,9 @@ h3 {
 }
 
 a,
-button {
+button,
+.sl-markdown-content summary,
+.landing summary {
     transition:
         color 120ms ease,
         background-color 120ms ease,
@@ -117,13 +124,29 @@ button {
     border-color: var(--sl-color-gray-5);
 }
 
-.sl-markdown-content th {
-    background: var(--sl-color-gray-6);
+.starlight-aside {
+    border-radius: 8px;
+    border-inline-start-width: 2px;
 }
 
 .expressive-code {
     margin-block: 1.5rem;
     min-width: 0;
+}
+
+.sl-markdown-content details,
+.landing details {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.sl-markdown-content summary,
+.landing summary {
+    cursor: pointer;
+    min-height: 44px;
+    align-content: center;
+    color: var(--sl-color-white);
 }
 
 html:not([data-has-sidebar]) .sl-container {
@@ -145,6 +168,14 @@ html:not([data-has-sidebar]) h1 {
         font-size: 2.25rem;
     }
 
+    html:not([data-has-sidebar]) .right-group {
+        display: flex;
+    }
+
+    html:not([data-has-sidebar]) .right-group .social-icons {
+        display: none;
+    }
+
     .content-panel {
         padding-inline: 20px;
     }
@@ -156,56 +187,34 @@ html:not([data-has-sidebar]) h1 {
     }
 
     a,
-    button {
-        transition: none;
-    }
-
-    .expressive-code .copy button,
-    .expressive-code .copy button > div,
-    .expressive-code .copy .feedback {
+    button,
+    summary {
         transition: none;
     }
 }
 
-/* Copy controls sit at the center of the code block or its title bar. */
-.expressive-code .copy {
-    inset-block-start: 50%;
-    transform: translateY(-50%);
+.sl-markdown-content th {
+    background: var(--sl-color-gray-6);
 }
 
-.expressive-code .frame:not(.has-title) .ec-line .code {
-    padding-inline-end: 4rem;
-}
-
-.expressive-code .copy button {
-    width: 2.75rem;
-    height: 2.75rem;
-    background: transparent;
-}
-
-.expressive-code .copy button > div {
-    inset: 0.375rem;
-}
-
-.expressive-code .copy button::after {
-    mask-size: 1rem;
-    mask-position: center;
-    margin: 0;
-}
-
-.expressive-code .copy button::before {
+html[data-has-hero] .content-panel {
     border: 0;
 }
 
-.expressive-code .frame.has-title .copy {
-    inset-block-start: 0;
-    transform: none;
+html[data-has-hero] main {
+    padding-top: 0;
 }
 
-.expressive-code .frame.has-title .header .title {
-    min-height: 2.75rem;
-    display: flex;
-    align-items: center;
-    padding-block: 0;
-    margin-block: 0;
+html[data-has-hero] .sl-markdown-content:not(:has(.landing)) h2 {
+    border: 0;
+    padding-top: 0;
+}
+
+html[data-has-hero] h1 {
+    margin-top: 0;
+}
+
+/* Homepage components own their spacing independently of article typography. */
+:where(.sl-markdown-content .landing) :where(p, ul, li, h2, h3, div, section, nav, footer) {
+    margin-top: 0;
 }

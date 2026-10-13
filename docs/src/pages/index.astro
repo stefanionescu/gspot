@@ -1,30 +1,18 @@
 ---
-import '../components/home/styles.css';
-import '../components/home/sections.css';
-import { REPOSITORY_URL } from '../config/site.ts';
 import { Code } from '@astrojs/starlight/components';
 import Example from '../components/home/Example.astro';
 import Features from '../components/home/Features.astro';
-import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
+import { TOOLS, WORKFLOW, REPOSITORY } from '../config/home.ts';
+import '../components/home/page.css';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import { description } from '@gspothq/cli/package.json' with { type: 'json' };
-
-import {
-    CHECK_COMMANDS,
-    SUPPORTED_TOOLS,
-    INSTALL_COMMANDS,
-    WORKFLOW_FEATURES,
-    REPOSITORY_FEATURES,
-    SUPPORTED_LANGUAGES,
-    SUPPORTED_FRAMEWORKS,
-} from '../config/home.ts';
 ---
 
 <StarlightPage
     frontmatter={{
-        title: 'Lint AI-generated code',
-        description,
-        hero: { title: 'Lint AI-generated code' },
+        title: 'Lint AI generated code',
+        description:
+            'gspot configures linters, runs checks, and generates instructions for coding agents from one configuration file.',
+        hero: { title: 'Lint AI generated code' },
         template: 'splash',
         editUrl: false,
         lastUpdated: false,
@@ -32,91 +20,97 @@ import {
 >
     <div class="landing">
         <section class="tool-strip" aria-label="Selected tools supported by gspot">
-            <p>Works with the tools you know</p>
+            <p>Works with these tools</p>
             <ul>
-                {SUPPORTED_TOOLS.map((name) => (
-                    <li>{name}</li>
-                ))}
-            </ul>
-        </section>
-        <section class="supported" aria-labelledby="supported">
-            <div class="section-heading">
-                <h2 id="supported">For your languages and frameworks</h2>
-                <a href="/reference/configurations/">
-                    Browse all configurations <span aria-hidden="true">→</span>
-                </a>
-            </div>
-            <ul class="supported-list">
-                {[...SUPPORTED_LANGUAGES, ...SUPPORTED_FRAMEWORKS].map((name) => (
-                    <li>{name}</li>
+                {TOOLS.map(({ image, name, colored }) => (
+                    <li>
+                        <img src={image} class:list={{ colored }} alt="" width="24" height="24" />
+                        <span>{name}</span>
+                    </li>
                 ))}
             </ul>
         </section>
         <Features
-            title="Lint AI-generated code"
-            description="gspot picks the linters for your languages, configures them, and runs them on every commit."
-            features={WORKFLOW_FEATURES}
+            title="Configure tools and check code"
+            description="Choose checks in gspot.toml, generate tool configuration, and run them against your code."
+            features={WORKFLOW}
         />
         <section class="demonstration" aria-labelledby="finding">
             <div class="section-heading">
                 <div>
-                    <h2 id="finding">An agent's wrapper, rejected and fixed</h2>
-                    <p>The helper adds no behavior. Delete it and call the function directly.</p>
+                    <p class="eyebrow">JavaScript example</p>
+                    <h2 id="finding">Check a JavaScript module</h2>
                 </div>
-                <a href="/guides/quickstart/javascript-typescript/">
-                    Run the TypeScript example <span aria-hidden="true">→</span>
+                <a class="pill" href="/guides/client-environment/">
+                    Run this example ↗
                 </a>
             </div>
+            <p>
+                The gspot ESLint plugin flags this <code>process.env</code> access in a client module. Change the client
+                to call an API route, then run the check again.
+            </p>
             <Example />
         </section>
         <Features
             title="Configure the whole repository"
-            description="Keep your checks, agent rules, and project settings together."
-            features={REPOSITORY_FEATURES}
+            description="Use the same configuration for agent instructions, nested projects, and generated files."
+            features={REPOSITORY}
         />
         <section class="setup" aria-labelledby="setup">
             <div class="section-heading">
-                <h2 id="setup">Set up a repository</h2>
-                <a href="/guides/install/">
-                    Read the install guide <span aria-hidden="true">→</span>
+                <div>
+                    <h2 id="setup">Set up a repository</h2>
+                    <p>Install from source, select the JavaScript configuration, and run your first checks.</p>
+                </div>
+                <a class="pill" href="/guides/install/">
+                    Get started ↗
                 </a>
             </div>
             <div class="setup-grid">
                 <div>
-                    <h3>Install and configure</h3>
-                    <Code code={INSTALL_COMMANDS} lang="sh" title="Repository root" />
-                    <p>Install gspot, choose your configurations, and install the tools.</p>
+                    <Code
+                        code={'version = 1\nconfigurations = ["javascript"]\nlevel = "recommended"'}
+                        lang="toml"
+                        title="gspot.toml"
+                    />
+                    <p>1. Select a configuration in your repository policy.</p>
                 </div>
                 <div>
-                    <h3>Check and fix</h3>
-                    <Code code={CHECK_COMMANDS} lang="sh" title="Repository root" />
-                    <p>Run the checks, read the findings, and fix your code. Git hooks check later commits.</p>
+                    <Code
+                        code={'gspot apply --dry-run\ngspot apply\ngspot install'}
+                        lang="sh"
+                        title="Repository root"
+                    />
+                    <p>2. Preview, generate, and install selected tools.</p>
+                </div>
+                <div>
+                    <Code
+                        code={'gspot check\ngspot explain javascript/eslint\ngspot doctor'}
+                        lang="sh"
+                        title="Repository root"
+                    />
+                    <p>3. Check code and diagnose findings or setup.</p>
                 </div>
             </div>
+            <p class="setup-note">
+                For a new configuration, <code>gspot init</code> proposes configurations and integrations before
+                applying them. Initialization runs no checks.
+            </p>
         </section>
         <section class="closing" aria-label="Next steps">
             <h2>Start linting your code.</h2>
-            <nav class="hero-actions">
-                <a class="primary" href="/guides/install/">
-                    Get started <span aria-hidden="true">→</span>
+            <nav>
+                <a class="pill primary" href="/guides/install/">
+                    Get started ↗
                 </a>
-                <a href="/reference/commands/">View commands</a>
+                <a class="pill" href="/reference/commands/check/">
+                    View commands
+                </a>
             </nav>
         </section>
         <footer class="home-footer">
-            <div class="footer-about">
-                <a href="/" class="footer-brand">
-                    gspot
-                </a>
-            </div>
-            <nav aria-label="Footer">
-                <a href="/guides/overview/">Docs</a>
-                <a href={REPOSITORY_URL}>GitHub</a>
-                <a href={`${REPOSITORY_URL}/blob/main/LICENSE.md`}>Apache-2.0</a>
-            </nav>
-            <div class="footer-theme">
-                <ThemeSelect />
-            </div>
+            <span>gspot · Apache-2.0</span>
+            <a href="https://github.com/stefanionescu/gspot">Contribute</a>
         </footer>
     </div>
 </StarlightPage>

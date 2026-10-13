@@ -48,6 +48,8 @@ export default defineConfig({
                 { tag: 'meta', attrs: { property: 'og:image:alt', content: 'The gspot logo.' } },
             ],
             components: {
+                Header: './src/components/starlight/Header.astro',
+                Search: './src/components/starlight/Search.astro',
                 SiteTitle: './src/components/starlight/SiteTitle.astro',
                 Hero: './src/components/starlight/Hero.astro',
             },

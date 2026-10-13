@@ -1,69 +1,63 @@
-import example from './example.json';
-
-export const HERO_IMAGE = '/brand/home/hero.webp';
-export const SUPPORTED_TOOLS = ['ESLint', 'Prettier', 'Ruff', 'Stylelint', 'ShellCheck', 'Semgrep'] as const;
-export const SUPPORTED_LANGUAGES = ['TypeScript', 'JavaScript', 'Python', 'Swift', 'Bash', 'Markdown', 'CSS'] as const;
-export const SUPPORTED_FRAMEWORKS = [
-    'React',
-    'Next.js',
-    'Astro',
-    'Vue',
-    'Svelte',
-    'React Native',
-    'Expo',
-    'Express',
-    'NestJS',
-    'FastAPI',
-] as const;
-export const INSTALL_COMMANDS = `${example.commands.install}\n${example.commands.init}\n${example.commands.install_tools}`;
-export const CHECK_COMMANDS = `${example.commands.check}\nnpx gspot explain javascript/eslint`;
-
-export const WORKFLOW_FEATURES = [
+export const WORKFLOW = [
     {
-        title: 'Configure the linters',
-        description: 'gspot writes the configuration for the linters your languages need and pins their versions.',
+        title: 'Choose your checks',
+        description:
+            'Choose configurations and settings in gspot.toml. Apply those choices to generate configuration for the selected tools.',
+        image: '/brand/home/policy.svg',
+        href: '/guides/gspot-toml/',
+        link: 'Choose checks and exceptions',
+    },
+    {
+        title: 'Run pinned tool versions',
+        description:
+            'Run selected tools with pinned versions. ESLint, Ruff, Prettier, and other tools keep their own diagnostic rules.',
         image: '/brand/home/toolchain.svg',
         href: '/reference/configurations/',
-        link: 'Browse configurations',
+        link: 'Browse the configuration reference',
     },
     {
-        title: 'Catch what agents write',
-        description: 'At level all, gspot reports unnecessary wrappers, catch-all names, and loose types.',
+        title: 'Find the code to fix',
+        description:
+            'Find the file, check, and correction advice in the report. Rerun the check after correcting the code.',
         image: '/brand/home/finding.svg',
         href: '/guides/findings/',
-        link: 'Read and fix findings',
+        link: 'Read and resolve findings',
+    },
+] as const;
+export const REPOSITORY = [
+    {
+        title: 'Generate agent instructions',
+        description:
+            'Generate rule guides and agent entry points from your selected configurations. Keep instructions aligned with repository choices.',
+        image: '/brand/home/agents.svg',
+        href: '/guides/agents/',
+        link: 'Configure agent instructions',
     },
     {
-        title: 'Stop bad commits',
+        title: 'Configure nested projects',
         description:
-            'Git hooks run the checks on every commit and push. A finding stops the commit and says what to fix.',
-        image: '/brand/home/policy.svg',
-        href: '/guides/hooks/',
-        link: 'Set up Git hooks',
+            'Use scopes for projects with different languages and settings. Run staged or changed-file checks for the work you are reviewing.',
+        image: '/brand/home/scopes.svg',
+        href: '/guides/monorepos/',
+        link: 'Work with scopes',
+    },
+    {
+        title: 'Review configuration changes',
+        description:
+            'Preview configuration changes, adopt supported existing settings, and inspect recovery copies when generated files have local edits.',
+        image: '/brand/home/preservation.svg',
+        href: '/guides/install/',
+        link: 'Adopt an existing repository',
     },
 ] as const;
 
-export const REPOSITORY_FEATURES = [
-    {
-        title: 'Write rules for agents',
-        description: 'gspot installs rules that describe how to write code, linked from AGENTS.md.',
-        image: '/brand/home/agents.svg',
-        href: '/guides/agents/',
-        link: 'Set up coding agents',
-    },
-    {
-        title: 'Keep one settings file',
-        description:
-            'Choose configurations, levels, limits, and exceptions in gspot.toml. Apply your settings to write every tool configuration.',
-        image: '/brand/home/preservation.svg',
-        href: '/guides/gspot-toml/',
-        link: 'Customize your checks',
-    },
-    {
-        title: 'Work in monorepos',
-        description: 'Give each project its own configurations and settings, and check the files you changed.',
-        image: '/brand/home/scopes.svg',
-        href: '/guides/monorepos/',
-        link: 'Set up monorepos',
-    },
+export const TOOLS = [
+    { image: '/tools/eslint.svg', name: 'ESLint', colored: false },
+    { image: '/tools/prettier.svg', name: 'Prettier', colored: false },
+    { image: '/tools/ruff.svg', name: 'Ruff', colored: false },
+    { image: '/tools/stylelint.svg', name: 'Stylelint', colored: false },
+    { image: '/tools/shellcheck.png', name: 'ShellCheck', colored: true },
+    { image: '/tools/semgrep.svg', name: 'Semgrep', colored: true },
 ] as const;
+
+export const SEARCH_BUTTONS = 'site-search button[data-open-modal]';

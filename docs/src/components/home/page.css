@@ -1,0 +1,232 @@
+.landing {
+    max-width: 1200px;
+    min-width: 0;
+}
+
+.landing > *,
+.landing :is(section, ul, li, nav, footer) {
+    margin-block: 0;
+}
+
+.landing .tool-strip {
+    border-block: 1px solid var(--sl-color-gray-5);
+    padding-block: 24px;
+    display: grid;
+    gap: 24px;
+}
+
+.landing .tool-strip p {
+    font-size: 0.75rem;
+    white-space: nowrap;
+    color: var(--sl-color-gray-3);
+    margin: 0;
+}
+
+.landing .tool-strip ul {
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 24px;
+    margin: 0;
+}
+
+.landing .tool-strip li {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    justify-content: start;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.landing .tool-strip img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    justify-self: center;
+    filter: invert(1);
+    opacity: 0.8;
+}
+
+.landing .tool-strip img.colored {
+    filter: none;
+}
+
+[data-theme='light'] .landing .tool-strip img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    justify-self: center;
+    filter: none;
+}
+
+.landing .demonstration,
+.landing .setup {
+    padding-block: 72px;
+    border-top: 1px solid var(--sl-color-gray-5);
+}
+
+.landing h2 {
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 500;
+    margin: 0 0 12px;
+    border: 0;
+    padding: 0;
+}
+
+.landing .demonstration > p {
+    max-width: 72ch;
+    margin-block: 20px 0;
+    color: var(--sl-color-gray-2);
+}
+
+.landing .setup-note {
+    margin-top: 24px;
+    max-width: 80ch;
+}
+
+.landing .section-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: center;
+}
+
+.landing .section-heading p {
+    color: var(--sl-color-gray-2);
+    margin: 0;
+}
+
+.landing .section-heading .eyebrow {
+    color: var(--sl-color-text-accent);
+    font-size: 0.75rem;
+    margin-bottom: 12px;
+}
+
+.landing .pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid var(--sl-color-gray-4);
+    padding: 8px 20px;
+    min-height: 44px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 0.875rem;
+    color: var(--sl-color-white);
+}
+
+.landing .pill:hover {
+    background: var(--sl-color-gray-6);
+}
+
+.landing .primary {
+    background: var(--sl-color-white);
+    color: var(--sl-color-black);
+}
+
+.landing .primary:hover {
+    background: var(--sl-color-gray-1);
+}
+
+.landing .setup-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 32px;
+}
+
+.landing .setup-grid > div {
+    min-width: 0;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    gap: 16px;
+}
+
+.landing .setup-grid p,
+.landing .setup-note {
+    font-size: 0.875rem;
+    color: var(--sl-color-gray-2);
+}
+
+.landing .setup-grid .expressive-code {
+    margin: 0;
+    min-width: 0;
+    height: 100%;
+}
+
+.landing .setup-grid .frame {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.landing .setup-grid pre {
+    flex: 1;
+    overflow-x: auto;
+}
+
+.landing .setup-grid p {
+    margin: 0;
+}
+
+.landing .closing {
+    border-top: 1px solid var(--sl-color-gray-5);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding-block: 72px;
+}
+
+.landing .closing nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.landing .home-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    padding-block: 24px;
+    border-top: 1px solid var(--sl-color-gray-5);
+    font-size: 0.75rem;
+    color: var(--sl-color-gray-3);
+}
+
+.landing .home-footer span {
+    margin-right: auto;
+}
+
+@media (width <= 49.99rem) {
+    .landing .tool-strip ul {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .landing .section-heading,
+    .landing .closing {
+        flex-direction: column;
+        align-items: start;
+    }
+
+    .landing .setup-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .landing .demonstration,
+    .landing .setup {
+        padding-block: 48px;
+    }
+}
+
+@media (width <= 39.99rem) {
+    .landing .tool-strip ul {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
