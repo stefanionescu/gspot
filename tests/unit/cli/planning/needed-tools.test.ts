@@ -61,6 +61,13 @@ test.each([...ARCHITECTURE_REQUIREMENTS])(
             expect(session.scopes.every(({ view }) => view.test_files.length > 0)).toBe(true);
             const names = session.neededToolManifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name));
             expect(names.includes('eslint-plugin-boundaries')).toBe(boundary[level]);
+            const checks = planRun(session, { stage: 'all', only: ['javascript/eslint'] });
+            for (const check of checks) {
+                expect(checkCompanions(check.scope, check.check).includes('eslint-plugin-boundaries')).toBe(
+                    boundary[level],
+                );
+                expect(requiredToolNames(check).includes('eslint-plugin-boundaries')).toBe(boundary[level]);
+            }
         }
     },
 );

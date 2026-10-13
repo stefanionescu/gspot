@@ -17,14 +17,17 @@ import { toolDeclaration, toolProjectPackage } from '#cli/configurations/tool-pi
 import type { Manifest, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 import { FLAG_VALUE, COVERAGE_FLAGS, STYLELINT_TOOL, LICENSES_CONFIGURATION } from '#cli/config/planning.ts';
 
-function toolConditionSelected(session: Session, condition: NonNullable<ToolDeclaration['when']>[number]): boolean {
-    if (condition.level !== undefined && condition.level !== session.settingsFile.settings.level) return false;
-    if (condition.setting === undefined) return true;
-    return session.scopes.some(({ view }) => {
-        const value = view.settings[condition.setting as string];
-        if (typeof value === 'object' && value !== null) return Object.values(value).flat().length > 0;
-        return value !== undefined && value !== false && value !== '';
-    });
+function isToolSelected(scope: ScopeSelection, conditions: ToolDeclaration['when']): boolean {
+    return (
+        conditions === undefined ||
+        conditions.some((condition) => {
+            if (condition.level !== undefined && condition.level !== scope.view.settings['level']) return false;
+            if (condition.setting === undefined) return true;
+            const value = scope.view.settings[condition.setting];
+            if (typeof value === 'object' && value !== null) return Object.values(value).flat().length > 0;
+            return value !== undefined && value !== false && value !== '';
+        })
+    );
 }
 
 /**
@@ -57,8 +60,9 @@ export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration, 
             ? stylelintComponents(scope.view.configurations).map((dialect) => dialect.customSyntax)
             : [];
     return [...new Set([...(check.other_tools ?? []), ...companions, ...syntax])].filter((name) => {
-        if (!withoutCoverage) return true;
         const pin = toolDeclaration(scope.selected, name);
+        if (!isToolSelected(scope, pin.when)) return false;
+        if (!withoutCoverage) return true;
         return pin.system !== true || pin.kind !== 'library';
     });
 }
@@ -115,11 +119,7 @@ export function neededToolManifests(session: Session, checks: PlannedCheck[]): M
     return [...owners].map((manifest) => ({
         ...manifest,
         tools: manifest.tools
-            .filter(
-                ({ when: conditions }) =>
-                    conditions === undefined ||
-                    conditions.some((condition) => toolConditionSelected(session, condition)),
-            )
+            .filter(({ when: conditions }) => session.scopes.some((scope) => isToolSelected(scope, conditions)))
             .filter((tool) => needed.has(tool.name)),
     }));
 }
