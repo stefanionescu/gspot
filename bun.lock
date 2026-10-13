@@ -36,7 +36,7 @@
     },
     "packages/cli": {
       "name": "@gspothq/cli",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "bin": {
         "gspot": "dist/gspot.js",
       },
@@ -94,7 +94,7 @@
     },
     "packages/eslint-plugin": {
       "name": "@gspothq/eslint-plugin",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@typescript-eslint/utils": "^8.70.0",
         "picomatch": "^4.0.7",

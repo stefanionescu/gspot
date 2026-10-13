@@ -1,10 +1,10 @@
 {
     "name": "@gspothq/eslint-plugin",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "publishConfig": {
         "access": "public"
     },
-    "description": "ESLint rules for private environment reads, trivial code, and file organization in JavaScript and TypeScript.",
+    "description": "ESLint rules for the gspot CLI.",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",

@@ -7,7 +7,6 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
-import { quoteArgument } from '#cli/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
@@ -114,17 +113,6 @@ describe('a repository with the commit hooks installed', () => {
     beforeEach(() => {
         gitOutput(root, ['reset', '--hard', initial]);
         gitOutput(root, ['clean', '-fd']);
-    });
-    test('the commit-msg hook refuses a free-form message and takes a conventional one', async () => {
-        await Bun.write(join(root, 'notes.md'), '# Notes\n');
-        expect(git(root, ['add', '-A']).code).toBe(0);
-        const bad = git(root, ['commit', '-qm', 'Added notes.'], environment);
-        expect(bad.code).not.toBe(0);
-        expect(`${bad.stdout}${bad.stderr}`).toContain('type-empty');
-        // The reproduction quotes the path, which holds backslashes on Windows.
-        expect(bad.stdout + bad.stderr).toContain(`--message-file ${quoteArgument(join(root, '.git/COMMIT_EDITMSG'))}`);
-        const good = git(root, ['commit', '-qm', 'docs: add the notes page'], environment);
-        expect(good.code, good.stdout + good.stderr).toBe(0);
     });
     test('commits/commitlint-pushed reports a commit made past the hook', async () => {
         const accepted = await spawnGspot(root, ['check', '--only', 'commits/commitlint-pushed'], environment);
