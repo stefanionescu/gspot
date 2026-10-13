@@ -2,7 +2,6 @@ import { confirm } from '@clack/prompts';
 import { compact } from '#cli/objects.ts';
 import { GspotError } from '#cli/errors.ts';
 import { emitAll } from '#cli/generation/files.ts';
-import { runGitBlocking } from '#cli/system/git.ts';
 import { readText } from '#cli/system/file-reads.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/commands/session.ts';
@@ -22,7 +21,6 @@ import { detectionText } from '#cli/commands/init/detection.ts';
 import { readFormatTables } from '#cli/commands/init/format.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { GIT_STATUS_ARGUMENTS } from '#cli/config/system/git.ts';
 import { planReplacedFiles } from '#cli/commands/init/replace.ts';
 import { type Tooling } from '#cli/types/repository/inventory.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
@@ -41,19 +39,6 @@ import type {
     InitSelection,
     InitPlanInputs,
 } from '#cli/types/commands/init.ts';
-
-// Require Git to preserve the written files that initialization replaces.
-function assertCleanTree(root: string, options: InitOptions): void {
-    if (options.isDryRun) return;
-    const status = runGitBlocking(root, [...GIT_STATUS_ARGUMENTS]);
-    if (status.code !== 0)
-        throw new GspotError('git', [`Git status failed (exit ${String(status.code)}): ${status.stderr.trim()}`]);
-    const changed = status.stdout.split('\n').filter((line) => line.trim() !== '');
-    if (changed.length > 0)
-        throw new GspotError('settings', [
-            `The working tree has ${String(changed.length)} uncommitted change(s). Commit or stash them before gspot init: Git then keeps every file init replaces, and you review its changes separately.`,
-        ]);
-}
 
 // Prints what init found, unless the caller reads JSON.
 function printDetection(
@@ -161,7 +146,6 @@ function registerInit(program: Command): void {
 async function planInit(root: string, options: InitOptions): Promise<InitPrepared> {
     const manifests = configurationManifests();
     const repo = await readRepository(root, [], []);
-    if (repo.hasGit) assertCleanTree(root, options);
     const packageManifests = await readDependencyFiles(root, repo.files);
     const scopes = findScopes(repo.files, packageManifests, manifests.values());
     const inputs = { root, repo, packageManifests, scopes, manifests };

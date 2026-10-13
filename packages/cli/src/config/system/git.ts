@@ -41,8 +41,6 @@ export const GIT_DIRECTORY_ARGV = ['rev-parse', '--absolute-git-dir'] as const;
 
 export const ORIGIN_URL_SETTING = 'remote.origin.url';
 
-export const GIT_STATUS_ARGUMENTS = ['status', '--porcelain'] as const;
-
 export const GIT_WORK_TREE_VARIABLE = 'GIT_WORK_TREE';
 export const GIT_VARIABLE_PREFIX = 'GIT_';
 export const NOT_REPOSITORY_MESSAGE = 'fatal: not a git repository (or any ';

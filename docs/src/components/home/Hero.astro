@@ -1,15 +1,12 @@
 ---
-import example from '../../config/example.json';
-import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import { HERO_IMAGE } from '../../config/home.ts';
 import { description } from '@gspothq/cli/package.json' with { type: 'json' };
-
-const agentFile = example.agent.files.find((file) => file.path === 'src/utils.ts');
-if (agentFile === undefined) throw new Error('The homepage example has no src/utils.ts.');
-const summary = `${String(new Set(example.findings.map((finding) => finding.check)).size)} checks failed, ${String(example.findings.length)} findings`;
 ---
 
 <section class="home-hero" aria-labelledby="_top">
     <div class="hero-copy">
+        <h1 id="_top">Lint AI-generated code</h1>
         <p class="purpose">{description}</p>
         <nav class="hero-actions" aria-label="Start using gspot">
             <a class="primary" href="/guides/install/">
@@ -17,55 +14,8 @@ const summary = `${String(new Set(example.findings.map((finding) => finding.chec
             </a>
             <a href="/reference/commands/">View commands</a>
         </nav>
-        <p>
-            Follow the Install steps, including the commit before init.{' '}
-            <a href="/guides/install/#what-you-need">Check requirements first.</a>
-        </p>
-        <Code
-            code={`${example.commands.install}\n# Commit package.json and the lockfile before init.\n${example.commands.init}\n${example.commands.install_tools}\n${example.commands.check}`}
-            lang="sh"
-            frame="none"
-        />
     </div>
-    <section class="hero-demo" aria-labelledby="hero-example">
-        <div class="demo-heading">
-            <h2 id="hero-example">An agent commits a wrapper</h2>
-            <span>Findings excerpt · TypeScript · level all</span>
-        </div>
-        <Tabs>
-            <TabItem label="Commit">
-                <Code code={agentFile.content.trimEnd()} lang="typescript" title={agentFile.path} wrap />
-                <Code code={`git commit -m "${example.agent.message}"`} lang="sh" frame="none" />
-                <ul class="demo-findings">
-                    {example.findings.map((finding) => (
-                        <li>
-                            <code>
-                                {finding.file}:{finding.line}
-                            </code>
-                            <p>{finding.message}</p>
-                            <span>
-                                {finding.rule} · {finding.check}
-                            </span>
-                        </li>
-                    ))}
-                </ul>
-                <p class="demo-status">{summary}</p>
-            </TabItem>
-            <TabItem label="Fix">
-                <ul class="demo-fixes">
-                    <li>
-                        Delete <code>src/utils.ts</code>.
-                    </li>
-                    <li>
-                        Call <code>calculateTotal</code> directly.
-                    </li>
-                </ul>
-                <Code code={`git commit -m "${example.agent.message}"`} lang="sh" frame="none" />
-                <p class="demo-status">{example.passed.replace(/, [\d.]+s(?= \(|$)/u, '')}</p>
-            </TabItem>
-        </Tabs>
-        <a class="demo-guide" href="/guides/quickstart/javascript-typescript/">
-            Run the TypeScript example <span aria-hidden="true">→</span>
-        </a>
-    </section>
+    <div class="hero-visual">
+        <Image src={HERO_IMAGE} alt="The gspot logo." width={720} height={720} loading="eager" fetchpriority="high" />
+    </div>
 </section>

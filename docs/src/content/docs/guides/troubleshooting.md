@@ -44,10 +44,6 @@ GSPOT_JOBS=2 gspot check
 
 On Windows, run `$env:GSPOT_JOBS = "2"` first, then `gspot check`.
 
-## The working tree has uncommitted changes
-
-Commit or stash your work before `gspot init`.
-
 ## No terminal accepts the question
 
 Pass `--yes` to accept the plan without the "Continue?" question.

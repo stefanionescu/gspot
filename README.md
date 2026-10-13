@@ -6,10 +6,6 @@
 
 gspot lints AI-generated code and installs rules for AI coding agents.
 
-## Status
-
-Get the [gspot CLI](https://www.npmjs.com/package/@gspothq/cli/v/0.1.1) and [ESLint plugin](https://www.npmjs.com/package/@gspothq/eslint-plugin/v/0.1.1) from npm at `0.1.1`.
-
 ## Requirements
 
 Read [Install gspot](docs/src/content/docs/guides/install.md) for the runtimes and tools each check needs.
@@ -27,14 +23,19 @@ For npm:
 
 ```shell
 npm install --save-dev --save-exact @gspothq/cli
-git add package.json package-lock.json
-git commit -m "build: Add gspot"
 npx gspot init
 npx gspot install
-npx gspot check
 ```
 
 Follow [Install gspot](docs/src/content/docs/guides/install.md) for other package managers, mise, and setup verification.
+
+## Check
+
+Check your current files, including uncommitted work:
+
+```shell
+npx gspot check
+```
 
 ## What it catches
 

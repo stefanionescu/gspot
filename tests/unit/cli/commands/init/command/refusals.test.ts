@@ -1,16 +1,15 @@
 import { join } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
-import { commitAll } from '#tests/setup/git.ts';
+import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { parseSettings } from '#cli/settings/read.ts';
-import * as processes from '#cli/system/processes.ts';
 import { GIT_PLAN_CASES } from '#tests/config/init.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { readTree, pathExists } from '#tests/setup/files.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash/tools.ts';
+import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {
     await using sandbox = await testdir();
@@ -23,61 +22,31 @@ test('init with an unknown configuration exits 2 and writes nothing', async () =
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test('uncommitted changes stop init until they are committed', async () => {
+test.each([true, false])('init, install, and check preserve uncommitted work (has commits: %s)', async (hasCommits) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
-    commitAll(sandbox.path);
+    gitOutput(sandbox.path, ['init', '-q']);
+    if (hasCommits) commitAll(sandbox.path);
+    await Bun.write(join(sandbox.path, 'scripts/a.sh'), CLEAN_BASH_SCRIPT + '\n');
+    gitOutput(sandbox.path, ['add', 'scripts/a.sh']);
+    await Bun.write(join(sandbox.path, 'scripts/a.sh'), CLEAN_BASH_SCRIPT + '\n\n');
     await Bun.write(join(sandbox.path, 'notes.txt'), 'draft\n');
-    const argv = buildInitArguments([]);
-    const before = await readTree(sandbox.path);
-    const diagnostic =
-        'The working tree has 1 uncommitted change(s). Commit or stash them before gspot init: Git then keeps every file init replaces, and you review its changes separately.';
-    const refused = await runGspot(sandbox.path, argv);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stdout).toBe('');
-    expect(refused.stderr).toBe(`${diagnostic}\n`);
+    const staged = gitOutput(sandbox.path, ['diff', '--cached', '--binary']);
+    const head = git(sandbox.path, ['rev-parse', '--verify', 'HEAD']);
+    const preview = await runGspot(sandbox.path, [...buildInitArguments(['none']), '--dry-run', '--json']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-    const structured = await runGspot(sandbox.path, [...argv, '--json']);
-    expect(structured.code, structured.stdout + structured.stderr).toBe(2);
-    expect(structured.stderr).toBe('');
-    expect(JSON.parse(structured.stdout)).toStrictEqual({ error: 'settings', message: diagnostic });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-    commitAll(sandbox.path);
-    const allowed = await runGspot(sandbox.path, argv);
-    expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
+    const initialized = await runGspot(sandbox.path, buildInitArguments(['none'], { json: true }));
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(true);
-});
-
-test('a failed git status stops init before it writes', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'control.txt': 'preserve this source\n' });
-    commitAll(sandbox.path);
-    const before = await readTree(sandbox.path);
-    const run = processes.runBlocking;
-    using boundary = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
-        if (command[0] !== 'git' || command[1] !== 'status' || command[2] !== '--porcelain')
-            return run(command, options);
-        return { code: 7, missing: false, duration: 0, stdout: '', stderr: 'status unavailable\n' };
-    });
-    const argv = buildInitArguments([]);
-    const human = await runGspot(sandbox.path, argv);
-    expect(human.code, human.stdout + human.stderr).toBe(2);
-    expect(human.stdout).toBe('');
-    expect(human.stderr).toBe('Git status failed (exit 7): status unavailable\n');
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-    const structured = await runGspot(sandbox.path, [...argv, '--json']);
-    expect(structured.code, structured.stdout + structured.stderr).toBe(2);
-    expect(structured.stderr).toBe('');
-    expect(JSON.parse(structured.stdout)).toStrictEqual({
-        error: 'git',
-        message: 'Git status failed (exit 7): status unavailable',
-    });
-    expect(boundary).toHaveBeenCalledWith(
-        ['git', 'status', '--porcelain'],
-        expect.objectContaining({ cwd: sandbox.path }),
-    );
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const installed = await runGspot(sandbox.path, ['install']);
+    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    const checked = await runGspot(sandbox.path, ['check', '--json']);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    expect(await Bun.file(join(sandbox.path, 'scripts/a.sh')).text()).toBe(CLEAN_BASH_SCRIPT + '\n\n');
+    expect(await Bun.file(join(sandbox.path, 'notes.txt')).text()).toBe('draft\n');
+    expect(gitOutput(sandbox.path, ['diff', '--cached', '--binary'])).toBe(staged);
+    expect(git(sandbox.path, ['rev-parse', '--verify', 'HEAD'])).toStrictEqual(head);
 });
 
 test('init refuses an unreadable package.json before writing', async () => {

@@ -49,6 +49,7 @@ export default defineConfig({
             ],
             components: {
                 SiteTitle: './src/components/starlight/SiteTitle.astro',
+                Hero: './src/components/starlight/Hero.astro',
             },
             expressiveCode: { defaultProps: { frame: 'code' } },
             editLink: { baseUrl: 'https://github.com/stefanionescu/gspot/edit/main/docs/' },

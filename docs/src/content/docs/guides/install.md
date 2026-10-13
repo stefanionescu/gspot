@@ -41,38 +41,29 @@ The guides write commands as `gspot ...`. Add the start from this table.
 
 ```shell
 npm install --save-dev --save-exact @gspothq/cli
-git add package.json package-lock.json
-git commit -m "build: Add gspot"
 npx gspot init
 npx gspot install
-npx gspot check
 ```
 
-| Package manager | Add gspot                                       | Then run                                                                   |
-| --------------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
-| pnpm            | `pnpm add --save-dev --save-exact @gspothq/cli` | `pnpm exec gspot init`, `pnpm exec gspot install`, `pnpm exec gspot check` |
-| Yarn            | `yarn add --dev --exact @gspothq/cli`           | `yarn exec gspot init`, `yarn exec gspot install`, `yarn exec gspot check` |
-| Bun             | `bun add --dev --exact @gspothq/cli`            | `bunx gspot init`, `bunx gspot install`, `bunx gspot check`                |
-
-Commit `package.json` and the lockfile before `init`.
+| Package manager | Add gspot                                       | Then run                                          |
+| --------------- | ----------------------------------------------- | ------------------------------------------------- |
+| pnpm            | `pnpm add --save-dev --save-exact @gspothq/cli` | `pnpm exec gspot init`, `pnpm exec gspot install` |
+| Yarn            | `yarn add --dev --exact @gspothq/cli`           | `yarn exec gspot init`, `yarn exec gspot install` |
+| Bun             | `bun add --dev --exact @gspothq/cli`            | `bunx gspot init`, `bunx gspot install`           |
 
 ## Repository without package.json
 
 ```shell
 mise use node@24 'npm:@gspothq/cli@<version>'
-git add mise.toml
-git commit -m "build: Add gspot"
 mise exec -- gspot init
 mise exec -- gspot install
-mise exec -- gspot check
 ```
 
-Replace `<version>` with the version you install, such as `0.1.0`. `mise use` pins Node.js and gspot in your
+Replace `<version>` with the version you install, such as `0.1.2`. `mise use` pins Node.js and gspot in your
 `mise.toml`, the same way a dev dependency pins gspot in `package.json`.
 
 ## Read the plan
 
-Commit your work first: `gspot init` stops when your work has uncommitted changes, so that Git keeps a copy of every file it replaces.
 Run `gspot init --dry-run` to read the plan before accepting it. The plan names existing tool files it replaces, such as `.eslintrc.json`, `.prettierrc`, `ruff.toml`, `.stylelintrc.json`, `typos.toml`, and `.shellcheckrc`. `init` deletes those files and writes its own tool files; it does not read settings out of them. Move settings you still need into `gspot.toml` with `gspot set` and `gspot ignore`. A tool without a tool file can run as a [command check](/guides/command-checks/).
 
 ### What init leaves alone
@@ -83,15 +74,25 @@ If Husky, Lefthook, or your own hooks folder already runs your Git hooks, gspot 
 
 The list under `no longer runs` in the plan names folders of lint scripts and dependency files that list only lint tools. Check that nothing else uses them, then delete them.
 
-## Install the tools and check
+## Set up the tools
 
 `init` shows a plan: the files it replaces, the configurations, the tools, the Git hooks, and CI. It prints
 "Continue?" and writes the files when you accept; `--yes` accepts without asking. It installs nothing and runs no
 check, and it ends with `run gspot install`. `gspot install` installs the tools and installs Git hooks when `hooks.enabled = true`.
 
-`gspot check` runs the checks. `init` proposes Git hooks and detects your CI provider; its plan shows the choices it writes. When you use a template, its hook and CI settings supply those choices.
+`init` proposes Git hooks and detects your CI provider; its plan shows the choices it writes. When you use a template, its hook and CI settings supply those choices. If `gspot install` fails, see [Troubleshooting](/guides/troubleshooting/).
 
-Fix the findings, review the generated files, and commit. If `gspot install` fails, see [Troubleshooting](/guides/troubleshooting/).
+## Check your files
+
+Run the check command for your installation:
+
+```shell
+npx gspot check
+```
+
+For a mise installation, run `mise exec -- gspot check`.
+The check reads your current files, including uncommitted changes and untracked files that `.gitignore` does not hide.
+You do not need to commit first. See [Fix findings](/guides/findings/) for corrections and file selection.
 
 ## How hooks start gspot
 

@@ -79,18 +79,29 @@ export async function readBlobs(root: string, requested: string[], cancelSignal?
 }
 
 /**
+ * Read the current commit, distinguishing an unborn branch from failed Git reads.
+ * @param root repository directory.
+ * @param cancelSignal command cancellation.
+ * @returns current commit hash, or undefined for an unborn branch.
+ */
+export async function readHead(root: string, cancelSignal?: AbortSignal): Promise<string | undefined> {
+    const options = { cancelSignal };
+    const head = await runGit(root, [...HEAD_ARGV], options);
+    if (head.code === 0) return head.stdout.trim();
+    const failure = new GspotError('git', ['Cannot read committed Git history. Restore HEAD and check again.']);
+    if (head.code !== 1) throw failure;
+    const symbolic = await runGit(root, [...SYMBOLIC_HEAD_ARGV], options);
+    if (symbolic.code !== 0) throw failure;
+    return undefined;
+}
+
+/**
  * Resolve committed entries, distinguishing an unborn branch from failed Git reads.
  * @param root repository directory.
  * @param cancelSignal command cancellation.
  * @returns current commit entries, or an empty list for an unborn branch.
  */
 export async function listHeadEntries(root: string, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
-    const options = { cancelSignal };
-    const head = await runGit(root, [...HEAD_ARGV], options);
-    if (head.code === 0) return listRevisionEntries(root, { kind: 'commit', hash: head.stdout.trim() }, cancelSignal);
-    const failure = new GspotError('git', ['Cannot read committed Git history. Restore HEAD and check again.']);
-    if (head.code !== 1) throw failure;
-    const symbolic = await runGit(root, [...SYMBOLIC_HEAD_ARGV], options);
-    if (symbolic.code !== 0) throw failure;
-    return [];
+    const head = await readHead(root, cancelSignal);
+    return head === undefined ? [] : listRevisionEntries(root, { kind: 'commit', hash: head }, cancelSignal);
 }

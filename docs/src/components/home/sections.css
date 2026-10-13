@@ -1,0 +1,110 @@
+:root:has(.landing) {
+    --sl-content-width: 75rem;
+}
+
+.tool-strip {
+    display: grid;
+    gap: 1.25rem;
+    padding-block: 1.5rem;
+    border-block: 1px solid var(--sl-color-gray-5);
+}
+
+.tool-strip p {
+    color: var(--sl-color-gray-3);
+    font-size: 0.875rem;
+}
+
+.tool-strip ul {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    list-style: none;
+    padding: 0;
+}
+
+.tool-strip li {
+    font-weight: 600;
+}
+
+.supported,
+.demonstration,
+.setup,
+.closing {
+    padding-block: var(--home-section-space);
+}
+
+.demonstration,
+.setup,
+.closing {
+    border-block-start: 1px solid var(--sl-color-gray-5);
+}
+
+.section-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    margin-block-end: 1.75rem;
+}
+
+.section-heading h2,
+.closing h2 {
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 500;
+}
+
+.section-heading p,
+.setup-grid p {
+    color: var(--sl-color-gray-2);
+    line-height: 1.7;
+}
+
+.section-heading a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+}
+
+.supported-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    list-style: none;
+    padding: 0;
+}
+
+.supported-list li {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 999px;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.875rem;
+}
+
+.setup-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+}
+
+.setup-grid > div {
+    display: grid;
+    align-content: start;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.setup-grid h3 {
+    font-size: 1.125rem;
+}
+
+@media (width <= 49.99rem) {
+    .setup-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .hero-visual img {
+        max-width: 20rem;
+    }
+}

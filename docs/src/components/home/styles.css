@@ -10,6 +10,27 @@
     padding-block: var(--home-section-space);
 }
 
+.home-hero h1 {
+    font-size: clamp(2.5rem, 5.5vw, 4.5rem);
+    font-weight: 550;
+    line-height: 1.06;
+    letter-spacing: -0.055em;
+    margin: 0;
+    max-width: 15ch;
+}
+
+.hero-visual {
+    display: grid;
+    place-items: center;
+    min-width: 0;
+}
+
+.hero-visual img {
+    width: 100%;
+    height: auto;
+    max-width: 30rem;
+}
+
 .hero-copy {
     min-width: 0;
 }
@@ -55,7 +76,7 @@
     gap: 0.5rem;
 }
 
-.demo-heading h2 {
+.demo-heading :is(h2, h3) {
     font-size: 1rem;
     font-weight: 550;
     margin: 0;

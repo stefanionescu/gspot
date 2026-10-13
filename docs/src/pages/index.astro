@@ -1,30 +1,108 @@
 ---
-import '../home.css';
-import { FEATURES } from '../config/home.ts';
+import '../components/home/styles.css';
+import '../components/home/sections.css';
 import { REPOSITORY_URL } from '../config/site.ts';
-import HomeHero from '../components/home/Hero.astro';
+import { Code } from '@astrojs/starlight/components';
+import Example from '../components/home/Example.astro';
 import Features from '../components/home/Features.astro';
 import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { description } from '@gspothq/cli/package.json' with { type: 'json' };
+
+import {
+    CHECK_COMMANDS,
+    SUPPORTED_TOOLS,
+    INSTALL_COMMANDS,
+    WORKFLOW_FEATURES,
+    REPOSITORY_FEATURES,
+    SUPPORTED_LANGUAGES,
+    SUPPORTED_FRAMEWORKS,
+} from '../config/home.ts';
 ---
 
 <StarlightPage
     frontmatter={{
-        title: 'Check code before it ships',
+        title: 'Lint AI-generated code',
         description,
+        hero: { title: 'Lint AI-generated code' },
         template: 'splash',
         editUrl: false,
         lastUpdated: false,
     }}
 >
     <div class="landing">
-        <HomeHero />
+        <section class="tool-strip" aria-label="Selected tools supported by gspot">
+            <p>Works with the tools you know</p>
+            <ul>
+                {SUPPORTED_TOOLS.map((name) => (
+                    <li>{name}</li>
+                ))}
+            </ul>
+        </section>
+        <section class="supported" aria-labelledby="supported">
+            <div class="section-heading">
+                <h2 id="supported">For your languages and frameworks</h2>
+                <a href="/reference/configurations/">
+                    Browse all configurations <span aria-hidden="true">→</span>
+                </a>
+            </div>
+            <ul class="supported-list">
+                {[...SUPPORTED_LANGUAGES, ...SUPPORTED_FRAMEWORKS].map((name) => (
+                    <li>{name}</li>
+                ))}
+            </ul>
+        </section>
         <Features
-            title="What gspot does"
-            description="It configures the linters of your languages, adds checks of its own, and runs them on every commit."
-            features={FEATURES}
+            title="Lint AI-generated code"
+            description="gspot picks the linters for your languages, configures them, and runs them on every commit."
+            features={WORKFLOW_FEATURES}
         />
+        <section class="demonstration" aria-labelledby="finding">
+            <div class="section-heading">
+                <div>
+                    <h2 id="finding">An agent's wrapper, rejected and fixed</h2>
+                    <p>The helper adds no behavior. Delete it and call the function directly.</p>
+                </div>
+                <a href="/guides/quickstart/javascript-typescript/">
+                    Run the TypeScript example <span aria-hidden="true">→</span>
+                </a>
+            </div>
+            <Example />
+        </section>
+        <Features
+            title="Configure the whole repository"
+            description="Keep your checks, agent rules, and project settings together."
+            features={REPOSITORY_FEATURES}
+        />
+        <section class="setup" aria-labelledby="setup">
+            <div class="section-heading">
+                <h2 id="setup">Set up a repository</h2>
+                <a href="/guides/install/">
+                    Read the install guide <span aria-hidden="true">→</span>
+                </a>
+            </div>
+            <div class="setup-grid">
+                <div>
+                    <h3>Install and configure</h3>
+                    <Code code={INSTALL_COMMANDS} lang="sh" title="Repository root" />
+                    <p>Install gspot, choose your configurations, and install the tools.</p>
+                </div>
+                <div>
+                    <h3>Check and fix</h3>
+                    <Code code={CHECK_COMMANDS} lang="sh" title="Repository root" />
+                    <p>Run the checks, read the findings, and fix your code. Git hooks check later commits.</p>
+                </div>
+            </div>
+        </section>
+        <section class="closing" aria-label="Next steps">
+            <h2>Start linting your code.</h2>
+            <nav class="hero-actions">
+                <a class="primary" href="/guides/install/">
+                    Get started <span aria-hidden="true">→</span>
+                </a>
+                <a href="/reference/commands/">View commands</a>
+            </nav>
+        </section>
         <footer class="home-footer">
             <div class="footer-about">
                 <a href="/" class="footer-brand">

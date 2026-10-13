@@ -1,5 +1,6 @@
 // Selects files changed between repository revisions.
 import { GspotError } from '#cli/errors.ts';
+import { readHead } from '#cli/repository/revisions/objects.ts';
 import { runGit, gitText, gitLines, gitPaths, isShallow } from '#cli/system/git.ts';
 import type { StagedPaths, ChangedPaths, CommitSelection } from '#cli/types/repository/revisions.ts';
 
@@ -123,6 +124,7 @@ export async function pushedCommits(
     cancelSignal?: AbortSignal,
 ): Promise<CommitSelection> {
     if (commits !== undefined) return commits;
+    if ((await readHead(root, cancelSignal)) === undefined) return [];
     const base = await readPushBase(root, cancelSignal);
     const listed = await runGit(root, ['rev-list', `${base}..HEAD`, '--'], {
         cancelSignal,

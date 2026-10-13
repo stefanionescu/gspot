@@ -1,12 +1,12 @@
 ---
 title: "Quickstart: JavaScript and TypeScript"
-description: "Set up gspot in a small TypeScript project and see it refuse an agent's commit. The same steps work in a JavaScript project."
+description: "Install gspot in a small TypeScript project, then check and fix source findings. The same steps work in a JavaScript project."
 ---
 
 import { Code } from '@astrojs/starlight/components';
 import example from '../../../../config/example.json';
 
-Create a small project, install gspot, and see the Git hook refuse a file that only passes a call on.
+Create a small project, install gspot, then check a file that only passes a call on.
 Read [Install gspot](/guides/install/) first.
 
 ## In a JavaScript project
@@ -20,13 +20,15 @@ Create a folder, run `git init`, and write these files:
 
 {example.project.map((file) => <Code code={file.content} lang={file.language} title={file.path} />)}
 
-<Code code={'git add -A\ngit commit -m "build: Create project"'} lang="sh" />
-
 ## Install gspot
 
-Add gspot and commit, because `gspot init` stops on uncommitted changes:
+Add gspot to the project:
 
-<Code code={`${example.commands.install}\ngit add -A\ngit commit -m "build: Add gspot"\n${example.commands.init}\n${example.commands.level}\n${example.commands.install_tools}\n${example.commands.check}`} lang="sh" />
+<Code code={example.commands.install} lang="sh" />
+
+## Set up the tools
+
+<Code code={`${example.commands.init}\n${example.commands.level}\n${example.commands.install_tools}`} lang="sh" />
 
 `init` selects TypeScript, JavaScript, and Markdown and writes `gspot.toml` and the tool files under `.gspot/`.
 `set level all` turns on more checks, including the ones for files and functions that only pass calls on.
@@ -34,21 +36,35 @@ Add gspot and commit, because `gspot init` stops on uncommitted changes:
 
 To scan dependency licenses, list allowed licenses first. See [Dependency licenses](/guides/dependency-licenses/).
 
-## Commit the agent's code
+## Check the source
+
+Run checks when you want to inspect the project:
+
+<Code code={example.commands.check} lang="sh" />
+
+Write these source files to see findings:
 
 {example.agent.files.map((file) => <Code code={file.content} lang={file.language} title={file.path} />)}
 
-<Code code={`${example.commands.check}\ngit add -A\ngit commit -m "${example.agent.message}"`} lang="sh" />
+<Code code={example.commands.check} lang="sh" />
 
-The hook refuses the commit. The report shows these findings:
+The report shows these findings:
 
 <Code code={example.findings.map((finding) => `${finding.file}:${finding.line}:${finding.column}  ${finding.rule}  ${finding.message}`).join('\n')} lang="text" />
 
+## Try the hook
+
+Before fixing the source, you can stage the files and try to commit them:
+
+<Code code={`git add -A\ngit commit -m "${example.agent.message}"`} lang="sh" />
+
+The hook refuses the commit and reports the findings. After you fix them, the hook can pass.
+
 ## Fix the findings
 
-Delete `src/utils.ts` and call `calculateTotal` directly. Run the check, then commit again.
+Delete `src/utils.ts` and call `calculateTotal` directly. Run the check again.
 
-<Code code={`${example.commands.check}\ngit add -A\ngit commit -m "${example.agent.message}"`} lang="sh" />
+<Code code={example.commands.check} lang="sh" />
 
 Read [The report](/guides/findings/#the-report) for skipped checks and their messages.
 To change the level, limits, or ignores, see [gspot.toml](/guides/gspot-toml/).

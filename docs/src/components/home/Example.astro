@@ -1,0 +1,50 @@
+---
+import example from '../../config/example.json';
+import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
+
+const agentFile = example.agent.files.find((file) => file.path === 'src/utils.ts');
+if (agentFile === undefined) throw new Error('The homepage example has no src/utils.ts.');
+const summary = `${String(new Set(example.findings.map((finding) => finding.check)).size)} checks failed, ${String(example.findings.length)} findings`;
+---
+
+<section class="hero-demo" aria-labelledby="hero-example">
+    <div class="demo-heading">
+        <h3 id="hero-example">An agent commits a wrapper</h3>
+        <span>Findings excerpt · TypeScript · level all</span>
+    </div>
+    <Tabs>
+        <TabItem label="Commit">
+            <Code code={agentFile.content.trimEnd()} lang="typescript" title={agentFile.path} wrap />
+            <Code code={`git commit -m "${example.agent.message}"`} lang="sh" frame="none" />
+            <ul class="demo-findings">
+                {example.findings.map((finding) => (
+                    <li>
+                        <code>
+                            {finding.file}:{finding.line}
+                        </code>
+                        <p>{finding.message}</p>
+                        <span>
+                            {finding.rule} · {finding.check}
+                        </span>
+                    </li>
+                ))}
+            </ul>
+            <p class="demo-status">{summary}</p>
+        </TabItem>
+        <TabItem label="Fix">
+            <ul class="demo-fixes">
+                <li>
+                    Delete <code>src/utils.ts</code>.
+                </li>
+                <li>
+                    Call <code>calculateTotal</code> directly.
+                </li>
+            </ul>
+            <Code code={`git commit -m "${example.agent.message}"`} lang="sh" frame="none" />
+            <p class="demo-status">{example.passed.replace(/, [\d.]+s(?= \(|$)/u, '')}</p>
+        </TabItem>
+    </Tabs>
+    <a class="demo-guide" href="/guides/quickstart/javascript-typescript/">
+        Run the TypeScript example <span aria-hidden="true">→</span>
+    </a>
+</section>
