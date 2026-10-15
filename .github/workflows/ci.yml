@@ -1,9 +1,8 @@
 name: ci
-# Run the unit, integration, and end-to-end tests on Linux, macOS, and Windows, and build the docs site.
+# Run the unit, integration, and end-to-end tests on Linux, macOS, and Windows.
 on:
     push:
         branches: [main]
-    pull_request:
 permissions:
     contents: read
 concurrency:
@@ -39,13 +38,3 @@ jobs:
             - run: mise run ${{ matrix.suite == 'unit' && 'test' || format('test:{0}', matrix.suite) }}
               env:
                   GITHUB_TOKEN: ${{ github.token }}
-    docs:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 60
-        steps:
-            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-              with:
-                  persist-credentials: false
-            - uses: $/.github/actions/setup
-            - run: bun install --frozen-lockfile --filter @gspothq/workspace --filter @gspothq/docs
-            - run: mise run build:docs
