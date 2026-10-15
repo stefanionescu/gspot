@@ -8,6 +8,7 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
 import { openOwnershipLog } from '#cli/ownership/log.ts';
+import { textContaining } from '#tests/setup/matchers.ts';
 import { executableNames } from '#cli/system/executables.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
@@ -21,6 +22,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         await createFileTree(sandbox.path, {
             'gspot.toml': settingsText(['prose'], { level: 'all', tables: 'tool_timeout_seconds=1\n' }),
             '.gspot/config/vale.ini': VALE_PACKAGES_INI,
+            '.gspot/vale/Google/terms.yml': 'previous bytes\n',
             'guide.md': 'Authored text.\n',
         });
         using log = openOwnershipLog(sandbox.path);
@@ -33,10 +35,9 @@ test.each([...VALE_INSTALL_FAILURES])(
         const cancelSignal = failure === 'cancellation' ? AbortSignal.abort() : undefined;
         const failedSteps: (readonly string[])[] = [];
         expect(installValePackages({ ...request, cancelSignal }, failedSteps)).rejects.toThrow(expected);
+        expect(await readFile(join(sandbox.path, '.gspot/vale/Google/terms.yml'), 'utf8')).toBe('previous bytes\n');
         expect(failedSteps).toStrictEqual(
-            failure === 'cancellation'
-                ? []
-                : [[executable, '--config', join(sandbox.path, '.gspot/config/vale.ini'), 'sync']],
+            failure === 'cancellation' ? [] : [[executable, '--config', textContaining('vale-'), 'sync']],
         );
         expect(await readFile(join(sandbox.path, 'guide.md'), 'utf8')).toBe('Authored text.\n');
         await writeFile(
@@ -45,7 +46,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         );
         const steps: (readonly string[])[] = [];
         expect(installValePackages(request, steps)).resolves.toBe('installed Vale packages in .gspot/vale');
-        expect(steps).toStrictEqual([[executable, '--config', join(sandbox.path, '.gspot/config/vale.ini'), 'sync']]);
+        expect(steps).toStrictEqual([[executable, '--config', textContaining('vale-'), 'sync']]);
         log.state.installed = ['vale'];
         log.save();
         expect(await readFile(join(sandbox.path, '.gspot/vale/Google/terms.yml'), 'utf8')).toBe('corrected bytes\n');

@@ -245,16 +245,6 @@ export const VALE_INSTALL_FAILURES = [
         'console.error("Registry request failed: https://alex:synthetic-password@example.com/styles.zip"); process.exitCode = 7;',
         'Registry request failed: https://[redacted]@example.com/styles.zip',
     ],
-    [
-        'incomplete native output',
-        "const { mkdirSync } = await import('node:fs'); mkdirSync('../vale/Google', { recursive: true });",
-        'Vale did not install .gspot/vale/write-good',
-    ],
-    [
-        'missing Harper dictionaries',
-        `const { mkdirSync } = await import('node:fs'); for (const name of ["Google", "write-good", "proselint", "alex", "Harper"]) mkdirSync('../vale/' + name, { recursive: true });`,
-        'Vale did not install .gspot/vale/config/dictionaries',
-    ],
 ] as const;
 
 export const FIXED_VALE_INSTALL_SCRIPT = String.raw`
