@@ -34,8 +34,7 @@ function prefixOf(stem: string): string {
  * @param input the check context.
  * @returns the findings.
  */
-// eslint-disable-next-line @typescript-eslint/require-await -- reason: All built-in checks return promises; this check computes findings from captured data.
-export async function sharedPrefixes(input: CheckInput): Promise<Finding[]> {
+export function sharedPrefixes(input: CheckInput): Finding[] {
     const limit = input.selection.view.options('limits').prefix_collisions;
     const prefixes = new Set(input.selection.selected.flatMap((manifest) => manifest.prefix_collisions.prefixes));
     const kinds = new Set(input.selection.selected.flatMap((manifest) => manifest.prefix_collisions.kinds));

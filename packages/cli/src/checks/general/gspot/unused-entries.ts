@@ -17,8 +17,7 @@ import { scopeSchema, settingsSchema } from '#cli/settings/schema/gspot-toml.ts'
  * @param input the selected check and repository files.
  * @returns findings for settings paths without matching files.
  */
-// eslint-disable-next-line @typescript-eslint/require-await -- reason: All built-in checks return promises; this check computes findings from captured data.
-export async function unusedEntries(input: CheckInput): Promise<Finding[]> {
+export function unusedEntries(input: CheckInput): Finding[] {
     const files = input.repositoryFiles;
     const candidates = [...includeParentFolders(files.map((file) => file.path))];
     return everyTable(input.settingsFile.settings).flatMap(({ table, scope = '', path }) => {

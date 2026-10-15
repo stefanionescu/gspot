@@ -170,8 +170,7 @@ export async function namingIdentifiers(input: CheckInput): Promise<Finding[]> {
  * @param input the selected check and repository files.
  * @returns the findings for file and directory names.
  */
-// eslint-disable-next-line @typescript-eslint/require-await -- reason: All built-in checks return promises; this check computes findings from captured data.
-export async function namingPaths(input: CheckInput): Promise<Finding[]> {
+export function namingPaths(input: CheckInput): Finding[] {
     const settings = readNamingSettings(input);
     return findingsFor(input, settings, pathIdentifiers(input));
 }

@@ -8,8 +8,7 @@ import { directoryTree, structureSources } from '#cli/checks/general/structure/s
  * @param input the check context.
  * @returns the findings.
  */
-// eslint-disable-next-line @typescript-eslint/require-await -- reason: All built-in checks return promises; this check computes findings from captured data.
-export async function fileFolderClashes(input: CheckInput): Promise<Finding[]> {
+export function fileFolderClashes(input: CheckInput): Finding[] {
     const files = structureSources(input);
     const tree = directoryTree(input.files);
     return files.flatMap((file) => {
