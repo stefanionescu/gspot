@@ -173,7 +173,11 @@ let package = Package(name: "App")
     const proposed = settingsSchema.parse(parse(output.settings));
     expect(proposed.scope!.map(({ path }) => path)).toStrictEqual(['ios']);
     expect(proposed.scope!.find(({ path }) => path === 'ios')?.configurations).toContain('swift');
-    expect(output.plan.noLongerRuns.map((entry) => entry.path)).toStrictEqual(['tools/lint/package.json']);
+    expect(output.plan.noLongerRuns).toStrictEqual([]);
+    expect(output.plan.change).toContainEqual({
+        path: 'tools/lint/package.json',
+        note: 'eslint is now pinned in .gspot/package.json; remove it from devDependencies if nothing else uses it',
+    });
 });
 
 test.each([

@@ -6,7 +6,8 @@ import { submodulePaths } from '#cli/repository/tracked.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
-import type { Tooling } from '#cli/types/repository/inventory.ts';
+import { readPackageJson } from '#cli/repository/dependency-files.ts';
+import type { PackageJson } from '#cli/types/parsers/dependency-files.ts';
 import { misePins, toolProjectPins } from '#cli/configurations/tool-pins.ts';
 import type { InitPlan, InitAnswers, InitFileRow, InitPlanInputs } from '#cli/types/commands/init.ts';
 
@@ -47,15 +48,34 @@ function toolProjectRows(everySelected: Manifest[]): InitPlan['change'] {
     return rows;
 }
 
-// What stops running once gspot runs the same tools: lint folders, lint-only manifests, and duplicate pins.
-function buildPinnedDependencyRows(tooling: Tooling): InitFileRow[] {
-    const list = tooling.lintFolders.map((folder) => ({
-        path: `${folder}/`,
-        note: 'a folder of lint scripts; check remaining references before deleting it',
-    }));
-    for (const manifest of tooling.lintOnlyManifests)
-        list.push({ path: manifest, note: 'a package.json whose dependencies are all tools gspot now pins' });
-    return list;
+// Name dependencies that the generated tool project now pins without deleting the authored manifest.
+function buildPinnedDependencyRows({ root, tooling }: InitPlanInputs, requirements: Manifest[]): InitFileRow[] {
+    const pinned = new Set(Object.keys(toolProjectPins(requirements).npm));
+    return tooling.lintOnlyManifests.flatMap((path) => {
+        const manifest = readPackageJson(root, path) as PackageJson;
+        const names = [
+            ...new Set(
+                Object.keys({
+                    ...manifest.dependencies,
+                    ...manifest.devDependencies,
+                    ...manifest.peerDependencies,
+                    ...manifest.optionalDependencies,
+                }),
+            ),
+        ]
+            .filter((name) => pinned.has(name))
+            .toSorted((left, right) => left.localeCompare(right));
+        if (names.length === 0) return [];
+        const subject = names.join(', ');
+        const verb = names.length === 1 ? 'is' : 'are';
+        const pronoun = names.length === 1 ? 'it' : 'them';
+        return [
+            {
+                path,
+                note: `${subject} ${verb} now pinned in ${NPM_TOOL_PROJECT_FILE}; remove ${pronoun} from devDependencies if nothing else uses ${pronoun}`,
+            },
+        ];
+    });
 }
 
 // The CI files init leaves alone: every one when init writes no workflow, and every existing lint job.
@@ -160,8 +180,11 @@ export function buildInitPlan(
             ...submodulePaths(planning.index).map((path) => ({ path, note: 'submodule; contents are not read' })),
             ...keptCiRows(answers.ci, tooling.ci, readLintJobs(root, tooling.ci)),
         ],
-        change: [...change, ...replaced.changed],
-        noLongerRuns: buildPinnedDependencyRows(tooling),
+        change: [...change, ...replaced.changed, ...buildPinnedDependencyRows(planning, requirements)],
+        noLongerRuns: tooling.lintFolders.map((folder) => ({
+            path: `${folder}/`,
+            note: 'a folder of lint scripts; check remaining references before deleting it',
+        })),
     };
 }
 

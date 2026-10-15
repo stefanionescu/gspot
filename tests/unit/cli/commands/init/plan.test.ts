@@ -9,6 +9,24 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { readTree, pathExists } from '#tests/setup/files.ts';
 import { buildInitOptions, buildInitArguments } from '#tests/setup/init.ts';
 
+test('init names pinned dependencies without proposing to delete the package manifest', async () => {
+    await using sandbox = await testdir({
+        'package.json': '{"name":"example","private":true,"type":"module","devDependencies":{"typescript":"^5.0.0"}}\n',
+    });
+    const before = await readTree(sandbox.path);
+    const result = await initCommand(
+        buildInitOptions(sandbox.path, { isDryRun: true, configurations: ['typescript'] }),
+    );
+    expect(result.exitCode, result.text).toBe(0);
+    const { plan } = result.json as Required<Pick<InitJson, 'plan'>>;
+    expect(plan.change).toContainEqual({
+        path: 'package.json',
+        note: 'typescript is now pinned in .gspot/package.json; remove it from devDependencies if nothing else uses it',
+    });
+    expect([...plan.delete, ...plan.noLongerRuns].map(({ path }) => path)).not.toContain('package.json');
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
 test('the init plan keeps existing CI jobs apart from tool settings that the generated tool files replace', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
