@@ -57,7 +57,7 @@ const packedPackagesSchema = z.array(
 /** Give real hook repositories the same authored runtime pins as this repository. */
 export async function installRuntimes(root: string): Promise<void> {
     const runtimeSettings = parse(await readFile(join(import.meta.dir, '../..', PINNED_TOOLS_FILE), 'utf8'));
-    const tools = z.record(z.string(), z.string()).parse(runtimeSettings['tools']);
+    const tools = z.object({ bun: z.string(), node: z.string() }).parse(runtimeSettings['tools']);
     await writeFile(join(root, PINNED_TOOLS_FILE), stringify({ tools }));
     const trusted = await runCommand([...MISE_TRUST, PINNED_TOOLS_FILE], { cwd: root });
     if (trusted.code !== 0) throw new Error(`Sandbox runtime trust failed: ${trusted.stdout}${trusted.stderr}`);
