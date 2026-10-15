@@ -5,7 +5,9 @@ import { gitOutput } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { readTooling } from '#cli/repository/tooling.ts';
+import { createReadCache } from '#cli/system/file-reads.ts';
 import { unlink, symlink, readFile, writeFile } from 'node:fs/promises';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { LEFTHOOK_FILES, LINKED_HOOK_FILES, LINKED_HOOK_FOLDERS } from '#tests/config/tooling.ts';
 
 test('hook discovery keeps spaces in core.hooksPath and refuses a broken Git configuration', async () => {
@@ -43,7 +45,12 @@ test('a hooks folder outside the repository that core.hooksPath names is listed'
 test('pre-commit is found from its configuration file', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { '.pre-commit-config.yaml': 'repos: []\n' });
-    const { files } = await readRepository(sandbox.path, [], []);
+    const { files } = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     expect(readTooling(sandbox.path, files, []).hooks).toStrictEqual([
         { kind: 'pre-commit', path: '.pre-commit-config.yaml', files: [] },
     ]);

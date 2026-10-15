@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
+import { createReadCache } from '#cli/system/file-reads.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -58,7 +59,12 @@ test.each([...WORKSPACE_DECLARATIONS])(
             'packages/api/package.json': '{"dependencies":{"express":"5.0.0"}}',
             'packages/lint/package.json': '{"devDependencies":{"eslint":"10.0.0"}}',
         });
-        const repository = await readRepository(sandbox.path, [], []);
+        const repository = await readRepository(sandbox.path, {
+            declarations: [],
+            scopeEntries: [],
+            manifests: configurationManifests(),
+            reads: createReadCache(sandbox.path),
+        });
         expect(packageWorkspaces(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
             'packages/api',
             'packages/lint',
@@ -133,7 +139,12 @@ test('broad workspace patterns skip .gspot/.venv and its outside interpreter lin
     });
     const root = join(directory.path, 'project');
     await symlink('../../../../outside/python', join(root, '.gspot/.venv/bin/python'));
-    const repository = await readRepository(root, [], []);
+    const repository = await readRepository(root, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(root),
+    });
     expect(packageWorkspaces(root)).toStrictEqual(['packages/app']);
     expect(
         findScopes(
@@ -168,7 +179,12 @@ test('every folder that holds a project file is a scope, the root and lint-only 
         'tools/lint/package.json': '{"devDependencies":{"eslint":"10.0.0"}}',
         'apps/web/supabase/config.toml': 'project_id = "web"\n',
     });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const packageManifests = await readDependencyFiles(sandbox.path, repository.files);
     const found = findScopes(repository.files, packageManifests, configurationManifests().values());
     expect(found.map((scope) => [scope.path, scope.source])).toStrictEqual([
@@ -191,7 +207,12 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
         'package.json': '{"workspaces":["packages/*"]}',
         ...manifests,
     });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     expect(packageWorkspaces(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'packages/custom',
         'packages/hooks',
@@ -209,7 +230,12 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
         join(sandbox.path, 'packages/next/package.json'),
         '{"dependencies":{"next":"16.0.0"},"devDependencies":{"@next/eslint-plugin-next":"16.0.0"}}',
     );
-    const corrected = await readRepository(sandbox.path, [], []);
+    const corrected = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     expect(
         findScopes(
             corrected.files,
@@ -222,7 +248,12 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
 test('Python scopes use the dependency files read with the repository', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, PYTHON_WORKSPACE_FILES);
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const packageManifests = await readDependencyFiles(sandbox.path, repository.files);
     await writeFile(join(sandbox.path, 'pyproject.toml'), '[invalid');
     expect(

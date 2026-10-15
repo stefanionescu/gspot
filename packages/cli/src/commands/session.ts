@@ -3,7 +3,6 @@ import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { startRunner } from '#cli/generation/hooks.ts';
 import { classifyFile } from '#cli/repository/kind.ts';
-import { findScopes } from '#cli/repository/scopes.ts';
 import { toolTimeoutSeconds } from '#cli/tools/run.ts';
 import { readOwnershipLog } from '#cli/ownership/log.ts';
 import { readRepository } from '#cli/repository/read.ts';
@@ -18,7 +17,6 @@ import { neededToolManifests } from '#cli/planning/needed-tools.ts';
 import { type Repository } from '#cli/types/repository/inventory.ts';
 import { locateCandidates, readMiseBinPaths } from '#cli/tools/find.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { misePins, toolProjectPins } from '#cli/configurations/tool-pins.ts';
 import { selectForScope, fileDeclarations } from '#cli/repository/select.ts';
 import { selectNpmClient, readNpmClientVersion } from '#cli/tools/npm/client.ts';
@@ -76,12 +74,15 @@ async function readSessionRepository(
         ['', ...Object.keys(settings.scope)].map((path) => [path, selectForScope(settings, path, manifests)]),
     );
     const declarations = fileDeclarations(selected);
-    const repository = await readRepository(
-        root,
+    const repository = await readRepository(root, {
         declarations,
-        Object.entries(settings.scope).map(([path, scope]) => ({ path, configurations: scope.configurations })),
+        scopeEntries: Object.entries(settings.scope).map(([path, scope]) => ({
+            path,
+            configurations: scope.configurations,
+        })),
+        manifests,
         reads,
-    );
+    });
     // Init has not written gspot.toml yet, so add it to the file list.
     if (!repository.files.some((file) => file.path === SETTINGS_FILE)) {
         const bytes = Buffer.from(text);
@@ -120,11 +121,7 @@ export async function openSession(
     const manifests = configurationManifests(reads);
     const settings = { ...settingsFile.settings };
     const repository = await readSessionRepository(root, settings, settingsFile.text, manifests, reads);
-    const packageManifests = await readDependencyFiles(root, repository.files);
-    const discovered = findScopes(repository.files, packageManifests, manifests.values());
-    repository.scopes = [
-        ...new Map([...discovered, ...repository.scopes].map((scope) => [scope.path, scope])).values(),
-    ].toSorted((left, right) => left.path.localeCompare(right.path));
+    const packageManifests = repository.dependencyFiles;
     const [scopes, selectInstaller] = await scopeSelections(settings, repository, manifests, reads);
     const timeoutSeconds = toolTimeoutSeconds(rootView(scopes));
     let npmClientIdentity: NpmClientIdentity | undefined = undefined;

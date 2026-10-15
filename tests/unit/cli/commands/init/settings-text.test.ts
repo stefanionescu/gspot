@@ -7,6 +7,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { EMPTY_TOOLING } from '#tests/config/tooling.ts';
 import { parseTemplate } from '#cli/settings/templates.ts';
+import { createReadCache } from '#cli/system/file-reads.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/xcode.ts';
 import { emitSettings, parseTomlText } from '#cli/settings/file.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -44,7 +45,12 @@ test.each([...CI_PREFERENCE_CASES])(
 
 test('the gspot.toml text keeps root and scope configurations', async () => {
     await using sandbox = await testdir();
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const text = initSettingsText(
         {
             configurations: [...INIT_CONFIGURATIONS],
@@ -73,7 +79,12 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
 
 test('template settings stay beside the commit scopes init adds', async () => {
     await using sandbox = await testdir();
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const text = initSettingsText(
         {
             configurations: ['python'],
@@ -102,7 +113,12 @@ test('template settings stay beside the commit scopes init adds', async () => {
 
 test('initialization honors disabled integrations and preserves template format settings', async () => {
     await using sandbox = await testdir();
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const text = initSettingsText(
         {
             configurations: ['format'],
@@ -135,7 +151,12 @@ test('initialization honors disabled integrations and preserves template format 
 
 test('a template keeps its comments and gspot.toml records which template it copied', async () => {
     await using sandbox = await testdir();
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const template = parseTemplate(
         `# Rule owner
 [rules]
@@ -166,7 +187,12 @@ instruction_files = ["TEAM.md"]
 test.each([...SDK_DESTINATIONS])('init picks the Xcode destination for SDK $sdk', async ({ sdk, destination }) => {
     const source = BUILD_SETTINGS_PBXPROJ.replace('SDKROOT=macosx', `SDKROOT=${sdk}`);
     await using sandbox = await testdir({ 'App.xcodeproj/project.pbxproj': source });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const text = initSettingsText(
         { configurations: ['swift', 'xcode'], scopes: [], hooks: false, ci: 'none', rules: false },
         repository,
@@ -189,7 +215,12 @@ test.each([...TEMPLATE_SWIFT_CHOICES])(
             'Unused.xcodeproj/project.pbxproj': 'not native plist syntax',
             'Chosen.xcodeproj/project.pbxproj': BUILD_SETTINGS_PBXPROJ,
         });
-        const repository = await readRepository(sandbox.path, [], []);
+        const repository = await readRepository(sandbox.path, {
+            declarations: [],
+            scopeEntries: [],
+            manifests: configurationManifests(),
+            reads: createReadCache(sandbox.path),
+        });
         const text = initSettingsText(
             {
                 configurations: ['swift', 'xcode'],

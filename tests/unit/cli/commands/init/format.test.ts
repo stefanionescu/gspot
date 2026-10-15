@@ -4,6 +4,7 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { parseTemplate } from '#cli/settings/templates.ts';
+import { createReadCache } from '#cli/system/file-reads.ts';
 import { readFormatTables } from '#cli/commands/init/format.ts';
 import type { SettingsDraft } from '#cli/types/commands/init.ts';
 import { initSettingsText } from '#cli/commands/init/settings-text.ts';
@@ -13,7 +14,12 @@ import { FORMAT_FILE_CASES, SCOPE_FORMAT_CASES, SCOPE_FORMAT_FILES } from '#test
 
 test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', async ({ files, expected }) => {
     await using sandbox = await testdir(files);
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const draft: SettingsDraft = {
         configurations: ['format'],
         scopes: [],
@@ -43,7 +49,12 @@ test.each([...SCOPE_FORMAT_CASES])(
     'init reads the format settings of each scope with $name',
     async ({ template, expected }) => {
         await using sandbox = await testdir(SCOPE_FORMAT_FILES);
-        const repository = await readRepository(sandbox.path, [], []);
+        const repository = await readRepository(sandbox.path, {
+            declarations: [],
+            scopeEntries: [],
+            manifests: configurationManifests(),
+            reads: createReadCache(sandbox.path),
+        });
         const draft: SettingsDraft = {
             configurations: ['format'],
             scopes: ['app', 'app/deep', 'sibling'].map((path) => ({

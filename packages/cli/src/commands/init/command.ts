@@ -2,10 +2,8 @@ import { confirm } from '@clack/prompts';
 import { compact } from '#cli/objects.ts';
 import { GspotError } from '#cli/errors.ts';
 import { emitAll } from '#cli/generation/files.ts';
-import { readText } from '#cli/system/file-reads.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { findScopes } from '#cli/repository/scopes.ts';
 import { findRoot } from '#cli/repository/find-root.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { readTooling } from '#cli/repository/tooling.ts';
@@ -24,9 +22,9 @@ import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { planReplacedFiles } from '#cli/commands/init/replace.ts';
 import { type Tooling } from '#cli/types/repository/inventory.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { readText, createReadCache } from '#cli/system/file-reads.ts';
 import { initPlanText, buildInitPlan } from '#cli/commands/init/plan.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { NO_CONFIGURATIONS, INIT_TEMPLATE_DEFAULTS } from '#cli/config/commands/init.ts';
 import { proposeCi, draftSettings, initSettingsText } from '#cli/commands/init/settings-text.ts';
 
@@ -145,9 +143,14 @@ function registerInit(program: Command): void {
  */
 async function planInit(root: string, options: InitOptions): Promise<InitPrepared> {
     const manifests = configurationManifests();
-    const repo = await readRepository(root, [], []);
-    const packageManifests = await readDependencyFiles(root, repo.files);
-    const scopes = findScopes(repo.files, packageManifests, manifests.values());
+    const repo = await readRepository(root, {
+        declarations: [],
+        scopeEntries: [],
+        manifests,
+        reads: createReadCache(root),
+    });
+    const packageManifests = repo.dependencyFiles;
+    const scopes = repo.scopes;
     const inputs = { root, repo, packageManifests, scopes, manifests };
     const template = options.template === undefined ? INIT_TEMPLATE_DEFAULTS : options.template.tables;
     const { ci: templateCi } = template;

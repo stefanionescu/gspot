@@ -6,6 +6,7 @@ import { unlink, writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { readRepository } from '#cli/repository/read.ts';
+import { createReadCache } from '#cli/system/file-reads.ts';
 import { runtimeDetectionRows } from '#tests/setup/sandbox.ts';
 import { buildTrackedFile } from '#tests/setup/tracked-file.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
@@ -62,7 +63,12 @@ test.each([...PYTHON_DEPENDENCY_CASES])(
             [`api/${path}`]: source,
             'other/readme.txt': 'No Python dependencies.\n',
         });
-        const repository = await readRepository(sandbox.path, [], []);
+        const repository = await readRepository(sandbox.path, {
+            declarations: [],
+            scopeEntries: [],
+            manifests: configurationManifests(),
+            reads: createReadCache(sandbox.path),
+        });
         const packageManifests = await readDependencyFiles(sandbox.path, repository.files);
         expect(
             Object.keys(packageManifests[0]!.dependencies).toSorted((left, right) => left.localeCompare(right)),
@@ -94,7 +100,12 @@ test.each(runtimeDetectionRows())('$name decides runtime detection within its pr
         'api/entry.js': entry.source,
         'api/.gspot/package.json': JSON.stringify('toolProjectManifest' in entry ? entry.toolProjectManifest : {}),
     });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const packageManifests = await readDependencyFiles(sandbox.path, repository.files);
     const manifest = parseManifest(
         `[configuration]\ntitle = "Runtime"\ndescription = "Detects the runtime declared by this project."\n[detect]\nruntimes = ["${entry.runtime}"]\n`,
@@ -113,7 +124,12 @@ test.each(runtimeDetectionRows())('$name decides runtime detection within its pr
 test.each([...SWIFT_TEST_CASES])('Swift test detection: $name', async ({ source, selected }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'Examples/Checks.swift': source });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     expect(repository.files[0]!.tags.includes('swift-test')).toBe(selected);
     expect(
         detectConfigurations(sandbox.path, repository.files, configurationManifests(), []).some(
@@ -125,7 +141,12 @@ test.each([...SWIFT_TEST_CASES])('Swift test detection: $name', async ({ source,
 test.each([...SWIFT_TARGET_CASES])('Swift package test targets: $name', async ({ source, declared }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'Package.swift': source });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     expect(
         detectConfigurations(sandbox.path, repository.files, configurationManifests(), []).some(
             ({ configuration }) => configuration === 'swift-tests',
@@ -142,7 +163,12 @@ test.each(PRISMA_CONTENT_CASES.flatMap((entry) => ['', 'apps/api'].map((scope) =
             [owned]: source,
             'other/prisma/schema.prisma': 'datasource db {\n  provider = "postgresql"\n}\n',
         });
-        const repository = await readRepository(sandbox.path, [], []);
+        const repository = await readRepository(sandbox.path, {
+            declarations: [],
+            scopeEntries: [],
+            manifests: configurationManifests(),
+            reads: createReadCache(sandbox.path),
+        });
         const manifests = configurationManifests();
         expect(
             detectConfigurations(sandbox.path, repository.files, manifests, [], scope).some(
@@ -160,7 +186,12 @@ test.each(PRISMA_CONTENT_CASES.flatMap((entry) => ['', 'apps/api'].map((scope) =
 test('content detection skips a deleted file and refuses an invalid pattern', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'prisma/schema.prisma': 'provider = "postgresql"\n' });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     await unlink(join(sandbox.path, 'prisma/schema.prisma'));
     expect(
         detectConfigurations(sandbox.path, repository.files, configurationManifests(), []).some(
@@ -181,7 +212,12 @@ test('a Prisma read error stops detection, and a session with saved choices does
         'gspot.toml': settingsText(['javascript']),
         'prisma/schema.prisma': 'provider = "postgresql"\n',
     });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const manifests = configurationManifests();
     const failure = Object.assign(new Error('Prisma read failed.'), { code: 'EIO' });
     using read = spyOn(filesystem, 'readFileSync').mockImplementationOnce(() => {

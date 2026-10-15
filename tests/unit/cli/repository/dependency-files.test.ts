@@ -6,7 +6,9 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { readRepository } from '#cli/repository/read.ts';
+import { createReadCache } from '#cli/system/file-reads.ts';
 import { projectDependencies } from '#cli/repository/scopes.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { PYTHON_WORKSPACE_FILES } from '#tests/config/python/tool-project.ts';
 import { readPackageJson, readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { REACT_VUE_PACKAGES, ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/config/npm.ts';
@@ -15,7 +17,12 @@ import { PACKAGE_FIELDS, PROJECT_DEPENDENCY_FILES, PROJECT_DEPENDENCY_SCOPES } f
 test('Python dependency file reads keep their dependencies and report invalid text', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, PYTHON_WORKSPACE_FILES);
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const packageManifests = await readDependencyFiles(sandbox.path, repository.files);
     expect(packageManifests.find((entry) => entry.path === 'api/pyproject.toml')?.dependencies).toStrictEqual({
         fastapi: 'fastapi>=1',
@@ -28,7 +35,12 @@ test('a dependency file that disappears after the repository read is an error', 
     const path = 'pyproject.toml';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [path]: '' });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     await rm(join(sandbox.path, path));
     expect(readDependencyFiles(sandbox.path, repository.files)).rejects.toThrow(path);
     await mkdir(join(sandbox.path, path));
@@ -41,7 +53,12 @@ test('package.json reads keep your own fields and tell a missing file from inval
     const source = JSON.stringify(PACKAGE_FIELDS);
     await createFileTree(sandbox.path, { 'package.json': source });
     expect(readPackageJson(sandbox.path, 'package.json')).toStrictEqual(PACKAGE_FIELDS);
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     await writeFile(join(sandbox.path, 'package.json'), '{');
     expect(() => readPackageJson(sandbox.path, 'package.json')).toThrow('package.json is not valid JSON.');
     expect(readDependencyFiles(sandbox.path, repository.files)).rejects.toThrow(
@@ -54,7 +71,12 @@ test('package.json reads keep your own fields and tell a missing file from inval
 test('declared framework dependencies follow the nearest npm project', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, PROJECT_DEPENDENCY_FILES);
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const manifests = await readDependencyFiles(sandbox.path, repository.files);
     for (const { scope, dependencies } of PROJECT_DEPENDENCY_SCOPES) {
         expect(projectDependencies(manifests, scope), scope).toStrictEqual(dependencies);

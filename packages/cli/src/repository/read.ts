@@ -2,7 +2,6 @@
 import { posix } from 'node:path';
 import { runGitBlocking } from '#cli/system/git.ts';
 import { classifyFile } from '#cli/repository/kind.ts';
-import { buildScope } from '#cli/repository/scopes.ts';
 import { swiftSourceTags } from '#cli/parsers/swift.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
@@ -11,11 +10,14 @@ import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
 import { isGitRepository } from '#cli/repository/find-root.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
+import { buildScope, findScopes } from '#cli/repository/scopes.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
+import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
+import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
+import { readText, readPrefix, readSource } from '#cli/system/file-reads.ts';
 import { attributesFor, gitAttributes, attributeRules } from '#cli/parsers/git.ts';
 import { readIndexEntries, listRepositoryFiles } from '#cli/repository/tracked.ts';
-import { readText, readPrefix, readSource, createReadCache } from '#cli/system/file-reads.ts';
-import type { Repository, ScopeEntry, TrackedFile, FileDeclaration } from '#cli/types/repository/inventory.ts';
+import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 
 import {
     SET_VALUES,
@@ -65,18 +67,18 @@ function readAttributes(root: string, paths: string[], hasGit: boolean): Map<str
 }
 
 /**
- * Reads the tracked file inventory with source kinds, language tags, and written scopes.
+ * Reads tracked files, dependency files, and the written and discovered scopes.
  * @param rootPath the repository root.
- * @param declarations the generated and vendored declarations.
- * @param scopeEntries the [[scope]] entries.
- * @param reads the repository root and cached source reads.
+ * @param options the declarations, written scopes, manifests, and cached source reads.
+ * @param options.declarations the generated and vendored declarations.
+ * @param options.scopeEntries the written scope entries.
+ * @param options.manifests the shipped configuration manifests.
+ * @param options.reads the run's cached source reads.
  * @returns the repository record.
  */
 export async function readRepository(
     rootPath: string,
-    declarations: FileDeclaration[],
-    scopeEntries: Pick<ScopeEntry, 'path' | 'configurations'>[],
-    reads: ReadCache = createReadCache(rootPath),
+    { declarations, scopeEntries, manifests, reads }: RepositoryReadOptions,
 ): Promise<Repository> {
     const root = reads.root;
     const hasGit = isGitRepository(root);
@@ -98,24 +100,30 @@ export async function readRepository(
         }
         files.push(file);
     }
+    const dependencyFiles = await readDependencyFiles(rootPath, files, reads);
+    const discovered = findScopes(files, dependencyFiles, manifests.values());
+    const written: ScopeEntry[] = [
+        { ...ROOT_SCOPE, configurations: [] },
+        ...scopeEntries
+            .filter((entry) => directory.stat(entry.path)?.isDirectory() === true)
+            .map((entry) =>
+                buildScope({
+                    path: entry.path,
+                    configurations: entry.configurations,
+                    source: SETTINGS_FILE,
+                }),
+            ),
+    ];
     return {
         root,
         attributes,
         index,
         hasGit,
         files,
-        scopes: [
-            { ...ROOT_SCOPE, configurations: [] },
-            ...scopeEntries
-                .filter((entry) => directory.stat(entry.path)?.isDirectory() === true)
-                .map((entry) =>
-                    buildScope({
-                        path: entry.path,
-                        configurations: entry.configurations,
-                        source: SETTINGS_FILE,
-                    }),
-                ),
-        ],
+        dependencyFiles,
+        scopes: [...new Map([...discovered, ...written].map((scope) => [scope.path, scope])).values()].toSorted(
+            (left, right) => left.path.localeCompare(right.path),
+        ),
     };
 }
 

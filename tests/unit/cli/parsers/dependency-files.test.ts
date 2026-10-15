@@ -1,6 +1,8 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
+import { createReadCache } from '#cli/system/file-reads.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { INVALID_DEPENDENCY_FILES, INVALID_PYTHON_DEPENDENCIES } from '#tests/config/repository.ts';
 
@@ -9,7 +11,12 @@ test('Python dependency groups with includes keep every dependency', async () =>
     await createFileTree(sandbox.path, {
         'pyproject.toml': '[dependency-groups]\ntest = ["pytest>=8"]\ndev = [{include-group = "test"}, "ruff>=1"]\n',
     });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const packageManifests = await readDependencyFiles(sandbox.path, repository.files);
     expect(packageManifests[0]!.dependencies).toStrictEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
 });
@@ -18,7 +25,12 @@ test('a pytest table counts as a pytest dependency', async () => {
     await using sandbox = await testdir();
     const source = '[tool.pytest.ini_options]\ntestpaths = ["tests"]\n';
     await createFileTree(sandbox.path, { 'pyproject.toml': source, 'source.py': 'print("authored")\n' });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const manifests = await readDependencyFiles(sandbox.path, repository.files);
     expect(manifests[0]?.dependencies).toStrictEqual({ pytest: 'tool.pytest' });
 });
@@ -26,13 +38,23 @@ test('a pytest table counts as a pytest dependency', async () => {
 test.each([...INVALID_PYTHON_DEPENDENCIES])('an invalid $name in $path names the file', async ({ path, source }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [path]: source });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     expect(readDependencyFiles(sandbox.path, repository.files)).rejects.toThrow(`Cannot inspect manifest ${path}`);
 });
 
 test.each(INVALID_DEPENDENCY_FILES)('invalid %s content %s is a dependency file error', async (path, content) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [path]: content, 'source.ts': 'export {};\n' });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     expect(readDependencyFiles(sandbox.path, repository.files)).rejects.toThrow(path);
 });

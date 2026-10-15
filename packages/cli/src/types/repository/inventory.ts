@@ -3,6 +3,7 @@ import type { Dirent } from 'node:fs';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
 import type { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import type { FILE_KINDS } from '#cli/config/repository/inventory.ts';
+import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 
 export type PathIgnore = { base: string; matcher: Ignore };
 
@@ -25,6 +26,7 @@ export type Repository = {
     hasGit: boolean;
     index: GitIndexEntry[];
     files: TrackedFile[];
+    dependencyFiles: DependencyFile[];
     scopes: ScopeEntry[];
 };
 

@@ -2,12 +2,12 @@
 import { isRecord } from '#cli/objects.ts';
 import { isDeepStrictEqual } from 'node:util';
 import type { Session } from '#cli/types/planning.ts';
+import { byScopeDepth } from '#cli/repository/scopes.ts';
 import { selectForScope } from '#cli/repository/select.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import type { InitSelection } from '#cli/types/commands/init.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
-import { findScopes, byScopeDepth } from '#cli/repository/scopes.ts';
 import type { Mutation, TomlTable } from '#cli/types/settings/file.ts';
 import type { ConfigurationLists, ConfigurationReconciliation } from '#cli/types/repository/selection.ts';
 
@@ -99,16 +99,12 @@ function configurationMutation(settings: Settings, rootIds: string[], scopeIds: 
  */
 export function reconcileConfigurations(session: Session): ConfigurationReconciliation {
     const { root, repository: repo, manifests, packageManifests } = session;
-    const discovered = findScopes(repo.files, packageManifests, manifests.values());
-    const scopes = new Map(
-        [...discovered, ...repo.scopes.filter((scope) => scope.path !== '')].map((scope) => [scope.path, scope]),
-    );
     const detected = selectForInit({
         root,
         repo,
         packageManifests,
         manifests,
-        scopes: [...scopes.values()],
+        scopes: repo.scopes,
         options: {},
     });
     return reconcileChoices(session, detected);

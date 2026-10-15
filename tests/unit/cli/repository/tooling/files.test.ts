@@ -3,7 +3,9 @@ import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { mkdir, unlink, symlink } from 'node:fs/promises';
+import { createReadCache } from '#cli/system/file-reads.ts';
 import { LINKED_RULE_FOLDERS } from '#tests/config/tooling.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readTooling, readLintJobs, hasIniSection } from '#cli/repository/tooling.ts';
 
 test('tool discovery finds nested tool files and skips .gspot and vendored folders', async () => {
@@ -15,7 +17,12 @@ test('tool discovery finds nested tool files and skips .gspot and vendored folde
         '.gspot/package.json': 'unowned malformed output',
         'nested/.gspot/package.json': 'unowned nested output',
     });
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     const discovered = readTooling(sandbox.path, repository.files, []);
     expect(discovered.toolFiles.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);
 });

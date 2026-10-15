@@ -1,7 +1,6 @@
 import { GspotError } from '#cli/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
@@ -116,7 +115,7 @@ export function selectForInit(inputs: InitInputs): InitSelection {
         hasGit: repo.hasGit,
     };
     assertKnown(options, manifests);
-    const scopes = [{ ...ROOT_SCOPE, configurations: [] }, ...inputs.scopes];
+    const scopes = inputs.scopes;
     const hasScopes = scopes.length > 1;
     const detected = detectConfigurations(root, repo.files, manifests, packageManifests);
     const proposedRoot = rootSelection(context, detected, hasScopes);

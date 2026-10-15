@@ -5,10 +5,12 @@ import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
 import * as processes from '#cli/system/processes.ts';
 import { readRepository } from '#cli/repository/read.ts';
+import { createReadCache } from '#cli/system/file-reads.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { findRoot, isGitRepository } from '#cli/repository/find-root.ts';
 import { rm, chmod, unlink, symlink, writeFile } from 'node:fs/promises';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { listRevisionEntries } from '#cli/repository/revisions/objects.ts';
 import { isWindows, useOperatingSystem } from '#tests/setup/operating-systems.ts';
 import { readIndexEntries, listRepositoryFiles } from '#cli/repository/tracked.ts';
@@ -26,13 +28,23 @@ test.each([
     gitOutput(root, ['init', '-q']);
     await symlink(target, join(root, name));
     gitOutput(root, ['add', '--', name]);
-    const repository = await readRepository(root, [], []);
+    const repository = await readRepository(root, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(root),
+    });
     expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
     await unlink(join(root, name));
     gitOutput(root, ['rm', '--cached', '--', name]);
     await symlink('local.ts', join(root, 'linked.ts'));
     gitOutput(root, ['add', 'linked.ts']);
-    const corrected = await readRepository(root, [], []);
+    const corrected = await readRepository(root, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(root),
+    });
     expect(corrected.files.find((file) => file.path === 'linked.ts')?.tags).toContain('symlink');
 });
 
@@ -59,7 +71,12 @@ test('a dangling tracked link is listed without reading its target', async () =>
     await symlink('missing.ts', join(sandbox.path, 'linked.ts'), 'file');
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', 'linked.ts']);
-    const repository = await readRepository(sandbox.path, [], []);
+    const repository = await readRepository(sandbox.path, {
+        declarations: [],
+        scopeEntries: [],
+        manifests: configurationManifests(),
+        reads: createReadCache(sandbox.path),
+    });
     expect(repository.files).toHaveLength(1);
     expect(repository.files[0]?.tags).toContain('symlink');
     expect(repository.files[0]?.kind).toBe('source');

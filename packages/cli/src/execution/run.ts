@@ -14,7 +14,6 @@ import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { DOCKER_TOOL } from '#cli/config/checks/infrastructure/docker.ts';
-import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { emptyResult, reproduceLine, buildRunReport } from '#cli/execution/report.ts';
 import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 import { RAN_STATUSES, JOBS_VARIABLE, FAILED_STATUSES } from '#cli/config/execution/run.ts';
@@ -49,8 +48,13 @@ async function refreshAfterFixes(session: Session): Promise<void> {
     const scopes = Object.entries(scope).map(([path, { configurations }]) => ({ path, configurations }));
     session.reads = createReadCache(session.root);
     const selected = new Map(session.scopes.map((selection) => [selection.scope.path, selection.selected]));
-    session.repository = await readRepository(session.root, fileDeclarations(selected), scopes, session.reads);
-    session.packageManifests = await readDependencyFiles(session.root, session.repository.files);
+    session.repository = await readRepository(session.root, {
+        declarations: fileDeclarations(selected),
+        scopeEntries: scopes,
+        manifests: session.manifests,
+        reads: session.reads,
+    });
+    session.packageManifests = session.repository.dependencyFiles;
     session.inspections.clear();
 }
 

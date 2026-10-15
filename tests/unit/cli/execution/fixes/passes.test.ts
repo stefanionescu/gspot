@@ -15,6 +15,27 @@ import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { TEXT_FIX, TEXT_CHECK, FIX_LINTER_CASES } from '#tests/config/execution.ts';
 import { REACT_VUE_PACKAGES, CLEAR_DEPENDENCIES_SCRIPT, ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/config/npm.ts';
 
+test('fix preserves discovered project scopes when checking each project task', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': settingsText(['docs'], { level: 'all' }),
+        'package.json': '{"name":"root","private":true,"scripts":{"root":"true"}}',
+        'README.md': 'Run `bun run root`.\n',
+        'app/package.json': '{"name":"app","private":true,"scripts":{"child":"true"}}',
+        'app/README.md': 'Run `bun run child`.\n',
+        'app/main.js': 'export const ready = true;\n',
+    });
+    const session = await openSession(sandbox.path);
+    expect(session.repository.scopes.map(({ path }) => path)).toContain('app');
+    const options = buildRunOptions({ only: ['docs/missing-paths'] });
+    const plain = await executeRun(session, options);
+    const fixed = await executeRun(session, { ...options, fix: true });
+    expect(plain.report.exitCode).toBe(0);
+    expect(fixed.report.exitCode, JSON.stringify(fixed.report.checks)).toBe(0);
+    expect(fixed.report.checks.map(({ scope, status, findings }) => ({ scope, status, findings }))).toStrictEqual(
+        plain.report.checks.map(({ scope, status, findings }) => ({ scope, status, findings })),
+    );
+});
+
 test.each([...FIX_LINTER_CASES])(
     'after --fix, the $configuration check status matches what the linter still reports',
     async (entry) => {
