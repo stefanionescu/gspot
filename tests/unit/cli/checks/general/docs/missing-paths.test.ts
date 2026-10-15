@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
+import { createReadCache } from '#cli/system/file-reads.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
 import { containing, textContaining } from '#tests/setup/matchers.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
@@ -158,6 +159,7 @@ test.each([
     await Bun.write(join(sandbox.path, 'gspot.toml'), settingsText(['docs'], { level: 'all' }));
     const session = await openSession(sandbox.path);
     await Bun.write(join(sandbox.path, path), text);
+    session.reads = createReadCache(sandbox.path);
     const selected = buildCheckInput(session, 'docs/missing-paths', { paths: ['a.md'] });
     expect(() => CHECK_FUNCTIONS['docs/missing-paths'](selected)).toThrow(`Cannot read task definitions from ${path}.`);
 });
@@ -199,6 +201,7 @@ test.each([
     });
     const session = await openSession(sandbox.path);
     await Bun.write(join(sandbox.path, path), text);
+    session.reads = createReadCache(sandbox.path);
     const input = buildCheckInput(session, 'docs/missing-paths', { paths: ['app/nested/guide.md'] });
     expect(() => CHECK_FUNCTIONS['docs/missing-paths'](input)).toThrow(`Cannot read task definitions from ${path}.`);
 });
