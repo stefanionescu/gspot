@@ -17,7 +17,6 @@ export function generatedFiles(session: Session, planned: PlannedCheck): Promise
     const findings = findStaleFiles(session, emitAll(session)).map((entry) =>
         findingAt(planned, { file: entry.path }, entry.kind, GENERATED_FILE_MESSAGES[entry.kind], {
             help: GENERATED_FILE_HELP[entry.kind],
-            fixable: true,
         }),
     );
     return Promise.resolve({
