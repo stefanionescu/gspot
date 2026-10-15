@@ -18,7 +18,7 @@ import { mergeIgnore, emitSettings, parseExpiryDate } from '#cli/settings/file.t
 function assertKnownCheck(checkName: string, settings: Settings): void {
     const known = knownChecks(Object.values(settings.check));
     if (known.includes(checkName)) return;
-    throw new GspotError('arguments', [unknownCheckMessage(checkName, known)]);
+    throw new GspotError('arguments', unknownCheckMessage(checkName, known));
 }
 
 function buildReasonHint(options: IgnoreOptions): string {

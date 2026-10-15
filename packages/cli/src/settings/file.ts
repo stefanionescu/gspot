@@ -115,7 +115,7 @@ function parseTomlText(text: string, path: string, kind: 'settings' | 'template'
         const { line, column } = error;
         if (typeof line !== 'number' || typeof column !== 'number') throw error;
         const detail = error.message.split('\n').slice(PARSE_CONTEXT_LINES).join('\n');
-        throw new GspotError(kind, [`${path}:${String(line)}:${String(column + 1)} is not valid TOML: ${detail}`]);
+        throw new GspotError(kind, `${path}:${String(line)}:${String(column + 1)} is not valid TOML: ${detail}`);
     }
 }
 
@@ -135,7 +135,7 @@ function sortedToml(table: TomlTable): string {
  */
 function parseExpiryDate(text: string): LocalDate {
     const result = calendarDateSchema.safeParse(text);
-    if (!result.success) throw new GspotError('settings', ['until must be a valid calendar date in YYYY-MM-DD form.']);
+    if (!result.success) throw new GspotError('settings', 'until must be a valid calendar date in YYYY-MM-DD form.');
     return new LocalDate(result.data);
 }
 
@@ -167,7 +167,7 @@ function readSettingsFile(root: string): SettingsSource {
     using files = openSafeFolder(root);
     const original = files.read(SETTINGS_FILE);
     if (original === undefined)
-        throw new GspotError('settings', ['There is no gspot.toml here. Run `gspot init` to create one.']);
+        throw new GspotError('settings', 'There is no gspot.toml here. Run `gspot init` to create one.');
     return { text: decodeSettingsText(original.bytes), original };
 }
 
@@ -178,7 +178,7 @@ function readSettingsFile(root: string): SettingsSource {
  */
 function decodeSettingsText(bytes: Buffer): string {
     const text = decodeUtf8(bytes);
-    if (text === undefined) throw new GspotError('settings', ['gspot.toml must contain valid UTF-8 text.']);
+    if (text === undefined) throw new GspotError('settings', 'gspot.toml must contain valid UTF-8 text.');
     return text;
 }
 

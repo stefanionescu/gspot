@@ -83,7 +83,7 @@ async function unignoreCommand(
         isRecord(entry) && typeof entry['name'] === 'string' ? [{ name: entry['name'] }] : [],
     );
     const known = knownChecks(names);
-    if (!known.includes(options.check)) throw new GspotError('arguments', [unknownCheckMessage(options.check, known)]);
+    if (!known.includes(options.check)) throw new GspotError('arguments', unknownCheckMessage(options.check, known));
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, options);
     const [noun, verb, pronoun] = everywhere === 1 ? ['ignore', 'covers', 'it'] : ['ignores', 'cover', 'them'];
     const warning =

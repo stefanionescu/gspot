@@ -176,10 +176,12 @@ export function layOutSettings(target: TomlTable, indent: string, comments: Toml
     if (comments.size > 0)
         throw new GspotError(
             'settings',
-            [...comments.values()].map(
-                ({ path }) =>
-                    `The comment for ${path.map(String).join('.')} cannot be represented in TOML 1.0. Move that field out of its inline table before writing the settings.`,
-            ),
+            [...comments.values()]
+                .map(
+                    ({ path }) =>
+                        `The comment for ${path.map(String).join('.')} cannot be represented in TOML 1.0. Move that field out of its inline table before writing the settings.`,
+                )
+                .join('\n'),
         );
     return output;
 }

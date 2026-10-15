@@ -251,7 +251,10 @@ export function toolFileName(target: string): string {
  * @returns the error to throw
  */
 export function manifestError(configuration: string, errors: string[]): GspotError {
-    return new GspotError('manifest', [`The configuration manifest for \`${configuration}\` is not valid:`, ...errors]);
+    return new GspotError(
+        'manifest',
+        [`The configuration manifest for \`${configuration}\` is not valid:`, ...errors].join('\n'),
+    );
 }
 
 /**

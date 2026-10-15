@@ -113,13 +113,14 @@ async function listGitFiles(root: string, options: string[], cancelSignal?: Abor
     const listed = await runGitForBytes(root, options, { cancelSignal });
     if (listed.code === 0) {
         const text = decodeUtf8(listed.stdout);
-        if (text === undefined) throw new GspotError('git', ['Revision paths must be valid UTF-8.']);
+        if (text === undefined) throw new GspotError('git', 'Revision paths must be valid UTF-8.');
         return text;
     }
     if (isOutsideGit(runGitBlocking(root, WORK_TREE_ARGV, { env: GIT_LOCALE }))) return undefined;
-    throw new GspotError('git', [
+    throw new GspotError(
+        'git',
         `Git ls-files failed in ${root} (exit ${String(listed.code)}): ${listed.stderr.trim()}`,
-    ]);
+    );
 }
 
 /**

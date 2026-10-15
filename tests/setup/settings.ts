@@ -54,7 +54,7 @@ export function settingsErrors(text: string, root?: string): string[] {
         parseSettings(text, root);
         return [];
     } catch (error) {
-        if (error instanceof GspotError && error.code === 'settings') return error.errors;
+        if (error instanceof GspotError && error.code === 'settings') return error.message.split('\n');
         throw error;
     }
 }

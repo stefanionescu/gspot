@@ -102,7 +102,7 @@ export function buildPlan(
     const { project, scheme, destination } = input.selection.view.options('xcode');
     if (project === undefined) {
         if (!input.repositoryFiles.some(({ path }) => path === posix.join(input.selection.scope.path, PACKAGE_SWIFT)))
-            throw new GspotError('skip', ['Set xcode.project or add Package.swift in this scope.']);
+            throw new GspotError('skip', 'Set xcode.project or add Package.swift in this scope.');
         const scratch = join(folder, PACKAGE_SCRATCH_FOLDER);
         return {
             folder,

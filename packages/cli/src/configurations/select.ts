@@ -29,7 +29,7 @@ export function selectConfigurations(configurationNames: string[], manifests: Ma
     const walk: SelectionWalk = { manifests, errors: [], order: [], seen: new Set() };
     for (const configurationName of configurationNames) visit(walk, configurationName);
     const { errors } = walk;
-    if (errors.length > 0) throw new GspotError('arguments', [...new Set(errors)]);
+    if (errors.length > 0) throw new GspotError('arguments', [...new Set(errors)].join('\n'));
     return walk.order;
 }
 

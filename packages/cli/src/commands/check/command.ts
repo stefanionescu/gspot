@@ -48,10 +48,11 @@ async function pushOptions(options: CheckOptions, paths: string[], signal: Abort
 // Checks an exact staged-index copy and writes the report in the working repository.
 async function checkStaged(root: string, options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
     if (options.fix)
-        throw new GspotError('arguments', [
+        throw new GspotError(
+            'arguments',
             'Staged checks do not run fixers. Run gspot check --fix and stage the reviewed changes.',
-        ]);
-    if (options.base !== undefined) throw new GspotError('arguments', ['Choose --staged or --changed, not both.']);
+        );
+    if (options.base !== undefined) throw new GspotError('arguments', 'Choose --staged or --changed, not both.');
     const set = await readStagedPaths(root, signal);
     return copyRevision(
         root,
@@ -75,7 +76,7 @@ async function checkCommand(root: string, options: CheckOptions, signal: AbortSi
     const isPush = options.hook === 'pre-push';
     const needsGit = [options.staged, isPush, options.base !== undefined].includes(true);
     if (needsGit && !isGitRepository(root))
-        throw new GspotError('git', ['--staged, --changed, and pre-push checks need a Git repository.']);
+        throw new GspotError('git', '--staged, --changed, and pre-push checks need a Git repository.');
     let selected = isPush ? await pushOptions(options, options.paths, signal) : options;
     if (options.messageFile !== undefined) {
         const commitFile = resolve(options.cwd, options.messageFile);
@@ -83,7 +84,7 @@ async function checkCommand(root: string, options: CheckOptions, signal: AbortSi
         try {
             accessSync(commitFile, constants.R_OK);
         } catch (error) {
-            throw new GspotError('files', [`The commit message file ${commitFile} cannot be read.`], {
+            throw new GspotError('files', `The commit message file ${commitFile} cannot be read.`, {
                 cause: error,
             });
         }

@@ -25,9 +25,9 @@ import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/comman
 // The repository files a selector names: the file itself, or everything under a folder.
 function matchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
     const selector = toPosix(relative(session.root, resolve(options.cwd, path)));
-    if (!isInside(selector)) throw new GspotError('arguments', [`Path ${path} is outside this repository.`]);
+    if (!isInside(selector)) throw new GspotError('arguments', `Path ${path} is outside this repository.`);
     const matches = candidates.filter((file) => isInScope(file, selector));
-    if (matches.length === 0) throw new GspotError('arguments', [`Path ${path} matches no repository files.`]);
+    if (matches.length === 0) throw new GspotError('arguments', `Path ${path} matches no repository files.`);
     return matches;
 }
 
@@ -58,7 +58,7 @@ function refuseUnknownChecks(session: Session, only: string[] | undefined): void
         ...Object.values(session.settingsFile.settings.check).map((check) => check.name),
     ]);
     const unknown = only?.find((check) => !known.has(check));
-    if (unknown !== undefined) throw new GspotError('arguments', [unknownCheckMessage(unknown, [...known])]);
+    if (unknown !== undefined) throw new GspotError('arguments', unknownCheckMessage(unknown, [...known]));
 }
 
 function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string {

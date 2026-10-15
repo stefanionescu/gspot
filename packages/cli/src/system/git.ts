@@ -230,9 +230,10 @@ export function hooksDirectory(root: string): string {
 export async function gitText(root: string, argv: readonly string[], options: GitOptions = {}): Promise<string> {
     const result = await runGit(root, argv, options);
     if (result.code !== 0)
-        throw new GspotError('git', [
+        throw new GspotError(
+            'git',
             `Git ${argv[0] ?? ''} failed in ${root} (exit ${String(result.code)}): ${result.stderr.trim()}`,
-        ]);
+        );
     return result.stdout;
 }
 /**

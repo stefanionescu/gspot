@@ -191,9 +191,10 @@ export function planRun(session: Session, options: PlanOptions): PlannedCheck[] 
     if (options.historyComplete === false) {
         const historyChecks = checks.filter((check) => check.skip === undefined && check.check.runs === 'history');
         if (historyChecks.length > 0)
-            throw new GspotError('git', [
+            throw new GspotError(
+                'git',
                 `Pushed history is incomplete for ${historyChecks.map((check) => check.check.name).join(', ')}. Run git fetch --unshallow and retry.`,
-            ]);
+            );
     }
     return checks;
 }

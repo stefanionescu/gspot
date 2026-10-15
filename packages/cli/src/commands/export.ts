@@ -38,7 +38,7 @@ export async function exportCommand(options: ExportOptions): Promise<CommandResu
         parent = realPath(parentPath);
     } catch (error) {
         if (isRecord(error) && error['code'] === 'ENOENT')
-            throw new GspotError('files', [`The folder ${parentPath} does not exist.`]);
+            throw new GspotError('files', `The folder ${parentPath} does not exist.`);
         throw error;
     }
     using destination = openSafeFolder(parent);
@@ -46,7 +46,7 @@ export async function exportCommand(options: ExportOptions): Promise<CommandResu
     const path = toPosix(relative(root, resolve(parent, name)));
     const ownership = readOwnershipLog(root);
     if (path === SETTINGS_FILE || ownership.files.some((entry) => entry.path === path))
-        throw new GspotError('template', [`gspot writes ${path} itself. Choose another file name.`]);
+        throw new GspotError('template', `gspot writes ${path} itself. Choose another file name.`);
     const index = await readIndexEntries(root);
     const tracked = new Set(index.map((entry) => entry.path));
     const checks = template.tables.command_check ?? [];

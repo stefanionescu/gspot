@@ -51,10 +51,7 @@ function issueLines(path: string, issue: z.core.$ZodIssue): string[] {
 }
 
 function throwErrors(errors: SettingsError[]): never {
-    throw new GspotError(
-        'settings',
-        errors.map((error) => errorText(error, SETTINGS_FILE)),
-    );
+    throw new GspotError('settings', errors.map((error) => errorText(error, SETTINGS_FILE)).join('\n'));
 }
 
 // Commands and check execution validate the same settings.
@@ -166,7 +163,7 @@ export function parseSettings(text: string, root?: string, reads?: ReadCache): S
     if (!result.success)
         throw new GspotError(
             'settings',
-            result.error.issues.flatMap((issue) => issueLines(SETTINGS_FILE, issue)),
+            result.error.issues.flatMap((issue) => issueLines(SETTINGS_FILE, issue)).join('\n'),
         );
     const settings = buildSettings(result.data);
     settings.written = written;

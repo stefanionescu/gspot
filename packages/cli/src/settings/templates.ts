@@ -36,7 +36,7 @@ async function downloadText(url: string): Promise<string> {
             : undefined;
     const headers = token === undefined ? {} : { Authorization: `Bearer ${token}` };
     const response = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS), headers });
-    if (!response.ok) throw new GspotError('template', [`The template at ${url} answered ${String(response.status)}.`]);
+    if (!response.ok) throw new GspotError('template', `The template at ${url} answered ${String(response.status)}.`);
     return response.text();
 }
 
@@ -46,7 +46,7 @@ function readLocalText(source: string, cwd: string): string {
         return readFileSync(path, 'utf8');
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'ENOENT')
-            throw new GspotError('template', [`There is no template at ${source}.`]);
+            throw new GspotError('template', `There is no template at ${source}.`);
         throw error;
     }
 }
@@ -93,7 +93,7 @@ export function parseTemplate(text: string, source: string): Template {
         ({ message: diagnostic }) => diagnostic,
     );
     const errors = [...shape, ...unknown];
-    if (!result.success || errors.length > 0) throw new GspotError('template', errors);
+    if (!result.success || errors.length > 0) throw new GspotError('template', errors.join('\n'));
     return {
         text,
         digest: contentDigest(text),
@@ -110,7 +110,7 @@ export function parseTemplate(text: string, source: string): Template {
  */
 export async function downloadTemplate(source: string, cwd: string): Promise<Template> {
     if (source.startsWith(HTTP_PREFIX))
-        throw new GspotError('template', ['A template is downloaded over https, not http.']);
+        throw new GspotError('template', 'A template is downloaded over https, not http.');
     const url = source.startsWith(GITHUB_PREFIX) ? githubRawUrl(source) : source;
     const text = url.startsWith(HTTPS_PREFIX) ? await downloadText(url) : readLocalText(source, cwd);
     return parseTemplate(text, source);

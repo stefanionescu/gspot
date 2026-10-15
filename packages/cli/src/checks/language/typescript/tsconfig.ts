@@ -51,7 +51,7 @@ export function typescriptTsconfig(input: CheckInput): Finding[] {
             ),
     );
     if (projects.length > 0 && unchecked.length === 0)
-        throw new GspotError('skip', ['An ancestor compiler check covers this project.']);
+        throw new GspotError('skip', 'An ancestor compiler check covers this project.');
     return unchecked.flatMap(({ path, parsed }) =>
         Object.keys(required)
             .filter((option) => parsed.options[option] !== true)

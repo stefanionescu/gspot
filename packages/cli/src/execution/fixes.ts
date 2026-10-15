@@ -12,15 +12,7 @@ import { FIX_PASSES, FIX_DIFF_CONTEXT } from '#cli/config/execution/run.ts';
 import { hasToolError, toolOutputDetail } from '#cli/execution/command/output.ts';
 import { copyIntoScratch, projectCopyInputs } from '#cli/execution/copy/scratch.ts';
 import { prepareCommand, prepareInScratch, commandEnvironment } from '#cli/execution/command/check.ts';
-
-import type {
-    FixRun,
-    FixReport,
-    FixResult,
-    FixOptions,
-    BuiltInChecks,
-    CheckRunOptions,
-} from '#cli/types/execution/check.ts';
+import type { FixReport, FixResult, FixOptions, BuiltInChecks, CheckRunOptions } from '#cli/types/execution/check.ts';
 
 function fixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
     // A code the check declares for findings means findings remain after the fix.
@@ -31,7 +23,7 @@ function fixFailure(planned: PlannedCheck, result: SpawnResult): string | undefi
     return [`${planned.check.name} exited ${String(result.code)}`, detail].filter((text) => text !== '').join(': ');
 }
 
-async function runFix(session: Session, planned: PlannedCheck, prepared: PreparedCommand): Promise<FixRun> {
+async function runFix(session: Session, planned: PlannedCheck, prepared: PreparedCommand): Promise<FixResult> {
     const check = planned.check.name;
     const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const before = contentsOf(prepared.root, paths);
@@ -50,13 +42,9 @@ async function runFix(session: Session, planned: PlannedCheck, prepared: Prepare
         if (note !== undefined) break;
     }
     const changed = changedPaths(before, contentsOf(prepared.root, paths));
-    return {
-        result:
-            note === undefined
-                ? { check, status: changed.length === 0 ? 'unchanged' : 'changed', changed }
-                : { check, status: 'failed', changed, note },
-        originals: new Map(changed.map((path) => [path, before.get(path)])),
-    };
+    return note === undefined
+        ? { check, status: changed.length === 0 ? 'unchanged' : 'changed', changed }
+        : { check, status: 'failed', changed, note };
 }
 
 async function scratchFix(
@@ -79,7 +67,7 @@ async function scratchFix(
     using files = openSafeFolder(root, 'system');
     const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const originals = new Map(paths.map((path) => [path, files.read(path)]));
-    const { result } = await runFix(session, planned, prepared);
+    const result = await runFix(session, planned, prepared);
     using corrected = openSafeFolder(scratch.path, 'system');
     for (const path of result.changed)
         if (!sameEntry(files.read(path), originals.get(path)))
@@ -137,8 +125,7 @@ async function runCommandFix(
         workingDirectory === session.root ? environment : commandEnvironment(scratchSession, selected, options),
         availability.path,
     );
-    const completed = await runFix(session, planned, prepared);
-    return completed.result;
+    return runFix(session, planned, prepared);
 }
 
 // Canceled and inactive fixes stay outside both publication and executable preparation.

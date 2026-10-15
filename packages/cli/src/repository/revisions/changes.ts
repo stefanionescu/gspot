@@ -49,7 +49,7 @@ async function readMergeBase(root: string, compared: string, cancelSignal?: Abor
     });
     if (base.code === 0) return base.stdout.trim();
     const help = (await isShallow(root, { cancelSignal })) ? ' History is cut; run git fetch --unshallow.' : '';
-    throw new GspotError('git', [`Git merge-base failed for ${compared}: ${base.stderr.trim()}.${help}`]);
+    throw new GspotError('git', `Git merge-base failed for ${compared}: ${base.stderr.trim()}.${help}`);
 }
 
 /**
@@ -81,7 +81,7 @@ export async function readChangedPaths(
 ): Promise<ChangedPaths> {
     const compared = reference === '' ? await readDefaultRef(root, cancelSignal) : reference;
     if (compared === '') {
-        throw new GspotError('git', ['No upstream or default branch is available; use --changed --base <ref>.']);
+        throw new GspotError('git', 'No upstream or default branch is available; use --changed --base <ref>.');
     }
     const merged = await readMergeBase(root, compared, cancelSignal);
     const committed = await gitPaths(root, [...WORKTREE_DIFF_ARGV, merged, '--'], { cancelSignal });

@@ -31,9 +31,10 @@ async function removeCommand(options: ConfigurationsOptions): Promise<CommandRes
     for (const configuration of options.configurations) {
         const chain = kept.map((id) => requireChain(configuration, id, manifests)).find((found) => found !== undefined);
         if (chain)
-            throw new GspotError('arguments', [
+            throw new GspotError(
+                'arguments',
                 `Cannot remove \`${configuration}\`: ${chain.join(' requires ')}. Remove \`${chain[0] as string}\` first, or keep \`${configuration}\`.`,
-            ]);
+            );
     }
     if (!options.configurations.some((name) => current.includes(name))) {
         return { text: 'nothing to remove\n', json: { changed: false }, exitCode: 0 };

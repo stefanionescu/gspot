@@ -65,9 +65,10 @@ export function assertPushOptions(options: CheckOptions): void {
         options.stage !== undefined ||
         options.messageFile !== undefined;
     if (hasConflict)
-        throw new GspotError('arguments', [
+        throw new GspotError(
+            'arguments',
             'The pre-push hook checks the pushed commits. Leave out --staged, --changed, --fix, --dry-run, and --message-file.',
-        ]);
+        );
 }
 
 /**

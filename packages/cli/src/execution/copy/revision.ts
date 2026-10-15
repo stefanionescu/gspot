@@ -38,9 +38,10 @@ function assertValeMatches(installed: SafeFolder, destination: SafeFolder, confi
     const current = installed.read(config);
     const selected = destination.read(config);
     if (current === undefined || selected === undefined || !current.bytes.equals(selected.bytes))
-        throw new GspotError('files', [
+        throw new GspotError(
+            'files',
             'Installed Vale packages do not match the revision configuration. Check this commit in its own clone after running gspot apply and gspot install there.',
-        ]);
+        );
 }
 
 // Copies one package file the copy lacks through the same confined writer.
@@ -48,7 +49,7 @@ function copyPackageFile(installed: SafeFolder, destination: SafeFolder, path: s
     if (destination.read(path) !== undefined) return;
     const content = installed.read(path);
     if (content === undefined)
-        throw new GspotError('files', [`Installed Vale package file ${path} disappeared. Run gspot apply.`]);
+        throw new GspotError('files', `Installed Vale package file ${path} disappeared. Run gspot apply.`);
     destination.write(path, content, undefined);
 }
 
@@ -85,9 +86,10 @@ async function assertDependencyFilesUnchanged(
     inputs: GitEntry[],
     cancelSignal?: AbortSignal,
 ): Promise<void> {
-    const mismatch = new GspotError('files', [
+    const mismatch = new GspotError(
+        'files',
         'Installed dependencies do not match the revision manifests and lockfiles or its compiler configurations. Check this commit in its own clone after installing its project dependencies and running gspot install there.',
-    ]);
+    );
     if (inputs.some((entry) => statSync(join(root, entry.path), { throwIfNoEntry: false }) === undefined))
         throw mismatch;
     // The confined read refuses a manifest link that leaves the repository before Git follows it.
@@ -97,9 +99,10 @@ async function assertDependencyFilesUnchanged(
         cancelSignal,
     });
     if (hashed.code !== 0)
-        throw new GspotError('git', [
+        throw new GspotError(
+            'git',
             `Git cannot hash the working-tree manifests: ${hashed.stderr.trim()}. Repair the repository before checking this revision.`,
-        ]);
+        );
     const hashes = hashed.stdout.trim().split('\n');
     if (inputs.some((entry, index) => hashes[index] !== entry.hash)) throw mismatch;
 }
@@ -181,13 +184,13 @@ async function revisionDependencies(
         ...declarations.copies,
         ...untrackedArtifacts.map((path): DependencyCopy => ({ path, operation: 'clone' })),
         ...directories.map((folder): DependencyCopy => {
-            const isToolProject = basename(folder) === DOT_GSPOT;
             const path = posix.join(folder, NODE_MODULES);
             if (lstatSync(join(scratch, path), { throwIfNoEntry: false }) !== undefined)
-                throw new GspotError('files', [
+                throw new GspotError(
+                    'files',
                     'Installed dependencies are tracked in the selected revision. Untrack them before checking again.',
-                ]);
-            return { path, operation: isToolProject ? 'link' : 'clone' };
+                );
+            return { path, operation: basename(folder) === DOT_GSPOT ? 'link' : 'clone' };
         }),
     ];
 }
@@ -212,9 +215,10 @@ async function populateRevision(
     const collision = caseCollision(entries);
     const upper = scratch.toUpperCase();
     if (collision !== undefined && upper !== scratch && existsSync(upper))
-        throw new GspotError('files', [
+        throw new GspotError(
+            'files',
             `Git holds ${collision[0]} and ${collision[1]}, which differ only by letter case, and this file system keeps one of them. Rename or remove one with git mv or git rm --cached, then check again.`,
-        ]);
+        );
     for (const entry of entries.filter((file) => file.mode === GITLINK_MODE)) {
         const target = join(scratch, ...systemSegments(entry.path));
         mkdirSync(target, { recursive: true, mode: DIRECTORY_MODE });

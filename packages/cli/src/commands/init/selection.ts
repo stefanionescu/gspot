@@ -73,7 +73,7 @@ function assertKnown(options: InitInputs['options'], manifests: Map<string, Mani
     const configurations = options.configurations ?? [];
     const declarations = configurations.map((name) => ({ name }));
     const unknown = unknownConfigurations(declarations, manifests).map(({ message: diagnostic }) => diagnostic);
-    if (unknown.length > 0) throw new GspotError('arguments', unknown);
+    if (unknown.length > 0) throw new GspotError('arguments', unknown.join('\n'));
 }
 
 function listedConfigurations(ids: string[], manifests: Map<string, Manifest>, detected: Set<string>): string[] {

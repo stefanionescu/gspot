@@ -35,7 +35,6 @@ export type FixResult = { check: string; changed: string[] } & (
 );
 
 /** Pre-fix bytes of changed files, retained only for isolated publication checks. */
-export type FixRun = { result: FixResult; originals: Map<string, Buffer | undefined> };
 
 export type FixReport = { results: FixResult[]; changed: string[]; diffs: string[] };
 
@@ -155,7 +154,6 @@ export type ReportInput = {
 export type ReplannedFixResult = { executables: RunnableCheck[]; fixes: FixReport | undefined };
 
 /** Findings retained after settings ignores and the matches credited to their written entries. */
-export type IgnoredFindings = { kept: Finding[]; uses: IgnoreUse[] };
 
 /** A preview fixes a disposable copy and reports differences. */
 export type FixOptions = { isDryRun: boolean; checks: BuiltInChecks };

@@ -31,11 +31,14 @@ async function saveSettings(root: string, options: SaveSettingsOptions): Promise
         report = writeGeneratedFiles(session, generated, log);
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        throw new GspotError('writing', [
-            summary,
-            `gspot.toml keeps this change, and applying it stopped: ${message}`,
-            'Fix that, then run gspot apply.',
-        ]);
+        throw new GspotError(
+            'writing',
+            [
+                summary,
+                `gspot.toml keeps this change, and applying it stopped: ${message}`,
+                'Fix that, then run gspot apply.',
+            ].join('\n'),
+        );
     }
     return {
         text: `${summary === '' ? '' : summary + '\n'}${reportText(report)}`,
@@ -80,9 +83,10 @@ async function startSettingsEdit(cwd: string): Promise<{ root: string; input: Se
 function refuseAlwaysSelected(names: string[], manifests: Map<string, Manifest>): void {
     const name = names.find((entry) => manifests.get(entry)?.configuration.always_selected === true);
     if (name !== undefined)
-        throw new GspotError('arguments', [
+        throw new GspotError(
+            'arguments',
             `gspot selects ${name} by itself when the repository needs it, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To turn one check off, run gspot ignore.`,
-        ]);
+        );
 }
 
 export { reportText, saveSettings, startSettingsEdit, refuseAlwaysSelected };

@@ -26,7 +26,7 @@ export function registerUnset(program: Command): void {
         .option('--scope <path>', COMMAND_HELP.unset.options['--scope <path>'], trimTrailingSlashes)
         .action(async (setting, items, flags) => {
             if (['configurations', 'removed_configurations'].includes(setting))
-                throw new GspotError('arguments', ['Use gspot add or gspot remove to change configurations.']);
+                throw new GspotError('arguments', 'Use gspot add or gspot remove to change configurations.');
             const { root, input } = await startSettingsEdit(process.cwd());
             const settings = parseSettings(input.text, root);
             findScopeTable(input.table, flags.scope);
@@ -35,11 +35,12 @@ export function registerUnset(program: Command): void {
                 session.scopes.find((selection) => selection.scope.path === (flags.scope ?? '')) as ScopeSelection
             ).known;
             const match = declarationFor(known, setting);
-            if (match === undefined) throw new GspotError('arguments', [unknownSettingError(known, setting)]);
+            if (match === undefined) throw new GspotError('arguments', unknownSettingError(known, setting));
             if (items.length > 0 && match.declaration.type !== 'list' && match.declaration.type !== 'table')
-                throw new GspotError('arguments', [
+                throw new GspotError(
+                    'arguments',
                     `${setting} is not a list, so it takes no items. Run gspot unset ${setting}.`,
-                ]);
+                );
             printResult(
                 await saveSettings(root, {
                     input,

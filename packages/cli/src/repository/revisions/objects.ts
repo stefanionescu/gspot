@@ -22,9 +22,10 @@ export async function listRevisionEntries(
     if (source.kind === 'index') return parseIndexRevision(await readIndexEntries(root, cancelSignal));
     const read = await runGitForBytes(root, [...TREE_ENTRIES_ARGV, source.hash], { cancelSignal });
     if (read.code !== 0)
-        throw new GspotError('git', [
+        throw new GspotError(
+            'git',
             `Git could not read the entries of this revision: ${read.stderr.trim()}. Resolve Git errors before checking again.`,
-        ]);
+        );
     return parseTreeEntries(read.stdout);
 }
 
@@ -55,7 +56,7 @@ export async function visitGitBlobs(
         },
     );
     if (result.code !== 0)
-        throw new GspotError('git', [`Git could not read the objects of this revision: ${result.stderr.trim()}`]);
+        throw new GspotError('git', `Git could not read the objects of this revision: ${result.stderr.trim()}`);
 }
 
 /**
@@ -88,7 +89,7 @@ export async function readHead(root: string, cancelSignal?: AbortSignal): Promis
     const options = { cancelSignal };
     const head = await runGit(root, [...HEAD_ARGV], options);
     if (head.code === 0) return head.stdout.trim();
-    const failure = new GspotError('git', ['Cannot read committed Git history. Restore HEAD and check again.']);
+    const failure = new GspotError('git', 'Cannot read committed Git history. Restore HEAD and check again.');
     if (head.code !== 1) throw failure;
     const symbolic = await runGit(root, [...SYMBOLIC_HEAD_ARGV], options);
     if (symbolic.code !== 0) throw failure;

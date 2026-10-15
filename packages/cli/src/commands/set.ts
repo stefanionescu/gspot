@@ -38,9 +38,10 @@ function parseStructured(text: string): unknown {
     try {
         return parseTomlText(`value = ${text}`, 'value', 'settings')['value'];
     } catch {
-        throw new GspotError('settings', [
+        throw new GspotError(
+            'settings',
             `The value ${text} is not a TOML inline value. Write a list as ["a", "b"] and a table as {key = "value"}, inside single quotes for the shell.`,
-        ]);
+        );
     }
 }
 
@@ -60,10 +61,11 @@ function buildSettingError(settings: Settings, known: KnownSettings, key: string
             undefined,
     );
     if (selectedScope !== undefined)
-        return new GspotError('arguments', [
+        return new GspotError(
+            'arguments',
             `A configuration has the setting \`${key}\` in the scope \`${selectedScope}\`; add --scope ${quoteArgument(selectedScope)}.`,
-        ]);
-    return new GspotError('arguments', [unknownSettingError(known, key)]);
+        );
+    return new GspotError('arguments', unknownSettingError(known, key));
 }
 
 function parseSettingValue(items: string[], declaration: SettingDeclaration): ParsedSettingValue {
@@ -125,9 +127,10 @@ async function changeSetting(
             )?.value,
         )
     )
-        throw new GspotError('settings', [
+        throw new GspotError(
+            'settings',
             `${options.key} already has the reason ${JSON.stringify(previous.reason)}. Pass --reason with a reason that covers every item.`,
-        ]);
+        );
     const mutation: Mutation = (written) => {
         const scopeTable = findScopeTable(written, options.scope);
         if (change.type === 'list') addToList(scopeTable, options.key, change.value);
@@ -153,11 +156,12 @@ async function changeSetting(
  */
 async function setCommand(options: SetOptions): Promise<CommandResult> {
     if (['configurations', 'removed_configurations'].includes(options.key))
-        throw new GspotError('arguments', ['Use gspot add or gspot remove to change configurations.']);
+        throw new GspotError('arguments', 'Use gspot add or gspot remove to change configurations.');
     if (Object.hasOwn(RECORD_FIELDS, options.key))
-        throw new GspotError('arguments', [
+        throw new GspotError(
+            'arguments',
             `Write [[${options.key}]] by hand in gspot.toml. Record lists have their own fields.`,
-        ]);
+        );
     const { root, input } = await startSettingsEdit(options.cwd);
     const settings = parseSettings(input.text, root);
     findScopeTable(input.table, options.scope);

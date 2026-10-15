@@ -76,9 +76,10 @@ async function initCommand(input: InitOptions): Promise<CommandResult<InitJson>>
             : input;
     const root = findRoot(options.cwd);
     if (readText(root, SETTINGS_FILE) !== undefined)
-        throw new GspotError('settings', [
+        throw new GspotError(
+            'settings',
             'This repository already has a gspot.toml. Run `gspot doctor` to inspect its setup and see suggested commands.',
-        ]);
+        );
     let effective = options;
     if (options.from !== undefined) {
         const template = await downloadTemplate(options.from, options.cwd);
@@ -121,9 +122,10 @@ function registerInit(program: Command): void {
         .option('--dry-run', COMMAND_HELP.init.options['--dry-run'])
         .action(async (flags, command) => {
             if (command.getOptionValue('json') === true && flags.yes !== true && flags.dryRun !== true)
-                throw new GspotError('prompt', [
+                throw new GspotError(
+                    'prompt',
                     '--json needs --yes or --dry-run, because gspot cannot ask while it prints JSON.',
-                ]);
+                );
             printResult(
                 await initCommand({
                     cwd: process.cwd(),

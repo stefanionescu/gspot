@@ -34,7 +34,7 @@ function parseLine(line: string): PushLine {
     const [localRef, localHash, remoteRef, remoteHash, ...verbatim] = line.trim().split(/\s+/u);
     const hasRefs = verbatim.length === 0 && localRef !== undefined && remoteRef !== undefined;
     if (!hasRefs || localHash === undefined || remoteHash === undefined || !isHashPair(localHash, remoteHash))
-        throw new GspotError('git', ['Invalid Git pre-push input. Supply every local and remote ref/object pair.']);
+        throw new GspotError('git', 'Invalid Git pre-push input. Supply every local and remote ref/object pair.');
     return { localRef, localHash, remoteRef, remoteHash };
 }
 

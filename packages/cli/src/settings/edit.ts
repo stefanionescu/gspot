@@ -143,9 +143,10 @@ export function findScopeTable(written: TomlTable, scope: string | undefined): T
           )
         : undefined;
     if (!isRecord(scopeTable))
-        throw new GspotError('arguments', [
+        throw new GspotError(
+            'arguments',
             `gspot.toml has no [[scope]] with path = ${JSON.stringify(scope)}. Add one, or leave out --scope.`,
-        ]);
+        );
     return scopeTable;
 }
 

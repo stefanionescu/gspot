@@ -59,9 +59,10 @@ async function copyTree(
             if (lstatSync(path).isSymbolicLink()) {
                 const original = realpathSync(path);
                 if (isInside(relative(original, context.root)))
-                    throw new GspotError('files', [
+                    throw new GspotError(
+                        'files',
                         `Installed dependency link ${relative(context.scratch, destination)} points to this repository or a parent folder. Check this commit in its own clone after installing its project dependencies there.`,
-                    ]);
+                    );
                 context.links.push({ source: original, target: destination });
             }
             return true;

@@ -28,7 +28,7 @@ async function addCommand(options: ConfigurationsOptions): Promise<CommandResult
         options.configurations.map((name) => ({ name })),
         manifests,
     );
-    if (unavailable !== undefined) throw new GspotError('arguments', [unavailable.message]);
+    if (unavailable !== undefined) throw new GspotError('arguments', unavailable.message);
     refuseAlwaysSelected(options.configurations, manifests);
     const scopeTable = findScopeTable(input.table, options.scope);
     const current = settingsSchema.shape.configurations.unwrap().parse(scopeTable['configurations'] ?? []);

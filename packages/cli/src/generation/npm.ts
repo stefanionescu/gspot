@@ -35,7 +35,7 @@ export function npmProject({ root, scopes, manifests, installer }: NpmProjectInp
         .map(({ scope, major }) => `${scope || 'the root'} requires ^${String(major)}`)
         .join('; ');
     if (majors.size > 1)
-        throw new GspotError('installation', [`Tool pin ${NEXT_ESLINT_PLUGIN} conflicts: ${requirements}.`]);
+        throw new GspotError('installation', `Tool pin ${NEXT_ESLINT_PLUGIN} conflicts: ${requirements}.`);
     const major = majors.values().next().value;
     if (major !== undefined) pins[NEXT_ESLINT_PLUGIN] = `^${String(major)}`;
     const files: GeneratedFile[] = [

@@ -3,9 +3,9 @@ import { GspotError } from '#cli/errors.ts';
 import { availableParallelism } from 'node:os';
 import { applyFixers } from '#cli/execution/fixes.ts';
 import { activeIgnores } from '#cli/settings/view.ts';
-import { isEntryMatch } from '#cli/execution/ignores.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { findTool } from '#cli/execution/command/tool.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
 import { createReadCache } from '#cli/system/file-reads.ts';
 import { fileDeclarations } from '#cli/repository/select.ts';
@@ -19,6 +19,7 @@ import { environmentVariable, environmentVariables } from '#cli/system/environme
 import { RAN_STATUSES, JOBS_VARIABLE, FAILED_STATUSES } from '#cli/config/execution/run.ts';
 
 import type {
+    Finding,
     RunState,
     IgnoreUse,
     RunOptions,
@@ -27,6 +28,20 @@ import type {
     RunnableCheck,
     ReplannedFixResult,
 } from '#cli/types/execution/check.ts';
+
+/**
+ * Match an ignore record against a finding.
+ *
+ * @param entry the ignore record.
+ * @param finding the finding to match.
+ *
+ * @returns whether the ignore covers this finding.
+ */
+function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
+    if (entry.check !== finding.check) return false;
+    if (entry.rule !== undefined && entry.rule !== finding.rule) return false;
+    return entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(finding.file);
+}
 
 // The plan and, for each planned check, the function that runs it.
 function planChecks(session: Session, options: RunOptions): RunnableCheck[] {

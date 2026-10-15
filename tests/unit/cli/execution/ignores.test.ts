@@ -4,7 +4,6 @@ import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { containing } from '#tests/setup/matchers.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { applyIgnores } from '#cli/execution/ignores.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { QUALITY_FIX, QUALITY_COMMAND } from '#tests/config/ignore.ts';
 
@@ -54,47 +53,6 @@ import { QUALITY_FIX, QUALITY_COMMAND } from '#tests/config/ignore.ts';
         const accepted = await runGspot(directory.path, [...args, '--', 'inputs/skip café.txt']);
         expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
         expect(await readFile(join(directory.path, 'inputs/skip café.txt'), 'utf8')).toBe('corrected\n');
-    });
-}
-{
-    test('ignores match by check, rule and paths and count what they matched', () => {
-        const findings = [
-            {
-                check: 'bash/shellcheck',
-                file: 'scripts/a.sh',
-                rule: 'SC2312',
-                message: 'm',
-                fixable: false,
-            },
-            {
-                check: 'bash/shellcheck',
-                file: 'src/b.sh',
-                rule: 'SC2312',
-                message: 'm',
-                fixable: false,
-            },
-            {
-                check: 'bash/shellcheck',
-                file: 'src/b.sh',
-                rule: 'SC2086',
-                message: 'm',
-                fixable: false,
-            },
-        ];
-        const result = applyIgnores(findings, [
-            { check: 'bash/shellcheck', rule: 'SC2312', paths: ['scripts/**'], reason: 'why' },
-            { check: 'bash/shellcheck', rule: 'SC2086', reason: 'why' },
-        ]);
-        expect(result.kept).toStrictEqual([
-            {
-                check: 'bash/shellcheck',
-                file: 'src/b.sh',
-                rule: 'SC2312',
-                message: 'm',
-                fixable: false,
-            },
-        ]);
-        expect(result.uses.map((use) => use.matched)).toStrictEqual([1, 1]);
     });
 }
 {
