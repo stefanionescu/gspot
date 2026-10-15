@@ -16,14 +16,15 @@ node_modules/
 
 # Logs and crash output
 *.log
-# Grammar files that the build writes
-/packages/cli/grammars/
 
-# Build output of the workspace packages
+# Build output
 /packages/*/dist/
+/packages/*/LICENSE.md
+/packages/cli/grammars/
 /packages/cli/gspot.schema.json
 /docs/dist/
 /docs/.astro/
+/docs/.wrangler/
 
 # Local cleanup findings
 /findings/
