@@ -105,7 +105,7 @@ export async function copyIntoScratch(source: ScratchCopyPaths): Promise<Scratch
  * @param paths selected authored files.
  * @param scopes the scope paths owning installed dependencies.
  *
- * @returns exact paths and cloned dependency trees.
+ * @returns exact paths and dependency copy operations.
  */
 export function projectCopyInputs(root: string, paths: string[], scopes: string[]): ScratchCopyPaths {
     const projects = paths.flatMap((path) =>
@@ -113,9 +113,16 @@ export function projectCopyInputs(root: string, paths: string[], scopes: string[
             ? [posix.dirname(path)]
             : [],
     );
-    const dependencies = [...new Set([...scopes, ...projects].map((project) => posix.join(project, NODE_MODULES)))]
+    const dependencies = [
+        ...new Set([DOT_GSPOT, ...scopes, ...projects].map((project) => posix.join(project, NODE_MODULES))),
+    ]
         .filter((path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined)
-        .map((path): DependencyCopy => ({ path, operation: 'clone' }));
+        .map(
+            (path): DependencyCopy => ({
+                path,
+                operation: path === posix.join(DOT_GSPOT, NODE_MODULES) ? 'link' : 'clone',
+            }),
+        );
     return {
         root,
         paths: [...new Set([...paths, ...SCRATCH_EXTRAS])].filter(

@@ -63,8 +63,9 @@ test('a workspace member that is no scope brings its own dependency store into t
     using copy = await copyIntoScratch(projectCopyInputs(repository.path, paths, ['']));
     const scratch = copy.path;
     expect(await readFile(join(scratch, 'tests/node_modules/vue/package.json'), 'utf8')).toBe('{"name":"vue"}');
-    // The private tools of gspot run in place and stay out of the copy.
-    expect(await pathExists(join(scratch, '.gspot/node_modules'))).toBe(false);
+    expect(await readFile(join(scratch, '.gspot/node_modules/prettier/package.json'), 'utf8')).toBe(
+        '{"name":"prettier"}',
+    );
 });
 
 test('a link into another linked tree points at the copy of that tree, whatever order the folder lists them in', async () => {

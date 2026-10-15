@@ -20,6 +20,22 @@ const installedSandbox = shareInstalledSandbox({
     },
 });
 
+test('the TypeScript ESLint fix preview completes without changing source files', async () => {
+    const { root, environment } = installedSandbox();
+    const source = join(root, 'src/main.ts');
+    const before = await Bun.file(source).text();
+    const preview = await spawnGspot(
+        root,
+        ['check', '--fix', '--dry-run', '--only', 'javascript/eslint', '--json'],
+        environment,
+    );
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    expect((JSON.parse(preview.stdout) as RunReport).checks).toMatchObject([
+        { check: 'javascript/eslint', status: 'passed' },
+    ]);
+    expect(await Bun.file(source).text()).toBe(before);
+});
+
 // typos needs an explicit option to keep exclusions for paths from the command line.
 test('typos keeps its excluded paths for a file named on the command line', async () => {
     const { root, environment } = installedSandbox();
