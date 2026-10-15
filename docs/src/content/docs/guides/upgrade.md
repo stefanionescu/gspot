@@ -21,7 +21,7 @@ See [Install gspot](/guides/install/).
 ## With mise
 
 ```shell
-mise use npm:@gspothq/cli@<version>
+mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@<version>
 mise exec -- gspot apply
 mise exec -- gspot install
 mise exec -- gspot check

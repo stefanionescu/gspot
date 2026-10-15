@@ -46,7 +46,7 @@ import { readVersionPin, writeVersionPin, assertVersionPin } from '#cli/apply/ve
         expect(refused).rejects.toThrow(
             [
                 `This repository pins gspot 9.9.9, and you are running gspot ${RUNNING_VERSION}.`,
-                'Install the pinned version: mise use npm:@gspothq/cli@9.9.9',
+                'Install the pinned version: mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@9.9.9',
                 'To upgrade the repository pin to this version: gspot apply',
             ].join('\n'),
         );
@@ -60,7 +60,7 @@ import { readVersionPin, writeVersionPin, assertVersionPin } from '#cli/apply/ve
         await Bun.write(join(sandbox.path, '.gspot/version'), '9.9.9\n');
         const check = await runGspot(sandbox.path, ['check', '--json']);
         expect(check.code, check.stdout + check.stderr).toBe(2);
-        expect(check.stdout).toContain('mise use npm:@gspothq/cli@9.9.9');
+        expect(check.stdout).toContain('mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@9.9.9');
         expect(check.stdout).toContain('gspot apply');
         const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
         expect(doctor.code, doctor.stdout + doctor.stderr).toBe(1);

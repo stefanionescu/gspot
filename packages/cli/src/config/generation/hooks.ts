@@ -29,7 +29,7 @@ export const RUNNERS = {
     mise: {
         command: 'mise exec -- gspot',
         missing: 'Install mise, then run: mise install.',
-        pin: 'mise use npm:<package>@<version>',
+        pin: 'mise use --pin --tool-option allow_low_downloads=true npm:<package>@<version>',
     },
 } as const;
 

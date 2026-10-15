@@ -11,6 +11,8 @@ rules. Do not write reference pages by hand.
 
 ## Deployment
 
+The mise install path selects a release 24 hours after you publish it.
+
 The `docs` workflow builds the published stable release tag and keeps its site artifact for one day.
 Download that run's `documentation-<run-id>` artifact into `docs/dist` in a checkout of the same release tag.
 Use the authenticated Cloudflare account, then run this command from `docs/`:

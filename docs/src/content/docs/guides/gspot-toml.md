@@ -77,8 +77,10 @@ gspot.toml uses TOML 1.0. Keep each inline table on one line.
 The editor schema uses your pinned version:
 
 ```toml
-#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
+#:schema https://unpkg.com/@gspothq/cli@<version>/gspot.schema.json
 ```
+
+Replace `<version>` with the version pinned in `package.json` or `mise.toml`.
 
 After an edit, run `gspot apply` and `gspot install`. `gspot apply --dry-run` previews the changes.
 

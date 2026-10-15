@@ -4,6 +4,8 @@ gspot lints AI-generated code and writes rules for AI coding agents.
 
 ## Install
 
+Use Git and Node.js 24.15 or newer.
+
 ```sh
 npm install --save-dev --save-exact @gspothq/cli
 npx gspot init

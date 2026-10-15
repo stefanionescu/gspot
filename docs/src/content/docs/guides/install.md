@@ -5,7 +5,7 @@ description: Choose an installation method for your repository and prepare its c
 
 ## What you need
 
-Use Git and Node.js 24.2 or newer. Bun can install and start gspot, but the checks run on Node.js.
+Use Git and Node.js 24.15 or newer. Bun can install and start gspot, but the checks run on Node.js.
 Use your package manager for a repository with `package.json`, or mise for another repository.
 
 Program tools such as Gitleaks, typos, and ShellCheck need mise on both paths.
@@ -54,13 +54,14 @@ npx gspot install
 ## Repository without package.json
 
 ```shell
-mise use node@24 'npm:@gspothq/cli@<version>'
+mise use --pin node@24 --tool-option allow_low_downloads=true npm:@gspothq/cli
 mise exec -- gspot init
 mise exec -- gspot install
 ```
 
-Replace `<version>` with the version you install, such as `0.1.2`. `mise use` pins Node.js and gspot in your
-`mise.toml`, the same way a dev dependency pins gspot in `package.json`.
+`--pin` writes the exact Node.js and gspot versions to `mise.toml`.
+mise refuses new npm packages and packages with few downloads until you approve them.
+`allow_low_downloads=true` approves gspot.
 
 ## Read the plan
 

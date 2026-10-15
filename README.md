@@ -8,16 +8,16 @@ gspot lints AI-generated code and installs rules for AI coding agents.
 
 ## Requirements
 
-Read [Install gspot](docs/src/content/docs/guides/install.md) for the runtimes and tools each check needs.
+Use Git and Node.js 24.15 or newer. Read [Install gspot](docs/src/content/docs/guides/install.md) for the runtimes and tools each check needs.
 
 ## Install
 
 Choose by repository:
 
-| Repository                                   | Install                                                        | Run commands with                                                                  |
-| -------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Has `package.json`                           | Exact CLI development dependency using npm, pnpm, Yarn, or Bun | `npx gspot`, `pnpm exec gspot`, `yarn exec gspot`, or `bun run --no-install gspot` |
-| Python, Swift, or another project using mise | Install the npm CLI through mise                               | `mise exec -- gspot`                                                               |
+| Repository                                   | Install                                                        | Run commands with                                                  |
+| -------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Has `package.json`                           | Exact CLI development dependency using npm, pnpm, Yarn, or Bun | `npx gspot`, `pnpm exec gspot`, `yarn exec gspot`, or `bunx gspot` |
+| Python, Swift, or another project using mise | Install the npm CLI through mise                               | `mise exec -- gspot`                                               |
 
 For npm:
 
