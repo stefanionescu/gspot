@@ -1,5 +1,3 @@
-const SEVEN_DAYS_IN_SECONDS = '604800';
-
 const DEPENDENCIES_REPOSITORY = {
     configurations: ['dependencies'],
 
@@ -7,33 +5,6 @@ const DEPENDENCIES_REPOSITORY = {
         'package.json': `{\n    "name": "example",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@1.4.2"\n}\n`,
     },
 } as const;
-
-const BUN_RELEASE_AGE_CASES = [
-    {
-        check: 'dependencies/bun-release-age',
-        files: { 'bun.lock': '{}\n', 'bunfig.toml': `[install]\nminimumReleaseAge = 3600\n` },
-        expected: { file: 'bunfig.toml', rule: 'release-age', line: 1 },
-        corrected: {
-            files: { 'bun.lock': '{}\n', 'bunfig.toml': `[install]\nminimumReleaseAge = ${SEVEN_DAYS_IN_SECONDS}\n` },
-        },
-    },
-    {
-        check: 'dependencies/bun-release-age',
-        files: { 'bun.lock': '{}\n', 'bunfig.toml': `[install]\nminimumReleaseAge = ${SEVEN_DAYS_IN_SECONDS}\n` },
-        settings: '[dependencies]\nscanner = "@socketsecurity/bun-security-scanner"\n',
-        expected: { file: 'bunfig.toml', rule: 'security-scanner', line: 1 },
-        corrected: {
-            files: {
-                'bun.lock': '{}\n',
-                'bunfig.toml': `[install]
-minimumReleaseAge = ${SEVEN_DAYS_IN_SECONDS}
-[install.security]
-scanner = "@socketsecurity/bun-security-scanner"
-`,
-            },
-        },
-    },
-] as const;
 
 const LOCKFILE_HOST_CASES = [
     {
@@ -235,7 +206,5 @@ export {
     SYNCPACK_FILES,
     TWO_WEEKS_SECONDS,
     LOCKFILE_HOST_CASES,
-    SEVEN_DAYS_IN_SECONDS,
-    BUN_RELEASE_AGE_CASES,
     DEPENDENCIES_REPOSITORY,
 };

@@ -20,7 +20,6 @@ import { envReads } from '#cli/checks/general/structure/env-reads.ts';
 import { nginxConfigTest } from '#cli/checks/infrastructure/nginx.ts';
 import { fileLines } from '#cli/checks/general/structure/file-lines.ts';
 import { loneFiles } from '#cli/checks/general/structure/lone-files.ts';
-import { bashSshBlocks } from '#cli/checks/language/bash/ssh-blocks.ts';
 import { suppressions } from '#cli/checks/general/gspot/suppressions.ts';
 import { actionlint } from '#cli/checks/infrastructure/github-actions.ts';
 import { translationsMessages } from '#cli/checks/library/translations.ts';
@@ -45,7 +44,6 @@ import { sharedPrefixes } from '#cli/checks/general/structure/shared-prefixes.ts
 import { siteBuild, buildReproducible } from '#cli/checks/framework/site/build.ts';
 import { lockfileHosts } from '#cli/checks/general/dependencies/lockfile-hosts.ts';
 import { staleLockfile } from '#cli/checks/general/dependencies/stale-lockfile.ts';
-import { bunReleaseAge } from '#cli/checks/general/dependencies/bun-release-age.ts';
 import { bashUnreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
 import { bashUnusedFunctions } from '#cli/checks/language/bash/unused-functions.ts';
 import { trivialFunctions } from '#cli/checks/general/structure/trivial-functions.ts';
@@ -133,7 +131,6 @@ export const CHECK_FUNCTIONS = {
     'dependencies/package-json': packageJson,
     'dependencies/stale-lockfile': staleLockfile,
     'licenses/allowed': allowedLicenses,
-    'dependencies/bun-release-age': bunReleaseAge,
     'dependencies/lockfile-hosts': lockfileHosts,
     'drizzle/relations': drizzleRelations,
     'drizzle/stale-migrations': staleGeneratedFiles,
@@ -215,7 +212,6 @@ export const CHECK_FUNCTIONS = {
     'bash/script-layout': bashScriptLayout,
     'bash/wrappers': bashWrappers,
     'bash/inline-scripts': bashInlineScripts,
-    'bash/ssh-blocks': bashSshBlocks,
     'bash/variable-defaults': bashVariableDefaults,
     'bash/include-guards': bashIncludeGuards,
     'bash/safety': bashSafety,

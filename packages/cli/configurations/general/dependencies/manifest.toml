@@ -137,17 +137,6 @@ why = "A lockfile that lags its manifest installs versions nobody reviewed the m
 help = "Run the install of the package manager once and commit the lockfile it writes."
 
 [[check]]
-name = "bun-release-age"
-example = "A Bun project without the required `[install] minimumReleaseAge` reports a missing installation safeguard. Set it to the seconds named in the finding and configure the required scanner under `[install.security]`."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { filenames = ["bunfig.toml", "bun.lock", "bun.lockb"], kinds = ["source", "generated"] }
-summary = "Checks each Bun project's bunfig.toml for the required minimum release age and security scanner."
-why = "Most malicious releases are pulled within days, so a package nobody installs in its first week rarely harms anybody."
-help = "Set [install] minimumReleaseAge in bunfig.toml to the seconds the message names, and the scanner under [install.security]."
-
-[[check]]
 name = "lockfile-hosts"
 example = "A locked package URL pointing to a host outside `dependencies.allowed_registries` reports that host. Resolve the package again from the approved registry, or review and explicitly allow the required host."
 level = "recommended"

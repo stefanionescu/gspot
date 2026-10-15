@@ -15,7 +15,6 @@ export const READONLY_WORD = 'readonly';
 export const STRICT_MODE = 'set -euo pipefail';
 
 /** An ssh heredoc, which needs a name and a description on the line above. */
-export const SSH_HEREDOC = /\bssh\b.*<</u;
 
 /** Inline runtime embeds, and what to say about them. */
 export const RUNTIME_EMBEDS = [
@@ -108,8 +107,6 @@ export const DECLARATION_WORDS = new Set(['export', 'readonly', 'local', 'declar
 export const SET_COMMAND = 'set ';
 
 export const LEADING_UNDERSCORES = /^_+/u;
-
-export const NAMED_COMMENT = /^# [A-Za-z_]\w*:\s+\S/u;
 
 export const PRIVATE_PREFIX = '_';
 
