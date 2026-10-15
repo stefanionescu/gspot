@@ -9,6 +9,22 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { targetInScope } from '#cli/repository/scopes.ts';
 import { SEMGREP_IGNORE_CASES, SWIFT_IGNORE_FOLDERS } from '#tests/config/semgrep.ts';
 
+test('a scoped semgrepignore rebases shared generated-file patterns', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': settingsText(['bash'], {
+            level: 'all',
+            tables: '[[scope]]\npath = "web"\nconfigurations = ["bash"]\n',
+        }),
+        '.gitattributes': 'web/gen/** linguist-generated\n',
+        'web/main.sh': 'echo source\n',
+        'web/gen/output.sh': 'echo generated\n',
+    });
+    const output = emitAll(await openSession(sandbox.path));
+    const ignore = output.files.find(({ path }) => path === 'web/.semgrepignore');
+    expect(ignore?.content).toContain('/gen/**');
+    expect(ignore?.content).not.toContain('web/');
+});
+
 test('a language choice brings its security rules without selecting security', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

@@ -54,16 +54,16 @@ export function semgrepignoreToolFile(
     const scope = input.selection.scope.path;
     const ignoredPaths = gitignorePatterns(input);
     return (
-        [
-            ...SEMGREP_IGNORED.slice(0, SEMGREP_ENV_PATTERNS_INDEX),
-            ...ignoredPaths,
-            SEMGREP_IGNORED[SEMGREP_ENV_PATTERNS_INDEX],
-            ...scopeIgnorePatterns(
-                ignoresFor('security/semgrep')
+        scopeIgnorePatterns(
+            [
+                ...SEMGREP_IGNORED.slice(0, SEMGREP_ENV_PATTERNS_INDEX),
+                ...ignoredPaths,
+                ...SEMGREP_IGNORED.slice(SEMGREP_ENV_PATTERNS_INDEX),
+                ...ignoresFor('security/semgrep')
                     .filter(({ rule }) => rule === undefined)
                     .flatMap(({ paths }) => paths),
-                scope,
-            ),
-        ].join('\n') + '\n'
+            ],
+            scope,
+        ).join('\n') + '\n'
     );
 }
