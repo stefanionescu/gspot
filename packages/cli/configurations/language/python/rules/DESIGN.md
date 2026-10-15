@@ -76,9 +76,11 @@ fields; a named constructor handles derivation through I/O or complex parsing.
 Use a dataclass as a typed plain data record with methods only from the data contract. Mutable
 defaults use `field(default_factory=...)`, and `__post_init__` holds cheap invariants and
 derived fields. A named constructor serves construction that needs parsing, I/O, or
-alternate sources. Never use it to disguise a mutable global configuration object. A frozen dataclass
+alternate sources.
+
+Never use it to disguise a mutable global configuration object. A frozen dataclass
 expresses a value fixed after construction. A project on `attrs` applies the same principles
-through its factories, validators, and converters, and do not introduce `attrs` to avoid a
+through its factories, validators, and converters. Do not introduce `attrs` to avoid a
 small dataclass or a function.
 
 ```python

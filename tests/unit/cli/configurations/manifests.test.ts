@@ -1,10 +1,45 @@
 import { test, spyOn, expect } from 'bun:test';
 import * as assets from '#cli/system/assets.ts';
+import { knownSettings } from '#cli/settings/view.ts';
 import { buildManifest } from '#tests/setup/manifest.ts';
+import { declarationFor } from '#cli/settings/inherit.ts';
+import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
 import { toolDeclarationSchema } from '#cli/configurations/schema/tool.ts';
 import { TOOL_DECLARATION, SECURITY_DECLARATION } from '#tests/config/manifests.ts';
 import { SEMGREP_ASSETS, CONFIGURATION_TABLE } from '#tests/config/configurations.ts';
 import { parseManifest, configurationManifests } from '#cli/configurations/manifests.ts';
+
+test('setting names in shipped manifest text and rules exist', () => {
+    const manifests = [...configurationManifests().values()];
+    const known = knownSettings(manifests, 'all');
+    const roots = new Set([...known.declarations.keys()].map((key) => key.split('.', 1)[0]));
+    const sources = [
+        ...manifests.flatMap(({ dir, checks }) =>
+            checks.map((check) => ({
+                path: `${dir}/manifest.toml`,
+                text: [check.summary, check.example, check.why, check.help].join('\n'),
+            })),
+        ),
+        ...assets
+            .listAssets(CONFIGURATIONS_FOLDER)
+            .filter((path) => path.includes('/rules/') && path.endsWith('.md'))
+            .map((path) => ({ path, text: assets.readAsset(path) })),
+    ];
+    const missing = sources.flatMap(({ path, text }) => {
+        const prose = text.replaceAll(/https?:\/\/[^\s)]+/gu, '');
+        return [...prose.matchAll(/(?<![\w/])[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+\b/gu)]
+            .map(([key]) => key)
+            .filter(
+                (key) =>
+                    roots.has(key.split('.', 1)[0]) &&
+                    declarationFor(known, key) === undefined &&
+                    settingSchema(key) === undefined,
+            )
+            .map((key) => `${path}: ${key}`);
+    });
+    expect([...new Set(missing)]).toStrictEqual([]);
+});
 
 test('a tool declared by two configurations is refused', () => {
     const paths = ['configurations/general/owner/manifest.toml', 'configurations/general/second/manifest.toml'];

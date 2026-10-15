@@ -71,8 +71,8 @@ value, and neither defines a typing interface.
 
 A private unconstrained type variable can use `_T` or `_P`; a public or constrained one has a
 descriptive name such as `Key`, with `_co` and `_contra` for variance, and no public
-single-letter `T` or `P`. `ParamSpec` forwards a callable's parameters, and declare a `Callable` with
-bound to the signature its consumer needs rather than left bare.
+single-letter `T` or `P`. `ParamSpec` forwards a callable's parameters. Give a `Callable` the
+signature its consumer needs; do not leave it bare.
 
 ### Forward references
 

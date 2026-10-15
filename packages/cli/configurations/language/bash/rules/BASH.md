@@ -48,8 +48,8 @@ prior checks establish success.
 ## Options
 
 Use `errexit` as a backstop rather than control flow: it has exceptions in
-conditionals, pipelines, command substitutions, subshells, and functions, so `cd`, `rm`,
-check builds, publishing, uploads, and destructive commands explicitly. Do not toggle
+conditionals, pipelines, command substitutions, subshells, and functions. Check `cd`, `rm`,
+builds, publishing, uploads, and destructive commands explicitly. Do not toggle
 options around a small operation without restoring the prior state. Do not change `IFS` as a
 strict-mode ritual; set it locally where reading or joining data requires it. Keep `set -x`
 out of committed code.

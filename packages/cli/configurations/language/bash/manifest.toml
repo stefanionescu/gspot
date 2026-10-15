@@ -220,20 +220,20 @@ help = "Move the block into a named function and write \"# name: what it does\" 
 
 [[check]]
 name = "variable-defaults"
-example = "A default such as `${PORT:-8080}` outside a declared configuration owner reports a misplaced default. Set the default in a path listed in `architecture.roles.env` and consume the configured value elsewhere."
+example = "A default such as `${PORT:-8080}` outside a declared environment reader reports a misplaced default. Set the default in a path listed in `architecture.roles.environment_readers` and consume the configured value elsewhere."
 level = "all"
 stage = "commit"
-summary = "Finds variable defaults of the form name:-value outside the configuration owners."
+summary = "Finds variable defaults of the form name:-value outside the environment readers."
 why = "A default set in three places is three settings with one name."
-help = "Set the default in a configuration owner named under architecture.roles.env and read the variable everywhere else."
+help = "Set the default in an environment reader named under architecture.roles.environment_readers and read the variable everywhere else."
 
 [[check]]
 name = "include-guards"
-example = "A sourced configuration owner without a load guard reports a guard finding. Begin it with `[[ -n ${APP_CONFIG_READY:-} ]] && return 0`, followed by `readonly APP_CONFIG_READY=1`, before declaring its configuration."
+example = "A sourced environment reader without a load guard reports a guard finding. Begin it with `[[ -n ${APP_CONFIG_READY:-} ]] && return 0`, followed by `readonly APP_CONFIG_READY=1`, before declaring its configuration."
 level = "all"
 stage = "commit"
 runs = "scope"
-summary = "Checks that each script in architecture.roles.env starts with an include guard of its own."
+summary = "Checks that each script in architecture.roles.environment_readers starts with an include guard of its own."
 why = "A configuration file sourced twice runs its side effects twice."
 help = "Open the owner with [[ -n ${NAME_READY:-} ]] && return 0 and then readonly NAME_READY=1, with a guard name no other owner uses."
 

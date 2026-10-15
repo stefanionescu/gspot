@@ -333,7 +333,7 @@ pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\
 
 [[check]]
 name = "knip"
-example = "An exported declaration that no selected entry point uses reports an unused export. Remove the export or declaration and update consumers. If the file is dynamically loaded, add its entry point in tools.knip.extra with a reason."
+example = "An exported declaration that no selected entry point uses reports an unused export. Remove the export or declaration and update consumers. If the file is dynamically loaded, add its entry point in tools.knip.entry."
 level = "recommended"
 stage = "push"
 runs = "scope"
@@ -341,7 +341,7 @@ command = ["knip", "--config", "{tool_file:knip}", "--no-progress", "--reporter"
 cwd = "root"
 summary = "Finds files, exports, and dependencies nothing uses."
 why = "Dead code is read, maintained, and shipped for nobody."
-help = "Delete what knip names, or add a knip entry point in tools.knip.extra with a reason if the file is loaded in a way knip cannot see."
+help = "Delete what knip names, or add a knip entry point in tools.knip.entry if the file is loaded in a way knip cannot see."
 
 [check.output]
 format = "knip"

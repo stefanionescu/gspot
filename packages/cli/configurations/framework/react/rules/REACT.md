@@ -26,7 +26,7 @@ adds routing, server components, and caching on top of these.
 ## Hooks
 
 - Every custom hook starts with `use` and owns one concern.
-- Memoize such as `useMemo`, `useCallback`, `memo` when a measurement shows expensive work or a
+- Use `useMemo`, `useCallback`, or `memo` when a measurement shows expensive work or a
   consumer needs a stable reference, not by default.
 
 ## Effects and state

@@ -13,5 +13,5 @@
 - Keyframe names describe the motion, such as `fade-in` or `slide-from-start`.
 - Name stylesheet files for what they hold such as `order-card.css`,
   `tokens.css`, `layout.css`.
-- Utility classes, when the project uses a utility system, keep that system's names; hand-written
-  do not add utilities beside it.
+- Utility classes, when the project uses a utility system, keep that system's names; do not add hand-written
+  utilities beside it.

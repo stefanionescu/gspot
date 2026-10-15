@@ -68,7 +68,7 @@ Follow the migration tool's file names. Name each migration for its durable data
 
 Use `archive_expired_orders` for a transactional operation that archives
 expired orders. Name its user argument `target_user_id` when `user_id` already names
-already a column in the affected tables. A generic `run` name hides the
+a column in the affected tables. A generic `run` name hides the
 operation, and an unqualified `id` can obscure column ownership.
 
 ## Indexes, constraints, triggers, and policies

@@ -118,7 +118,7 @@ Keep these final decisions. Never reverse one inside other work.
 - 2026-10-06: The rule `TALKING.md` ships in every installation: "When you talk, use ASD-STE100."
 - 2026-10-06: The documentation site uses generativespotting.com and deploys to Cloudflare Workers.
 - 2026-10-03: No scheduled CI.
-- 2026-10-06: No GitHub environments.
+- 2026-10-06: No GitHub environments. This overrides the environment requirement in `GITHUB-ACTIONS.md`.
 - 2026-10-07: Use one name for each concept in the Names table below. Never give one thing two names or one name two
   meanings.
 - 2026-10-07: This repository has no `CONTRIBUTING.md`. Repository rules that no check enforces live in this file.

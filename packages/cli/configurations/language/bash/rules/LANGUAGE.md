@@ -44,7 +44,7 @@ Mark constants `readonly` immediately after assignment, and
 `export` only what child processes need. Never casually overwrite `PATH`, `HOME`, `IFS`,
 `CDPATH`, `SHELL`, `PWD`, or `BASH_ENV`, and never export `CDPATH`.
 
-Compute a directory constant with `CDPATH='' cd -- <path> && pwd -P` and carries a failure path, `|| exit 1` in an
+Compute a directory constant with `CDPATH='' cd -- <path> && pwd -P` and add a failure path: `|| exit 1` in an
 entrypoint and `|| return 1` in a library. Use `$HOME`, not a quoted `~`, inside paths, and
 assign a home-relative value before exporting it. Quote array elements passed to `unset -v`.
 

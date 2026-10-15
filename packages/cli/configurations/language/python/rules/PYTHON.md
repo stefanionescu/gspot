@@ -121,8 +121,8 @@ validation.
 
 <!-- level: all -->
 
-Avoid power features unless the project has a clear local pattern and the feature serves
-necessary. That covers custom metaclasses, bytecode manipulation, dynamic inheritance, object
+Avoid power features unless the project has a clear local pattern and the code needs that
+feature. That covers custom metaclasses, bytecode manipulation, dynamic inheritance, object
 reparenting, import hooks, runtime monkeypatching, and reflection-heavy designs. It also
 covers interpreter internals, `__del__` cleanup, manual descriptors, and dynamic code
 generation. A power feature never makes code shorter or hides a dependency cycle; ordinary
@@ -132,5 +132,7 @@ functions, dataclasses, explicit imports, and explicit data structures come firs
 
 Built-in types and variable assignment do not synchronize threads: use `queue.Queue` for thread
 communication and locks or conditions for shared state, which stays small and explicit.
+
+## Tests
 
 Name Python test files `test_<behavior>.py`, grouped by behavior.

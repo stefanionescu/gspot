@@ -48,8 +48,8 @@ the catalog loader for the application's format and namespace layout.
 
 Translations land in the same change as their call sites; an incomplete locale leaves the
 supported list instead. Checks validate catalog structure. List the locales and screens for the
-user to check for linguistic accuracy, dynamic keys, and untranslated UI text. Missing
-show keys during development, and make a production fallback intentional and observable, never
+user to check for linguistic accuracy, dynamic keys, and untranslated UI text. Show missing
+keys during development, and make a production fallback intentional and observable, never
 a silent `catch` that hides a missing catalog.
 
 ## Rendering and formatting
@@ -70,10 +70,10 @@ a silent `catch` that hides a missing catalog.
 2. Persist the preference through the validated write owner when the product promises persistence.
 3. Navigate through the locale-aware routing, so server-rendered content, client labels, and
    metadata agree.
-4.
-
-Refresh locale-dependent query keys and results instead of keeping translated data under an
-identity without the locale. 5. Keep focus and scroll position sensible. 6. Report a failed preference write; never show a completed selection that reverts on refresh.
+4. Refresh locale-dependent query keys and results instead of keeping translated data under an
+   identity without the locale.
+5. Keep focus and scroll position sensible.
+6. Report a failed preference write; never show a completed selection that reverts on refresh.
 
 A language menu names each language with a clear label, commonly its native name, not a flag.
 Treat region and currency as separate choices when the product offers them.

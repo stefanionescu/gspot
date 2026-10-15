@@ -53,10 +53,10 @@ When the project uses view models, name a direct UI event for the event
 such as `submitButtonTapped()`, `cameraPermissionDenied()`, `selectedItemChanged(to:)`. Name domain work
 with a domain verb such as `enqueueFileUpload(_:)`, `refreshOrderHistory(for:)`,
 `validateEmailAddress(_:)`; `handle`, `process`, and `didTap` name neither. Reserve `handle...` for
-reserved for literal UIKit target-action and notification handlers marked `@objc`.
+literal UIKit target-action and notification handlers marked `@objc`.
 
 Names form grammatical English at the call site: omit the first label when the base
-name and argument form a phrase and included when it clarifies a weak type. Initializer
+name and argument form a phrase. Include it when it clarifies a weak type. Initializer
 arguments that set stored properties use the property names with explicit `self.`, and
 factories use `make...` such as `makeTemplateView(for:)`. Nonmutating methods without side effects
 read as noun phrases, and mutating methods read as imperatives. Pairs follow `sort`/`sorted`,

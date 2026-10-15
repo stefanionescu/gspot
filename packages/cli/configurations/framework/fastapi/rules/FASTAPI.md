@@ -46,7 +46,7 @@ app.include_router(router)
 
 ## Parameters
 
-`Annotated[..., Query(...)]`, `Path`, `Body`, `Header`, `Cookie`, `Form`, `File`, or `Depends`;
+Declare parameters with `Annotated[..., Query(...)]`, `Path`, `Body`, `Header`, `Cookie`, `Form`, `File`, or `Depends`;
 a plain scalar supplies a query parameter. A parameter without a default requires a value, even when it
 accepts `None`. Constraints such as `max_length` or `ge` belong at the boundary when the public interface requires them. Use a dependency for a check that needs a database or authorization state, not
 a validator. Declare fixed routes such as `/users/me` before `/users/{user_id}`, and group

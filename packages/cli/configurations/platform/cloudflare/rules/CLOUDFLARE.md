@@ -1,4 +1,4 @@
-# Workers
+# Cloudflare Workers
 
 Rules that hold because the code runs on a V8 isolate runtime such as Cloudflare Workers.
 

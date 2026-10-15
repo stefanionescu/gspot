@@ -33,9 +33,10 @@ Choose the Supabase connection mode for the workload.
 | Migrations, dumps, or session-dependent tooling | Direct connection; use a supported session alternative when necessary |
 
 A separate migration credential holds schema privileges. The application role holds only what
-runtime needs
+runtime needs.
 See [connection modes](https://supabase.com/docs/guides/database/connecting-to-postgres). Postgres.js
 uses the transaction pooler's supported configuration.
+
 Set explicit connection, idle, and query timeouts. Budget connections across instances and
 workers. With Postgres.js through transaction pooling, set `prepare: false` and confirm the setting
 after a driver or pooler change.

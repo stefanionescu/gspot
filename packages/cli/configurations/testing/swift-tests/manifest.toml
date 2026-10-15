@@ -47,6 +47,6 @@ runs = "scope"
 needs = ["build"]
 operating_systems = ["macos", "linux"]
 files = { extensions = [".swift"] }
-summary = "Measures Xcode projects and Swift packages, holding each source target against coverage.lines and its coverage.override floor."
+summary = "Measures Xcode projects and Swift packages, holding each source target against coverage.lines and its coverage.target floor."
 why = "A target-specific coverage floor exposes Swift code that its test target has not exercised."
 help = "Add tests for the target, or lower its floor with a reason."
