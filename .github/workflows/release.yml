@@ -1,7 +1,7 @@
-name: release
 # Start this workflow by hand on a version tag, such as v0.1.0. npm accepts the publish through
 # trusted publishing (OIDC: GitHub proves to npm which workflow runs). Publish the first version
 # by hand, then add this workflow as a trusted publisher on npmjs.com.
+name: release
 on:
     workflow_dispatch:
 permissions:

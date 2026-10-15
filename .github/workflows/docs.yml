@@ -1,5 +1,5 @@
-name: docs
 # Release and manual runs build the published stable release tag.
+name: docs
 on:
     workflow_call:
         inputs:

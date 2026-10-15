@@ -1,5 +1,5 @@
-name: ci
 # Run the unit, integration, and end-to-end tests on Linux, macOS, and Windows.
+name: ci
 on:
     push:
         branches: [main]
