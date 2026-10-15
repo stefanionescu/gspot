@@ -1,13 +1,28 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { commitAll } from '#tests/setup/git.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { runCheckSample } from '#tests/setup/fixes.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { BASH_REPOSITORY } from '#tests/config/bash/sandbox.ts';
 import { ROUTE_CASES, LONE_FILE_TREE, LONE_FILE_CASES } from '#tests/config/structure/folders.ts';
+
+test('an untracked neighbor does not hide a selected tracked lone file', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': settingsText(['typescript'], { level: 'all' }),
+        'lone/only.ts': LONE_FILE_TREE['lone/only.ts'],
+    });
+    commitAll(sandbox.path);
+    await Bun.write(join(sandbox.path, 'lone/notes.txt'), 'Untracked notes.\n');
+    expect(await checkFindings(sandbox.path, 'structure/lone-files', { paths: ['lone/only.ts'] })).toMatchObject([
+        { file: 'lone/only.ts', rule: 'lone-file' },
+    ]);
+});
 
 test('lone-files counts code files only and honors ignores and nested folders', async () => {
     await using sandbox = await testdir();
@@ -27,6 +42,7 @@ test('lone-files counts code files only and honors ignores and nested folders', 
         'dist/pkg/lone.ts',
         'lone/only.ts',
         'module/one.mts',
+        'parent/main.ts',
         'typed/one.ts',
     ]);
 });
