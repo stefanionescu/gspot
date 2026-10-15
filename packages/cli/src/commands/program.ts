@@ -31,8 +31,9 @@ function printFailure(error: unknown, isJson: boolean): number {
         printError({ error: error.code, message: error.message });
         return EXIT_ERROR;
     }
-    const message = error instanceof Error ? error.message : String(error);
-    printError(isJson ? { error: 'failure', message } : `gspot stopped: ${message}`);
+    const detail = (error instanceof Error ? error.message : String(error)).replaceAll(/\s+/gu, ' ').trim();
+    const message = `gspot stopped because of an internal error: ${detail}. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.`;
+    printError(isJson ? { error: 'failure', message } : message);
     return EXIT_ERROR;
 }
 

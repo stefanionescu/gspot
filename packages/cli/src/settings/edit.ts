@@ -23,6 +23,7 @@ function splitKey(key: string): SettingKey {
 export function editSettings(root: string, input: SettingsEdit, mutate: Mutation): EditedSettings {
     const { text, table, values } = input;
     mutate(table);
+    parseSettings(sortedToml(table), root);
     const next = sortedToml(table) === values ? text : emitSettings(text, table);
     const settings = parseSettings(next, root);
     return { text: next, settings, changed: next !== text, original: input.original };

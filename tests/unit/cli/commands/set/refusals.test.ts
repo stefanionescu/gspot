@@ -69,10 +69,9 @@ test('an invalid level leaves gspot.toml as it was', async () => {
     const settingsPath = join(sandbox.path, 'gspot.toml');
     const settings = settingsText(['bash', 'naming']);
     await Bun.write(settingsPath, settings);
-    const refused = await runGspot(sandbox.path, ['set', 'level', 'strict']);
+    const refused = await runGspot(sandbox.path, ['set', 'level', 'everything']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stdout + refused.stderr).toContain('Invalid option: expected one of');
-    expect(refused.stdout + refused.stderr).toContain('recommended');
-    expect(refused.stdout + refused.stderr).toContain('all');
+    expect(refused.stderr.trim()).toBe('The value `everything` is not valid for level. Use recommended or all.');
+    expect(refused.stderr.trim().split('\n')).toHaveLength(1);
     expect(await Bun.file(settingsPath).text()).toBe(settings);
 });

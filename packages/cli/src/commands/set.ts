@@ -15,6 +15,7 @@ import { RECORD_FIELDS } from '#cli/config/settings/file.ts';
 import { compact, valueAt, isRecord } from '#cli/objects.ts';
 import { isLoosening } from '#cli/settings/errors/reasons.ts';
 import { unknownSettingError } from '#cli/settings/errors/keys.ts';
+import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { setKey, addToList, findScopeTable } from '#cli/settings/edit.ts';
@@ -67,12 +68,18 @@ function buildSettingError(settings: Settings, known: KnownSettings, key: string
 
 function parseSettingValue(items: string[], declaration: SettingDeclaration): ParsedSettingValue {
     const parsed = items.map((item) => parseItem(item));
-    const [only] = parsed;
-    if (declaration.type === 'list') {
-        const value: unknown[] = parsed.length === 1 && Array.isArray(only) ? only : parsed;
-        return { type: 'list', value };
+    const scalar = parsed.length === 1 ? parsed[0] : parsed;
+    const validation = settingSchema(declaration.name)?.safeParse(scalar);
+    if (validation?.success === false) {
+        const issue = validation.error.issues.find((issue) => issue.code === 'invalid_value');
+        if (issue !== undefined)
+            throw new GspotError(
+                'arguments',
+                `The value \`${items.join(' ')}\` is not valid for ${declaration.name}. Use ${issue.values.map(String).join(' or ')}.`,
+            );
     }
-    return { type: 'scalar', value: parsed.length === 1 ? only : parsed };
+    if (declaration.type === 'list') return { type: 'list', value: Array.isArray(scalar) ? scalar : parsed };
+    return { type: 'scalar', value: scalar };
 }
 
 function describeSet(
