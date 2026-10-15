@@ -1,5 +1,6 @@
 // Packs packages, serves their registry, and installs sandbox tool projects.
 import { z } from 'zod';
+import { tmpdir } from 'node:os';
 import { expect } from 'bun:test';
 import { testdir } from 'testdirs';
 import { createHash } from 'node:crypto';
@@ -36,6 +37,7 @@ import {
     PINNED_TOOLS_FILE,
     UPSTREAM_REGISTRY,
     GSPOT_PACKAGE_SCOPE,
+    TEST_RUN_FOLDER_NAME,
     PACKED_PACKAGES_FILE,
 } from '#tests/config/integration.ts';
 
@@ -72,10 +74,14 @@ export function toolsPath(): string {
     ].join(delimiter);
 }
 
+/** Return the folder that holds the current test run's packages and tool paths. */
+export function testRunFolder(): string {
+    return join(tmpdir(), TEST_RUN_FOLDER_NAME);
+}
+
 /** Resolve the integration preload command before installed tools. */
 export function sandboxPath(): string {
-    const folder = environmentVariables()['GSPOT_TEST_RUN_FOLDER'];
-    if (folder === undefined) throw new Error('The test run folder is not configured.');
+    const folder = testRunFolder();
     return [join(folder, 'bin'), toolsPath()].join(delimiter);
 }
 
@@ -143,8 +149,7 @@ export async function createNpmRegistry(
     work: string,
     options: { declarations: readonly RegistryPackage[]; execute: typeof runCommand; token?: string },
 ): Promise<NpmRegistry> {
-    const folder = environmentVariables()['GSPOT_TEST_RUN_FOLDER'];
-    if (folder === undefined) throw new Error('The test run folder is not configured.');
+    const folder = testRunFolder();
     const files = [join(folder, PACKED_PACKAGES_FILE)];
     if (options.declarations.length > 0) files.push(await packPackages(work, options.declarations, options.execute));
 

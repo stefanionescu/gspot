@@ -115,6 +115,7 @@
     "workspaces": {
         ".": {
             "entry": [
+                "tests/setup/prepare-run.ts",
                 "scripts/build.ts",
                 "tests/setup/integration.ts",
                 "packages/cli/src/checks/framework/site/linkinator-program.ts",
@@ -218,6 +219,7 @@
         },
         "tests": {
             "entry": [
+                "setup/prepare-run.ts",
                 "setup/integration.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",

@@ -1,4 +1,9 @@
-/** Metadata for the npm packages packed by the integration preload. */
+/** Metadata for the npm packages packed before the test workers start. */
+export const TEST_RUN_FOLDER_NAME = 'gspot-test-run';
+export const TOOL_PATHS_FILE = 'tool-paths.txt';
+export const GSPOT_LAUNCHER_PATH = 'bin/gspot';
+export const PREPARED_SUITES = ['integration', 'e2e'] as const;
+
 export const PACKED_PACKAGES_FILE = 'packages.json';
 
 export const INTERRUPTED_EXIT = 130;

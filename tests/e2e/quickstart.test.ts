@@ -1,7 +1,6 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { toolsPath } from '#tests/setup/install.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { misePins } from '#cli/configurations/tool-pins.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -9,6 +8,7 @@ import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { hasToolBuild } from '#tests/setup/operating-systems.ts';
 import { environmentVariables } from '#cli/system/environment.ts';
+import { toolsPath, testRunFolder } from '#tests/setup/install.ts';
 import { TUTORIALS, QUICKSTART_COMMANDS } from '#tests/config/e2e.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
@@ -79,7 +79,7 @@ async function linkQuickstartTools(root: string, environment: Record<string, str
         const installed = await runCommand(
             pin.name === 'uv' ? ['mise', 'which', 'uv'] : ['mise', 'where', requirement],
             {
-                cwd: environmentVariables()['GSPOT_TEST_RUN_FOLDER']!,
+                cwd: testRunFolder(),
             },
         );
         expect(installed.code, `Quickstart tool lookup failed: ${installed.stdout}${installed.stderr}`).toBe(0);

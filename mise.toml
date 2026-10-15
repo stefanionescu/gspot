@@ -19,12 +19,12 @@ run = '''bun test --parallel --timeout {{ exec(command="bun --eval \"import { TE
 [tasks."test:integration"]
 description = "Run gspot with the pinned tools installed, on sample repositories."
 depends = ["build"]
-run = '''bun test --parallel --timeout {{ exec(command="bun --eval \"import { TEST_TIMEOUT_MS } from './tests/config/processes.ts'; console.log(TEST_TIMEOUT_MS)\"") }} --preload ./tests/setup/preload.ts --preload ./tests/setup/integration.ts tests/integration'''
+run = ["bun tests/setup/prepare-run.ts integration", '''bun test --parallel --timeout {{ exec(command="bun --eval \"import { TEST_TIMEOUT_MS } from './tests/config/processes.ts'; console.log(TEST_TIMEOUT_MS)\"") }} --preload ./tests/setup/preload.ts --preload ./tests/setup/integration.ts tests/integration''']
 
 [tasks."test:e2e"]
 description = "Install both packed npm packages in a new project and test them there."
 depends = ["build"]
-run = '''bun test --parallel --timeout {{ exec(command="bun --eval \"import { TEST_TIMEOUT_MS } from './tests/config/processes.ts'; console.log(TEST_TIMEOUT_MS)\"") }} --preload ./tests/setup/preload.ts --preload ./tests/setup/integration.ts tests/e2e'''
+run = ["bun tests/setup/prepare-run.ts e2e", '''bun test --parallel --timeout {{ exec(command="bun --eval \"import { TEST_TIMEOUT_MS } from './tests/config/processes.ts'; console.log(TEST_TIMEOUT_MS)\"") }} --preload ./tests/setup/preload.ts --preload ./tests/setup/integration.ts tests/e2e''']
 
 [tasks."update:rule-lists"]
 description = "Copy the rule lists of the pinned linter packages into packages/cli/configurations. Run after changing a linter version."
