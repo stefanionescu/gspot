@@ -76,34 +76,48 @@ where the framework uses it, such as a NestJS provider. Preserve external names 
 
 <!-- level: all -->
 
-A function name starts with the action and carries enough domain context to read at the call
-site without repeating the enclosing type or module. A generic verb such as `process`, `handle`, `run`, `execute`,
-`manage`, `perform` never stands where the name can state the action. `handle` exists only in a
-framework callback such as a React `handleSubmit` or a UIKit `@objc handleConfirmButtonTapped`.
-Never use `Handler` as a type suffix. A name that needs `and`, `or`, `with`, or an umbrella verb
-marks a function that combines too many concepts.
+A function name starts with the action and carries enough domain context to read at the call site without
+repeating the enclosing type or module. A generic verb such as `process`, `handle`, `execute`, `manage`, `perform`,
+or `ensure` never stands where the name can state the action. `handle` exists only in a framework callback such as
+a React `handleSubmit` or a UIKit `@objc handleConfirmButtonTapped`. Never use `Handler` as a type suffix. A name
+that needs `and`, `or`, `with`, or an umbrella verb marks a function that combines too many concepts. A preposition
+cannot replace a verb: `toPosix`, `fromRow`, and `withTimeout` need one.
 
-A fixed verb vocabulary spares the reader a guess at which synonym a module chose:
+Each act has one verb. Use the verb of the table for its act, and never a synonym:
 
-| Verb                 | Meaning                                                                         |
-| -------------------- | ------------------------------------------------------------------------------- |
-| `get`                | Retrieve an existing value from memory, cache, file, database, SDK, or API.     |
-| `set`                | Assign or replace current state with the supplied value.                        |
-| `insert`, `update`   | Add or change a row or item in persisted data.                                  |
-| `delete`             | Destroy a durable row, object, or domain value.                                 |
-| `add`, `remove`      | In-memory collection membership only.                                           |
-| `create`             | Make a new independent domain value before persistence.                         |
-| `make`, `build`      | Construct an object or dependency; construct a value from existing values.      |
-| `parse`, `decode`    | Raw input to structured data; encoded bytes or payloads to typed values.        |
-| `encode`             | Typed values to bytes or serialized payloads.                                   |
-| `validate`, `assert` | Report invalidity; stop execution on failure.                                   |
-| `refresh`, `prepare` | Replace presentation state from a source; set up local state before a workflow. |
-| `reset`              | Return to an initial state.                                                     |
+| Verb                          | Act                                                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `get`                         | Take a value that is already in memory: a variable, a map, a cache, or a parsed structure.                   |
+| `read`                        | Take data from outside memory: a file, Git, the environment, a child process, or the network.                |
+| `write`                       | Put data into a file or another store outside memory.                                                        |
+| `find`                        | Search for one item. The result can be absent.                                                               |
+| `list`                        | Return every item of a kind, such as the files, the scopes, or the checks.                                   |
+| `select`                      | Choose among known options.                                                                                  |
+| `detect`                      | Infer a fact from the files of the project.                                                                  |
+| `build`, `make`               | Construct a value from other values, such as a message, a plan, or the text of a file.                       |
+| `create`                      | Make a new independent value or resource, such as a domain value before it is saved, a folder, or a sandbox. |
+| `parse`, `decode`             | Raw text to structured data; encoded bytes or payloads to typed values.                                      |
+| `encode`, `serialize`         | Typed values to bytes; values to the text of a file format.                                                  |
+| `format`                      | A value to text that people read: terminal lines, Markdown, or a message.                                    |
+| `check`                       | Inspect files or values for a check, and return its findings.                                                |
+| `validate`                    | Return the problems of one value.                                                                            |
+| `assert`                      | Stop with an error when a value is invalid.                                                                  |
+| `run`                         | Start a named program, command, or step, such as `runEslint` or `runInstallCommand`. Never a bare `run`.     |
+| `spawn`                       | Start a child process.                                                                                       |
+| `set`                         | Assign or replace current state with the supplied value.                                                     |
+| `add`, `remove`               | In-memory collection membership only.                                                                        |
+| `insert`, `update`, `delete`  | Add, change, or destroy a row or item in persisted data.                                                     |
+| `prepare`, `refresh`, `reset` | Set up local state before a workflow; replace presentation state from a source; return to an initial state.  |
+| `is`, `has`, `can`            | Predicates only: `is` for state, `has` for presence, `can` for capability.                                   |
 
-Each act keeps one verb across the codebase: once retrieval uses `get`, no module reads, finds,
-fetches, or loads instead. The noun and the return type carry multiplicity and optionality
-such as `getSession`, `getSessions`, and a qualifier appears only to tell apart two operations at one
-use site. Give a domain operation that combines create, read, update, and delete (CRUD) acts its precise domain verb.
+Use `plan`, `install`, `apply`, and `generate` only for the program step of the same name, such as an `install`
+command. When no verb of the table fits, use another plain verb that names the act, such as `count`, `compare`,
+`merge`, `split`, `sort`, `filter`, `group`, `match`, `replace`, `normalize`, `convert`, `extract`, `strip`, `copy`,
+`move`, `stop`, or `wait`. Never use `load`, `fetch`, or `resolve` for retrieval: use `get`, `read`, or `find`.
+
+The noun and the return type carry multiplicity and optionality, such as `getSession` and `getSessions`. Add a
+qualifier only to tell two operations apart at one use site. Give a domain operation that combines create, read,
+update, and delete (CRUD) acts its precise domain verb.
 Preserve framework, SDK, generated, and external names exactly.
 
 | Avoid                    | Prefer                   | Meaning                        |
