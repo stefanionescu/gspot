@@ -18,7 +18,24 @@ import {
     TSCONFIG_PROJECT,
     SOLUTION_TSCONFIG,
     REFERENCE_BUILD_FILES,
+    IMPLICIT_PROJECT_FILES,
 } from '#tests/config/tsconfig.ts';
+
+test('typescript/tsc checks an authored project without files or include', async () => {
+    await using sandbox = await testdir({
+        ...IMPLICIT_PROJECT_FILES,
+        'gspot.toml': settingsText(['typescript'], { level: 'all' }),
+    });
+    await installToolProjects(sandbox.path);
+    commitAll(sandbox.path);
+    const failed = await checkTypes(sandbox.path);
+    expect(failed.code, failed.output).toBe(1);
+    expect(failed.findings).toMatchObject([{ file: 'src/broken.ts', rule: 'TS2322' }]);
+    await writeFile(join(sandbox.path, 'src/broken.ts'), IMPLICIT_PROJECT_FILES['src/clean.ts']);
+    const clean = await checkTypes(sandbox.path);
+    expect(clean.code, clean.output).toBe(0);
+    expect(await Bun.file(join(sandbox.path, 'tsconfig.json')).text()).toBe(IMPLICIT_PROJECT_FILES['tsconfig.json']);
+});
 
 // The installed TypeScript compiler checks project references, authored compiler settings, and build output bounds.
 // Apply authored compiler settings through the same pipeline used by repositories.

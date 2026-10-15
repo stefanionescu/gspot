@@ -105,12 +105,20 @@ const ANCESTOR_TYPESCRIPT_PROJECT = {
 const SOLUTION_TSCONFIG =
     '{// The solution has no sources.\n"files":[],"references":[{"path":"./orders"},{"path":"./users"}],}';
 
+const IMPLICIT_PROJECT_FILES = {
+    '.gitignore': 'node_modules/\n.gspot/\n',
+    'tsconfig.json': '{"compilerOptions":{"strict":true,"types":[]}}\n',
+    'src/clean.ts': 'export const count: number = 1;\n',
+    'src/broken.ts': 'export const count: number = "wrong";\n',
+} as const;
+
 export {
     OUTDIR_CASES,
     YOUR_TSCONFIG,
     TSCONFIG_PROJECT,
     SOLUTION_TSCONFIG,
     REFERENCE_BUILD_FILES,
+    IMPLICIT_PROJECT_FILES,
     STANDALONE_FIXED_SOURCE,
     ANCESTOR_SCOPE_SETTINGS,
     ANCESTOR_TYPESCRIPT_FILES,
