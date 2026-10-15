@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import { decodeUtf8 } from '#cli/text.ts';
 import { GspotError } from '#cli/errors.ts';
 import { findingAt } from '#cli/checks/finding.ts';
@@ -152,7 +152,7 @@ export function envExamples(input: CheckInput): Finding[] {
     const { env_examples: names, reader_functions: readers } = input.selection.view.options('secrets');
     // Example files list variable names; reads appear in code, so inspect the whole scope.
     const inScope = input.files.filter((file) => isInScope(file.path, input.selection.scope.path));
-    const examples = inScope.filter((file) => names.includes(file.path));
+    const examples = inScope.filter((file) => names.includes(posix.basename(file.path)));
     if (examples.length === 0)
         throw new GspotError(
             'skip',

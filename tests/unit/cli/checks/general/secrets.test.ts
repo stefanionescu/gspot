@@ -14,12 +14,28 @@ import {
     READER_TABLES,
     READER_EXAMPLE,
     READER_FINDINGS,
+    NESTED_ENV_FILES,
     ENV_ACCESSOR_FILES,
     SCOPE_READER_FIXES,
     SCOPE_READER_FILES,
     SCOPE_READER_TABLES,
     ENV_ACCESSOR_EXAMPLE,
 } from '#tests/config/secrets.ts';
+
+test('a nested scope uses the default example environment file names', async () => {
+    await using sandbox = await testdir({
+        ...NESTED_ENV_FILES,
+        'gspot.toml': settingsText(['secrets'], {
+            level: 'all',
+            tables: '[[scope]]\npath = "app"\nconfigurations = ["secrets"]\n',
+        }),
+    });
+    expect(await checkFindings(sandbox.path, 'secrets/env-examples', { scope: 'app' })).toMatchObject([
+        { file: 'app/source.ts', rule: 'missing-key', message: textContaining('MISSING') },
+    ]);
+    await Bun.write(join(sandbox.path, 'app/.env.example'), 'KNOWN=example\nMISSING=example\n');
+    expect(await checkFindings(sandbox.path, 'secrets/env-examples', { scope: 'app' })).toStrictEqual([]);
+});
 
 test('keys read through Bun.env and custom reader functions are reported until the example file lists them', async () => {
     await using sandbox = await testdir();

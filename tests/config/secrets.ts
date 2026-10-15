@@ -11,8 +11,13 @@ os.environ.get("OTHER");
     'notes.txt': 'Bun.env.TEXT; $readEnv("TEXT");\n',
 } as const;
 
+const NESTED_ENV_FILES = {
+    'app/.env.example': 'KNOWN=example\n',
+    'app/source.ts': 'process.env.KNOWN; process.env.MISSING;\n',
+} as const;
+
 const READER_TABLES = `[secrets]
-env_examples = ["config/example.env"]
+env_examples = ["example.env"]
 reader_functions = ["config.$env", "$readEnv", "read_env"]
 `;
 
@@ -78,13 +83,13 @@ reader_functions = ["root_env"]
 path = "app"
 
 [scope.secrets]
-env_examples = ["app/project.env"]
+env_examples = ["project.env"]
 reader_functions = ["config.$env", "$readEnv"]
 [[scope]]
 path = "sibling"
 
 [scope.secrets]
-env_examples = ["sibling/.env.example"]
+env_examples = [".env.example"]
 `;
 
 const SCOPE_READER_FIXES = {
@@ -202,6 +207,7 @@ export {
     READER_FINDINGS,
     GITLEAKS_SCOPES,
     VERIFIER_TOKENS,
+    NESTED_ENV_FILES,
     SCOPE_READER_FILES,
     SCOPE_READER_FIXES,
     ENV_EXAMPLES_CASES,
