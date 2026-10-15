@@ -5,7 +5,6 @@ import { sqlFunctions } from '#cli/checks/language/sql.ts';
 import { runBuiltInCheck } from '#cli/execution/built-in.ts';
 import { svelteCheck } from '#cli/checks/framework/svelte.ts';
 import { deptry } from '#cli/checks/language/python/deptry.ts';
-import { settings } from '#cli/checks/general/gspot/settings.ts';
 import { bashSafety } from '#cli/checks/language/bash/safety.ts';
 import { commitlintPushed } from '#cli/checks/general/commits.ts';
 import { allowedLicenses } from '#cli/checks/general/licenses.ts';
@@ -111,7 +110,6 @@ import {
 
 /** Native input calculations, keyed by their check IDs. */
 export const CHECK_FUNCTIONS = {
-    'gspot/settings': settings,
     'gspot/unused-entries': unusedEntries,
     'expo/doctor': expoDoctor,
     'svelte/svelte-check': svelteCheck,

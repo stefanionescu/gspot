@@ -44,17 +44,6 @@ why = "An ignore or declaration that matches nothing misleads the next reader."
 help = "Remove the entry or correct its path."
 
 [[check]]
-name = "settings"
-example = "An unknown setting or a loosened limit without a reason reports its gspot.toml key path. Correct the declaration or record the required reason."
-level = "recommended"
-stage = "commit"
-runs = "once"
-files = { paths = ["gspot.toml"] }
-summary = "Checks the captured gspot.toml declarations for invalid settings and missing reasons."
-why = "A setting no check reads, or an unexplained loosening, can leave repository settings unenforced."
-help = "Fix the gspot.toml key the finding names, and give each loosened value a reason."
-
-[[check]]
 name = "suppressions"
 example = "An `eslint-disable-next-line` comment without a reason reports an unexplained suppression. Fix the underlying finding and remove the suppression, or append a specific `-- reason: ...` explanation of the required exception."
 level = "recommended"
