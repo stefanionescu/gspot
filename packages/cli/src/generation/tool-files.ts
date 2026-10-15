@@ -4,14 +4,15 @@ import { join, dirname } from 'node:path/posix';
 import { headerFor } from '#cli/generation/headers.ts';
 import { targetInScope } from '#cli/repository/scopes.ts';
 import { collectRules } from '#cli/generation/rule-capture.ts';
+import { prettierPlugins } from '#cli/planning/needed-tools.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { emitTarget } from '#cli/generation/tool-file-builders.ts';
 import { TOOL_FILE_REFERENCE } from '#cli/config/generation/files.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import { prettierConfiguration } from '#cli/generation/formatting.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { bodyPointer, pointerPaths } from '#cli/generation/pointers.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { prettierPlugins, prettierConfiguration } from '#cli/generation/formatting.ts';
 
 import type {
     Generated,

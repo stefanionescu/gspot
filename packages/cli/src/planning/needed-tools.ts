@@ -6,16 +6,25 @@ import { coverageArguments } from '#cli/planning/checks.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { isInGspotFolder } from '#cli/repository/selectors.ts';
 import { PIP_LICENSES_COMMAND } from '#cli/config/tools/python.ts';
+import { PRETTIER_TOOL } from '#cli/config/generation/formatting.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
-import { prettierToolRequirements } from '#cli/generation/formatting.ts';
+import type { StylelintComponent } from '#cli/types/generation/eslint.ts';
+import type { PrettierPlugin } from '#cli/types/generation/formatting.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import type { Session, PlannedCheck, LicenseProject } from '#cli/types/planning.ts';
-import { stylelintComponents } from '#cli/generation/tool-file-sources/stylelint.ts';
 import { toolDeclaration, toolProjectPackage } from '#cli/configurations/tool-pins.ts';
 import type { Manifest, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
-import { FLAG_VALUE, COVERAGE_FLAGS, STYLELINT_TOOL, LICENSES_CONFIGURATION } from '#cli/config/planning.ts';
+
+import {
+    FLAG_VALUE,
+    COVERAGE_FLAGS,
+    STYLELINT_TOOL,
+    VUE_STYLELINT_OVERRIDE,
+    LICENSES_CONFIGURATION,
+    SVELTE_STYLELINT_OVERRIDE,
+} from '#cli/config/planning.ts';
 
 function isToolSelected(scope: ScopeSelection, conditions: ToolDeclaration['when']): boolean {
     return (
@@ -28,6 +37,20 @@ function isToolSelected(scope: ScopeSelection, conditions: ToolDeclaration['when
             return value !== undefined && value !== false && value !== '';
         })
     );
+}
+
+/**
+ * The selected plugin tools that active formatter checks require.
+ *
+ * @param scopes the selected project scopes.
+ * @param programs the declared program installations.
+ *
+ * @returns the package names required by active formatter plugins.
+ */
+function prettierToolRequirements(scopes: ScopeSelection[], programs: ReadonlySet<string>): string[] {
+    return programs.has(PRETTIER_TOOL)
+        ? [...prettierPlugins(scopes.flatMap(({ selected }) => selected)).keys()].map(({ name }) => name)
+        : [];
 }
 
 /**
@@ -169,4 +192,38 @@ export function licenseProjects(
             ? []
             : [{ manifest: file.path, selection, configuration, skip: settingsSkip(settings, selection, check) }];
     });
+}
+
+/**
+ * Resolve the selected formatter plugins once. Retain their declaration identities and npm entries.
+ *
+ * @param manifests the selected configuration manifests.
+ *
+ * @returns the selected formatter plugins and their module paths.
+ */
+export function prettierPlugins(manifests: Iterable<Manifest>): Map<ToolDeclaration, PrettierPlugin> {
+    return new Map(
+        [...manifests].flatMap(({ tools }) =>
+            tools.flatMap((tool): [ToolDeclaration, PrettierPlugin][] => {
+                const name = tool.installers['npm']?.name;
+                return tool.prettier === undefined || name === undefined
+                    ? []
+                    : [[tool, { name, entry: tool.prettier.entry, overrides: tool.prettier.overrides }]];
+            }),
+        ),
+    );
+}
+
+/**
+ * The component dialects Stylelint reads and the parser each requires.
+ *
+ * @param configurations the selected configuration names.
+ *
+ * @returns the selected component dialects and their parser declarations.
+ */
+export function stylelintComponents(configurations: string[]): StylelintComponent[] {
+    return [
+        ...(configurations.includes('vue') ? [VUE_STYLELINT_OVERRIDE] : []),
+        ...(configurations.includes('svelte') ? [SVELTE_STYLELINT_OVERRIDE] : []),
+    ];
 }

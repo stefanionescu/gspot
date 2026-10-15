@@ -139,19 +139,6 @@ export const TAILWIND_AT_RULES = [
 
 export const STYLELINT_BASE_RULES = { 'no-descending-specificity': true, 'import-notation': 'string' } as const;
 
-export const SVELTE_STYLELINT_OVERRIDE = {
-    files: ['**/*.svelte'],
-    customSyntax: 'postcss-html',
-    ignorePseudoClasses: ['global'],
-} as const;
-
-export const VUE_STYLELINT_OVERRIDE = {
-    files: ['**/*.vue'],
-    customSyntax: 'postcss-html',
-    ignorePseudoClasses: ['deep', 'global', 'slotted'],
-    functions: ['v-bind'],
-} as const;
-
 export const SWIFT_TOOLS_VERSION = /^\s*\/\/\s*swift-tools-version\s*:\s*(\d+(?:\.\d+){1,2})\b/u;
 
 export const STYLELINT_RULE_NAMES_FILE = 'configurations/language/css/stylelint-rule-names.json';

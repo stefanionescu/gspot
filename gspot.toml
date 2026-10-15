@@ -266,7 +266,7 @@ may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", 
 [[architecture.module]]
 name = "planning"
 paths = ["packages/cli/src/planning/**"]
-may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules", "generation"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "rules"]
 
 [[architecture.module]]
 name = "generation"

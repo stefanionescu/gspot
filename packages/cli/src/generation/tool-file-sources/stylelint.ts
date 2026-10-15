@@ -4,17 +4,17 @@ import type { Session } from '#cli/types/planning.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { projectDependencies } from '#cli/repository/scopes.ts';
+import { VUE_STYLELINT_OVERRIDE } from '#cli/config/planning.ts';
+import { stylelintComponents } from '#cli/planning/needed-tools.ts';
+import type { RuleNamesFile } from '#cli/types/generation/eslint.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import type { EmitInputs, ToolFileSource } from '#cli/types/generation/files.ts';
-import type { RuleNamesFile, StylelintComponent } from '#cli/types/generation/eslint.ts';
 
 import {
     TAILWIND_AT_RULES,
     STYLELINT_BASE_RULES,
-    VUE_STYLELINT_OVERRIDE,
     STYLELINT_ALL_LEVEL_RULES,
     STYLELINT_RULE_NAMES_FILE,
-    SVELTE_STYLELINT_OVERRIDE,
 } from '#cli/config/generation/tool-file-sources.ts';
 
 /**
@@ -123,18 +123,4 @@ export function stylelintToolFile(
     };
 
     return { content: `${JSON.stringify(document, null, JSON_INDENT)}\n`, document: document };
-}
-
-/**
- * The component dialects Stylelint reads and the parser each requires.
- *
- * @param configurations the selected configuration names.
- *
- * @returns the selected component dialects and their parser declarations.
- */
-export function stylelintComponents(configurations: string[]): StylelintComponent[] {
-    return [
-        ...(configurations.includes('vue') ? [VUE_STYLELINT_OVERRIDE] : []),
-        ...(configurations.includes('svelte') ? [SVELTE_STYLELINT_OVERRIDE] : []),
-    ];
 }

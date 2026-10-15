@@ -1,6 +1,7 @@
 import { readAsset } from '#cli/system/assets.ts';
 import { extensionOf } from '#cli/system/paths.ts';
 import { buildJsconfig } from '#cli/generation/jsconfig.ts';
+import { prettierPlugins } from '#cli/planning/needed-tools.ts';
 import { jsonText, headerFor } from '#cli/generation/headers.ts';
 import { JSON_EXTENSIONS } from '#cli/config/generation/headers.ts';
 import { v8rToolFile } from '#cli/generation/tool-file-sources/v8r.ts';
@@ -36,7 +37,6 @@ import type { EmitInputs, ToolFileSource, ToolFileBuilder } from '#cli/types/gen
 import { semgrepToolFile, semgrepignoreToolFile } from '#cli/generation/tool-file-sources/semgrep.ts';
 
 import {
-    prettierPlugins,
     editorconfigToolFile,
     editorconfigOverrides,
     prettierConfiguration,

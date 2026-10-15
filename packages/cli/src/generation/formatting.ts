@@ -4,13 +4,11 @@ import { compact, isRecord } from '#cli/objects.ts';
 import { everyTable } from '#cli/settings/inherit.ts';
 import { byScopeDepth } from '#cli/repository/scopes.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/system/locations.ts';
-import type { Manifest, ToolDeclaration } from '#cli/types/configurations.ts';
+import type { Settings, ScopeView } from '#cli/types/settings/values.ts';
 import type { WrittenFormat, FormatSettings } from '#cli/types/settings/file.ts';
 import { literalGlob, includeFolderContents } from '#cli/repository/selectors.ts';
-import type { Settings, ScopeView, ScopeSelection } from '#cli/types/settings/values.ts';
 
 import {
-    PRETTIER_TOOL,
     PRETTIERIGNORE_HEADER,
     PRETTIER_FIXED_OPTIONS,
     UNREPRESENTABLE_SELECTOR,
@@ -255,38 +253,4 @@ export function prettierignoreToolFile({
                 .flatMap(({ paths }) => paths),
         ].join('\n') + '\n'
     );
-}
-
-/**
- * Resolve the selected formatter plugins once. Retain their declaration identities and npm entries.
- *
- * @param manifests the selected configuration manifests.
- *
- * @returns the selected formatter plugins and their module paths.
- */
-export function prettierPlugins(manifests: Iterable<Manifest>): Map<ToolDeclaration, PrettierPlugin> {
-    return new Map(
-        [...manifests].flatMap(({ tools }) =>
-            tools.flatMap((tool): [ToolDeclaration, PrettierPlugin][] => {
-                const name = tool.installers['npm']?.name;
-                return tool.prettier === undefined || name === undefined
-                    ? []
-                    : [[tool, { name, entry: tool.prettier.entry, overrides: tool.prettier.overrides }]];
-            }),
-        ),
-    );
-}
-
-/**
- * The selected plugin tools that active formatter checks require.
- *
- * @param scopes the selected project scopes.
- * @param programs the declared program installations.
- *
- * @returns the package names required by active formatter plugins.
- */
-export function prettierToolRequirements(scopes: ScopeSelection[], programs: ReadonlySet<string>): string[] {
-    return programs.has(PRETTIER_TOOL)
-        ? [...prettierPlugins(scopes.flatMap(({ selected }) => selected)).keys()].map(({ name }) => name)
-        : [];
 }
