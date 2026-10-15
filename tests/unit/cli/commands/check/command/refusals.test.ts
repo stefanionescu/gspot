@@ -10,6 +10,16 @@ import { readdir, readFile, writeFile } from 'node:fs/promises';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { FIX_REFUSALS, ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/check.ts';
 
+test('only refuses a commit message check outside the message stage', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': settingsText(['commits']) });
+    commitAll(sandbox.path);
+    const refused = await runGspot(sandbox.path, ['check', '--only', 'commits/commitlint']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stderr.trim()).toBe(
+        'commits/commitlint checks commit messages. Run gspot check --hook commit-msg --message-file <file>.',
+    );
+});
+
 test.each(['--changed', '--staged', '--hook'])('%s outside Git reports a setup error', async (flag) => {
     await using sandbox = await testdir();
     const settings = `configurations = []

@@ -17,6 +17,7 @@ import { type CheckOptions } from '#cli/types/commands/check.ts';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
 import { EXIT_ERROR, SIGNAL_EXIT_CODES } from '#cli/config/terminal.ts';
 import { findRoot, isGitRepository } from '#cli/repository/find-root.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { checkPush, assertPushOptions } from '#cli/commands/check/push.ts';
 
 // Reads the pre-push protocol from standard input, stopping when the signal stops the run.
@@ -170,6 +171,15 @@ export function registerCheck(program: Command) {
         .addOption(new Option('--message-file <path>', COMMAND_HELP.check.options['--message-file <path>']))
         .option('--verbose', COMMAND_HELP.check.options['--verbose'])
         .action(async (paths, flags) => {
+            const messageCheck = [...configurationManifests().values()]
+                .flatMap(({ checks }) => checks)
+                .find((check) => check.stage === 'message' && flags.only?.includes(check.name) === true);
+            const hasMessage = flags.messageFile !== undefined;
+            if (messageCheck !== undefined && !hasMessage)
+                throw new GspotError(
+                    'arguments',
+                    `${messageCheck.name} checks commit messages. Run gspot check --hook commit-msg --message-file <file>.`,
+                );
             await runCheck(paths, flags);
         });
 }

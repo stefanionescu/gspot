@@ -48,7 +48,7 @@ export const COMMAND_HELP = {
     check: {
         summary: 'Run the checks',
         description:
-            'Run the checks and print each finding with its file, line, lint rule, and help. Without paths or options, gspot checks every file in the working tree.',
+            'Run the checks and print each finding with its file, line, lint rule, and help. Without options, gspot runs the commit and push checks on the working tree. Commit message checks run with --hook commit-msg. Manual checks run only when --only names them.',
         arguments: {
             paths: 'Files or folders to check. Leave out to check the whole repository',
         },
