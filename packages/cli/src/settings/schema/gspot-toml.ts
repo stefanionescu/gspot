@@ -207,7 +207,10 @@ export const tableSettingSchemas = Object.fromEntries(
 export const scopeSchema = z.strictObject({
     path: relativePath.describe(SETTINGS_DESCRIPTIONS['scope.path']),
     configurations: z.array(z.string()).default([]).describe(SETTINGS_DESCRIPTIONS['scope.configurations']),
-    removed_configurations: z.array(z.string()).default([]).describe(SETTINGS_DESCRIPTIONS['scope.configurations']),
+    removed_configurations: z
+        .array(z.string())
+        .default([])
+        .describe(SETTINGS_DESCRIPTIONS['scope.removed_configurations']),
     test_files: z.array(relativePath).optional().describe(SETTINGS_DESCRIPTIONS['scope.test_files']),
     ...scopeBody,
 } satisfies SchemaShape<NonNullable<ParsedSettings['scope']>[number], WrittenScope>) satisfies z.ZodType<
