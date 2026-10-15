@@ -1,6 +1,7 @@
 import { stringify } from '@decimalturn/toml-patch';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { TOOL_EMIT_FORMAT } from '#cli/config/generation/tool-file-sources.ts';
+
 /**
  * Write the lychee configuration from selected settings.
  *

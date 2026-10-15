@@ -12,6 +12,7 @@ import { GSPOT_ENVIRONMENT } from '#tests/config/processes.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import type { RunReport, RunOptions } from '#cli/types/execution/check.ts';
 import type { StdinOptions, SpawnOutcome } from '#tests/types/processes.ts';
+
 /** The gspot source folder in this checkout. */
 export const CLI_SOURCE = join(import.meta.dir, '../../packages/cli/src');
 

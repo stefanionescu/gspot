@@ -5,6 +5,7 @@ import Search from '@astrojs/starlight/components/Search.astro';
 <Search />
 <script>
     import { SEARCH_BUTTONS } from '../../config/home.ts';
+
     // Keep the visible platform shortcut in the button name for speech control.
     for (const button of document.querySelectorAll<HTMLButtonElement>(SEARCH_BUTTONS)) {
         const text = button.textContent;

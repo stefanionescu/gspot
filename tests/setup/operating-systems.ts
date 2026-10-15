@@ -2,6 +2,7 @@
 import { currentOperatingSystem } from '#cli/system/environment.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { missingBuild, toolDeclaration } from '#cli/configurations/tool-pins.ts';
+
 /** Whether the tests run on Windows. */
 export const isWindows = process.platform === 'win32';
 export const isLinux = process.platform === 'linux';

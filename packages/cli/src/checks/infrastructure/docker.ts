@@ -34,6 +34,7 @@ import {
     DOCKERIGNORE_ENTRIES,
     TRIVY_SCHEMA_VERSION,
 } from '#cli/config/checks/infrastructure/docker.ts';
+
 // Group actual project paths in the order of base files before their overrides for metadata and validation.
 function composeGroups(files: TrackedFile[]): ComposeFiles[] {
     const groups = new Map<string, ComposeFiles>();

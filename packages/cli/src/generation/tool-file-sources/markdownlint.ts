@@ -3,6 +3,7 @@ import type { ScopeView } from '#cli/types/settings/values.ts';
 import type { ToolFileSource } from '#cli/types/generation/files.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { MARKDOWNLINT_RULES } from '#cli/config/generation/tool-file-sources.ts';
+
 /**
  * Write the markdownlint configuration from selected settings.
  *

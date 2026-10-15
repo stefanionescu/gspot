@@ -7,6 +7,16 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { SORT_CASES, SORT_RULES, SORT_LEVELS } from '#tests/config/eslint/sorting.ts';
 import { createEslint, lintFindings, readEslintConfiguration } from '#tests/setup/generate.ts';
 
+test('the generated import gap rule counts comments', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': settingsText(['javascript'], { level: 'all' }),
+        'source.js': 'export const value = 1;\n',
+    });
+    const eslint = await createEslint(sandbox.path);
+    const config = await readEslintConfiguration(eslint, join(sandbox.path, 'source.js'));
+    expect(config.rules['import-x/newline-after-import']?.[1]).toStrictEqual({ count: 1, considerComments: true });
+});
+
 test('a bundler scope uses extensionless imports while the Node.js parent keeps .js suffixes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

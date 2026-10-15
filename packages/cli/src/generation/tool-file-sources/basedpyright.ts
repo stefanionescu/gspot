@@ -3,6 +3,7 @@ import { pythonInputs } from '#cli/generation/python.ts';
 import type { EmitInputs } from '#cli/types/generation/files.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { BASEDPYRIGHT_OPTIONS } from '#cli/config/generation/python.ts';
+
 /**
  * Write the basedpyright configuration from selected settings.
  *

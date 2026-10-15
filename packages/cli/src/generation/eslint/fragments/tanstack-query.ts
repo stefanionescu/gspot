@@ -1,5 +1,6 @@
 import { presetSource, eslintErrorRules } from '#cli/generation/eslint/serialize.ts';
 import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
+
 /**
  * Write tanstackQuery ESLint rules for the selected scope.
  *

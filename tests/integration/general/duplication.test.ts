@@ -11,6 +11,7 @@ import { buildInitArguments } from '#tests/setup/init.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { sandboxPath, initRepository } from '#tests/setup/install.ts';
 import { containing, textContaining } from '#tests/setup/matchers.ts';
+
 /** Run the selected check and verify its contractual exit before reading its report. */
 async function checkDuplication(root: string, environment: Record<string, string>, code: number): Promise<RunReport> {
     const result = await spawnGspot(root, ['check', '--only', 'duplication/jscpd', '--json'], environment);

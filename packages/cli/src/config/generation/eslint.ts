@@ -141,7 +141,7 @@ export const EXPORTS_LAST_RULE = 'import-x/exports-last';
 export const BARREL_FILES_RULE = 'barrel-files/avoid-barrel-files';
 export const IMPORT_LAYOUT_RULES = {
     'import-x/first': 'error',
-    'import-x/newline-after-import': ['error', { count: 1 }],
+    'import-x/newline-after-import': ['error', { count: 1, considerComments: true }],
 } as const;
 export const ESLINT_SETTINGS_TABLE = 'tools.eslint';
 export const NODE_SHEBANG_TAG = 'shebang:node';

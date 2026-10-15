@@ -1,5 +1,6 @@
 import type { EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 import { ZUSTAND_STORE_CREATORS } from '#cli/config/generation/eslint-fragments.ts';
+
 /**
  * Write zustand ESLint rules for the selected scope.
  *

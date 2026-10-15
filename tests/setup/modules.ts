@@ -3,6 +3,7 @@ import { join, dirname } from 'node:path';
 import { pathExists } from '#tests/setup/files.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { mkdir, readdir, symlink, realpath } from 'node:fs/promises';
+
 /** The installed workspace store keeps each package beside its own dependencies. */
 const installedModules = join(import.meta.dir, '../../node_modules');
 

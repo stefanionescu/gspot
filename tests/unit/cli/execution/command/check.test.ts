@@ -17,6 +17,7 @@ import { isWindows } from '#tests/setup/operating-systems.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/config/settings/scopes.ts';
 import { runCheckCommand, commandEnvironment } from '#cli/execution/command/check.ts';
 import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
+
 // A checker that passes, and one that fails.
 const PASSING_SCRIPT = `#!${process.execPath}\nprocess.exitCode = 0;\n`;
 

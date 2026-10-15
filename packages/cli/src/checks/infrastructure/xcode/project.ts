@@ -19,6 +19,7 @@ import {
     XCODEPROJ_SUFFIX,
     SHARED_DATA_FOLDER,
 } from '#cli/config/checks/infrastructure/xcode.ts';
+
 // The folder that holds the project bundle, with its trailing slash, or an empty string at the root.
 function projectFolder(projectFile: string): string {
     const bundle = projectFile.slice(0, projectFile.indexOf(XCODEPROJ_SUFFIX));

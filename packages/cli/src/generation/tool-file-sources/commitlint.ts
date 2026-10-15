@@ -1,6 +1,7 @@
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import type { EmitInputs, ToolFileSource } from '#cli/types/generation/files.ts';
 import { COMMITLINT_RULES, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generation/tool-file-sources.ts';
+
 /**
  * Write the commitlint configuration from selected settings.
  *

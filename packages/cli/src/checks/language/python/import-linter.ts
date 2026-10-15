@@ -13,6 +13,7 @@ import { pythonProjectCommand } from '#cli/tools/python/project.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { BROKEN_CONTRACT, IMPORT_LINTER_FILES, LINT_IMPORTS_COMMAND } from '#cli/config/checks/language/python.ts';
+
 // Run Python import contracts for one scope and retain the dependency chains behind each broken contract.
 
 function importLinterFile(input: CheckInput): string | undefined {

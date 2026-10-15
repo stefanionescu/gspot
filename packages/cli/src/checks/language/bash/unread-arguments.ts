@@ -1,6 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+
 /**
  * One finding per function call with more arguments than the function reads.
  * @param input the check context.

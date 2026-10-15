@@ -1,6 +1,7 @@
 import { presetSource, eslintErrorRules } from '#cli/generation/eslint/serialize.ts';
 import { TESTING_LIBRARY_DEFAULT_PRESET } from '#cli/config/generation/eslint-fragments.ts';
 import type { EslintPresets, FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
+
 /**
  * Write testingLibrary ESLint rules for the selected scope.
  *

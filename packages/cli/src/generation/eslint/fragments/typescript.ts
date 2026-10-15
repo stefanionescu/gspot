@@ -1,6 +1,7 @@
 import { presetSource } from '#cli/generation/eslint/serialize.ts';
 import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES_OFF } from '#cli/config/generation/eslint-fragments.ts';
+
 /**
  * Write typescript ESLint rules for the selected scope.
  *

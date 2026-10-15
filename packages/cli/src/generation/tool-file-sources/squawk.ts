@@ -3,6 +3,7 @@ import type { Session } from '#cli/types/planning.ts';
 import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
 import type { EmitInputs, ToolFileSource } from '#cli/types/generation/files.ts';
 import { TOOL_EMIT_FORMAT, SQUAWK_RECOMMENDED_OFF } from '#cli/config/generation/tool-file-sources.ts';
+
 /**
  * Write the squawk configuration from selected settings.
  *

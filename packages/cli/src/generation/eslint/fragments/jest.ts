@@ -1,5 +1,6 @@
 import type { EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 import { JEST_GLOBAL_PACKAGE } from '#cli/config/generation/eslint-fragments.ts';
+
 /**
  * Write jest ESLint rules for the selected scope.
  *

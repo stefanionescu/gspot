@@ -171,9 +171,9 @@ export const headerFirst = createRule<[], 'headerFirst'>({
         docs: {
             level: 'all',
             example:
-                'A file header after an import reports `headerFirst`. A comment between imports does too. Move the comment above the first import or beside the code it explains. A comment that leads the next declaration and a tool directive remain in place. CommonJS require declarations follow the same rule when ESLint selects the commonjs source type.',
+                'A file header after an import reports `headerFirst`. A comment between imports does too. Move the comment above the first import or beside the code it explains. A comment that leads the next declaration remains in place. A tool directive is allowed only after the last import; a directive between imports is reported without a fix. CommonJS require declarations follow the same rule when ESLint selects the commonjs source type.',
             description:
-                'Reports comments within or immediately after an import block. Exempts tool directives and comments that lead the next declaration.',
+                'Reports comments within or immediately after an import block. Exempts tool directives after the last import and comments that lead the next declaration.',
             why: 'An import block lists dependencies. A file header belongs before it, and a behavior comment belongs with the code it explains.',
             fix: 'Move the comment above the first import or beside its declaration. eslint --fix moves it above the block.',
         },
@@ -199,7 +199,7 @@ export const headerFirst = createRule<[], 'headerFirst'>({
                         (comment) =>
                             comment.range[0] > first.range[0] &&
                             comment.range[1] <= end &&
-                            !isToolComment(comment.value) &&
+                            !(isToolComment(comment.value) && comment.range[0] > last.range[1]) &&
                             !(other !== undefined && isLeading(source, comment, other, comments)),
                     );
                     if (violating === undefined) continue;
@@ -208,6 +208,7 @@ export const headerFirst = createRule<[], 'headerFirst'>({
                         loc: violating.loc,
                         messageId: 'headerFirst',
                         fix(fixer) {
+                            if (isToolComment(violating.value)) return null;
                             const removal = removalRange(source, violating);
                             if (followsImports) {
                                 const rest = text.slice(removal[1]);

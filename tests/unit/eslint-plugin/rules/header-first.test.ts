@@ -40,12 +40,20 @@ createRuleTester().run('header-first', plugin.rules['header-first'], {
 
         "// The file header.\nimport { a } from './a';\nimport { b } from './b';\n\nexport const c = a + b;",
         "import { a } from './a';\nimport { b } from './b';\n\n// Explains c.\nexport const c = a + b;",
-        "import { a } from './a';\n/* global process */\nimport { b } from '../b';",
-        "import { a } from './a';\n// @ts-expect-error The declaration is incomplete.\nimport { b } from './b';",
         "import { a } from './a';",
         "import { a } from './a';\n\nconst value = 1;\n// A note between two blocks is not inside either.\nimport { b } from './b';",
     ],
     invalid: [
+        {
+            code: "import { a } from './a';\n// @ts-expect-error The declaration is incomplete.\nimport { b } from './b';",
+            output: null,
+            errors: [{ messageId: 'headerFirst', line: 2 }],
+        },
+        {
+            code: "import { a } from './a';\n/* global process */\nimport { b } from '../b';",
+            output: null,
+            errors: [{ messageId: 'headerFirst', line: 2 }],
+        },
         {
             code: "import { a } from './a';\n// Explains the complete\n// import below.\nimport { c } from './c';\nexport const b = a + c;",
             output: "// Explains the complete\n// import below.\nimport { a } from './a';\nimport { c } from './c';\nexport const b = a + c;",

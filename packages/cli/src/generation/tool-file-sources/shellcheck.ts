@@ -7,6 +7,7 @@ import {
     SHELLCHECK_OPTIONS,
     SHELLCHECK_ALL_LEVEL_CHECKS,
 } from '#cli/config/generation/tool-file-sources.ts';
+
 /**
  * Write the shellcheck configuration from selected settings.
  *

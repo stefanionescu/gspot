@@ -13,6 +13,7 @@ import { COMPILER_SOURCE } from '#tests/config/typescript.ts';
 import { installToolProjects } from '#tests/setup/install.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { JSCONFIG_CASES, JAVASCRIPT_PROJECT_FILES } from '#tests/config/javascript.ts';
+
 // The compiler passes after the source correction.
 
 test("javascript/tsc uses gspot's own TypeScript when the project has none", async () => {

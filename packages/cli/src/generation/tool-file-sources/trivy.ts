@@ -1,6 +1,7 @@
 import { stringify } from 'yaml';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { TRIVY_SKIPPED_FOLDERS } from '#cli/config/generation/tool-file-sources.ts';
+
 /**
  * Write the trivy configuration from selected settings.
  *

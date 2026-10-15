@@ -3,6 +3,7 @@ import type { Level } from '#cli/types/configurations.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import type { ToolFileSource } from '#cli/types/generation/files.ts';
 import { HADOLINT_RECOMMENDED_OFF, HADOLINT_FAILURE_THRESHOLD } from '#cli/config/generation/tool-file-sources.ts';
+
 /**
  * Write the hadolint configuration from selected settings.
  *

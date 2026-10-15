@@ -1,4 +1,5 @@
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
+
 /** The pinned native tool reads unclassified docstrings as NumPy style. */
 export const PYDOCLINT_DEFAULT_STYLE = 'numpy';
 

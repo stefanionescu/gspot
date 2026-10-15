@@ -1,5 +1,6 @@
 import type { EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 import { REACT_NATIVE_RULES } from '#cli/config/generation/eslint-fragments.ts';
+
 /**
  * Write reactNative ESLint rules for the selected scope.
  *

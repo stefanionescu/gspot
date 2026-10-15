@@ -6,6 +6,7 @@ import {
     MISE_TOOL_PROJECT_FILE,
     PYTHON_TOOL_PROJECT_FILE,
 } from '#cli/config/system/locations.ts';
+
 // The paths the job caches between runs: the package caches and the installed tools.
 const CACHED_PATHS = [
     '~/.npm/_cacache',

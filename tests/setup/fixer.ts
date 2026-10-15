@@ -1,6 +1,7 @@
 // Builds the settings and plan for a test fixer.
 import { planRun } from '#cli/planning/checks.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+
 /**
  * The planned fixer of the sandbox with its command replaced by a script.
  * @param session the open sandbox session.

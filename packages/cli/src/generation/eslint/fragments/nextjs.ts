@@ -7,6 +7,7 @@ import {
     NEXT_SERVER_FILES,
     NEXT_PAGES_FOLDERS,
 } from '#cli/config/generation/eslint-fragments.ts';
+
 /**
  * Write nextjs ESLint rules for the selected scope.
  *

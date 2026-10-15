@@ -5,6 +5,7 @@ import { pythonInputs } from '#cli/generation/python.ts';
 import { TOOL_EMIT_FORMAT } from '#cli/config/generation/tool-file-sources.ts';
 import type { EmitInputs, ToolFileSource } from '#cli/types/generation/files.ts';
 import { RUFF_ISORT, RUFF_IGNORED_RULES } from '#cli/config/generation/python.ts';
+
 /**
  * Write the ruff configuration from selected settings.
  *

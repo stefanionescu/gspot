@@ -1,6 +1,7 @@
 import { stringify } from 'yaml';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { MISE_SCHEMA } from '#cli/config/generation/tool-file-sources.ts';
+
 /**
  * Write the v8r configuration from selected settings.
  *

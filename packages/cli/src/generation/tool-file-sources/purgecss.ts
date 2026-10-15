@@ -6,6 +6,7 @@ import {
     PURGECSS_TOKEN_END,
     PURGECSS_PSEUDO_CLASS_PATTERN,
 } from '#cli/config/generation/tool-file-sources.ts';
+
 /**
  * Write the purgecss configuration from selected settings.
  *

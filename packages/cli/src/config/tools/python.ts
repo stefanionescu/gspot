@@ -1,4 +1,5 @@
 import { PYTHON_VERSION } from '#cli/config/parsers/dependency-files.ts';
+
 /** Arguments shared by uv execution and its installation preview. */
 export const UV_LOCKFILE_ARGUMENTS = ['lock'] as const;
 export const UV_VENV_ARGUMENTS = ['venv', '--python', PYTHON_VERSION, '--allow-existing', '.venv'] as const;

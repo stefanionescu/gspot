@@ -7,6 +7,7 @@ import {
     SQLFLUFF_CAPITALISATION,
     SQLFLUFF_RECOMMENDED_OFF,
 } from '#cli/config/generation/tool-file-sources.ts';
+
 /**
  * Write the sqlfluff configuration from selected settings.
  *

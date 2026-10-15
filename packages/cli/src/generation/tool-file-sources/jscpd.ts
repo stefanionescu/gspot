@@ -1,6 +1,7 @@
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { JSCPD_IGNORED } from '#cli/config/generation/tool-file-sources.ts';
+
 /**
  * Write the jscpd configuration from selected settings.
  *

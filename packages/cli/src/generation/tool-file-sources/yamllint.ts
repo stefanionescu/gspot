@@ -7,6 +7,7 @@ import {
     YAMLLINT_YAML_OPTIONS,
     YAMLLINT_RULE_OPTIONS,
 } from '#cli/config/generation/tool-file-sources.ts';
+
 /**
  * Write the yamllint configuration from selected settings.
  *

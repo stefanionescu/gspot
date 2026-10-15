@@ -2,6 +2,7 @@ import { literalGlob } from '#cli/repository/selectors.ts';
 import { presetSource } from '#cli/generation/eslint/serialize.ts';
 import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 import { NESTJS_ALL_LEVEL_RULES, NESTJS_INJECTABLE_FILTER_PATHS } from '#cli/config/generation/eslint-fragments.ts';
+
 /**
  * Write nestjs ESLint rules for the selected scope.
  *

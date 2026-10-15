@@ -1,4 +1,5 @@
 import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
+
 /** The upstream styles shipped at level all. */
 export const VALE_PACKAGES = ['Google', 'write-good', 'proselint', 'alex', 'Harper'] as const;
 
