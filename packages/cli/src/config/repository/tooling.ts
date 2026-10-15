@@ -48,3 +48,4 @@ export const RUN_WORD = 'run';
 export const LINT_TASK = 'lint';
 export const KEPT_DOT_FILE = '.gitkeep';
 export const JOB_NAME_SEPARATORS = /[-_: ]/u;
+export const MISE_TASKS_FOLDER = '.mise/tasks';

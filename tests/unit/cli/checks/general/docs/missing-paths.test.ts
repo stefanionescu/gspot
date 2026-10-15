@@ -86,6 +86,22 @@ test('mise task aliases count; unknown aliases are reported', async () => {
     ]);
 });
 
+test('clone host names are skipped while missing repository paths are reported', async () => {
+    const found = await missingPathFindings({
+        'README.md': 'Clone github.com/example/demo.git and read docs/guide.md.\n',
+    });
+    expect(found.map(({ message }) => message)).toStrictEqual(['docs/guide.md names no tracked file or folder.']);
+});
+
+test('mise file tasks include nested names while unknown tasks are reported', async () => {
+    const found = await missingPathFindings({
+        'README.md': 'Run `mise run setup`, `mise run docs:build`, and `mise run absent`.\n',
+        '.mise/tasks/setup': '#!/usr/bin/env bash\ntrue\n',
+        '.mise/tasks/docs/build': '#!/usr/bin/env bash\ntrue\n',
+    });
+    expect(found.map(({ message }) => message)).toStrictEqual(['mise run absent names no task or script.']);
+});
+
 test('tasks in .mise/config.toml, mise.local.toml and conf.d files count, and .tool-versions is not read as TOML', async () => {
     const found = await missingPathFindings(
         {

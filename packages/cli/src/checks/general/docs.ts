@@ -13,7 +13,6 @@ import type { NumberedLine } from '#cli/types/text.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
-import packageJson from '#cli-package' with { type: 'json' };
 import { TRAILING_SLASH } from '#cli/config/system/paths.ts';
 import { executableNames } from '#cli/system/executables.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/parsers/output.ts';
@@ -22,8 +21,8 @@ import { SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
 import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import type { PathIndex, TaskSources } from '#cli/types/checks/general.ts';
-import { MISE_FILES, RUNNER_NAMES } from '#cli/config/repository/tooling.ts';
 import { scopeOf, joinScope, scopeAncestors } from '#cli/repository/scopes.ts';
+import { MISE_FILES, RUNNER_NAMES, MISE_TASKS_FOLDER } from '#cli/config/repository/tooling.ts';
 
 import {
     BUN_RUN,
@@ -43,7 +42,6 @@ import {
     TOKEN_SEPARATORS,
     TRAILING_PUNCTUATION,
     OPTIONAL_GENERATED_PATHS,
-    DOCUMENTED_PACKAGE_INSTALL,
 } from '#cli/config/checks/general/docs.ts';
 
 // eslint-disable-next-line complexity, sonarjs/cognitive-complexity -- reason: This index combines tracked, ignored, generated, and declared paths; splitting it creates one-caller index wrappers.
@@ -111,7 +109,7 @@ function isMissing(token: string, file: string, index: PathIndex): boolean {
     if (index.known.has(relative)) return false;
     if (token.startsWith('./') || token.startsWith('../')) return true;
     const first = clean.split('/', 1)[0] ?? '';
-    return (index.known.has(first) || FILE_EXTENSION.test(clean)) && !index.known.has(clean);
+    return !index.known.has(clean) && (index.known.has(first) || (!first.includes('.') && FILE_EXTENSION.test(clean)));
 }
 
 function lineFindings(input: CheckInput, file: string, prose: NumberedLine, index: PathIndex): Finding[] {
@@ -193,7 +191,15 @@ function taskSources(input: CheckInput, scope: string): TaskSources {
         break;
     }
     return {
-        mise: new Set(files.flatMap((file) => miseTasks(input, file))),
+        mise: new Set([
+            ...files.flatMap((file) => miseTasks(input, file)),
+            ...ancestors.flatMap(({ path }) => {
+                const folder = posix.join(path, MISE_TASKS_FOLDER);
+                return globPaths(input.root, posix.join(folder, '**')).map((file) =>
+                    posix.relative(folder, file).replaceAll('/', ':'),
+                );
+            }),
+        ]),
         packages: new Set(scripts),
         binaries: new Set(
             ancestors.flatMap(({ path }) => {
@@ -272,14 +278,7 @@ export function missingPaths(input: CheckInput): Finding[] {
         const index: PathIndex = { known, tasks: taskSources(input, scope) };
         return sources.flatMap((file) => {
             const text = readSource(input.root, file.path, input.reads).toString('utf8');
-            const installation = new RegExp(
-                `${DOCUMENTED_PACKAGE_INSTALL}[^\n]*\\s${RegExp.escape(packageJson.name)}(?:@[^\\s]+)?(?:\\s|$)`,
-                'mu',
-            );
-            const binaries = new Set(index.tasks.binaries);
-            if (installation.test(text)) for (const name of Object.keys(packageJson.bin)) binaries.add(name);
-            const context: PathIndex = { ...index, tasks: { ...index.tasks, binaries } };
-            return proseLines(text).flatMap((prose) => lineFindings(input, file.path, prose, context));
+            return proseLines(text).flatMap((prose) => lineFindings(input, file.path, prose, index));
         });
     });
 }

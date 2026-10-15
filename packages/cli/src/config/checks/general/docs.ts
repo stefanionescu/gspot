@@ -26,8 +26,6 @@ export const PATH_TOKEN_SKIPS = [/^\.\.?\/?$/u, /^\d+\/\d+$/u, /^\//u] as const;
 export const MISE_RUN = 'mise run ';
 export const BUN_RUN = 'bun run ';
 
-/** Package installation commands establish the executables used by later examples. */
-export const DOCUMENTED_PACKAGE_INSTALL = String.raw`\b(?:npm\s+install|(?:bun|pnpm|yarn)\s+add)\b`;
 export const MISE_CONF_FILES = '.mise/conf.d/*.toml';
 export const README_FILE = 'README.md';
 export const LICENSE_PATH = 'LICENSE';
