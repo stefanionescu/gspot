@@ -48,7 +48,7 @@ function toolProjectRows(everySelected: Manifest[]): InitPlan['change'] {
 }
 
 // What stops running once gspot runs the same tools: lint folders, lint-only manifests, and duplicate pins.
-function noLongerRuns(tooling: Tooling): InitFileRow[] {
+function buildPinnedDependencyRows(tooling: Tooling): InitFileRow[] {
     const list = tooling.lintFolders.map((folder) => ({
         path: `${folder}/`,
         note: 'a folder of lint scripts; check remaining references before deleting it',
@@ -161,7 +161,7 @@ export function buildInitPlan(
             ...keptCiRows(answers.ci, tooling.ci, readLintJobs(root, tooling.ci)),
         ],
         change: [...change, ...replaced.changed],
-        noLongerRuns: noLongerRuns(tooling),
+        noLongerRuns: buildPinnedDependencyRows(tooling),
     };
 }
 
