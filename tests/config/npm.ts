@@ -1,9 +1,3 @@
-/** The declared package manager version supplied by the process boundary. */
-const NPM_VERSION = '11.19.0';
-
-/** A successful command with no diagnostic output. */
-const NPM_SUCCESS = { code: 0, missing: false, duration: 1, stdout: '', stderr: '' } as const;
-
 const NEXT_INSTALLATIONS = [
     {
         name: 'an uninstalled Next uses the shipped manifest pin',
@@ -196,8 +190,6 @@ const NPM_SANDBOX_PACKAGE = {
 const PNPM_WORKSPACE = 'packages:\n  - "**"\n';
 
 export {
-    NPM_VERSION,
-    NPM_SUCCESS,
     YARN_CLIENTS,
     PNPM_WORKSPACE,
     NPM_CLIENT_ROWS,

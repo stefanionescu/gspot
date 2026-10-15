@@ -86,4 +86,4 @@ After an edit, run `gspot apply` and `gspot install`. `gspot apply --dry-run` pr
 
 ## When files of a language appear or go
 
-When files of a language or framework appear or go away, run `gspot apply`, then `gspot install`. `apply` adds a detected configuration when its files appear. When the files go away, its checks become inactive; its configurations, settings, ignores, and command checks stay in gspot.toml. It never undoes your own `gspot add` or `gspot remove`; those stay in `configurations` and `removed_configurations`.
+When files of a language or framework appear, use `gspot add` to select its configuration, then run `gspot install`. When the files go away, its checks become inactive. Its configurations, settings, ignores, and command checks stay in gspot.toml. `gspot apply` writes generated files from your saved settings and does not change `configurations` or `removed_configurations`.

@@ -1,16 +1,5 @@
-import type { Mutation } from '#cli/types/settings/file.ts';
 import type { GROUP_LABELS } from '#cli/config/configurations.ts';
 import type { FileKind } from '#cli/types/repository/inventory.ts';
-
-/** Settings mutation and selection changes calculated from repository evidence. */
-export type ConfigurationReconciliation = { mutate: Mutation; notes: string[] };
-
-/** Existing and detected choices with a scope's recorded overrides. */
-export type ConfigurationLists = {
-    saved: string[];
-    found: string[];
-    removed: string[];
-};
 
 export type ConfigurationEvidence = {
     configuration: string;

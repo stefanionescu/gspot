@@ -16,7 +16,6 @@ import { everyManifest } from '#cli/configurations/select.ts';
 import type { ToolInspection } from '#cli/types/tools/find.ts';
 import { inspectTool, isToolAvailable } from '#cli/tools/find.ts';
 import { currentOperatingSystem } from '#cli/system/environment.ts';
-import { reconcileConfigurations } from '#cli/commands/reconcile.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { collectPins, missingBuild } from '#cli/configurations/tool-pins.ts';
 import { type Suggestions, type DoctorReport } from '#cli/types/commands/doctor.ts';
@@ -139,12 +138,9 @@ export async function doctorCommand(directory: string): Promise<CommandResult> {
     const root = findRoot(directory);
     const session = await openSession(root);
     const report = buildDoctorReport(session, readVersionPin(root));
-    const stale = reconcileConfigurations(session).notes;
-    const note =
-        stale.length === 0 ? '' : `gspot apply would change gspot.toml: ${stale.join('; ')}. Run gspot apply.\n`;
     return {
-        text: `${formatDoctorReport(report)}${note}`,
-        json: { ...report, stale },
+        text: formatDoctorReport(report),
+        json: report,
         exitCode: report.exitCode,
     };
 }

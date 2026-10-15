@@ -44,6 +44,11 @@ async function saveSettings(root: string, options: SaveSettingsOptions): Promise
     };
 }
 
+/**
+ * Format generated file changes and notes for command output.
+ * @param report the applied file changes and notes.
+ * @returns the report text.
+ */
 function reportText(report: ApplyReport): string {
     const lines = [
         ...report.written.map((path) => `wrote    ${path}`),
@@ -80,4 +85,4 @@ function refuseAlwaysSelected(names: string[], manifests: Map<string, Manifest>)
         ]);
 }
 
-export { saveSettings, startSettingsEdit, refuseAlwaysSelected };
+export { reportText, saveSettings, startSettingsEdit, refuseAlwaysSelected };

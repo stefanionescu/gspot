@@ -34,7 +34,7 @@ export const COMMAND_HELP = {
     apply: {
         summary: 'Write the generated files from gspot.toml',
         description:
-            'Add the configurations the repository now needs to gspot.toml, then write the tool files, rules, Git hooks, and CI workflow from gspot.toml. A generated file you edited stays as it is, and apply names it. apply installs no tools: run gspot install after it.',
+            'Write the tool files, rules, Git hooks, and CI workflow from gspot.toml. A generated file you edited stays as it is, and apply names it. apply installs no tools: run gspot install after it.',
         arguments: {},
         options: {
             '--dry-run': 'Print the changes, with each lint rule that turns on or off, and write nothing',

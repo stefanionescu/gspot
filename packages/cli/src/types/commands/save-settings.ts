@@ -14,8 +14,6 @@ export type ApplyOptions = {
 
 export type DryRunJson = {
     dryRun: true;
-    settings: string;
-    reconciled: string[];
     pin: { from: string | undefined; to: string };
     drift: StaleFile[];
     notes: string[];

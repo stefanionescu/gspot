@@ -215,5 +215,3 @@ export const CONFIGURATION_CHOICES = [
     { configurations: [] },
     { configurations: ['python'] },
 ] as const;
-
-export const SCRIPT_SOURCE = 'echo example\n';

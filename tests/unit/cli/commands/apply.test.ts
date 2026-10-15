@@ -23,6 +23,9 @@ test('init deletes a replaced file, and apply exits 2 and keeps later edits and 
     const writtenVersion = await readFile(join(directory.path, '.gspot/version'), 'utf8');
     expect(initialized.stdout.split('\n')).toContain(`gspot ${writtenVersion.trim()}`);
     expect(await pathExists(join(directory.path, '.shellcheckrc'))).toBe(false);
+    const settingsPath = join(directory.path, 'gspot.toml');
+    const settings = await readFile(settingsPath, 'utf8');
+    await writeFile(join(directory.path, 'added.py'), 'print("example")\n');
     const generated = join(directory.path, '.gspot/config/shellcheckrc');
     const edited = `${await readFile(generated, 'utf8')}# Authored after installation.\n`;
     await chmod(generated, 0o644);
@@ -33,6 +36,7 @@ test('init deletes a replaced file, and apply exits 2 and keeps later edits and 
     expect(applied.stderr).toContain('.gspot/config/shellcheckrc');
     expect(await readFile(generated, 'utf8')).toBe(edited);
     expect(await readFile(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('Preserve this file.\n');
+    expect(await readFile(settingsPath, 'utf8')).toBe(settings);
 });
 
 test('a generated file cannot go into .gspot/state', async () => {
