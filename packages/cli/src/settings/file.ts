@@ -10,7 +10,6 @@ import { tomlSyntax } from '#cli/parsers/toml/comments.ts';
 import type { OwnershipLog } from '#cli/types/ownership.ts';
 import { dropDefaults } from '#cli/settings/drop-defaults.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
 import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import type { FileCopy } from '#cli/types/system/safe-folder.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
@@ -19,17 +18,7 @@ import { tableValuesSchema } from '#cli/settings/schema/tables.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { parse, LocalDate, stringify } from '@decimalturn/toml-patch';
 import type { TomlTable, SettingsSource } from '#cli/types/settings/file.ts';
-
-import {
-    ROOT_KEYS,
-    LAST_TABLES,
-    SCHEMA_FILE,
-    FIRST_TABLES,
-    RECORD_FIELDS,
-    SCHEMA_URL_PREFIX,
-    PARSE_CONTEXT_LINES,
-    SCHEMA_COMMENT_PREFIX,
-} from '#cli/config/settings/file.ts';
+import { ROOT_KEYS, LAST_TABLES, FIRST_TABLES, RECORD_FIELDS, PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts';
 
 function sortTable(table: TomlTable): TomlTable {
     const order = [
@@ -166,7 +155,7 @@ function emitSettings(previousText: string, settings: TomlTable): string {
     const syntax = tomlSyntax(previousText, parseTomlText(previousText, SETTINGS_FILE, 'settings'));
     const comments = keptComments(syntax, target, settings);
     target = sortTable(target);
-    return `${SCHEMA_COMMENT_PREFIX}${SCHEMA_URL_PREFIX}${packageManifest.version}/${SCHEMA_FILE}\n\n${layOutSettings(target, indent, comments)}`;
+    return layOutSettings(target, indent, comments);
 }
 
 /**

@@ -9,9 +9,7 @@ configurations=[]
 [hooks]
 enabled=true
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-# Copied from template https://example.com/team.toml
+        expected: `# Copied from template https://example.com/team.toml
 
 # Hook comment
 [hooks]
@@ -23,9 +21,7 @@ enabled = true
         source: `configurations=[]
 ignore=[{check="gspot/generated-files",reason="Another generator owns reviewed outputs.",paths=["other/**"],until=2027-10-07}]
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-[[ignore]]
+        expected: `[[ignore]]
 check = "gspot/generated-files"
 paths = ["other/**"]
 reason = "Another generator owns reviewed outputs."
@@ -46,9 +42,7 @@ enabled=true
 value={source-path="SCRIPTDIR"}
 reason="The project uses reviewed source paths."
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-[hooks]
+        expected: `[hooks]
 enabled = true
 
 # Formatter options

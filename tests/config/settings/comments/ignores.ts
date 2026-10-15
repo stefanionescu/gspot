@@ -14,9 +14,7 @@ paths=["docs/**"]
 reason="Private documentation"
 until=2026-12-31
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-# Copied from template team, sha256 abc.
+        expected: `# Copied from template team, sha256 abc.
 
 # Root owner
 level = "all"
@@ -67,9 +65,7 @@ paths = [ "b.ts" ]
 reason="Reviewed findings stay ignored intentionally."
 until = 2026-12-31
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-# Copied from template team, sha256 abc.
+        expected: `# Copied from template team, sha256 abc.
 
 allowed_words = { value = ["Term"], reason = "The project uses this reviewed name." }
 
@@ -115,9 +111,7 @@ paths = [ "b.ts" ]
 reason="Reviewed findings stay ignored intentionally."
 until = 2026-12-31
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-# Original physical row
+        expected: `# Original physical row
 [[ignore]]
 check = "a/check"
 paths = [
@@ -156,9 +150,7 @@ paths=["b.ts"]
 reason="Reviewed findings stay ignored intentionally."
 until=2026-11-01
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-# A row
+        expected: `# A row
 [[ignore]]
 check = "a/check"
 paths = ["a.ts"]

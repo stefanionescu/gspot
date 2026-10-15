@@ -24,9 +24,7 @@ check="docs/links"
 paths=["docs/**"]
 reason="Private documentation"
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-# Whole repository
+        expected: `# Whole repository
 [[ignore]]
 check = "docs/links"
 reason = "Private documentation"
@@ -53,9 +51,7 @@ reason = "These options exercise the written indentation."
 [tools.eslint.extra.value]
 values=[1]
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-[format]
+        expected: `[format]
 indent_width = 2
 
 [tools.eslint.extra]
@@ -89,9 +85,7 @@ reason = "These options exercise the written indentation."
 [tools.eslint.extra.value]
 values=[1]
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-[format]
+        expected: `[format]
 indent_style = "tab"
 
 [tools.eslint.extra]
@@ -117,9 +111,7 @@ paths=["src/**"]
 stage="commit"
 summary="Team check"
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-# Existing level
+        expected: `# Existing level
 level = "all"
 
 [[command_check]]
@@ -144,9 +136,7 @@ test_files=["vendor/**","output/**"]
 [hooks]
 enabled=true
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-level = "all"
+        expected: `level = "all"
 test_files = ["vendor/**", "output/**"]
 
 [hooks]
@@ -171,9 +161,7 @@ docstring_convention = "google"
 eslint = { import_extension = "ts", rules = { "z/rule" = [] } }
 ruff = { docstring_convention = "google" }
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-# Eslint first
+        expected: `# Eslint first
 [tools.eslint]
 import_extension = "ts"
 
@@ -202,9 +190,7 @@ paths=["src/**"]
         target: `[tools]
 eslint = { rules = { "z/rule" = [], "a/rule" = [] }, override = [ { paths = [ "src/**" ], rules = { "z/rule" = [] } } ] }
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-# Rules owner
+        expected: `# Rules owner
 [tools.eslint.rules]
 "a/rule" = []
 "z/rule" = []
@@ -232,9 +218,7 @@ may_import = ["core"] # Limit inline
         target: `[architecture]
 module = [ { name = "core", paths = [ "src/**" ], may_import = ["core"] } ]
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-# Architecture owner
+        expected: `# Architecture owner
 [architecture]
 
 # Module owner

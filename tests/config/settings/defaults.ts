@@ -10,9 +10,7 @@ enabled=false
 indent_style="space"
 indent_width=4
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-
+        expected: `
 `,
     },
     {
@@ -29,9 +27,7 @@ format.indent_width=4
 path="notes"
 format.indent_width=2
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-[format]
+        expected: `[format]
 indent_width = 2
 
 [[scope]]
@@ -56,9 +52,7 @@ limits.python.file_lines=300
 path="app/worker"
 limits.python.file_lines=300
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-[limits]
+        expected: `[limits]
 file_lines = { value = 500, reason = "Reviewed root files need this ceiling." }
 
 [[scope]]

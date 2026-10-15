@@ -18,9 +18,7 @@ enabled=true
 [hooks]
 enabled = true
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-level = "all"
+        expected: `level = "all"
 
 # Free regional note
 
@@ -45,9 +43,7 @@ paths = [ "a.ts" ]
 reason="Reviewed findings stay ignored intentionally."
 until = 2026-12-31
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-[[ignore]]
+        expected: `[[ignore]]
 check = "a/check"
 paths = ["a.ts"]
 # Authored reason
@@ -59,8 +55,6 @@ until = 2026-12-31
         name: `maps dotted and blank lines`,
         source: `# schema note
 # Copied from template team, sha256 abc.
-#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
 # Root
 level="all" # Level inline
 # Dotted hook
@@ -97,12 +91,9 @@ command=["bun","task.ts"]
 paths=["src/**"]
 summary="Changed task"
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-# Copied from template team, sha256 abc.
+        expected: `# Copied from template team, sha256 abc.
 
 # schema note
-
 # Root
 # Level inline
 level = "all"
@@ -150,9 +141,7 @@ path="apps/前言"
 configurations=[]
 `,
         // eslint-disable-next-line unicorn/prefer-string-raw -- Bun escapes Unicode in raw templates and changes this expected TOML value.
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-# Native options
+        expected: `# Native options
 [tools.eslint]
 
 # Native inline
@@ -178,9 +167,7 @@ extra.value={
  values=[1,2]
  }
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-[tools.eslint.extra]
+        expected: `[tools.eslint.extra]
 reason = "The project keeps reviewed native options."
 
 [tools.eslint.extra.value]

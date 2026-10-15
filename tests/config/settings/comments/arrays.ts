@@ -23,9 +23,7 @@ enabled=true
 [hooks]
 enabled = true
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-# Global note
+        expected: `# Global note
 
 # Exclusions
 # Array inline
@@ -61,9 +59,7 @@ extra.value={ values=[
  ]
 ] }
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-[tools.eslint.extra]
+        expected: `[tools.eslint.extra]
 reason = "The project keeps reviewed native options."
 
 [tools.eslint.extra.value]
@@ -98,9 +94,7 @@ extra.value={ values=[
  2
 ] }
 `,
-        expected: `#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json
-
-[tools.eslint.extra]
+        expected: `[tools.eslint.extra]
 reason = "The project keeps reviewed native options."
 
 [tools.eslint.extra.value]
