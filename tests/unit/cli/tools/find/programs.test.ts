@@ -64,6 +64,7 @@ test("inspectTool finds the project compiler, and the original repository's comp
 });
 
 test('version reads and runs use the companion programs of the chosen tool folder', async () => {
+    using _git = useEnvironment({ GIT_EDITOR: 'true' });
     await using sandbox = await testdir();
     const program =
         "const child = Bun.spawnSync(['companion'], {stdout:'pipe', stderr:'pipe'}); process.stdout.write(child.stdout); process.exitCode = child.exitCode;\n";

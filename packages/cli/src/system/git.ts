@@ -116,7 +116,7 @@ export function gitEnvironment(
         return { env: explicit };
     const origin = process.cwd();
     if (sourceMetadata === undefined) {
-        const declared = runBlocking(['git', ...GIT_LOCAL_VARIABLES_ARGV], { cwd: origin, env: explicit });
+        const declared = runBlocking(['git', ...GIT_LOCAL_VARIABLES_ARGV], { cwd: origin, env: {} });
         if (declared.code !== 0) return { failure: declared };
         const metadata = parseLocalEnvironment(declared.stdout).filter(
             (name) => !new Set<string | undefined>(GIT_COMMAND_CONFIGURATION).has(name),
