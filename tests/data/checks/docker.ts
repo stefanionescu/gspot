@@ -173,6 +173,7 @@ export const COMPOSE_PAIRING_CASES = [
 ] as const;
 
 export const DOCKER_SANDBOX = {
+    install: false,
     configurations: ['docker'],
     files: {
         'api/Dockerfile': `FROM node:22.11.0-bookworm-slim

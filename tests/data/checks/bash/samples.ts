@@ -28,6 +28,7 @@ export const BASH_SANDBOX = {
 } as const;
 
 export const SHELLCHECK_SANDBOX = {
+    install: false,
     configurations: ['bash'],
     files: { 'scripts/build.sh': CLEAN_BASH_SCRIPT },
 } as const;

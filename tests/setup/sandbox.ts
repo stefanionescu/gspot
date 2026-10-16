@@ -3,12 +3,12 @@ import { join, dirname } from 'node:path';
 import { afterAll, beforeAll } from 'bun:test';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { linkPackages } from '#tests/setup/modules.ts';
 import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
-import { linkInstalledModules } from '#tests/setup/modules.ts';
 import { runGspot, spawnGspot } from '#tests/setup/run-gspot.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { isOnDisk, encodeZipArchive } from '#tests/setup/files.ts';
@@ -63,7 +63,7 @@ async function createSandbox(plan: SandboxPlan): Promise<Sandbox> {
 /** Initialize and install the tools used by one integration test file. */
 async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan): Promise<Record<string, string>> {
     await writeSandbox(root, plan);
-    if (plan.dependencies !== undefined) await linkInstalledModules(join(root, 'node_modules'));
+    if (plan.dependencies !== undefined) await linkPackages(join(root, 'node_modules'), Object.keys(plan.dependencies));
     await plan.before?.(root);
     commitAll(root);
     const environment = { PATH: buildSandboxPath() };
@@ -74,6 +74,7 @@ async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan)
         {
             without: [...(plan.without ?? [])],
             level: plan.level ?? 'all',
+            ...(plan.install === false ? { install: false } : {}),
         },
         plan.prepare,
     );
@@ -177,7 +178,7 @@ async function writeChanges(cwd: string, changes: SampleChanges, settings: strin
 }
 
 // Preserve bytes and permissions before the first mutation, including setup that fails partway through.
-async function updateSandbox(sandbox: SandboxFiles, changes: SampleChanges): Promise<AsyncDisposable> {
+async function changeSandbox(sandbox: SandboxFiles, changes: SampleChanges): Promise<AsyncDisposable> {
     const cwd = sandbox.root;
     const tree = runGit(cwd, ['write-tree']).stdout.trim();
     const head = runGit(cwd, ['rev-parse', 'HEAD']).stdout.trim();
@@ -218,7 +219,17 @@ async function updateSandbox(sandbox: SandboxFiles, changes: SampleChanges): Pro
             if (reset.code !== 0) throw new Error(reset.stderr);
             const restored = runGit(cwd, ['read-tree', tree]);
             if (restored.code !== 0) throw new Error(restored.stderr);
-            const result = await sandbox.run(cwd, ['apply'], sandbox.environment);
+        },
+    };
+}
+
+/** Change the sandbox for a test that applies, and apply again after the restore so the generated files match. */
+async function updateSandbox(sandbox: SandboxFiles, changes: SampleChanges): Promise<AsyncDisposable> {
+    const change = await changeSandbox(sandbox, changes);
+    return {
+        async [Symbol.asyncDispose]() {
+            await change[Symbol.asyncDispose]();
+            const result = await sandbox.run(sandbox.root, ['apply'], sandbox.environment);
             if (result.code !== 0) throw new Error(`Sandbox restore failed: ${result.stdout}${result.stderr}`);
         },
     };
@@ -259,7 +270,14 @@ function shareProseSandbox(): () => Sandbox {
     return sandbox;
 }
 
-export { createSandbox, updateSandbox, shareProseSandbox, registerSharedSandbox, prepareInstalledSandbox };
+export {
+    createSandbox,
+    changeSandbox,
+    updateSandbox,
+    shareProseSandbox,
+    registerSharedSandbox,
+    prepareInstalledSandbox,
+};
 
 /** Apply changed sample files and regenerate their tool files with one owned restoration. */
 export async function applySandboxChanges(sandbox: SandboxFiles, changes: SampleChanges): Promise<AsyncDisposable> {

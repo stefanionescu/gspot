@@ -146,6 +146,7 @@ const IMPLICIT_PROJECT_FILES = {
 } as const;
 
 const TYPESCRIPT_PROJECTS_SANDBOX = {
+    install: false,
     configurations: ['typescript'],
     level: 'all',
     files: BASE_INSTALLED_FILES,

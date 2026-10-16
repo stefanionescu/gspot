@@ -11,6 +11,7 @@ import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 
 const installedSandbox = registerSharedSandbox({
+    install: false,
     ...PYTEST_SANDBOX,
     async before(root) {
         const installed = await runCommand(['uv', 'sync'], { cwd: root });

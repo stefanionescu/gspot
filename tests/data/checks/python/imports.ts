@@ -1,3 +1,5 @@
+import { PYPROJECT } from '#tests/data/checks/python/project.ts';
+
 // Native import-linter output keeps two broken contracts and their distinct dependency chains.
 const IMPORT_CONTRACT_REPORT = `Contracts
 ---------
@@ -50,4 +52,30 @@ forbidden_modules = ["example.high"]
     },
 ] as const;
 
-export { IMPORT_CONFIGURATIONS, IMPORT_CONTRACT_REPORT };
+/** The settings of the import-linter cases: one Python scope inside the root project. */
+const IMPORT_SCOPE_SETTINGS = `[[scope]]
+path = "app"
+
+configurations = ["python"]
+`;
+
+/** The package in each project; low imports high, which every contract forbids. */
+const IMPORT_PACKAGE_FILES = Object.fromEntries(
+    ['', 'app/'].flatMap((scope) => [
+        [scope + 'pyproject.toml', PYPROJECT],
+        [scope + 'example/__init__.py', ''],
+        [scope + 'example/low.py', 'import example.high\n'],
+        [scope + 'example/high.py', ''],
+    ]),
+);
+
+/** One installed Python tool project serves every import-linter case. */
+const IMPORT_LINTER_SANDBOX = { configurations: ['python'], files: IMPORT_PACKAGE_FILES } as const;
+
+export {
+    IMPORT_PACKAGE_FILES,
+    IMPORT_CONFIGURATIONS,
+    IMPORT_LINTER_SANDBOX,
+    IMPORT_SCOPE_SETTINGS,
+    IMPORT_CONTRACT_REPORT,
+};

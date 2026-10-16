@@ -77,4 +77,7 @@ name = "project/audit"
 stage = "manual"
 paths = ["*.sh"]
 command = %AUDIT_COMMAND%
+[[ignore]]
+check = "files/v8r"
+reason = "The jobs test the generated workflow; without an npm check, each install runs mise only."
 `;

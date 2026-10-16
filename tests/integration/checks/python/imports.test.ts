@@ -7,7 +7,14 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import { installToolProjects } from '#tests/setup/install.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { PYPROJECT } from '#tests/data/checks/python/project.ts';
-import { IMPORT_CONFIGURATIONS } from '#tests/data/checks/python/imports.ts';
+import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+
+import {
+    IMPORT_PACKAGE_FILES,
+    IMPORT_LINTER_SANDBOX,
+    IMPORT_CONFIGURATIONS,
+    IMPORT_SCOPE_SETTINGS,
+} from '#tests/data/checks/python/imports.ts';
 
 test("deptry ignores gspot's tool folder without Git and keeps your exclude settings", async () => {
     await using sandbox = await testdir();
@@ -57,32 +64,24 @@ extend_exclude = ["^vendor/"]
     ]);
 });
 
+const installedSandbox = registerSharedSandbox(IMPORT_LINTER_SANDBOX);
+
 test.each([...IMPORT_CONFIGURATIONS])(
     'import-linter reads $file and reports the forbidden import in each scope',
     async ({ file, text }) => {
-        await using sandbox = await testdir();
-        const project = PYPROJECT;
-        const files = Object.fromEntries(
-            ['', 'app/'].flatMap((scope) => [
-                [scope + 'pyproject.toml', project],
-                [scope + file, file === 'pyproject.toml' ? project + text : text],
-                [scope + 'example/__init__.py', ''],
-                [scope + 'example/low.py', 'import example.high\n'],
-                [scope + 'example/high.py', ''],
-            ]),
-        );
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['python'], {
-                tables: `[[scope]]
-path = "app"
-
-configurations = ["python"]
-`,
-            }),
-            ...files,
+        const sandbox = { path: installedSandbox().root };
+        const files = {
+            ...IMPORT_PACKAGE_FILES,
+            ...Object.fromEntries(
+                ['', 'app/'].map((scope) => [scope + file, file === 'pyproject.toml' ? PYPROJECT + text : text]),
+            ),
+        };
+        await using _change = await updateSandbox(installedSandbox(), {
+            check: '',
+            files: { 'gspot.toml': buildSettingsText(['python'], { tables: IMPORT_SCOPE_SETTINGS }), ...files },
         });
-
-        await installToolProjects(sandbox.path);
+        const applied = await spawnGspot(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const commandArguments = ['check', '--only', 'python/import-linter', '--json'];
         const failed = await spawnGspot(sandbox.path, commandArguments);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);

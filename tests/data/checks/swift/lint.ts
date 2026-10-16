@@ -61,6 +61,7 @@ public  func greeting(for name: String) -> String {
 /** A clean function that every Swift check accepts. */
 
 export const SWIFT_SANDBOX = {
+    install: false,
     configurations: ['swift', 'naming'],
     files: { 'Sources/App/Greeting.swift': CLEAN_SWIFT },
 } as const;

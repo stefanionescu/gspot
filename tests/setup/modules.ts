@@ -2,7 +2,8 @@
 import { join, dirname } from 'node:path';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { isWindows } from '#tests/setup/system.ts';
-import { mkdir, readdir, symlink, realpath } from 'node:fs/promises';
+import type { PackageJson } from '#cli/types/parsers/dependency-files.ts';
+import { mkdir, readdir, symlink, readFile, realpath } from 'node:fs/promises';
 
 /** The installed workspace store keeps each package beside its own dependencies. */
 const installedModules = join(import.meta.dir, '../../node_modules');
@@ -52,4 +53,41 @@ async function linkInstalledModules(target: string): Promise<void> {
         await symlink(original, destination, kind);
     }
 }
-export { testModules, installedModules, linkInstalledModules };
+/**
+ * Link declared packages and the installed packages they depend on, so a scratch copy of node_modules holds only those.
+ * A test package wins over a workspace package of the same name, as in linkInstalledModules.
+ * @param target the node_modules folder to create.
+ * @param names the package names the sandbox project declares.
+ */
+async function linkPackages(target: string, names: readonly string[]): Promise<void> {
+    const kind = isWindows ? 'junction' : 'dir';
+    const pending = await Promise.all(
+        names.map(
+            async (name) =>
+                [name, join((await isOnDisk(join(testModules, name))) ? testModules : installedModules, name)] as const,
+        ),
+    );
+    const found = new Map<string, string>();
+    for (let entry = pending.pop(); entry !== undefined; entry = pending.pop()) {
+        const [name, path] = entry;
+        if (found.has(name) || !(await isOnDisk(path))) continue;
+        const real = await realpath(path);
+        found.set(name, real);
+        const manifest = JSON.parse(await readFile(join(real, 'package.json'), 'utf8')) as PackageJson;
+        // The store keeps each dependency of a package beside it, in the same node_modules folder.
+        const folder = join(real, ...name.split('/').map(() => '..'));
+        const dependencies = {
+            ...manifest.dependencies,
+            ...manifest.optionalDependencies,
+            ...manifest.peerDependencies,
+        };
+        for (const dependency of Object.keys(dependencies)) pending.push([dependency, join(folder, dependency)]);
+    }
+    for (const [name, real] of found) {
+        const destination = join(target, name);
+        await mkdir(dirname(destination), { recursive: true });
+        await symlink(real, destination, kind);
+    }
+}
+
+export { testModules, linkPackages, installedModules, linkInstalledModules };

@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
-import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
@@ -25,7 +24,6 @@ test('adding the zod configuration adds its ESLint finding, and removing it drop
     await using sandbox = await testdir();
     const environment = await prepareLooseSchemaProject(sandbox.path);
     await installSandbox(sandbox.path, buildInitArguments(['typescript']), environment, { level: 'all' });
-    expect(await spawnGspot(sandbox.path, ['install'])).toMatchObject({ code: 0 });
     const before = await spawnGspot(sandbox.path, ['check', '--only', 'javascript/eslint', '--json'], environment);
     expect(before.code, before.stdout + before.stderr).toBe(0);
     const added = await spawnGspot(sandbox.path, ['add', 'zod', '--json'], environment);
@@ -51,8 +49,7 @@ test('adding the zod configuration adds its ESLint finding, and removing it drop
     await Bun.write(join(sandbox.path, 'schema.ts'), LOOSE_ZOD_SCHEMA);
     const removed = await spawnGspot(sandbox.path, ['remove', 'zod', '--json'], environment);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    await installToolProjects(sandbox.path);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules/eslint-plugin-zod'))).toBe(false);
+    expect(await Bun.file(join(sandbox.path, '.gspot/package.json')).text()).not.toContain('eslint-plugin-zod');
     const removedCheck = await spawnGspot(
         sandbox.path,
         ['check', '--only', 'javascript/eslint', '--json'],

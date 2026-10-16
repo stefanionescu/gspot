@@ -2,7 +2,7 @@ import type { Level } from '#cli/types/configurations.ts';
 import type { GspotCall, SampleFix, CheckSample } from '#tests/types/samples.ts';
 
 /** Settings choices computed before a sandbox installs applicable tools. */
-export type SandboxSettings = Pick<InstalledSandboxPlan, 'without' | 'level'>;
+export type SandboxSettings = Pick<InstalledSandboxPlan, 'without' | 'level' | 'install'>;
 
 /** Settings and files owned by one isolated sandbox. */
 export type SandboxPlan = {
@@ -19,6 +19,8 @@ export type SandboxPlan = {
 /** A sandbox with tools installed for its integration tests. */
 export type InstalledSandboxPlan = SandboxPlan & {
     without?: readonly string[];
+    /** False when every check of the file runs a pinned or system tool, so the sandbox needs no tool project. */
+    install?: false;
 };
 
 /** A sandbox whose disposal removes its files. */

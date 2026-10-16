@@ -4,7 +4,6 @@ import { createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { runSandboxStep } from '#tests/setup/install.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
@@ -106,7 +105,6 @@ test('Stylelint accepts Tailwind syntax only in the scope that declares Tailwind
     });
     const applied = await spawnGspot(root, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    await runSandboxStep(root, ['install'], installedSandbox().environment, 'install');
     const command = ['check', '--only', 'css/stylelint', '--json'];
     const failed = await spawnGspot(root, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);

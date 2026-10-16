@@ -32,6 +32,7 @@ export const INVALID_RESOURCE_DOCUMENTS = [
 ] as const;
 
 export const XCODE_SANDBOX = {
+    install: false,
     configurations: ['xcode'],
     files: {},
 } as const;

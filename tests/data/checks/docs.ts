@@ -135,6 +135,7 @@ Read [the other page](second.md) first.
 ] as const;
 
 export const DOCS_SANDBOX = {
+    install: false,
     configurations: ['docs'],
     files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },
 } as const;

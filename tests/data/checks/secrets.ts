@@ -104,6 +104,7 @@ APP_MISSING=example
 const ENV_SOURCE = 'const host = process.env.HOST;\nconsole.log(host, process.env.PORT);\n';
 
 const ENV_EXAMPLES_SANDBOX = {
+    install: false,
     configurations: ['secrets'],
     files: { '.env.example': 'PORT=3000\n' },
 } as const;

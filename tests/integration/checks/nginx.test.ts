@@ -84,7 +84,6 @@ test.skipIf(!hasToolBuild('gixy'))('gixy finds the forged proxy target and passe
     commitAll(sandbox.path);
     const environment = { PATH: buildSandboxPath() };
     await installSandbox(sandbox.path, buildInitArguments(['nginx']), environment, { level: 'all' });
-    expect(await spawnGspot(sandbox.path, ['install'])).toMatchObject({ code: 0 });
     const clean = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy'], environment);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     const result = await checkChanges(

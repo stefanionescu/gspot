@@ -37,6 +37,7 @@ export const TYPO = {
 } as const;
 
 export const CHECKS_SPELLING_INSTALLED_SANDBOX = {
+    install: false,
     configurations: ['spelling'],
     level: 'all',
     files: BASE_INSTALLED_FILES,

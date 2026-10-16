@@ -70,7 +70,7 @@ async function installSandbox(
         await runSandboxStep(root, ['remove', configuration], environment, 'remove');
     }
     await prepare?.(root, environment);
-    await runSandboxStep(root, ['install'], environment, 'install');
+    if (settings.install !== false) await runSandboxStep(root, ['install'], environment, 'install');
 }
 
 /** Run a public setup step and report its captured output when it fails. */

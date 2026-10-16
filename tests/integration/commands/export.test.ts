@@ -6,9 +6,9 @@ import { hashContent } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { parseTomlText } from '#cli/settings/file.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import { buildSandboxPath } from '#tests/setup/install.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
-import { buildSandboxPath, installToolProjects } from '#tests/setup/install.ts';
 
 import {
     TEMPLATE_FILE,
@@ -38,7 +38,6 @@ test('an exported template sets up another repository', async () => {
         expect(init.code, init.stdout + init.stderr).toBe(0);
         expect(init.stdout).toContain(`template    ${join(first.path, TEMPLATE_FILE)}`);
         expect(init.stdout).toMatch(/typescript\s+detected/u);
-        await installToolProjects(second.path);
     }
     {
         const [sourceText, exported, copied] = await Promise.all([

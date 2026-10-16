@@ -5,7 +5,7 @@ import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import type { Sandbox, SandboxPlan } from '#tests/types/sandbox.ts';
-import { createSandbox, updateSandbox } from '#tests/setup/sandbox.ts';
+import { createSandbox, changeSandbox } from '#tests/setup/sandbox.ts';
 import { BASH_SANDBOX, CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import type { Finding, RunReport, CheckResult } from '#cli/types/checks/run/check.ts';
 
@@ -32,7 +32,8 @@ export async function checkChanges(
     run: GspotCall = spawnGspot,
 ): Promise<ProcessOutput> {
     await using resources = new AsyncDisposableStack();
-    resources.use(await updateSandbox({ root: cwd, environment, run }, changes));
+    // A check writes no generated file, so the restored sandbox needs no apply.
+    resources.use(await changeSandbox({ root: cwd, environment, run }, changes));
     const commandArguments = ['check', '--only', changes.check, '--json'];
     return await run(cwd, commandArguments, environment);
 }

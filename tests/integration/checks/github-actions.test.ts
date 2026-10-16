@@ -25,8 +25,8 @@ test('the generated GitHub workflow passes actionlint', async () => {
     await createFileTree(sandbox.path, { 'README.md': '# Workflow test\n' });
     commitAll(sandbox.path);
     const environment = { PATH: buildSandboxPath() };
-    await installSandbox(sandbox.path, buildInitArguments(['github-actions']), environment);
-    expect(await spawnGspot(sandbox.path, ['install'])).toMatchObject({ code: 0 });
+    // The sandbox needs no tool project, because mise pins actionlint.
+    await installSandbox(sandbox.path, buildInitArguments(['github-actions']), environment, { install: false });
     const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const ci = await spawnGspot(sandbox.path, ['set', 'ci.enabled', 'true'], environment);

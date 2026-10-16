@@ -90,6 +90,7 @@ configurations = ["typescript", "vitest"]
 });
 
 const coverageSandbox = registerSharedSandbox({
+    install: false,
     ...VITEST_SANDBOX,
     dependencies: { vitest: vitestManifest.version },
 });

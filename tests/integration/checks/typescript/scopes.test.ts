@@ -22,6 +22,7 @@ import {
 } from '#tests/data/checks/typescript/projects.ts';
 
 const installedSandbox = registerSharedSandbox({
+    install: false,
     configurations: ['typescript'],
     level: 'all',
     files: { 'package.json': '{"private":true}\n' },

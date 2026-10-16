@@ -6,6 +6,7 @@ let package = Package(name: "Example", targets: [.target(name: "Example", path: 
 `;
 
 export const SWIFT_PACKAGE_SANDBOX = {
+    install: false,
     configurations: ['swift', 'naming'],
     files: {
         '.gitignore': '.build\nnode_modules/\n',

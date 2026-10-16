@@ -45,7 +45,6 @@ test('a block copied between two files is a finding on the file that holds it', 
         PATH: buildSandboxPath(),
     };
     await installSandbox(sandbox.path, buildInitArguments(['bash']), environment, { level: 'all' });
-    expect(await spawnGspot(sandbox.path, ['install'])).toMatchObject({ code: 0 });
     await checkDuplication(sandbox.path, environment, 0);
     await Bun.write(
         `${sandbox.path}/scripts/second.sh`,

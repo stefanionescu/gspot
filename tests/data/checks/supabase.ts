@@ -63,6 +63,7 @@ const DATABASE_SCHEMAS = ['public', 'private', 'audit'] as const;
 const HELLO_EDGE_FUNCTION = 'Deno.serve(() => new Response("hello"));\n';
 
 const SUPABASE_SANDBOX = {
+    install: false,
     configurations: ['supabase'],
 
     without: ['typescript'],
