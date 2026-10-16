@@ -49,16 +49,9 @@ test('replacement records keep shared sections and refuse invalid items', () => 
     }
 });
 
-test('a tool declaration refuses unknown fields and bad installer constraints', () => {
+test('a tool declaration refuses unknown fields', () => {
     expect(toolDeclarationSchema.safeParse('probe').success).toBe(false);
     expect(toolDeclarationSchema.safeParse({ name: 'probe', mystery: true }).success).toBe(false);
-    expect(
-        toolDeclarationSchema.safeParse({
-            name: 'probe',
-            version: '1.0.0',
-            pypi: { name: 'probe', version: '1.0.0', constraints: ['not a constraint'] },
-        }).success,
-    ).toBe(false);
     const tool = toolDeclarationSchema.parse({ name: 'probe', version: '1.0.0', npm: 'native-probe' });
     expect(tool).toMatchObject({
         name: 'probe',

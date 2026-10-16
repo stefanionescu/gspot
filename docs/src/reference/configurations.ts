@@ -33,11 +33,7 @@ function ruleExclusions(manifest: Manifest): string {
         .map((exclusion) => {
             const rules = exclusion.rules.map((rule) => `\`${rule}\``).join(', ');
             const files = exclusion.files?.map((path) => `\`${path}\``).join(', ') ?? 'all files in the scope';
-            const condition =
-                exclusion.when === undefined
-                    ? ''
-                    : ` when \`${exclusion.when.setting}\` is \`${JSON.stringify(exclusion.when.value)}\``;
-            return `${rules} for ${files}${condition}. ${exclusion.reason}`;
+            return `${rules} for ${files}. ${exclusion.reason}`;
         })
         .map((item) => `- ${item}`)
         .join('\n');

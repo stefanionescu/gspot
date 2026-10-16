@@ -1,6 +1,3 @@
-export const REQUIRES_PYTHON = '==3.13.16';
-export const TOOL_PROJECT_NAME = 'tools';
-
 export const PYTHON_PROJECTS = ['uv.toml', 'pyproject.toml'] as const;
 
 export const PYTHON_INSTALL_STEPS = [
@@ -96,17 +93,12 @@ dependencies = ["fastapi>=1"]
     'member-only/main.py': 'print("not a project file")\n',
 } as const;
 
-export const PYJWT_CONSTRAINT = { name: 'pyjwt', specifier: '>=2.14.0' } as const;
-
-export const PYJWT_CONSTRAINT_ARGUMENT = `${PYJWT_CONSTRAINT.name}${PYJWT_CONSTRAINT.specifier}`;
-
 export const PYTHON_INDEX_NAME = 'gspot-test';
 
 export const RUFF_VERSION_OUTPUT = /^ruff (?<version>\d+\.\d+\.\d[-+\w.]*)$/u;
 
 export const UV_LOCKFILE_MISMATCHES = [
     ['Python version', '==3.13.16', '==3.13.15'],
-    ['constraint', '>=2.0.0', '>=3.0.0'],
     ['pin', '==4.0.0', '==5.0.0'],
     ['virtual root', 'virtual = "."', 'virtual = "elsewhere"'],
 ] as const;

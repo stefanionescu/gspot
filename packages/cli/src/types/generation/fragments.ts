@@ -4,7 +4,7 @@ type FragmentSelector = ParsedManifest['eslint']['selectors'][number];
 
 export type Fragment = { manifest: Manifest; toolFile: ToolFileDeclaration };
 
-/** A fragment selector with the allowed setting replaced by the paths it holds. */
-export type SelectorPaths = Pick<FragmentSelector, 'selector' | 'message' | 'files'> & { except?: string[] };
+/** A fragment selector with its resolved source paths. */
+export type SelectorPaths = Pick<FragmentSelector, 'selector' | 'message'> & { files?: string[]; except?: string[] };
 
 export type TypescriptImports = { imports: string[]; body: string };

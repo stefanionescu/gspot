@@ -166,7 +166,7 @@ function moduleInputs(session: Session, selection: ScopeSelection, pluginLevels:
         settingsBlocks: () => [
             ...environmentRuleBlocks(context),
             ...trivialRuleBlocks(context),
-            ...manifestRuleBlocks(scopes, settings),
+            ...manifestRuleBlocks(scopes),
             ...ignoreBlocks(settings),
         ],
         eslintAllRules: allRules,

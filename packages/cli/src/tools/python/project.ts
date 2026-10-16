@@ -34,7 +34,6 @@ import {
     UV_SETTINGS_FILE,
     UV_RUN_ARGUMENTS,
     UV_VENV_ARGUMENTS,
-    CONSTRAINT_OPERATOR,
     PINNED_PACKAGE_NAME,
     UV_INSTALL_ARGUMENTS,
     UV_LOCKFILE_ARGUMENTS,
@@ -100,15 +99,6 @@ function requirementTexts(requirements: PythonRequirement[]): string[] {
         .toSorted((left, right) => left.localeCompare(right));
 }
 
-// Compare the lockfile constraints with the project's transitive dependency constraints.
-function constraintsMatch(constraints: string[], recorded: PythonToolLockfile): boolean {
-    const declared = constraints.map((constraint) => {
-        const operator = constraint.search(CONSTRAINT_OPERATOR);
-        return { name: constraint.slice(0, operator), specifier: constraint.slice(operator) };
-    });
-    return isDeepStrictEqual(requirementTexts(declared), requirementTexts(recorded.manifest.constraints));
-}
-
 const requirementSchema = z.object({
     name: z.string(),
     specifier: z.string(),
@@ -117,11 +107,6 @@ const requirementSchema = z.object({
 const uvLockSchema = z.object({
     version: z.literal(1),
     'requires-python': z.string(),
-    manifest: z
-        .object({ constraints: z.array(requirementSchema).default([]) } satisfies SchemaShape<
-            PythonToolLockfile['manifest']
-        >)
-        .default({ constraints: [] }),
     package: z.array(
         z.object({
             name: z.string(),
@@ -267,7 +252,7 @@ export function pythonProjectCommand(
 }
 
 /**
- * Compare a Python tool project with the pins and constraints recorded in its uv lockfile.
+ * Compare a Python tool project with the pins recorded in its uv lockfile.
  *
  * @param project the parsed generated pyproject.toml.
  * @param lockfile the recorded uv.lock contents.
@@ -286,7 +271,6 @@ export function pythonLockfileMatches(project: PythonToolProject, lockfile: stri
     const validated = uvLockSchema.safeParse(document);
     if (!validated.success) return false;
     const recorded = validated.data;
-    if (!constraintsMatch(project.tool.uv['constraint-dependencies'] ?? [], recorded)) return false;
     const projectEntry = recorded.package.find((entry) => entry.name === manifest.name && entry.source.virtual === '.');
     if (projectEntry === undefined || recorded['requires-python'] !== manifest['requires-python']) return false;
     const expected = manifest.dependencies

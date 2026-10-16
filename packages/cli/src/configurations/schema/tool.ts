@@ -8,7 +8,6 @@ import {
     TOOL_KINDS,
     TOOL_BUILDS,
     MAX_EXIT_CODE,
-    PYPI_CONSTRAINT,
     RULE_PLACEHOLDER,
     EXTENSION_PATTERN,
 } from '#cli/config/configurations.ts';
@@ -26,8 +25,6 @@ const installerOptionsSchema = z.record(z.string(), z.union([z.string(), z.boole
     Record<string, string | boolean>
 >;
 
-const installerConstraintsSchema = z.array(z.string().regex(PYPI_CONSTRAINT)).min(1);
-
 // Options mise writes beside the version, such as no_app or rename_exe for a release that ships an app bundle.
 const miseInstallerSchema = z.union([
     z.string(),
@@ -38,18 +35,9 @@ const miseInstallerSchema = z.union([
     string | { name: string; version: string; options?: Record<string, string | boolean> | undefined }
 >;
 
-// A floor a gspot maintainer raises on a package a Python tool pulls in, such as one above an advisory. Each has a
-// name, one comparison, and a version, as uv takes it.
-const pypiInstallerSchema = z.union([
-    z.string(),
-    installerDefinition.extend({
-        constraints: installerConstraintsSchema.optional(),
-    } satisfies SchemaShape<{ constraints?: string[] | undefined }>),
-]) satisfies z.ZodType<string | { name: string; version: string; constraints?: string[] | undefined }>;
-
 const installerFields = {
     npm: installerSchema.optional(),
-    pypi: pypiInstallerSchema.optional(),
+    pypi: installerSchema.optional(),
     mise: miseInstallerSchema.optional(),
     brew: installerSchema.optional(),
     apt: installerSchema.optional(),
@@ -112,10 +100,6 @@ const toolSchema = z
                                 ),
                         )
                         .min(1),
-                    values: z
-                        .array(z.union([z.string(), z.number(), z.boolean()]))
-                        .min(1)
-                        .optional(),
                     message: z.string().min(1),
                 } satisfies SchemaShape<NonNullable<ToolDeclaration['refused_options']>[number]>),
             )

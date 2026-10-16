@@ -103,7 +103,6 @@ export const SEMGREP_TOOL_FILE = {
 } as const;
 export const PYTHON_CONFIGURATION = 'python';
 export const NAME_PATTERN = /^[a-z0-9-]+$/u;
-export const PYPI_CONSTRAINT = /^[a-z0-9._-]+(?:[<>!~=]=|[<>])[a-z0-9.*+!_-]+$/iu;
 export const TOOL_BUILDS = OPERATING_SYSTEMS.flatMap(
     (system) => [system.name, `${system.name}-x64`, `${system.name}-arm64`] as const,
 );

@@ -33,21 +33,8 @@ export type ParsedManifest = {
     eslint: {
         presets: Record<string, { package: string; source: string }>;
         all_level_rules: EslintAllRules;
-        selectors: {
-            selector: string;
-            message: string;
-            files?: string[] | undefined;
-            role?: string | undefined;
-            allowed?: string | undefined;
-            ignores?: string[] | undefined;
-            when?: Pick<ConditionFields, 'setting' | 'value'> | undefined;
-        }[];
-        rules_off: {
-            rules: string[];
-            reason: string;
-            files?: string[] | undefined;
-            when?: Pick<ConditionFields, 'setting' | 'value'> | undefined;
-        }[];
+        selectors: { selector: string; message: string; role?: string | undefined }[];
+        rules_off: { rules: string[]; reason: string; files?: string[] | undefined }[];
     };
     prefix_collisions: { prefixes: string[]; kinds: string[] };
     ignored_folders: string[];
@@ -185,7 +172,7 @@ export type InstalledToolFolder = (typeof TOOL_FOLDER_KINDS)[number];
 export type Level = (typeof LEVELS)[number];
 
 /** Requirements of the generated npm and Python tool projects. */
-export type ToolProjectPins = { npm: Record<string, string>; python: string[]; constraints: string[] };
+export type ToolProjectPins = { npm: Record<string, string>; python: string[] };
 
 /** Default rules active only at level all. */
 export type EslintAllRules = Set<string>;
@@ -194,7 +181,6 @@ export type InstallerPin = {
     name: string;
     version?: string | undefined;
     options?: Record<string, string | boolean> | undefined;
-    constraints?: string[] | undefined;
 };
 
 /** Resolved tool metadata derives from the validated manifest; installer declarations become named pins. */
@@ -221,7 +207,7 @@ export type ToolDeclaration = {
         forbidden?: boolean | undefined;
     };
     env?: Record<string, string>;
-    refused_options?: { paths: string[]; message: string; values?: (string | number | boolean)[] | undefined }[];
+    refused_options?: { paths: string[]; message: string }[];
     prettier?: {
         entry: string;
         extensions: string[];
@@ -249,13 +235,12 @@ export type GeneratedPath = NonNullable<CheckDeclaration['generated_paths']>[num
 export type ConditionFields = Pick<
     ParsedManifest['detect'],
     'dependencies' | 'absent_dependencies' | 'filenames' | 'tags' | 'runtimes'
-> & { configuration: string; level: Level; setting: string; value: string | number | boolean; git: true };
+> & { configuration: string; level: Level; setting: string; git: true };
 
 /** Native tool fields before consumers resolve installer names and omitted values. */
 export type ToolFields = Pick<ToolDeclaration, 'name' | 'kind'> &
     Optional<Omit<ToolDeclaration, 'name' | 'kind' | 'installers'>> &
-    Optional<Record<'npm' | 'brew' | 'apt' | 'cargo' | 'github' | 'winget' | 'scoop', NativeInstaller>> & {
-        pypi?: string | (Exclude<NativeInstaller, string> & Pick<InstallerPin, 'constraints'>) | undefined;
+    Optional<Record<'npm' | 'pypi' | 'brew' | 'apt' | 'cargo' | 'github' | 'winget' | 'scoop', NativeInstaller>> & {
         mise?: string | (Exclude<NativeInstaller, string> & Pick<InstallerPin, 'options'>) | undefined;
     };
 
@@ -306,9 +291,7 @@ export type ManifestInput = Optional<
     tool_file?: ToolFileInput[] | undefined;
     check?: CheckInput[] | undefined;
     naming?: Optional<NonNullable<ParsedManifest['naming']>> | undefined;
-    rules?:
-        | Record<string, Optional<Omit<ConditionFields, 'configuration' | 'level' | 'setting' | 'value' | 'git'>>>
-        | undefined;
+    rules?: Record<string, Optional<Omit<ConditionFields, 'configuration' | 'level' | 'setting' | 'git'>>> | undefined;
     ruff_rules?: Optional<ParsedManifest['ruff_rules']> | undefined;
 };
 /** Native installer declarations before each installer receives a canonical name. */

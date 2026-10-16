@@ -1,7 +1,7 @@
+import { everyTable } from '#cli/settings/inherit.ts';
 import { activeIgnores } from '#cli/settings/view.ts';
 import { literalGlob } from '#cli/repository/selectors.ts';
 import { parentSelection } from '#cli/generation/eslint/structure.ts';
-import { everyTable, writtenSetting } from '#cli/settings/inherit.ts';
 import { byScopeDepth, nestedScopes } from '#cli/repository/scopes.ts';
 import type { Settings, ScopeView, ScopeSelection } from '#cli/types/settings/values.ts';
 import { BASE_RULES, NODE_RULES, ALL_LEVEL_RULES } from '#cli/config/generation/eslint-rules.ts';
@@ -77,11 +77,10 @@ export function ignoreBlocks(settings: Settings): EslintRuleBlock[] {
  * The blocks that turn off reasoned manifest exclusions after structural defaults and before your own settings.
  *
  * @param scopes the selected configurations and their owning scopes.
- * @param settings the effective root settings.
  *
  * @returns rule blocks that exclude every nested scope.
  */
-export function manifestRuleBlocks(scopes: ScopeSelection[], settings: Settings): EslintRuleBlock[] {
+export function manifestRuleBlocks(scopes: ScopeSelection[]): EslintRuleBlock[] {
     return scopes.flatMap((selection) => {
         const scope = selection.scope.path;
         const children = nestedScopes(
@@ -91,12 +90,6 @@ export function manifestRuleBlocks(scopes: ScopeSelection[], settings: Settings)
         const excluded = children.map((path) => `!${literalGlob(path)}/**`);
         return selection.selected
             .flatMap((manifest) => manifest.eslint.rules_off)
-            .filter(
-                ({ when: condition }) =>
-                    condition === undefined ||
-                    (selection.view.settings[condition.setting] ??
-                        writtenSetting(settings, condition.setting)?.value) === condition.value,
-            )
             .map(({ files, rules }) => ({
                 scope,
                 ...globSelectors([...(files ?? ['**/*']), ...excluded]),

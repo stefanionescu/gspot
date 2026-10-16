@@ -131,10 +131,7 @@ function extraOptionErrors(table: Partial<Settings>, tools: ToolDeclaration[]): 
         for (const restriction of tool.refused_options ?? []) {
             const refused = restriction.paths.some((path) => {
                 const value = valueAt(options, path.split('.'));
-                return (
-                    value !== undefined &&
-                    (restriction.values?.some((candidate) => Object.is(candidate, value)) ?? true)
-                );
+                return value !== undefined;
             });
             if (refused) errors.push({ path: ['tools', tool.name, 'extra'], message: restriction.message });
         }

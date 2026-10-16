@@ -20,7 +20,7 @@ import { TOOL_FILE_DIRECTORY, PYTHON_TOOL_PROJECT_FILE } from '#cli/config/syste
  * @returns the Python tool project files, or none without Python tools.
  */
 export function pythonProject(manifests: Manifest[]): GeneratedFile[] {
-    const { python: dependencies, constraints } = toolProjectPins(manifests);
+    const { python: dependencies } = toolProjectPins(manifests);
     if (dependencies.length === 0) return [];
     return [
         {
@@ -28,10 +28,7 @@ export function pythonProject(manifests: Manifest[]): GeneratedFile[] {
             content:
                 stringify({ project: { ...PYTHON_TOOL_PROJECT, dependencies } }, TOOL_EMIT_FORMAT) +
                 `\n${UV_PROJECT_TABLE}\n` +
-                stringify(
-                    { package: false, ...(constraints.length === 0 ? {} : { 'constraint-dependencies': constraints }) },
-                    TOOL_EMIT_FORMAT,
-                ),
+                stringify({ package: false }, TOOL_EMIT_FORMAT),
             kind: 'tool_file',
         },
     ];

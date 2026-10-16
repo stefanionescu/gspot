@@ -73,24 +73,21 @@ export function pinOf(tool: ToolDeclaration): MisePin | undefined {
 /**
  * The npm and Python project requirements declared by the selected configurations.
  * @param manifests the selected manifests
- * @returns npm versions, Python pins, and distinct Python constraints
+ * @returns npm versions, Python pins
  */
 export function toolProjectPins(manifests: Manifest[]): ToolProjectPins {
     const npm: [string, string][] = [];
     const python: string[] = [];
-    const constraints: string[] = [];
     for (const tool of collectPins(manifests)) {
         const installation = toolProjectPackage(tool);
         if (installation === undefined) continue;
         if (installation.kind === 'npm') npm.push([installation.name, installation.version]);
         if (installation.kind !== 'python') continue;
         python.push(`${installation.name}==${installation.version}`);
-        constraints.push(...(tool.installers['pypi']?.constraints ?? []));
     }
     return {
         npm: Object.fromEntries(npm.toSorted(([a], [b]) => a.localeCompare(b))),
         python,
-        constraints: [...new Set(constraints)].toSorted((a, b) => a.localeCompare(b)),
     };
 }
 

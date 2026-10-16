@@ -51,19 +51,11 @@ const filesSchema = z.strictObject({
     kinds: z.array(fileKindSchema).default(['source']),
 } satisfies SchemaShape<ParsedManifest['files'], FileMatchInput>);
 
-// An all-level syntax selector a fragment adds to the one no-restricted-syntax rule: everywhere, in the named files, or everywhere except the paths a setting allows.
+// A syntax selector applies to every source file or to an architecture role.
 const selectorSchema = z.strictObject({
     selector: z.string().min(1),
     message: z.string().min(1),
-    files: z.array(z.string().min(1)).min(1).optional(),
     role: z.string().min(1).optional(),
-    allowed: z.string().min(1).optional(),
-    ignores: z.array(z.string().min(1)).min(1).optional(),
-    when: (
-        conditionSchema.pick({ setting: true, value: true }) satisfies z.ZodType<
-            Pick<ConditionFields, 'setting' | 'value'>
-        >
-    ).optional(),
 } satisfies SchemaShape<ParsedManifest['eslint']['selectors'][number]>);
 
 const pointerSchema = z.strictObject({
@@ -244,11 +236,6 @@ export const manifestSchema = z
                             rules: z.array(z.string().min(1)).min(1),
                             reason: sentence,
                             files: z.array(z.string().min(1)).min(1).optional(),
-                            when: (
-                                conditionSchema.pick({ setting: true, value: true }) satisfies z.ZodType<
-                                    Pick<ConditionFields, 'setting' | 'value'>
-                                >
-                            ).optional(),
                         } satisfies SchemaShape<ParsedManifest['eslint']['rules_off'][number]>),
                     )
                     .default([]),

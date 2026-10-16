@@ -1,5 +1,4 @@
 import { posix } from 'node:path';
-import { isRecord } from '#cli/objects.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { nestedScopes } from '#cli/repository/scopes.ts';
 import { literalGlob } from '#cli/repository/selectors.ts';
@@ -10,15 +9,6 @@ import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import { ENVIRONMENT_SELECTOR, ESLINT_SETTINGS_TABLE, ALIAS_IMPORT_SELECTORS } from '#cli/config/generation/eslint.ts';
 
 // The paths a loosening setting allows: every entry's paths, in the order written.
-function allowedPaths(selection: ScopeSelection, setting: string): string[] {
-    const value = selection.view.settings[setting];
-    if (!Array.isArray(value)) return [];
-    return value.flatMap((entry: unknown) => {
-        const paths = isRecord(entry) ? entry['paths'] : undefined;
-        return Array.isArray(paths) ? paths.filter((path): path is string => typeof path === 'string') : [];
-    });
-}
-
 function distinctLists(lists: string[][]): string[][] {
     const seen = new Set<string>();
     return lists.filter((list) => {
@@ -92,28 +82,20 @@ export function fragmentSelectorGroups(
     return scopes.flatMap((scope) => {
         const prefix = literalGlob(scope.scope.path);
         const declarations = scope.selected.flatMap((manifest) => (isAll ? manifest.eslint.selectors : []));
-        const enabled = declarations.filter(
-            (entry) => entry.when === undefined || scope.view.settings[entry.when.setting] === entry.when.value,
-        );
-        const applied: SelectorPaths[] = [...new Map(enabled.map((entry) => [entry.selector, entry])).values()].map(
-            (entry) => {
-                const files =
-                    entry.role === undefined
-                        ? entry.files?.map((path) => posix.join(prefix, path))
-                        : Object.entries(scope.view.roles).flatMap(([name, paths]) =>
-                              name === entry.role ? paths : [],
-                          );
-                return {
-                    selector: entry.selector,
-                    message: entry.message,
-                    ...(files === undefined ? {} : { files }),
-                    except: [
-                        ...(entry.ignores ?? []).map((path) => posix.join(prefix, path)),
-                        ...(entry.allowed === undefined ? [] : allowedPaths(scope, entry.allowed)),
-                    ],
-                };
-            },
-        );
+        const applied: SelectorPaths[] = [
+            ...new Map(declarations.map((entry) => [entry.selector, entry])).values(),
+        ].map((entry) => {
+            const files =
+                entry.role === undefined
+                    ? undefined
+                    : Object.entries(scope.view.roles).flatMap(([name, paths]) => (name === entry.role ? paths : []));
+            return {
+                selector: entry.selector,
+                message: entry.message,
+                ...(files === undefined ? {} : { files }),
+                except: [],
+            };
+        });
         if (isAll) {
             const except = reexports === 'index-only' ? [posix.join(prefix, '**/index.*')] : [];
             applied.push(

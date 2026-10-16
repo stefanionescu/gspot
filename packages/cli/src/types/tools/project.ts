@@ -46,7 +46,6 @@ export type PythonPreparation = {
 export type PythonToolLockfile = {
     version: 1;
     'requires-python': string;
-    manifest: { constraints: PythonRequirement[] };
     package: {
         name: string;
         version: string;
@@ -55,7 +54,7 @@ export type PythonToolLockfile = {
     }[];
 };
 
-/** A dependency requirement recorded by uv for constraints and root metadata. */
+/** A dependency requirement recorded by uv for root metadata. */
 export type PythonRequirement = { name: string; specifier: string };
 
 /** Authored uv configuration sources, with uv.toml taking precedence over pyproject.toml. */
@@ -75,7 +74,7 @@ export type NpmToolProject = {
 /** The pyproject.toml generated for gspot Python tools. */
 export type PythonToolProject = {
     project: { name: string; version: string; 'requires-python': string; dependencies: string[] };
-    tool: { uv: { package: false; 'constraint-dependencies'?: string[] } };
+    tool: { uv: { package: false } };
 };
 
 export type StaleLockfile = { path: string; kind?: 'missing' | 'changed' };

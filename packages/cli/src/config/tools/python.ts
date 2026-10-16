@@ -22,7 +22,6 @@ export const PYTHON_ENVIRONMENT_FOLDER = '.venv';
 export const UV_TOOL = 'uv';
 export const UV_SETTINGS_FILE = 'uv.toml';
 export const UV_RUN_ARGUMENTS = ['run', '--no-sync'] as const;
-export const CONSTRAINT_OPERATOR = /[<>!~=]/u;
 export const PINNED_PACKAGE_NAME = /^[^=]+/u;
 
 export const PIP_LICENSES_COMMAND = [
