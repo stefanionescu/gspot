@@ -4,6 +4,7 @@ import { findScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { checkInput } from '#cli/checks/run/built-in.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { join, posix, dirname, relative } from 'node:path';
 import { buildBaseResult } from '#cli/checks/run/report.ts';
 import { listCoveredInputs } from '#cli/planning/checks.ts';
 import { extractToolFileName } from '#cli/planning/files.ts';
@@ -15,7 +16,6 @@ import { createScratchFolder } from '#cli/system/files/folders.ts';
 import type { WholeToolFile } from '#cli/types/generation/files.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { buildJsconfig } from '#cli/generation/tool-files/jsconfig.ts';
-import { join, dirname, extname, basename, relative } from 'node:path';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { type TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 import { readToolFileDeclaration } from '#cli/checks/run/command/placeholders.ts';
@@ -101,12 +101,13 @@ function findJavascriptProject(session: Session, planned: PlannedCheck): string 
     const toolFile = readToolFileDeclaration(session, planned, extractToolFileName(JSCONFIG_FILE)) as WholeToolFile;
     const paths = new Set([
         toolFile.target,
+        // A tool-file path names a repository file with forward slashes on every system.
         ...session.scopes.map(({ scope }) =>
-            join(
-                dirname(toolFile.target),
-                basename(toolFile.target, extname(toolFile.target)),
+            posix.join(
+                posix.dirname(toolFile.target),
+                posix.basename(toolFile.target, posix.extname(toolFile.target)),
                 scope.path,
-                basename(toolFile.target),
+                posix.basename(toolFile.target),
             ),
         ),
     ]);
