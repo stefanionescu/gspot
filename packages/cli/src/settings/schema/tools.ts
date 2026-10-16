@@ -11,7 +11,6 @@ import ESLINT_RUNTIMES from '../../../configurations/language/javascript/eslint-
 
 import {
     reasonValue,
-    settingField,
     relativePath,
     nonemptyPaths,
     nonemptyString,
@@ -135,29 +134,27 @@ const stylelintRules = z.record(
 ) satisfies z.ZodType<TableSettings<'tools.stylelint'>['rules']>;
 
 const eslintTable = toolOptionsSchema.extend({
-    import_extension: settingField(z.enum(IMPORT_EXTENSIONS), 'js', SETTING_FIELDS.eslinttable_import_extension),
-    restricted_imports: settingField(
-        z.array(
+    import_extension: z.enum(IMPORT_EXTENSIONS).default('js').meta(SETTING_FIELDS.eslinttable_import_extension),
+    restricted_imports: z
+        .array(
             z.strictObject({
                 name: z.string().describe('The import to refuse.'),
                 message: z.string().describe('What to import instead.'),
             } satisfies SchemaShape<TableSettings<'tools.eslint'>['restricted_imports'][number]>),
-        ),
-        [],
-        SETTING_FIELDS.eslinttable_restricted_imports,
-    ),
-    rules: settingField(eslintRules, {}, SETTING_FIELDS.eslinttable_rules),
-    override: settingField(
-        z.array(
+        )
+        .default([])
+        .meta(SETTING_FIELDS.eslinttable_restricted_imports),
+    rules: eslintRules.default({}).meta(SETTING_FIELDS.eslinttable_rules),
+    override: z
+        .array(
             z.strictObject({
                 paths: nonemptyPaths.describe(RECORD_DESCRIPTIONS.eslint_paths),
                 rules: eslintRules.optional().describe(RECORD_DESCRIPTIONS.eslint_rules),
                 runtime: z.enum(ESLINT_RUNTIMES).optional().describe(RECORD_DESCRIPTIONS.eslint_runtime),
             } satisfies SchemaShape<NonNullable<NonNullable<WrittenTools['eslint']>['override']>[number]>),
-        ),
-        [],
-        SETTING_FIELDS.eslinttable_override,
-    ),
+        )
+        .default([])
+        .meta(SETTING_FIELDS.eslinttable_override),
 } satisfies SchemaShape<
     Omit<TableSettings<'tools.eslint'>, 'extra'>,
     Omit<NonNullable<WrittenTools['eslint']>, 'extra'>
@@ -166,12 +163,12 @@ const eslintTable = toolOptionsSchema.extend({
 export const toolsSchema = z.strictObject({
     hadolint: z
         .strictObject({
-            trusted_registries: settingField(z.array(z.string()), [], SETTING_FIELDS.hadolint_trusted_registries),
+            trusted_registries: z.array(z.string()).default([]).meta(SETTING_FIELDS.hadolint_trusted_registries),
         } satisfies SchemaShape<TableSettings<'tools.hadolint'>, NonNullable<WrittenTools['hadolint']>>)
         .optional(),
     nginx: z
         .strictObject({
-            image: settingField(nonemptyString, 'nginx:1.29.3-alpine', SETTING_FIELDS.nginx_image),
+            image: nonemptyString.default('nginx:1.29.3-alpine').meta(SETTING_FIELDS.nginx_image),
         } satisfies SchemaShape<TableSettings<'tools.nginx'>, NonNullable<WrittenTools['nginx']>>)
         .optional(),
     ruff: z
@@ -184,67 +181,67 @@ export const toolsSchema = z.strictObject({
         .optional(),
     semgrep: z
         .strictObject({
-            registry_packs: settingField(
-                z.array(z.string()),
-                ['p/owasp-top-ten'],
-                SETTING_FIELDS.semgrep_registry_packs,
-            ),
-            rule_files: settingField(z.array(relativePath), [], SETTING_FIELDS.semgrep_rule_files),
+            registry_packs: z
+                .array(z.string())
+                .default(['p/owasp-top-ten'])
+                .meta(SETTING_FIELDS.semgrep_registry_packs),
+            rule_files: z.array(relativePath).default([]).meta(SETTING_FIELDS.semgrep_rule_files),
         } satisfies SchemaShape<TableSettings<'tools.semgrep'>, NonNullable<WrittenTools['semgrep']>>)
         .optional(),
     sqlfluff: z
         .strictObject({
-            dialect: settingField(z.string().regex(/^[a-z][a-z0-9_]*$/u), 'ansi', SETTING_FIELDS.sqlfluff_dialect),
+            dialect: z
+                .string()
+                .regex(/^[a-z][a-z0-9_]*$/u)
+                .default('ansi')
+                .meta(SETTING_FIELDS.sqlfluff_dialect),
         } satisfies SchemaShape<TableSettings<'tools.sqlfluff'>, NonNullable<WrittenTools['sqlfluff']>>)
         .optional(),
     swiftlint: z
         .strictObject({
-            always_keep_imports: settingField(z.array(z.string()), [], SETTING_FIELDS.swiftlint_always_keep_imports),
+            always_keep_imports: z.array(z.string()).default([]).meta(SETTING_FIELDS.swiftlint_always_keep_imports),
         } satisfies SchemaShape<TableSettings<'tools.swiftlint'>, NonNullable<WrittenTools['swiftlint']>>)
         .optional(),
     trivy: z
         .strictObject({
-            severity: settingField(z.array(z.string()), ['HIGH', 'CRITICAL'], SETTING_FIELDS.trivy_severity),
+            severity: z.array(z.string()).default(['HIGH', 'CRITICAL']).meta(SETTING_FIELDS.trivy_severity),
         } satisfies SchemaShape<TableSettings<'tools.trivy'>, NonNullable<WrittenTools['trivy']>>)
         .optional(),
     eslint: eslintTable.optional(),
     commitlint: z
         .strictObject({
-            types: settingField(
-                nonemptyStrings,
-                ['feat', 'fix', 'refactor', 'perf', 'docs', 'test', 'build', 'ci', 'chore', 'style', 'revert'],
-                SETTING_FIELDS.commitlint_types,
-            ),
-            scopes: settingField(nonemptyStrings, [], SETTING_FIELDS.commitlint_scopes),
-            rules: settingField(commitlintRules, {}, SETTING_FIELDS.commitlint_rules),
+            types: nonemptyStrings
+                .default(['feat', 'fix', 'refactor', 'perf', 'docs', 'test', 'build', 'ci', 'chore', 'style', 'revert'])
+                .meta(SETTING_FIELDS.commitlint_types),
+            scopes: nonemptyStrings.default([]).meta(SETTING_FIELDS.commitlint_scopes),
+            rules: commitlintRules.default({}).meta(SETTING_FIELDS.commitlint_rules),
         } satisfies SchemaShape<TableSettings<'tools.commitlint'>, NonNullable<WrittenTools['commitlint']>>)
         .optional(),
     yamllint: z
         .strictObject({
-            rules: settingField(yamlRules, {}, SETTING_FIELDS.yamllint_rules),
+            rules: yamlRules.default({}).meta(SETTING_FIELDS.yamllint_rules),
         } satisfies SchemaShape<TableSettings<'tools.yamllint'>, NonNullable<WrittenTools['yamllint']>>)
         .optional(),
     markdownlint: z
         .strictObject({
-            rules: settingField(
-                z.record(
+            rules: z
+                .record(
                     z.string().regex(/^MD\d{3}$/u, { error: MARKDOWNLINT_OPTIONS_HELP }),
                     z.record(z.string(), z.json(), { error: MARKDOWNLINT_OPTIONS_HELP }),
                     { error: MARKDOWNLINT_OPTIONS_HELP },
-                ),
-                {},
-                SETTING_FIELDS.markdownlint_rules,
-            ),
+                )
+                .default({})
+                .meta(SETTING_FIELDS.markdownlint_rules),
         } satisfies SchemaShape<TableSettings<'tools.markdownlint'>, NonNullable<WrittenTools['markdownlint']>>)
         .optional(),
     stylelint: z
         .strictObject({
-            rules: settingField(stylelintRules, {}, SETTING_FIELDS.stylelint_rules),
+            rules: stylelintRules.default({}).meta(SETTING_FIELDS.stylelint_rules),
         } satisfies SchemaShape<TableSettings<'tools.stylelint'>, NonNullable<WrittenTools['stylelint']>>)
         .optional(),
     squawk: z
         .strictObject({
-            assume_in_transaction: settingField(z.boolean(), false, SETTING_FIELDS.squawk_assume_in_transaction),
+            assume_in_transaction: z.boolean().default(false).meta(SETTING_FIELDS.squawk_assume_in_transaction),
         } satisfies SchemaShape<TableSettings<'tools.squawk'>, NonNullable<WrittenTools['squawk']>>)
         .optional(),
     prettier: toolOptionsSchema.optional(),
@@ -262,19 +259,17 @@ export const toolsSchema = z.strictObject({
     shellcheck: toolOptionsSchema.optional(),
     knip: toolOptionsSchema
         .extend({
-            entry: settingField(z.array(relativePath), [], SETTING_FIELDS.knip_entry),
-            ignore_dependencies: settingField(
-                reasonValue(
-                    z.array(
-                        z
-                            .string()
-                            .min(1)
-                            .regex(KNIP_PACKAGE_NAME, 'Use an exact package name, without a regular expression.'),
-                    ),
+            entry: z.array(relativePath).default([]).meta(SETTING_FIELDS.knip_entry),
+            ignore_dependencies: reasonValue(
+                z.array(
+                    z
+                        .string()
+                        .min(1)
+                        .regex(KNIP_PACKAGE_NAME, 'Use an exact package name, without a regular expression.'),
                 ),
-                [],
-                SETTING_FIELDS.knip_ignore_dependencies,
-            ),
+            )
+                .default([])
+                .meta(SETTING_FIELDS.knip_ignore_dependencies),
         } satisfies SchemaShape<
             Omit<TableSettings<'tools.knip'>, 'extra'>,
             Omit<NonNullable<WrittenTools['knip']>, 'extra'>
@@ -282,21 +277,20 @@ export const toolsSchema = z.strictObject({
         .optional(),
     purgecss: z
         .strictObject({
-            safelist: settingField(reasonValue(nonemptyStrings), [], SETTING_FIELDS.purgecss_safelist),
+            safelist: reasonValue(nonemptyStrings).default([]).meta(SETTING_FIELDS.purgecss_safelist),
         } satisfies SchemaShape<TableSettings<'tools.purgecss'>, NonNullable<WrittenTools['purgecss']>>)
         .optional(),
     v8r: z
         .strictObject({
-            schema: settingField(
-                z.array(
+            schema: z
+                .array(
                     z.strictObject({
                         paths: nonemptyPaths.describe(RECORD_DESCRIPTIONS.v8r_paths),
                         url: z.url().describe(RECORD_DESCRIPTIONS.v8r_url),
                     } satisfies SchemaShape<TableSettings<'tools.v8r'>['schema'][number]>),
-                ),
-                [],
-                SETTING_FIELDS.v8r_schema,
-            ),
+                )
+                .default([])
+                .meta(SETTING_FIELDS.v8r_schema),
         } satisfies SchemaShape<TableSettings<'tools.v8r'>, NonNullable<WrittenTools['v8r']>>)
         .optional(),
     taplo: toolOptionsSchema.optional(),

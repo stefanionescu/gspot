@@ -26,22 +26,28 @@ const wholeNumber = z.number().int().nonnegative();
 const percentage = z.number().min(0).max(DEFAULT_VALUES.percentage_maximum);
 
 const formatFields = z.strictObject({
-    indent_style: settingField(z.enum(FORMAT_INDENT_STYLES).optional(), 'space', TABLE_FIELDS.indent_style),
-    indent_width: settingField(
-        z.number().int().min(1).max(INDENT_MAX).optional(),
-        DEFAULT_VALUES.indent_width,
-        TABLE_FIELDS.indent_width,
-    ),
-    print_width: settingField(
-        z.number().int().min(PRINT_WIDTH_MIN).max(PRINT_WIDTH_MAX).optional(),
-        DEFAULT_VALUES.print_width,
-        TABLE_FIELDS.print_width,
-    ),
-    line_ending: settingField(z.enum(LINE_ENDINGS).optional(), 'lf', TABLE_FIELDS.line_ending),
-    final_newline: settingField(z.boolean().optional(), true, TABLE_FIELDS.final_newline),
-    quotes: settingField(z.enum(QUOTE_STYLES).optional(), 'single', TABLE_FIELDS.quotes),
-    trailing_commas: settingField(z.enum(TRAILING_COMMAS).optional(), 'all', TABLE_FIELDS.trailing_commas),
-    semicolons: settingField(z.boolean().optional(), true, TABLE_FIELDS.semicolons),
+    indent_style: z.enum(FORMAT_INDENT_STYLES).optional().default('space').meta(TABLE_FIELDS.indent_style),
+    indent_width: z
+        .number()
+        .int()
+        .min(1)
+        .max(INDENT_MAX)
+        .optional()
+        .default(DEFAULT_VALUES.indent_width)
+        .meta(TABLE_FIELDS.indent_width),
+    print_width: z
+        .number()
+        .int()
+        .min(PRINT_WIDTH_MIN)
+        .max(PRINT_WIDTH_MAX)
+        .optional()
+        .default(DEFAULT_VALUES.print_width)
+        .meta(TABLE_FIELDS.print_width),
+    line_ending: z.enum(LINE_ENDINGS).optional().default('lf').meta(TABLE_FIELDS.line_ending),
+    final_newline: z.boolean().optional().default(true).meta(TABLE_FIELDS.final_newline),
+    quotes: z.enum(QUOTE_STYLES).optional().default('single').meta(TABLE_FIELDS.quotes),
+    trailing_commas: z.enum(TRAILING_COMMAS).optional().default('all').meta(TABLE_FIELDS.trailing_commas),
+    semicolons: z.boolean().optional().default(true).meta(TABLE_FIELDS.semicolons),
 } satisfies SchemaShape<Omit<TableSettings<'format'>, 'override'>, Omit<WrittenFormat, 'override'>>);
 
 const relativePath = z
@@ -58,17 +64,15 @@ const relativePaths = z.array(relativePath);
 const nonemptyPaths = relativePaths.min(1);
 
 const namingCategorySchema = z.strictObject({
-    max_characters: settingField(
-        reasonValue(z.number().int().positive()),
-        DEFAULT_VALUES.max_characters,
-        SETTING_FIELDS.max_characters,
-    ),
-    max_words: settingField(
-        reasonValue(z.number().int().positive()),
-        DEFAULT_VALUES.max_words,
-        SETTING_FIELDS.max_words,
-    ),
-    cases: settingField(reasonValue(z.array(z.enum(CASE_NAMES))), [], SETTING_FIELDS.cases),
+    max_characters: reasonValue(z.number().int().positive())
+        .default(DEFAULT_VALUES.max_characters)
+        .meta(SETTING_FIELDS.max_characters),
+    max_words: reasonValue(z.number().int().positive())
+        .default(DEFAULT_VALUES.max_words)
+        .meta(SETTING_FIELDS.max_words),
+    cases: reasonValue(z.array(z.enum(CASE_NAMES)))
+        .default([])
+        .meta(SETTING_FIELDS.cases),
 } satisfies SchemaShape<ParsedNamingFields, NamingFields<ReasonValue<number>, ReasonValue<NamingCase[]>>>);
 
 /** Numeric limits at both written and resolved settings boundaries. */
@@ -102,8 +106,8 @@ function settingsJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
 }
 
 const formatSchema = formatFields.extend({
-    override: settingField(
-        z.array(
+    override: z
+        .array(
             z
                 .strictObject({
                     paths: nonemptyPaths.describe(RECORD_DESCRIPTIONS.format_paths),
@@ -139,26 +143,10 @@ const formatSchema = formatFields.extend({
                     message: 'A format override needs at least one formatting option.',
                 })
                 .meta({ minProperties: DEFAULT_VALUES.minProperties }),
-        ),
-        [],
-        TABLE_FIELDS.formatschema_override,
-    ),
+        )
+        .default([])
+        .meta(TABLE_FIELDS.formatschema_override),
 } satisfies SchemaShape<Pick<TableSettings<'format'>, 'override'>, Pick<WrittenFormat, 'override'>>);
-
-/**
- * Apply a setting's default and declaration to its explicit validator.
- * @param schema the field's validator
- * @param value the default used when the document omits the field
- * @param metadata the field's declaration
- * @returns the declared field with its default
- */
-function settingField<Schema extends z.ZodType>(
-    schema: Schema,
-    value: z.core.util.NoUndefined<z.output<Schema>>,
-    metadata: z.GlobalMeta,
-): z.ZodDefault<Schema> {
-    return schema.default(value).meta(metadata);
-}
 
 /**
  * Accept a setting value with its explanation in the same TOML entry.
@@ -207,7 +195,6 @@ export {
     reasonValue,
     relativePath,
     formatSchema,
-    settingField,
     relativePaths,
     nonemptyPaths,
     nonemptyString,

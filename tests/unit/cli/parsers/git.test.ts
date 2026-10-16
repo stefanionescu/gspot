@@ -45,20 +45,52 @@ test('a batch keeps binary content and an empty blob in response order', async (
         Buffer.from(BINARY_BLOB),
         Buffer.from(`\n${SHA256} blob 0\n\n`),
     ]);
-    expect(new Map(await Array.fromAsync(parseGitBlobs([output].values(), [SHA1, SHA256])))).toStrictEqual(
+    expect(
+        new Map(
+            await Array.fromAsync(
+                parseGitBlobs(
+                    // eslint-disable-next-line @typescript-eslint/require-await -- reason: The Git reader takes an async stream; this test supplies fixed byte chunks.
+                    (async function* () {
+                        for (const chunk of [output]) yield chunk;
+                    })(),
+                    [SHA1, SHA256],
+                ),
+            ),
+        ),
+    ).toStrictEqual(
         new Map([
             [SHA1, Buffer.from(BINARY_BLOB)],
             [SHA256, Buffer.alloc(0)],
         ]),
     );
-    expect(new Map(await Array.fromAsync(parseGitBlobs([Buffer.alloc(0)].values(), [])))).toStrictEqual(new Map());
+    expect(
+        new Map(
+            await Array.fromAsync(
+                parseGitBlobs(
+                    // eslint-disable-next-line @typescript-eslint/require-await -- reason: The Git reader takes an async stream; this test supplies fixed byte chunks.
+                    (async function* () {
+                        for (const chunk of [Buffer.alloc(0)]) yield chunk;
+                    })(),
+                    [],
+                ),
+            ),
+        ),
+    ).toStrictEqual(new Map());
 });
 
 for (const { name, output, message } of INVALID_BLOBS)
     test(`a batch is refused: ${name}`, () => {
-        expect(Array.fromAsync(parseGitBlobs([Buffer.from(output)].values(), [SHA1]))).rejects.toThrow(
-            new RegExp(message),
-        );
+        expect(
+            Array.fromAsync(
+                parseGitBlobs(
+                    // eslint-disable-next-line @typescript-eslint/require-await -- reason: The Git reader takes an async stream; this test supplies fixed byte chunks.
+                    (async function* () {
+                        for (const chunk of [Buffer.from(output)]) yield chunk;
+                    })(),
+                    [SHA1],
+                ),
+            ),
+        ).rejects.toThrow(new RegExp(message));
     });
 
 test.each([0, 1])('index entries keep stage %i and the full object ID', (stage) => {
@@ -75,7 +107,19 @@ test('a batch parses the same for every split between header, body and delimiter
     ]);
     for (let split = 0; split <= output.length; split += 1) {
         const chunks = [output.subarray(0, split), output.subarray(split)];
-        expect(new Map(await Array.fromAsync(parseGitBlobs(chunks.values(), [SHA1, SHA256])))).toStrictEqual(
+        expect(
+            new Map(
+                await Array.fromAsync(
+                    parseGitBlobs(
+                        // eslint-disable-next-line @typescript-eslint/require-await -- reason: The Git reader takes an async stream; this test supplies fixed byte chunks.
+                        (async function* () {
+                            for (const chunk of chunks) yield chunk;
+                        })(),
+                        [SHA1, SHA256],
+                    ),
+                ),
+            ),
+        ).toStrictEqual(
             new Map([
                 [SHA1, Buffer.from([0, 255, 0, 10])],
                 [SHA256, Buffer.alloc(0)],

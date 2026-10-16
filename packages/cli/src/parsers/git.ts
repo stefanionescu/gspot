@@ -186,11 +186,11 @@ export function parseIndexRevision(entries: GitIndexEntry[]): GitEntry[] {
  * @returns each object's exact bytes before reading its successor.
  */
 export async function* parseGitBlobs(
-    chunks: AsyncIterable<Buffer> | Iterable<Buffer>,
+    chunks: AsyncIterable<Buffer>,
     objects: readonly string[],
 ): AsyncGenerator<readonly [string, Buffer]> {
     const stream: GitStream = {
-        chunks: Symbol.asyncIterator in chunks ? chunks[Symbol.asyncIterator]() : chunks[Symbol.iterator](),
+        chunks: chunks[Symbol.asyncIterator](),
         chunk: Buffer.alloc(0),
         cursor: 0,
     };

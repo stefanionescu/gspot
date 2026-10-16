@@ -24,7 +24,6 @@ import {
     wholeNumber,
     reasonValue,
     formatSchema,
-    settingField,
     relativePath,
     relativePaths,
     nonemptyPaths,
@@ -60,9 +59,9 @@ const namingLanguageSchema = namingCategorySchema.extend({
     Pick<NonNullable<WrittenNaming[NamingLanguage]>, NamingCategory>
 >);
 const namingLists = {
-    banned_words: settingField(z.array(z.string()), [], DEFAULT_FIELDS.banned_words),
-    override: settingField(
-        z.array(
+    banned_words: z.array(z.string()).default([]).meta(DEFAULT_FIELDS.banned_words),
+    override: z
+        .array(
             namingOverrideSchema.extend({
                 paths: nonemptyPaths.default(['**']).describe(namingOverrideSchema.shape.paths.description as string),
                 languages: z
@@ -76,10 +75,9 @@ const namingLists = {
                 Pick<ParsedNamingOverride, 'paths' | 'languages' | 'allow_digits' | 'allow_repeated_words' | 'reason'>,
                 Pick<WrittenNamingOverride, 'paths' | 'languages' | 'allow_digits' | 'allow_repeated_words' | 'reason'>
             >),
-        ),
-        [],
-        DEFAULT_FIELDS.override,
-    ),
+        )
+        .default([])
+        .meta(DEFAULT_FIELDS.override),
 };
 
 const namingSchema = z.strictObject({
@@ -105,8 +103,8 @@ const allowedPackageSchema = z.strictObject({
 } satisfies SchemaShape<TableSettings<'licenses'>['allowed_package'][number]>);
 
 const licensesSchema = z.strictObject({
-    allowed: settingField(nonemptyStrings, [], TABLE_FIELDS.allowed),
-    allowed_package: settingField(z.array(allowedPackageSchema), [], TABLE_FIELDS.allowed_package),
+    allowed: nonemptyStrings.default([]).meta(TABLE_FIELDS.allowed),
+    allowed_package: z.array(allowedPackageSchema).default([]).meta(TABLE_FIELDS.allowed_package),
 } satisfies SchemaShape<TableSettings<'licenses'>, WrittenLicenses>);
 
 const configurationTableSchemas = {
@@ -116,58 +114,53 @@ const configurationTableSchemas = {
     naming: namingSchema.optional(),
     structure: z
         .strictObject({
-            reexports: settingField(reasonValue(z.enum(REEXPORT_MODES)), 'none', TABLE_FIELDS.reexports),
+            reexports: reasonValue(z.enum(REEXPORT_MODES)).default('none').meta(TABLE_FIELDS.reexports),
         } satisfies SchemaShape<TableSettings<'structure'>, NonNullable<WrittenSettings['structure']>>)
         .optional(),
     cloudflare: z
         .strictObject({
-            types_file: settingField(destinationPath, 'worker-configuration.d.ts', TABLE_FIELDS.cloudflare_types_file),
-            types_interface: settingField(nonemptyString, 'Env', TABLE_FIELDS.types_interface),
+            types_file: destinationPath.default('worker-configuration.d.ts').meta(TABLE_FIELDS.cloudflare_types_file),
+            types_interface: nonemptyString.default('Env').meta(TABLE_FIELDS.types_interface),
         } satisfies SchemaShape<TableSettings<'cloudflare'>, NonNullable<WrittenSettings['cloudflare']>>)
         .optional(),
     coverage: z
         .strictObject({
-            lines: settingField(reasonValue(percentage), 0, TABLE_FIELDS.lines),
-            branches: settingField(reasonValue(percentage), 0, TABLE_FIELDS.branches),
-            functions: settingField(reasonValue(percentage), 0, TABLE_FIELDS.functions),
-            statements: settingField(reasonValue(percentage), 0, TABLE_FIELDS.statements),
-            target: settingField(
-                z.array(
+            lines: reasonValue(percentage).default(0).meta(TABLE_FIELDS.lines),
+            branches: reasonValue(percentage).default(0).meta(TABLE_FIELDS.branches),
+            functions: reasonValue(percentage).default(0).meta(TABLE_FIELDS.functions),
+            statements: reasonValue(percentage).default(0).meta(TABLE_FIELDS.statements),
+            target: z
+                .array(
                     z.strictObject({
                         name: nonemptyString.describe(RECORD_DESCRIPTIONS.target_name),
                         lines: percentage.describe(RECORD_DESCRIPTIONS.target_lines),
                         reason: z.string().optional().describe(RECORD_DESCRIPTIONS.target_reason),
                     } satisfies SchemaShape<TableSettings<'coverage'>['target'][number]>),
-                ),
-                [],
-                TABLE_FIELDS.target,
-            ),
+                )
+                .default([])
+                .meta(TABLE_FIELDS.target),
         } satisfies SchemaShape<TableSettings<'coverage'>, NonNullable<WrittenSettings['coverage']>>)
         .optional(),
     dependencies: z
         .strictObject({
-            min_release_age_days: settingField(
-                reasonValue(wholeNumber),
-                DEFAULT_VALUES.min_release_age_days,
-                TABLE_FIELDS.min_release_age_days,
-            ),
-            allowed_registries: settingField(
-                reasonValue(nonemptyStrings),
-                ['registry.npmjs.org', 'registry.yarnpkg.com'],
-                TABLE_FIELDS.allowed_registries,
-            ),
+            min_release_age_days: reasonValue(wholeNumber)
+                .default(DEFAULT_VALUES.min_release_age_days)
+                .meta(TABLE_FIELDS.min_release_age_days),
+            allowed_registries: reasonValue(nonemptyStrings)
+                .default(['registry.npmjs.org', 'registry.yarnpkg.com'])
+                .meta(TABLE_FIELDS.allowed_registries),
             scanner: nonemptyString.optional().meta(TABLE_FIELDS.scanner),
         } satisfies SchemaShape<TableSettings<'dependencies'>, NonNullable<WrittenSettings['dependencies']>>)
         .optional(),
     docs: z
         .strictObject({
-            banned_headings: settingField(z.array(z.string()), [], TABLE_FIELDS.banned_headings),
-            allowed_urls: settingField(reasonValue(z.array(z.string())), [], TABLE_FIELDS.allowed_urls),
+            banned_headings: z.array(z.string()).default([]).meta(TABLE_FIELDS.banned_headings),
+            allowed_urls: reasonValue(z.array(z.string())).default([]).meta(TABLE_FIELDS.allowed_urls),
         } satisfies SchemaShape<TableSettings<'docs'>, NonNullable<WrittenSettings['docs']>>)
         .optional(),
     drizzle: z
         .strictObject({
-            client_names: settingField(nonemptyStrings, ['db'], TABLE_FIELDS.client_names),
+            client_names: nonemptyStrings.default(['db']).meta(TABLE_FIELDS.client_names),
         } satisfies SchemaShape<TableSettings<'drizzle'>, NonNullable<WrittenSettings['drizzle']>>)
         .optional(),
     licenses: licensesSchema.optional(),
@@ -179,57 +172,52 @@ const configurationTableSchemas = {
         .optional(),
     postgres: z
         .strictObject({
-            client_schemas: settingField(nonemptyStrings, [], TABLE_FIELDS.client_schemas),
-            frozen_through: settingField(nonemptyString, 'none', TABLE_FIELDS.frozen_through),
+            client_schemas: nonemptyStrings.default([]).meta(TABLE_FIELDS.client_schemas),
+            frozen_through: nonemptyString.default('none').meta(TABLE_FIELDS.frozen_through),
             migrations_folder: relativePath.optional().meta(TABLE_FIELDS.migrations_folder),
         } satisfies SchemaShape<TableSettings<'postgres'>, NonNullable<WrittenSettings['postgres']>>)
         .optional(),
     secrets: z
         .strictObject({
-            env_examples: settingField(
-                nonemptyStrings,
-                ['.env.example', '.env.template', '.env.sample', '.dev.vars.example'],
-                TABLE_FIELDS.env_examples,
-            ),
-            reader_functions: settingField(nonemptyStrings, [], TABLE_FIELDS.reader_functions),
+            env_examples: nonemptyStrings
+                .default(['.env.example', '.env.template', '.env.sample', '.dev.vars.example'])
+                .meta(TABLE_FIELDS.env_examples),
+            reader_functions: nonemptyStrings.default([]).meta(TABLE_FIELDS.reader_functions),
         } satisfies SchemaShape<TableSettings<'secrets'>, NonNullable<WrittenSettings['secrets']>>)
         .optional(),
     site: z
         .strictObject({
-            build_command: settingField(commandSchema, ['npm', 'run', 'build'], TABLE_FIELDS.build_command),
-            build_folder: settingField(destinationPath, 'dist', TABLE_FIELDS.build_folder),
-            allowed_unlisted_pages: settingField(
-                reasonValue(relativePaths),
-                ['404.html'],
-                TABLE_FIELDS.allowed_unlisted_pages,
-            ),
-            size_limit: settingField(
-                z.array(
+            build_command: commandSchema.default(['npm', 'run', 'build']).meta(TABLE_FIELDS.build_command),
+            build_folder: destinationPath.default('dist').meta(TABLE_FIELDS.build_folder),
+            allowed_unlisted_pages: reasonValue(relativePaths)
+                .default(['404.html'])
+                .meta(TABLE_FIELDS.allowed_unlisted_pages),
+            size_limit: z
+                .array(
                     z.strictObject({
                         paths: z.array(destinationPath).min(1).describe(RECORD_DESCRIPTIONS.size_paths),
                         kilobytes: wholeNumber.describe(RECORD_DESCRIPTIONS.size_kilobytes),
                     } satisfies SchemaShape<TableSettings<'site'>['size_limit'][number]>),
-                ),
-                [],
-                TABLE_FIELDS.size_limit,
-            ),
+                )
+                .default([])
+                .meta(TABLE_FIELDS.size_limit),
         } satisfies SchemaShape<TableSettings<'site'>, NonNullable<WrittenSettings['site']>>)
         .optional(),
     spelling: z
         .strictObject({
-            locale: settingField(z.enum(SPELLING_LOCALES), 'en-us', TABLE_FIELDS.locale),
+            locale: z.enum(SPELLING_LOCALES).default('en-us').meta(TABLE_FIELDS.locale),
         } satisfies SchemaShape<TableSettings<'spelling'>, NonNullable<WrittenSettings['spelling']>>)
         .optional(),
     supabase: z
         .strictObject({
-            functions_folder: settingField(relativePath, 'supabase/functions', TABLE_FIELDS.functions_folder),
-            schemas: settingField(nonemptyStrings, ['public'], TABLE_FIELDS.schemas),
+            functions_folder: relativePath.default('supabase/functions').meta(TABLE_FIELDS.functions_folder),
+            schemas: nonemptyStrings.default(['public']).meta(TABLE_FIELDS.schemas),
             types_file: destinationPath.optional().meta(TABLE_FIELDS.supabase_types_file),
         } satisfies SchemaShape<TableSettings<'supabase'>, NonNullable<WrittenSettings['supabase']>>)
         .optional(),
     translations: z
         .strictObject({
-            base_locale: settingField(nonemptyString, 'en', TABLE_FIELDS.base_locale),
+            base_locale: nonemptyString.default('en').meta(TABLE_FIELDS.base_locale),
             messages_folder: relativePath.optional().meta(TABLE_FIELDS.messages_folder),
         } satisfies SchemaShape<TableSettings<'translations'>, NonNullable<WrittenSettings['translations']>>)
         .optional(),
@@ -237,8 +225,8 @@ const configurationTableSchemas = {
         .strictObject({
             project: relativePath.optional().meta(DEFAULT_FIELDS.project),
             scheme: nonemptyString.optional().meta(DEFAULT_FIELDS.scheme),
-            destination: settingField(nonemptyString, 'generic/platform=iOS Simulator', DEFAULT_FIELDS.destination),
-            allowed_entitlements: settingField(z.array(z.string()), [], DEFAULT_FIELDS.allowed_entitlements),
+            destination: nonemptyString.default('generic/platform=iOS Simulator').meta(DEFAULT_FIELDS.destination),
+            allowed_entitlements: z.array(z.string()).default([]).meta(DEFAULT_FIELDS.allowed_entitlements),
         } satisfies SchemaShape<TableSettings<'xcode'>, NonNullable<WrittenSettings['xcode']>>)
         .optional(),
 };

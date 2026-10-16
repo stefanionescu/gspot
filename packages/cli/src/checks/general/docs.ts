@@ -18,8 +18,8 @@ import { LICENSE_FILE } from '#cli/config/repository/inventory.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
 import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import { scopeOf, isInScope, joinScope } from '#cli/repository/scopes.ts';
 import type { PathIndex, TaskSources } from '#cli/types/checks/general.ts';
-import { scopeOf, joinScope, scopeAncestors } from '#cli/repository/scopes.ts';
 import { MISE_FILES, RUNNER_NAMES, MISE_TASKS_FOLDER } from '#cli/config/repository/tooling.ts';
 
 import {
@@ -135,7 +135,9 @@ function lineFindings(input: CheckInput, file: string, prose: NumberedLine, inde
 }
 
 function taskSources(input: CheckInput, scope: string): TaskSources {
-    const ancestors = scopeAncestors(input.scopeEntries, scope).toReversed();
+    const ancestors = input.scopeEntries
+        .filter((entry) => isInScope(scope, entry.path))
+        .toSorted((left, right) => right.path.length - left.path.length);
     const files = [
         ...new Set(
             ancestors.flatMap(({ path }) => [

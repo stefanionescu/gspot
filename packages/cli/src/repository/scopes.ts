@@ -210,21 +210,6 @@ export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
 }
 
 /**
- * Declared ancestors of a scope, ordered from the outermost to the exact scope.
- * @param entries the declared scopes.
- * @param path the scope path.
- * @returns the scopes on the way down to the path, the path itself last.
- */
-export function scopeAncestors(
-    entries: Pick<ScopeEntry, 'path' | 'configurations'>[],
-    path: string,
-): Pick<ScopeEntry, 'path' | 'configurations'>[] {
-    return entries
-        .filter((entry) => isInScope(path, entry.path))
-        .toSorted((left, right) => left.path.length - right.path.length);
-}
-
-/**
  * Get dependencies from the nearest declared npm project that contains a scope.
  * @param manifests validated source project manifests.
  * @param scope the repository-relative project scope.

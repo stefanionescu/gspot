@@ -7,6 +7,6 @@ export type GitEntry = { mode: (typeof GIT_ENTRY_MODES)[number]; hash: string; p
 export type GitIndexEntry = GitEntry & { stage: number };
 
 /** The current transport chunk and cursor in a Git batch response. */
-export type GitStream = { chunks: Iterator<Buffer> | AsyncIterator<Buffer>; chunk: Buffer; cursor: number };
+export type GitStream = { chunks: AsyncIterator<Buffer>; chunk: Buffer; cursor: number };
 
 export type AttributeRule = { pattern: string; attributes: string[] };
