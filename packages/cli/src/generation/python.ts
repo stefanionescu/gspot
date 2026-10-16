@@ -52,8 +52,8 @@ export function pythonInputs(
     const exclusions = generatedIgnores(session);
     return {
         ruffRules: selection.selected.flatMap((manifest) => [
-            ...manifest.ruff_rules.recommended,
-            ...(settings.level === 'all' ? manifest.ruff_rules.all : []),
+            ...manifest.ruff.recommended,
+            ...(settings.level === 'all' ? manifest.ruff.all : []),
         ]),
         pythonScopePath: posix.join(base, selection.scope.path),
         pythonVenv:

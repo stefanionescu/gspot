@@ -76,7 +76,7 @@ help = "Fix the first error Deno prints; later ones are often the same mistake."
 [[check]]
 name = "stale-types"
 command = ["supabase", "gen", "types", "typescript", "--local", "{each:--schema:supabase.schemas}"]
-generated_paths = [{ stdout = "{setting:supabase.types_file}" }]
+generator_outputs = [{ stdout = "{setting:supabase.types_file}" }]
 example = "A database types file that differs from the configured local Supabase schema reports drift. With the local database ready, regenerate using `supabase gen types typescript --local`, write the output to the configured file, and rerun."
 level = "recommended"
 stage = "push"

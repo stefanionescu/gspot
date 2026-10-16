@@ -1,4 +1,4 @@
-[prefix_collisions]
+[shared_prefixes]
 kinds = ["controller", "service", "module", "guard", "pipe", "filter", "interceptor", "middleware", "decorator", "gateway", "resolver", "repository", "entity", "dto", "strategy", "provider"]
 
 [configuration]

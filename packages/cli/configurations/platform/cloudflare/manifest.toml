@@ -55,7 +55,7 @@ help = "Write the rule as source, destination, status."
 [[check]]
 name = "stale-types"
 command = ["wrangler", "types", "{file}", "--env-interface", "{setting:cloudflare.types_interface}"]
-generated_paths = [{ pattern = "**/{setting:cloudflare.types_file}" }]
+generator_outputs = [{ pattern = "**/{setting:cloudflare.types_file}" }]
 example = "A generated Worker environment type file that differs from `wrangler types` output reports drift. Regenerate it using the configured Wrangler project, inspect the changes, and rerun."
 level = "recommended"
 stage = "push"

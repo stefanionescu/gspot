@@ -112,26 +112,26 @@ const checkFields = z.strictObject({
     name: z.string().regex(NAME_PATTERN),
     level: levelSchema,
     runs: z.enum(CHECK_RUNS).default('files'),
-    generated_paths: z
+    generator_outputs: z
         .array(
             z.union([
                 z
                     .strictObject({ path: z.string() } satisfies SchemaShape<{ path: string }>)
                     .transform(({ path }) => ({ kind: 'path' as const, path })) satisfies z.ZodType<
                     GeneratedPath,
-                    Extract<NonNullable<CheckInput['generated_paths']>[number], { path: string }>
+                    Extract<NonNullable<CheckInput['generator_outputs']>[number], { path: string }>
                 >,
                 z
                     .strictObject({ pattern: z.string().min(1) } satisfies SchemaShape<{ pattern: string }>)
                     .transform(({ pattern }) => ({ kind: 'pattern' as const, path: pattern })) satisfies z.ZodType<
                     GeneratedPath,
-                    Extract<NonNullable<CheckInput['generated_paths']>[number], { pattern: string }>
+                    Extract<NonNullable<CheckInput['generator_outputs']>[number], { pattern: string }>
                 >,
                 z
                     .strictObject({ stdout: z.string() } satisfies SchemaShape<{ stdout: string }>)
                     .transform(({ stdout }) => ({ kind: 'stdout' as const, path: stdout })) satisfies z.ZodType<
                     GeneratedPath,
-                    Extract<NonNullable<CheckInput['generated_paths']>[number], { stdout: string }>
+                    Extract<NonNullable<CheckInput['generator_outputs']>[number], { stdout: string }>
                 >,
             ]),
         )
@@ -241,10 +241,10 @@ export const manifestSchema = z
                     .default([]),
             } satisfies SchemaShape<ParsedManifest['eslint'], NonNullable<ManifestInput['eslint']>>)
             .prefault({}),
-        prefix_collisions: z
+        shared_prefixes: z
             .strictObject({ prefixes: optionalStringList, kinds: optionalStringList } satisfies SchemaShape<
-                ParsedManifest['prefix_collisions'],
-                NonNullable<ManifestInput['prefix_collisions']>
+                ParsedManifest['shared_prefixes'],
+                NonNullable<ManifestInput['shared_prefixes']>
             >)
             .prefault({}),
         ignored_folders: z.array(z.string().min(1)).default([]),
@@ -296,10 +296,10 @@ export const manifestSchema = z
                     .pipe(detectionSchema),
             )
             .default({}),
-        ruff_rules: z
+        ruff: z
             .strictObject({ recommended: optionalStringList, all: optionalStringList } satisfies SchemaShape<
-                ParsedManifest['ruff_rules'],
-                NonNullable<ManifestInput['ruff_rules']>
+                ParsedManifest['ruff'],
+                NonNullable<ManifestInput['ruff']>
             >)
             .prefault({}),
     } satisfies SchemaShape<

@@ -1,7 +1,7 @@
 allowed_words = ["JavaScript", "ESLint"]
 ignored_folders = ["node_modules", "bower_components"]
 
-[prefix_collisions]
+[shared_prefixes]
 prefixes = ["jsconfig", "eslint", "playwright"]
 
 [configuration]

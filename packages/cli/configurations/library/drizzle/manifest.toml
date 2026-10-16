@@ -35,7 +35,7 @@ summary = "Asks drizzle-kit to write migrations, and fails when it writes one."
 why = "A schema change with no migration works on the machine that pushed the schema and nowhere else."
 help = "Run drizzle-kit generate and commit the migration."
 
-[[check.generated_paths]]
+[[check.generator_outputs]]
 pattern = "**/*"
 
 [check.files]

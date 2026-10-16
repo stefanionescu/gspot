@@ -62,7 +62,7 @@ function generatedInputs(input: CheckInput) {
     const declaration = input.check.command ?? [];
     const command = substitute(input, planned, declaration, values);
 
-    const declared = (input.check.generated_paths ?? []).flatMap((entry): GeneratedPath[] => {
+    const declared = (input.check.generator_outputs ?? []).flatMap((entry): GeneratedPath[] => {
         const { kind, path: original } = entry;
         let path = substituteValue(input, planned, original, values);
         if (kind === 'pattern' && original.includes('{setting:') && input.selection.scope.path !== '') {

@@ -46,7 +46,7 @@ function knownPaths(input: CheckInput): Set<string> {
     for (const manifest of input.selection.selected)
         for (const toolFile of manifest.toolFiles) known.add(toolFile.target);
     const outputs = input.selection.selected.flatMap((manifest) =>
-        manifest.checks.flatMap((check) => check.generated_paths ?? []),
+        manifest.checks.flatMap((check) => check.generator_outputs ?? []),
     );
     for (const output of outputs) {
         if (output.kind === 'pattern') continue;

@@ -223,7 +223,7 @@ summary = "Finds docstrings that hold a placeholder word, or the name of the fun
 why = "A docstring that says nothing passes the docstring rule and wastes the line."
 help = "Say what the function does that its name does not, or for whom it exists."
 
-[ruff_rules]
+[ruff]
 recommended = [
     "A",
     "ARG",

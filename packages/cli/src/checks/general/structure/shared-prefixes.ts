@@ -36,25 +36,23 @@ function prefixOf(stem: string): string {
  */
 export function sharedPrefixes(input: CheckInput): Finding[] {
     const limit = input.selection.view.options('limits').prefix_collisions;
-    const prefixes = new Set(input.selection.selected.flatMap((manifest) => manifest.prefix_collisions.prefixes));
-    const kinds = new Set(input.selection.selected.flatMap((manifest) => manifest.prefix_collisions.kinds));
+    const prefixes = new Set(input.selection.selected.flatMap((manifest) => manifest.shared_prefixes.prefixes));
+    const kinds = new Set(input.selection.selected.flatMap((manifest) => manifest.shared_prefixes.kinds));
     const tree = directoryTree(input.files);
     const seen = new Set<string>();
-    // eslint-disable-next-line complexity -- reason: Prefix comparison evaluates sibling file and directory relationships together; splitting it adds one-caller predicates.
-    return structureSources(input).flatMap((file) => {
+    const files = structureSources(input).filter((file) => {
+        const directory = extractParentFolder(file.path);
+        return (
+            !HOOK_DIRECTORIES.some((hook) => isInScope(directory, posix.join(input.selection.scope.path, hook))) &&
+            !isDependencyFolder(directory)
+        );
+    });
+    return files.flatMap((file) => {
         const directory = extractParentFolder(file.path);
         const stem = extractStem(file.path);
         const prefix = prefixOf(stem);
         const key = JSON.stringify([directory, prefix]);
-        if (
-            prefix === '' ||
-            prefixes.has(prefix) ||
-            INDEX_STEMS.has(stem) ||
-            seen.has(key) ||
-            HOOK_DIRECTORIES.some((hook) => isInScope(directory, posix.join(input.selection.scope.path, hook))) ||
-            isDependencyFolder(directory)
-        )
-            return [];
+        if (prefix === '' || prefixes.has(prefix) || INDEX_STEMS.has(stem) || seen.has(key)) return [];
         const peers = (tree.get(directory) ?? []).filter((entry) => {
             if (entry.kind === 'dir')
                 return (

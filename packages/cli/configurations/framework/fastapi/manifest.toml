@@ -7,5 +7,5 @@ description = "Checks FastAPI route declarations with Ruff. Adds Semgrep request
 [detect]
 dependencies = ["fastapi"]
 
-[ruff_rules]
+[ruff]
 recommended = ["FAST001", "FAST002", "FAST003"]

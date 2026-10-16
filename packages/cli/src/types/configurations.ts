@@ -36,7 +36,7 @@ export type ParsedManifest = {
         selectors: { selector: string; message: string; role?: string | undefined }[];
         rules_off: { rules: string[]; reason: string; files?: string[] | undefined }[];
     };
-    prefix_collisions: { prefixes: string[]; kinds: string[] };
+    shared_prefixes: { prefixes: string[]; kinds: string[] };
     ignored_folders: string[];
     generated: string[];
     allowed_words: string[];
@@ -90,7 +90,7 @@ export type ParsedManifest = {
     checks: ParsedCheck[];
     naming?: { override: (NamingOverride & { reason: string })[] } | undefined;
     rules: Record<string, ParsedManifest['detect']>;
-    ruff_rules: { recommended: string[]; all: string[] };
+    ruff: { recommended: string[]; all: string[] };
 };
 
 export type ToolFileDeclaration = ParsedManifest['toolFiles'][number];
@@ -107,7 +107,7 @@ export type ParsedCheck = {
     stage: Stage;
     runs: (typeof CHECK_RUNS)[number];
     command?: string[] | undefined;
-    generated_paths?: { kind: 'path' | 'pattern' | 'stdout'; path: string }[] | undefined;
+    generator_outputs?: { kind: 'path' | 'pattern' | 'stdout'; path: string }[] | undefined;
     run_in_copy?: boolean | undefined;
     env?: Record<string, string> | undefined;
     fix?: string[] | undefined;
@@ -229,7 +229,7 @@ export type ToolDeclaration = {
 };
 
 export type Stage = (typeof STAGES)[number];
-export type GeneratedPath = NonNullable<CheckDeclaration['generated_paths']>[number];
+export type GeneratedPath = NonNullable<CheckDeclaration['generator_outputs']>[number];
 
 /** Native manifest conditions before each consumer selects its supported fields. */
 export type ConditionFields = Pick<
@@ -249,11 +249,14 @@ export type FileMatchInput = Optional<ParsedManifest['files']>;
 /** Detection keys before consumers fill absent lists. */
 export type DetectionInput = Optional<ParsedManifest['detect']>;
 /** Native check paths before consumers write their discriminator and command defaults. */
-export type CheckInput = Omit<ParsedCheck, 'runs' | 'tool' | 'other_tools' | 'generated_paths' | 'files' | 'output'> & {
+export type CheckInput = Omit<
+    ParsedCheck,
+    'runs' | 'tool' | 'other_tools' | 'generator_outputs' | 'files' | 'output'
+> & {
     output?: OutputInput | undefined;
     runs?: ParsedCheck['runs'] | undefined;
     tool?: string | string[] | undefined;
-    generated_paths?: ({ path: string } | { pattern: string } | { stdout: string })[] | undefined;
+    generator_outputs?: ({ path: string } | { pattern: string } | { stdout: string })[] | undefined;
     files?: FileMatchInput | undefined;
 };
 /** Tool-file consumers and omitted defaults before consumers resolve their source. */
@@ -268,7 +271,7 @@ export type ManifestInput = Optional<
         ParsedManifest,
         | 'configuration'
         | 'eslint'
-        | 'prefix_collisions'
+        | 'shared_prefixes'
         | 'detect'
         | 'files'
         | 'tools'
@@ -276,13 +279,13 @@ export type ManifestInput = Optional<
         | 'checks'
         | 'naming'
         | 'rules'
-        | 'ruff_rules'
+        | 'ruff'
     >
 > & {
     eslint?:
         | (Optional<Omit<ParsedManifest['eslint'], 'all_level_rules'>> & { all_level_rules?: string[] | undefined })
         | undefined;
-    prefix_collisions?: Optional<ParsedManifest['prefix_collisions']> | undefined;
+    shared_prefixes?: Optional<ParsedManifest['shared_prefixes']> | undefined;
     configuration: Omit<ParsedManifest['configuration'], 'requires' | 'suggests' | 'always_selected'> &
         Optional<Pick<ParsedManifest['configuration'], 'requires' | 'suggests' | 'always_selected'>>;
     detect?: DetectionInput | undefined;
@@ -292,7 +295,7 @@ export type ManifestInput = Optional<
     check?: CheckInput[] | undefined;
     naming?: Optional<NonNullable<ParsedManifest['naming']>> | undefined;
     rules?: Record<string, Optional<Omit<ConditionFields, 'configuration' | 'level' | 'setting' | 'git'>>> | undefined;
-    ruff_rules?: Optional<ParsedManifest['ruff_rules']> | undefined;
+    ruff?: Optional<ParsedManifest['ruff']> | undefined;
 };
 /** Native installer declarations before each installer receives a canonical name. */
 export type ToolInput = Omit<ToolFields, 'kind' | 'prettier' | 'when' | 'replace'> & {

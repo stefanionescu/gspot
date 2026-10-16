@@ -1,4 +1,4 @@
-prefix_collisions = { prefixes = ["docker"] }
+shared_prefixes = { prefixes = ["docker"] }
 
 allowed_words = ["Docker", "Trivy"]
 [configuration]
