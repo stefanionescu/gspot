@@ -86,17 +86,23 @@ function commentTarget(syntax: TomlSyntax, target: TomlTable, written: TomlTable
  * @param written the draft before omission of tool defaults
  * @returns source-ordered owned blocks and separately anchored free prose
  */
+// eslint-disable-next-line sonarjs/cognitive-complexity -- reason: Keep exact physical comments on their surviving semantic owner before records merge or move.
 export function keptComments(syntax: TomlSyntax, target: TomlTable, written: TomlTable): TomlComments {
     const comments: TomlComments = new Map();
     for (const { comment, anchor: owner } of listAnchoredComments(syntax)) {
         if (METADATA_PREFIXES.some((prefix) => comment.raw.startsWith(prefix))) {
             if (comment.raw.startsWith(TEMPLATE_COMMENT_PREFIX))
-                addTomlComment(comments, 'provenance', [], comment, 'owned');
+                addTomlComment(comments, { kind: 'provenance', path: [], comment, placement: 'owned' });
             continue;
         }
         if (owner !== undefined) {
             const mapped = commentTarget(syntax, target, written, owner);
-            addTomlComment(comments, mapped.kind, mapped.path, comment, 'owned');
+            addTomlComment(comments, {
+                kind: mapped.kind,
+                path: mapped.path,
+                comment,
+                placement: mapped.kind === 'preamble' ? 'free' : 'owned',
+            });
             continue;
         }
         const next = syntax.entries.find(
@@ -105,7 +111,7 @@ export function keptComments(syntax: TomlSyntax, target: TomlTable, written: Tom
                 destinations(syntax, target, entry.path).length > 0,
         );
         const anchor = commentTarget(syntax, target, written, next ?? { kind: 'preamble', path: [] });
-        addTomlComment(comments, anchor.kind, anchor.path, comment, 'free');
+        addTomlComment(comments, { kind: anchor.kind, path: anchor.path, comment, placement: 'free' });
     }
     return comments;
 }

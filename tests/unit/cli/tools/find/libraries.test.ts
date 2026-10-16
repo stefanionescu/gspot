@@ -118,7 +118,7 @@ test('a system library is read from the chosen project, not from the tool projec
             },
             tool,
         ),
-    ).toThrow('package.json is not valid JSON. Fix the file, then run gspot apply.');
+    ).toThrow('package.json is not valid JSON. Fix the file.');
 });
 
 test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $name report as $state', async (report) => {
@@ -208,9 +208,7 @@ test.each([...PACKAGE_METADATA_FAILURES])(
             inspections: new Map(),
         };
         const tool = buildLibraryPin('teller', '5.0.1');
-        expect(() => inspectTool(context, tool)).toThrow(
-            `${path} is not valid JSON. Fix the file, then run gspot apply.`,
-        );
+        expect(() => inspectTool(context, tool)).toThrow(`${path} is not valid JSON. Fix the file.`);
         expect(await Bun.file(path).text()).toBe(original);
         await Bun.write(path, '{"name":"teller","version":"5.0.1"}');
         expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });

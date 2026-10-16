@@ -76,7 +76,6 @@
         "zod": "4.6.2"
     },
     "devDependencies": {
-        "@bacons/xcode": "1.0.0-alpha.33",
         "@pgsql/types": "18.0.0",
         "@types/npmcli__config": "6.0.4",
         "@types/picomatch": "4.0.2",

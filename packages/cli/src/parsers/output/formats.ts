@@ -1,18 +1,26 @@
 // Defines tool-output formats and validates their declarations.
 import { z } from 'zod';
 import { realpathSync } from 'node:fs';
-import { isAbsolute } from 'node:path';
+import { posix, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { DRIVE_LETTER } from '#cli/config/system/paths.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseJsonFindings } from '#cli/parsers/output/json.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseKnipFindings } from '#cli/parsers/output/knip.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseSarifFindings } from '#cli/parsers/output/sarif.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseTyposFindings } from '#cli/parsers/output/typos.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseSemgrepFindings } from '#cli/parsers/output/semgrep.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseTrufflehogFindings } from '#cli/parsers/output/trufflehog.ts';
 import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseMarkdownlintFindings } from '#cli/parsers/output/markdownlint.ts';
 import { parseRegexFindings, parseGroupedFindings } from '#cli/parsers/output/text.ts';
 
@@ -42,84 +50,59 @@ function stripRoot(root: string, file: string): string {
         const realFile = convertToPosixPath(realpathSync.native(file));
         return realFile.startsWith(realRoot) ? realFile.slice(realRoot.length) : file;
     } catch (error) {
-        if (new Set<string | undefined>(MISSING_PATH_CODES).has((error as NodeJS.ErrnoException).code)) return file;
+        if (MISSING_PATH_CODES.has((error as NodeJS.ErrnoException).code ?? '')) return file;
         throw error;
     }
 }
 
 function hasFilePaths(output: OutputSpec): boolean {
     return (
-        (output.file_type ?? 'path') === 'path' &&
+        output.file_type === 'path' &&
         (output.pattern === undefined ? output.fields?.file !== undefined : output.pattern.includes(FILE_GROUP))
     );
 }
 
-/** The parser and process-result rules for each supported output format. */
+/**
+ * Parse and validate a report without exposing its untrusted contents in errors.
+ * @param tool the tool that produced the invalid output.
+ * @param text the JSON report.
+ * @param schema the report's contract.
+ * @returns the validated report.
+ */
+export function parseReport<Value>(tool: string, text: string, schema: z.ZodType<Value>): Value {
+    try {
+        return schema.parse(JSON.parse(text));
+    } catch {
+        throw new GspotError('output', `${tool} returned invalid structured findings.`);
+    }
+}
+
+/** The reader and process-result rules for every supported output format. */
 export const outputFormats = {
-    none: {
-        read: () => [],
-        namesFiles: () => false,
-        redactsOutput: false,
-    },
+    none: { read: () => [], namesFiles: () => false, redactsOutput: false },
     json: {
-        read: ({ check, stdout }, output) => parseJsonFindings(check.name, output, stdout, check.help),
-        namesFiles: (output) => (output.file_type ?? 'path') === 'path' && output.fields?.file !== undefined,
+        read: parseJsonFindings,
+        namesFiles: (output) => output.file_type === 'path' && output.fields?.file !== undefined,
         redactsOutput: false,
     },
-    sarif: {
-        read: ({ check, stdout, root }) => {
-            try {
-                return parseSarifFindings(JSON.parse(stdout), check.name, check.help, root);
-            } catch (error) {
-                throw new GspotError('output', 'The tool returned an invalid SARIF report.', { cause: error });
-            }
-        },
-        namesFiles: () => true,
-        redactsOutput: false,
-    },
-    trufflehog: {
-        read: ({ check, stdout }) => parseTrufflehogFindings(check.name, stdout, check.help),
-        namesFiles: () => false,
-        redactsOutput: true,
-    },
-    typos: {
-        read: ({ check, stdout, root, cwd }) => parseTyposFindings(check.name, stdout, check.help, root, cwd),
-        namesFiles: () => true,
-        redactsOutput: false,
-    },
-    markdownlint: {
-        read: ({ check, stdout, root, cwd }) => parseMarkdownlintFindings(check.name, stdout, check.help, root, cwd),
-        namesFiles: () => true,
-        redactsOutput: false,
-    },
-    knip: {
-        read: ({ check, stdout }) => parseKnipFindings(check.name, stdout, check.help),
-        namesFiles: () => true,
-        redactsOutput: false,
-    },
-    semgrep: {
-        read: ({ check, stdout }) => parseSemgrepFindings(check.name, stdout, check.help),
-        namesFiles: () => true,
-        redactsOutput: false,
-    },
+    sarif: { read: parseSarifFindings, namesFiles: () => true, redactsOutput: false },
+    trufflehog: { read: parseTrufflehogFindings, namesFiles: () => false, redactsOutput: true },
+    typos: { read: parseTyposFindings, namesFiles: () => true, redactsOutput: false },
+    markdownlint: { read: parseMarkdownlintFindings, namesFiles: () => true, redactsOutput: false },
+    knip: { read: parseKnipFindings, namesFiles: () => true, redactsOutput: false },
+    semgrep: { read: parseSemgrepFindings, namesFiles: () => true, redactsOutput: false },
     lines: {
-        read: ({ check, text }) =>
+        read: ({ check, text, help }) =>
             text
                 .split('\n')
                 .map((line) => line.trim())
                 .filter((line) => line !== '')
-                .map((line) => ({ check: check.name, file: '', message: line, help: check.help, fixable: false })),
+                .map((line) => ({ check, file: '', message: line, help, fixable: false })),
         namesFiles: () => false,
         redactsOutput: false,
     },
-    regex: {
-        namesFiles: hasFilePaths,
-        redactsOutput: false,
-    },
-    grouped: {
-        namesFiles: hasFilePaths,
-        redactsOutput: false,
-    },
+    regex: { read: parseRegexFindings, namesFiles: hasFilePaths, redactsOutput: false },
+    grouped: { read: parseGroupedFindings, namesFiles: hasFilePaths, redactsOutput: false },
 } satisfies Record<OutputSpec['format'], OutputDescriptor>;
 
 /**
@@ -136,25 +119,24 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
     const output = check.output;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`);
-    let findings: Finding[];
-    switch (output.format) {
-        case 'regex': {
-            findings = parseRegexFindings(check.name, output, text, check.help);
-            break;
-        }
-        case 'grouped': {
-            findings = parseGroupedFindings(check.name, output, text, check.help);
-            break;
-        }
-        default: {
-            findings = outputFormats[output.format].read({ check, stdout, text, root, cwd }, output);
-        }
-    }
-    return findings.map((finding) => ({
-        ...finding,
-        fixable: check.fix !== undefined && finding.fixable,
-        file: stripRoot(nativeRoot, convertToPosixPath(finding.file)),
-    }));
+    const findings = outputFormats[output.format].read({
+        check: check.name,
+        help: check.help,
+        output,
+        stdout,
+        text,
+        root,
+        cwd,
+    });
+    return findings.map((finding) => {
+        const formatted = { ...finding, fixable: check.fix !== undefined && finding.fixable };
+        if (output.file_type !== 'path' || finding.file === '') return formatted;
+        const file = normalizeOutputPath(finding.file);
+        const absolute =
+            isAbsolute(file) || DRIVE_LETTER.test(file) ? file : posix.join(normalizeOutputPath(cwd), file);
+        formatted.file = stripRoot(nativeRoot, absolute);
+        return formatted;
+    });
 }
 
 // Output parsing metadata shared by configuration and command checks.
@@ -195,7 +177,7 @@ export const outputSchema = z
             z.union([z.literal(0), z.literal(1)]) satisfies z.ZodType<NonNullable<OutputInput['line_base']>>
         ).optional(),
         // Paths in the repository, link targets, and paths in past commits have different existence requirements.
-        file_type: z.enum(OUTPUT_FILE_TYPES).optional(),
+        file_type: z.enum(OUTPUT_FILE_TYPES).default('path'),
         fields: z
             .strictObject({
                 file: z.string().optional(),
@@ -210,7 +192,7 @@ export const outputSchema = z
         file_pattern: z.string().optional(),
         fixable: z.string().optional(),
         message: z.string().optional(),
-    } satisfies SchemaShape<OutputInput>)
+    } satisfies SchemaShape<OutputInput & Pick<OutputSpec, 'file_type'>>)
     .transform((output): OutputSpec => {
         switch (output.format) {
             case 'regex': {

@@ -1,11 +1,11 @@
 // Reads secret findings from TruffleHog reports.
-// Reads secret findings from TruffleHog reports.
 import { z } from 'zod';
-import { GspotError } from '#cli/system/errors.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
+import { parseReport } from '#cli/parsers/output/formats.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
-import type { TrufflehogResult } from '#cli/types/parsers/output.ts';
+import { type ReportInput, type TrufflehogResult } from '#cli/types/parsers/output.ts';
 
 const trufflehogResultSchema = z.object({
     DetectorName: z.string().min(1),
@@ -22,18 +22,18 @@ const trufflehogResultSchema = z.object({
 } satisfies SchemaShape<TrufflehogResult>);
 /**
  * Findings from TruffleHog's verified results, one per credential, without the secret itself.
- * @param check the check ID.
- * @param stdout the JSON lines TruffleHog printed.
- * @param help the check's help text.
+ * @param input the check, report text, source paths, and output declaration.
  * @returns the findings.
  */
-export function parseTrufflehogFindings(check: string, stdout: string, help: string): Finding[] {
-    const findings: Finding[] = [];
-    for (const line of stdout.split('\n').filter((line) => line.trim() !== '')) {
-        try {
-            const result = trufflehogResultSchema.parse(JSON.parse(line));
+export function parseTrufflehogFindings(input: ReportInput): Finding[] {
+    const { check, stdout, help } = input;
+    return stdout
+        .split('\n')
+        .filter((line) => line.trim() !== '')
+        .map((line) => {
+            const result = parseReport('TruffleHog', line, trufflehogResultSchema);
             const metadata = result.SourceMetadata.Data.Git;
-            findings.push({
+            return {
                 check,
                 file: metadata.file,
                 line: metadata.line,
@@ -41,10 +41,6 @@ export function parseTrufflehogFindings(check: string, stdout: string, help: str
                 message: `Verified ${result.DetectorName} credential in commit ${metadata.commit}.`,
                 help,
                 fixable: false,
-            });
-        } catch {
-            throw new GspotError('output', 'TruffleHog returned invalid structured findings; raw output was withheld.');
-        }
-    }
-    return findings;
+            };
+        });
 }

@@ -1,11 +1,11 @@
 // Reads findings from declared JSON fields.
-import { isAbsolute } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
+import { z } from 'zod';
 import { getValueAt } from '#cli/system/values.ts';
 import { JSON_START } from '#cli/config/parsers/output.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
+import { parseReport } from '#cli/parsers/output/formats.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
-import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
-import type { OutputSpec, JsonFindingSpec } from '#cli/types/parsers/output.ts';
+import { type ReportInput, type JsonFindingSpec } from '#cli/types/parsers/output.ts';
 
 // Findings from a tool that prints JSON: the manifest names the list location and the field for each value.
 
@@ -58,7 +58,7 @@ function buildFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
     const file = getField('file') ?? '';
     const finding: Finding = {
         check,
-        file: isAbsolute(file) ? convertToPosixPath(file) : normalizeOutputPath(file),
+        file,
         message: message,
         help,
         fixable: getFieldValues('fixable').some((entries) => entries.some((value) => value !== undefined)),
@@ -72,23 +72,18 @@ function buildFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
 /**
  * Reads JSON findings from the dotted `items` path. Each `children` key descends into another nested list. Missing leaf fields inherit from ancestor nodes.
  *
- * @param check the check id.
- * @param output the output table of the manifest.
- * @param stdout what the tool printed.
- * @param help the fix text of the check.
+ * @param input the check, report text, source paths, and output declaration.
  * @returns the findings from a valid report.
  */
-export function parseJsonFindings(check: string, output: OutputSpec, stdout: string, help: string): Finding[] {
-    try {
-        const start = stdout.search(JSON_START);
-        if (start === -1) throw new Error('The tool returned no JSON report.');
-        const parsed: unknown = JSON.parse(stdout.slice(start));
+export function parseJsonFindings(input: ReportInput): Finding[] {
+    const { check, output, stdout, help } = input;
+    const start = stdout.search(JSON_START);
+    const schema = z.unknown().transform((parsed) => {
         const shape = { check, help, output };
         const keys = output.children === undefined ? [] : output.children.split('.');
         return listAt(parsed, output.items).flatMap((item) =>
             listChains([item], keys).map((chain) => buildFinding(shape, chain)),
         );
-    } catch (error) {
-        throw new GspotError('output', 'The tool returned an invalid JSON report.', { cause: error });
-    }
+    }) satisfies z.ZodType<Finding[]>;
+    return parseReport('JSON', stdout.slice(start), schema);
 }

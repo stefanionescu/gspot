@@ -246,7 +246,7 @@ test('at level recommended, init keeps the tool files of checks that are off', a
     const awaitedSession = await openSession(sandbox.path);
     const project = parseToolProject(
         await Bun.file(join(sandbox.path, '.gspot/package.json')).text(),
-        awaitedSession.npmClient()!,
+        awaitedSession.requirePackageManager().name,
     );
     expect(project.dependencies).not.toHaveProperty('@commitlint/cli');
     expect(project.dependencies).not.toHaveProperty('syncpack');

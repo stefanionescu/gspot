@@ -38,7 +38,7 @@ test('a check command runs with a tool file that is a link inside the repository
     planned.check = {
         ...planned.check,
         command: [process.execPath, '-e', 'process.exitCode = 0'],
-        output: { format: 'lines' },
+        output: { format: 'lines', file_type: 'path' },
     };
     planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
     const result = await runCheckCommand(session, planned, BUILT_IN_CHECKS['swift/swiftlint']);

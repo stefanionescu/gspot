@@ -1,14 +1,25 @@
 import { test, expect } from 'bun:test';
-import { parseOutput } from '#cli/parsers/output/formats.ts';
 import { parseJsonFindings } from '#cli/parsers/output/json.ts';
+import { parseOutput, outputSchema } from '#cli/parsers/output/formats.ts';
 
 test('a flat JSON list maps its fields to a finding', () => {
     const stdout = JSON.stringify([{ path: 'nginx.conf', line: 9, plugin: 'ssrf', summary: 'Possible SSRF.' }]);
     const output = {
         format: 'json' as const,
+        file_type: 'path' as const,
         fields: { file: 'path', line: 'line', rule: 'plugin', message: 'summary' },
     };
-    expect(parseJsonFindings('nginx/gixy', output, stdout, 'help')).toStrictEqual([
+    expect(
+        parseJsonFindings({
+            check: 'nginx/gixy',
+            output: outputSchema.parse(output),
+            stdout: stdout,
+            text: stdout,
+            help: 'help',
+            root: process.cwd(),
+            cwd: process.cwd(),
+        }),
+    ).toStrictEqual([
         {
             check: 'nginx/gixy',
             file: 'nginx.conf',
@@ -27,11 +38,20 @@ test('a nested list reads the file from the item and the rest from the child', (
     })}`;
     const output = {
         format: 'json' as const,
+        file_type: 'path' as const,
         items: 'files',
         children: 'violations',
         fields: { file: 'filepath', line: 'start_line_no', rule: 'code', message: 'description' },
     };
-    const [finding] = parseJsonFindings('sql/sqlfluff', output, stdout, 'help');
+    const [finding] = parseJsonFindings({
+        check: 'sql/sqlfluff',
+        output: outputSchema.parse(output),
+        stdout: stdout,
+        text: stdout,
+        help: 'help',
+        root: process.cwd(),
+        cwd: process.cwd(),
+    });
     expect([finding?.file, finding?.line, finding?.rule]).toStrictEqual(['a.sql', 3, 'LT01']);
 });
 
@@ -45,6 +65,7 @@ test.each([
     (name, extra, expected) => {
         const output = {
             format: 'json' as const,
+            file_type: 'path' as const,
             children: 'messages',
             fields: { file: 'filePath', message: 'message', fixable: 'fix' },
         };
@@ -62,10 +83,19 @@ test('a tool that counts lines from zero names its line base', () => {
     const stdout = JSON.stringify([{ file: 'a.sql', line: 0, column: 18, rule_name: 'r', message: 'm' }]);
     const output = {
         format: 'json' as const,
+        file_type: 'path' as const,
         line_base: 0 as const,
         fields: { file: 'file', line: 'line', column: 'column', rule: 'rule_name', message: 'message' },
     };
-    const [finding] = parseJsonFindings('postgres/squawk', output, stdout, 'help');
+    const [finding] = parseJsonFindings({
+        check: 'postgres/squawk',
+        output: outputSchema.parse(output),
+        stdout: stdout,
+        text: stdout,
+        help: 'help',
+        root: process.cwd(),
+        cwd: process.cwd(),
+    });
     expect([finding?.line, finding?.column]).toStrictEqual([1, 19]);
 });
 
@@ -85,11 +115,20 @@ test('lists nested two levels down read the file from the top and join several m
     });
     const output = {
         format: 'json' as const,
+        file_type: 'path' as const,
         items: 'results',
         children: 'packages.vulnerabilities',
         fields: { file: 'source.path', rule: 'id', message: 'package.name package.version summary' },
     };
-    const [finding] = parseJsonFindings('dependencies/osv', output, stdout, 'help');
+    const [finding] = parseJsonFindings({
+        check: 'dependencies/osv',
+        output: outputSchema.parse(output),
+        stdout: stdout,
+        text: stdout,
+        help: 'help',
+        root: process.cwd(),
+        cwd: process.cwd(),
+    });
     expect([finding?.file, finding?.rule, finding?.message]).toStrictEqual([
         'bun.lock',
         'GHSA-1',
@@ -98,24 +137,45 @@ test('lists nested two levels down read the file from the top and join several m
 });
 
 test.each(['', '{ broken', '{"items":null}'])('an invalid JSON report is refused: %s', (stdout) => {
-    expect(() => parseJsonFindings('x/y', { format: 'json', items: 'items' }, stdout, 'help')).toThrow(
-        'The tool returned an invalid JSON report.',
-    );
+    expect(() =>
+        parseJsonFindings({
+            check: 'x/y',
+            output: outputSchema.parse({ format: 'json', items: 'items' }),
+            stdout: stdout,
+            text: stdout,
+            help: 'help',
+            root: process.cwd(),
+            cwd: process.cwd(),
+        }),
+    ).toThrow('JSON returned invalid structured findings.');
 });
 
 test('an empty report has no findings, and missing nested lists are refused', () => {
-    expect(parseJsonFindings('x/y', { format: 'json' }, '[]', 'help')).toStrictEqual([]);
+    expect(
+        parseJsonFindings({
+            check: 'x/y',
+            output: outputSchema.parse({ format: 'json' }),
+            stdout: '[]',
+            text: '[]',
+            help: 'help',
+            root: process.cwd(),
+            cwd: process.cwd(),
+        }),
+    ).toStrictEqual([]);
     for (const output of [
         { format: 'json' as const },
-        { format: 'json' as const, fields: { message: 'message' } },
-        { format: 'json' as const, children: 'messages' },
+        { format: 'json' as const, file_type: 'path' as const, fields: { message: 'message' } },
+        { format: 'json' as const, file_type: 'path' as const, children: 'messages' },
     ])
         expect(() =>
-            parseJsonFindings(
-                'x/y',
-                output,
-                output.fields === undefined && output.children === undefined ? '[null]' : '[{}]',
-                'help',
-            ),
-        ).toThrow('The tool returned an invalid JSON report.');
+            parseJsonFindings({
+                check: 'x/y',
+                output: outputSchema.parse(output),
+                stdout: output.fields === undefined && output.children === undefined ? '[null]' : '[{}]',
+                text: output.fields === undefined && output.children === undefined ? '[null]' : '[{}]',
+                help: 'help',
+                root: process.cwd(),
+                cwd: process.cwd(),
+            }),
+        ).toThrow('JSON returned invalid structured findings.');
 });

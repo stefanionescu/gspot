@@ -20,7 +20,6 @@ import {
     BLOCK_COMMENT_END,
     YAML_SCALAR_TOKENS,
     SCSS_COMMENT_OPENERS,
-    TREE_COMMENT_LANGUAGES,
     HTML_ALTERNATE_COMMENT_END,
 } from '#cli/config/parsers/comments.ts';
 
@@ -66,7 +65,7 @@ function parseJavascriptComments(text: string, path: string): SourceComment[] {
 function findCommentStart(line: string, openers: readonly string[]): number | undefined {
     for (let at = 0; at < line.length; ) {
         if (openers.some((opener) => line.startsWith(opener, at))) return at;
-        if (new Set<string>(QUOTE_CHARACTERS).has(line.charAt(at))) at = findQuotedEnd(line, at);
+        if (QUOTE_CHARACTERS.has(line.charAt(at))) at = findQuotedEnd(line, at);
         else at += 1;
     }
     return undefined;
@@ -89,7 +88,7 @@ function parseYamlComments(text: string): SourceComment[] {
     let isScalar = false;
     for (const token of new Lexer().lex(text)) {
         const kind = CST.tokenType(token);
-        if (!isScalar && new Set<string | undefined>(YAML_SCALAR_TOKENS).has(kind ?? '')) {
+        if (!isScalar && YAML_SCALAR_TOKENS.has(kind ?? '')) {
             isScalar = kind === 'scalar';
             continue;
         }
@@ -134,10 +133,10 @@ function parseTomlComments(text: string): SourceComment[] {
     });
 }
 
-async function parseGrammarComments(grammar: GrammarName, text: string, source: string): Promise<SourceComment[]> {
-    // Preserve offsets when the HTML grammar reads the alternate comment terminator.
-    const parsed = grammar === 'html' ? source.replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->') : source;
-    const tree = await parseSource(grammar, parsed);
+// The HTML parse of Markdown keeps original prose for standalone-comment classification.
+async function parseMarkdownComments(text: string): Promise<SourceComment[]> {
+    const source = extractMarkdownHtml(text).replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->');
+    const tree = await parseSource('html', source);
     try {
         return tree.rootNode
             .descendantsOfType([...COMMENT_NODES])
@@ -163,17 +162,36 @@ const COMMENT_READERS = new Map<string, CommentReader>([
     ['.pgsql', parseSqlComments],
     ['.psql', parseSqlComments],
     ['.scss', parseScssComments],
-    ['.py', (text) => parseGrammarComments('python', text, text)],
-    ['.sh', (text) => parseGrammarComments('bash', text, text)],
-    ['.bash', (text) => parseGrammarComments('bash', text, text)],
-    ['.zsh', (text) => parseGrammarComments('bash', text, text)],
-    ['.swift', (text) => parseGrammarComments('swift', text, text)],
-    ['.html', (text) => parseGrammarComments('html', text, text)],
-    ['.htm', (text) => parseGrammarComments('html', text, text)],
-    ['.md', (text) => parseGrammarComments('html', text, extractMarkdownHtml(text))],
-    ['.mdx', (text) => parseGrammarComments('html', text, extractMarkdownHtml(text))],
-    ['.css', (text) => parseGrammarComments('css', text, text)],
+    ['.py', parseGrammarComments.bind(undefined, 'python')],
+    ['.sh', parseGrammarComments.bind(undefined, 'bash')],
+    ['.bash', parseGrammarComments.bind(undefined, 'bash')],
+    ['.zsh', parseGrammarComments.bind(undefined, 'bash')],
+    ['.swift', parseGrammarComments.bind(undefined, 'swift')],
+    ['.html', parseGrammarComments.bind(undefined, 'html')],
+    ['.htm', parseGrammarComments.bind(undefined, 'html')],
+    ['.md', parseMarkdownComments],
+    ['.mdx', parseMarkdownComments],
+    ['.css', parseGrammarComments.bind(undefined, 'css')],
 ]);
+
+/**
+ * Read comments in one explicit grammar.
+ * @param grammar the parser grammar.
+ * @param text the source text.
+ * @returns comments in source order.
+ */
+export async function parseGrammarComments(grammar: GrammarName, text: string): Promise<SourceComment[]> {
+    // Preserve offsets when the HTML grammar reads the alternate comment terminator.
+    const parsed = grammar === 'html' ? text.replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->') : text;
+    const tree = await parseSource(grammar, parsed);
+    try {
+        return tree.rootNode
+            .descendantsOfType([...COMMENT_NODES])
+            .map((node) => buildComment(text, node.startIndex, node.endIndex, node.startPosition.row + 1));
+    } finally {
+        tree.delete();
+    }
+}
 
 /**
  * Skip a quoted span before looking for comment openers outside it.
@@ -203,13 +221,11 @@ export function stripCommentEnd(text: string): string {
 
 /**
  * Read comment text and line locations for suppression discovery.
- * @param path the source path or grammar name that selects its syntax.
+ * @param path the source path that selects its syntax.
  * @param text the source text.
  * @returns comments in source order, with whether each occupies its line alone.
  */
 export async function parseComments(path: string, text: string): Promise<SourceComment[]> {
-    const grammar = TREE_COMMENT_LANGUAGES.find((language) => language === path);
-    if (grammar !== undefined) return parseGrammarComments(grammar, text, text);
     const reader = COMMENT_READERS.get(extractExtension(path));
     return reader === undefined ? [] : reader(text, path);
 }

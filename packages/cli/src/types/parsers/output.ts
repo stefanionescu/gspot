@@ -1,7 +1,13 @@
 import type { Finding } from '#cli/types/execution/check.ts';
 import type { OUTPUT_FILE_TYPES, KNIP_ISSUE_CATEGORIES, MARKDOWNLINT_SEVERITIES } from '#cli/config/parsers/output.ts';
 
-type Parsing = OutputPaths & { check: ParsingCheck; stdout: string; text: string };
+export type ReportInput = OutputPaths & {
+    check: string;
+    help: string;
+    stdout: string;
+    text: string;
+    output: OutputSpec;
+};
 
 /** The output table accepted by configuration and command checks. */
 export type OutputInput = {
@@ -38,8 +44,9 @@ export type OutputInput = {
 };
 
 /** Output patterns after the parsing schema supplies each format's defaults. */
-export type OutputSpec = Omit<OutputInput, 'format' | 'pattern' | 'file_pattern'> &
-    (
+export type OutputSpec = Omit<OutputInput, 'format' | 'pattern' | 'file_pattern' | 'file_type'> & {
+    file_type: (typeof OUTPUT_FILE_TYPES)[number];
+} & (
         | { format: 'regex'; pattern: string; file_pattern?: string | undefined }
         | { format: 'grouped'; pattern: string; file_pattern: string }
         | {
@@ -91,7 +98,7 @@ export type JsonFindingSpec = { check: string; help: string; output: OutputSpec 
 
 /** One format's parser, source-file checks and protection of captured output. */
 export type OutputDescriptor = {
-    read?: (parsing: Parsing, output: OutputSpec) => Finding[];
+    read: (input: ReportInput) => Finding[];
     namesFiles: (output: OutputSpec) => boolean;
     redactsOutput: boolean;
 };

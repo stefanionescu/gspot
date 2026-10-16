@@ -23,7 +23,7 @@ export function parseJsonFile(path: string, source: string, schema?: z.ZodType):
         if (!isRecord(value)) throw new Error('JSON configuration must contain an object.');
         return schema === undefined ? value : schema.parse(value);
     } catch (error) {
-        throw new Error(`${path} is not valid JSON. Fix the file, then run gspot apply.`, { cause: error });
+        throw new Error(`${path} is not valid JSON. Fix the file.`, { cause: error });
     }
 }
 

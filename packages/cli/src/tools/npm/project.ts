@@ -10,6 +10,7 @@ import type { Files } from '#cli/types/system/files.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { readContainedPath } from '#cli/system/files/reads.ts';
+import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
 import { REINSTALL_HINT } from '#cli/config/tools/diagnostics.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
@@ -18,15 +19,20 @@ import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 import { toolVersionState, parseVersionOutput } from '#cli/tools/versions.ts';
-import { isYarnBerry, npmClientMajor } from '#cli/tools/npm/package-manager.ts';
 import { lockfileMatches, stripRegistryUrls } from '#cli/tools/npm/lockfiles.ts';
 import { parseToolProject, selectLockfileName } from '#cli/tools/npm/tool-project.ts';
 import { rmSync, existsSync, realpathSync, readFileSync, writeFileSync } from 'node:fs';
 import { installationDiagnostics, assertCredentialFreeLockfile } from '#cli/tools/diagnostics.ts';
 import { writeNpmrc, registryEnvironment, registryCredentials } from '#cli/tools/npm/registry.ts';
 import { DOT_GSPOT, NPM_TOOL_PROJECT_FILE, NODE_MODULES_DIRECTORY } from '#cli/config/system/locations.ts';
-import type { NpmClientRun, NpmToolProject, NpmClientCommands, NpmClientExecution } from '#cli/types/tools/project.ts';
 
+import {
+    type NpmClientRun,
+    type NpmPreparation,
+    type NpmToolProject,
+    type NpmClientCommands,
+    type NpmClientExecution,
+} from '#cli/types/tools/project.ts';
 import {
     NODE_TOOL,
     NPMRC_FILE,
@@ -43,11 +49,12 @@ async function resolveNpmLockfile(
     manifest: GeneratedFile,
     project: NpmToolProject,
     recorded: string | undefined,
-    preparation: Pick<Session, 'root' | 'timeoutSeconds'>,
+    preparation: NpmPreparation,
     yarn: string | undefined,
     steps: (readonly string[])[],
 ): Promise<string> {
     const { root, timeoutSeconds } = preparation;
+    const client = preparation.requirePackageManager();
     if (which.sync(NODE_TOOL, { nothrow: true }) === null)
         throw new GspotError(
             'installation',
@@ -58,23 +65,23 @@ async function resolveNpmLockfile(
     writeFileSync(join(work, PACKAGE_JSON), manifest.content);
 
     if (yarn !== undefined) writeFileSync(join(work, '.yarnrc.yml'), yarn);
-    if (recorded !== undefined && lockfileMatches(project.npmClient.name, recorded, project.dependencies))
+    if (recorded !== undefined && lockfileMatches(client.name, recorded, project.dependencies))
         writeFileSync(join(work, project.lockfile), recorded);
     const env = await runNpmClient({
         root,
         work,
-        client: project.npmClient,
-        argv: npmClientCommands(project.npmClient).lockfile,
+        client: client,
+        argv: npmClientCommands(client).lockfile,
         failure: 'lockfile resolution failed',
         timeoutSeconds,
         steps,
     });
-    stripRegistryUrls(work, project.npmClient, env);
+    stripRegistryUrls(work, client, env);
     const lockfile = readFileSync(join(work, project.lockfile), 'utf8');
-    if (!lockfileMatches(project.npmClient.name, lockfile, project.dependencies))
+    if (!lockfileMatches(client.name, lockfile, project.dependencies))
         throw new GspotError(
             'installation',
-            `${project.npmClient.name} produced a mismatched tool lockfile. Existing files were preserved.`,
+            `${client.name} produced a mismatched tool lockfile. Existing files were preserved.`,
         );
     return lockfile;
 }
@@ -205,7 +212,7 @@ async function runNpmClient(request: NpmClientExecution): Promise<NpmClientRun> 
  * @returns nothing.
  */
 function assertNpmClientVersion(client: NpmClient, version: SpawnResult): void {
-    const requirement = `${String(npmClientMajor(client))}.x`;
+    const requirement = `${String(semver.major(client.version))}.x`;
     if (version.code !== 0 || !semver.satisfies(version.stdout.trim(), requirement, { includePrerelease: true }))
         throw new GspotError(
             'tool',
@@ -227,18 +234,19 @@ function assertNpmClientVersion(client: NpmClient, version: SpawnResult): void {
 async function prepareNpmLockfile(
     manifest: GeneratedFile,
     owner: Pick<Files, 'read'>,
-    preparation: Pick<Session, 'root' | 'npmClient' | 'timeoutSeconds'>,
+    preparation: Pick<Session, 'root' | 'requirePackageManager' | 'timeoutSeconds'>,
     yarn: string | undefined,
     steps: (readonly string[])[],
 ): Promise<GeneratedFile> {
     const { root } = preparation;
-    const project = parseToolProject(manifest.content, preparation.npmClient() as NpmClient);
+    const client = preparation.requirePackageManager();
+    const project = parseToolProject(manifest.content, preparation.requirePackageManager().name);
     const original = owner.read(project.lockfilePath);
     const recorded = original?.bytes.toString('utf8');
     if (
         owner.read(NPM_TOOL_PROJECT_FILE)?.bytes.equals(Buffer.from(manifest.content)) === true &&
         recorded !== undefined &&
-        lockfileMatches(project.npmClient.name, recorded, project.dependencies)
+        lockfileMatches(client.name, recorded, project.dependencies)
     ) {
         assertCredentialFreeLockfile(
             recorded,
@@ -275,7 +283,7 @@ async function prepareNpmLockfile(
  * @returns the installation summary.
  */
 async function installNpmTools(
-    session: Pick<Session, 'root' | 'npmClient' | 'timeoutSeconds'>,
+    session: Pick<Session, 'root' | 'requirePackageManager' | 'timeoutSeconds'>,
     owner: Pick<Files, 'read' | 'removeTree'>,
     tools: Iterable<ToolDeclaration>,
     steps: (readonly string[])[],
@@ -283,27 +291,28 @@ async function installNpmTools(
     const { root, timeoutSeconds } = session;
     const manifest = owner.read(NPM_TOOL_PROJECT_FILE);
     if (manifest === undefined) return '';
-    const project = parseToolProject(manifest.bytes.toString('utf8'), session.npmClient() as NpmClient);
+    const client = session.requirePackageManager();
+    const project = parseToolProject(manifest.bytes.toString('utf8'), session.requirePackageManager().name);
     const lockfile = owner.read(project.lockfilePath)?.bytes.toString('utf8');
-    if (lockfile === undefined || !lockfileMatches(project.npmClient.name, lockfile, project.dependencies))
+    if (lockfile === undefined || !lockfileMatches(client.name, lockfile, project.dependencies))
         throw new GspotError('installation', 'Run: gspot install');
-    const versionCommand = [project.npmClient.name, VERSION_FLAG];
+    const versionCommand = [client.name, VERSION_FLAG];
     steps.push(versionCommand);
     const version = await runTool(versionCommand, { cwd: root, timeoutSeconds });
-    assertNpmClientVersion(project.npmClient, version);
+    assertNpmClientVersion(client, version);
     owner.removeTree(NODE_MODULES_DIRECTORY);
     const work = join(root, DOT_GSPOT);
     await runNpmClient({
         root,
         work,
-        client: project.npmClient,
-        argv: npmClientCommands(project.npmClient).install,
+        client: client,
+        argv: npmClientCommands(client).install,
         failure: 'installation failed',
         timeoutSeconds,
         steps,
     });
     await runNpmWrappersOnce(work, project.dependencies, tools, timeoutSeconds, steps);
-    return `installed locked npm tools under .gspot/node_modules with ${project.npmClient.name}@${project.npmClient.version}`;
+    return `installed locked npm tools under .gspot/node_modules with ${client.name}@${client.version}`;
 }
 
 export { installNpmTools, prepareNpmLockfile };

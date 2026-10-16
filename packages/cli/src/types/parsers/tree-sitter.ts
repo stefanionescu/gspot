@@ -1,12 +1,13 @@
 import type { Node, Parser } from 'web-tree-sitter';
 import type { ReadCache } from '#cli/types/system/files.ts';
+import type { GRAMMAR_NAMES } from '#cli/config/parsers/tree-sitter.ts';
 
 /** Files with grammars that a check already selected. */
 type ParsedFile = { path: string; grammar: GrammarName };
 
 export type MarkupAttribute = { name: string; value: string; element: string; node: Node };
 
-export type GrammarName = 'typescript' | 'tsx' | 'javascript' | 'bash' | 'python' | 'swift' | 'html' | 'css';
+export type GrammarName = (typeof GRAMMAR_NAMES)[number];
 
 export type ParseCache = { reads: ReadCache; resources?: DisposableStack };
 

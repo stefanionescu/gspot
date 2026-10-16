@@ -32,9 +32,9 @@ export function parseShebang(firstLine: string): string | undefined {
 
 /**
  * Read the declared consumers of one repository lockfile.
- * @param filename the file basename.
+ * @param path the repository-relative file.
  * @returns its metadata, or undefined for an unsupported filename.
  */
-export function findLockfile(filename: string): Lockfile | undefined {
-    return LOCKFILES.find((entry) => entry.file === filename);
+export function findLockfile(path: string): Lockfile | undefined {
+    return LOCKFILES.find((entry) => entry.file === posix.basename(path));
 }

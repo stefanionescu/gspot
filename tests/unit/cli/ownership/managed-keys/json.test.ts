@@ -65,7 +65,7 @@ test.each(['', '[]', 'false', '{"stylelint":', '{ /* comment */ "stylelint": {} 
         using log = openWriter(sandbox.path);
         expect(() =>
             planManagedKeys(log, 'package.json', [{ path: ['stylelint'], value: { extends: './managed.json' } }]),
-        ).toThrow('package.json is not valid JSON. Fix the file, then run gspot apply.');
+        ).toThrow('package.json is not valid JSON. Fix the file.');
         expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(source);
     },
 );

@@ -182,7 +182,7 @@ async function projectChecks(session: Session): Promise<void> {
         runs: 'scope',
         cwd: 'root' as const,
         command: [join(session.root, '.gspot/mock-tsc')],
-        output: { format: 'lines' as const },
+        output: { format: 'lines' as const, file_type: 'path' },
         files: manifest.files,
         fix: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
     };

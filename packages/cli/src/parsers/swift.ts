@@ -35,14 +35,14 @@ export async function detectSwiftTags(path: string, text: string): Promise<strin
             .filter((name) => name !== undefined);
         const attributes = tree.rootNode.descendantsOfType(SWIFT_ATTRIBUTE_NODE);
         const isTest =
-            imports.some((name) => new Set<string | undefined>(SWIFT_TEST_MODULES).has(name)) ||
+            imports.some((name) => SWIFT_TEST_MODULES.has(name)) ||
             attributes.some((node) => {
                 const name = node.namedChildren.find((child) => child.type === SWIFT_TYPE_NODE)?.text;
-                return name !== undefined && new Set<string | undefined>(SWIFT_TEST_ATTRIBUTES).has(name);
+                return name !== undefined && SWIFT_TEST_ATTRIBUTES.has(name);
             });
         const hasTarget = tree.rootNode
             .descendantsOfType(SWIFT_CALL_NODE)
-            .some((node) => new Set<string | undefined>(SWIFT_TEST_TARGET_CALLS).has(node.firstNamedChild?.text));
+            .some((node) => SWIFT_TEST_TARGET_CALLS.has(node.firstNamedChild?.text ?? ''));
         return [
             ...new Set(imports.map((name) => `${SWIFT_IMPORT_TAG}${name}`)),
             ...(isTest ? [SWIFT_TEST_TAG] : []),

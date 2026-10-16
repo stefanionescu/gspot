@@ -72,9 +72,7 @@ function parseBashFunctions(root: Node, codeText: string): ScriptSyntax['functio
         const controls = node
             .descendantsOfType([...BASH_BRANCH_NODES, ...BASH_COMPOUND_NODES])
             .filter((child) => findEnclosingFunction(child)?.id === node.id);
-        const compoundNodes = controls.filter((child) =>
-            new Set<string | undefined>(BASH_COMPOUND_NODES).has(child.type),
-        );
+        const compoundNodes = controls.filter((child) => BASH_COMPOUND_NODES.includes(child.type));
 
         const nesting = Math.max(
             0,
@@ -100,8 +98,7 @@ function parseBashFunctions(root: Node, codeText: string): ScriptSyntax['functio
                 end: node.endPosition.row + 1,
                 body: codeText.slice(body.startIndex + 1, body.endIndex - 1).split('\n'),
                 highestRead: findHighestParameter(node),
-                branches: controls.filter((child) => new Set<string | undefined>(BASH_BRANCH_NODES).has(child.type))
-                    .length,
+                branches: controls.filter((child) => BASH_BRANCH_NODES.includes(child.type)).length,
                 nesting,
                 assignments: node
                     .descendantsOfType('variable_assignment')
@@ -136,7 +133,7 @@ function stripComments(text: string, comments: Node[]): string {
 function isTemporaryValue(assignment: Node): boolean {
     const value = assignment.childForFieldName('value');
     if (value === null) return false;
-    if (!new Set<string | undefined>(TEMPORARY_VALUE_NODES).has(value.type)) return false;
+    if (!TEMPORARY_VALUE_NODES.has(value.type)) return false;
     if (value.namedChildCount !== 1) return false;
     const substitution = [value, ...value.namedChildren].find(
         (candidate) => candidate.type === 'command_substitution' && candidate.namedChildCount === 1,
@@ -201,7 +198,7 @@ function findTemporaryTarget(
 ): TemporaryPath | undefined {
     const references = argument.type === 'string' ? argument.namedChildren : [argument];
     if (references.length !== 1) return undefined;
-    const reference = references.find((node) => new Set<string | undefined>(EXPANSION_NODES).has(node.type));
+    const reference = references.find((node) => EXPANSION_NODES.includes(node.type));
     if (reference === undefined) return undefined;
     const name = reference.namedChildren[0]?.text;
     if (name === undefined) return undefined;

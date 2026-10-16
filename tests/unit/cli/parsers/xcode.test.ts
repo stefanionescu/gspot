@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { parsePbxproj } from '#cli/parsers/xcode.ts';
-import { GROUPED_PBXPROJ, XCODE_PROJECT_REFUSALS } from '#tests/config/xcode.ts';
+import { GROUPED_PBXPROJ, PROJECT_SYNTAX_CASES, XCODE_PROJECT_REFUSALS } from '#tests/config/xcode.ts';
 
 test('the project folder offset and source roots apply separately', () => {
     const source = GROUPED_PBXPROJ.replace('mainGroup = MAIN;', 'mainGroup = MAIN; projectDirPath = ../Code;');
@@ -29,4 +29,11 @@ test('quoted project strings keep escapes and ignore comment-like text', () => {
 
 test.each([...XCODE_PROJECT_REFUSALS])('a project with $name is refused', ({ source, message }) => {
     expect(() => parsePbxproj(source, '/repo')).toThrow(message);
+});
+
+test.each([...PROJECT_SYNTAX_CASES])('the project reader accepts $name', ({ source }) => {
+    expect([...parsePbxproj(source, '/repo').sources]).toStrictEqual([
+        '/repo/First Group/Shared.swift',
+        '/repo/Root.swift',
+    ]);
 });

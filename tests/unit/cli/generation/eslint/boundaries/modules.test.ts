@@ -26,7 +26,7 @@ test.each([...MODULE_CASES])(
         const awaitedSession = await openSession(sandbox.path);
         const packages = parseToolProject(
             await Bun.file(join(sandbox.path, '.gspot/package.json')).text(),
-            awaitedSession.npmClient()!,
+            awaitedSession.requirePackageManager().name,
         );
         const enabled = level === 'all' || declarations !== 'none';
         expect(Object.hasOwn(packages.dependencies, 'eslint-plugin-boundaries')).toBe(enabled);

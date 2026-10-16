@@ -45,16 +45,7 @@ export const packageManagerDeclarationSchema = z.strictObject({
  */
 export function isYarnBerry(installer: NpmClient): boolean {
     if (installer.name !== 'yarn') return false;
-    return npmClientMajor(installer) >= YARN_BERRY_MAJOR;
-}
-
-/**
- * Get the major version from a validated package-manager version.
- * @param installer the validated package manager.
- * @returns the required major version.
- */
-export function npmClientMajor(installer: NpmClient): number {
-    return semver.major(installer.version);
+    return semver.major(installer.version) >= YARN_BERRY_MAJOR;
 }
 
 /**

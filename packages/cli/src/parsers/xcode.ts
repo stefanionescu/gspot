@@ -1,19 +1,88 @@
 // Reads Xcode projects, source groups, and build settings.
-// Reads Xcode projects, source groups, and build settings.
 import { z } from 'zod';
 import { posix } from 'node:path';
-import { parse } from '@bacons/xcode/json';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { SETTING_REFERENCE } from '#cli/config/parsers/xcode.ts';
+import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
 
-import type {
-    Folder,
-    ProjectEntry,
-    XcodeProject,
-    ProjectSources,
-    ProjectMetadata,
-    ProjectBuildSettings,
+import {
+    PROJECT_TOKEN,
+    PROJECT_ESCAPE,
+    PROJECT_ESCAPES,
+    SETTING_REFERENCE,
+    PROJECT_PUNCTUATION,
+} from '#cli/config/parsers/xcode.ts';
+import {
+    type Folder,
+    type ProjectEntry,
+    type XcodeProject,
+    type ProjectTokens,
+    type ProjectSources,
+    type ProjectMetadata,
+    type ProjectBuildSettings,
 } from '#cli/types/parsers/xcode.ts';
+
+function readProjectString(token: string | undefined): string {
+    if (token === undefined || PROJECT_PUNCTUATION.has(token))
+        throw new Error('The Xcode project has an invalid string.');
+    if (!token.startsWith('"')) return token;
+    return token.slice(1, -1).replace(PROJECT_ESCAPE, (escape: string, sequence: string) => {
+        if (sequence.startsWith('U')) return String.fromCodePoint(Number.parseInt(sequence.slice(1), 16));
+        if (/^[0-7]/u.test(sequence)) return String.fromCodePoint(Number.parseInt(sequence, 8));
+        return PROJECT_ESCAPES[sequence] ?? escape;
+    });
+}
+
+function expectProjectToken(state: ProjectTokens, expected: string): void {
+    if (state.tokens[state.index] !== expected) throw new Error(`The Xcode project requires ${expected}.`);
+    state.index += 1;
+}
+
+function readProjectArray(state: ProjectTokens): unknown[] {
+    const values: unknown[] = [];
+    while (state.tokens[state.index] !== ')') {
+        values.push(readProjectValue(state));
+        if (state.tokens[state.index] !== ',') break;
+        state.index += 1;
+    }
+    expectProjectToken(state, ')');
+    return values;
+}
+
+function readProjectDictionary(state: ProjectTokens): Record<string, unknown> {
+    const entries: [string, unknown][] = [];
+    while (state.tokens[state.index] !== '}') {
+        const key = readProjectString(state.tokens[state.index++]);
+        expectProjectToken(state, '=');
+        entries.push([key, readProjectValue(state)]);
+        expectProjectToken(state, ';');
+    }
+    expectProjectToken(state, '}');
+    return Object.fromEntries(entries);
+}
+
+function readProjectValue(state: ProjectTokens): unknown {
+    const lexeme = state.tokens[state.index++];
+    if (lexeme === '{') return readProjectDictionary(state);
+    if (lexeme === '(') return readProjectArray(state);
+    return readProjectString(lexeme);
+}
+
+function parseProjectDocument(text: string): unknown {
+    const tokens: string[] = [];
+    const matcher = new RegExp(PROJECT_TOKEN, 'yu');
+    for (let offset = 0; offset < text.length; ) {
+        matcher.lastIndex = offset;
+        const match = matcher.exec(text);
+        if (match === null) throw new Error(`The Xcode project has invalid syntax at offset ${String(offset)}.`);
+        offset = matcher.lastIndex;
+        const token = match[0];
+        if (token.trim() !== '' && !token.startsWith('//') && !token.startsWith('/*')) tokens.push(token);
+    }
+    const state: ProjectTokens = { tokens, index: 0 };
+    const value = readProjectValue(state);
+    if (state.index !== tokens.length) throw new Error('The Xcode project has text after its root dictionary.');
+    return value;
+}
 
 // The object an id names, which must exist.
 function getElement(project: Pick<XcodeProject, 'objects'>, id: string): ProjectEntry {
@@ -72,7 +141,7 @@ function listTargetSources(project: XcodeProject, target: ProjectEntry): string[
             const build = getElement(project, buildId);
             if (build.fileRef === undefined) throw new Error('An Xcode source build entry has no file reference.');
             const file = getElement(project, build.fileRef);
-            return file.path?.endsWith('.swift') === true ? [findElementPath(project, build.fileRef)] : [];
+            return file.path?.endsWith(SWIFT_EXTENSION) === true ? [findElementPath(project, build.fileRef)] : [];
         });
 }
 
@@ -91,7 +160,7 @@ function listTargetFolders(project: XcodeProject, id: string, target: ProjectEnt
 
 // Validate project metadata without requiring source paths or a main group.
 function parseProjectMetadata(text: string): ProjectMetadata {
-    const project = pbxprojSchema.parse(parse(text));
+    const project = pbxprojSchema.parse(parseProjectDocument(text));
     const root = project.objects[project.rootObject];
     if (root?.isa !== 'PBXProject') throw new Error('The Xcode project has no project root.');
     return { objects: project.objects, root };

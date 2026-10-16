@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/system/files/reads.ts';
-import { parseComments } from '#cli/parsers/comments.ts';
+import { parseGrammarComments } from '#cli/parsers/comments.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { COMMENT_MARKERS } from '#cli/config/checks/general/structure.ts';
 
@@ -21,7 +21,7 @@ export async function fileLines(input: CheckInput): Promise<Finding[]> {
     const findings = await Promise.all(
         sources.map(async ({ file, language, limit }) => {
             const text = readSource(input.root, file.path, input.reads).toString('utf8');
-            const parsed = language === 'bash' ? await parseComments('bash', text) : undefined;
+            const parsed = language === 'bash' ? await parseGrammarComments('bash', text) : undefined;
             const comments = new Set(parsed?.filter((comment) => comment.standalone).map((comment) => comment.line));
             const count = text
                 .split('\n')

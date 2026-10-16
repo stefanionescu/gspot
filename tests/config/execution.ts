@@ -54,21 +54,21 @@ export const FAILED_RUN = { code: 1, stdout: '', stderr: '', missing: false, dur
 
 export const LOCATED_CHECK = {
     ...BASE_CHECK,
-    output: { format: 'regex', pattern: '^(?<file>[^:]+): (?<message>.*)$' },
+    output: { format: 'regex', file_type: 'path', pattern: '^(?<file>[^:]+): (?<message>.*)$' },
 } as const;
 
 export const FILELESS_CHECKS = [
     {
         ...BASE_CHECK,
         name: 'sandbox/coverage',
-        output: { format: 'regex', pattern: '^ERROR: (?<message>.*)$' },
+        output: { format: 'regex', file_type: 'path', pattern: '^ERROR: (?<message>.*)$' },
     },
     {
         ...BASE_CHECK,
         name: 'sandbox/links',
         output: { format: 'regex', file_type: 'link', pattern: '(?<file>.+)' },
     },
-    { ...BASE_CHECK, name: 'sandbox/lines', output: { format: 'lines' } },
+    { ...BASE_CHECK, name: 'sandbox/lines', output: { format: 'lines', file_type: 'path' } },
 ] as const;
 
 export const WORKSPACE_SOURCE_FILES = {

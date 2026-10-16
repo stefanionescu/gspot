@@ -1,12 +1,12 @@
 // Reads markdownlint messages and source locations.
 import { z } from 'zod';
-import { resolve, relative } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
+import { resolve } from 'node:path';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
+import { parseReport } from '#cli/parsers/output/formats.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
-import type { MarkdownlintEntry } from '#cli/types/parsers/output.ts';
 import { MARKDOWNLINT_SEVERITIES } from '#cli/config/parsers/output.ts';
+import { type ReportInput, type MarkdownlintEntry } from '#cli/types/parsers/output.ts';
 
 // One markdownlint entry as a finding.
 function buildFinding(check: string, help: string, entry: MarkdownlintEntry, file: string): Finding {
@@ -40,28 +40,14 @@ const markdownlintReportSchema = z.array(
 
 /**
  * Findings from the markdownlint JSON report, with its reported source position.
- * @param check the check ID.
- * @param stdout the report.
- * @param help the check's help text.
- * @param root the repository root.
- * @param cwd the directory markdownlint ran in.
+ * @param input the check, report text, source paths, and output declaration.
  * @returns the findings.
  */
-export function parseMarkdownlintFindings(
-    check: string,
-    stdout: string,
-    help: string,
-    root: string,
-    cwd: string,
-): Finding[] {
-    let entries: MarkdownlintEntry[];
-    try {
-        entries = markdownlintReportSchema.parse(JSON.parse(stdout));
-    } catch (error) {
-        throw new GspotError('output', 'Markdownlint returned invalid structured findings.', { cause: error });
-    }
+export function parseMarkdownlintFindings(input: ReportInput): Finding[] {
+    const { check, stdout, help, cwd } = input;
+    const entries = parseReport('Markdownlint', stdout, markdownlintReportSchema);
     return entries.map((entry) => {
-        const file = convertToPosixPath(relative(root, resolve(cwd, entry.fileName)));
+        const file = resolve(cwd, entry.fileName);
         return buildFinding(check, help, entry, file);
     });
 }

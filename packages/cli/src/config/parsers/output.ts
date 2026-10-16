@@ -10,7 +10,7 @@ export const LEADING_DOT_SLASH = /^\.\//u;
 
 export const TRAILING_PAREN_RULE = /\((?<rule>[a-z0-9_:/@.-]+)\)$/u;
 
-export const DEFAULT_OUTPUT_FORMAT = { format: 'regex', pattern: DEFAULT_PATTERN } as const;
+export const DEFAULT_OUTPUT_FORMAT = { format: 'regex', pattern: DEFAULT_PATTERN, file_type: 'path' } as const;
 
 /** The native Semgrep source parsing diagnostic exit code. */
 export const SEMGREP_PARSE_EXIT = 3;
@@ -60,9 +60,9 @@ export const MARKDOWNLINT_SEVERITIES = ['error', 'warning'] as const;
 
 export const OUTPUT_FILE_TYPES = ['path', 'link', 'history'] as const;
 
-export const MISSING_PATH_CODES = ['ENOENT', 'ENOTDIR'] as const;
+export const MISSING_PATH_CODES: ReadonlySet<string> = new Set(['ENOENT', 'ENOTDIR']);
 export const FILE_GROUP = '(?<file>';
 export const SARIF_SOURCE_ROOT = '%SRCROOT%';
-export const SEMGREP_PARSE_ERRORS = ['ParseError', 'PartialParsing'] as const;
+export const SEMGREP_PARSE_ERRORS: ReadonlySet<string> = new Set(['ParseError', 'PartialParsing']);
 export const SEMGREP_PARSE_RULE = 'parse-error';
 export const JSON_START = /[[{]/u;

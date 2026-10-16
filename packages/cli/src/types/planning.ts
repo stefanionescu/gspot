@@ -24,6 +24,7 @@ export type Session = {
     reads: ReadCache;
     resources: DisposableStack;
     npmClient: () => NpmClient | undefined;
+    requirePackageManager: () => NpmClient;
     cancelSignal?: AbortSignal | undefined;
     version: string;
     settingsFile: SettingsFile;

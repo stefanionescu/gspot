@@ -90,3 +90,6 @@ export const REGISTRY_ALIASES = ['BUN_CONFIG_REGISTRY', 'YARN_REGISTRY'] as cons
 export const YARN_CONFIG_LIST = ['yarn', 'config', '--json', '--no-defaults'] as const;
 export const YARN_CONFIG_GET = ['yarn', 'config', 'get'] as const;
 export const YARN_SECRET_KEYS = ['npmAuthToken', 'npmAuthIdent'] as const;
+
+export const MISSING_PACKAGE_MANAGER_MESSAGE =
+    'No package manager is selected for the npm tool project. Run gspot apply first.';

@@ -6,7 +6,6 @@ import { lockfileMatches } from '#cli/tools/npm/lockfiles.ts';
 import { prepareNpmLockfile } from '#cli/tools/npm/project.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 import { preparePythonLockfile, pythonLockfileMatches } from '#cli/tools/python/project.ts';
 import type { StaleLockfile, PythonToolProject, PythonPreparation } from '#cli/types/tools/project.ts';
 
@@ -33,7 +32,7 @@ function recordLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
  * @returns missing, mismatched, or current lockfiles.
  */
 export function staleLockfiles(
-    session: Pick<Session, 'root' | 'npmClient'>,
+    session: Pick<Session, 'root' | 'requirePackageManager'>,
     generated: GeneratedFile[],
 ): StaleLockfile[] {
     const { root } = session;
@@ -43,7 +42,7 @@ export function staleLockfiles(
         .flatMap((manifest) => {
             const npm =
                 manifest.path === NPM_TOOL_PROJECT_FILE
-                    ? parseToolProject(manifest.content, session.npmClient() as NpmClient)
+                    ? parseToolProject(manifest.content, session.requirePackageManager().name)
                     : undefined;
             const python =
                 manifest.path === PYTHON_TOOL_PROJECT_FILE
@@ -56,7 +55,7 @@ export function staleLockfiles(
             const matches =
                 npm === undefined
                     ? pythonLockfileMatches(python as PythonToolProject, content)
-                    : lockfileMatches(npm.npmClient.name, content, npm.dependencies);
+                    : lockfileMatches(session.requirePackageManager().name, content, npm.dependencies);
             return matches ? [{ path }] : [{ path, kind: 'changed' as const }];
         });
 }
@@ -70,7 +69,7 @@ export function staleLockfiles(
  * @param steps the commands attempted during lockfile creation.
  */
 export async function prepareLockfiles(
-    preparation: PythonPreparation & Pick<Session, 'npmClient'>,
+    preparation: PythonPreparation & Pick<Session, 'requirePackageManager'>,
     files: GeneratedFile[],
     owner: Pick<Files, 'read'>,
     steps: (readonly string[])[],

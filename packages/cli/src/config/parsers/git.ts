@@ -25,6 +25,8 @@ const LEADING_SLASH = /^\//u;
 const BINARY_ATTRIBUTES = { diff: 'unset', merge: 'unset', text: 'unset' } as const;
 const BINARY_MACRO = 'binary';
 
+const INVALID_GIT_STREAM_MESSAGE = 'The Git object stream is incomplete or invalid.';
+
 export {
     TREE_ENTRY,
     BLOB_HEADER,
@@ -36,4 +38,5 @@ export {
     ATTRIBUTE_FIELDS,
     UNSUPPORTED_ENTRY,
     BINARY_ATTRIBUTES,
+    INVALID_GIT_STREAM_MESSAGE,
 };

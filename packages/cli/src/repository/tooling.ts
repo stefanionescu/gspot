@@ -5,6 +5,7 @@ import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { isInside } from '#cli/system/paths.ts';
 import { isRecord } from '#cli/system/values.ts';
+import { parseJsonFile } from '#cli/parsers/json.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
@@ -174,14 +175,7 @@ function findReplacedToolFiles(
 }
 
 function parseSharedFile(text: string, extension: string, path: string): unknown {
-    if (extension === '.json') {
-        try {
-            return JSON.parse(text) as unknown;
-        } catch (error) {
-            if (!(error instanceof SyntaxError)) throw error;
-            throw new SyntaxError(`Cannot read tool file ${path}: ${error.message}`, { cause: error });
-        }
-    }
+    if (extension === '.json') return parseJsonFile(path, text);
     if (extension === '.yaml' || extension === '.yml') return parseYaml(text) as unknown;
     if (extension === '.toml') return parseToml(text);
     throw new Error(`${path}: shared configuration format is unsupported.`);

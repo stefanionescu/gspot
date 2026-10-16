@@ -1,5 +1,4 @@
 // Reads grammars and shares source parses within a run.
-// Reads grammars and shares source parses within a run.
 import { readFileSync } from 'node:fs';
 import { findWasmPath } from '#cli/system/assets.ts';
 import { readSource } from '#cli/system/files/reads.ts';
@@ -95,6 +94,6 @@ export async function visitParsedSources(input: ParsedSourceInput, visit: (sourc
  */
 export function selectGrammar(path: string, language: string): GrammarName | undefined {
     if ([...DECLARATION_EXTENSIONS].some((extension) => path.endsWith(extension))) return undefined;
-    const grammar = Object.entries(LANGUAGE_GRAMMARS).find(([configuration]) => configuration === language)?.[1];
+    const grammar = Object.hasOwn(LANGUAGE_GRAMMARS, language) ? LANGUAGE_GRAMMARS[language] : undefined;
     return grammar === 'typescript' && path.endsWith(TSX_EXTENSION) ? 'tsx' : grammar;
 }

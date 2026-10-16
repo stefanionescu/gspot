@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { parseJsonFile } from '#cli/parsers/json.ts';
-import { parseComments } from '#cli/parsers/comments.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { parseGrammarComments } from '#cli/parsers/comments.ts';
 
 import type {
     Pyproject,
@@ -157,7 +157,7 @@ function parsePyproject(path: string, text: string): DependencyFile {
 
 async function parseSwiftPackage(path: string, text: string): Promise<DependencyFile> {
     const dependencies: DependencyMap = {};
-    const comments = await parseComments('swift', text);
+    const comments = await parseGrammarComments('swift', text);
     const source = text
         .split('\n')
         .map((line, index) => {

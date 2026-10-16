@@ -19,6 +19,7 @@ import {
     ATTRIBUTE_FIELDS,
     BINARY_ATTRIBUTES,
     UNSUPPORTED_ENTRY,
+    INVALID_GIT_STREAM_MESSAGE,
 } from '#cli/config/parsers/git.ts';
 
 // Validate the fields captured from an index or committed-tree entry.
@@ -58,15 +59,14 @@ async function readBlobLine(stream: GitStream): Promise<string> {
         stream.cursor = end === -1 ? stream.chunk.length : end + 1;
         if (end !== -1) return Buffer.concat(pieces).toString('ascii');
     }
-    throw new GspotError('git', 'The Git object stream is incomplete or invalid.');
+    throw new GspotError('git', INVALID_GIT_STREAM_MESSAGE);
 }
 
 async function readBytes(stream: GitStream, size: number): Promise<Buffer> {
     const bytes = Buffer.alloc(size);
     let filled = 0;
     while (filled < size) {
-        if (!(await readNextChunk(stream)))
-            throw new GspotError('git', 'The Git object stream is incomplete or invalid.');
+        if (!(await readNextChunk(stream))) throw new GspotError('git', INVALID_GIT_STREAM_MESSAGE);
         const length = Math.min(size - filled, stream.chunk.length - stream.cursor);
         stream.chunk.copy(bytes, filled, stream.cursor, stream.cursor + length);
         stream.cursor += length;
@@ -78,8 +78,7 @@ async function readBytes(stream: GitStream, size: number): Promise<Buffer> {
 function parseBlobSize(header: string, hash: string): number {
     const match = BLOB_HEADER.exec(header);
     const size = Number(match?.[2]);
-    if (match?.[1] !== hash || !Number.isSafeInteger(size))
-        throw new GspotError('git', 'The Git object stream is incomplete or invalid.');
+    if (match?.[1] !== hash || !Number.isSafeInteger(size)) throw new GspotError('git', INVALID_GIT_STREAM_MESSAGE);
     return size;
 }
 
@@ -199,5 +198,8 @@ export async function* parseGitBlobs(
         const bytes = await readBytes(stream, parseBlobSize(await readBlobLine(stream), hash));
         await readBytes(stream, 1);
         yield [hash, bytes];
+    }
+    for (let next = await stream.chunks.next(); next.done !== true; next = await stream.chunks.next()) {
+        // The standard output stream must end before the Git process completion can settle.
     }
 }

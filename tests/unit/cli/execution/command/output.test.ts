@@ -44,21 +44,21 @@ import {
     test("a tool's crash pattern detects crashes for every check that runs it", () => {
         expect(
             hasToolError(
-                { ...BASE_CHECK, output: { format: 'lines' }, command: [...BASE_CHECK.command] },
+                { ...BASE_CHECK, output: { format: 'lines', file_type: 'path' }, command: [...BASE_CHECK.command] },
                 ESLINT_TOOL,
                 ESLINT_CRASH,
             ),
         ).toBe(true);
         expect(
             hasToolError(
-                { ...BASE_CHECK, output: { format: 'lines' }, command: [...BASE_CHECK.command] },
+                { ...BASE_CHECK, output: { format: 'lines', file_type: 'path' }, command: [...BASE_CHECK.command] },
                 ESLINT_TOOL,
                 { ...ESLINT_CRASH, stderr: '1 problem\n' },
             ),
         ).toBe(false);
         expect(
             hasToolError(
-                { ...BASE_CHECK, output: { format: 'lines' }, command: [...BASE_CHECK.command] },
+                { ...BASE_CHECK, output: { format: 'lines', file_type: 'path' }, command: [...BASE_CHECK.command] },
                 undefined,
                 ESLINT_CRASH,
             ),
@@ -68,7 +68,7 @@ import {
     test("a check's own pattern comes before the tool's", () => {
         const check = {
             ...BASE_CHECK,
-            output: { format: 'lines' },
+            output: { format: 'lines', file_type: 'path' },
             command: [...BASE_CHECK.command],
             crash_pattern: '^Fatal:',
         } satisfies CheckDeclaration;
@@ -203,6 +203,7 @@ import {
                             exit_codes: [1],
                             output: {
                                 format: 'regex',
+                                file_type: 'path',
                                 pattern: String.raw`^(?<file>.+):(?<line>\d+): (?<message>.+)$`,
                             },
                         },

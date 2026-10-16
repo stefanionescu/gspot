@@ -9,8 +9,8 @@ test.each([...TOOL_REQUIREMENTS])('$name', ({ dependency, version, accepted }) =
         devDependencies: { [dependency]: version },
     });
     if (accepted)
-        expect(parseToolProject(source, { name: 'bun', version: '1.4.2' }).dependencies).toStrictEqual({
+        expect(parseToolProject(source, 'bun').dependencies).toStrictEqual({
             [dependency]: version,
         });
-    else expect(() => parseToolProject(source, { name: 'bun', version: '1.4.2' })).toThrow(dependency);
+    else expect(() => parseToolProject(source, 'bun')).toThrow(dependency);
 });

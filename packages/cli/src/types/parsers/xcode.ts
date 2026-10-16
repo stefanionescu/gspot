@@ -37,3 +37,6 @@ export type ProjectSources = { sources: Set<string>; folders: Folder[] };
 
 /** Native compiler and SDK choices authored in Xcode build configurations. */
 export type ProjectBuildSettings = { sdkRoot: string | undefined; swiftVersion: string | undefined };
+
+/** Token stream for the UTF-8 project property-list reader. */
+export type ProjectTokens = { tokens: string[]; index: number };

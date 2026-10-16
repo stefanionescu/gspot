@@ -65,7 +65,6 @@ export type PythonIndexSettings = { settings: Record<string, unknown>; credentia
 
 /** Validated npm tool project with the manager and lockfile it declares. */
 export type NpmToolProject = {
-    npmClient: NpmClient;
     dependencies: Record<string, string>;
     lockfile: ToolProjectLockfileName;
     lockfilePath: string;
@@ -87,3 +86,6 @@ export type NpmProjectFile = {
     private: true;
     devDependencies: Record<string, string> & { '@next/eslint-plugin-next'?: string | undefined };
 };
+
+/** Repository state needed to prepare a locked npm tool project. */
+export type NpmPreparation = { root: string; timeoutSeconds: number; requirePackageManager: () => NpmClient };

@@ -21,7 +21,9 @@ test.each([...STYLESHEET_CASES])(
         const session = await openSession(sandbox.path);
         const manifest = emitAll(session).files.find(({ path }) => path === '.gspot/package.json')!;
         expect(
-            Object.keys(parseToolProject(manifest.content, session.npmClient()!).dependencies).includes('postcss-html'),
+            Object.keys(parseToolProject(manifest.content, session.requirePackageManager().name).dependencies).includes(
+                'postcss-html',
+            ),
         ).toBe(entry.needsHtmlParser);
     },
 );
@@ -39,7 +41,7 @@ test('a React Native project without Expo installs no Expo or DOM lint plugins',
     });
     const session = await openSession(sandbox.path);
     const generated = emitAll(session).files.find(({ path }) => path === '.gspot/package.json')!;
-    const project = parseToolProject(generated.content, session.npmClient()!);
+    const project = parseToolProject(generated.content, session.requirePackageManager().name);
     expect(project.dependencies).toHaveProperty('eslint-plugin-react-native');
     expect(project.dependencies).not.toHaveProperty('eslint-plugin-expo');
     expect(project.dependencies).not.toHaveProperty('expo-doctor');
@@ -76,10 +78,6 @@ test.each([...YARN_CLIENTS])(
         expect(files.map((file) => file.path)).toStrictEqual(
             settings ? ['.gspot/package.json', '.gspot/.yarnrc.yml'] : ['.gspot/package.json'],
         );
-        expect(parseToolProject(files[0]!.content, installer).npmClient).toStrictEqual({
-            name: installer.name,
-            version: installer.version,
-        });
         if (settings) expect(files[1]!.content).toBe('nodeLinker: node-modules\nenableGlobalCache: true\n');
     },
 );
@@ -116,7 +114,9 @@ test.each([...NEXT_INSTALLATIONS])('$name', async (row) => {
     } else {
         const generated = emitAll(session).files.find(({ path }) => path === '.gspot/package.json');
         expect(
-            parseToolProject(generated!.content, session.npmClient()!).dependencies['@next/eslint-plugin-next'],
+            parseToolProject(generated!.content, session.requirePackageManager().name).dependencies[
+                '@next/eslint-plugin-next'
+            ],
         ).toBe(row.expected);
     }
 });
@@ -135,7 +135,9 @@ test('only selected Next.js scopes set the shared plugin version', async () => {
     });
     const session = await openSession(sandbox.path);
     const output = emitAll(session).files.find(({ path }) => path === '.gspot/package.json');
-    expect(parseToolProject(output!.content, session.npmClient()!).dependencies['@next/eslint-plugin-next']).toBe(
-        '^16',
-    );
+    expect(
+        parseToolProject(output!.content, session.requirePackageManager().name).dependencies[
+            '@next/eslint-plugin-next'
+        ],
+    ).toBe('^16');
 });

@@ -2,8 +2,10 @@
 import { z } from 'zod';
 import { GspotError } from '#cli/system/errors.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
+import { parseReport } from '#cli/parsers/output/formats.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
-import type { SemgrepReport } from '#cli/types/parsers/output.ts';
+import { type ReportInput, type SemgrepReport } from '#cli/types/parsers/output.ts';
 import { SEMGREP_PARSE_EXIT, SEMGREP_PARSE_RULE, SEMGREP_PARSE_ERRORS } from '#cli/config/parsers/output.ts';
 
 const positionSchema = z.object({
@@ -43,18 +45,12 @@ const semgrepReportSchema = z.object({
 
 /**
  * Read Semgrep rule findings and source parsing errors without accepting scanner or rule failures.
- * @param check the check ID.
- * @param text the JSON report.
- * @param help the check's correction guidance.
+ * @param input the check, report text, source paths, and output declaration.
  * @returns positioned diagnostics from a validated report.
  */
-export function parseSemgrepFindings(check: string, text: string, help: string): Finding[] {
-    let report: SemgrepReport;
-    try {
-        report = semgrepReportSchema.parse(JSON.parse(text));
-    } catch (error) {
-        throw new GspotError('output', 'Semgrep returned invalid structured findings.', { cause: error });
-    }
+export function parseSemgrepFindings(input: ReportInput): Finding[] {
+    const { check, stdout: text, help } = input;
+    const report = parseReport('Semgrep', text, semgrepReportSchema);
     const findings: Finding[] = report.results.map((entry) => ({
         check,
         help,
@@ -68,11 +64,7 @@ export function parseSemgrepFindings(check: string, text: string, help: string):
     for (const error of report.errors) {
         const type = typeof error.type === 'string' ? error.type : error.type[0];
         const span = error.spans?.find((entry) => entry.file === error.path);
-        if (
-            error.code !== SEMGREP_PARSE_EXIT ||
-            !new Set<string | undefined>(SEMGREP_PARSE_ERRORS).has(type) ||
-            span === undefined
-        )
+        if (error.code !== SEMGREP_PARSE_EXIT || !SEMGREP_PARSE_ERRORS.has(type) || span === undefined)
             throw new GspotError('output', `Semgrep could not complete the scan: ${error.message}`);
         findings.push({
             check,

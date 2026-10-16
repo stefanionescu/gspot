@@ -1,4 +1,3 @@
-import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { readSource } from '#cli/system/files/reads.ts';
@@ -26,7 +25,7 @@ function rootFindings(input: CheckInput, root: PackageJson | undefined): Finding
 function lockfileFindings(input: CheckInput): Finding[] {
     const kinds = new Map<string, string>();
     for (const file of input.files) {
-        const lockfile = findLockfile(posix.basename(file.path));
+        const lockfile = findLockfile(file.path);
         const kind =
             lockfile !== undefined && 'configuration' in lockfile && lockfile.configuration === 'javascript'
                 ? lockfile.client

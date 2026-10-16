@@ -129,7 +129,7 @@ export const XCODE_PROJECT_REFUSALS = [
     {
         name: 'missing value',
         source: GROUPED_PBXPROJ.slice(0, -3),
-        message: 'Unexpected end of input in object at line 19, column 7',
+        message: 'The Xcode project has an invalid string.',
     },
     {
         name: 'unknown object',
@@ -171,3 +171,15 @@ export const SINGLE_FILE_PBXPROJ = GROUPED_PBXPROJ.replace('files = (B1, B2,);',
     'fileSystemSynchronizedGroups = (SYNC,);',
     '',
 );
+
+/** Native project syntax that the property-list reader must preserve. */
+export const PROJECT_SYNTAX_CASES = [
+    { name: 'quoted keys', source: GROUPED_PBXPROJ.replace('rootObject = P;', '"rootObject" = P;') },
+    {
+        name: 'comments inside arrays',
+        source: GROUPED_PBXPROJ.replace(
+            'files = (B1, B2,);',
+            'files = (B1, /* first source */ B2, // second source\n);',
+        ),
+    },
+] as const;

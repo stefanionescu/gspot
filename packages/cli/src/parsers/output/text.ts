@@ -1,6 +1,6 @@
 // Reads tool messages with declared text patterns.
 import type { Finding } from '#cli/types/execution/check.ts';
-import type { OutputSpec, RegexParser } from '#cli/types/parsers/output.ts';
+import { type ReportInput, type RegexParser } from '#cli/types/parsers/output.ts';
 import { LEADING_DOT_SLASH, TRAILING_PAREN_RULE, TRAILING_BRACKET_RULE } from '#cli/config/parsers/output.ts';
 
 function setMatchedFields(finding: Finding, groups: Record<string, string | undefined>): Finding {
@@ -47,19 +47,12 @@ function buildFinding(
 
 /**
  * Read findings from individually matched output lines.
- * @param check the check name.
- * @param output the declared output format.
- * @param text the source text.
- * @param help the advice attached to each finding.
+ * @param input the check, report text, source paths, and output declaration.
  * @returns the findings from matched lines.
  */
-export function parseRegexFindings(
-    check: string,
-    output: Extract<OutputSpec, { format: 'regex' }>,
-    text: string,
-    help: string,
-): Finding[] {
-    const pattern = new RegExp(output.pattern, 'u');
+export function parseRegexFindings(input: ReportInput): Finding[] {
+    const { check, output, text, help } = input;
+    const pattern = new RegExp(output.pattern as string, 'u');
     const fixable = output.fixable === undefined ? undefined : new RegExp(output.fixable, 'u');
     const parser: RegexParser = { output, fixable, help };
     const findings = new Map<string, Finding>();
@@ -75,20 +68,13 @@ export function parseRegexFindings(
 
 /**
  * Read findings grouped under output file headings.
- * @param check the check name.
- * @param output the declared output format.
- * @param text the source text.
- * @param help the advice attached to each finding.
+ * @param input the check, report text, source paths, and output declaration.
  * @returns the findings under each matched file heading.
  */
-export function parseGroupedFindings(
-    check: string,
-    output: Extract<OutputSpec, { format: 'grouped' }>,
-    text: string,
-    help: string,
-): Finding[] {
-    const filePattern = new RegExp(output.file_pattern, 'u');
-    const pattern = new RegExp(output.pattern, 'u');
+export function parseGroupedFindings(input: ReportInput): Finding[] {
+    const { check, output, text, help } = input;
+    const filePattern = new RegExp(output.file_pattern as string, 'u');
+    const pattern = new RegExp(output.pattern as string, 'u');
     const findings: Finding[] = [];
     let file = '';
     for (const line of text.split(/\r?\n/u)) {

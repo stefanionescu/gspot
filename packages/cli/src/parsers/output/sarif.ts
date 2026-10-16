@@ -1,12 +1,21 @@
 // Read Static Analysis Results Interchange Format (SARIF) reports.
 import { z } from 'zod';
 import { sep, relative } from 'node:path';
+import { isInside } from '#cli/system/paths.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { SchemaShape } from '#cli/types/objects.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
+import { parseReport } from '#cli/parsers/output/formats.ts';
 import { SARIF_SOURCE_ROOT } from '#cli/config/parsers/output.ts';
-import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import type { Finding, FindingPlace } from '#cli/types/execution/check.ts';
-import type { SarifLog, SarifRun, SarifPhysicalLocation, SarifArtifactLocation } from '#cli/types/parsers/output.ts';
+
+import {
+    type SarifLog,
+    type SarifRun,
+    type ReportInput,
+    type SarifPhysicalLocation,
+    type SarifArtifactLocation,
+} from '#cli/types/parsers/output.ts';
 
 function getArtifactLocation(artifact: SarifArtifactLocation, run: SarifRun): SarifArtifactLocation {
     if (artifact.uri !== undefined || artifact.index === undefined) return artifact;
@@ -33,7 +42,7 @@ function convertArtifactUri(artifact: SarifArtifactLocation, run: SarifRun, sour
     if (uri.protocol !== 'file:') throw new Error('SARIF reported a source location that is not a file.');
     const file = relative(source, fileURLToPath(uri));
     if (!isInside(file)) throw new Error('SARIF reported a source location outside its selected source copy.');
-    return convertToPosixPath(file);
+    return fileURLToPath(uri);
 }
 
 /**
@@ -142,15 +151,13 @@ const sarifLogSchema = z.object({
 } satisfies SchemaShape<SarifLog>);
 
 /**
- * Validate SARIF results and resolve their repository-relative source locations.
- * @param log the parsed SARIF log.
- * @param check the check ID the findings carry.
- * @param help the check help text.
- * @param source the copy of the repository the analysis ran in.
- * @returns validated findings without reading source file contents.
+ * Read a SARIF report and validate its source locations.
+ * @param input the check, report text, source paths, and output declaration.
+ * @returns the report findings.
  */
-export function parseSarifFindings(log: unknown, check: string, help: string, source: string): Finding[] {
-    const parsed = sarifLogSchema.parse(log);
+export function parseSarifFindings(input: ReportInput): Finding[] {
+    const { stdout, check, help, root: source } = input;
+    const parsed = parseReport('SARIF', stdout, sarifLogSchema);
     return parsed.runs.flatMap((run) => {
         const unsuccessful =
             run.invocations?.filter(

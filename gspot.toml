@@ -168,6 +168,31 @@ paths = ["packages/cli/src/tools/npm/package-manager.ts"]
 allowed_names = ["package-manager", "packageManagerDeclarationSchema", "packageManagerSchema", "parsePackageManagerField", "readPackageManagerDeclaration"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
+[[naming.override]]
+paths = ["packages/cli/src/commands/session.ts"]
+allowed_names = ["packageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["packages/cli/src/config/tools/npm.ts"]
+allowed_names = ["MISSING_PACKAGE_MANAGER_MESSAGE"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["packages/cli/src/tools/npm/tool-project.ts"]
+allowed_names = ["packageManagerName"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/planning.ts"]
+allowed_names = ["requirePackageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/tools/project.ts"]
+allowed_names = ["requirePackageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
 [architecture.roles]
 environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/environment.ts"]
 scripts = ["scripts/**"]

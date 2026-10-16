@@ -71,7 +71,12 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
         if (owner === undefined) return [];
         const key = JSON.stringify([owner.kind, ...owner.path]);
         if (!retained.has(key)) return [];
-        addTomlComment(comments, owner.kind, owner.path, comment, authored === undefined ? 'free' : 'owned');
+        addTomlComment(comments, {
+            kind: owner.kind,
+            path: owner.path,
+            comment,
+            placement: authored === undefined ? 'free' : 'owned',
+        });
         if (found === undefined) return [];
         const [start, end] = getTomlRange(found.comment);
         return [{ start, end: end + Number(patched[end] === '\n'), text: '' }];

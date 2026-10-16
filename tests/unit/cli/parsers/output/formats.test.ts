@@ -23,7 +23,7 @@ test.each(OUTPUTS.flatMap((output) => ['empty', 'foreign'].map((input) => ({ for
             example: 'sandbox',
             why: 'The output contract holds for every format.',
             help: 'Correct the sandbox file.',
-            output,
+            output: outputSchema.parse(output),
         };
         delete check.command;
         const fails = (input === 'empty' ? EMPTY_ERRORS : JSON_FORMATS).has(output.format);

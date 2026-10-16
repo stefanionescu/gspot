@@ -3,19 +3,20 @@ import { getValueAt } from '#cli/system/values.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 
-import type {
-    TomlBlock,
-    TomlValue,
-    TomlSyntax,
-    InlineArray,
-    InlineTable,
-    SourceRange,
-    TomlComments,
-    TomlKeyValue,
-    TomlCommentNode,
-    TomlSyntaxEntry,
-    TomlTablePositions,
-    TomlAnchoredComment,
+import {
+    type TomlBlock,
+    type TomlValue,
+    type TomlSyntax,
+    type InlineArray,
+    type InlineTable,
+    type SourceRange,
+    type TomlComments,
+    type TomlKeyValue,
+    type TomlCommentNode,
+    type TomlSyntaxEntry,
+    type TomlTablePositions,
+    type TomlAnchoredComment,
+    type TomlCommentPlacement,
 } from '#cli/types/parsers/toml.ts';
 
 function buildTablePath(
@@ -132,7 +133,7 @@ function parseTomlSyntax(source: string, value: Record<string, unknown>): TomlSy
 
 /**
  * Place comments immediately before their own key, header or array item, without column alignment.
- * @param comments the original syntax entrieship.
+ * @param comments the original syntax entries.
  * @param kind the syntax entry kind.
  * @param path the key or array-item path.
  * @param text the entry text.
@@ -214,22 +215,14 @@ function getTomlRange(node: SourceRange): readonly [number, number] {
 /**
  * Add a source comment to its retained TOML entry.
  * @param comments the collected comment blocks.
- * @param kind the syntax entry kind.
- * @param path the entry path, absent after removing the entry.
- * @param comment the original comment.
- * @param placement whether it belongs to an entry or stands alone.
+ * @param entry the syntax entry, original comment, and placement.
  */
-function addTomlComment(
-    comments: TomlComments,
-    kind: string,
-    path: KeyPath | undefined,
-    comment: TomlCommentNode,
-    placement: 'owned' | 'free',
-): void {
+function addTomlComment(comments: TomlComments, entry: TomlCommentPlacement): void {
+    const { kind, path, comment, placement } = entry;
     if (path === undefined) return;
     const id = JSON.stringify([kind, ...path]);
     const block = comments.get(id) ?? { path, owned: [], free: [] };
-    block[kind === 'preamble' ? 'free' : placement].push({
+    block[placement].push({
         raw: comment.raw,
         start: getTomlRange(comment)[0],
         line: comment.loc.start.line,

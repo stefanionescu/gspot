@@ -65,7 +65,7 @@ test('hook discovery ignores a package.json without hooks', async () => {
 test('hook discovery refuses a malformed package.json', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'package.json': '{' });
-    expect(() => readTooling(sandbox.path, [], [])).toThrow(SyntaxError);
+    expect(() => readTooling(sandbox.path, [], [])).toThrow(Error);
     expect(() => readTooling(sandbox.path, [], [])).toThrow('package.json');
 });
 

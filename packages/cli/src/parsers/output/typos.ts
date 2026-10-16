@@ -6,8 +6,10 @@ import { GspotError } from '#cli/system/errors.ts';
 import { readSource } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
+import { parseReport } from '#cli/parsers/output/formats.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
-import type { TypoEntry } from '#cli/types/parsers/output.ts';
+import { type TypoEntry, type ReportInput } from '#cli/types/parsers/output.ts';
 
 // The lines of a source file as bytes, read once per file, so byte offsets map to columns.
 function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {
@@ -84,27 +86,24 @@ const reportedTypoSchema = z.object({
  * Findings from the JSON lines typos prints. JSON preserves filename delimiters; offsets count UTF-8 bytes,
  * while report columns count characters.
  *
- * @param check the check ID.
- * @param stdout the report.
- * @param help the check's help text.
- *
- * @param root the repository root.
- * @param cwd the directory typos ran in.
+ * @param input the check, report text, source paths, and output declaration.
  * @returns the findings.
  */
-export function parseTyposFindings(check: string, stdout: string, help: string, root: string, cwd: string): Finding[] {
-    let entries: TypoEntry[];
-    try {
-        entries = stdout
-            .split('\n')
-            .filter((line) => line.trim() !== '')
-            .map((line) => reportedTypoSchema.parse(JSON.parse(line)));
-    } catch (error) {
-        throw new GspotError('output', 'Typos returned invalid structured findings.', { cause: error });
-    }
+export function parseTyposFindings(input: ReportInput): Finding[] {
+    const { check, stdout, help, root, cwd } = input;
+    const entries = stdout
+        .split('\n')
+        .filter((line) => line.trim() !== '')
+        .map((line) => parseReport('Typos', line, reportedTypoSchema));
     const linesByPath = new Map<string, Buffer[]>();
     return entries.map((entry) => {
-        const path = convertToPosixPath(relative(root, resolve(cwd, entry.path)));
-        return buildFinding(check, help, entry, path, computeTypoPosition(root, path, entry, linesByPath));
+        const path = resolve(cwd, entry.path);
+        return buildFinding(
+            check,
+            help,
+            entry,
+            path,
+            computeTypoPosition(root, convertToPosixPath(relative(root, path)), entry, linesByPath),
+        );
     });
 }

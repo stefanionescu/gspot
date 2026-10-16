@@ -11,7 +11,6 @@ import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
 import { staleLockfiles } from '#cli/tools/project-lockfiles.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
-import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 
 import {
     UV_LOCKFILE,
@@ -87,7 +86,7 @@ function staleKeys(files: Files, generated: Generated): StaleFile[] {
  * @returns the drift entries in path order.
  */
 export function findStaleFiles(
-    session: Pick<Session, 'root' | 'npmClient' | 'repository' | 'settingsFile'>,
+    session: Pick<Session, 'root' | 'requirePackageManager' | 'repository' | 'settingsFile'>,
     generated: Generated,
 ): StaleFile[] {
     using files = openFiles(session.root);
@@ -111,14 +110,14 @@ export function findStaleFiles(
  *
  * @returns the destination paths.
  */
-export function expectedPaths(session: Pick<Session, 'npmClient'>, generated: Generated): Set<string> {
+export function expectedPaths(session: Pick<Session, 'requirePackageManager'>, generated: Generated): Set<string> {
     const paths = new Set([
         VERSION_PIN_FILE,
         ...[...generated.files, ...generated.blocks, ...generated.fileEdits].map((file) => file.path),
     ]);
     for (const file of generated.files) {
         if (file.path === NPM_TOOL_PROJECT_FILE)
-            paths.add(parseToolProject(file.content, session.npmClient() as NpmClient).lockfilePath);
+            paths.add(parseToolProject(file.content, session.requirePackageManager().name).lockfilePath);
         if (file.path === PYTHON_TOOL_PROJECT_FILE) paths.add(UV_LOCKFILE);
     }
     return paths;

@@ -61,3 +61,11 @@ export type TomlTextChunk = { start: number; end: number; text: string };
 
 /** Original comment identity distinguishes repeated physical text with different owners. */
 export type TomlAnchoredComment = { comment: TomlCommentNode; anchor: TomlSyntaxEntry | undefined; identity: string };
+
+/** One original TOML comment and its retained syntax entry. */
+export type TomlCommentPlacement = {
+    kind: string;
+    path: KeyPath | undefined;
+    comment: TomlCommentNode;
+    placement: 'owned' | 'free';
+};

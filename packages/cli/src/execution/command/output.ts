@@ -70,7 +70,7 @@ function markFailure(
 function attributeFile(parsed: Finding[], invocation: CommandInvocation, check: CheckDeclaration): void {
     if (invocation.file === undefined) return;
     // Regex file groups can name a rule or another identifier instead of a path.
-    if (check.output.format === 'regex' && (check.output.file_type ?? 'path') !== 'path') return;
+    if (check.output.format === 'regex' && check.output.file_type !== 'path') return;
     for (const finding of parsed) if (finding.file === '') finding.file = invocation.file;
 }
 

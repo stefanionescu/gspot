@@ -67,7 +67,7 @@ test.each([...NON_JAVASCRIPT_PROJECTS])(
             const awaitedSession = await openSession(sandbox.path);
             const project = parseToolProject(
                 await Bun.file(join(sandbox.path, '.gspot/package.json')).text(),
-                awaitedSession.npmClient()!,
+                awaitedSession.requirePackageManager().name,
             );
             for (const name of ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'])
                 expect(Object.keys(project.dependencies)).not.toContain(name);
@@ -83,7 +83,7 @@ test.each([...NON_JAVASCRIPT_PROJECTS])(
             expect(selected.scopes.flatMap(({ view }) => view.configurations)).toContain('javascript');
             const project = parseToolProject(
                 await Bun.file(join(sandbox.path, '.gspot/package.json')).text(),
-                selected.npmClient()!,
+                selected.requirePackageManager().name,
             );
             expect(Object.keys(project.dependencies)).toContain('eslint');
             expect(await Bun.file(join(sandbox.path, '.gspot/config/eslint.config.mjs')).exists()).toBe(true);

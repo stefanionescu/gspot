@@ -1,3 +1,4 @@
+import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { type Session } from '#cli/types/planning.ts';
@@ -16,6 +17,7 @@ import { neededToolManifests } from '#cli/planning/needed-tools.ts';
 import { type Repository } from '#cli/types/repository/inventory.ts';
 import { locateCandidates, readMiseBinPaths } from '#cli/tools/find.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { MISSING_PACKAGE_MANAGER_MESSAGE } from '#cli/config/tools/npm.ts';
 import { misePins, toolProjectPins } from '#cli/configurations/tool-pins.ts';
 import { selectForScope, fileDeclarations } from '#cli/repository/select.ts';
 import { selectNpmClient, readNpmClientVersion } from '#cli/tools/npm/client.ts';
@@ -140,6 +142,11 @@ export async function openSession(
         configuredChecks: [],
         resources: new DisposableStack(),
         timeoutSeconds,
+        requirePackageManager() {
+            const packageManager = session.npmClient();
+            if (packageManager === undefined) throw new GspotError('installation', MISSING_PACKAGE_MANAGER_MESSAGE);
+            return packageManager;
+        },
         npmClient() {
             if (npmClientIdentity === undefined) return undefined;
             installerState ??= readNpmClientVersion(installedRoot, npmClientIdentity, timeoutSeconds);

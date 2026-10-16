@@ -1,10 +1,11 @@
 // Reads Knip issue categories and source locations.
 import { z } from 'zod';
-import { GspotError } from '#cli/system/errors.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
+import { parseReport } from '#cli/parsers/output/formats.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
-import type { KnipReport, KnipSymbol } from '#cli/types/parsers/output.ts';
 import { KNIP_ISSUE_MESSAGES, KNIP_ISSUE_CATEGORIES } from '#cli/config/parsers/output.ts';
+import { type KnipReport, type KnipSymbol, type ReportInput } from '#cli/types/parsers/output.ts';
 
 const knipSymbolSchema = z.object({
     name: z.string().min(1),
@@ -50,18 +51,12 @@ const knipReportSchema = z.strictObject({
 
 /**
  * Read Knip's JSON categories without losing grouped symbols or source positions.
- * @param check the check ID.
- * @param text the JSON report.
- * @param help the check help text.
+ * @param input the check, report text, source paths, and output declaration.
  * @returns categorized findings, including each positioned member of a grouped issue.
  */
-export function parseKnipFindings(check: string, text: string, help: string): Finding[] {
-    let report: KnipReport;
-    try {
-        report = knipReportSchema.parse(JSON.parse(text));
-    } catch (error) {
-        throw new GspotError('output', 'Knip returned invalid structured findings.', { cause: error });
-    }
+export function parseKnipFindings(input: ReportInput): Finding[] {
+    const { check, stdout: text, help } = input;
+    const report = parseReport('Knip', text, knipReportSchema);
     const findings: Finding[] = [];
     for (const row of report.issues) {
         for (const category of KNIP_ISSUE_CATEGORIES) {

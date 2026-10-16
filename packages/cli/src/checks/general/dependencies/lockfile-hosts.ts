@@ -13,7 +13,7 @@ function urlMessage(url: URL, hosts: Set<string>): string | undefined {
 function fileFindings(input: CheckInput, path: string, hosts: Set<string>): Finding[] {
     const lines = readSource(input.root, path, input.reads).toString('utf8').split('\n');
     // An npm lockfile also holds funding pages and deprecation notes; only its resolved field names a download.
-    const isNpm = findLockfile(posix.basename(path))?.client === 'npm';
+    const isNpm = findLockfile(path)?.client === 'npm';
     return lines.flatMap((text, index) =>
         (isNpm
             ? text.matchAll(NPM_DOWNLOAD).map((match) => match[1] ?? '')
