@@ -5,6 +5,7 @@ import {
     SHELLCHECK_OPTIONS,
     SHELLCHECK_ALL_LEVEL_CHECKS,
 } from '#cli/config/generation/tool-files.ts';
+
 /**
  * Build shellcheck file from the selected settings.
  * @param context the repository, scope settings, tool declaration, and output path.

@@ -13,6 +13,7 @@ import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 import type { KnownSettings, SettingDefault } from '#cli/types/settings/values.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/settings/schema/tables.ts';
 import { BUILD_SCRIPT, COMMIT_SCOPES, XCODE_DESTINATIONS } from '#cli/config/settings/defaults.ts';
+
 // Read setting declarations and resolve their shipped and detected defaults.
 
 function getSchemaPathRole(input: z.core.JSONSchema.JSONSchema): unknown {

@@ -12,6 +12,7 @@ import { type Settings, type SettingsFile } from '#cli/types/settings/values.ts'
 import { type TomlTable, type ParsedSettings } from '#cli/types/settings/file.ts';
 import { SCOPE_EMPTY_RECORDS, COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/values.ts';
 import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/settings.ts';
+
 /**
  * Parse and validate gspot.toml. Throw a GspotError with every settings error.
  *

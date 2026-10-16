@@ -1,6 +1,7 @@
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { COMMITLINT_RULES, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generation/tool-files.ts';
+
 /**
  * Build commitlint file from the selected settings.
  * @param context the repository, scope settings, tool declaration, and output path.

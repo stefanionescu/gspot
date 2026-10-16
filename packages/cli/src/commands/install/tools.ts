@@ -14,6 +14,7 @@ import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { installToolProjects } from '#cli/commands/install/projects.ts';
 import { verifyPackageManagerVersion } from '#cli/tools/npm/project.ts';
 import type { InstallContext, InstallationResult } from '#cli/types/install.ts';
+
 /**
  * Install selected tools in their repository projects and set the clone's hooks.
  *

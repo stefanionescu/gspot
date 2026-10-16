@@ -19,6 +19,7 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
 import { CLI_MAIN, runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { waitForExit, waitForFile, captureChild, startCommand, prepareCommand } from '#tests/setup/processes.ts';
+
 // Windows does not deliver these process signals like POSIX systems.
 test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
     'check passes %s to a running tool and reports the run as canceled',

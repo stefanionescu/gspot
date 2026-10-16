@@ -8,6 +8,7 @@ import { isRecord, getValueAt, stripUndefined } from '#cli/system/values.ts';
 import { deleteKey, findScopeTable, removeFromList } from '#cli/settings/edit.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { saveSettings, startSettingsEdit, findSettingDeclaration } from '#cli/apply/save-settings.ts';
+
 /**
  * Register deletion of a written setting or selected list items and table entries.
  * @param program the command program

@@ -10,6 +10,7 @@ import type { Settings } from '#cli/types/settings/values.ts';
 import { type ConfigurationsOptions } from '#cli/types/commands/edit-settings.ts';
 import { saveSettings, startConfigurationEdit } from '#cli/apply/save-settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+
 /**
  * gspot add: appends configurations to the root list or to one scope's list.
  * @param options the parsed flags

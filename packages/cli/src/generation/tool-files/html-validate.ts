@@ -7,6 +7,7 @@ import {
     HTML_BUILT_OVERRIDES,
     HTML_VALIDATE_EXTENDS,
 } from '#cli/config/generation/html.ts';
+
 /**
  * Build html validate file from the selected settings.
  * @param context the repository, scope settings, tool declaration, and output path.

@@ -16,6 +16,7 @@ import { type Settings, type KnownSettings } from '#cli/types/settings/values.ts
 import { RECORD_FIELDS, SETTINGS_REFERENCE_URL } from '#cli/config/settings/file.ts';
 import { listCheckIds, readManifests, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import { validateScopePaths, validateExtraOptions, validateDisabledRules } from '#cli/settings/validation/values.ts';
+
 /**
  * Name the invalid setting and retain the validator’s explanation.
  * @param path the setting or field that the issue concerns.

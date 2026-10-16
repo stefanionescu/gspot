@@ -24,6 +24,7 @@ import {
     EDITORCONFIG_SECTION,
     EDITORCONFIG_COMMENT,
 } from '#cli/config/commands/init.ts';
+
 // Read only the formatting options that gspot settings use.
 const formatOptionsSchema = z.object({
     tabWidth: z.number().optional(),

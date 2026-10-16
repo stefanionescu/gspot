@@ -15,6 +15,7 @@ import {
     SPECTRAL_RECOMMENDED_OFF,
     PURGECSS_PSEUDO_CLASS_PATTERN,
 } from '#cli/config/generation/tool-files.ts';
+
 /**
  * Build ansible lint file from the selected settings.
  * @param context the repository, scope settings, tool declaration, and output path.

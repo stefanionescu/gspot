@@ -8,6 +8,7 @@ import { saveSettings, startSettingsEdit } from '#cli/apply/save-settings.ts';
 import { listCheckIds, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import type { IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/edit-settings.ts';
+
 /**
  * Register removal of ignores by check, lint rule, and path.
  * @param program the command program

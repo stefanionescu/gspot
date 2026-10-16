@@ -8,6 +8,7 @@ import { copyRevision } from '#cli/checks/run/copy/revision.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { type PushReport, type CheckOptions } from '#cli/types/commands/check.ts';
 import { type PushRevision, type PushSelection } from '#cli/types/repository/revisions.ts';
+
 // Checks one pushed commit in a copy of it, or undefined when the signal stopped the run.
 async function checkRevision(
     root: string,

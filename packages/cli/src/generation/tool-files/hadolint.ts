@@ -1,6 +1,7 @@
 import { stringify } from 'yaml';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { HADOLINT_RECOMMENDED_OFF, HADOLINT_FAILURE_THRESHOLD } from '#cli/config/generation/tool-files.ts';
+
 /**
  * Build hadolint file from the selected settings.
  * @param context the repository, scope settings, tool declaration, and output path.

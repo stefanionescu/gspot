@@ -18,6 +18,7 @@ import { getSettingValue, getWrittenValue, findSettingDefault } from '#cli/setti
 import { type SetOptions, type ParsedSettingValue } from '#cli/types/commands/edit-settings.ts';
 import { saveSettings, startSettingsEdit, findSettingDeclaration } from '#cli/apply/save-settings.ts';
 import type { Settings, KnownSettings, DeclarationMatch, EffectiveSetting } from '#cli/types/settings/values.ts';
+
 // Structured values use the inline syntax of gspot.toml.
 function parseStructured(text: string): unknown {
     try {

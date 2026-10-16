@@ -2,6 +2,7 @@
 
 import { mock } from 'bun:test';
 import * as systemEnvironment from 'std-env';
+
 /**
  * Sets or clears one environment variable for this process and the tools it spawns.
  * @param name the key in process.env to set or remove.

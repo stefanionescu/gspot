@@ -16,6 +16,7 @@ import { dirname, resolve, basename, relative } from 'node:path';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { type ExportJson, type ExportOptions } from '#cli/types/commands/export.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+
 /**
  * Writes a template from the settings of this repository.
  * @param options the export destination.

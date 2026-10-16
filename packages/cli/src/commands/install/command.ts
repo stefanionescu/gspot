@@ -9,6 +9,7 @@ import { installTools } from '#cli/commands/install/tools.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import type { InstallCommandJson } from '#cli/types/install.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+
 /**
  * Install the selected tools and set the Git hooks as the settings require.
  * @param cwd the directory the command starts in

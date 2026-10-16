@@ -2,6 +2,7 @@ import { JSCPD_IGNORED } from '#cli/config/generation/tool-files.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { buildGlobSections, buildIgnoreSections, buildSettingsSections } from '#cli/generation/ignore-files.ts';
+
 /**
  * Build jscpd file from the selected settings.
  * @param context the repository, scope settings, tool declaration, and output path.

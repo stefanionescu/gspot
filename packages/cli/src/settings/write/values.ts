@@ -1,6 +1,7 @@
 import { type KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { type TomlValue, type TomlComments } from '#cli/types/parsers/toml.ts';
 import { isTomlKind, getTomlRange, insertTomlComments } from '#cli/parsers/toml/comments.ts';
+
 /**
  * Retain comments while emitting nested TOML arrays and inline tables.
  * @param node the parsed value whose layout supplies the source ranges.

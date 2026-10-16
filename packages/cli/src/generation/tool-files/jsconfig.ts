@@ -17,6 +17,7 @@ import {
     JAVASCRIPT_EXTENSIONS,
     JAVASCRIPT_BUNDLED_IMPORTS,
 } from '#cli/config/generation/typescript.ts';
+
 /**
  * Build jsconfig from the selected settings.
  * @param context the repository, scope settings, tool declaration, and output path.

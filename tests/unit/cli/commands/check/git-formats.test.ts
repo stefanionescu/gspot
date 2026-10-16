@@ -7,6 +7,7 @@ import { readGitOutput } from '#tests/setup/git.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { buildReportingCheck } from '#tests/setup/settings.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
+
 // The files a check reports and the status it ends with, for a staged run and for a push of the same change.
 async function collectVerdicts(format: 'sha1' | 'sha256'): Promise<unknown> {
     await using sandbox = await testdir();

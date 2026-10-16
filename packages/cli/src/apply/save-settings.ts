@@ -26,6 +26,7 @@ import { findScopeTable, updateSettings, readSettingsEdit } from '#cli/settings/
 import { refuseAlwaysSelected, listUnknownConfigurations } from '#cli/configurations/select.ts';
 import type { SaveSettingsResult, SaveSettingsOptions } from '#cli/types/commands/edit-settings.ts';
 import { type Settings, type KnownSettings, type DeclarationMatch } from '#cli/types/settings/values.ts';
+
 /**
  * Edit settings, check them, and write them and their generated files. Installs nothing.
  * @param repositoryRoot the folder where gspot writes settings and generated files.

@@ -26,6 +26,7 @@ import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/t
 import { listCheckIds, listRuleFiles, readManifests } from '#cli/configurations/manifests.ts';
 import { listSettings, getSettingValue, findDeclaration, listCandidateKeys } from '#cli/settings/inherit.ts';
 import { type Explanation, type SettingScope, type ConfigurationExplanation } from '#cli/types/commands/explain.ts';
+
 // Explain a check, rule, configuration, setting, or file path.
 
 function formatList(label: string, items: string[]): string[] {

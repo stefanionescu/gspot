@@ -21,6 +21,7 @@ import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
 import type { CheckResult, CheckProgress } from '#cli/types/checks/run/check.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type CheckFlags, type CheckOptions, type CheckCommandJson } from '#cli/types/commands/check.ts';
+
 // Reads the pre-push protocol from standard input, stopping when the signal stops the run.
 async function readPushInput(signal: AbortSignal): Promise<string> {
     signal.throwIfAborted();

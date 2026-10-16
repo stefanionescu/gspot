@@ -1,6 +1,7 @@
 import { stringify } from 'yaml';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { YAMLLINT_RULES, YAMLLINT_YAML_OPTIONS, YAMLLINT_RULE_OPTIONS } from '#cli/config/generation/tool-files.ts';
+
 /**
  * Build yamllint file from the selected settings.
  * @param context the repository, scope settings, tool declaration, and output path.
