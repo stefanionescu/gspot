@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { parseSettings } from '#cli/settings/read.ts';
 import { REASON } from '#tests/config/settings/errors.ts';
-import { selectForScope } from '#cli/repository/select.ts';
+import { selectForScope } from '#cli/repository/coverage.ts';
 import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 

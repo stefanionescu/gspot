@@ -1,18 +1,18 @@
 // The parts of the ESLint configuration that the settings and the emitted scope decide.
 import { basename } from 'node:path/posix';
 import type { Session } from '#cli/types/planning.ts';
-import { aliasesFor } from '#cli/repository/aliases.ts';
 import { settingValue } from '#cli/settings/inherit.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { aliasesFor } from '#cli/generation/eslint/aliases.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
-import { projectDependencies } from '#cli/repository/scopes.ts';
 import { eslintModule } from '#cli/generation/eslint/serialize.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { boundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
 import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
-import { literalGlob, pathMatcher } from '#cli/repository/selectors.ts';
+import { literalGlob, pathMatcher } from '#cli/repository/matchers.ts';
+import { projectDependencies } from '#cli/repository/dependency-files.ts';
 import { scriptPaths, runtimeBlocks } from '#cli/generation/eslint/runtimes.ts';
 import { filePatterns, nodePatterns, sourcePattern } from '#cli/generation/eslint/files.ts';
 import { trivialRuleBlocks, environmentRuleBlocks } from '#cli/generation/eslint/structure.ts';

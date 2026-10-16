@@ -1,5 +1,7 @@
 // Bun preloads this module in each isolated integration and end-to-end test file.
 // Starts each file's registry and reuses the prepared packages and program tools.
+// Bun preloads this module in each isolated integration and end-to-end test file.
+// Starts each file's registry and reuses the prepared packages and program tools.
 import { testdir } from 'testdirs';
 import { afterAll } from 'bun:test';
 import { readFile } from 'node:fs/promises';

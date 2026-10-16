@@ -8,7 +8,7 @@ import { readCachedPrefix } from '#cli/system/files/reads.ts';
 import { type Generated } from '#cli/types/generation/files.ts';
 import { hasGeneratedHeader } from '#cli/repository/classify.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
-import { readTooling, readLintJobs } from '#cli/repository/tooling.ts';
+import { readTooling, readLintJobs } from '#cli/repository/existing-tools.ts';
 import { type Suggestions, type SuggestionRow } from '#cli/types/commands/doctor.ts';
 import { type Tooling, type FoundToolFile } from '#cli/types/repository/inventory.ts';
 

@@ -1,5 +1,4 @@
 // Runs Git commands with repository environment isolation.
-// Runs Git commands with repository environment isolation.
 import { resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
@@ -24,6 +23,7 @@ import {
     GIT_HOOKS_ARGUMENTS,
     GIT_VARIABLE_PREFIX,
     NOT_REPOSITORY_CODE,
+    WORK_TREE_ARGUMENTS,
     GIT_SOURCE_ARGUMENTS,
     GIT_PREFIX_ARGUMENTS,
     GIT_SETTING_ARGUMENTS,
@@ -131,6 +131,7 @@ export function buildGitEnvironment(
     if ('failure' in source) return source;
     return readTargetGitEnvironment(root, source, { isolated, overrides, explicit });
 }
+
 /**
  * Distinguishes an absent work tree from broken Git metadata after a failed command.
  * @param inspection the work-tree probe result.
@@ -139,6 +140,7 @@ export function buildGitEnvironment(
 export function isOutsideGit(inspection: SpawnResult): boolean {
     return inspection.code === NOT_REPOSITORY_CODE && inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE);
 }
+
 /**
  * Run Git without a time limit and wait for its result.
  * @param root the working directory.
@@ -155,6 +157,7 @@ export function runGitBlocking(
     if ('failure' in selected) return selected.failure;
     return spawnProcessBlocking(['git', ...argv], { ...options, env: selected.env, cwd: root });
 }
+
 /**
  * Runs Git with cancellation.
  * @param root the working directory.
@@ -175,6 +178,7 @@ export async function runGit(
     const prepared = { ...options, env: selected.env, cwd: root };
     return output === 'utf8' ? spawnProcess(command, prepared) : streamProcess(command, prepared, output);
 }
+
 /**
  * Runs Git with cancellation and keeps output bytes for paths and objects.
  * @param root the working directory.
@@ -193,6 +197,7 @@ export async function runGitForBytes(
     });
     return { ...result, stdout: Buffer.concat(chunks) };
 }
+
 /**
  * Reads a Git configuration value, distinguishing an unset key from a failed command.
  * @param root the working directory.
@@ -207,6 +212,7 @@ export function readGitSetting(root: string, key: string): string | undefined {
         `Git configuration ${key} failed in ${root} (exit ${String(result.code)}): ${result.stderr.trim()}`,
     );
 }
+
 /**
  * The folder Git runs hooks from: core.hooksPath when set, otherwise the hooks folder of the Git directory.
  * @param root the repository root.
@@ -217,6 +223,7 @@ export function readHooksFolder(root: string): string {
     if (result.code !== 0) throw new Error(`Cannot read the Git hooks folder: ${result.stderr.trim()}`);
     return resolve(root, trimGitLine(result.stdout));
 }
+
 /**
  * What a Git command prints, or the selection error it failed with.
  * @param root the repository root.
@@ -233,6 +240,7 @@ export async function readGitText(root: string, argv: readonly string[], options
         );
     return result.stdout;
 }
+
 /**
  * A Git command's output as its non-empty lines.
  * @param root the repository root.
@@ -244,6 +252,7 @@ export async function readGitLines(root: string, argv: readonly string[], option
     const text = await readGitText(root, argv, options);
     return text.split('\n').filter((line) => line !== '');
 }
+
 /**
  * The paths a null-separated Git listing names.
  * @param root the repository root.
@@ -255,6 +264,7 @@ export async function readGitPaths(root: string, argv: readonly string[], option
     const text = await readGitText(root, argv, options);
     return text.split('\0').filter((path) => path !== '');
 }
+
 /**
  * Whether a shallow clone cuts repository history.
  * @param root the repository root.
@@ -265,6 +275,7 @@ export async function isShallow(root: string, options: GitOptions): Promise<bool
     const answer = await readGitText(root, GIT_SHALLOW_ARGUMENTS, options);
     return answer.trim() === 'true';
 }
+
 /**
  * The path from Git's top level to the project root, with a trailing slash.
  * @param root the repository directory.
@@ -277,6 +288,7 @@ export function readGitPrefix(root: string, hasGit: boolean): string {
     if (result.code !== 0) throw new GspotError('git', `Cannot find the hook directory: ${result.stderr.trim()}`);
     return trimGitLine(result.stdout);
 }
+
 /**
  * Remove the final newline from a Git result while preserving the value's other bytes.
  * @param text Git's printed value.
@@ -294,4 +306,19 @@ export function trimGitLine(text: string): string {
  */
 export async function gitTopLevel(root: string, options: GitOptions): Promise<string> {
     return trimGitLine(await readGitText(root, [...GIT_TOP_LEVEL_ARGUMENTS], options));
+}
+
+/**
+ * True when a Git work tree contains the root.
+ * @param root the directory.
+ * @returns whether Git confirms a work tree.
+ * @throws when Git cannot establish the repository state.
+ */
+export function isGitRepository(root: string): boolean {
+    const inspection = runGitBlocking(root, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
+    if (inspection.code === 0 && inspection.stdout.trim() === 'true') return true;
+    if (isOutsideGit(inspection)) return false;
+    throw new Error(
+        `Git work-tree discovery failed in ${root} (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
+    );
 }

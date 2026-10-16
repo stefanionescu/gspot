@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { selectForScope } from '#cli/repository/select.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
+import { selectForScope } from '#cli/repository/coverage.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { WrittenTable } from '#cli/types/settings/values.ts';

@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import { coveredBy } from '#cli/repository/select.ts';
+import { coveredBy } from '#cli/repository/coverage.ts';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { MIGRATION_VERSION } from '#cli/config/parsers/sql.ts';

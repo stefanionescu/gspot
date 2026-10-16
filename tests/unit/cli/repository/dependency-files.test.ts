@@ -7,11 +7,10 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { projectDependencies } from '#cli/repository/scopes.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { PYTHON_WORKSPACE_FILES } from '#tests/config/python/tool-project.ts';
-import { readPackageJson, readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { REACT_VUE_PACKAGES, ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/config/npm.ts';
+import { readPackageJson, projectDependencies, readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { PACKAGE_FIELDS, PROJECT_DEPENDENCY_FILES, PROJECT_DEPENDENCY_SCOPES } from '#tests/config/repository.ts';
 
 test('Python dependency file reads keep their dependencies and report invalid text', async () => {

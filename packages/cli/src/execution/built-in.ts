@@ -1,5 +1,5 @@
 import { emptyResult } from '#cli/execution/report.ts';
-import { workspaceSourceFiles } from '#cli/repository/scopes.ts';
+import { workspaceSourceFiles } from '#cli/tools/npm/packages.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 
 import type {

@@ -1,11 +1,7 @@
-// Builds filename and path matchers for repository selection.
+// Compiles repository path and filename selectors.
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
-import { DOT_GSPOT } from '#cli/config/system/locations.ts';
-import { HOOK_PACKAGES } from '#cli/config/repository/hooks.ts';
 import type { PathExpressions } from '#cli/types/repository/inventory.ts';
-import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
-import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { GLOB_EXCLUDE, TRAILING_SLASH, FOLDER_CONTENTS, GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 
 const matcherCache = new Map<string, (path: string) => boolean>();
@@ -60,24 +56,6 @@ export function includeFolderContents(patterns: string[]): string[] {
 }
 
 /**
- * Whether a repository path belongs to a gspot tool project.
- * @param path the repository-relative path.
- * @returns whether a .gspot folder contains the file.
- */
-export function isInGspotFolder(path: string): boolean {
-    return path.split('/').some((part) => part.toLowerCase() === DOT_GSPOT);
-}
-
-/**
- * Whether a repository path belongs to tool projects or installed npm dependencies.
- * @param path the repository-relative path.
- * @returns whether project discovery must leave out the path.
- */
-export function isToolingPath(path: string): boolean {
-    return isInGspotFolder(path) || path.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part));
-}
-
-/**
  * Matches literal filenames and glob selectors against both the filename and repository path.
  * @param names the literal filenames and glob selectors.
  * @returns the same filename matcher for detection and ownership.
@@ -98,17 +76,4 @@ export function filenameMatcher(names: string[]): (path: string) => boolean {
  */
 export function literalGlob(path: string): string {
     return path.replaceAll(GLOB_SPECIAL_CHARACTERS, String.raw`\$&`);
-}
-
-/**
- * True when an npm manifest holds only declared npm tools or recognized Git hook managers.
- * @param projectManifest the parsed project manifest.
- * @param npmNames declared npm installer packages.
- * @returns whether it holds tooling only.
- */
-export function isToolsOnlyPackage(projectManifest: DependencyFile, npmNames: ReadonlySet<string>): boolean {
-    if (projectManifest.kind !== 'package.json') return false;
-    const names = Object.keys(projectManifest.installed);
-    if (names.length === 0) return false;
-    return names.every((name) => npmNames.has(name) || new Set<string | undefined>(HOOK_PACKAGES).has(name));
 }

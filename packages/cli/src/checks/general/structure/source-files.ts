@@ -1,9 +1,8 @@
-import { extensionsTagged } from '#cli/repository/tags.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
-import { isInGspotFolder } from '#cli/repository/selectors.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { DirectoryEntry } from '#cli/types/checks/general.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { isInGspotFolder, extensionsTagged } from '#cli/repository/classify.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 
 /**

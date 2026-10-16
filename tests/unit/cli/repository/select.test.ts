@@ -5,8 +5,8 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { buildTrackedFile } from '#tests/setup/tracked-file.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { pathMatcher, filenameMatcher } from '#cli/repository/selectors.ts';
-import { coveredBy, isCovered, selectForScope } from '#cli/repository/select.ts';
+import { pathMatcher, filenameMatcher } from '#cli/repository/matchers.ts';
+import { coveredBy, isCovered, selectForScope } from '#cli/repository/coverage.ts';
 import { DECLARATION_FILES, GENERATED_SELECTIONS } from '#tests/config/repository.ts';
 
 import {

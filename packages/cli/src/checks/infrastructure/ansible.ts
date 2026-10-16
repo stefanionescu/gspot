@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { isToolingPath } from '#cli/repository/selectors.ts';
+import { isToolingPath } from '#cli/repository/classify.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { toolFindings } from '#cli/execution/command/output.ts';
 import { substitute } from '#cli/execution/command/placeholders.ts';

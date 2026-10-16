@@ -1,5 +1,7 @@
 // Settings and defaults declared by gspot and selected configurations. Framework, platform, library, and database
 // configurations override an earlier scalar default; other scalar disagreements produce conflicts.
+// Settings and defaults declared by gspot and selected configurations. Framework, platform, library, and database
+// configurations override an earlier scalar default; other scalar disagreements produce conflicts.
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { coversScope } from '#cli/repository/scopes.ts';

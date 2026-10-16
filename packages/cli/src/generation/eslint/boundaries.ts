@@ -1,5 +1,5 @@
 import { joinScope } from '#cli/repository/scopes.ts';
-import { literalGlob } from '#cli/repository/selectors.ts';
+import { literalGlob } from '#cli/repository/matchers.ts';
 import { nodePatterns, sourcePattern } from '#cli/generation/eslint/files.ts';
 
 import type {

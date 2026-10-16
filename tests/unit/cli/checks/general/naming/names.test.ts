@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { parseSettings } from '#cli/settings/read.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { TERMS } from '#tests/config/naming/settings.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { pathMatcher } from '#cli/repository/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import { nameFindings } from '#cli/checks/general/naming/names.ts';

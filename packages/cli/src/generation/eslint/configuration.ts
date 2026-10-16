@@ -1,5 +1,4 @@
 // The parts of the ESLint configuration that the settings and the emitted scope decide.
-// The parts of the ESLint configuration that the settings and the emitted scope decide.
 import { z } from 'zod';
 import { readAsset } from '#cli/system/assets.ts';
 import { LEVELS } from '#cli/config/configurations.ts';

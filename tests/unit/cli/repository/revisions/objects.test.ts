@@ -5,7 +5,7 @@ import { gitOutput } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
-import { readBlobs, listHeadEntries } from '#cli/repository/revisions/objects.ts';
+import { readBlobs, listHeadEntries } from '#cli/repository/revisions/tree-entries.ts';
 
 // Windows file names cannot hold a newline or a quote.
 test.skipIf(isWindows)('committed blobs keep unusual file names and bytes', async () => {

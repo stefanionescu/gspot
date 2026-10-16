@@ -1,5 +1,4 @@
 // Packs packages, serves their registry, and installs sandbox tool projects.
-// Packs packages, serves their registry, and installs sandbox tool projects.
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { expect } from 'bun:test';

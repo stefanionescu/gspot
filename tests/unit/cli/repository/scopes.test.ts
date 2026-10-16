@@ -4,13 +4,14 @@ import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
+import { packageWorkspaces } from '#cli/tools/npm/packages.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { NESTED_SCOPES_SETTINGS } from '#tests/config/settings/scopes.ts';
 import { PYTHON_WORKSPACE_FILES } from '#tests/config/python/tool-project.ts';
-import { joinScope, findScopes, projectFolder, packageWorkspaces } from '#cli/repository/scopes.ts';
+import { joinScope, findScopes, projectFolder } from '#cli/repository/scopes.ts';
 
 import {
     SCOPE_PATHS,

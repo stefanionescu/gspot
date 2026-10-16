@@ -1,5 +1,7 @@
 // Shapes read from dependency lockfiles before their values reach consumers.
 // Matching and registry portability for npm tool-project lockfiles.
+// Shapes read from dependency lockfiles before their values reach consumers.
+// Matching and registry portability for npm tool-project lockfiles.
 import { z } from 'zod';
 import semver from 'semver';
 import { writeFileSync } from 'node:fs';

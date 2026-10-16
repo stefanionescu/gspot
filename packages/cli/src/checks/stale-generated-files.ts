@@ -1,6 +1,6 @@
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { pathMatcher } from '#cli/repository/matchers.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';

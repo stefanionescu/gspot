@@ -1,8 +1,9 @@
 import ignore from 'ignore';
+import { coversScope } from '#cli/repository/scopes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { TOOL_IGNORE_ARGUMENT } from '#cli/config/planning.ts';
 import { missingBuild } from '#cli/configurations/tool-pins.ts';
-import { coversScope, projectDependencies } from '#cli/repository/scopes.ts';
+import { projectDependencies } from '#cli/repository/dependency-files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';

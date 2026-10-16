@@ -1,10 +1,10 @@
 import { emitAll } from '#cli/generation/files.ts';
+import { findRoot } from '#cli/repository/read.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { printResult } from '#cli/system/terminal.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { installTools } from '#cli/install/install.ts';
-import { findRoot } from '#cli/repository/find-root.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';

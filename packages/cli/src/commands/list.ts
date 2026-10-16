@@ -1,8 +1,8 @@
+import { findRoot } from '#cli/repository/read.ts';
 import { settingsSkip } from '#cli/planning/skips.ts';
 import { printResult } from '#cli/system/terminal.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { findRoot } from '#cli/repository/find-root.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';

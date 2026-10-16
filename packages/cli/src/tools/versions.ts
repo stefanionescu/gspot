@@ -6,11 +6,11 @@ import type { Files } from '#cli/types/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import { installedPackage } from '#cli/tools/npm/packages.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import { installedPackage } from '#cli/repository/dependency-files.ts';
 import { TOOL_ENV, NO_VERSION, VERSION_FLAG } from '#cli/config/tools/run.ts';
 import type { ToolInspection, ParsedToolVersion } from '#cli/types/tools/find.ts';
 

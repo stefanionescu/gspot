@@ -5,10 +5,11 @@ import type { Session } from '#cli/types/planning.ts';
 import { prefixScopePath } from '#cli/settings/paths.ts';
 import { pointerPaths } from '#cli/generation/pointers.ts';
 import { collectPins } from '#cli/configurations/tool-pins.ts';
+import { packageWorkspaces } from '#cli/tools/npm/packages.ts';
 import type { EmitInputs } from '#cli/types/generation/files.ts';
+import { isInScope, byScopeDepth } from '#cli/repository/scopes.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
-import { isInScope, byScopeDepth, packageWorkspaces } from '#cli/repository/scopes.ts';
 import { generatedIgnores, selectedIgnorePaths } from '#cli/generation/ignore-patterns.ts';
 
 import {

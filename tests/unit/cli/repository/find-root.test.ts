@@ -1,7 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { findRoot } from '#cli/repository/read.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { findRoot, isGitRepository } from '#cli/repository/find-root.ts';
+import { isGitRepository } from '#cli/system/git.ts';
 
 test('finds the nearest gspot.toml in a folder with no Git', async () => {
     await using sandbox = await testdir();

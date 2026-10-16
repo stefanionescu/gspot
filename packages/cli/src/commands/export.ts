@@ -1,11 +1,11 @@
 import { realpathSync } from 'node:fs';
 import { isRecord } from '#cli/system/values.ts';
 import { isOwned } from '#cli/ownership/plans.ts';
+import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { printResult } from '#cli/system/terminal.ts';
-import { findRoot } from '#cli/repository/find-root.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';

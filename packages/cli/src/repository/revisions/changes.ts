@@ -1,8 +1,7 @@
-// Selects files changed between repository revisions.
+// Reads staged paths and compares branches.
 import { GspotError } from '#cli/system/errors.ts';
-import { readHead } from '#cli/repository/revisions/objects.ts';
+import type { StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { runGit, isShallow, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
-import type { StagedPaths, ChangedPaths, CommitSelection } from '#cli/types/repository/revisions.ts';
 
 import {
     HEAD_SUFFIX,
@@ -12,7 +11,6 @@ import {
     MERGE_BASE_ARGUMENTS,
     STAGED_DIFF_ARGUMENTS,
     REMOTE_HEADS_ARGUMENTS,
-    ROOT_COMMITS_ARGUMENTS,
     WORKTREE_DIFF_ARGUMENTS,
     CHANGED_COMMITS_ARGUMENTS,
 } from '#cli/config/repository/revisions.ts';
@@ -28,9 +26,12 @@ async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promis
         return isHead ? [[name, target] as [string, string]] : [];
     });
 }
-
-// The upstream or remote default branch, or an empty string when neither exists.
-async function readDefaultRef(root: string, cancelSignal?: AbortSignal): Promise<string> {
+/** Read the upstream or remote default branch.
+ * @param root the repository root.
+ * @param cancelSignal cancellation for Git reads.
+ * @returns the selected branch or an empty string when absent.
+ */
+export async function readDefaultRef(root: string, cancelSignal?: AbortSignal): Promise<string> {
     const head = await readGitText(root, [...HEAD_NAME_ARGUMENTS], { cancelSignal });
     const upstreamText = await readGitText(root, [...UPSTREAM_ARGUMENTS, head.trim()], {
         cancelSignal,
@@ -41,9 +42,13 @@ async function readDefaultRef(root: string, cancelSignal?: AbortSignal): Promise
     const preferred = heads.find(([name]) => name === ORIGIN_HEAD) ?? (heads.length === 1 ? heads[0] : undefined);
     return preferred?.[1] ?? '';
 }
-
-// The merge base of a reference and the current commit, with a note about cut history for a shallow repository.
-async function readMergeBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<string> {
+/** Read the merge base between a comparison branch and `HEAD`.
+ * @param root the repository root.
+ * @param compared the comparison branch.
+ * @param cancelSignal cancellation for Git reads.
+ * @returns the shared base commit.
+ */
+export async function readMergeBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<string> {
     const base = await runGit(root, [...MERGE_BASE_ARGUMENTS, compared, 'HEAD'], {
         cancelSignal,
     });
@@ -94,39 +99,4 @@ export async function readChangedPaths(
         paths: [...new Set([...committed, ...working])].toSorted((a, b) => a.localeCompare(b)),
         commits,
     };
-}
-
-/**
- * Compare a push with its upstream or remote default. Without either, start at the root commit.
- * @param root the repository root.
- * @param cancelSignal cancellation for the Git commands.
- * @returns the commit the pushed range starts after.
- */
-export async function readPushBase(root: string, cancelSignal?: AbortSignal): Promise<string> {
-    const compared = await readDefaultRef(root, cancelSignal);
-    if (compared !== '') return readMergeBase(root, compared, cancelSignal);
-    const roots = await readGitLines(root, [...ROOT_COMMITS_ARGUMENTS], { cancelSignal });
-    return roots.at(-1) as string;
-}
-
-/**
- * The supplied pushed commits, or the commits after the push base.
- * @param root the repository root.
- * @param commits the explicit selection when supplied.
- * @param cancelSignal cancellation for the Git commands.
- * @returns the exact selected commits or the Git selection error.
- */
-export async function pushedCommits(
-    root: string,
-    commits: string[] | undefined,
-    cancelSignal?: AbortSignal,
-): Promise<CommitSelection> {
-    if (commits !== undefined) return commits;
-    if ((await readHead(root, cancelSignal)) === undefined) return [];
-    const base = await readPushBase(root, cancelSignal);
-    const listed = await runGit(root, ['rev-list', `${base}..HEAD`, '--'], {
-        cancelSignal,
-    });
-    if (listed.code !== 0) return { error: `Cannot select commit messages: ${listed.stderr.trim()}` };
-    return listed.stdout.split('\n').filter(Boolean);
 }

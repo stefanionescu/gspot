@@ -1,8 +1,7 @@
 // Runs ESLint rule cases with the declared parsers and shared test callbacks.
 import { it, afterAll, describe } from 'bun:test';
 import * as parser from '@typescript-eslint/parser';
-import { RuleTester } from '@typescript-eslint/rule-tester';
-import type { RuleTesterConfig } from '@typescript-eslint/rule-tester';
+import { RuleTester, type RuleTesterConfig } from '@typescript-eslint/rule-tester';
 import { RULE_TESTER_ROOT, RULE_TESTER_PARSER_OPTIONS } from '#tests/config/eslint-plugin.ts';
 
 RuleTester.afterAll = afterAll;

@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { extensionsTagged } from '#cli/repository/tags.ts';
+import { extensionsTagged } from '#cli/repository/classify.ts';
 import { HOOK_DIRECTORIES } from '#cli/config/repository/hooks.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';

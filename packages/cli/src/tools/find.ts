@@ -12,7 +12,7 @@ import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import { readToolVersion, toolVersionState } from '#cli/tools/versions.ts';
-import { installedPackage, installedDependency } from '#cli/repository/dependency-files.ts';
+import { installedPackage, installedDependency } from '#cli/tools/npm/packages.ts';
 import { isInside, buildVenvBinPath, convertToPosixPath, listExecutableNames } from '#cli/system/paths.ts';
 import { DOT_GSPOT, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/system/locations.ts';
 

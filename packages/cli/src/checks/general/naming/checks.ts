@@ -1,13 +1,13 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { isCovered } from '#cli/repository/select.ts';
+import { isCovered } from '#cli/repository/coverage.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { scopeOf, isInScope } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { namingDefaults } from '#cli/configurations/manifests.ts';
 import { nameFindings } from '#cli/checks/general/naming/names.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import { pathMatcher, filenameMatcher } from '#cli/repository/matchers.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
-import { pathMatcher, filenameMatcher } from '#cli/repository/selectors.ts';
 import type { FileNames, Identifier, NamingSource, NamingSettings } from '#cli/types/checks/general.ts';
 import { identifiersOf, fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 

@@ -2,21 +2,21 @@
 import { addAbortSignal } from 'node:stream';
 import { resolve, relative } from 'node:path';
 import { constants, accessSync } from 'node:fs';
+import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { Option } from '@commander-js/extra-typings';
+import { isGitRepository } from '#cli/system/git.ts';
 import { printResult } from '#cli/system/terminal.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { checkTree } from '#cli/commands/check/tree.ts';
 import { progress } from '#cli/commands/check/report.ts';
-import type { Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import { copyRevision } from '#cli/execution/copy/revision.ts';
 import { type CheckOptions } from '#cli/types/commands/check.ts';
+import { Option, type Command } from '@commander-js/extra-typings';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
 import { EXIT_ERROR, SIGNAL_EXIT_CODES } from '#cli/config/terminal.ts';
-import { findRoot, isGitRepository } from '#cli/repository/find-root.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { checkPush, assertPushOptions } from '#cli/commands/check/push.ts';
 

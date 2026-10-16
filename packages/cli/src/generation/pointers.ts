@@ -1,7 +1,7 @@
 import { dirname, relative } from 'node:path';
-import { coveredBy } from '#cli/repository/select.ts';
 import { headerFor } from '#cli/generation/headers.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { coveredBy } from '#cli/repository/coverage.ts';
+import { pathMatcher } from '#cli/repository/matchers.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { isInScope, joinScope, nestedScopes } from '#cli/repository/scopes.ts';

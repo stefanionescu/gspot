@@ -8,11 +8,11 @@ import { containing } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
-import { projectDependencies } from '#cli/repository/scopes.ts';
 import { type RunOptions } from '#cli/types/execution/check.ts';
 import { DECLARATION_FILES } from '#tests/config/repository.ts';
 import { checkReport, buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { projectDependencies } from '#cli/repository/dependency-files.ts';
 import { TEXT_FIX, TEXT_CHECK, FIX_LINTER_CASES } from '#tests/config/execution.ts';
 import { REACT_VUE_PACKAGES, CLEAR_DEPENDENCIES_SCRIPT, ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/config/npm.ts';
 

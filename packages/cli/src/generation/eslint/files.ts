@@ -1,8 +1,8 @@
-import { extensionsTagged } from '#cli/repository/tags.ts';
+import { extensionsTagged } from '#cli/repository/classify.ts';
 import { joinScope, isInScope } from '#cli/repository/scopes.ts';
 import type { PathExpressions } from '#cli/types/repository/inventory.ts';
 import { CODE_LANGUAGES, COMPONENT_CONFIGURATIONS } from '#cli/config/generation/eslint.ts';
-import { literalGlob, pathMatcher, includeFolderContents } from '#cli/repository/selectors.ts';
+import { literalGlob, pathMatcher, includeFolderContents } from '#cli/repository/matchers.ts';
 import type { EslintFiles, EslintFileInputs, EslintSettingsBlock } from '#cli/types/generation/eslint.ts';
 
 /**

@@ -1,5 +1,7 @@
 // Selects positional repository paths and refuses unknown check IDs.
 // Checking one tree: the working tree, or a copy of the index or of a pushed commit.
+// Selects positional repository paths and refuses unknown check IDs.
+// Checking one tree: the working tree, or a copy of the index or of a pushed commit.
 import { resolve, relative } from 'node:path';
 import { executeRun } from '#cli/execution/run.ts';
 import { hookStatus } from '#cli/install/hooks.ts';

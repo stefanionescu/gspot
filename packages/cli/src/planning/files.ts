@@ -1,11 +1,11 @@
 // Which files a planned check runs over: what it owns, less excluded and child-scope paths, narrowed to a selection.
-import { coveredBy } from '#cli/repository/select.ts';
-import { classifyFile } from '#cli/repository/kind.ts';
+import { coveredBy } from '#cli/repository/coverage.ts';
+import { pathMatcher } from '#cli/repository/matchers.ts';
 import { toolFileName } from '#cli/configurations/manifests.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { DOT_GSPOT, SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { pathMatcher, isInGspotFolder } from '#cli/repository/selectors.ts';
+import { classifyFile, isInGspotFolder } from '#cli/repository/classify.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
 import { isInScope, joinScope, isOutsideChildren } from '#cli/repository/scopes.ts';
 import type { Session, PlanEntry, PlanInputs, PlannedCheck } from '#cli/types/planning.ts';

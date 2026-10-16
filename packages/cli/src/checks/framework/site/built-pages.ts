@@ -5,7 +5,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { BYTES_PER_KB } from '#cli/config/units.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { pathMatcher } from '#cli/repository/matchers.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';

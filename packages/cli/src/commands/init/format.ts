@@ -5,7 +5,7 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { selectForScope } from '#cli/repository/select.ts';
+import { selectForScope } from '#cli/repository/coverage.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';

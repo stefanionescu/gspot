@@ -1,16 +1,14 @@
-// Reads repository files, scopes, and dependency declarations.
-// Reads repository files, scopes, and dependency declarations.
-import { posix } from 'node:path';
-import { runGitBlocking } from '#cli/system/git.ts';
+// Finds and reads repository roots, file attributes, dependency files, and scopes.
+import { statSync, realpathSync } from 'node:fs';
 import { openFiles } from '#cli/system/files/open.ts';
-import { classifyFile } from '#cli/repository/kind.ts';
 import { findScopes } from '#cli/repository/scopes.ts';
 import { detectSwiftTags } from '#cli/parsers/swift.ts';
+import { join, posix, dirname, resolve } from 'node:path';
+import { classifyFile } from '#cli/repository/classify.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
-import { isGitRepository } from '#cli/repository/find-root.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
@@ -18,7 +16,9 @@ import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { readCachedBytes, readCachedPrefix } from '#cli/system/files/reads.ts';
 import { readIndexEntries, listRepositoryFiles } from '#cli/repository/tracked.ts';
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
+import { trimGitLine, isOutsideGit, runGitBlocking, isGitRepository } from '#cli/system/git.ts';
 import { mergeAttributes, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
+import { GIT_LOCALE, WORK_TREE_ARGUMENTS, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 
 import {
     SET_VALUES,
@@ -131,4 +131,26 @@ export function readGeneratedPatterns(reads: ReadCache, paths: string[]): string
                 }),
         ),
     ];
+}
+
+/**
+ * The nearest folder at or above start that holds gspot.toml, stopping at the Git top level.
+ * Without settings, use the Git top level or start outside Git.
+ * @param start the directory to start from.
+ * @returns the root.
+ */
+export function findRoot(start: string): string {
+    const directory = realpathSync(start);
+    const top = runGitBlocking(directory, [...GIT_TOP_LEVEL_ARGUMENTS]);
+    const gitRoot = top.code === 0 ? resolve(trimGitLine(top.stdout)) : undefined;
+    if (gitRoot === undefined && !isOutsideGit(runGitBlocking(directory, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE })))
+        throw new Error(`Git root discovery failed in ${directory} (exit ${String(top.code)}): ${top.stderr.trim()}`);
+    let current = directory;
+    while (statSync(join(current, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {
+        if (current === gitRoot) return gitRoot;
+        const parent = dirname(current);
+        if (parent === current) return directory;
+        current = parent;
+    }
+    return current;
 }

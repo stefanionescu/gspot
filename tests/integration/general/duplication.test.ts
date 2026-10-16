@@ -2,6 +2,8 @@
 
 /** Number of Bash commands in the copied source block. */
 
+/** Number of metadata rows outside the selected source scan. */
+/** Number of Bash commands in the copied source block. */
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';

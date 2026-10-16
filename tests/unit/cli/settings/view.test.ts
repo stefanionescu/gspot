@@ -7,7 +7,7 @@ import { test, expect, setSystemTime } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
-import { selectForScope } from '#cli/repository/select.ts';
+import { selectForScope } from '#cli/repository/coverage.ts';
 import { setKey, findScopeTable } from '#cli/settings/edit.ts';
 import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';

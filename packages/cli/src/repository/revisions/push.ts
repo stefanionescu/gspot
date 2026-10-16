@@ -1,15 +1,21 @@
-// Staged and changed paths, unstaged overlap, and the base of an upstream push.
-// The revisions a push sends, resolved from the ref and object pairs Git hands the pre-push hook.
-// Reads the revisions included in a push.
+// Selects pushed revisions and their commit range.
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
-import { readPushBase } from '#cli/repository/revisions/changes.ts';
-import { isShallow, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
-import type { PushLine, Comparison, PushSearch, PushRevision, PushSelection } from '#cli/types/repository/revisions.ts';
+import { readHead } from '#cli/repository/revisions/tree-entries.ts';
+import { readMergeBase, readDefaultRef } from '#cli/repository/revisions/changes.ts';
+import { runGit, isShallow, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
 
+import {
+    type PushLine,
+    type Comparison,
+    type PushSearch,
+    type PushRevision,
+    type PushSelection,
+    type CommitSelection,
+} from '#cli/types/repository/revisions.ts';
 import {
     ABSENT_HASH,
     PEEL_SUFFIX,
@@ -22,6 +28,7 @@ import {
     REV_LIST_ARGUMENTS,
     COMMIT_DIFF_ARGUMENTS,
     SHALLOW_FILE_ARGUMENTS,
+    ROOT_COMMITS_ARGUMENTS,
 } from '#cli/config/repository/revisions.ts';
 
 // Whether a pre-push field pair holds two object ids of the same hash length.
@@ -175,4 +182,39 @@ export async function selectPush(
     const result: PushSelection = { revisions: [], skipped: [] };
     for (const line of lines) await selectLine(context, result, line);
     return result;
+}
+
+/**
+ * Compare a push with its upstream or remote default. Without either, start at the root commit.
+ * @param root the repository root.
+ * @param cancelSignal cancellation for the Git commands.
+ * @returns the commit the pushed range starts after.
+ */
+export async function readPushBase(root: string, cancelSignal?: AbortSignal): Promise<string> {
+    const compared = await readDefaultRef(root, cancelSignal);
+    if (compared !== '') return readMergeBase(root, compared, cancelSignal);
+    const roots = await readGitLines(root, [...ROOT_COMMITS_ARGUMENTS], { cancelSignal });
+    return roots.at(-1) as string;
+}
+
+/**
+ * The supplied pushed commits, or the commits after the push base.
+ * @param root the repository root.
+ * @param commits the explicit selection when supplied.
+ * @param cancelSignal cancellation for the Git commands.
+ * @returns the exact selected commits or the Git selection error.
+ */
+export async function pushedCommits(
+    root: string,
+    commits: string[] | undefined,
+    cancelSignal?: AbortSignal,
+): Promise<CommitSelection> {
+    if (commits !== undefined) return commits;
+    if ((await readHead(root, cancelSignal)) === undefined) return [];
+    const base = await readPushBase(root, cancelSignal);
+    const listed = await runGit(root, ['rev-list', `${base}..HEAD`, '--'], {
+        cancelSignal,
+    });
+    if (listed.code !== 0) return { error: `Cannot select commit messages: ${listed.stderr.trim()}` };
+    return listed.stdout.split('\n').filter(Boolean);
 }

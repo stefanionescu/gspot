@@ -6,7 +6,7 @@ import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
-import { readBlobs, listHeadEntries } from '#cli/repository/revisions/objects.ts';
+import { readBlobs, listHeadEntries } from '#cli/repository/revisions/tree-entries.ts';
 
 const COMMITTED_MIGRATIONS_MEMO = { create: () => new Map<string, Promise<Map<string, string>>>() };
 

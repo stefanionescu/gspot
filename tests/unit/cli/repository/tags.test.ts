@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
-import { tagEntry } from '#cli/repository/tags.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { SHEBANGS } from '#tests/config/repository.ts';
 import { readRepository } from '#cli/repository/read.ts';
+import { classifyFile } from '#cli/repository/classify.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
@@ -28,22 +28,41 @@ test('tags and kinds come from the extension, the file name, and the content', a
 
 test.each([...SHEBANGS])('a $name shebang gives only its language and runtime tags', ({ source, tags }) => {
     const prefix = Buffer.from(source);
-    const result = tagEntry({ path: 'script', size: prefix.length, executable: false, symlink: false }, prefix);
-    expect(result.binary).toBe(false);
+    const result = classifyFile(
+        '.',
+        { path: 'script', size: prefix.length, executable: false, symlink: false },
+        prefix,
+        { attributes: new Map(), declarations: [] },
+    );
+    expect(result.kind).toBe('source');
     expect(new Set(result.tags)).toStrictEqual(new Set(tags));
 });
 
 test('binary content gets no shebang language or runtime tags', () => {
     const prefix = Buffer.from('#!/usr/bin/env bun\n\0');
-    expect(tagEntry({ path: 'script', size: prefix.length, executable: true, symlink: false }, prefix)).toStrictEqual({
-        binary: true,
+    expect(
+        classifyFile('.', { path: 'script', size: prefix.length, executable: true, symlink: false }, prefix, {
+            attributes: new Map(),
+            declarations: [],
+        }),
+    ).toStrictEqual({
+        path: 'script',
+        kind: 'binary',
+        kindSource: 'content',
         tags: ['binary', 'executable'],
+        executable: true,
+        size: prefix.length,
     });
 });
 
 test('sh overrides the Bash extension tag of a .sh script', () => {
     const prefix = Buffer.from('#!/bin/sh\nprintf "%s\\n" example\n');
-    const result = tagEntry({ path: 'script.sh', size: prefix.length, executable: false, symlink: false }, prefix);
+    const result = classifyFile(
+        '.',
+        { path: 'script.sh', size: prefix.length, executable: false, symlink: false },
+        prefix,
+        { attributes: new Map(), declarations: [] },
+    );
     expect(result.tags).toContain('sh');
     expect(result.tags).not.toContain('bash');
 });

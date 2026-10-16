@@ -1,10 +1,10 @@
-// Selects files and configurations for a scope.
+// Selects scope configurations and the files their tables cover.
 import { posix } from 'node:path';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/scopes.ts';
-import type { TrackedFile, FileDeclaration } from '#cli/types/repository/inventory.ts';
-import { literalGlob, pathMatcher, filenameMatcher } from '#cli/repository/selectors.ts';
+import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { literalGlob, pathMatcher, filenameMatcher } from '#cli/repository/matchers.ts';
 import { selectConfigurations, sourceConfigurations } from '#cli/configurations/select.ts';
 import { SETTING_PLACEHOLDER, TEST_FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { FileMatch, ConfigurationSelection } from '#cli/types/repository/selection.ts';
@@ -146,28 +146,4 @@ export function selectForScope(
         for (const configuration of table.configurations) choices.add(configuration);
     }
     return selectConfigurations([...choices, ...automatic], manifests);
-}
-
-/**
- * Resolve generated paths of the configurations each scope selects.
- * @param selected the actual manifests selected by each written scope.
- * @returns file declarations with internal configuration origins retained.
- */
-export function fileDeclarations(selected: Map<string, Manifest[]>): FileDeclaration[] {
-    return selected
-        .entries()
-        .flatMap(([path, manifests]) =>
-            manifests.flatMap(({ generated, configuration }) =>
-                generated.length === 0
-                    ? []
-                    : [
-                          {
-                              kind: 'generated' as const,
-                              configuration: configuration.name,
-                              paths: generated.map((file) => posix.join(path, file)),
-                          },
-                      ],
-            ),
-        )
-        .toArray();
 }

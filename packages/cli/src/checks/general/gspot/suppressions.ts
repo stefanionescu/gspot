@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { coveredBy } from '#cli/repository/select.ts';
+import { coveredBy } from '#cli/repository/coverage.ts';
 import { toolName } from '#cli/configurations/tool-pins.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { REASON_ABOVE } from '#cli/config/checks/general/gspot.ts';

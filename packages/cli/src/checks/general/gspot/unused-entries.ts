@@ -3,7 +3,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { everyTable } from '#cli/settings/inherit.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { pathMatcher } from '#cli/repository/matchers.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';

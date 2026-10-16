@@ -1,9 +1,10 @@
 // What the selected fragments add to a generated target: emitted text, imports, file globs, and selectors.
 import ts from 'typescript';
 import type { Session } from '#cli/types/planning.ts';
-import { literalGlob } from '#cli/repository/selectors.ts';
+import { literalGlob } from '#cli/repository/matchers.ts';
 import { filePatterns } from '#cli/generation/eslint/files.ts';
 import { eslintModule } from '#cli/generation/eslint/serialize.ts';
+import { isInScope, nestedScopes } from '#cli/repository/scopes.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { vueFragment } from '#cli/generation/eslint/fragments/vue.ts';
 import { zodFragment } from '#cli/generation/eslint/fragments/zod.ts';
@@ -11,6 +12,7 @@ import { expoFragment } from '#cli/generation/eslint/fragments/expo.ts';
 import { jestFragment } from '#cli/generation/eslint/fragments/jest.ts';
 import { astroFragment } from '#cli/generation/eslint/fragments/astro.ts';
 import { reactFragment } from '#cli/generation/eslint/fragments/react.ts';
+import { projectDependencies } from '#cli/repository/dependency-files.ts';
 import { nestjsFragment } from '#cli/generation/eslint/fragments/nestjs.ts';
 import { nextjsFragment } from '#cli/generation/eslint/fragments/nextjs.ts';
 import { svelteFragment } from '#cli/generation/eslint/fragments/svelte.ts';
@@ -26,7 +28,6 @@ import { typescriptFragment } from '#cli/generation/eslint/fragments/typescript.
 import type { Fragment, TypescriptImports } from '#cli/types/generation/fragments.ts';
 import { reactNativeFragment } from '#cli/generation/eslint/fragments/react-native.ts';
 import { translationsFragment } from '#cli/generation/eslint/fragments/translations.ts';
-import { isInScope, nestedScopes, projectDependencies } from '#cli/repository/scopes.ts';
 import { tanstackQueryFragment } from '#cli/generation/eslint/fragments/tanstack-query.ts';
 import { testingLibraryFragment } from '#cli/generation/eslint/fragments/testing-library.ts';
 

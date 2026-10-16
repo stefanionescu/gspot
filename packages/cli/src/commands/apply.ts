@@ -1,10 +1,10 @@
 import { emitAll } from '#cli/generation/files.ts';
+import { findRoot } from '#cli/repository/read.ts';
 import { findStaleFiles } from '#cli/apply/stale.ts';
 import { type StaleFile } from '#cli/types/apply.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { findRoot } from '#cli/repository/find-root.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { readVersionPin } from '#cli/apply/version-pin.ts';

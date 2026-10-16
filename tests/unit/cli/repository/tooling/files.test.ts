@@ -6,7 +6,7 @@ import { mkdir, unlink, symlink } from 'node:fs/promises';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { LINKED_RULE_FOLDERS } from '#tests/config/tooling.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { readTooling, readLintJobs, hasIniSection } from '#cli/repository/tooling.ts';
+import { readTooling, readLintJobs, hasIniSection } from '#cli/repository/existing-tools.ts';
 
 test('tool discovery finds nested tool files and skips .gspot and vendored folders', async () => {
     await using sandbox = await testdir();

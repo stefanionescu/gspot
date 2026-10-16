@@ -6,20 +6,20 @@ import { emitSettings } from '#cli/settings/file.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { detectedDefaults } from '#cli/settings/view.ts';
-import { readLintJobs } from '#cli/repository/tooling.ts';
 import { parseBuildSettings } from '#cli/parsers/xcode.ts';
-import { selectForScope } from '#cli/repository/select.ts';
+import { selectForScope } from '#cli/repository/coverage.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { CI_FILE_LABELS } from '#cli/config/generation/ci.ts';
+import { filenameMatcher } from '#cli/repository/matchers.ts';
 import { ORIGIN_URL_SETTING } from '#cli/config/system/git.ts';
-import { filenameMatcher } from '#cli/repository/selectors.ts';
+import { readLintJobs } from '#cli/repository/existing-tools.ts';
 import { PBXPROJ, PBXPROJ_NAME } from '#cli/config/parsers/xcode.ts';
 import { TEMPLATE_COMMENT_PREFIX } from '#cli/config/settings/file.ts';
 import type { ConfigurationSelection } from '#cli/types/repository/selection.ts';
 import { type Tooling, type Repository } from '#cli/types/repository/inventory.ts';
-import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/tooling.ts';
 import { PREFACE_BODY, REMOTE_URL_USER, REMOTE_URL_SCHEME } from '#cli/config/commands/init.ts';
+import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/existing-tools.ts';
 import { type InitAnswers, type InitSelection, type SettingsDraft } from '#cli/types/commands/init.ts';
 
 function buildOpenapiTables(

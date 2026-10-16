@@ -2,7 +2,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { listCodeLines } from '#cli/parsers/bash.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { pathMatcher } from '#cli/repository/matchers.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import type { ScriptFile, ScriptReport } from '#cli/types/checks/language.ts';
 import { functionAt, readScripts } from '#cli/checks/language/bash/scripts.ts';

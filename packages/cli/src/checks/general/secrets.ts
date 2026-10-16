@@ -4,14 +4,14 @@ import { readGitText } from '#cli/system/git.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { extensionsTagged } from '#cli/repository/tags.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
+import { extensionsTagged } from '#cli/repository/classify.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { mergeRuns, historyResult } from '#cli/checks/general/history.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
-import { readPushBase, pushedCommits } from '#cli/repository/revisions/changes.ts';
+import { readPushBase, pushedCommits } from '#cli/repository/revisions/push.ts';
 import { type Finding, type CheckInput, type CheckResult } from '#cli/types/execution/check.ts';
 
 import {

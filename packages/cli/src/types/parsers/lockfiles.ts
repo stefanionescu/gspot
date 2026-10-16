@@ -1,5 +1,6 @@
 /** One npm package entry in a Bun lockfile, with each slot derived from its parser schema. */
 
+/** One npm package entry in a Bun lockfile, with each slot derived from its parser schema. */
 import type { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 
 /** One declared lockfile and its applicable consumers. */

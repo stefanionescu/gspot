@@ -1,7 +1,7 @@
 import { Query, type Node } from 'web-tree-sitter';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { isInGspotFolder } from '#cli/repository/selectors.ts';
+import { isInGspotFolder } from '#cli/repository/classify.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { SourceInput } from '#cli/types/parsers/tree-sitter.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';

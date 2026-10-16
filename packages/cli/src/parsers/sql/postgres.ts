@@ -1,5 +1,7 @@
 // Reads PostgreSQL statements and their parse trees.
 // SQL payloads use PostgreSQL's node union; procedural output has a separate external shape.
+// Reads PostgreSQL statements and their parse trees.
+// SQL payloads use PostgreSQL's node union; procedural output has a separate external shape.
 import type { Parsed } from '#cli/types/errors.ts';
 import { computePosition } from '#cli/system/text.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';

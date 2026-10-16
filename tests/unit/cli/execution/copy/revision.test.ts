@@ -10,7 +10,7 @@ import type { GitHookReport } from '#tests/types/processes.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
 import { submodulePaths, readIndexEntries } from '#cli/repository/tracked.ts';
-import { listHeadEntries, listRevisionEntries } from '#cli/repository/revisions/objects.ts';
+import { listHeadEntries, listRevisionEntries } from '#cli/repository/revisions/tree-entries.ts';
 import { chmod, mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
 
 import {

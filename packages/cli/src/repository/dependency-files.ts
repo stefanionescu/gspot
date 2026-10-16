@@ -1,17 +1,16 @@
-// Reads repository dependency files and installed package versions.
-import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
+// Reads repository dependency files and selects project dependencies.
+
+import { posix } from 'node:path';
 import { parseJsonFile } from '#cli/parsers/json.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { isToolingPath } from '#cli/repository/selectors.ts';
-import { FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
-import { join, dirname, basename, relative } from 'node:path';
-import { listMatchingPaths } from '#cli/system/files/folders.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: Scope discovery and dependency selection share these hoisted calculations within the repository module.
+import { isInScope } from '#cli/repository/scopes.ts';
+import { isToolingPath } from '#cli/repository/classify.ts';
+import { type ReadCache } from '#cli/types/system/files.ts';
+import { HOOK_PACKAGES } from '#cli/config/repository/hooks.ts';
 import { readText, readCachedText } from '#cli/system/files/reads.ts';
-import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { type Files, type ReadCache } from '#cli/types/system/files.ts';
+import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { packageJsonSchema, selectDependencyFileParser } from '#cli/parsers/dependency-files.ts';
-import type { PackageJson, DependencyFile, InstalledDependency } from '#cli/types/parsers/dependency-files.ts';
+import { type PackageJson, type DependencyMap, type DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 
 /**
  * Read supported project manifests for dependency and runtime detection.
@@ -50,60 +49,32 @@ export function readPackageJson(root: string, path: string): PackageJson | undef
 }
 
 /**
- * Select existing files that package manifests declare for publication.
- * @param root the repository root.
- * @param manifests the package.json paths.
- * @returns the repository-relative package files.
+ * True when an npm manifest holds only declared npm tools or recognized Git hook managers.
+ * @param projectManifest the parsed project manifest.
+ * @param npmNames declared npm installer packages.
+ * @returns whether it holds tooling only.
  */
-export function packageFiles(root: string, manifests: string[]): string[] {
-    return manifests.flatMap((path) => {
-        const folder = dirname(path);
-        const patterns = (readPackageJson(root, path)?.files ?? []).flatMap((pattern) => [
-            pattern,
-            pattern + FOLDER_CONTENTS,
-        ]);
-        return listMatchingPaths(join(root, folder), patterns).map((file) => convertToPosixPath(join(folder, file)));
-    });
+export function isToolsOnlyPackage(projectManifest: DependencyFile, npmNames: ReadonlySet<string>): boolean {
+    if (projectManifest.kind !== 'package.json') return false;
+    const names = Object.keys(projectManifest.installed);
+    if (names.length === 0) return false;
+    return names.every((name) => npmNames.has(name) || new Set<string | undefined>(HOOK_PACKAGES).has(name));
 }
 
 /**
- * Read package metadata from a tool project installation or a host installation.
- * @param files the tool project installation boundary, or undefined for a host installation.
- * @param root the repository root owning the tool-project boundary.
- * @param manifest the absolute package.json path.
- * @returns the validated package fields, or undefined when the file does not exist.
+ * Get dependencies from the nearest declared npm project that contains a scope.
+ * @param manifests validated source project manifests.
+ * @param scope the repository-relative project scope.
+ * @returns declared dependencies without borrowing from children or siblings.
  */
-export function installedPackage(files: Files | undefined, root: string, manifest: string): PackageJson | undefined {
-    try {
-        let text: string | undefined;
-        if (files === undefined) text = readFileSync(manifest, 'utf8');
-        else {
-            const directory = files.realPath(convertToPosixPath(relative(root, dirname(manifest))));
-            const path = convertToPosixPath(relative(root, join(directory, basename(manifest))));
-            text = readText(root, path);
-        }
-        return text === undefined ? undefined : parseJsonFile(manifest, text, packageJsonSchema);
-    } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
-        throw error;
-    }
-}
-
-/**
- * Read the path and version of a dependency resolved from its actual project manifest, including hoisted installations.
- * @param root the repository root.
- * @param manifest the repository-relative source project manifest.
- * @param name the installed dependency name.
- * @returns the resolved manifest and its version, or undefined when the dependency does not exist.
- */
-export function installedDependency(root: string, manifest: string, name: string): InstalledDependency | undefined {
-    const require = createRequire(join(root, manifest));
-    let path: string;
-    try {
-        path = require.resolve(`${name}/package.json`);
-    } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'MODULE_NOT_FOUND') return undefined;
-        throw error;
-    }
-    return { path, version: installedPackage(undefined, root, path)?.version };
+export function projectDependencies(manifests: DependencyFile[], scope: string): DependencyMap {
+    const owner = manifests
+        .filter(
+            (manifest) =>
+                manifest.kind === 'package.json' &&
+                isInScope(scope, manifest.path === 'package.json' ? '' : posix.dirname(manifest.path)),
+        )
+        .toSorted((first, second) => second.path.length - first.path.length)[0];
+    if (owner === undefined) return {};
+    return owner.dependencies;
 }

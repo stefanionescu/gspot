@@ -1,11 +1,11 @@
 import { emitAll } from '#cli/generation/files.ts';
+import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { formatNotes } from '#cli/system/terminal.ts';
 import { openSession } from '#cli/commands/session.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
-import { findRoot } from '#cli/repository/find-root.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
 import type { Manifest } from '#cli/types/configurations.ts';

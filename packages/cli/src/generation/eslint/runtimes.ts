@@ -1,4 +1,4 @@
-import { literalGlob } from '#cli/repository/selectors.ts';
+import { literalGlob } from '#cli/repository/matchers.ts';
 import { globSelectors } from '#cli/generation/eslint/files.ts';
 import { joinScope, nestedScopes } from '#cli/repository/scopes.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';

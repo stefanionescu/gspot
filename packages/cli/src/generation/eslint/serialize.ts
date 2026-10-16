@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { literalGlob } from '#cli/repository/selectors.ts';
+import { literalGlob } from '#cli/repository/matchers.ts';
 import { scopeFiles } from '#cli/generation/eslint/files.ts';
 import { ESLINT_BASE_IMPORTS } from '#cli/config/generation/eslint.ts';
 

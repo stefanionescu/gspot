@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { aliasesFor } from '#cli/repository/aliases.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
+import { aliasesFor } from '#cli/generation/eslint/aliases.ts';
 import { ALIAS_FILES, ALIAS_PROJECT } from '#tests/config/repository.ts';
 
 test.each([...ALIAS_FILES])('alias reads report a malformed $path', async ({ path, diagnostic }) => {

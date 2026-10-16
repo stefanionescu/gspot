@@ -3,12 +3,11 @@ import picomatch from 'picomatch';
 import { normalizePath } from '../paths.ts';
 import { IMPORT_SELECTOR } from '../config/syntax.ts';
 import type { ImportSource } from '../types/syntax.ts';
-import type { TSESTree } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '../create-rule.ts';
-import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { DEFAULT_FOLDERS, RELATIVE_PREFIXES } from '../config/imports.ts';
 import type { RuleContext, ImportBoundariesOptions } from '../types/rules.ts';
 import { STDIN_NAMES, TRAILING_STAR, TRAILING_SLASH } from '../config/paths.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const globCache = new Map<string, (path: string) => boolean>();
 function isGlobMatch(path: string, glob: string): boolean {

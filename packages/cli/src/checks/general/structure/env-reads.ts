@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { pathMatcher } from '#cli/repository/matchers.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { CONVENTION_SOURCES } from '#cli/checks/general/structure/conventions.ts';
 

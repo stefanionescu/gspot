@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { hookStatus } from '#cli/install/hooks.ts';
+import { findRoot } from '#cli/repository/read.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { EXIT_FINDINGS } from '#cli/config/terminal.ts';
-import { findRoot } from '#cli/repository/find-root.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { readVersionPin } from '#cli/apply/version-pin.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';

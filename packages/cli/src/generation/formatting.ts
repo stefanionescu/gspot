@@ -5,8 +5,8 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import type { Settings, ScopeView } from '#cli/types/settings/values.ts';
+import { literalGlob, includeFolderContents } from '#cli/repository/matchers.ts';
 import type { WrittenFormat, FormatSettings } from '#cli/types/settings/file.ts';
-import { literalGlob, includeFolderContents } from '#cli/repository/selectors.ts';
 
 import {
     PRETTIERIGNORE_HEADER,

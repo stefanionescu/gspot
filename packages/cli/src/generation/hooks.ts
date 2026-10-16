@@ -1,9 +1,8 @@
-import { readGitPrefix } from '#cli/system/git.ts';
 import { name as cliName } from '../../package.json';
 import { selectNpmClient } from '#cli/tools/npm/client.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
-import { isGitRepository } from '#cli/repository/find-root.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
+import { readGitPrefix, isGitRepository } from '#cli/system/git.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import type { HookName, StartRunner, GeneratedFile } from '#cli/types/generation/files.ts';
 import { RUNNERS, HOOK_ARGS, HOOK_SHEBANG, COMMIT_MESSAGE_PATH_LINES } from '#cli/config/generation/hooks.ts';

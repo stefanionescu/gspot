@@ -1,15 +1,15 @@
 // Explain a check, rule, configuration, setting, or file path.
+import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { quoteArgument } from '#cli/system/text.ts';
-import { coveredBy } from '#cli/repository/select.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { printResult } from '#cli/system/terminal.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { findRoot } from '#cli/repository/find-root.ts';
+import { coveredBy } from '#cli/repository/coverage.ts';
+import { pathMatcher } from '#cli/repository/matchers.ts';
 import { type Command } from '@commander-js/extra-typings';
-import { pathMatcher } from '#cli/repository/selectors.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';

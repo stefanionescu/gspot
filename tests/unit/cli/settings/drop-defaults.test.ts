@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { parseSettings } from '#cli/settings/read.ts';
-import { selectForScope } from '#cli/repository/select.ts';
+import { selectForScope } from '#cli/repository/coverage.ts';
 import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import { DEFAULT_CASES } from '#tests/config/settings/defaults.ts';
 import { emitSettings, parseTomlText } from '#cli/settings/file.ts';

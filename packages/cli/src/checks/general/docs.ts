@@ -19,7 +19,7 @@ import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { scopeOf, isInScope, joinScope } from '#cli/repository/scopes.ts';
 import type { PathIndex, TaskSources } from '#cli/types/checks/general.ts';
 import { listExecutableNames, includeParentFolders } from '#cli/system/paths.ts';
-import { MISE_FILES, RUNNER_NAMES, MISE_TASKS_FOLDER } from '#cli/config/repository/tooling.ts';
+import { MISE_FILES, RUNNER_NAMES, MISE_TASKS_FOLDER } from '#cli/config/repository/existing-tools.ts';
 
 import {
     BUN_RUN,

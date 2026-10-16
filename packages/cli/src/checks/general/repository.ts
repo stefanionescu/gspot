@@ -2,7 +2,7 @@ import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { BYTES_PER_KB } from '#cli/config/units.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { pathMatcher } from '#cli/repository/matchers.ts';
 import { LFS_FILTER } from '#cli/config/repository/inventory.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 

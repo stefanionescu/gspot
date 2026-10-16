@@ -2,6 +2,8 @@
 
 /** The repository and declared wrappers verified before installing the package project. */
 
+/** The repository and generated Yarn settings used during package lockfile resolution. */
+/** The repository and declared wrappers verified before installing the package project. */
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 import type { ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
 

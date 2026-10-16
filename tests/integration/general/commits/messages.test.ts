@@ -1,6 +1,9 @@
 /** Native preparation commands shared by the four installed commit scenarios. */
 // Completed history includes every selected commit and passes its range check.
 /** Derived scope names retain the case of project folders; messages may omit a scope. */
+/** Native preparation commands shared by the four installed commit scenarios. */
+// Completed history includes every selected commit and passes its range check.
+/** Derived scope names retain the case of project folders; messages may omit a scope. */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';

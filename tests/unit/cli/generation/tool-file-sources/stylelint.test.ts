@@ -1,7 +1,6 @@
-import stylelint from 'stylelint';
 import { test, expect } from 'bun:test';
-import type { Config } from 'stylelint';
 import { emitAll } from '#cli/generation/files.ts';
+import stylelint, { type Config } from 'stylelint';
 import { testdir, createFileTree } from 'testdirs';
 import { testModules } from '#tests/setup/modules.ts';
 import { openSession } from '#cli/commands/session.ts';

@@ -1,9 +1,9 @@
 import { resolve, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { hookLine } from '#cli/generation/hooks.ts';
-import { readHooks } from '#cli/repository/tooling.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { HOOK_ARGS } from '#cli/config/generation/hooks.ts';
+import { readHooks } from '#cli/repository/existing-tools.ts';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
 import type { Tooling } from '#cli/types/repository/inventory.ts';

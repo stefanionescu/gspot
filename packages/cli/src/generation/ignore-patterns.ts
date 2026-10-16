@@ -1,7 +1,7 @@
 import picomatch from 'picomatch';
 import type { Session } from '#cli/types/planning.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import { fileDeclarations } from '#cli/repository/select.ts';
+import { fileDeclarations } from '#cli/repository/classify.ts';
 import { readGeneratedPatterns } from '#cli/repository/read.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { BRACE_TOKENS, ALWAYS_IGNORED } from '#cli/config/generation/ignore-patterns.ts';

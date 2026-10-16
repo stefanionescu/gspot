@@ -1,5 +1,4 @@
 // Reads TypeScript project files and compiler options.
-// Reads TypeScript project files and compiler options.
 import { z } from 'zod';
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';

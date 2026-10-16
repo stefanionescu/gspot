@@ -1,6 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { coveredBy } from '#cli/repository/select.ts';
 import { stripUndefined } from '#cli/system/values.ts';
+import { coveredBy } from '#cli/repository/coverage.ts';
 import { isOutsideChildren } from '#cli/repository/scopes.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';

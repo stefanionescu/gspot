@@ -1,6 +1,6 @@
 import { parseBashScript } from '#cli/parsers/bash.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { isInGspotFolder } from '#cli/repository/selectors.ts';
+import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { type ScriptFile } from '#cli/types/checks/language.ts';
 import { type CheckInput } from '#cli/types/execution/check.ts';

@@ -1,7 +1,7 @@
 import { splitByCase } from 'scule';
 import { tablesFor } from '#cli/settings/inherit.ts';
 import { stripUndefined } from '#cli/system/values.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { pathMatcher } from '#cli/repository/matchers.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { namingDefaults } from '#cli/configurations/manifests.ts';

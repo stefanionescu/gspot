@@ -1,39 +1,17 @@
 // Discovers project scopes and resolves paths within them.
+import { posix } from 'node:path';
 import picomatch from 'picomatch';
-import { realpathSync } from 'node:fs';
-import type { Package } from '@manypkg/tools';
-import { GspotError } from '#cli/system/errors.ts';
-import { posix, basename, relative } from 'node:path';
-import { getCachedValue } from '#cli/system/files/cache.ts';
-import { type ReadCache } from '#cli/types/system/files.ts';
+import { literalGlob } from '#cli/repository/matchers.ts';
+import { isToolingPath } from '#cli/repository/classify.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { npmToolNames } from '#cli/configurations/tool-pins.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
-import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
-import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
-import { listSourceFiles, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: Scope discovery and dependency selection share these hoisted calculations within the repository module.
+import { isToolsOnlyPackage } from '#cli/repository/dependency-files.ts';
+import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
 import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
-import { packageFiles, readPackageJson } from '#cli/repository/dependency-files.ts';
-import type { DependencyMap, DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import { GLOB_EXCLUDE, FOLDER_CONTENTS, WHOLE_TREE_GLOBS } from '#cli/config/system/paths.ts';
-import { literalGlob, isToolingPath, isToolsOnlyPackage } from '#cli/repository/selectors.ts';
-
-function workspacePackages(root: string): Package[] {
-    const manifest = readPackageJson(root, PACKAGE_JSON);
-    for (const tool of [PnpmTool, LernaTool, RushTool]) {
-        if (!tool.isMonorepoRootSync(root)) continue;
-        return tool.getPackagesSync(root).packages;
-    }
-    if (manifest === undefined) return [];
-    const { workspaces: declaration = [] } = manifest;
-    const workspaces = Array.isArray(declaration) ? declaration : declaration.packages;
-    if (workspaces.length === 0) return [];
-    return YarnTool.getPackagesSync(root).packages;
-}
-
-const WORKSPACE_SOURCE_MEMO = { create: () => new Map<string, string[]>() };
 
 /**
  * Test scope containment. The empty root path matches every file.
@@ -157,19 +135,6 @@ export function findScopes(
 }
 
 /**
- * The folders of the npm package workspaces the repository declares, the root left out.
- * @param root the repository root.
- * @returns the root-relative folders.
- */
-export function packageWorkspaces(root: string): string[] {
-    const packages = workspacePackages(root);
-    for (const found of packages)
-        if (!isInside(relative(realpathSync(root), realpathSync(found.dir))))
-            throw new GspotError('filesystem', `Workspace package leaves the repository: ${found.relativeDir}`);
-    return packages.map((found) => convertToPosixPath(found.relativeDir)).filter((path) => path !== '' && path !== '.');
-}
-
-/**
  * The folder a project file marks: the path before the segments the pattern names, when the file carries them.
  * @param path the tracked file, root-relative.
  * @param pattern a project file name, a folder name such as `*.xcodeproj`, or a short path such as `supabase/config.toml`.
@@ -207,91 +172,4 @@ export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
             .filter((scope) => scope.path !== '' && isInScope(path, scope.path))
             .toSorted((left, right) => right.path.length - left.path.length)[0] ?? root
     );
-}
-
-/**
- * Get dependencies from the nearest declared npm project that contains a scope.
- * @param manifests validated source project manifests.
- * @param scope the repository-relative project scope.
- * @returns declared dependencies without borrowing from children or siblings.
- */
-export function projectDependencies(manifests: DependencyFile[], scope: string): DependencyMap {
-    const owner = manifests
-        .filter(
-            (manifest) =>
-                manifest.kind === 'package.json' &&
-                isInScope(scope, manifest.path === 'package.json' ? '' : posix.dirname(manifest.path)),
-        )
-        .toSorted((first, second) => second.path.length - first.path.length)[0];
-    if (owner === undefined) return {};
-    return owner.dependencies;
-}
-
-/**
- * Select declared workspace sources from this run's repository inventory.
- * @param root the source root.
- * @param scope the owning project.
- * @param files the source inventory.
- * @param reads the metadata cache.
- * @returns workspace dependency paths.
- */
-export function workspaceSourceFiles(root: string, scope: string, files: TrackedFile[], reads: ReadCache): string[] {
-    const cache = getCachedValue(reads, WORKSPACE_SOURCE_MEMO);
-    const project = files
-        .map((file) => file.path)
-        .filter(
-            (path) => basename(path) === 'package.json' && isInScope(scope, posix.relative('.', posix.dirname(path))),
-        )
-        .toSorted((left, right) => right.length - left.length)[0];
-    if (project === undefined) return [];
-    const key = JSON.stringify([root, project]);
-    const held = cache.get(key);
-    if (held !== undefined) return held;
-    const projectFolder = posix.relative('.', posix.dirname(project));
-    const ordered = [...new Set([projectFolder, ...packageWorkspaces(root)])].toSorted(
-        (left, right) => right.length - left.length,
-    );
-    const packages = new Map(ordered.map((path) => [path, readPackageJson(root, posix.join(path, 'package.json'))]));
-    const pending = [projectFolder];
-    for (const folder of pending) {
-        const manifest = packages.get(folder);
-        if (manifest === undefined)
-            throw new Error(`Workspace manifest is missing: ${posix.join(folder, 'package.json')}`);
-        const names = Object.keys({
-            ...manifest.dependencies,
-            ...manifest.devDependencies,
-            ...manifest.peerDependencies,
-            ...manifest.optionalDependencies,
-        });
-        const project = readTsconfigProject(root, folder, [], reads);
-        const sources =
-            project === undefined
-                ? []
-                : listSourceFiles(root, folder, reads, {
-                      ...project.config,
-                      fileNames: project.config.fileNames.filter((file) =>
-                          isInScope(convertToPosixPath(relative(root, file)), folder),
-                      ),
-                  }).flatMap(
-                      (file) =>
-                          ordered.find((path) => isInScope(convertToPosixPath(relative(root, file.fileName)), path)) ??
-                          [],
-                  );
-        const dependencies = [...packages]
-            .filter(([, dependency]) => dependency?.name !== undefined && names.includes(dependency.name))
-            .map(([path]) => path);
-        pending.push(...[...new Set([...sources, ...dependencies])].filter((path) => !pending.includes(path)));
-    }
-    const visited = new Set(pending);
-    visited.delete(projectFolder);
-    const selected = files
-        .filter((file) => {
-            const owner = ordered.find((entry) => isInScope(file.path, entry));
-            return owner !== undefined && visited.has(owner);
-        })
-        .map((file) => file.path);
-    const packageManifests = [...visited].map((path) => posix.join(path, PACKAGE_JSON));
-    selected.push(...packageFiles(root, packageManifests));
-    cache.set(key, selected);
-    return selected;
 }

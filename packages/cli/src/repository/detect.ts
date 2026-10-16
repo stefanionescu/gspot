@@ -3,13 +3,15 @@
 import { readText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { npmToolNames } from '#cli/configurations/tool-pins.ts';
+import { isToolsOnlyPackage } from '#cli/repository/dependency-files.ts';
+import { pathMatcher, filenameMatcher } from '#cli/repository/matchers.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
 import { isInScope, joinScope, projectFolder } from '#cli/repository/scopes.ts';
 import type { TrackedFile, ScopeContents } from '#cli/types/repository/inventory.ts';
 import type { DetectionEvidence, ConfigurationEvidence } from '#cli/types/repository/selection.ts';
-import { pathMatcher, filenameMatcher, isInGspotFolder, isToolsOnlyPackage } from '#cli/repository/selectors.ts';
 
 function dependencyMap(packageManifests: DependencyFile[], scope: string): Map<string, string> {
     const dependencies = new Map<string, string>();

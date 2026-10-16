@@ -5,7 +5,8 @@ import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
-import { pushedCommits, readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
+import { pushedCommits } from '#cli/repository/revisions/push.ts';
+import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
 test('reports an unborn index and its unstaged edits', async () => {
     await using sandbox = await testdir();

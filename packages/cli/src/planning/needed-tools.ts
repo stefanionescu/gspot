@@ -1,9 +1,9 @@
 import { basename } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { coveredBy } from '#cli/repository/select.ts';
+import { coveredBy } from '#cli/repository/coverage.ts';
 import { coverageArguments } from '#cli/planning/checks.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import { isInGspotFolder } from '#cli/repository/selectors.ts';
+import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { PIP_LICENSES_COMMAND } from '#cli/config/tools/python.ts';
 import { PRETTIER_TOOL } from '#cli/config/generation/formatting.ts';
 import { settingsSkip, isSettingEmpty } from '#cli/planning/skips.ts';

@@ -3,12 +3,12 @@ import { readAsset } from '#cli/system/assets.ts';
 import type { Session } from '#cli/types/planning.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { Level } from '#cli/types/configurations.ts';
-import { projectDependencies } from '#cli/repository/scopes.ts';
 import { VUE_STYLELINT_OVERRIDE } from '#cli/config/planning.ts';
 import type { EmitInputs } from '#cli/types/generation/files.ts';
 import { stylelintComponents } from '#cli/planning/needed-tools.ts';
 import type { RuleNamesFile } from '#cli/types/generation/eslint.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import { projectDependencies } from '#cli/repository/dependency-files.ts';
 
 import {
     TAILWIND_AT_RULES,

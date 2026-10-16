@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { nestedScopes } from '#cli/repository/scopes.ts';
-import { literalGlob } from '#cli/repository/selectors.ts';
+import { literalGlob } from '#cli/repository/matchers.ts';
 import type { SelectorGroup } from '#cli/types/generation/eslint.ts';
 import type { SelectorPaths } from '#cli/types/generation/fragments.ts';
 import { REEXPORT_SELECTORS } from '#cli/config/generation/eslint-rules.ts';

@@ -4,7 +4,7 @@ import { isInside } from '#cli/system/paths.ts';
 import { AGENTS_FILE } from '#cli/config/rules.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { pathMatcher } from '#cli/repository/matchers.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
 import { planKeyChanges } from '#cli/ownership/managed-keys.ts';

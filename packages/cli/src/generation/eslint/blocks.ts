@@ -1,6 +1,6 @@
 import { everyTable } from '#cli/settings/inherit.ts';
 import { activeIgnores } from '#cli/settings/view.ts';
-import { literalGlob } from '#cli/repository/selectors.ts';
+import { literalGlob } from '#cli/repository/matchers.ts';
 import { parentSelection } from '#cli/generation/eslint/structure.ts';
 import { byScopeDepth, nestedScopes } from '#cli/repository/scopes.ts';
 import type { Settings, ScopeView, ScopeSelection } from '#cli/types/settings/values.ts';

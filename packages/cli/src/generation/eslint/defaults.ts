@@ -1,5 +1,5 @@
 import { stripUndefined } from '#cli/system/values.ts';
-import { literalGlob } from '#cli/repository/selectors.ts';
+import { literalGlob } from '#cli/repository/matchers.ts';
 import { scopeFiles } from '#cli/generation/eslint/files.ts';
 import { levelRules } from '#cli/generation/eslint/blocks.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';

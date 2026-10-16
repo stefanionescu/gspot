@@ -1,6 +1,7 @@
 import { parse, stringify } from 'yaml';
 import type { Session } from '#cli/types/planning.ts';
-import { byScopeDepth, projectDependencies } from '#cli/repository/scopes.ts';
+import { byScopeDepth } from '#cli/repository/scopes.ts';
+import { projectDependencies } from '#cli/repository/dependency-files.ts';
 import type { EmitInputs, SemgrepDocument } from '#cli/types/generation/files.ts';
 import { gitignorePatterns, scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
 import { SEMGREP_IGNORED, SEMGREP_ENV_PATTERNS_INDEX } from '#cli/config/generation/tool-file-sources.ts';

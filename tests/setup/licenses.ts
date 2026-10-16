@@ -6,7 +6,6 @@ import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { ALLOWED_PACKAGE_SCOPE_CASES } from '#tests/config/licenses.ts';
 
 import {
     LICENSE_SETTINGS,
@@ -14,6 +13,7 @@ import {
     ALLOWED_PACKAGE_ENTRY,
     ABSENT_PACKAGE_LOCKFILE,
     LICENSE_TOOL_PROJECT_FILES,
+    type ALLOWED_PACKAGE_SCOPE_CASES,
 } from '#tests/config/licenses.ts';
 
 /** Write the license settings and a scanner version command before mocking scan output. */

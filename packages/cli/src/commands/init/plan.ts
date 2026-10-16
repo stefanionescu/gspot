@@ -1,11 +1,11 @@
 // The plan initialization shows before writing files, including dry runs.
 import { colors } from '#cli/system/terminal.ts';
 import { stripUndefined } from '#cli/system/values.ts';
-import { readLintJobs } from '#cli/repository/tooling.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
+import { readLintJobs } from '#cli/repository/existing-tools.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import type { PackageJson } from '#cli/types/parsers/dependency-files.ts';
 import { misePins, toolProjectPins } from '#cli/configurations/tool-pins.ts';

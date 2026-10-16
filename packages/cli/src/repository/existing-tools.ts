@@ -8,19 +8,20 @@ import { isRecord } from '#cli/system/values.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { pathMatcher } from '#cli/repository/matchers.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
+import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { npmToolNames } from '#cli/configurations/tool-pins.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
-import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { join, extname, dirname, basename, relative } from 'node:path';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import { statSync, lstatSync, existsSync, readdirSync, realpathSync } from 'node:fs';
-import { pathMatcher, isInGspotFolder, isToolsOnlyPackage } from '#cli/repository/selectors.ts';
+import { readPackageJson, isToolsOnlyPackage } from '#cli/repository/dependency-files.ts';
 import type { CiJob, Tooling, TrackedFile, FoundToolFile } from '#cli/types/repository/inventory.ts';
 
 import {
@@ -53,7 +54,7 @@ import {
     COMMAND_SEPARATORS,
     JOB_NAME_SEPARATORS,
     GITHUB_WORKFLOWS_FOLDER,
-} from '#cli/config/repository/tooling.ts';
+} from '#cli/config/repository/existing-tools.ts';
 
 // Whether a CI command line runs a linter: eslint, a two-word lint command, or a runner's lint task.
 function isLintCommand(command: string): boolean {

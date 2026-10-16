@@ -1,7 +1,7 @@
 // Each rule comparison uses the closest containing project.
 
 import { isDeepStrictEqual } from 'node:util';
-import { literalGlob } from '#cli/repository/selectors.ts';
+import { literalGlob } from '#cli/repository/matchers.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { isInScope, byScopeDepth, nestedScopes } from '#cli/repository/scopes.ts';
 import type { EslintContext, EslintRuleBlock } from '#cli/types/generation/eslint.ts';
