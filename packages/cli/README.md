@@ -82,8 +82,7 @@ ones, such as secrets, spelling, and naming, apply to every repository.
 - Languages: Bash, CSS, HTML, JavaScript, Markdown, Python, SQL, Swift, TypeScript.
 - Frameworks: Astro, Expo, Express, FastAPI, NestJS, Next.js, React, React DOM, React Native, static sites,
   Svelte, Vue.
-- Libraries: Drizzle, React Hook Form, Swift Snapshot Testing, TanStack Query, Testing Library, translations,
-  tRPC, Zod, Zustand.
+- Libraries: Drizzle, React Hook Form, TanStack Query, Testing Library, translations, tRPC, Zod, Zustand.
 - Testing: Jest, pytest, Swift tests, Vitest.
 - Infrastructure, platforms, and databases: Ansible, Docker, GitHub Actions, nginx, OpenAPI, Xcode, Cloudflare,
   Supabase, Postgres.
