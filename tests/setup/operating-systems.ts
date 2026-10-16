@@ -1,7 +1,7 @@
 // Selects tool builds and temporarily changes the reported operating system.
 import { getOperatingSystem } from '#cli/system/environment.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { missingBuild, toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
+import { findMissingBuild, getToolDeclaration } from '#cli/configurations/tools.ts';
 
 /** Whether the tests run on Windows. */
 export const isWindows = process.platform === 'win32';
@@ -17,8 +17,8 @@ export const isMacos = process.platform === 'darwin';
  */
 export function hasToolBuild(name: string): boolean {
     const operatingSystem = getOperatingSystem();
-    const pin = toolDeclaration(configurationManifests().values(), name);
-    return missingBuild(pin, operatingSystem, process.arch) === undefined;
+    const pin = getToolDeclaration(readManifests().values(), name);
+    return findMissingBuild(pin, operatingSystem, process.arch) === undefined;
 }
 
 /**

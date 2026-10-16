@@ -4,7 +4,7 @@ import { tablesFor } from '#cli/settings/inherit.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { prefixScopePath } from '#cli/settings/paths.ts';
 import { pointerPaths } from '#cli/generation/pointers.ts';
-import { collectPins } from '#cli/configurations/tool-pins.ts';
+import { listDistinctTools } from '#cli/configurations/tools.ts';
 import type { EmitInputs } from '#cli/types/generation/files.ts';
 import { listWorkspaceFolders } from '#cli/tools/npm/packages.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
@@ -104,7 +104,7 @@ export function knipToolFile(
             manifest.toolFiles.flatMap((toolFile) => pointerPaths({ files, selection, manifest, scopes }, toolFile)),
         ),
     );
-    const tools = collectPins(manifests);
+    const tools = listDistinctTools(manifests);
     const toolBinaries = [
         ...tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name),
         startRunner.name,

@@ -2,10 +2,9 @@ import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
 import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
-import { unknownConfigurations } from '#cli/configurations/unknown-names.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/selection.ts';
+import { selectConfigurations, listUnknownConfigurations } from '#cli/configurations/select.ts';
 
 import type {
     InitInputs,
@@ -72,7 +71,7 @@ function hasSourceOutsideScopes(context: InitDetection, manifest: Manifest, scop
 function assertKnown(options: InitInputs['options'], manifests: Map<string, Manifest>): void {
     const configurations = options.configurations ?? [];
     const declarations = configurations.map((name) => ({ name }));
-    const unknown = unknownConfigurations(declarations, manifests).map(({ message: diagnostic }) => diagnostic);
+    const unknown = listUnknownConfigurations(declarations, manifests).map(({ message: diagnostic }) => diagnostic);
     if (unknown.length > 0) throw new GspotError('arguments', unknown.join('\n'));
 }
 

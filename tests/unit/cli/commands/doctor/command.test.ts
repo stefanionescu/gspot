@@ -14,14 +14,14 @@ import { gitOutput, commitAll } from '#tests/setup/git.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { containing, containingAll } from '#tests/setup/matchers.ts';
 import { join, dirname, extname, basename, delimiter } from 'node:path';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { collectPins, toolDeclaration, toolProjectPackage } from '#cli/configurations/tool-pins.ts';
 import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/system/locations.ts';
+import { listDistinctTools, getToolDeclaration, findToolProjectPackage } from '#cli/configurations/tools.ts';
 
 test('doctor reports no unowned gspot files in a fresh clone', async () => {
     await using sandbox = await testdir();
@@ -97,7 +97,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
     'doctor exit code follows the library state %s: an outdated tool exits 1',
     async (state) => {
         await using sandbox = await testdir();
-        const pin = toolDeclaration(configurationManifests().values(), 'eslint-plugin-zod');
+        const pin = getToolDeclaration(readManifests().values(), 'eslint-plugin-zod');
         const floor = semver.parse(pin.min_version ?? pin.version!)!;
         let older = `${String(floor.major - 1)}.0.0`;
         if (floor.minor > 0) older = `${String(floor.major)}.${String(floor.minor - 1)}.0`;
@@ -109,7 +109,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
             'source.js': 'export const value = 1;\n',
         });
         const awaitedSession = await openSession(sandbox.path);
-        const tools = collectPins(awaitedSession.neededToolManifests);
+        const tools = listDistinctTools(awaitedSession.neededToolManifests);
         await createFileTree(
             sandbox.path,
             Object.fromEntries(
@@ -121,7 +121,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
                             JSON.stringify({ name, version: tool.name === pin.name ? version : tool.version }),
                         ];
                     }
-                    const installation = toolProjectPackage(tool);
+                    const installation = findToolProjectPackage(tool);
                     let folder = 'test-tools';
                     if (installation?.kind === 'npm') folder = join(NODE_MODULES_DIRECTORY, '.bin');
                     else if (installation?.kind === 'python') folder = buildVenvBinPath(PYTHON_ENVIRONMENT_DIRECTORY);
@@ -169,7 +169,7 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
         'test_math.py': '',
     });
     const session = await openSession(sandbox.path);
-    const tools = collectPins(session.neededToolManifests);
+    const tools = listDistinctTools(session.neededToolManifests);
     using _which = spyOn(executables, 'sync').mockImplementation(((...[, options]: [string, executables.Options?]) => {
         const path = join(sandbox.path, 'tool-bin', 'pytest');
         return options?.all === true ? [path] : path;

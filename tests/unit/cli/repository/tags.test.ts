@@ -4,7 +4,7 @@ import { SHEBANGS } from '#tests/config/repository.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { classifyFile } from '#cli/repository/classify.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 
 test('tags and kinds come from the extension, the file name, and the content', async () => {
     await using sandbox = await testdir();
@@ -17,7 +17,7 @@ test('tags and kinds come from the extension, the file name, and the content', a
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
     const files = new Map(repository.files.map((file) => [file.path, file]));
     expect(files.get('a.png')!.kind).toBe('binary');

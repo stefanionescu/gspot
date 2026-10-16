@@ -7,19 +7,19 @@ import { buildSettings } from '#cli/settings/normalize.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
-import { collectPins } from '#cli/configurations/tool-pins.ts';
 import { reasonErrors } from '#cli/settings/errors/reasons.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import { listDistinctTools } from '#cli/configurations/tools.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
+import { listUnknownConfigurations } from '#cli/configurations/select.ts';
 import { validateAgainstKnownSettings } from '#cli/settings/errors/keys.ts';
 import type { Settings, SettingsFile } from '#cli/types/settings/values.ts';
 import type { ConfigurationDeclaration } from '#cli/types/configurations.ts';
 import type { WrittenScope, SettingsError } from '#cli/types/settings/file.ts';
 import { RECORD_FIELDS, SETTINGS_REFERENCE_URL } from '#cli/config/settings/file.ts';
-import { knownChecks, configurationManifests } from '#cli/configurations/manifests.ts';
-import { unknownCheckMessage, unknownConfigurations } from '#cli/configurations/unknown-names.ts';
+import { listCheckIds, readManifests, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import { pathErrors, extraOptionErrors, disabledRuleErrors } from '#cli/settings/errors/values.ts';
 
 function nestedIssueLines(path: string, prefix: z.core.$ZodIssue['path'], issues: z.core.$ZodIssue[]): string[] {
@@ -60,7 +60,7 @@ function collectErrors(settings: Settings, root: string | undefined, reads?: Rea
         ...reasonErrors(settings),
         ...(Array.isArray(settings.written['command_check']) ? settings.written['command_check'] : []).flatMap(
             (entry, index) =>
-                isRecord(entry) && typeof entry['name'] === 'string' && knownChecks([], reads).includes(entry['name'])
+                isRecord(entry) && typeof entry['name'] === 'string' && listCheckIds([], reads).includes(entry['name'])
                     ? [
                           {
                               path: ['command_check', index, 'name'],
@@ -70,13 +70,13 @@ function collectErrors(settings: Settings, root: string | undefined, reads?: Rea
                     : [],
         ),
         ...settings.ignore.flatMap((entry, index) => {
-            const checks = knownChecks(Object.values(settings.check), reads);
+            const checks = listCheckIds(Object.values(settings.check), reads);
             return checks.includes(entry.check)
                 ? []
                 : [
                       {
                           path: ['ignore', index, 'check'],
-                          message: unknownCheckMessage(entry.check, checks),
+                          message: formatUnknownCheck(entry.check, checks),
                       },
                   ];
         }),
@@ -93,14 +93,14 @@ function collectErrors(settings: Settings, root: string | undefined, reads?: Rea
  * @returns one error per unknown name.
  */
 function unknownConfigurationErrors(settings: Settings, reads?: ReadCache): SettingsError[] {
-    const manifests = configurationManifests(reads);
+    const manifests = readManifests(reads);
     const declarations: ConfigurationDeclaration[] = [
         ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
         ...Object.entries(settings.scope).flatMap(([, scope], scopeIndex) =>
             scope.configurations.map((name, index) => ({ name, path: ['scope', scopeIndex, 'configurations', index] })),
         ),
     ];
-    return unknownConfigurations(declarations, manifests).map(({ path, message: diagnostic }) => ({
+    return listUnknownConfigurations(declarations, manifests).map(({ path, message: diagnostic }) => ({
         path,
         message: diagnostic,
     }));
@@ -113,9 +113,9 @@ function unknownConfigurationErrors(settings: Settings, reads?: ReadCache): Sett
  * @returns the errors, each at the value that raised it.
  */
 function settingErrors(settings: Settings, reads?: ReadCache): SettingsError[] {
-    const manifests = configurationManifests(reads);
+    const manifests = readManifests(reads);
     const errors: SettingsError[] = [];
-    const tools = collectPins([...manifests.values()]);
+    const tools = listDistinctTools([...manifests.values()]);
     for (const { table, path } of everyTable(settings))
         errors.push(...extraOptionErrors(table, tools).map((error) => ({ ...error, path: [...path, ...error.path] })));
     const rootSelected = selectForScope(settings, '', manifests);

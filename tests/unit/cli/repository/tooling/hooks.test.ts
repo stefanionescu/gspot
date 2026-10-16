@@ -5,9 +5,9 @@ import { gitOutput } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { readExistingTools } from '#cli/repository/existing-tools.ts';
 import { unlink, symlink, readFile, writeFile } from 'node:fs/promises';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { LEFTHOOK_FILES, LINKED_HOOK_FILES, LINKED_HOOK_FOLDERS } from '#tests/config/tooling.ts';
 
 test('hook discovery keeps spaces in core.hooksPath and refuses a broken Git configuration', async () => {
@@ -48,7 +48,7 @@ test('pre-commit is found from its configuration file', async () => {
     const { files } = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
     expect(readExistingTools(sandbox.path, files, []).hooks).toStrictEqual([
         { kind: 'pre-commit', path: '.pre-commit-config.yaml', files: [] },

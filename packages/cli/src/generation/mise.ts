@@ -1,5 +1,5 @@
 import { stringify } from '@decimalturn/toml-patch';
-import { misePins } from '#cli/configurations/tool-pins.ts';
+import { listMisePins } from '#cli/configurations/tools.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { MISE_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
@@ -14,7 +14,7 @@ import { TOOL_EMIT_FORMAT } from '#cli/config/generation/tool-file-sources.ts';
  */
 export function miseFile(manifests: Manifest[]): GeneratedFile {
     const tools = Object.fromEntries(
-        misePins(manifests).map((pin) => [
+        listMisePins(manifests).map((pin) => [
             pin.name,
             pin.options === undefined ? pin.version : { version: pin.version, ...pin.options },
         ]),

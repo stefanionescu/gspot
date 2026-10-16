@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseOutput } from '#cli/parsers/output/formats.ts';
 import { INVALID_KNIP_REPORTS } from '#tests/config/knip.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 
-const check = configurationManifests()
+const check = readManifests()
     .get('javascript')!
     .checks.find(({ name }) => name === 'javascript/knip')!;
 

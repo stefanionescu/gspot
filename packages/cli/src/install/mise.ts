@@ -13,7 +13,7 @@ import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import { type ToolDeclaration } from '#cli/types/configurations.ts';
 import { locateCandidates, readMiseBinPaths } from '#cli/tools/locate.ts';
 import { MISE_TRUST_ARGUMENTS, MISE_INSTALL_ARGUMENTS } from '#cli/config/install.ts';
-import { pinOf, misePins, missingBuild, toolProjectPins } from '#cli/configurations/tool-pins.ts';
+import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/configurations/tools.ts';
 
 // Select only programs required by checks this operating system can run in hooks.
 function installationPrograms(session: Session, tools: ToolDeclaration[]) {
@@ -31,13 +31,13 @@ function installationPrograms(session: Session, tools: ToolDeclaration[]) {
     const programs = tools.filter(
         (tool) =>
             programNames.has(tool.name) &&
-            missingBuild(tool, host.platform, host.arch) === undefined &&
-            pinOf(tool) !== undefined,
+            findMissingBuild(tool, host.platform, host.arch) === undefined &&
+            findMisePin(tool) !== undefined,
     );
-    const pins = misePins(manifests).filter(
+    const pins = listMisePins(manifests).filter(
         (pin) =>
-            programs.some((tool) => pinOf(tool)?.name === pin.name) ||
-            (pin.name === UV_TOOL && toolProjectPins(manifests).python.length > 0),
+            programs.some((tool) => findMisePin(tool)?.name === pin.name) ||
+            (pin.name === UV_TOOL && listToolProjectPins(manifests).python.length > 0),
     );
     return { pins, programs };
 }
@@ -58,7 +58,7 @@ export async function installMiseTools(context: InstallContext): Promise<string>
             const name =
                 pin.name === UV_TOOL
                     ? UV_TOOL
-                    : (programs.find((tool) => pinOf(tool)?.name === pin.name) as ToolDeclaration).name;
+                    : (programs.find((tool) => findMisePin(tool)?.name === pin.name) as ToolDeclaration).name;
             return which.sync(name, { nothrow: true }) === null ? [`${name} ${pin.version}`] : [];
         });
         return missing.length === 0 ? '' : `Install mise, or install these programs yourself: ${missing.join(', ')}`;

@@ -5,8 +5,8 @@ import { extractExtension } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
-import { selectConfigurations, sourceConfigurations } from '#cli/configurations/select.ts';
 import { SETTING_PLACEHOLDER, TEST_FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
+import { selectConfigurations, filterSourceConfigurations } from '#cli/configurations/select.ts';
 import { escapeGlob, buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import type { FileMatch, FileCoverageOptions, ConfigurationSelection } from '#cli/types/repository/selection.ts';
 
@@ -82,7 +82,7 @@ export function listCoveredFiles(
     const matches = [
         owners,
         ...defaults,
-        ...(owners.languages ? sourceConfigurations(selected).map(({ files }) => files) : []),
+        ...(owners.languages ? filterSourceConfigurations(selected).map(({ files }) => files) : []),
     ].map((table) => buildFileMatcher(table));
     return candidates.filter((file) => {
         const scopeFile = { ...file, path: posix.relative(scope, file.path) };

@@ -22,12 +22,12 @@ import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { checkStageSchema } from '#cli/configurations/schema/parts.ts';
 import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
 import { coveredInputs, configuredChecks } from '#cli/planning/checks.ts';
+import { formatUnknownConfiguration } from '#cli/configurations/select.ts';
 import { knownSettings, configurationSettings } from '#cli/settings/view.ts';
 import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
 import { settingValue, declarationFor, settingCandidates } from '#cli/settings/inherit.ts';
 import eslintRuleNames from '../../../configurations/language/javascript/eslint-rule-names.json';
-import { ruleFiles, knownChecks, configurationManifests } from '#cli/configurations/manifests.ts';
-import { unknownCheckMessage, unknownConfigurationMessage } from '#cli/configurations/unknown-names.ts';
+import { listCheckIds, listRuleFiles, readManifests, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 
 import {
     type Explanation,
@@ -41,7 +41,7 @@ function formatList(label: string, items: string[]): string[] {
 }
 
 function explainConfiguration(configurationName: string): Explanation | undefined {
-    const manifest = configurationManifests().get(configurationName);
+    const manifest = readManifests().get(configurationName);
     if (manifest === undefined) return undefined;
     const row: ConfigurationExplanation = {
         name: manifest.configuration.name,
@@ -52,7 +52,7 @@ function explainConfiguration(configurationName: string): Explanation | undefine
         tools: manifest.tools.map((tool) => (tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`)),
         checks: manifest.checks.map((check) => ({ check: check.name, stage: check.stage })),
         settings: configurationSettings(manifest.configuration.name).map((setting) => setting.name),
-        rules: ruleFiles(manifest).map((file) => file.path),
+        rules: listRuleFiles(manifest).map((file) => file.path),
         alwaysSelected: manifest.configuration.always_selected,
     };
     const { detect, files } = manifest;
@@ -154,9 +154,9 @@ function explainSetting(session: Session | undefined, key: string): Explanation 
 
 function buildUnknownSubjectDiagnostic(session: Session | undefined, subject: string): string {
     if (subject.includes('/'))
-        return unknownCheckMessage(
+        return formatUnknownCheck(
             subject,
-            knownChecks(session === undefined ? [] : Object.values(session.settingsFile.settings.check)),
+            listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.check)),
         );
     if (subject.includes('.'))
         return unknownSettingError(
@@ -167,7 +167,7 @@ function buildUnknownSubjectDiagnostic(session: Session | undefined, subject: st
             ),
             subject,
         );
-    return unknownConfigurationMessage(subject, configurationManifests().keys().toArray());
+    return formatUnknownConfiguration(subject, readManifests().keys().toArray());
 }
 
 // A check retains its meaning; a tracked path precedes a rule with the same first folder.

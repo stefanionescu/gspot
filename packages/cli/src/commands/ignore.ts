@@ -9,16 +9,15 @@ import { type CommandResult } from '#cli/types/terminal.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { reasonError } from '#cli/settings/errors/reasons.ts';
 import { type Settings } from '#cli/types/settings/values.ts';
-import { knownChecks } from '#cli/configurations/manifests.ts';
 import { type IgnoreOptions } from '#cli/types/commands/save-settings.ts';
-import { unknownCheckMessage } from '#cli/configurations/unknown-names.ts';
 import { saveSettings, startSettingsEdit } from '#cli/commands/save-settings.ts';
 import { mergeIgnore, emitSettings, parseExpiryDate } from '#cli/settings/file.ts';
+import { listCheckIds, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 
 function assertKnownCheck(checkName: string, settings: Settings): void {
-    const known = knownChecks(Object.values(settings.check));
+    const known = listCheckIds(Object.values(settings.check));
     if (known.includes(checkName)) return;
-    throw new GspotError('arguments', unknownCheckMessage(checkName, known));
+    throw new GspotError('arguments', formatUnknownCheck(checkName, known));
 }
 
 function buildReasonHint(options: IgnoreOptions): string {

@@ -2,15 +2,15 @@ import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { runCommand } from '#tests/setup/processes.ts';
-import { misePins } from '#cli/configurations/tool-pins.ts';
+import { listMisePins } from '#cli/configurations/tools.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { hasToolBuild } from '#tests/setup/operating-systems.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { toolsPath, testRunFolder } from '#tests/setup/install.ts';
 import { TUTORIALS, QUICKSTART_COMMANDS } from '#tests/config/e2e.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 test.each(
     TUTORIALS.filter(
@@ -73,7 +73,7 @@ test.each(
  * @returns after linking every supported pin.
  */
 async function linkQuickstartTools(root: string, environment: Record<string, string>): Promise<void> {
-    for (const pin of misePins([...configurationManifests().values()]).filter((pin) => hasToolBuild(pin.name))) {
+    for (const pin of listMisePins([...readManifests().values()]).filter((pin) => hasToolBuild(pin.name))) {
         const requirement = `${pin.name}@${pin.version}`;
 
         const installed = await runCommand(

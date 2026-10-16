@@ -2,14 +2,14 @@ import { test, expect } from 'bun:test';
 import { parseSettings } from '#cli/settings/read.ts';
 import { REASON } from '#tests/config/settings/errors.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { scopeView, knownSettings } from '#cli/settings/view.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 test('a tool option named reason is passed on and is not a gspot reason', () => {
     const settings = parseSettings(
         `configurations = ["javascript"]\n[tools.prettier]\nextra = { value = { reason = false }, reason = "${REASON}" }\n`,
     );
-    const selected = selectForScope(settings, '', configurationManifests());
+    const selected = selectForScope(settings, '', readManifests());
     expect(scopeView(knownSettings(selected), settings, selected, '').extra('prettier')).toStrictEqual({
         reason: false,
     });

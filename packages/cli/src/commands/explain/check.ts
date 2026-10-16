@@ -7,9 +7,9 @@ import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { CommandCheck } from '#cli/types/settings/values.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
-import { toolName, toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { getToolName, getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { Found, CheckFacts, Explanation } from '#cli/types/commands/explain.ts';
-import { allChecks, ruleFiles, configurationManifests } from '#cli/configurations/manifests.ts';
+import { listRuleFiles, readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 import type { Manifest, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
 function getRulePlugin(prefix: string, manifests: Map<string, Manifest>): ToolDeclaration | undefined {
@@ -28,7 +28,7 @@ function getRulePage(
 ): string | undefined {
     const slash = rule.lastIndexOf('/');
     if (slash === -1) {
-        const pin = toolDeclaration(manifests.values(), tool, manifests.get(check.name.split('/', 1)[0] ?? ''));
+        const pin = getToolDeclaration(manifests.values(), tool, manifests.get(check.name.split('/', 1)[0] ?? ''));
         return pin.rule_url?.replace(RULE_PLACEHOLDER, rule);
     }
     const plugin = getRulePlugin(rule.slice(0, slash), manifests);
@@ -41,7 +41,7 @@ function getFacts(
     configuration: Found['configuration'],
     manifests: Map<string, Manifest>,
 ): CheckFacts {
-    const tool = toolName(check);
+    const tool = getToolName(check);
     const settings = (configuration === undefined ? [] : configurationSettings(configuration.configuration.name))
         .filter(
             (setting) =>
@@ -49,10 +49,10 @@ function getFacts(
                 (tool !== undefined && setting.name.startsWith(`tools.${tool}.`)),
         )
         .map((setting) => setting.name);
-    const rules = configuration === undefined ? [] : ruleFiles(configuration).map((file) => file.path);
+    const rules = configuration === undefined ? [] : listRuleFiles(configuration).map((file) => file.path);
     const crashPattern =
         check.crash_pattern ??
-        (tool === undefined ? undefined : toolDeclaration(manifests.values(), tool, configuration).crash_pattern);
+        (tool === undefined ? undefined : getToolDeclaration(manifests.values(), tool, configuration).crash_pattern);
     return {
         source:
             configuration === undefined ? 'repository command' : `${configuration.configuration.name} configuration`,
@@ -127,10 +127,10 @@ function describeCheck(
  * @returns the explanation, or undefined when no check has the name
  */
 export function explainCheck(session: Session | undefined, checkName: string): Explanation | undefined {
-    const manifests = configurationManifests(session?.reads);
+    const manifests = readManifests(session?.reads);
     const declared = session?.settingsFile.settings.check[checkName];
     const found: Found | undefined =
-        allChecks(manifests.values()).get(checkName) ??
+        listChecksById(manifests.values()).get(checkName) ??
         (declared === undefined ? undefined : { check: declared, configuration: undefined });
     if (found === undefined) return undefined;
     const { check, configuration } = found;
@@ -167,15 +167,16 @@ export function explainCheck(session: Session | undefined, checkName: string): E
  * @returns the explanation, or undefined when no check runs the tool
  */
 export function explainLintRule(tool: string, rule: string): Explanation | undefined {
-    const manifests = configurationManifests();
+    const manifests = readManifests();
     const qualified = `${tool}/${rule}`;
     const plugin = getRulePlugin(qualified.slice(0, qualified.lastIndexOf('/')), manifests);
     const ruleTool = plugin === undefined ? tool : ESLINT_TOOL;
     const identifier = plugin === undefined ? rule : qualified;
-    const found = allChecks(manifests.values())
+    const found = listChecksById(manifests.values())
         .values()
         .find(
-            ({ check: declaration }) => toolName(declaration) === ruleTool || declaration.name.endsWith(`/${ruleTool}`),
+            ({ check: declaration }) =>
+                getToolName(declaration) === ruleTool || declaration.name.endsWith(`/${ruleTool}`),
         );
     if (!found) return undefined;
     const { check, configuration } = found;

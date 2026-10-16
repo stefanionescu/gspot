@@ -8,9 +8,9 @@ import * as processes from '#cli/system/processes.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { findRoot, readRepository } from '#cli/repository/read.ts';
 import { rm, chmod, unlink, symlink, writeFile } from 'node:fs/promises';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { listRevisionEntries } from '#cli/repository/revisions/tree-entries.ts';
 import { readIndexEntries, listTrackedFiles } from '#cli/repository/tracked.ts';
 import { isWindows, useOperatingSystem } from '#tests/setup/operating-systems.ts';
@@ -31,7 +31,7 @@ test.each([
     const repository = await readRepository(createReadCache(root), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
     expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
     await unlink(join(root, name));
@@ -41,7 +41,7 @@ test.each([
     const corrected = await readRepository(createReadCache(root), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
     expect(corrected.files.find((file) => file.path === 'linked.ts')?.tags).toContain('symlink');
 });
@@ -74,7 +74,7 @@ test('a dangling tracked link is listed without reading its target', async () =>
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
     expect(repository.files).toHaveLength(1);
     expect(repository.files[0]?.tags).toContain('symlink');

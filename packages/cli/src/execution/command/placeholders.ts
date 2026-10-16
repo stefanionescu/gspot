@@ -1,8 +1,8 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { convertToSystemPath } from '#cli/system/paths.ts';
+import { extractToolFileName } from '#cli/planning/files.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
-import { toolFileName } from '#cli/configurations/manifests.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 
 import type {
@@ -117,7 +117,7 @@ function plainPart(
  */
 export function toolFilePath(session: CommandSource, planned: SubstitutionCheck, name: string): string {
     const target = allToolFiles(session, planned).find(
-        (config) => !config.fragment && toolFileName(config.target) === name,
+        (config) => !config.fragment && extractToolFileName(config.target) === name,
     );
     if (!target)
         throw new Error(`Check ${planned.check.name} names {tool_file:${name}} and no configuration writes it.`);

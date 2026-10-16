@@ -4,11 +4,11 @@ import { isRecord } from '#cli/system/values.ts';
 import { hashContent } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { templateSchema } from '#cli/settings/schema/templates.ts';
 import { emitSettings, parseTomlText } from '#cli/settings/file.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { unknownConfigurations } from '#cli/configurations/unknown-names.ts';
+import { listUnknownConfigurations } from '#cli/configurations/select.ts';
 import type { Template, ExportedTemplate } from '#cli/types/settings/file.ts';
 
 import {
@@ -87,7 +87,7 @@ export function parseTemplate(text: string, source: string): Template {
           });
     const named = written['configurations'];
     const declarations = Array.isArray(named) ? named.map((name) => ({ name: String(name) })) : [];
-    const unknown = unknownConfigurations(declarations, configurationManifests()).map(
+    const unknown = listUnknownConfigurations(declarations, readManifests()).map(
         ({ message: diagnostic }) => diagnostic,
     );
     const errors = [...shape, ...unknown];

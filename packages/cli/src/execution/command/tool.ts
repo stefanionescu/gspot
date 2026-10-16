@@ -6,8 +6,8 @@ import type { ToolSearch } from '#cli/types/tools/find.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { checkCompanions } from '#cli/planning/needed-tools.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { runTool, getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import { executionFailure } from '#cli/execution/command/output.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
@@ -28,7 +28,7 @@ function checkTool(
     name: string,
     options: Pick<PreparedCommand, 'cwd'> & Partial<Pick<PreparedCommand, 'env'>>,
 ): CheckTool {
-    const tool = toolDeclaration(input.manifests.values(), name);
+    const tool = getToolDeclaration(input.manifests.values(), name);
     const env = { ...tool.env, ...input.check.env, ...options.env };
     const availability = findTool(input, options.cwd, tool, env);
     if ('status' in availability) {
@@ -93,7 +93,7 @@ export function companionEnvironment(
     env: Record<string, string>,
 ): Record<string, string> {
     const directories = (names ?? [])
-        .map((name) => inspectTool(input, toolDeclaration(input.manifests.values(), name)).path)
+        .map((name) => inspectTool(input, getToolDeclaration(input.manifests.values(), name)).path)
         .filter((path) => path !== undefined)
         .map((path) => dirname(path));
     if (directories.length === 0) return env;

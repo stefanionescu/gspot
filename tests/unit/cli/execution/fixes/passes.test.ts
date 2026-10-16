@@ -10,8 +10,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
 import { type RunOptions } from '#cli/types/execution/check.ts';
 import { DECLARATION_FILES } from '#tests/config/repository.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { checkReport, buildRunOptions } from '#tests/setup/run-gspot.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 import { TEXT_FIX, TEXT_CHECK, FIX_LINTER_CASES } from '#tests/config/execution.ts';
 import { REACT_VUE_PACKAGES, CLEAR_DEPENDENCIES_SCRIPT, ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/config/npm.ts';
@@ -41,7 +41,7 @@ test.each([...FIX_LINTER_CASES])(
     'after --fix, the $configuration check status matches what the linter still reports',
     async (entry) => {
         await using sandbox = await testdir();
-        const check = configurationManifests()
+        const check = readManifests()
             .get(entry.configuration)!
             .checks.find((check) => check.name === `${entry.configuration}/${entry.tool}`)!;
         const executable = join(

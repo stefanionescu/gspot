@@ -4,15 +4,15 @@ import { knownSettings } from '#cli/settings/view.ts';
 import { buildManifest } from '#tests/setup/manifest.ts';
 import { declarationFor } from '#cli/settings/inherit.ts';
 import { TOOL_DECLARATION } from '#tests/config/manifests.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
 import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { toolDeclarationSchema } from '#cli/configurations/schema/tool.ts';
 import { SEMGREP_ASSETS, CONFIGURATION_TABLE } from '#tests/config/configurations.ts';
 
 test('setting names in shipped manifest text and rules exist', () => {
-    const manifests = [...configurationManifests().values()];
+    const manifests = [...readManifests().values()];
     const known = knownSettings(manifests, 'all');
     const roots = new Set([...known.declarations.keys()].map((key) => key.split('.', 1)[0]));
     const sources = [
@@ -55,7 +55,7 @@ test('a tool declared by two configurations is refused', () => {
             return CONFIGURATION_TABLE + `[[tool]]\nname = "probe"\nversion = "${version}"\n`;
         }),
     );
-    expect(() => configurationManifests()).toThrow('tool probe is already declared.');
+    expect(() => readManifests()).toThrow('tool probe is already declared.');
 });
 
 test('a tool named without a declaration links to the configuration that declares it, and fails when none does', () => {
@@ -75,13 +75,13 @@ test('a tool named without a declaration links to the configuration that declare
             );
         }),
     );
-    expect(() => configurationManifests()).toThrow('tool probe has no declaration.');
+    expect(() => readManifests()).toThrow('tool probe has no declaration.');
     for (const paths of [
         [consumer, owner],
         [owner, consumer],
     ]) {
         listing.mockImplementation((prefix) => (prefix === 'configurations/' ? paths : []));
-        const manifests = configurationManifests();
+        const manifests = readManifests();
         expect(manifests.get('consumer')!.tools).toStrictEqual(manifests.get('owner')!.tools);
     }
 });
@@ -139,7 +139,7 @@ test('Semgrep rule packs in the configuration folder become tool files read by t
               '\n[[tool_file]]\nsource = "other.yml"\ntarget = ".gspot/config/other.yml"\npointer = { path = "other.yml" }\n'
             : readAsset(path),
     );
-    const manifest = configurationManifests().get('example')!;
+    const manifest = readManifests().get('example')!;
     expect(manifest.toolFiles.map(({ source, target }) => [source, target])).toStrictEqual([
         ['other.yml', '.gspot/config/other.yml'],
         ['semgrep/first.yml', '.gspot/config/semgrep/first.yml'],

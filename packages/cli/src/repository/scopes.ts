@@ -3,7 +3,7 @@ import { posix } from 'node:path';
 import picomatch from 'picomatch';
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
-import { npmToolNames } from '#cli/configurations/tool-pins.ts';
+import { listNpmToolNames } from '#cli/configurations/tools.ts';
 import { isInstalledToolPath } from '#cli/repository/classify.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { isToolOnlyPackage } from '#cli/repository/dependency-files.ts';
@@ -114,7 +114,7 @@ export function findScopes(
 ): ScopeEntry[] {
     const configurations = [...manifests];
     const patterns = configurations.flatMap((manifest) => manifest.detect.project_files);
-    const npmNames = npmToolNames(configurations);
+    const npmNames = listNpmToolNames(configurations);
     const toolOnlyPackages = new Set(
         packageManifests.filter((fact) => isToolOnlyPackage(fact, npmNames)).map((fact) => fact.path),
     );

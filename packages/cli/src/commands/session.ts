@@ -11,14 +11,14 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { configuredSystemChecks } from '#cli/planning/checks.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { neededToolManifests } from '#cli/planning/needed-tools.ts';
 import { type Repository } from '#cli/types/repository/inventory.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { locateCandidates, readMiseBinPaths } from '#cli/tools/locate.ts';
 import { MISSING_PACKAGE_MANAGER_MESSAGE } from '#cli/config/tools/npm.ts';
-import { misePins, toolProjectPins } from '#cli/configurations/tool-pins.ts';
+import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { classifyFile, listFileDeclarations } from '#cli/repository/classify.ts';
 import type { Settings, SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts';
 import { rootView, scopeView, knownSettings, detectedDefaults } from '#cli/settings/view.ts';
@@ -118,7 +118,7 @@ export async function openSession(
 ): Promise<Session> {
     const reads = createReadCache(rootPath);
     const root = reads.root;
-    const manifests = configurationManifests(reads);
+    const manifests = readManifests(reads);
     const settings = { ...settingsFile.settings };
     const repository = await readSessionRepository(root, settings, settingsFile.text, manifests, reads);
     const packageManifests = repository.dependencyFiles;
@@ -127,7 +127,7 @@ export async function openSession(
     let packageManagerIdentity: PackageManagerDeclaration | undefined = undefined;
     let packageManagerState: PackageManager | undefined;
     let generatedPaths: ReadonlySet<string> | undefined;
-    const toolNames = misePins(scopes.flatMap((selection) => selection.selected)).map((pin) => pin.name);
+    const toolNames = listMisePins(scopes.flatMap((selection) => selection.selected)).map((pin) => pin.name);
     const miseBinPaths = readMiseBinPaths(installedRoot, [...new Set(toolNames)], timeoutSeconds, []);
     const searchOptions = { search: 'path' as const, searchFolders: [], miseBinPaths, timeoutSeconds };
     const session: Session = {
@@ -166,7 +166,7 @@ export async function openSession(
     };
     session.configuredChecks = configuredSystemChecks(session);
     session.neededToolManifests = neededToolManifests(session, session.configuredChecks);
-    if (Object.keys(toolProjectPins(session.neededToolManifests).npm).length > 0)
+    if (Object.keys(listToolProjectPins(session.neededToolManifests).npm).length > 0)
         packageManagerIdentity = await getPackageManagerIdentity();
     return session;
 }

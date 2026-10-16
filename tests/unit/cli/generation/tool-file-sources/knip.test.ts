@@ -11,7 +11,7 @@ import { parseOutput } from '#cli/parsers/output/formats.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import type { KnipToolFile } from '#tests/types/tool-files.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 
 import {
     KNIP_ARGV,
@@ -24,7 +24,7 @@ import {
     KNIP_DEPENDENCY_PACKAGE,
 } from '#tests/config/knip.ts';
 
-const check = configurationManifests()
+const check = readManifests()
     .get('javascript')!
     .checks.find(({ name }) => name === 'javascript/knip')!;
 

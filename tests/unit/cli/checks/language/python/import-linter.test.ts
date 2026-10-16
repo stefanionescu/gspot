@@ -10,7 +10,7 @@ import { processResult } from '#tests/setup/processes.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { IMPORT_CONTRACT_REPORT } from '#tests/config/python/imports.ts';
-import { toolDeclaration, toolProjectPins } from '#cli/configurations/tool-pins.ts';
+import { getToolDeclaration, listToolProjectPins } from '#cli/configurations/tools.ts';
 
 test('import-linter skips a project without contracts', async () => {
     await using sandbox = await testdir();
@@ -41,8 +41,8 @@ test('import-linter reads setup.cfg first and reports each broken contract with 
     using resources = new DisposableStack();
     resources.use(
         mockPinnedExecutables([
-            toolDeclaration(session.manifests.values(), 'uv'),
-            toolDeclaration(session.manifests.values(), 'lint-imports'),
+            getToolDeclaration(session.manifests.values(), 'uv'),
+            getToolDeclaration(session.manifests.values(), 'lint-imports'),
         ]),
     );
     const command = resources.use(
@@ -62,7 +62,9 @@ test('import-linter reads setup.cfg first and reports each broken contract with 
         '--project',
         session.root,
         '--with',
-        ...toolProjectPins([...session.manifests.values()]).python.filter((pin) => pin.startsWith('import-linter==')),
+        ...listToolProjectPins([...session.manifests.values()]).python.filter((pin) =>
+            pin.startsWith('import-linter=='),
+        ),
         'lint-imports',
         '--no-cache',
         '--verbose',

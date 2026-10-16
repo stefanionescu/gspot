@@ -13,8 +13,8 @@ import { commitAll, gitOutput } from '#tests/setup/git.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { readTree, pathExists } from '#tests/setup/files.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { TAPLO_REASON, TAPLO_OPTIONS, RESTRICTED_IMPORTS, EXTRA_OPTION_SCOPES } from '#tests/config/set.ts';
 
 test.each([
@@ -68,7 +68,7 @@ test.each([...EXTRA_OPTION_SCOPES])(
         const written = await runGspot(sandbox.path, [...argv, '--reason', TAPLO_REASON]);
         expect(written.code, written.stdout + written.stderr).toBe(0);
         const { settings } = readSettings(sandbox.path);
-        const selected = selectForScope(settings, scope, configurationManifests());
+        const selected = selectForScope(settings, scope, readManifests());
         expect(settingValue(knownSettings(selected), settings, key, scope)).toMatchObject({
             value: TAPLO_OPTIONS,
             reason: TAPLO_REASON,

@@ -9,11 +9,11 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { setKey, findScopeTable } from '#cli/settings/edit.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { emitSettings, parseExpiryDate } from '#cli/settings/file.ts';
 import { NESTED_SCOPE_SETTINGS } from '#tests/config/settings/scopes.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { SITE_BUILD_COMMANDS, SITE_NPM_CLIENT_CASES } from '#tests/config/site/build.ts';
 
 test.each(
@@ -133,7 +133,7 @@ test('an until date ends at the end of that day in UTC, and the expired ignore s
             },
         ] as const;
         const settings = parseSettings(emitSettings('', { configurations: [], ignore: entries }));
-        const selected = selectForScope(settings, '', configurationManifests());
+        const selected = selectForScope(settings, '', readManifests());
         const view = scopeView(knownSettings(selected), settings, selected, '');
         expect(view.ignoresFor('dependencies/osv')).toStrictEqual([
             { ...entries[3], paths: [] },

@@ -12,14 +12,14 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { npmToolNames } from '#cli/configurations/tool-pins.ts';
+import { listNpmToolNames } from '#cli/configurations/tools.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { join, extname, dirname, basename, relative } from 'node:path';
 import { MARKDOWN_EXTENSION } from '#cli/config/repository/inventory.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import { statSync, lstatSync, existsSync, readdirSync, realpathSync } from 'node:fs';
 import { readPackageJson, isToolOnlyPackage } from '#cli/repository/dependency-files.ts';
@@ -282,8 +282,8 @@ export function readExistingTools(
     reads?: ReadCache,
 ): ExistingTools {
     const paths = new Set(files.map((file) => file.path));
-    const manifests = configurationManifests(reads);
-    const npmNames = npmToolNames(manifests.values());
+    const manifests = readManifests(reads);
+    const npmNames = listNpmToolNames(manifests.values());
     const lintOnlyManifests = packageManifests
         .filter((fact) => fact.kind === 'package.json' && isToolOnlyPackage(fact, npmNames))
         .map((fact) => fact.path)

@@ -10,14 +10,15 @@ import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { type NamingDefaults } from '#cli/types/checks/general.ts';
 import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
+import { formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import { namingDefaultsSchema } from '#cli/configurations/schema/naming.ts';
 
-import type {
-    Manifest,
-    ToolDeclaration,
-    CheckDeclaration,
-    ConfigurationCheck,
-    ManifestDeclaration,
+import {
+    type Manifest,
+    type ToolDeclaration,
+    type CheckDeclaration,
+    type ConfigurationCheck,
+    type ManifestDeclaration,
 } from '#cli/types/configurations.ts';
 import {
     RULES_FOLDER,
@@ -42,8 +43,9 @@ function issueLines(issue: z.core.$ZodIssue): string[] {
 }
 
 // Producer identities retain bundled declarations only for the supplied run cache.
-const MANIFESTS = { create: configurationManifests };
-const NAMING_DEFAULTS = { create: namingDefaults };
+const MANIFESTS = { create: readManifests };
+
+const NAMING_DEFAULTS = { create: readNamingDefaults };
 
 // Discovery adds plain Semgrep and Vale assets while retaining invalid declarations for schema errors.
 function discoveredToolFilesAt(dir: string, toolFiles: unknown): unknown {
@@ -86,7 +88,7 @@ function applyToolVersions(manifest: ManifestDeclaration, versions: Record<strin
  * @returns the registry with canonical tool metadata
  */
 function linkManifestTools(manifests: ManifestDeclaration[]): Map<string, Manifest> {
-    const tools = declaredTools(manifests);
+    const tools = listDeclaredTools(manifests);
     return new Map(
         manifests.map((manifest) => [
             manifest.configuration.name,
@@ -96,7 +98,7 @@ function linkManifestTools(manifests: ManifestDeclaration[]): Map<string, Manife
                     if (typeof tool !== 'string') return tool;
                     const declared = tools.get(tool);
                     if (declared === undefined)
-                        throw manifestError(manifest.configuration.name, [`tool ${tool} has no declaration.`]);
+                        throw buildManifestError(manifest.configuration.name, [`tool ${tool} has no declaration.`]);
                     return declared;
                 }),
             },
@@ -124,7 +126,7 @@ function parseManifest(text: string, dir: string): ManifestDeclaration {
         },
     });
     if (!result.success)
-        throw manifestError(posix.basename(dir), [
+        throw buildManifestError(posix.basename(dir), [
             ...new Set(result.error.issues.flatMap((issue) => issueLines(issue))),
         ]);
     const declared = result.data;
@@ -143,7 +145,7 @@ function parseManifest(text: string, dir: string): ManifestDeclaration {
  * @param reads the optional run cache
  * @returns the manifests
  */
-function configurationManifests(reads?: ReadCache): Map<string, Manifest> {
+function readManifests(reads?: ReadCache): Map<string, Manifest> {
     if (reads !== undefined) return getCachedValue(reads, MANIFESTS);
     const manifests = new Map<string, ManifestDeclaration>();
     const toolVersions = (z.record(z.string(), z.string().min(1)) satisfies z.ZodType<Record<string, string>>).parse(
@@ -170,8 +172,8 @@ function configurationManifests(reads?: ReadCache): Map<string, Manifest> {
  * @param reads the optional run cache
  * @returns the available check IDs
  */
-function knownChecks(checks: readonly Pick<CheckDeclaration, 'name'>[], reads?: ReadCache): string[] {
-    const bundled = [...allChecks(configurationManifests(reads).values()).keys()];
+function listCheckIds(checks: readonly Pick<CheckDeclaration, 'name'>[], reads?: ReadCache): string[] {
+    const bundled = [...listChecksById(readManifests(reads).values()).keys()];
     const authored = checks.map((check) => check.name);
     return [...new Set([...bundled, ...authored])];
 }
@@ -181,7 +183,7 @@ function knownChecks(checks: readonly Pick<CheckDeclaration, 'name'>[], reads?: 
  * @param reads the optional run cache
  * @returns the shipped naming choices
  */
-function namingDefaults(reads?: ReadCache): NamingDefaults {
+function readNamingDefaults(reads?: ReadCache): NamingDefaults {
     if (reads !== undefined) return getCachedValue(reads, NAMING_DEFAULTS);
     return namingDefaultsSchema.parse(JSON.parse(readAsset(NAMING_DEFAULTS_FILE)));
 }
@@ -191,7 +193,7 @@ function namingDefaults(reads?: ReadCache): NamingDefaults {
  * @param manifest the configuration
  * @returns each file with its path inside the rules folder
  */
-function ruleFiles(manifest: Manifest): RuleSource[] {
+function listRuleFiles(manifest: Manifest): RuleSource[] {
     const { group, name } = manifest.configuration;
     const sources = listAssets(`${manifest.dir}/${RULES_FOLDER}/`);
     return sources.map((source) => ({
@@ -206,7 +208,7 @@ function ruleFiles(manifest: Manifest): RuleSource[] {
  * @param manifests the manifests to index
  * @returns the declared checks by ID
  */
-function allChecks(manifests: Iterable<Manifest>): Map<string, ConfigurationCheck> {
+function listChecksById(manifests: Iterable<Manifest>): Map<string, ConfigurationCheck> {
     const checks = new Map<string, ConfigurationCheck>();
     for (const manifest of manifests) {
         for (const check of manifest.checks) {
@@ -217,23 +219,12 @@ function allChecks(manifests: Iterable<Manifest>): Map<string, ConfigurationChec
 }
 
 /**
- * The name a tool-file placeholder uses for a tool file.
- * @param target the target path
- * @returns the file name under .gspot/config without its extensions
- */
-function toolFileName(target: string): string {
-    const bare = target.startsWith(TOOL_FILE_PREFIX) ? target.slice(TOOL_FILE_PREFIX.length) : target;
-    const dot = bare.indexOf('.');
-    return dot === -1 ? bare : bare.slice(0, dot);
-}
-
-/**
  * The error for an invalid configuration manifest.
  * @param configuration the configuration name
  * @param errors the errors in plain English
  * @returns the error to throw
  */
-function manifestError(configuration: string, errors: string[]): GspotError {
+function buildManifestError(configuration: string, errors: string[]): GspotError {
     return new GspotError(
         'manifest',
         [`The configuration manifest for \`${configuration}\` is not valid:`, ...errors].join('\n'),
@@ -245,25 +236,36 @@ function manifestError(configuration: string, errors: string[]): GspotError {
  * @param manifests the parsed configuration declarations
  * @returns the canonical tools by name
  */
-function declaredTools(manifests: Iterable<ManifestDeclaration>): Map<string, ToolDeclaration> {
+function listDeclaredTools(manifests: Iterable<ManifestDeclaration>): Map<string, ToolDeclaration> {
     const tools = new Map<string, ToolDeclaration>();
     for (const manifest of manifests)
         for (const tool of manifest.tools.filter((entry) => typeof entry !== 'string')) {
             const previous = tools.get(tool.name);
             if (previous !== undefined && previous !== tool)
-                throw manifestError(manifest.configuration.name, [`tool ${tool.name} is already declared.`]);
+                throw buildManifestError(manifest.configuration.name, [`tool ${tool.name} is already declared.`]);
             tools.set(tool.name, tool);
         }
     return tools;
 }
 
+/**
+ * Name an unknown check and suggest nearby checks from the caller's native inventory.
+ * @param name the requested check ID
+ * @param known the check IDs available to the caller
+ * @returns the shared selection diagnostic
+ */
+function formatUnknownCheck(name: string, known: string[]): string {
+    const suggestions = selectSimilarNames(name, known);
+    return `There is no check called \`${name}\`.${suggestions.length > 0 ? ' Did you mean ' + formatCodeList(suggestions) + '?' : ''}`;
+}
+
 export {
-    ruleFiles,
-    allChecks,
-    knownChecks,
-    toolFileName,
-    manifestError,
-    declaredTools,
-    namingDefaults,
-    configurationManifests,
+    listCheckIds,
+    readManifests,
+    listRuleFiles,
+    listChecksById,
+    listDeclaredTools,
+    readNamingDefaults,
+    buildManifestError,
+    formatUnknownCheck,
 };

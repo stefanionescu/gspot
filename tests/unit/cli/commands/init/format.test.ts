@@ -6,9 +6,9 @@ import { readRepository } from '#cli/repository/read.ts';
 import { parseTemplate } from '#cli/settings/templates.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readFormatTables } from '#cli/commands/init/format.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import type { SettingsDraft } from '#cli/types/commands/init.ts';
 import { initSettingsText } from '#cli/commands/init/settings-text.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { FORMAT_FILE_CASES, SCOPE_FORMAT_CASES, SCOPE_FORMAT_FILES } from '#tests/config/init.ts';
 
@@ -17,7 +17,7 @@ test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', a
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
     const draft: SettingsDraft = {
         configurations: ['format'],
@@ -26,7 +26,7 @@ test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', a
         ci: 'none',
         rules: false,
     };
-    const manifests = configurationManifests();
+    const manifests = readManifests();
     const formats = readFormatTables(
         draft,
         repository,
@@ -51,7 +51,7 @@ test.each([...SCOPE_FORMAT_CASES])(
         const repository = await readRepository(createReadCache(sandbox.path), {
             declarations: [],
             scopeEntries: [],
-            manifests: configurationManifests(),
+            manifests: readManifests(),
         });
         const draft: SettingsDraft = {
             configurations: ['format'],
@@ -67,7 +67,7 @@ test.each([...SCOPE_FORMAT_CASES])(
 
             ...(template ? { template: parseTemplate(template, 'team.template.toml') } : {}),
         };
-        const manifests = configurationManifests();
+        const manifests = readManifests();
         const formats = readFormatTables(
             draft,
             repository,

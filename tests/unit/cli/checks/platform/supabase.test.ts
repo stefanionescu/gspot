@@ -9,8 +9,8 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 
 import {
     SECRET_KEY_READS,
@@ -32,7 +32,7 @@ test('Supabase config.toml and function folders are read per scope', async () =>
         'apps/api/edge/_shared/index.ts': 'export {};\n',
     });
     const session = await openSession(sandbox.path);
-    using _pins = mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'deno')]);
+    using _pins = mockPinnedExecutables([getToolDeclaration(session.manifests.values(), 'deno')]);
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(
         processResult({ stdout: '{"diagnostics":[],"errors":[]}' }),
     );
@@ -63,7 +63,7 @@ test.each([1, 2])("Deno lint exit %s without JSON reports Deno's error text", as
     });
     const session = await openSession(sandbox.path);
     using resources = new DisposableStack();
-    resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'deno')]));
+    resources.use(mockPinnedExecutables([getToolDeclaration(session.manifests.values(), 'deno')]));
     resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(
             processResult({ code, stderr: 'The project configuration is invalid.' }),

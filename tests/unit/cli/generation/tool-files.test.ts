@@ -13,16 +13,16 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import { EDITORCONFIG_SETTINGS } from '#tests/config/formatting.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { emitSettings, parseExpiryDate } from '#cli/settings/file.ts';
 import { SWIFT_FORMAT_SETTINGS } from '#tests/config/swift/projects.ts';
 import { NESTED_PYTHON_SETTINGS } from '#tests/config/python/project.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { createEslint, readEslintConfiguration } from '#tests/setup/generate.ts';
 import { PLAIN_TOOL_FILES, TOOL_FILE_PROJECT } from '#tests/config/tool-files.ts';
-import { toolDeclaration, toolProjectPins } from '#cli/configurations/tool-pins.ts';
+import { getToolDeclaration, listToolProjectPins } from '#cli/configurations/tools.ts';
 
 import {
     ODD_KEY,
@@ -100,13 +100,13 @@ test('Go and Rust sources get only the formatter files and tools they use', asyn
     expect(paths).toContain('.editorconfig');
     expect(paths).toContain('.gspot/config/taplo.toml');
     for (const path of ['.gspot/config/prettier.json', '.prettierignore']) expect(paths).not.toContain(path);
-    const packages = toolProjectPins(session.neededToolManifests).npm;
-    const manifests = configurationManifests();
+    const packages = listToolProjectPins(session.neededToolManifests).npm;
+    const manifests = readManifests();
     const fileManifest = manifests.get('files')!;
-    const expected = toolProjectPins([
+    const expected = listToolProjectPins([
         {
             ...fileManifest,
-            tools: [...fileManifest.tools, toolDeclaration(manifests.values(), 'editorconfig-checker')],
+            tools: [...fileManifest.tools, getToolDeclaration(manifests.values(), 'editorconfig-checker')],
         },
     ]).npm;
     expect(Object.keys(packages).toSorted((a, b) => a.localeCompare(b))).toStrictEqual(Object.keys(expected));
@@ -147,7 +147,7 @@ function parseModule(text: string, path: string): void {
     if (errors.length > 0) throw new Error(`${path}: ${errors.join('; ')}`);
 }
 
-const configurations = [...configurationManifests().values()]
+const configurations = [...readManifests().values()]
     .filter((manifest) => manifest.toolFiles.some((config) => !config.fragment))
     .map((manifest) => manifest.configuration.name);
 

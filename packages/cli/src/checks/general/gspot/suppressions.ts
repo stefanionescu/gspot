@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { findScope } from '#cli/repository/scopes.ts';
-import { toolName } from '#cli/configurations/tool-pins.ts';
+import { getToolName } from '#cli/configurations/tools.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { REASON_ABOVE } from '#cli/config/checks/general/gspot.ts';
@@ -37,7 +37,7 @@ function suppressionSyntaxes(selection: ScopeSelection, file: TrackedFile): Supp
                     view: selection.view,
                 }).length === 0
                     ? []
-                    : [toolName(check)],
+                    : [getToolName(check)],
             ),
         ),
     );

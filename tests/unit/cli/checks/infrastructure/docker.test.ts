@@ -10,7 +10,7 @@ import { processResult } from '#tests/setup/processes.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 
 import {
     MIXED_REPORT,
@@ -33,7 +33,7 @@ test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', asyn
     });
     const session = await openSession(directory.path);
     using resources = new DisposableStack();
-    resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'trivy')]));
+    resources.use(mockPinnedExecutables([getToolDeclaration(session.manifests.values(), 'trivy')]));
     const nativeRun = processes.spawnProcess;
     resources.use(
         spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
@@ -66,7 +66,7 @@ test('a fatal registry failure is reported with its diagnostic', async () => {
     });
     const session = await openSession(directory.path);
     using resources = new DisposableStack();
-    resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'trivy')]));
+    resources.use(mockPinnedExecutables([getToolDeclaration(session.manifests.values(), 'trivy')]));
     resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(processResult({ code, stdout, stderr })));
     expect(await rejection(checkFindings(session.root, 'docker/trivy-image'))).toContain(diagnostic);
 });
@@ -135,7 +135,7 @@ test('Trivy scans a repeated image once and reports each advisory and secret in 
     });
     const session = await openSession(sandbox.path);
     using resources = new DisposableStack();
-    resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'trivy')]));
+    resources.use(mockPinnedExecutables([getToolDeclaration(session.manifests.values(), 'trivy')]));
     const scan = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(
             processResult({ code: TRIVY_FINDINGS_EXIT, stdout: MIXED_REPORT }),
@@ -165,7 +165,7 @@ test.each([...COMPOSE_PAIRING_CASES])(
         using resources = new DisposableStack();
         resources.use(
             mockPinnedExecutables([
-                { ...toolDeclaration(session.manifests.values(), 'docker'), version: DOCKER_VERSION },
+                { ...getToolDeclaration(session.manifests.values(), 'docker'), version: DOCKER_VERSION },
             ]),
         );
         const toolRun = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(processResult()));

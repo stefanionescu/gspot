@@ -7,7 +7,7 @@ import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import { nameFindings } from '#cli/checks/general/naming/names.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
-import { allChecks, configurationManifests } from '#cli/configurations/manifests.ts';
+import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 
 import {
     NAME_WORDS,
@@ -18,10 +18,10 @@ import {
     LINTER_CHECKED_CATEGORIES,
 } from '#tests/config/naming/settings.ts';
 
-const check = allChecks(configurationManifests().values()).get('naming/identifiers')!.check;
+const check = listChecksById(readManifests().values()).get('naming/identifiers')!.check;
 
 test('category limits inherit root and scope language settings while explicit categories take precedence', () => {
-    const selected = selectConfigurations(['naming'], configurationManifests());
+    const selected = selectConfigurations(['naming'], readManifests());
     const known = knownSettings(selected);
     const settings = parseSettings(
         settingsText(['naming'], {
@@ -48,7 +48,7 @@ test('category limits inherit root and scope language settings while explicit ca
 });
 
 test.each([...NAMING_LANGUAGES])('%s accepts its exact limits and reports the next character or word', (language) => {
-    const selected = selectConfigurations(['naming'], configurationManifests());
+    const selected = selectConfigurations(['naming'], readManifests());
     const known = knownSettings(selected);
     const settings = parseSettings(settingsText(['naming'], { rules: true }));
     const view = scopeView(known, settings, selected, '');
@@ -88,7 +88,7 @@ test.each([...NAMING_LANGUAGES])('%s accepts its exact limits and reports the ne
 test.each([...LINTER_CHECKED_CATEGORIES])(
     "$language $category: the language's own linter owns case and length; word limits still apply",
     ({ language, category, native }) => {
-        const selected = selectConfigurations(['naming'], configurationManifests());
+        const selected = selectConfigurations(['naming'], readManifests());
         const known = knownSettings(selected);
         const settings = parseSettings(
             settingsText(['naming'], {
@@ -120,7 +120,7 @@ test.each([...LINTER_CHECKED_CATEGORIES])(
         );
     },
 );
-const manifests = configurationManifests();
+const manifests = readManifests();
 
 test("a framework's naming rules come after the shipped ones and before the repository's", () => {
     const text = settingsText(['typescript', 'express'], {

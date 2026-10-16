@@ -4,8 +4,8 @@ import { buildFileMatcher } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { findScope, isInScope } from '#cli/repository/scopes.ts';
-import { namingDefaults } from '#cli/configurations/manifests.ts';
 import { nameFindings } from '#cli/checks/general/naming/names.ts';
+import { readNamingDefaults } from '#cli/configurations/manifests.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
 import type { FileNames, Identifier, NamingSource, NamingSettings } from '#cli/types/checks/general.ts';
@@ -39,7 +39,7 @@ function findingsFor(input: CheckInput, settings: NamingSettings, identifiers: I
 }
 
 function pathIdentifiers(input: CheckInput): Identifier[] {
-    const containers = namingDefaults(input.reads).path_containers;
+    const containers = readNamingDefaults(input.reads).path_containers;
     const seen = new Set<string>();
     return sourceFiles(input).flatMap(({ file, language }) => {
         const all = [

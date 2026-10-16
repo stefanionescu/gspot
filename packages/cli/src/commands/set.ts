@@ -13,10 +13,10 @@ import { type CommandResult } from '#cli/types/terminal.ts';
 import { RECORD_FIELDS } from '#cli/config/settings/file.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { isLoosening } from '#cli/settings/errors/reasons.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { unknownSettingError } from '#cli/settings/errors/keys.ts';
 import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { setKey, addToList, findScopeTable } from '#cli/settings/edit.ts';
 import type { Mutation, SettingsEdit } from '#cli/types/settings/file.ts';
 import { DECIMAL, INTEGER, STRUCTURED } from '#cli/config/commands/set.ts';
@@ -54,7 +54,7 @@ function parseItem(text: string): unknown {
 }
 
 function buildSettingError(settings: Settings, known: KnownSettings, key: string): GspotError {
-    const manifests = configurationManifests();
+    const manifests = readManifests();
     const selectedScope = Object.keys(settings.scope).find(
         (scope) =>
             declarationFor(knownSettings(selectForScope(settings, scope, manifests), settings.level), key) !==

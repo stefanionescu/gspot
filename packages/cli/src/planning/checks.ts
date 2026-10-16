@@ -8,7 +8,7 @@ import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { skipFor, restrictIgnoredPaths } from '#cli/planning/skips.ts';
 import { filesFor, runsAtRoot, childScopes } from '#cli/planning/files.ts';
-import { toolName, toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { getToolName, getToolDeclaration } from '#cli/configurations/tools.ts';
 import { FLAG_VALUE, COVERAGE_FLAGS, COVERAGE_DIMENSIONS } from '#cli/config/planning.ts';
 import type { Stage, Session, PlanEntry, PlanInputs, PlanOptions, PlannedCheck } from '#cli/types/planning.ts';
 
@@ -42,8 +42,8 @@ function planOne(context: PlanInputs, entry: PlanEntry, isRootCheck: boolean): P
     const { check, manifest } = entry;
     // Repository inventory always places the root scope first.
     const rootScope = session.scopes[0] as ScopeSelection;
-    const name = toolName(check);
-    const tool = name === undefined ? undefined : toolDeclaration(session.manifests.values(), name, manifest);
+    const name = getToolName(check);
+    const tool = name === undefined ? undefined : getToolDeclaration(session.manifests.values(), name, manifest);
     const planned: PlannedCheck = {
         scope: isRootCheck ? rootScope : scope,
         check,

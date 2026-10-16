@@ -8,11 +8,11 @@ import { CLI_MAIN } from '#tests/setup/run-gspot.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { hasToolBuild } from '#tests/setup/operating-systems.ts';
 import type { PreparedSuite } from '#tests/types/preparation.ts';
-import { pinOf, collectPins } from '#cli/configurations/tool-pins.ts';
 import { packPackages, testRunFolder } from '#tests/setup/install.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { findMisePin, listDistinctTools } from '#cli/configurations/tools.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 
 import {
@@ -64,10 +64,10 @@ try {
 /** Install the program pins once for integration and end-to-end suites. */
 async function installPinnedTools(folder: string, cancelSignal: AbortSignal): Promise<string[]> {
     const config = join(folder, PINNED_TOOLS_FILE);
-    const manifests = [...configurationManifests().values()];
-    const names = collectPins(manifests)
+    const manifests = [...readManifests().values()];
+    const names = listDistinctTools(manifests)
         .filter((tool) => tool.system !== true && hasToolBuild(tool.name))
-        .flatMap((tool) => pinOf(tool)?.name ?? []);
+        .flatMap((tool) => findMisePin(tool)?.name ?? []);
     await writeFile(config, miseFile(manifests).content);
     for (const argv of [
         [...MISE_TRUST, config],

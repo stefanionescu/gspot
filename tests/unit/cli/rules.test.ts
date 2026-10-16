@@ -7,11 +7,11 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import type { Level } from '#cli/types/configurations.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import { RULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import { test, spyOn, expect, describe, beforeAll } from 'bun:test';
+import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
-import { allChecks, configurationManifests } from '#cli/configurations/manifests.ts';
+import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 import { DRIZZLE_DRIVERS, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests/config/rules.ts';
 
 {
@@ -27,7 +27,7 @@ import { DRIZZLE_DRIVERS, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests
         });
         const session = await openSession(sandbox.path);
         const manifest = {
-            ...configurationManifests().get('bash')!,
+            ...readManifests().get('bash')!,
             dir: sandbox.path.replaceAll('\\', '/'),
             rules: {},
         };
@@ -80,7 +80,7 @@ import { DRIZZLE_DRIVERS, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests
             const session = await openSession(sandbox.path);
             const files = selectRuleFiles(
                 session.settingsFile.settings.rules,
-                everyManifest(session.scopes),
+                listSelectedManifests(session.scopes),
                 session.repository,
                 'all',
                 session.packageManifests,
@@ -96,10 +96,10 @@ import { DRIZZLE_DRIVERS, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests
     test('an always-selected configuration installs its rule file once', async () => {
         await using sandbox = await testdir({ 'gspot.toml': settingsText([], { rules: true, level: 'all' }) });
         const session = await openSession(sandbox.path);
-        const engineering = everyManifest(session.scopes).find(
+        const engineering = listSelectedManifests(session.scopes).find(
             (manifest) => manifest.configuration.name === 'engineering',
         )!;
-        const manifests = everyManifest(session.scopes);
+        const manifests = listSelectedManifests(session.scopes);
         for (const selected of [manifests, [...manifests, engineering]]) {
             const files = selectRuleFiles(
                 session.settingsFile.settings.rules,
@@ -116,7 +116,7 @@ import { DRIZZLE_DRIVERS, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests
     async function blockFor(root: string): Promise<string> {
         const session = await openSession(root);
         const { rules, level } = session.settingsFile.settings;
-        const selected = everyManifest(session.scopes);
+        const selected = listSelectedManifests(session.scopes);
         const generated = emitAll(session);
         return buildAgentsBlock({
             generatedPaths: [...generated.files, ...generated.fileEdits]
@@ -125,7 +125,7 @@ import { DRIZZLE_DRIVERS, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests
             level,
             files: selectRuleFiles(rules, selected, session.repository, level, session.packageManifests),
             startCommand: session.startRunner.command,
-            hasChecks: allChecks(selected).size > 0,
+            hasChecks: listChecksById(selected).size > 0,
         });
     }
 
@@ -234,7 +234,7 @@ test('a React dependency selects COMPONENTS.md', async () => {
     expect(
         selectRuleFiles(
             session.settingsFile.settings.rules,
-            everyManifest(session.scopes),
+            listSelectedManifests(session.scopes),
             session.repository,
             session.settingsFile.settings.level,
             session.packageManifests,

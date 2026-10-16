@@ -6,7 +6,7 @@ import { installNpmTools } from '#cli/tools/npm/project.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { installPythonTools } from '#cli/tools/python/project.ts';
-import { toolProjectPins } from '#cli/configurations/tool-pins.ts';
+import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { prepareLockfiles } from '#cli/tools/project-lockfiles.ts';
 import { PYTHON_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
 
@@ -43,7 +43,7 @@ export async function installToolProjects(context: InstallContext): Promise<stri
     if (session.getPackageManager() !== undefined) {
         notes.push(await installNpmTools(context));
     }
-    if (uvPath !== undefined && toolProjectPins(manifests).python.length > 0) {
+    if (uvPath !== undefined && listToolProjectPins(manifests).python.length > 0) {
         notes.push(await installPythonTools(context, uvPath));
     }
     return notes;

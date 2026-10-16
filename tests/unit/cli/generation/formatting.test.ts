@@ -13,10 +13,10 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { prettierConfiguration } from '#cli/generation/formatting.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { SVELTE_PLUGIN, PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/formatting.ts';
 
 test('format.indent_width reaches EditorConfig, Prettier and each tool file', async () => {
@@ -132,7 +132,7 @@ const settings = parseSettings(
     }),
 );
 
-const selected = selectConfigurations(settings.configurations, configurationManifests());
+const selected = selectConfigurations(settings.configurations, readManifests());
 
 const { format } = scopeView(knownSettings(selected, settings.level), settings, selected, '');
 

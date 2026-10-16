@@ -11,12 +11,12 @@ import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { buildPathKey, trimTrailingSlashes } from '#cli/system/paths.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import type { ToolTable, SettingsError, RuleExcludeError } from '#cli/types/settings/file.ts';
-import { allChecks, ruleFiles, configurationManifests } from '#cli/configurations/manifests.ts';
+import { listRuleFiles, readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 
 function toolRuleErrors(tool: string, table: ToolTable, path: KeyPath): SettingsError[] {
     const rules = table['rules'];
     if (!isRecord(rules)) return [];
-    const manifests = configurationManifests();
+    const manifests = readManifests();
     const disabledOptions = [...manifests.values()]
         .flatMap((manifest) => configurationSettings(manifest.configuration.name))
         .find((declaration) => declaration.name === `tools.${tool}.rules`)?.off_values;
@@ -30,7 +30,7 @@ function toolRuleErrors(tool: string, table: ToolTable, path: KeyPath): Settings
     });
     if (disabled.length === 0) return [];
     // Tool settings use the check ID, which can differ from its executable.
-    const check = [...allChecks(manifests.values()).values()].find(({ check }) =>
+    const check = [...listChecksById(manifests.values()).values()].find(({ check }) =>
         check.name.endsWith(`/${tool}`),
     )?.check;
     const name = check === undefined ? '<check>' : quoteArgument(check.name);
@@ -155,9 +155,7 @@ function isExcluded(entry: string, path: string): boolean {
  */
 function ruleExcludeErrors(exclude: string[]): RuleExcludeError[] {
     if (exclude.length === 0) return [];
-    const paths = [...configurationManifests().values()].flatMap((manifest) =>
-        ruleFiles(manifest).map((file) => file.path),
-    );
+    const paths = [...readManifests().values()].flatMap((manifest) => listRuleFiles(manifest).map((file) => file.path));
     return exclude.flatMap((entry, index) => {
         if ([...FIRST_READ].some((file) => isExcluded(entry, `${RULES_DIRECTORY}/${file}`)))
             return [

@@ -9,16 +9,16 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
 import { lockfileResult } from '#cli/tools/project-lockfiles.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { UV_LOCKFILE_NAME } from '#cli/config/parsers/lockfiles.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { normalizePythonPackage } from '#cli/parsers/dependency-files.ts';
 import { parsePythonSettings, writePythonSettings } from '#cli/tools/python/settings.ts';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/tools/credentials.ts';
@@ -71,7 +71,7 @@ async function runUv(
     if (result.missing)
         throw new GspotError(
             'tool',
-            formatUnavailableNote(toolDeclaration(configurationManifests().values(), UV_TOOL), {
+            formatUnavailableNote(getToolDeclaration(readManifests().values(), UV_TOOL), {
                 name: UV_TOOL,
                 state: 'missing',
             }),
@@ -212,7 +212,7 @@ export function buildUvRunCommand(
     scopeRoot: string,
     command: [string, ...string[]],
 ): string[] {
-    const tool = toolDeclaration(selection.selected, command[0]);
+    const tool = getToolDeclaration(selection.selected, command[0]);
     const packagePin = tool.installers['pypi'];
     if (packagePin?.version === undefined)
         throw new GspotError('tool', `The ${tool.name} check has no pinned Python package declaration.`);

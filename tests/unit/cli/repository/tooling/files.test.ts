@@ -5,7 +5,7 @@ import { readRepository } from '#cli/repository/read.ts';
 import { mkdir, unlink, symlink } from 'node:fs/promises';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { LINKED_RULE_FOLDERS } from '#tests/config/tooling.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { readLintJobs, hasIniSection, readExistingTools } from '#cli/repository/existing-tools.ts';
 
 test('tool discovery finds nested tool files and skips root .gspot and vendored folders', async () => {
@@ -20,7 +20,7 @@ test('tool discovery finds nested tool files and skips root .gspot and vendored 
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
     const discovered = readExistingTools(sandbox.path, repository.files, []);
     expect(discovered.toolFiles.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);

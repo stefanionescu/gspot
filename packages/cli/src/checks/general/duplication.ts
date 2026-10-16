@@ -11,9 +11,9 @@ import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
-import { sourceConfigurations } from '#cli/configurations/select.ts';
 import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
+import { filterSourceConfigurations } from '#cli/configurations/select.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 
 import {
@@ -65,7 +65,7 @@ export async function jscpd(input: CheckInput): Promise<Finding[]> {
     const work = workFolder.path;
     const owned = [
         ...new Set(
-            sourceConfigurations(input.selection.selected).flatMap((manifest) =>
+            filterSourceConfigurations(input.selection.selected).flatMap((manifest) =>
                 listCoveredFiles(manifest.files, input.files, {
                     selected: input.selection.selected,
                     scope: input.selection.scope.path,

@@ -2,8 +2,8 @@ import { createTwoFilesPatch } from 'diff';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import type { PreparedCommand } from '#cli/types/execution/command.ts';
 import { findTool, runPlannedTool } from '#cli/execution/command/tool.ts';
@@ -93,7 +93,7 @@ async function runCommandFix(
     const tool =
         planned.tool?.name === name
             ? planned.tool
-            : toolDeclaration(session.manifests.values(), name, planned.manifest);
+            : getToolDeclaration(session.manifests.values(), name, planned.manifest);
     const selected = { ...planned, tool };
     const environment = commandEnvironment(session, selected, options);
     const { env, cwd } = environment;

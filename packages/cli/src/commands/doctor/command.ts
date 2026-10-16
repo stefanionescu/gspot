@@ -10,14 +10,14 @@ import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { CI_FILE_LABELS } from '#cli/config/generation/ci.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import { colors, printResult } from '#cli/system/terminal.ts';
 import type { ToolInspection } from '#cli/types/tools/find.ts';
 import { listSubmodulePaths } from '#cli/repository/tracked.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { inspectTool, isToolAvailable } from '#cli/tools/inspect.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
-import { collectPins, missingBuild } from '#cli/configurations/tool-pins.ts';
+import { listSelectedManifests } from '#cli/configurations/select.ts';
+import { findMissingBuild, listDistinctTools } from '#cli/configurations/tools.ts';
 import { type Suggestions, type DoctorReport } from '#cli/types/commands/doctor.ts';
 import { VERSION_GAP, COLUMN_WIDTHS, TOOL_STATE_COLORS, SUGGESTION_SECTIONS } from '#cli/config/commands/doctor.ts';
 
@@ -68,8 +68,8 @@ function buildDoctorReport(session: Session, pinned: string | undefined): Doctor
     const platform = getOperatingSystem();
     // The session omits a tool with no build for this host; its checks skip here.
     const inspections = new Map<string, ToolInspection>();
-    const pins = collectPins(session.neededToolManifests).filter(
-        (tool) => missingBuild(tool, platform, process.arch) === undefined,
+    const pins = listDistinctTools(session.neededToolManifests).filter(
+        (tool) => findMissingBuild(tool, platform, process.arch) === undefined,
     );
     for (const { scope, selected } of session.scopes) {
         const declared = new Set(selected.flatMap((manifest) => manifest.tools).map((tool) => tool.name));
@@ -95,7 +95,7 @@ function buildDoctorReport(session: Session, pinned: string | undefined): Doctor
         ruleFiles: settings.rules.enabled
             ? selectRuleFiles(
                   settings.rules,
-                  everyManifest(session.scopes),
+                  listSelectedManifests(session.scopes),
                   session.repository,
                   settings.level,
                   session.packageManifests,

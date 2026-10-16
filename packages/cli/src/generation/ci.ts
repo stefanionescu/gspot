@@ -7,8 +7,8 @@ import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { hashCommentHeader } from '#cli/generation/headers.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import { pinOf, missingBuild } from '#cli/configurations/tool-pins.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
+import { findMisePin, findMissingBuild } from '#cli/configurations/tools.ts';
 import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
 
 import {
@@ -65,8 +65,8 @@ function supportedManual(pipeline: Pipeline, platform: Pipeline['operatingSystem
     );
     const required = new Set(checks.flatMap((check) => requiredToolNames(check)));
     const tools = pipeline.manualTools.flatMap((tool) => {
-        const pin = pinOf(tool);
-        return pin !== undefined && required.has(tool.name) && missingBuild(tool, platform, arch) === undefined
+        const pin = findMisePin(tool);
+        return pin !== undefined && required.has(tool.name) && findMissingBuild(tool, platform, arch) === undefined
             ? [pin.name]
             : [];
     });

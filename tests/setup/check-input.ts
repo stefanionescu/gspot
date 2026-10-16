@@ -9,8 +9,8 @@ import * as environment from '#cli/system/environment.ts';
 import { normalizeOutputPath } from '#cli/system/paths.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { SWIFT_PACKAGE } from '#tests/config/swift/package.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { checkInput, runBuiltInCheck } from '#cli/execution/built-in.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 
@@ -72,7 +72,7 @@ export async function swiftBuildInput(
 ): Promise<{ input: CheckInput; session: Session; resources: AsyncDisposableStack }> {
     await using resources = new AsyncDisposableStack();
     resources.use(spyOn(environment, 'getOperatingSystem').mockReturnValue('macos'));
-    resources.use(mockPinnedExecutables([...configurationManifests().values()].flatMap((manifest) => manifest.tools)));
+    resources.use(mockPinnedExecutables([...readManifests().values()].flatMap((manifest) => manifest.tools)));
     resources.use(await isolateCompilerCache());
     await createFileTree(sandbox.path, {
         'Package.swift': SWIFT_PACKAGE,

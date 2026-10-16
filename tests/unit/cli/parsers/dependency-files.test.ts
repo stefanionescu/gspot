@@ -3,7 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildTrackedFile } from '#tests/setup/tracked-file.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { INVALID_DEPENDENCY_FILES, INVALID_PYTHON_DEPENDENCIES } from '#tests/config/repository.ts';
 
@@ -15,7 +15,7 @@ test('Python dependency groups with includes keep every dependency', async () =>
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
     const packageManifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     expect(packageManifests[0]!.dependencies).toStrictEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
@@ -28,7 +28,7 @@ test('a pytest table counts as a pytest dependency', async () => {
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
     const manifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     expect(manifests[0]?.dependencies).toStrictEqual({ pytest: 'tool.pytest' });

@@ -14,9 +14,9 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { initCommand } from '#cli/commands/init/command.ts';
 import { readTree, pathExists } from '#tests/setup/files.ts';
 import { installedVersionResponse } from '#tests/setup/pins.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { MISE_FAILURES, UV_LOCK_FAILURE } from '#tests/config/tools.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 test('an unexpected error during install reaches the failure handler and changes nothing', async () => {
     await using sandbox = await testdir();
@@ -66,7 +66,7 @@ test.each([...MISE_FAILURES])(
         commitAll(sandbox.path);
         let isRepaired = false;
         const paths = new Map(
-            [...configurationManifests().values()]
+            [...readManifests().values()]
                 .flatMap((manifest) => manifest.tools.map((tool) => tool.name))
                 .map((name) => [name, which.sync(name, { nothrow: true })] as const),
         );
@@ -78,7 +78,7 @@ test.each([...MISE_FAILURES])(
             }) as typeof which.sync),
         );
         const native = processes.spawnProcess;
-        const editorconfig = toolDeclaration(configurationManifests().values(), 'editorconfig-checker');
+        const editorconfig = getToolDeclaration(readManifests().values(), 'editorconfig-checker');
         mockResources.use(
             spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
                 const version = installedVersionResponse(sandbox.path, command, editorconfig);
@@ -120,7 +120,7 @@ test.each([...MISE_FAILURES])(
 test('install after init refuses when uv cannot make the Python lockfile, and writes no .gspot/uv.lock', async () => {
     using mockResources = new DisposableStack();
     await using sandbox = await testdir({ 'main.py': 'print("authored")\n' });
-    const uvVersion = toolDeclaration(configurationManifests().values(), 'uv').version;
+    const uvVersion = getToolDeclaration(readManifests().values(), 'uv').version;
     const locks: string[][] = [];
     const run = processes.spawnProcess;
     mockResources.use(
@@ -149,7 +149,7 @@ test('install after init refuses when uv cannot make the Python lockfile, and wr
         }),
     );
     const paths = new Map(
-        [...configurationManifests().values()]
+        [...readManifests().values()]
             .flatMap((manifest) => manifest.tools.map((tool) => tool.name))
             .map((name) => [name, which.sync(name, { nothrow: true })] as const),
     );

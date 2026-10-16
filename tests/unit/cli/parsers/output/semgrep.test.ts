@@ -1,13 +1,13 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { FAILED_RUN } from '#tests/config/execution.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { commandOutcome } from '#cli/execution/command/output.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR } from '#tests/config/semgrep.ts';
 
 test('Semgrep rule findings and source parse errors keep positions and Unicode paths', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\neval input\n' });
-    const manifest = configurationManifests().get('security')!;
+    const manifest = readManifests().get('security')!;
     const check = manifest.checks.find((check) => check.name === 'security/semgrep')!;
     const stdout = JSON.stringify({ results: [SEMGREP_MATCH], errors: [SEMGREP_PARSE_ERROR] });
     expect(
@@ -42,7 +42,7 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
 
 test('Semgrep scanner, rule, unpositioned and malformed reports are errors', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\n' });
-    const manifest = configurationManifests().get('security')!;
+    const manifest = readManifests().get('security')!;
     const check = manifest.checks.find((check) => check.name === 'security/semgrep')!;
     const outputs = [
         '',

@@ -11,10 +11,10 @@ import { chmod, mkdir, symlink } from 'node:fs/promises';
 import { parseVersionOutput } from '#cli/tools/versions.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { type ToolDeclaration } from '#cli/types/configurations.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { VERSION_OUTPUTS, VERSION_RESPONSE, MISSING_TOOL_VERSION } from '#tests/config/tools.ts';
 
 test('when the npm package version differs from the pin, the version comes from the command output', () => {
@@ -246,7 +246,7 @@ test.each(['gitleaks', 'next'])('the %s pin is outdated below its floor and acce
     await using sandbox = await testdir();
     using _which = spyOn(executables, 'sync').mockImplementation(((...[, options]: [string, executables.Options?]) =>
         options?.all === true ? [process.execPath] : process.execPath) as typeof executables.sync);
-    const pin = toolDeclaration(configurationManifests().values(), name);
+    const pin = getToolDeclaration(readManifests().values(), name);
     const floor = pin.min_version!;
     const available = pin.system === true ? 'system' : 'ok';
     for (const version of [belowFloor(floor), floor]) {

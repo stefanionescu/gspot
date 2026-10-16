@@ -10,8 +10,8 @@ import { buildManifest } from '#tests/setup/manifest.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { runtimeDetectionRows } from '#tests/setup/sandbox.ts';
 import { buildTrackedFile } from '#tests/setup/tracked-file.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 
 import {
@@ -22,7 +22,7 @@ import {
 } from '#tests/config/detect.ts';
 
 test('detection proposes a language from an extension and the always-selected configurations', () => {
-    const plans = detectConfigurations(process.cwd(), [buildTrackedFile('a.sh')], configurationManifests(), []);
+    const plans = detectConfigurations(process.cwd(), [buildTrackedFile('a.sh')], readManifests(), []);
     expect(plans.find((plan) => plan.configuration === 'bash')?.evidence).toBe('1 .sh file');
     expect(plans.some((plan) => plan.configuration === 'spelling')).toBe(true);
 });
@@ -67,13 +67,13 @@ test.each([...PYTHON_DEPENDENCY_CASES])(
         const repository = await readRepository(createReadCache(sandbox.path), {
             declarations: [],
             scopeEntries: [],
-            manifests: configurationManifests(),
+            manifests: readManifests(),
         });
         const packageManifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
         expect(
             Object.keys(packageManifests[0]!.dependencies).toSorted((left, right) => left.localeCompare(right)),
         ).toStrictEqual(['fastapi', 'friendly-bard']);
-        const manifests = configurationManifests();
+        const manifests = readManifests();
         const proposed = detectConfigurations(sandbox.path, repository.files, manifests, packageManifests, 'api');
         expect(proposed.find((entry) => entry.configuration === 'fastapi')?.evidence).toBe(`fastapi in api/${path}`);
         expect(proposed.find((entry) => entry.configuration === 'python')?.evidence).toBe(`api/${path}`);
@@ -103,7 +103,7 @@ test.each(runtimeDetectionRows())('$name decides runtime detection within its pr
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
     const packageManifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     const manifest = buildManifest('runtime', {
@@ -129,11 +129,11 @@ test.each([...SWIFT_TEST_CASES])('Swift test detection: $name', async ({ source,
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
     expect(repository.files[0]!.tags.includes('swift-test')).toBe(selected);
     expect(
-        detectConfigurations(sandbox.path, repository.files, configurationManifests(), []).some(
+        detectConfigurations(sandbox.path, repository.files, readManifests(), []).some(
             ({ configuration }) => configuration === 'swift-tests',
         ),
     ).toBe(selected);
@@ -145,10 +145,10 @@ test.each([...SWIFT_TARGET_CASES])('Swift package test targets: $name', async ({
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
     expect(
-        detectConfigurations(sandbox.path, repository.files, configurationManifests(), []).some(
+        detectConfigurations(sandbox.path, repository.files, readManifests(), []).some(
             ({ configuration }) => configuration === 'swift-tests',
         ),
     ).toBe(declared);
@@ -166,9 +166,9 @@ test.each(PRISMA_CONTENT_CASES.flatMap((entry) => ['', 'apps/api'].map((scope) =
         const repository = await readRepository(createReadCache(sandbox.path), {
             declarations: [],
             scopeEntries: [],
-            manifests: configurationManifests(),
+            manifests: readManifests(),
         });
-        const manifests = configurationManifests();
+        const manifests = readManifests();
         expect(
             detectConfigurations(sandbox.path, repository.files, manifests, [], scope).some(
                 (entry) => entry.configuration === 'postgres',
@@ -188,11 +188,11 @@ test('content detection skips a deleted file and refuses an invalid pattern', as
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
     await unlink(join(sandbox.path, 'prisma/schema.prisma'));
     expect(
-        detectConfigurations(sandbox.path, repository.files, configurationManifests(), []).some(
+        detectConfigurations(sandbox.path, repository.files, readManifests(), []).some(
             (entry) => entry.configuration === 'postgres',
         ),
     ).toBe(false);
@@ -216,9 +216,9 @@ test('a Prisma read error stops detection, and a session with saved choices does
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: configurationManifests(),
+        manifests: readManifests(),
     });
-    const manifests = configurationManifests();
+    const manifests = readManifests();
     const failure = Object.assign(new Error('Prisma read failed.'), { code: 'EIO' });
     using read = spyOn(filesystem, 'readFileSync').mockImplementationOnce(() => {
         throw failure;

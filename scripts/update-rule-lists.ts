@@ -7,9 +7,9 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { StylelintModule } from './types/rule-lists.ts';
-import { toolProjectPins } from '#cli/configurations/tool-pins.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
+import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { EslintPresets } from '#cli/types/generation/eslint.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { PackageJson } from '#cli/types/parsers/dependency-files.ts';
 import { eslintPresetSchema } from '#cli/configurations/schema/manifest.ts';
 import { ruleNamesFileSchema } from '#cli/generation/tool-file-sources/stylelint.ts';
@@ -130,8 +130,8 @@ function installedPackageIdentity(entry: string, packageName: string): { name: s
 }
 
 const testsFolder = fileURLToPath(new URL(`../${TESTS_FOLDER}/`, import.meta.url));
-const manifests = configurationManifests();
-const versions = toolProjectPins([...manifests.values()]).npm;
+const manifests = readManifests();
+const versions = listToolProjectPins([...manifests.values()]).npm;
 const testsPackagePath = join(testsFolder, PACKAGE_JSON_FILE);
 const testsPackage = z
     .object({ devDependencies: z.record(z.string(), z.string()) })

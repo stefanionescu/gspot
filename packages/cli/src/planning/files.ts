@@ -1,14 +1,11 @@
-// Which files a planned check runs over: what it owns, less excluded and child-scope paths, narrowed to a selection.
-// Which files a planned check runs over: what it owns, less excluded and child-scope paths, narrowed to a selection.
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { toolFileName } from '#cli/configurations/manifests.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { classifyFile, isInGspotFolder } from '#cli/repository/classify.ts';
-import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
+import { SETTINGS_FILE, TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { isInScope, joinScope, isOutsideChildren } from '#cli/repository/scopes.ts';
+import { type Manifest, type CheckDeclaration } from '#cli/types/configurations.ts';
 import type { Session, PlanEntry, PlanInputs, PlannedCheck } from '#cli/types/planning.ts';
 
 // Every tracked file under the scope.
@@ -140,7 +137,7 @@ export function runsAtRoot(manifest: Manifest | undefined, check: CheckDeclarati
             config.per_scope &&
             !config.fragment &&
             (config.check.includes(check.name) ||
-                command.some((part) => part.includes(`{tool_file:${toolFileName(config.target)}}`))),
+                command.some((part) => part.includes(`{tool_file:${extractToolFileName(config.target)}}`))),
     );
 }
 
@@ -172,4 +169,15 @@ export function filesFor(
         return { ...withoutIgnored(narrowed(context, entry, files), check, scope), triggerPaths };
     const selected = withoutIgnored(files, check, scope);
     return { ...selected, triggerPaths };
+}
+
+/**
+ * The name a tool-file placeholder uses for a tool file.
+ * @param target the target path
+ * @returns the file name under .gspot/config without its extensions
+ */
+export function extractToolFileName(target: string): string {
+    const bare = target.startsWith(TOOL_FILE_PREFIX) ? target.slice(TOOL_FILE_PREFIX.length) : target;
+    const dot = bare.indexOf('.');
+    return dot === -1 ? bare : bare.slice(0, dot);
 }

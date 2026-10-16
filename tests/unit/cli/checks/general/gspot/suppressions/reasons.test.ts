@@ -8,8 +8,8 @@ import { createSandbox } from '#tests/setup/sandbox.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { COMPILER_SOURCE } from '#tests/config/typescript.ts';
 import { BASH_REPOSITORY } from '#tests/config/bash/sandbox.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { containing, containingAll } from '#tests/setup/matchers.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { runGspot, checkReport, buildRunOptions } from '#tests/setup/run-gspot.ts';
 
 import {
@@ -204,7 +204,7 @@ test.each(['swiftformat:disable blockComments', 'periphery:ignore'])(
 test.each(SUPPRESSION_REASONS)(
     'the %s suppression pattern of %s finds the comment and its reason',
     (configuration, tool, bare, explained, expected) => {
-        const definition = configurationManifests()
+        const definition = readManifests()
             .get(configuration)!
             .tools.find(({ name }) => name === tool)!.suppression!;
         const marker = new RegExp(definition.marker, 'u');

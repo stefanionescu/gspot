@@ -12,7 +12,7 @@ import { processResult } from '#tests/setup/processes.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 
 test('Vale gets the timeout setting, and its alerts become findings with file, line and column', async () => {
@@ -25,7 +25,7 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
     });
     const session = await openSession(directory.path);
     using resources = new DisposableStack();
-    resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'vale')]));
+    resources.use(mockPinnedExecutables([getToolDeclaration(session.manifests.values(), 'vale')]));
     const run = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(
             processResult({ stdout: JSON.stringify({ [join(directory.path, path)]: [VALE_ALERT] }) }),
@@ -60,7 +60,7 @@ test('files Vale reads from stdin are scanned as read at the start of the run', 
     for (const path of paths) await Bun.write(join(session.root, path), '// Changed after the run read it.\n');
 
     using resources = new DisposableStack();
-    resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'vale')]));
+    resources.use(mockPinnedExecutables([getToolDeclaration(session.manifests.values(), 'vale')]));
     const scanned: string[] = [];
     const nativePaths: string[] = [];
     const run = resources.use(
@@ -92,7 +92,7 @@ test('Vale reads known file types by path, and .mts files and scripts without an
     });
     const session = await openSession(sandbox.path);
     using resources = new DisposableStack();
-    resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'vale')]));
+    resources.use(mockPinnedExecutables([getToolDeclaration(session.manifests.values(), 'vale')]));
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(processResult({ stdout: '{}' }));
     expect(await checkFindings(session.root, 'prose/vale')).toStrictEqual([]);
     expect(
@@ -120,7 +120,7 @@ test('Vale groups path files by extension and reads each script without an exten
     });
     const session = await openSession(sandbox.path);
     using resources = new DisposableStack();
-    resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'vale')]));
+    resources.use(mockPinnedExecutables([getToolDeclaration(session.manifests.values(), 'vale')]));
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(processResult({ stdout: '{}' }));
     expect(await checkFindings(session.root, 'prose/vale')).toStrictEqual([]);
     const sourcePaths = new Set(['a.md', 'b.md', 'c.ts', 'd.sh', 'e.sh'].map((path) => join(sandbox.path, path)));
@@ -191,7 +191,7 @@ test.each([
     });
     const session = await openSession(sandbox.path);
     using resources = new DisposableStack();
-    resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'vale')]));
+    resources.use(mockPinnedExecutables([getToolDeclaration(session.manifests.values(), 'vale')]));
     const absoluteOutput = JSON.stringify(
         Object.fromEntries(
             Object.entries(JSON.parse(stdout) as Record<string, unknown>).map(([path, alerts]) => [
@@ -219,7 +219,7 @@ test.each(['diagnostic text', '{"file.md":[{}]}'])(
         });
         const session = await openSession(sandbox.path);
         using resources = new DisposableStack();
-        resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'vale')]));
+        resources.use(mockPinnedExecutables([getToolDeclaration(session.manifests.values(), 'vale')]));
         resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(processResult({ stdout })));
         expect(checkFindings(session.root, 'prose/vale')).rejects.toThrow(
             stdout.startsWith('{') ? 'Line' : SyntaxError,

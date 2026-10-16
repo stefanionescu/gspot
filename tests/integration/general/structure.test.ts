@@ -10,10 +10,10 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { hasToolBuild } from '#tests/setup/operating-systems.ts';
 import type { ParameterFinding } from '#tests/types/tool-output.ts';
 import { toolsPath, installToolProjects } from '#tests/setup/install.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { runCommand, runCommandBlocking } from '#tests/setup/processes.ts';
 import { PARAMETER_LIMIT_TOOLS } from '#tests/config/structure/parameters.ts';
 import { RUFF_SUPPRESSIONS, VALE_SUPPRESSIONS } from '#tests/config/suppressions.ts';
@@ -112,7 +112,7 @@ We delve into records.
     );
 });
 
-const { value: defaultMaximum } = knownSettings([configurationManifests().get('structure')!], 'all').defaults.get(
+const { value: defaultMaximum } = knownSettings([readManifests().get('structure')!], 'all').defaults.get(
     'limits.function_parameters',
 )!;
 

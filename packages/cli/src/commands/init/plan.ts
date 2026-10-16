@@ -9,7 +9,7 @@ import type { Generated } from '#cli/types/generation/files.ts';
 import { readLintJobs } from '#cli/repository/existing-tools.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import type { PackageJson } from '#cli/types/parsers/dependency-files.ts';
-import { misePins, toolProjectPins } from '#cli/configurations/tool-pins.ts';
+import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { InitPlan, InitAnswers, InitFileRow, InitPlanInputs } from '#cli/types/commands/init.ts';
 
 import {
@@ -29,7 +29,7 @@ import {
 } from '#cli/config/system/locations.ts';
 
 function toolProjectRows(everySelected: Manifest[]): InitPlan['change'] {
-    const pins = toolProjectPins(everySelected);
+    const pins = listToolProjectPins(everySelected);
     const count = Object.keys(pins.npm).length;
     const rows: InitPlan['change'] =
         count === 0
@@ -41,17 +41,17 @@ function toolProjectRows(everySelected: Manifest[]): InitPlan['change'] {
             path: PYTHON_TOOL_PROJECT_FILE,
             note: `${String(python)} pinned Python tools; matching uv.lock and tool environment`,
         });
-    if (misePins(everySelected).length > 0)
+    if (listMisePins(everySelected).length > 0)
         rows.unshift({
             path: MISE_TOOL_PROJECT_FILE,
-            note: `${String(misePins(everySelected).length)} tool pins`,
+            note: `${String(listMisePins(everySelected).length)} tool pins`,
         });
     return rows;
 }
 
 // Name dependencies that the generated tool project now pins without deleting the authored manifest.
 function buildPinnedDependencyRows({ root, tooling }: InitPlanInputs, requirements: Manifest[]): InitFileRow[] {
-    const pinned = new Set(Object.keys(toolProjectPins(requirements).npm));
+    const pinned = new Set(Object.keys(listToolProjectPins(requirements).npm));
     return tooling.lintOnlyManifests.flatMap((path) => {
         const manifest = readPackageJson(root, path) as PackageJson;
         const names = [

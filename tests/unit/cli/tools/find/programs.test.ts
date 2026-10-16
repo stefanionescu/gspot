@@ -14,10 +14,10 @@ import { useEnvironment } from '#tests/setup/environment.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmod, mkdir, unlink, symlink, readFile } from 'node:fs/promises';
 
 test("inspectTool finds the project compiler, and the original repository's compiler from a scratch copy", async () => {
@@ -30,7 +30,7 @@ test("inspectTool finds the project compiler, and the original repository's comp
     const snapshot = join(sandbox.path, 'snapshot');
     await installCompiler(work, join(work, '.gspot/node_modules'));
     await installCompiler(work);
-    const compiler = toolDeclaration(configurationManifests().values(), 'tsc');
+    const compiler = getToolDeclaration(readManifests().values(), 'tsc');
     const projectPath = join(work, 'node_modules/typescript/package.json');
     const project = packageJsonSchema.parse(parseJsonFile(projectPath, await readFile(projectPath, 'utf8')));
     expect(
@@ -107,7 +107,7 @@ test('a program on PATH wins over an unrelated mise shim', async () => {
             timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
             inspections: new Map(),
         },
-        toolDeclaration(configurationManifests().values(), 'tsc'),
+        getToolDeclaration(readManifests().values(), 'tsc'),
     );
     expect(inspection.state).toBe('system');
     expect(inspection.path).toBe(active);
@@ -240,7 +240,7 @@ test('a system tsc is found in node_modules and the tool project tsc is ignored'
             timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
             inspections: new Map(),
         },
-        toolDeclaration(configurationManifests().values(), 'tsc'),
+        getToolDeclaration(readManifests().values(), 'tsc'),
     );
     expect(inspection).toMatchObject({
         state: 'system',

@@ -19,8 +19,8 @@ import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { installNpmTools } from '#cli/tools/npm/project.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
-import { collectPins } from '#cli/configurations/tool-pins.ts';
 import type { SandboxSettings } from '#tests/types/sandbox.ts';
+import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { installPythonTools } from '#cli/tools/python/project.ts';
 import { prepareLockfiles } from '#cli/tools/project-lockfiles.ts';
 import { selectLockfileName } from '#cli/tools/npm/tool-project.ts';
@@ -309,7 +309,7 @@ export function buildInstallContext(session: Session, writer: Writer): InstallCo
         session,
         writer,
         generated: emitAll(session),
-        tools: collectPins(session.neededToolManifests),
+        tools: listDistinctTools(session.neededToolManifests),
         mise: null,
         steps: [],
     };

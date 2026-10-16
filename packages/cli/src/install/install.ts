@@ -8,9 +8,9 @@ import type { Session } from '#cli/types/planning.ts';
 import { installMiseTools } from '#cli/install/mise.ts';
 import { installValePackages } from '#cli/install/vale.ts';
 import { TOOL_PROJECT_INPUTS } from '#cli/config/install.ts';
-import { collectPins } from '#cli/configurations/tool-pins.ts';
 import { installToolProjects } from '#cli/install/projects.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
+import { listDistinctTools } from '#cli/configurations/tools.ts';
 import type { InstallContext, InstallationResult } from '#cli/types/install.ts';
 
 /**
@@ -26,7 +26,7 @@ export async function installTools(session: Session, log: Writer, generated: Gen
     const manifests = session.neededToolManifests;
     const steps: (readonly string[])[] = [];
     const notes: string[] = [];
-    const tools = collectPins(manifests);
+    const tools = listDistinctTools(manifests);
     const mise = which.sync('mise', { nothrow: true });
     const context: InstallContext = { session, writer: log, generated, tools, mise, steps };
     try {

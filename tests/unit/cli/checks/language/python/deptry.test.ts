@@ -8,7 +8,7 @@ import { checkReport } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 
 test('deptry skips a scope without pyproject.toml', async () => {
     await using sandbox = await testdir();
@@ -45,7 +45,7 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
     });
     const session = await openSession(sandbox.path);
     using resources = mockPinnedExecutables(
-        ['uv', 'deptry'].map((name) => toolDeclaration(session.manifests.values(), name)),
+        ['uv', 'deptry'].map((name) => getToolDeclaration(session.manifests.values(), name)),
     );
     const executed = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(processResult({ stdout: '[]' })));
     const checked = await checkReport(sandbox.path, ['check', '--only', 'python/deptry', '--json']);

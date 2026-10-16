@@ -10,7 +10,7 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { bodyPointer } from '#cli/generation/pointers.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { MODULE_VALUE, MODULE_TARGETS } from '#tests/config/serialization.ts';
 
 test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
@@ -72,7 +72,7 @@ test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
 for (const configuration of ['javascript', 'markdown'])
     test(`${configuration} pointers import modules from folders with URI characters and Unicode`, async () => {
         await using sandbox = await testdir();
-        const manifest = configurationManifests().get(configuration)!;
+        const manifest = readManifests().get(configuration)!;
         const pointer = manifest.toolFiles.find(
             (file) => file.pointer?.body?.includes('{target_module}') === true,
         )!.pointer!;

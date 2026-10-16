@@ -11,10 +11,10 @@ import plugin from '../packages/eslint-plugin/src/plugin.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { GRAMMARS_FOLDER } from '#cli/config/system/assets.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { TOOL_VERSIONS_FILE } from '#cli/config/configurations.ts';
-import { toolProjectPins } from '#cli/configurations/tool-pins.ts';
+import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { buildJsonSchema } from '#cli/settings/schema/gspot-toml.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { ESLINT_RULE_LEVELS_FILE } from '#cli/config/generation/eslint.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { rm, mkdir, chmod, copyFile, readFile, writeFile } from 'node:fs/promises';
@@ -66,7 +66,7 @@ async function downloadPinnedFile(path: string, url: string, checksum: string): 
  * @param manifests every shipped configuration
  */
 function validateEslintPresets(manifests: Map<string, Manifest>): void {
-    const versions = toolProjectPins([...manifests.values()]).npm;
+    const versions = listToolProjectPins([...manifests.values()]).npm;
     if (ruleNames.version !== versions['eslint'])
         throw new Error(
             `Run mise run update:rule-lists to update the core rule names: the rule list must use eslint@${String(versions['eslint'])}.`,
@@ -131,7 +131,7 @@ await writeFile(
         JSON_INDENT,
     ) + '\n',
 );
-const manifests = configurationManifests();
+const manifests = readManifests();
 assertManifests(manifests);
 validateEslintPresets(manifests);
 const cliBuild = await Bun.build({

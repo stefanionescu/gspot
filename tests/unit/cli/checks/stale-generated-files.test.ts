@@ -15,8 +15,8 @@ import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { staleGeneratedFiles } from '#cli/checks/stale-generated-files.ts';
 import { GENERATOR_CASES, GENERATOR_SCRIPT } from '#tests/config/generated-files.ts';
 
@@ -87,7 +87,7 @@ test('a missing OpenAPI document is reported before generation', async () => {
 });
 
 async function mockWrangler(root: string): Promise<DisposableStack> {
-    const pin = toolDeclaration(configurationManifests().values(), 'wrangler');
+    const pin = getToolDeclaration(readManifests().values(), 'wrangler');
     const path = join(root, 'node_modules', '.bin', pin.name);
     await Bun.write(path, '');
     await chmod(path, EXECUTABLE_FILE);

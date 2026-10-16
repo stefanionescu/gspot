@@ -9,8 +9,8 @@ import { buildInitArguments } from '#tests/setup/init.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash/tools.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 
 test('a check whose tool is not installed fails with the pinned version and the install command', async () => {
     await using sandbox = await testdir();
@@ -43,7 +43,7 @@ test('a check whose tool is not installed fails with the pinned version and the 
     expect(check.code).toBe(2);
     expect(check.stdout).toContain('missing');
     expect(check.stdout).toContain(
-        `shellcheck ${String(toolDeclaration([...configurationManifests().values()], 'shellcheck').version)} is not installed`,
+        `shellcheck ${String(getToolDeclaration([...readManifests().values()], 'shellcheck').version)} is not installed`,
     );
     const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);

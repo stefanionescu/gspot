@@ -11,7 +11,7 @@ import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { CALLED_WORKFLOW, ACTIONLINT_EXITS, CALLED_WORKFLOW_REFERENCES } from '#tests/config/github-actions.ts';
 
 // The workflow text actionlint reads: each self-repository marker of a reference becomes a local path at the same
@@ -34,8 +34,8 @@ test.each([
     });
     const session = await openSession(sandbox.path);
     using _pins = mockPinnedExecutables([
-        toolDeclaration(session.manifests.values(), 'actionlint'),
-        toolDeclaration(session.manifests.values(), 'shellcheck'),
+        getToolDeclaration(session.manifests.values(), 'actionlint'),
+        getToolDeclaration(session.manifests.values(), 'shellcheck'),
     ]);
     using run = spyOn(processes, 'spawnProcess').mockImplementation(async (_command, options) => {
         const prepared = await readFile(join(options.cwd, '.github/workflows/caller.yml'), 'utf8');
@@ -65,7 +65,7 @@ test.each([...ACTIONLINT_EXITS])(
         await chmod(executable, 0o755);
         await chmod(join(sandbox.path, '.github/workflows/caller.yml'), 0o444);
         const session = await openSession(sandbox.path);
-        using _pins = mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'shellcheck')]);
+        using _pins = mockPinnedExecutables([getToolDeclaration(session.manifests.values(), 'shellcheck')]);
         const plans = planRun(session, { stage: 'commit', only: ['github-actions/actionlint'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };

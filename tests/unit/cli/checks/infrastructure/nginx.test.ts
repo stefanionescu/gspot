@@ -10,7 +10,7 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { NGINX_CONFIGURATION, NGINX_DIRECTIVE_CASES } from '#tests/config/nginx.ts';
 
 test.each([
@@ -37,8 +37,8 @@ test.each([
     await using sandbox = await testdir({ 'gspot.toml': settingsText(['nginx']), 'nginx.conf': source });
     const session = await openSession(sandbox.path);
     using _pins = mockPinnedExecutables([
-        toolDeclaration(session.manifests.values(), 'openssl'),
-        toolDeclaration(session.manifests.values(), 'docker'),
+        getToolDeclaration(session.manifests.values(), 'openssl'),
+        getToolDeclaration(session.manifests.values(), 'docker'),
     ]);
     using run = spyOn(processes, 'spawnProcess').mockImplementation(async (command) => {
         if (!command.includes('--rm')) return processResult();
@@ -70,8 +70,8 @@ test.each(['stdout', 'stderr'])(
         using resources = new DisposableStack();
         resources.use(
             mockPinnedExecutables([
-                toolDeclaration(session.manifests.values(), 'openssl'),
-                toolDeclaration(session.manifests.values(), 'docker'),
+                getToolDeclaration(session.manifests.values(), 'openssl'),
+                getToolDeclaration(session.manifests.values(), 'docker'),
             ]),
         );
         const directories: string[] = [];

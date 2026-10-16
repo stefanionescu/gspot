@@ -4,11 +4,11 @@ import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import type { WrittenTable } from '#cli/types/settings/values.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { knownSettings, detectedDefaults } from '#cli/settings/view.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { mergeValue, writtenValue, declarationFor, settingDefault, settingCandidates } from '#cli/settings/inherit.ts';
 
 function configurationSelection(table: TomlTable) {
@@ -92,7 +92,7 @@ function dropTableDefaults(
  * @returns the draft without redundant setting values
  */
 export function dropDefaults(settings: TomlTable): TomlTable {
-    const manifests = configurationManifests();
+    const manifests = readManifests();
     const level = settingsSchema.shape.level.parse(settings['level']);
     const scopes = (settings['scope'] ?? []) as TomlTable[];
     const selection = {

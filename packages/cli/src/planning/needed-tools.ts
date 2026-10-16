@@ -1,11 +1,11 @@
 import { basename } from 'node:path';
 import { findScope } from '#cli/repository/scopes.ts';
 import { coverageArguments } from '#cli/planning/checks.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { PIP_LICENSES_COMMAND } from '#cli/config/tools/python.ts';
 import { PRETTIER_TOOL } from '#cli/config/generation/formatting.ts';
+import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { settingsSkip, isSettingEmpty } from '#cli/planning/skips.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
@@ -14,7 +14,7 @@ import type { StylelintComponent } from '#cli/types/generation/eslint.ts';
 import type { PrettierPlugin } from '#cli/types/generation/formatting.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import type { Session, PlannedCheck, LicenseProject } from '#cli/types/planning.ts';
-import { toolDeclaration, toolProjectPackage } from '#cli/configurations/tool-pins.ts';
+import { getToolDeclaration, findToolProjectPackage } from '#cli/configurations/tools.ts';
 import type { Manifest, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
 import {
@@ -81,7 +81,7 @@ export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration, 
             ? stylelintComponents(scope.view.configurations).map((dialect) => dialect.customSyntax)
             : [];
     return [...new Set([...(check.other_tools ?? []), ...companions, ...syntax])].filter((name) => {
-        const pin = toolDeclaration(scope.selected, name);
+        const pin = getToolDeclaration(scope.selected, name);
         if (!isToolSelected(scope, pin.when)) return false;
         if (!withoutCoverage) return true;
         return pin.system !== true || pin.kind !== 'library';
@@ -102,7 +102,9 @@ export function requiredToolNames(check: PlannedCheck): string[] {
         ),
     );
     for (const name of names)
-        for (const required of new Set(toolProjectPackage(toolDeclaration(check.scope.selected, name))?.requires))
+        for (const required of new Set(
+            findToolProjectPackage(getToolDeclaration(check.scope.selected, name))?.requires,
+        ))
             names.add(required);
     return [...names];
 }
@@ -124,10 +126,11 @@ export function neededToolManifests(session: Session, checks: PlannedCheck[]): M
         .map((project) => (basename(project.manifest) === PACKAGE_JSON ? LICENSE_CHECKER : PIP_LICENSES_COMMAND[0]));
     const needed = new Set([...checks.flatMap((check) => requiredToolNames(check)), ...licenses]);
     for (const name of prettierToolRequirements(session.scopes, needed)) needed.add(name);
-    const selected = everyManifest(session.scopes);
+    const selected = listSelectedManifests(session.scopes);
     const selectedTools = new Set(selected.flatMap((manifest) => manifest.tools.map(({ name }) => name)));
     for (const name of needed)
-        for (const required of toolProjectPackage(toolDeclaration(session.manifests.values(), name))?.requires ?? [])
+        for (const required of findToolProjectPackage(getToolDeclaration(session.manifests.values(), name))?.requires ??
+            [])
             needed.add(required);
     const extras = [...needed].flatMap((name) =>
         selectedTools.has(name)

@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import type { Identifier } from '#cli/types/checks/general.ts';
-import { namingDefaults } from '#cli/configurations/manifests.ts';
+import { readNamingDefaults } from '#cli/configurations/manifests.ts';
 import { identifiersOf, fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 
 import {
@@ -117,7 +117,7 @@ test.each([...NAME_POSITION_CASES])(
 );
 
 test('shared route containers retain punctuation without changing plain paths', () => {
-    const containers = namingDefaults().path_containers;
+    const containers = readNamingDefaults().path_containers;
     expect(fileIdentifier('app/[...slug].ts', 'typescript', containers)).toMatchObject({
         name: 'slug',
         category: 'path_parameters',
@@ -140,7 +140,7 @@ test('the stem drops one extension, or the whole declaration suffix', () => {
 });
 
 test('Next.js segments are unwrapped and dot folders skipped', () => {
-    const containers = namingDefaults().path_containers;
+    const containers = readNamingDefaults().path_containers;
     const names = directoryIdentifiers('app/(marketing)/[slug]/@modal/_lib/.hidden/page.tsx', 'typescript', containers);
     expect(names.map((entry) => `${entry.category}:${entry.name}`)).toStrictEqual([
         'directories:app',

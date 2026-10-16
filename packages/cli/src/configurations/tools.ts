@@ -3,7 +3,7 @@ import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 import { MISE_BACKENDS, PYTHON_CONFIGURATION } from '#cli/config/configurations.ts';
-import { manifestError, configurationManifests } from '#cli/configurations/manifests.ts';
+import { readManifests, buildManifestError } from '#cli/configurations/manifests.ts';
 
 import {
     type MisePin,
@@ -20,12 +20,12 @@ import {
  * @returns the declared uv mise pin
  */
 function uvPin(): MisePin {
-    const tool = configurationManifests()
+    const tool = readManifests()
         .get(PYTHON_CONFIGURATION)
         ?.tools.find((entry) => entry.name === UV_TOOL);
-    const pin = tool === undefined ? undefined : pinOf(tool);
+    const pin = tool === undefined ? undefined : findMisePin(tool);
     if (pin === undefined)
-        throw manifestError(PYTHON_CONFIGURATION, ['tool uv requires a pinned mise installer version.']);
+        throw buildManifestError(PYTHON_CONFIGURATION, ['tool uv requires a pinned mise installer version.']);
     return pin;
 }
 
@@ -34,7 +34,7 @@ function uvPin(): MisePin {
  * @param tool the pin.
  * @returns the installer pin with its backend prefix, or undefined for a host tool.
  */
-function misePin(tool: ToolDeclaration): InstallerPin | undefined {
+function findMiseInstaller(tool: ToolDeclaration): InstallerPin | undefined {
     if (tool.system === true) return undefined;
     for (const { installer, prefix } of MISE_BACKENDS) {
         const pin = tool.installers[installer];
@@ -48,11 +48,11 @@ function misePin(tool: ToolDeclaration): InstallerPin | undefined {
  * @param manifests the selected manifests.
  * @returns pins installed by mise.
  */
-export function misePins(manifests: Manifest[]): MisePin[] {
-    const tools = collectPins(manifests);
-    const pins = tools.flatMap((tool) => pinOf(tool) ?? []);
+export function listMisePins(manifests: Manifest[]): MisePin[] {
+    const tools = listDistinctTools(manifests);
+    const pins = tools.flatMap((tool) => findMisePin(tool) ?? []);
     if (
-        tools.some((tool) => toolProjectPackage(tool)?.kind === 'python') &&
+        tools.some((tool) => findToolProjectPackage(tool)?.kind === 'python') &&
         !tools.some((tool) => tool.name === UV_TOOL)
     )
         pins.push(uvPin());
@@ -64,9 +64,9 @@ export function misePins(manifests: Manifest[]): MisePin[] {
  * @param tool the pin.
  * @returns the mise pin, or undefined when mise does not install the tool.
  */
-export function pinOf(tool: ToolDeclaration): MisePin | undefined {
-    const excluded = toolProjectPackage(tool) !== undefined;
-    const pin = excluded ? undefined : misePin(tool);
+export function findMisePin(tool: ToolDeclaration): MisePin | undefined {
+    const excluded = findToolProjectPackage(tool) !== undefined;
+    const pin = excluded ? undefined : findMiseInstaller(tool);
     if (pin?.version === undefined) return undefined;
     return { name: pin.name, version: pin.version, ...stripUndefined({ options: pin.options }) };
 }
@@ -76,11 +76,11 @@ export function pinOf(tool: ToolDeclaration): MisePin | undefined {
  * @param manifests the selected manifests
  * @returns npm versions, Python pins
  */
-export function toolProjectPins(manifests: Manifest[]): ToolProjectPins {
+export function listToolProjectPins(manifests: Manifest[]): ToolProjectPins {
     const npm: [string, string][] = [];
     const python: string[] = [];
-    for (const tool of collectPins(manifests)) {
-        const installation = toolProjectPackage(tool);
+    for (const tool of listDistinctTools(manifests)) {
+        const installation = findToolProjectPackage(tool);
         if (installation === undefined) continue;
         if (installation.kind === 'npm') npm.push([installation.name, installation.version]);
         if (installation.kind !== 'python') continue;
@@ -97,7 +97,7 @@ export function toolProjectPins(manifests: Manifest[]): ToolProjectPins {
  * @param manifests the selected manifests.
  * @returns the pins.
  */
-export function collectPins(manifests: Manifest[]): ToolDeclaration[] {
+export function listDistinctTools(manifests: Manifest[]): ToolDeclaration[] {
     const pins = new Map<string, ToolDeclaration>();
     for (const manifest of manifests)
         for (const tool of manifest.tools) {
@@ -116,7 +116,7 @@ export function collectPins(manifests: Manifest[]): ToolDeclaration[] {
  * @param owner the configuration whose check or fixer consumes the tool.
  * @returns the declared pin or a host command when no configuration declares it.
  */
-export function toolDeclaration(manifests: Iterable<Manifest>, name: string, owner?: Manifest): ToolDeclaration {
+export function getToolDeclaration(manifests: Iterable<Manifest>, name: string, owner?: Manifest): ToolDeclaration {
     const own = owner?.tools.find((tool) => tool.name === name);
     if (own !== undefined) return own;
     for (const manifest of manifests) {
@@ -131,7 +131,7 @@ export function toolDeclaration(manifests: Iterable<Manifest>, name: string, own
  * @param check the validated check declaration.
  * @returns the executable name, absent for an internal check without a tool.
  */
-export function toolName(check: CheckDeclaration): string | undefined {
+export function getToolName(check: CheckDeclaration): string | undefined {
     return typeof check.tool === 'string' ? check.tool : check.command?.[0];
 }
 
@@ -140,7 +140,7 @@ export function toolName(check: CheckDeclaration): string | undefined {
  * @param tool the pin
  * @returns the package to install, or undefined when the host or mise supplies it.
  */
-export function toolProjectPackage(tool: ToolDeclaration): ToolProjectPackage | undefined {
+export function findToolProjectPackage(tool: ToolDeclaration): ToolProjectPackage | undefined {
     const python = tool.installers['pypi'];
     if (tool.system !== true && python?.version !== undefined)
         return { kind: 'python', name: python.name, version: python.version };
@@ -159,7 +159,7 @@ export function toolProjectPackage(tool: ToolDeclaration): ToolProjectPackage | 
  * @param manifests the configuration declarations
  * @returns installer package names for tooling-only package detection
  */
-export function npmToolNames(manifests: Iterable<Manifest>): Set<string> {
+export function listNpmToolNames(manifests: Iterable<Manifest>): Set<string> {
     return new Set(
         [...manifests].flatMap((manifest) =>
             manifest.tools.flatMap((tool) => {
@@ -177,7 +177,7 @@ export function npmToolNames(manifests: Iterable<Manifest>): Set<string> {
  * @param arch the host architecture: x64 or arm64
  * @returns the words for the missing build, or undefined
  */
-export function missingBuild(tool: ToolDeclaration, platform: string, arch: string): string | undefined {
+export function findMissingBuild(tool: ToolDeclaration, platform: string, arch: string): string | undefined {
     const named: readonly string[] = tool.builds ?? [];
     if (tool.builds === undefined || named.includes(platform) || named.includes(`${platform}-${arch}`))
         return undefined;

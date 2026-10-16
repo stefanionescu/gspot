@@ -9,9 +9,9 @@ import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { Mutation } from '#cli/types/settings/file.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { unknownConfigurations } from '#cli/configurations/unknown-names.ts';
+import { listUnknownConfigurations } from '#cli/configurations/select.ts';
 import { type ConfigurationsOptions } from '#cli/types/commands/save-settings.ts';
 import { saveSettings, startSettingsEdit, refuseAlwaysSelected } from '#cli/commands/save-settings.ts';
 
@@ -23,8 +23,8 @@ import { saveSettings, startSettingsEdit, refuseAlwaysSelected } from '#cli/comm
 async function addCommand(options: ConfigurationsOptions): Promise<CommandResult> {
     const { root, input } = await startSettingsEdit(options.cwd);
     parseSettings(input.text, root);
-    const manifests = configurationManifests();
-    const [unavailable] = unknownConfigurations(
+    const manifests = readManifests();
+    const [unavailable] = listUnknownConfigurations(
         options.configurations.map((name) => ({ name })),
         manifests,
     );

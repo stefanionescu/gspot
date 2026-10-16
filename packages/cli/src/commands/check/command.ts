@@ -13,11 +13,11 @@ import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import { copyRevision } from '#cli/execution/copy/revision.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { type CheckOptions } from '#cli/types/commands/check.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
 import { EXIT_ERROR, SIGNAL_EXIT_CODES } from '#cli/config/terminal.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { checkPush, assertPushOptions } from '#cli/commands/check/push.ts';
 
 // Reads the pre-push protocol from standard input, stopping when the signal stops the run.
@@ -172,7 +172,7 @@ export function registerCheck(program: Command) {
         .addOption(new Option('--message-file <path>', COMMAND_HELP.check.options['--message-file <path>']))
         .option('--verbose', COMMAND_HELP.check.options['--verbose'])
         .action(async (paths, flags) => {
-            const messageCheck = [...configurationManifests().values()]
+            const messageCheck = [...readManifests().values()]
                 .flatMap(({ checks }) => checks)
                 .find((check) => check.stage === 'message' && flags.only?.includes(check.name) === true);
             const hasMessage = flags.messageFile !== undefined;

@@ -18,8 +18,8 @@ import type { CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
 import type { Session, StageFilter } from '#cli/types/planning.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import { formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
-import { unknownCheckMessage } from '#cli/configurations/unknown-names.ts';
 import type { RunReport, FixReport, RunOptions } from '#cli/types/execution/check.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
@@ -103,7 +103,7 @@ function refuseUnknownChecks(session: Session, only: string[] | undefined): void
         ...Object.values(session.settingsFile.settings.check).map((check) => check.name),
     ]);
     const unknown = only?.find((check) => !known.has(check));
-    if (unknown !== undefined) throw new GspotError('arguments', unknownCheckMessage(unknown, [...known]));
+    if (unknown !== undefined) throw new GspotError('arguments', formatUnknownCheck(unknown, [...known]));
 }
 
 function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string {

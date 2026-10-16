@@ -3,7 +3,7 @@ import { readText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
-import { npmToolNames } from '#cli/configurations/tool-pins.ts';
+import { listNpmToolNames } from '#cli/configurations/tools.ts';
 import { isToolOnlyPackage } from '#cli/repository/dependency-files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
@@ -169,7 +169,7 @@ export function detectConfigurations(
     packageManifests: DependencyFile[],
     scope = '',
 ): ConfigurationEvidence[] {
-    const npmNames = npmToolNames(manifests.values());
+    const npmNames = listNpmToolNames(manifests.values());
     const toolOnlyPackages = new Set(
         packageManifests.filter((manifest) => isToolOnlyPackage(manifest, npmNames)).map((manifest) => manifest.path),
     );

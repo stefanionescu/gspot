@@ -9,8 +9,8 @@ import { planRun, isActive } from '#cli/planning/checks.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { IgnoreEntry } from '#cli/types/settings/file.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { listFileDeclarations } from '#cli/repository/classify.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { DOCKER_TOOL } from '#cli/config/checks/infrastructure/docker.ts';
@@ -77,7 +77,7 @@ function unrunnable(session: Session, planned: PlannedCheck, base: CheckResult):
     if (planned.skip) return { ...base, status: 'skipped', note: planned.skip.note };
     if (
         planned.check.needs?.includes(DOCKER_TOOL) === true &&
-        'status' in findTool(session, session.root, toolDeclaration(session.manifests.values(), DOCKER_TOOL))
+        'status' in findTool(session, session.root, getToolDeclaration(session.manifests.values(), DOCKER_TOOL))
     )
         return { ...base, status: 'missing', note: 'Docker has no installation. Install Docker to run this check.' };
     return undefined;

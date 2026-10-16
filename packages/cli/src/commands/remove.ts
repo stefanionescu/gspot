@@ -9,8 +9,8 @@ import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { Mutation } from '#cli/types/settings/file.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { type ConfigurationsOptions } from '#cli/types/commands/save-settings.ts';
 import { saveSettings, startSettingsEdit, refuseAlwaysSelected } from '#cli/commands/save-settings.ts';
 
@@ -22,7 +22,7 @@ import { saveSettings, startSettingsEdit, refuseAlwaysSelected } from '#cli/comm
 async function removeCommand(options: ConfigurationsOptions): Promise<CommandResult> {
     const { root, input } = await startSettingsEdit(options.cwd);
     parseSettings(input.text, root);
-    const manifests = configurationManifests();
+    const manifests = readManifests();
     refuseAlwaysSelected(options.configurations, manifests);
     const written = findScopeTable(input.table, options.scope);
     const current = settingsSchema.shape.configurations.parse(written['configurations']);

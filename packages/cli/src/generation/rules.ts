@@ -5,8 +5,8 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
 import { isExcluded } from '#cli/settings/errors/values.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
-import { ruleFiles } from '#cli/configurations/manifests.ts';
 import { detectConditions } from '#cli/repository/detect.ts';
+import { listRuleFiles } from '#cli/configurations/manifests.ts';
 import type { ParsedRules } from '#cli/types/settings/tables.ts';
 import { RULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import { type Repository } from '#cli/types/repository/inventory.ts';
@@ -24,7 +24,7 @@ function listConfigurationRules(
     const conditions = manifests.flatMap((manifest) => Object.values(manifest.rules));
     const matched = detectConditions(conditions, repository.files, dependencyFiles);
     return manifests.flatMap((manifest) =>
-        ruleFiles(manifest).filter((file) => {
+        listRuleFiles(manifest).filter((file) => {
             const condition = manifest.rules[posix.basename(file.source)];
             return condition === undefined || matched.has(condition);
         }),

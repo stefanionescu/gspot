@@ -12,19 +12,19 @@ import { type CommandResult } from '#cli/types/terminal.ts';
 import { writeInitFiles } from '#cli/commands/init/write.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { print, printResult } from '#cli/system/terminal.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import { downloadTemplate } from '#cli/settings/templates.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import { readFormatTables } from '#cli/commands/init/format.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { planReplacedFiles } from '#cli/commands/init/replace.ts';
 import { findRoot, readRepository } from '#cli/repository/read.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { readExistingTools } from '#cli/repository/existing-tools.ts';
 import { type ExistingTools } from '#cli/types/repository/inventory.ts';
 import { initPlanText, buildInitPlan } from '#cli/commands/init/plan.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { NO_CONFIGURATIONS, INIT_TEMPLATE_DEFAULTS } from '#cli/config/commands/init.ts';
 import { proposeCi, draftSettings, initSettingsText } from '#cli/commands/init/settings-text.ts';
 
@@ -144,7 +144,7 @@ function registerInit(program: Command): void {
  * @returns the plan, the settings text, and the files it read
  */
 async function planInit(root: string, options: InitOptions): Promise<InitPrepared> {
-    const manifests = configurationManifests();
+    const manifests = readManifests();
     const repo = await readRepository(createReadCache(root), { declarations: [], scopeEntries: [], manifests });
     const packageManifests = repo.dependencyFiles;
     const scopes = repo.scopes;
@@ -166,7 +166,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
     const settingsText = initSettingsText(effective, repo, manifests, formats);
     const settings = parseSettings(settingsText, root);
     const session = await openSession(root, { settings, text: settingsText });
-    const everySelected = everyManifest(session.scopes);
+    const everySelected = listSelectedManifests(session.scopes);
     const applicable = session.neededToolManifests;
     const tools = new Set(applicable.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     printDetection(inputs, selection, tooling, tools);

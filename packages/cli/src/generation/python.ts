@@ -3,7 +3,7 @@ import { join, posix } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
 import type { Session } from '#cli/types/planning.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { toolProjectPins } from '#cli/configurations/tool-pins.ts';
+import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
 import { UV_PROJECT_TABLE } from '#cli/config/generation/tool-projects.ts';
@@ -20,7 +20,7 @@ import { TOOL_FILE_DIRECTORY, PYTHON_TOOL_PROJECT_FILE } from '#cli/config/syste
  * @returns the Python tool project files, or none without Python tools.
  */
 export function pythonProject(manifests: Manifest[]): GeneratedFile[] {
-    const { python: dependencies } = toolProjectPins(manifests);
+    const { python: dependencies } = listToolProjectPins(manifests);
     if (dependencies.length === 0) return [];
     return [
         {

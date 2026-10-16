@@ -7,7 +7,7 @@ import type { InstallContext } from '#cli/types/install.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { redactInstallOutput } from '#cli/tools/credentials.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { DOT_GSPOT, VALE_CONFIG, VALE_PACKAGE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
@@ -42,7 +42,7 @@ export async function installValePackages(context: InstallContext): Promise<stri
     const { root, timeoutSeconds } = search;
     const level = search.settingsFile.settings.level;
     if (level === 'recommended') return '';
-    const tool = toolDeclaration(search.neededToolManifests, 'vale');
+    const tool = getToolDeclaration(search.neededToolManifests, 'vale');
     const available = buildToolAvailability(tool, inspectTool(search, tool));
     if ('status' in available) throw new GspotError('tool', available.note);
     using files = openFiles(root);

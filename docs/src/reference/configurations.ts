@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
 import type { ReferencePage } from '../types/reference.ts';
-import { ruleFiles } from '#cli/configurations/manifests.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { configurationSettings } from '#cli/settings/view.ts';
+import { listRuleFiles } from '#cli/configurations/manifests.ts';
 import { cell, table, section, referencePage } from './markdown.ts';
 import { DETECTION_LABELS, REFERENCE_FOLDERS } from '../config/reference.ts';
 
@@ -18,7 +18,7 @@ function detectionConditions(detect: Manifest['detect']): string[] {
 
 // The configuration's rule files and the conditions that install them.
 function ruleSelection(manifest: Manifest): string {
-    return ruleFiles(manifest)
+    return listRuleFiles(manifest)
         .map(({ path }) => {
             const condition = manifest.rules[posix.basename(path)];
             if (condition === undefined) return `- \`${path}\``;

@@ -6,7 +6,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import type { ToolAvailability } from '#cli/types/tools/run.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import { toolProjectPackage } from '#cli/configurations/tool-pins.ts';
+import { findToolProjectPackage } from '#cli/configurations/tools.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
 import { DOT_GSPOT, NODE_MODULES_DIRECTORY } from '#cli/config/system/locations.ts';
@@ -23,7 +23,7 @@ import type { Inspected, ToolSearch, ToolInspection, AvailableToolInspection } f
  * @returns the hint.
  */
 function installHint(tool: ToolDeclaration): string {
-    const installation = toolProjectPackage(tool);
+    const installation = findToolProjectPackage(tool);
     if (installation !== undefined || tool.system !== true) {
         if (installation !== undefined || which.sync(MISE_PROGRAM, { nothrow: true }) !== null)
             return 'Run: gspot install';
@@ -131,7 +131,7 @@ function inspectProjectExecutable(
 ): ToolInspection | undefined {
     const { root, cwd, tool } = inputs;
     if (tool.system !== true) return undefined;
-    const installation = toolProjectPackage(tool);
+    const installation = findToolProjectPackage(tool);
     if (installation === undefined) return undefined;
     const [project] = locateRepositoryCandidates(root, tool.name, {
         searchFolders: [cwd, root].flatMap((folder) =>
@@ -169,7 +169,7 @@ function inspectExecutable(
               search: 'path' as const,
               searchFolders: [join(root, DOT_GSPOT), cwd, root],
               miseBinPaths: context.miseBinPaths,
-              toolProjectKind: toolProjectPackage(tool)?.kind,
+              toolProjectKind: findToolProjectPackage(tool)?.kind,
           };
     const [path] = locateCandidates(root, tool.name, {
         timeoutSeconds: context.timeoutSeconds,

@@ -2,7 +2,7 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
-import { toolProjectPins } from '#cli/configurations/tool-pins.ts';
+import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { findInstalledDependency } from '#cli/tools/npm/packages.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/generation/eslint.ts';
 import type { GeneratedFile, NpmProjectInputs } from '#cli/types/generation/files.ts';
@@ -23,7 +23,7 @@ import { JSON_INDENT, NEXT_PACKAGE, YARN_TOOL_PROJECT_SETTINGS } from '#cli/conf
  */
 export function npmProject({ root, scopes, manifests, installer }: NpmProjectInputs): GeneratedFile[] {
     if (installer === undefined) return [];
-    const pins = toolProjectPins(manifests).npm;
+    const pins = listToolProjectPins(manifests).npm;
     const nextVersions = scopes
         .filter(({ selected }) => selected.some(({ configuration }) => configuration.name === NEXTJS_CONFIGURATION))
         .flatMap(({ scope }) => {

@@ -11,7 +11,7 @@ import { checkCompanions } from '#cli/planning/needed-tools.ts';
 import type { ExecutionFailure } from '#cli/types/tools/run.ts';
 import { copyIntoScratch } from '#cli/execution/copy/scratch.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { batchedCommands } from '#cli/execution/command/batches.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
@@ -136,7 +136,7 @@ function unavailableCompanion(
     cwd: string,
 ): ExecutionFailure | undefined {
     for (const name of checkCompanions(planned.scope, planned.check, command)) {
-        const required = toolDeclaration(session.manifests.values(), name);
+        const required = getToolDeclaration(session.manifests.values(), name);
         const availability = findTool(session, cwd, required);
         if ('status' in availability) return availability;
     }

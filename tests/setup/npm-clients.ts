@@ -12,7 +12,7 @@ import type { NpmRegistry } from '#tests/types/e2e.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { createNpmRegistry } from '#tests/setup/install.ts';
 import type { NpmClientSandbox } from '#tests/types/npm.ts';
-import { collectPins } from '#cli/configurations/tool-pins.ts';
+import { listDistinctTools } from '#cli/configurations/tools.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 
@@ -100,7 +100,7 @@ export async function createNpmClientSandbox(
             root,
             artifacts,
             registry,
-            tools: collectPins(awaitedSession.neededToolManifests),
+            tools: listDistinctTools(awaitedSession.neededToolManifests),
             ...authored,
             async [Symbol.asyncDispose]() {
                 await resources.disposeAsync();

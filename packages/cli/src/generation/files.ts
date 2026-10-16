@@ -13,17 +13,17 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import { emitToolFiles } from '#cli/generation/tool-files.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
-import { collectPins } from '#cli/configurations/tool-pins.ts';
 import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
 import { packageRedirects } from '#cli/generation/redirects.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
+import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/generation/ci.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
-import { everyManifest, isConfigurationSelected } from '#cli/configurations/select.ts';
+import { listSelectedManifests, isConfigurationSelected } from '#cli/configurations/select.ts';
 import { DOT_GSPOT, STATE_DIRECTORY, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
 
 import {
@@ -52,7 +52,7 @@ function emitWorkflow(session: Session, generated: Generated): void {
             operatingSystems: settings.ci.operating_systems,
             hasSwift: isConfigurationSelected(scopes, SWIFT_CONFIGURATION),
             manualChecks: manual,
-            manualTools: collectPins(session.neededToolManifests).filter((tool) => required.has(tool.name)),
+            manualTools: listDistinctTools(session.neededToolManifests).filter((tool) => required.has(tool.name)),
         }),
     );
 }
@@ -194,7 +194,7 @@ export function emitAll(session: Session): Generated {
         miseFile(manifests),
     );
     emitWorkflow(session, generated);
-    const selected = everyManifest(scopes);
+    const selected = listSelectedManifests(scopes);
     const rules = selectRuleFiles(settings.rules, selected, repository, settings.level, session.packageManifests);
     generated.files.push(
         ...rules.map((file) => ({

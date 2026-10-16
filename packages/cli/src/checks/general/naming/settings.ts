@@ -4,7 +4,7 @@ import { stripUndefined } from '#cli/system/values.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { namingDefaults } from '#cli/configurations/manifests.ts';
+import { readNamingDefaults } from '#cli/configurations/manifests.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY, CATEGORY_PARENTS } from '#cli/config/checks/general/naming.ts';
 
@@ -35,24 +35,39 @@ function compileOverride(rule: NamingOverride, source: string): CompiledOverride
     };
 }
 
+function getNamingLimits(view: Pick<ScopeView, 'options'>, language: string, category: string) {
+    const root = view.options('naming');
+    const languageKey = SETTING_LANGUAGES.find((name) => name === language);
+    const languageTable = languageKey === undefined ? undefined : root[languageKey];
+    const categoryKey = NAMING_TABLE_CATEGORIES.find((name) => name === category);
+    const categoryTable = categoryKey === undefined ? undefined : languageTable?.[categoryKey];
+    return {
+        ...root,
+        ...(languageTable === undefined ? undefined : stripUndefined(languageTable)),
+        ...(categoryTable === undefined ? undefined : stripUndefined(categoryTable)),
+    };
+}
+
+function listDefaultCases(shipped: NamingDefaults, language: string, category: string, parent: string) {
+    const table: NamingLanguage | undefined = shipped.languages[language];
+    for (const name of [category, parent]) {
+        const cases = table?.categories[name]?.cases;
+        if (cases !== undefined) return cases;
+    }
+    return [];
+}
+
 function buildLimitsFor(shipped: NamingDefaults, view: Pick<ScopeView, 'options'>): NamingSettings['limitsFor'] {
     const parents: Readonly<Record<string, string>> = CATEGORY_PARENTS;
-    // eslint-disable-next-line complexity -- reason: A naming override keeps category, language, and scope fields together; splitting those optional fields adds one-caller wrappers.
+
     return (language, category) => {
-        const table: NamingLanguage | undefined = shipped.languages[language];
         const parent = parents[category] ?? category;
-        const root = view.options('naming');
-        const languageKey = SETTING_LANGUAGES.find((name) => name === language);
-        const languageTable = languageKey === undefined ? undefined : root[languageKey];
-        const categoryKey = NAMING_TABLE_CATEGORIES.find((name) => name === parent);
-        const categoryTable = categoryKey === undefined ? undefined : languageTable?.[categoryKey];
-        const cases = categoryTable?.cases ?? languageTable?.cases ?? root.cases;
-        const defaults =
-            [category, parent].map((name) => table?.categories[name]?.cases).find((value) => value !== undefined) ?? [];
+        const limits = getNamingLimits(view, language, parent);
+        const defaults = listDefaultCases(shipped, language, category, parent);
         return {
-            caseNames: cases.length > 0 ? cases : defaults,
-            maxChars: categoryTable?.max_characters ?? languageTable?.max_characters ?? root.max_characters,
-            maxWords: categoryTable?.max_words ?? languageTable?.max_words ?? root.max_words,
+            caseNames: limits.cases.length > 0 ? limits.cases : defaults,
+            maxChars: limits.max_characters,
+            maxWords: limits.max_words,
         };
     };
 }
@@ -74,7 +89,7 @@ function compileTerms(terms: string[], origin: Pick<Term, 'source' | 'group' | '
  * @param input the effective selection, written settings, and run's source reads.
  * @returns the effective settings.
  */
-export function readNamingSettings(
+function readNamingSettings(
     input: Pick<CheckInput, 'reads'> & {
         selection: Pick<CheckInput['selection'], 'view' | 'selected'> & {
             scope: Pick<CheckInput['selection']['scope'], 'path'>;
@@ -89,7 +104,7 @@ export function readNamingSettings(
     } = input.selection;
     const settings = input.settingsFile.settings;
     const reads = input.reads;
-    const shipped = namingDefaults(reads);
+    const shipped = readNamingDefaults(reads);
     const tables = tablesFor(settings, scope).map(({ table }) => table.naming);
     const bannedWords = [...new Set(tables.flatMap((table) => table?.banned_words ?? []))];
     const terms = [
@@ -132,7 +147,7 @@ export function readNamingSettings(
  * @param name the identifier.
  * @returns the parts.
  */
-export function splitParts(name: string): string[] {
+function splitParts(name: string): string[] {
     return name
         .split(SEPARATORS)
         .filter((segment) => segment !== '')
@@ -141,3 +156,5 @@ export function splitParts(name: string): string[] {
         .map((part) => part.toLowerCase())
         .filter((part) => part !== '');
 }
+
+export { splitParts, readNamingSettings };

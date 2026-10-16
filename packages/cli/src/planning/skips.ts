@@ -2,7 +2,7 @@ import ignore from 'ignore';
 import { isScopeCovered } from '#cli/repository/scopes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { TOOL_IGNORE_ARGUMENT } from '#cli/config/planning.ts';
-import { missingBuild } from '#cli/configurations/tool-pins.ts';
+import { findMissingBuild } from '#cli/configurations/tools.ts';
 import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
@@ -84,7 +84,7 @@ export function systemSkip(check: CheckDeclaration, tool: ToolDeclaration | unde
             note: `runs on ${check.operating_systems.join(', ')} only; this is ${host.platform}`,
         };
     if (tool === undefined) return undefined;
-    const missing = missingBuild(tool, host.platform, host.arch);
+    const missing = findMissingBuild(tool, host.platform, host.arch);
     if (missing !== undefined) return { cause: 'platform', note: `${tool.name} has no ${missing} build` };
     return undefined;
 }

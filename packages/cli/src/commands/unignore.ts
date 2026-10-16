@@ -6,10 +6,9 @@ import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { knownChecks } from '#cli/configurations/manifests.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
-import { unknownCheckMessage } from '#cli/configurations/unknown-names.ts';
 import { saveSettings, startSettingsEdit } from '#cli/commands/save-settings.ts';
+import { listCheckIds, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import type { IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/save-settings.ts';
 
 /**
@@ -82,8 +81,8 @@ async function unignoreCommand(
     const names = commandChecks.flatMap((entry) =>
         isRecord(entry) && typeof entry['name'] === 'string' ? [{ name: entry['name'] }] : [],
     );
-    const known = knownChecks(names);
-    if (!known.includes(options.check)) throw new GspotError('arguments', unknownCheckMessage(options.check, known));
+    const known = listCheckIds(names);
+    if (!known.includes(options.check)) throw new GspotError('arguments', formatUnknownCheck(options.check, known));
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, options);
     const [noun, verb, pronoun] = everywhere === 1 ? ['ignore', 'covers', 'it'] : ['ignores', 'cover', 'them'];
     const warning =

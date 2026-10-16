@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { buildTrackedFile } from '#tests/setup/tracked-file.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { DECLARATION_FILES, GENERATED_SELECTIONS } from '#tests/config/repository.ts';
 import { selectForScope, buildFileMatcher, listCoveredFiles } from '#cli/repository/coverage.ts';
 
@@ -17,7 +17,7 @@ import {
     PROJECT_SELECTIONS,
 } from '#tests/config/select.ts';
 
-const manifests = configurationManifests();
+const manifests = readManifests();
 
 test('files are covered by extension, file name at any depth, tag and glob', () => {
     const bash = manifests.get('bash')!;
@@ -129,7 +129,7 @@ test.each(PROJECT_SELECTIONS)('scope %s selects configuration %s: %s', (scope, n
             ),
         },
         scope,
-        configurationManifests(),
+        readManifests(),
     ).map((manifest) => manifest.configuration.name);
     expect(names.includes(name)).toBe(selected);
     expect(names).toContain('gspot');

@@ -1,7 +1,7 @@
 import { test, expect, describe } from 'bun:test';
 import { buildManifest } from '#tests/setup/manifest.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 describe('selectConfigurations', () => {
     test('adds required configurations, dependencies first, in order of first mention', () => {
@@ -16,6 +16,6 @@ describe('selectConfigurations', () => {
     });
 
     test('an unknown configuration names the near matches', () => {
-        expect(() => selectConfigurations(['bassh'], configurationManifests())).toThrow('Did you mean `bash`');
+        expect(() => selectConfigurations(['bassh'], readManifests())).toThrow('Did you mean `bash`');
     });
 });

@@ -3,13 +3,13 @@ import ts from 'typescript';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { checkInput } from '#cli/execution/built-in.ts';
-import { allChecks } from '#cli/configurations/manifests.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
 import { listTypescriptNodes } from '#cli/parsers/typescript.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { listChecksById } from '#cli/configurations/manifests.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
 import { runTsc, restoreCommandPaths } from '#cli/checks/language/typescript/project.ts';
@@ -132,14 +132,14 @@ export async function nextjsTsc(session: Session, planned: PlannedCheck): Promis
     });
     const output = `${generated.stdout}${generated.stderr}`;
     if (generated.code !== 0) throw new Error(`The next typegen command failed: ${failureSummary(output)}`);
-    const compiler = allChecks(session.manifests.values()).get(TYPESCRIPT_TSC_CHECK);
+    const compiler = listChecksById(session.manifests.values()).get(TYPESCRIPT_TSC_CHECK);
     if (compiler === undefined) throw new Error('The Next.js compiler check requires typescript/tsc.');
     const result = await runTsc(
         scratchSession,
         {
             ...planned,
             check: { ...compiler.check, ...planned.check, output: compiler.check.output },
-            tool: toolDeclaration(session.manifests.values(), TSC_TOOL, compiler.configuration),
+            tool: getToolDeclaration(session.manifests.values(), TSC_TOOL, compiler.configuration),
         },
         root,
     );

@@ -9,7 +9,7 @@ import type { ReferencePage } from '../types/reference.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { cell, table, section, referencePage } from './markdown.ts';
-import { allChecks, configurationManifests } from '#cli/configurations/manifests.ts';
+import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 import { PAGES_FOLDER, REFERENCE_FOLDERS, REFERENCE_IDS_KEY, REFERENCE_COLLECTION_NAME } from '../config/reference.ts';
 
 function configurationSections(manifests: Manifest[]): string {
@@ -33,7 +33,7 @@ function configurationSections(manifests: Manifest[]): string {
 function referencePages(): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>();
     for (const [path, page] of commandPages()) pages.set(path, page);
-    const manifests = configurationManifests()
+    const manifests = readManifests()
         .values()
         .toArray()
         .toSorted((a, b) => a.configuration.name.localeCompare(b.configuration.name));
@@ -50,7 +50,7 @@ function referencePages(): Map<string, ReferencePage> {
             `${REFERENCE_FOLDERS.configurations}/${manifest.configuration.name}.md`,
             configurationPage(manifest, manifests),
         );
-    const checks = allChecks(configurationManifests().values());
+    const checks = listChecksById(readManifests().values());
     const checkRows = [...checks.values()]
         .toSorted((a, b) => a.check.name.localeCompare(b.check.name))
         .map(({ check, configuration }) => [

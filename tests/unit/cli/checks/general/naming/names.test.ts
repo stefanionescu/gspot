@@ -8,13 +8,13 @@ import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import { nameFindings } from '#cli/checks/general/naming/names.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import type { Identifier, NamingSettings } from '#cli/types/checks/general.ts';
-import { allChecks, configurationManifests } from '#cli/configurations/manifests.ts';
+import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 import { splitParts, readNamingSettings } from '#cli/checks/general/naming/settings.ts';
 
-const check = allChecks(configurationManifests().values()).get('naming/identifiers')!.check;
+const check = listChecksById(readManifests().values()).get('naming/identifiers')!.check;
 
 test('a number word such as base64 counts as one word; repeated, extra, banned and digit words are still reported', () => {
-    const selected = selectConfigurations(['naming'], configurationManifests());
+    const selected = selectConfigurations(['naming'], readManifests());
     const known = knownSettings(selected);
     const settings = parseSettings(settingsText(['naming'], { rules: true }));
     const view = scopeView(known, settings, selected, '');
@@ -114,7 +114,7 @@ const namingSettings: NamingSettings = {
     isRepeatAllowed: false,
 };
 
-const owned = allChecks(configurationManifests().values()).get('naming/identifiers')!;
+const owned = listChecksById(readManifests().values()).get('naming/identifiers')!;
 
 const plain = { check: owned.check, settings: namingSettings, isTestFile: false };
 

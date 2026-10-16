@@ -6,9 +6,9 @@ import { openSession } from '#cli/commands/session.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
+import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { KEY_GAP, LIST_KINDS, VALUE_WIDTH } from '#cli/config/commands/list.ts';
 import { type Settings, type ScopeSelection } from '#cli/types/settings/values.ts';
 import { everyTable, listSettings, writtenSetting } from '#cli/settings/inherit.ts';
@@ -40,7 +40,7 @@ function buildSettingsResult(session: Session): CommandResult {
 }
 
 function buildConfigurationsResult(session: Session): CommandResult {
-    const manifests = everyManifest(session.scopes);
+    const manifests = listSelectedManifests(session.scopes);
     const names = new Set(manifests.map((manifest) => manifest.configuration.name));
     const selected = manifests.map((manifest) => ({
         name: manifest.configuration.name,

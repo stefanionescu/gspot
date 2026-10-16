@@ -5,7 +5,7 @@ import { isBelowFloor } from '#cli/tools/versions.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import type { CheckContradiction } from './types/manifests.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
-import { allChecks, declaredTools, manifestError } from '#cli/configurations/manifests.ts';
+import { listChecksById, listDeclaredTools, buildManifestError } from '#cli/configurations/manifests.ts';
 import type { Manifest, PinRequirement, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
 import {
@@ -48,21 +48,25 @@ const CHECK_CONTRADICTIONS: CheckContradiction[] = [
 function assertRequirementsExist(manifest: Manifest, manifests: Map<string, Manifest>): void {
     for (const required of manifest.configuration.requires)
         if (!manifests.has(required))
-            throw manifestError(manifest.configuration.name, [`it requires \`${required}\`, which does not exist.`]);
+            throw buildManifestError(manifest.configuration.name, [
+                `it requires \`${required}\`, which does not exist.`,
+            ]);
 }
 
 // Reject defaults with names absent from the setting declarations.
 function assertDefaultsDeclared(manifest: Manifest, settings: Map<string, SettingDeclaration>): void {
     for (const name of Object.keys(manifest.defaults))
         if (!settings.has(name))
-            throw manifestError(manifest.configuration.name, [`Defaults name ${name}, which no setting declares.`]);
+            throw buildManifestError(manifest.configuration.name, [
+                `Defaults name ${name}, which no setting declares.`,
+            ]);
 }
 
 // Refuses a requirement chain that returns to a configuration it already passed.
 function assertNoRequirementCycle(manifest: Manifest, manifests: Map<string, Manifest>, chain: string[] = []): void {
     const name = manifest.configuration.name;
     if (chain.includes(name))
-        throw manifestError(name, [`Configuration requirement cycle: ${[...chain, name].join(' -> ')}.`]);
+        throw buildManifestError(name, [`Configuration requirement cycle: ${[...chain, name].join(' -> ')}.`]);
     for (const required of manifest.configuration.requires) {
         const dependency = manifests.get(required);
         if (dependency !== undefined) assertNoRequirementCycle(dependency, manifests, [...chain, name]);
@@ -78,7 +82,7 @@ function assertNoReplacementCycle(
     const chain = [check.name];
     for (let next = check.instead_of; next !== undefined; next = checks.get(next)?.instead_of) {
         if (chain.includes(next))
-            throw manifestError(manifest.configuration.name, [
+            throw buildManifestError(manifest.configuration.name, [
                 `Check replacement cycle: ${[...chain, next].join(' -> ')}.`,
             ]);
         chain.push(next);
@@ -89,7 +93,7 @@ function assertNoReplacementCycle(
 function assertReplacement(manifest: Manifest, check: CheckDeclaration, checks: Map<string, CheckDeclaration>): void {
     const target = check.instead_of;
     if (target !== undefined && (!checks.has(target) || target === check.name))
-        throw manifestError(manifest.configuration.name, [
+        throw buildManifestError(manifest.configuration.name, [
             `check ${check.name} instead_of must name a different check; received ${target}.`,
         ]);
     assertNoReplacementCycle(manifest, check, checks);
@@ -106,7 +110,7 @@ function assertPinsAgree(tool: ToolDeclaration, owner: string, owners: Map<strin
     for (const [name, version] of declared) {
         const previous = owners.get(name);
         if (previous !== undefined && previous.version !== version)
-            throw manifestError(owner, [
+            throw buildManifestError(owner, [
                 `Tool pin ${name} conflicts: ${previous.owner} requires ${previous.version}; ${owner} requires ${version}.`,
             ]);
         owners.set(name, { version, owner });
@@ -117,9 +121,9 @@ function assertToolPin(manifest: Manifest, tool: ToolDeclaration): void {
     const isUnpinned =
         tool.version === undefined && Object.values(tool.installers).some((entry) => entry.version === undefined);
     if (isUnpinned && tool.min_version === undefined)
-        throw manifestError(manifest.configuration.name, [`tool ${tool.name} has no version and no floor.`]);
+        throw buildManifestError(manifest.configuration.name, [`tool ${tool.name} has no version and no floor.`]);
     if (isBelowFloor(tool.version, tool.min_version))
-        throw manifestError(manifest.configuration.name, [
+        throw buildManifestError(manifest.configuration.name, [
             `tool ${tool.name} pins ${tool.version ?? ''}, below its floor ${tool.min_version ?? ''}.`,
         ]);
 }
@@ -144,21 +148,21 @@ function assertSettingWait(
 ): void {
     const awaited = check.when?.setting;
     if (awaited !== undefined && !settings.has(awaited))
-        throw manifestError(manifest.configuration.name, [
+        throw buildManifestError(manifest.configuration.name, [
             `check ${check.name} waits for ${awaited}, which no configuration declares.`,
         ]);
     const missing = settingsRead(check).filter((name) => {
         if (name === awaited) return false;
         const declaration = settings.get(name);
         if (declaration === undefined)
-            throw manifestError(manifest.configuration.name, [
+            throw buildManifestError(manifest.configuration.name, [
                 `check ${check.name} reads ${name}, which no configuration declares.`,
             ]);
         const value = declaration.default;
         return value === undefined || value === '' || value === false || (Array.isArray(value) && value.length === 0);
     });
     if (missing.length > 0)
-        throw manifestError(
+        throw buildManifestError(
             manifest.configuration.name,
             missing.map((name) => `check ${check.name} reads ${name}, whose default is empty, and must wait for it.`),
         );
@@ -189,7 +193,7 @@ function assertToolFileConsumers(
             .map((name) => `config ${config.target} requires undeclared check ${name}.`),
     );
     const errors = [...unknownTools, ...unknownChecks];
-    if (errors.length > 0) throw manifestError(manifest.configuration.name, errors);
+    if (errors.length > 0) throw buildManifestError(manifest.configuration.name, errors);
 }
 
 // Conditional instructions must name shipped assets before any consumer selects or reads them.
@@ -197,7 +201,7 @@ function assertRuleFiles(manifest: Manifest): void {
     const ruleFiles = new Set(listAssets(`${manifest.dir}/${RULES_FOLDER}/`).map((file) => posix.basename(file)));
     const missingRules = Object.keys(manifest.rules).filter((file) => !ruleFiles.has(file));
     if (missingRules.length > 0)
-        throw manifestError(
+        throw buildManifestError(
             manifest.configuration.name,
             missingRules.map((file) => `Rule ${file} does not exist in this configuration.`),
         );
@@ -210,13 +214,13 @@ function assertRuleFiles(manifest: Manifest): void {
  */
 function assertCheckDeclaration(manifest: Manifest, check: CheckDeclaration): void {
     if (check.command === undefined && !(check.name in BUILT_IN_CHECKS))
-        throw manifestError(manifest.configuration.name, [
+        throw buildManifestError(manifest.configuration.name, [
             `The check ${check.name} names no command, and gspot has no built-in check by that name.`,
         ]);
     const contradictions = CHECK_CONTRADICTIONS.filter((entry) => entry.applies(check)).map((entry) =>
         entry.error(check),
     );
-    if (contradictions.length > 0) throw manifestError(manifest.configuration.name, contradictions);
+    if (contradictions.length > 0) throw buildManifestError(manifest.configuration.name, contradictions);
 }
 
 /**
@@ -259,13 +263,13 @@ function assertManifestDeclarations(
 export function assertManifests(manifests: Map<string, Manifest>): void {
     const entries = [...manifests.values()];
     const pinOwners = new Map<string, PinRequirement>();
-    const tools = declaredTools(entries);
+    const tools = listDeclaredTools(entries);
     const names = new Set<string>();
     for (const check of entries.flatMap((manifest) => manifest.checks)) {
         if (names.has(check.name)) throw new Error(`Duplicate check identity: ${check.name}`);
         names.add(check.name);
     }
-    const ownedChecks = allChecks(entries);
+    const ownedChecks = listChecksById(entries);
     const checks: Map<string, CheckDeclaration> = new Map([...ownedChecks].map(([name, { check }]) => [name, check]));
     const settings = knownSettings(entries).declarations;
     for (const manifest of entries)
