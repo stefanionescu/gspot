@@ -2,12 +2,12 @@
 export const EXECUTABLE_LAYOUTS = {
     windows: {
         executableSuffixes: ['.cmd', '.exe', ''],
-        environmentDirectory: 'Scripts',
+        environmentFolder: 'Scripts',
         environmentSuffix: '.exe',
     },
     posix: {
         executableSuffixes: [''],
-        environmentDirectory: 'bin',
+        environmentFolder: 'bin',
         environmentSuffix: '',
     },
 } as const;

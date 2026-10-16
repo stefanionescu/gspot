@@ -21,7 +21,7 @@ import {
  * @param name the Bash size setting.
  * @returns its declared numeric default.
  */
-function defaultLimit(name: string): number {
+function getDefaultLimit(name: string): number {
     const setting = listConfigurationSettings('structure').find(
         ({ name: key }) => key === name.replace('limits.bash.', 'limits.'),
     )!;
@@ -32,13 +32,13 @@ function defaultLimit(name: string): number {
  * @param depth the count of nested conditions.
  * @returns the function body.
  */
-function nestedConditions(depth: number): string {
+function buildNestedConditions(depth: number): string {
     const opening = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (index + 1))}${NESTED_CONDITION}`);
     const closing = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (depth - index))}fi`);
     return [...opening, `${' '.repeat(4 * (depth + 1))}echo "$1"`, ...closing].join('\n');
 }
 function buildFileSizeCase() {
-    const fileLines = defaultLimit('limits.bash.file_lines');
+    const fileLines = getDefaultLimit('limits.bash.file_lines');
     // The header contributes the set and shopt commands; each declaration adds one code line.
     const filesAtLimit = Array.from(
         { length: fileLines - 2 },
@@ -54,10 +54,10 @@ function buildFileSizeCase() {
     };
 }
 function buildSizeCases() {
-    const functionLines = defaultLimit('limits.bash.function_lines');
-    const branches = defaultLimit('limits.bash.function_branches');
-    const nesting = defaultLimit('limits.bash.block_nesting');
-    const assignments = defaultLimit('limits.bash.function_assignments');
+    const functionLines = getDefaultLimit('limits.bash.function_lines');
+    const branches = getDefaultLimit('limits.bash.function_branches');
+    const nesting = getDefaultLimit('limits.bash.block_nesting');
+    const assignments = getDefaultLimit('limits.bash.function_assignments');
     const bodyAtLimit = Array.from({ length: functionLines }, (_, index) => `    echo "line ${String(index)}"`).join(
         '\n',
     );
@@ -88,8 +88,8 @@ function buildSizeCases() {
             },
         },
         {
-            source: `${BASH_HEADER}# main: selects nested conditions.\nmain() {\n${nestedConditions(nesting + 1)}\n}\n\nmain "$@"\n`,
-            corrected: `${BASH_HEADER}# main: selects nested conditions.\nmain() {\n${nestedConditions(nesting)}\n}\n\nmain "$@"\n`,
+            source: `${BASH_HEADER}# main: selects nested conditions.\nmain() {\n${buildNestedConditions(nesting + 1)}\n}\n\nmain "$@"\n`,
+            corrected: `${BASH_HEADER}# main: selects nested conditions.\nmain() {\n${buildNestedConditions(nesting)}\n}\n\nmain "$@"\n`,
             expected: {
                 ...BASH_SIZE_LOCATIONS[3],
                 message: `main has ${String(nesting + 1)} levels of nesting, over the limit of ${String(nesting)}.`,

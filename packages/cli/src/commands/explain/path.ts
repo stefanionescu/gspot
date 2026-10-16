@@ -1,7 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { scopeLabel } from '#cli/system/terminal.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { type Session } from '#cli/types/planning.ts';
+import { formatScopeLabel } from '#cli/system/terminal.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
@@ -36,7 +36,7 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
     );
     const report: PathExplanation = {
         path,
-        scope: scopeLabel(scope.path),
+        scope: formatScopeLabel(scope.path),
         fileKind: file.kind,
         tags: file.tags,
         configurations: configurations.map((manifest) => manifest.configuration.name),
@@ -57,7 +57,7 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
                 reason: entry.reason,
             })),
     };
-    if (file.kindOrigin !== undefined) report.fileKindSource = file.kindOrigin;
+    if (file.kindOrigin !== undefined) report.fileKindOrigin = file.kindOrigin;
     const unchecked = formatUncheckedKind(file);
     if (unchecked !== undefined) report.unchecked = unchecked;
     if (report.checks.length === 0 && file.kind === 'source') {
@@ -74,7 +74,7 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
  * @returns the text for stdout.
  */
 function formatPathReport(report: PathExplanation): string {
-    const by = report.fileKindSource === undefined ? '' : ` by ${report.fileKindSource}`;
+    const by = report.fileKindOrigin === undefined ? '' : ` by ${report.fileKindOrigin}`;
     const checks = report.checks.map(
         (check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? 'repository command'})`,
     );

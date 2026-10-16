@@ -9,9 +9,9 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildTanstackQueryFragment(
-    context: Pick<EslintContext, 'eslintModule' | 'eslintFiles' | 'eslintPresets'>,
+    context: Pick<EslintContext, 'blockWriter' | 'eslintFiles' | 'eslintPresets'>,
 ): EslintFragment {
-    const { eslintModule, eslintFiles, eslintPresets } = context;
+    const { blockWriter, eslintFiles, eslintPresets } = context;
 
     const imports: string[] = ["import tanstackQuery from '@tanstack/eslint-plugin-query';"];
 
@@ -19,7 +19,7 @@ function buildTanstackQueryFragment(
     const preset = (eslintPresets.get('tanstack-query') as FragmentPresets).recommended;
     output.push(
         serializeBlocks(
-            eslintModule,
+            blockWriter,
             buildPresetBlocks(preset, 'tanstackQuery', ({ rules }, index, source) => [
                 { files: eslintFiles.code, ...(rules === undefined ? {} : { rules: convertWarningsToErrors(rules) }) },
                 "plugins: { '@tanstack/query': tanstackQuery }",

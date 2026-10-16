@@ -207,7 +207,7 @@ function buildSentenceLengthStyle(context: ToolFileContext): string {
  * @returns the Vale possessive-form rule.
  */
 function buildPossessivesStyle(context: ToolFileContext): string {
-    const names = productNames(context.session);
+    const names = listProductNames(context.session);
 
     return stringify({
         extends: 'existence',
@@ -241,7 +241,7 @@ function buildProseInputs(session: Session, manifests: Manifest[]): ProseInputs 
     if (cached !== undefined) return cached;
     const words = session.settingsFile.settings.allowed_words;
     const prose = {
-        words: [...new Set([...productNames(session), ...words])],
+        words: [...new Set([...listProductNames(session), ...words])],
         rules: manifests.flatMap((manifest) =>
             manifest.toolFiles
                 .filter((file) => file.tool.includes('vale') && file.target.endsWith(VALE_RULE_EXTENSION))
@@ -257,7 +257,7 @@ function buildProseInputs(session: Session, manifests: Manifest[]): ProseInputs 
  * @param session the repository inventory, selected configurations, and effective settings.
  * @returns the distinct tool names and allowed product words for the Vale vocabulary.
  */
-function productNames(session: Session): string[] {
+function listProductNames(session: Session): string[] {
     return [
         ...new Set(
             session.scopes.flatMap(({ selected }) =>

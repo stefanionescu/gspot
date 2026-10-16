@@ -27,7 +27,7 @@ import {
 } from '#tests/data/tools/npm-tool-project.ts';
 
 /** Give each npm preparation the same generated project declaration. */
-function npmToolFile(content: string): GeneratedFile {
+function buildNpmToolFile(content: string): GeneratedFile {
     return { path: '.gspot/package.json', content, kind: 'tool_file' };
 }
 
@@ -86,7 +86,7 @@ test.each([...INSTALL_FAILURES])(
         const installError = await (
             frozen
                 ? installNpmTools(buildInstallContext(session, owner))
-                : prepareNpmLockfile(buildInstallContext(session, owner), npmToolFile(manifest), undefined)
+                : prepareNpmLockfile(buildInstallContext(session, owner), buildNpmToolFile(manifest), undefined)
         ).catch((error: unknown) => error);
         expect(installError).toMatchObject({ name: 'GspotError', code: 'installation' });
         const message = installError instanceof Error ? installError.message : String(installError);
@@ -138,7 +138,7 @@ test.each([false, true])(
             };
         });
         const message = await captureRejection(
-            prepareNpmLockfile(buildInstallContext(session, owner), npmToolFile(manifest), undefined),
+            prepareNpmLockfile(buildInstallContext(session, owner), buildNpmToolFile(manifest), undefined),
         );
         expect(message).toBe(
             frozen
@@ -175,12 +175,12 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
     });
     using owner = openWriter(sandbox.path);
     const message = await captureRejection(
-        prepareNpmLockfile(buildInstallContext(session, owner), npmToolFile(manifest), undefined),
+        prepareNpmLockfile(buildInstallContext(session, owner), buildNpmToolFile(manifest), undefined),
     );
     expect(message).toBe('node is required by the npm tool project. Install it before it creates its lockfile.');
     expect(await isOnDisk(join(sandbox.path, '.gspot/package.json'))).toBe(false);
     await createFileTree(sandbox.path, { ['.gspot/package.json']: manifest, '.gspot/bun.lock': lockfile });
-    const cached = await prepareNpmLockfile(buildInstallContext(session, owner), npmToolFile(manifest), undefined);
+    const cached = await prepareNpmLockfile(buildInstallContext(session, owner), buildNpmToolFile(manifest), undefined);
     expect(cached.content).toBe(lockfile);
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('kept\n');
     expect(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8')).toBe(manifest);

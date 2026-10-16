@@ -76,7 +76,7 @@ function buildCommandReference(command: ReturnType<typeof buildProgram>['command
  * Read CLI facts once for the documentation build.
  * @returns commands, configurations, checks, settings, and their schema
  */
-export function referenceData(): ReferenceData {
+export function readReferenceData(): ReferenceData {
     const configurations = [...readManifests(createReadCache(process.cwd())).values()].toSorted((first, second) =>
         first.configuration.name.localeCompare(second.configuration.name),
     );

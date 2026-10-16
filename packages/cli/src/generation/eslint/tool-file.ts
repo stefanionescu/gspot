@@ -23,7 +23,7 @@ function buildEslintFile(context: ToolFileContext): string {
     const { session, selection, toolFile: target } = context;
 
     const base = buildEslintContext(context);
-    const { eslint, json, eslintModule } = base;
+    const { eslint, json, blockWriter } = base;
     const { fragmentParts, fragmentImports, fragmentSelectors } = collectFragments(
         session,
         session.scopes,
@@ -39,11 +39,11 @@ function buildEslintFile(context: ToolFileContext): string {
         'export default [\n    // Shared ignore sections.\n',
         indentEslintBlock(serializeBlock({ ignores: config.ignoredPaths }, '', undefined)),
         ',\n',
-        serializeBlocks(eslintModule, buildBlocksBeforeFragments(base, selection.view, plugins)),
+        serializeBlocks(blockWriter, buildBlocksBeforeFragments(base, selection.view, plugins)),
         '\n',
         fragmentParts.join('\n'),
         '\n',
-        serializeBlocks(eslintModule, buildBlocksAfterFragments(base, selection.view, fragmentSelectors)),
+        serializeBlocks(blockWriter, buildBlocksAfterFragments(base, selection.view, fragmentSelectors)),
     ];
 
     if (config.extra !== undefined) {
@@ -51,7 +51,7 @@ function buildEslintFile(context: ToolFileContext): string {
     }
     output.push(
         serializeBlocks(
-            eslintModule,
+            blockWriter,
             buildSelectedBlocks(base).map((block) => [block]),
         ),
         '\n];\n',

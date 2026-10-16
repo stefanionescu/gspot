@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
-import { safeParseJson } from '#cli/parsers/json.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
+import { parseJsonResult } from '#cli/parsers/json.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { MESSAGE_FILE_SUFFIX } from '#cli/config/checks/library.ts';
@@ -42,7 +42,7 @@ function checkTranslationMessages(input: CheckInput): Finding[] {
     const messagesByPath = new Map<string, Map<string, string>>();
     const findings: Finding[] = [];
     for (const path of files) {
-        const parsed = safeParseJson(readCachedBytes(input.reads, path).toString('utf8'), messagesSchema);
+        const parsed = parseJsonResult(readCachedBytes(input.reads, path).toString('utf8'), messagesSchema);
         if ('error' in parsed) findings.push(buildFinding(input, { file: path, line: 1 }, 'syntax', parsed.error));
         else messagesByPath.set(path, flattenMessages(parsed.value));
     }

@@ -9,9 +9,9 @@ import { NESTJS_ALL_LEVEL_RULES, NESTJS_INJECTABLE_FILTER_PATHS } from '#cli/con
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildNestjsFragment(
-    context: Pick<EslintContext, 'eslintModule' | 'eslintFiles' | 'eslintPresets' | 'scope' | 'scopeDependencies'>,
+    context: Pick<EslintContext, 'blockWriter' | 'eslintFiles' | 'eslintPresets' | 'scope' | 'scopeDependencies'>,
 ): EslintFragment {
-    const { eslintModule, eslintFiles, eslintPresets, scope, scopeDependencies } = context;
+    const { blockWriter, eslintFiles, eslintPresets, scope, scopeDependencies } = context;
 
     const imports: string[] = ["import nestjsTyped from '@darraghor/eslint-plugin-nestjs-typed';"];
 
@@ -19,7 +19,7 @@ function buildNestjsFragment(
     const presets = eslintPresets.get('nestjs') as FragmentPresets;
     output.push(
         '\n',
-        eslintModule.block({
+        blockWriter.block({
             files: eslintFiles.typescript,
             rules: NESTJS_ALL_LEVEL_RULES,
         }),
@@ -40,7 +40,7 @@ function buildNestjsFragment(
     const prefix = scope === '' ? '' : `${escapeGlob(scope)}/`;
     output.push(
         '\n',
-        eslintModule.block(
+        blockWriter.block(
             {
                 files: eslintFiles.typescriptSource,
                 rules: {

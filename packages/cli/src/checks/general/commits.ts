@@ -7,7 +7,7 @@ import { type CheckResult } from '#cli/types/checks/run/check.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { siblingCommand, runOverPushedCommits } from '#cli/checks/general/pushed-commits.ts';
+import { getSiblingCommand, runOverPushedCommits } from '#cli/checks/general/pushed-commits.ts';
 import { MESSAGE_FILE, COMMITLINT_CHECK, COMMIT_MESSAGE_ARGUMENTS } from '#cli/config/checks/general/commits.ts';
 
 /**
@@ -34,7 +34,7 @@ export async function checkCommitlintPushed(session: Session, planned: PlannedCh
         const current = await runCheckCommand(
             session,
             { ...planned, messageFile: commitFile },
-            { command: siblingCommand(planned, COMMITLINT_CHECK) },
+            { command: getSiblingCommand(planned, COMMITLINT_CHECK) },
         );
         count += 1;
         return {

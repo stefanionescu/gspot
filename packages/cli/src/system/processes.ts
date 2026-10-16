@@ -6,7 +6,7 @@ import type { ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
-import { environmentKey, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
+import { buildSpawnEnvironment, normalizeEnvironmentKey, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import type {
     StdoutRead,
@@ -35,7 +35,7 @@ import {
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env = buildSpawnEnvironment(options.env);
     // A selected tool's launcher must find its sibling runtime and commands before unrelated tools on the executable search path.
-    const path = Object.keys(env).find((name) => environmentKey(name) === 'PATH');
+    const path = Object.keys(env).find((name) => normalizeEnvironmentKey(name) === 'PATH');
     if (isAbsolute(executable) && path !== undefined)
         env[path] = [dirname(executable), env[path]].filter((value) => value !== '').join(delimiter);
     return {

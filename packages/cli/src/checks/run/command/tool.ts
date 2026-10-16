@@ -13,7 +13,7 @@ import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { findExecutionFailure } from '#cli/checks/run/command/output.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import type { ToolRunOptions, ToolAvailability } from '#cli/types/tools/run.ts';
-import { environmentKey, readEnvironmentVariable } from '#cli/system/environment.ts';
+import { normalizeEnvironmentKey, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import type {
     CheckTool,
@@ -100,7 +100,7 @@ export function buildCompanionEnvironment(
         ...env,
         PATH: [
             ...folders,
-            env[Object.keys(env).find((name) => environmentKey(name) === 'PATH') ?? 'PATH'] ??
+            env[Object.keys(env).find((name) => normalizeEnvironmentKey(name) === 'PATH') ?? 'PATH'] ??
                 readEnvironmentVariable('PATH') ??
                 '',
         ].join(delimiter),

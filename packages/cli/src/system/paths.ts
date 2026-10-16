@@ -124,7 +124,7 @@ export function listExecutableNames(name: string): string[] {
  * @returns its Scripts directory on Windows or bin directory elsewhere.
  */
 export function buildVenvBinPath(folder: string): string {
-    return join(folder, systemExecutables.environmentDirectory);
+    return join(folder, systemExecutables.environmentFolder);
 }
 
 /**

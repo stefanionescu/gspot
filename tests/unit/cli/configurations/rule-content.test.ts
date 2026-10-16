@@ -59,7 +59,7 @@ function hasUnmarkedLevelText(text: string): boolean {
 }
 
 /** Find check identifiers only where the prose explicitly calls them checks or findings. */
-function mentionedChecks(text: string): string[] {
+function listMentionedChecks(text: string): string[] {
     const prose = [...text.matchAll(/`([a-z][a-z-]+\/[a-z][a-z-]+)`/gu)]
         .filter(
             (match) =>
@@ -93,7 +93,7 @@ function ruleReferenceViolations(source: { path: string; text: string }, referen
         .map((match) => match[1]!)
         .filter((name) => !references.commands.has(name))
         .map((name) => `${path}: command ${name}`);
-    const checks = mentionedChecks(text)
+    const checks = listMentionedChecks(text)
         .filter((name) => !references.checks.has(name))
         .map((name) => `${path}: check ${name}`);
     const roots = new Set([...references.settings.keys()].map((name) => name.split('.', 1)[0]));

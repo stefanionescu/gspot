@@ -11,7 +11,7 @@ import { listPointerPaths, buildPointerFiles } from '#cli/generation/pointers.ts
 
 import type {
     WholeToolFile,
-    ToolFileOutput,
+    ToolFileContent,
     NeededToolFiles,
     ToolFileSelection,
     ToolFileGeneration,
@@ -73,7 +73,7 @@ function groupToolOutputs(
     session: Session,
     entries: (ToolFileSelection & { toolFile: WholeToolFile })[],
     state: ToolFileGenerationState,
-): ToolFileOutput[][] {
+): ToolFileContent[][] {
     const [first] = entries as [
         ToolFileSelection & { toolFile: WholeToolFile },
         ...(ToolFileSelection & { toolFile: WholeToolFile })[],
@@ -99,7 +99,7 @@ function groupToolOutputs(
 }
 
 // Distinct scope settings share a tool folder while preserving the declared root destination.
-function chooseTarget(declared: string, index: number, first: ToolFileOutput): string {
+function chooseTarget(declared: string, index: number, first: ToolFileContent): string {
     if (index === 0) return declared;
     if (!declared.startsWith(TOOL_FILE_PREFIX)) return join(first.owner.selection.scope.path, declared);
     const relative = declared.slice(TOOL_FILE_PREFIX.length);
@@ -113,11 +113,11 @@ function chooseTarget(declared: string, index: number, first: ToolFileOutput): s
 function recordToolOutput(
     session: Session,
     declared: string,
-    group: ToolFileOutput[],
+    group: ToolFileContent[],
     index: number,
     state: ToolFileGenerationState,
 ): void {
-    const [first] = group as [ToolFileOutput, ...ToolFileOutput[]];
+    const [first] = group as [ToolFileContent, ...ToolFileContent[]];
     const chosen = chooseTarget(declared, index, first);
     const file =
         chosen === declared
@@ -153,7 +153,7 @@ function buildWholeFiles(session: Session, declarations: ToolFileSelection[], st
 }
 
 // A pointer fragment can replace the generic pointer for the same scope and declared target.
-function collectPointerFragments(declarations: ToolFileSelection[], selected: ToolFileSelection): Set<string> {
+function collectPointerOnlyPaths(declarations: ToolFileSelection[], selected: ToolFileSelection): Set<string> {
     return new Set(
         declarations
             .filter(
@@ -179,7 +179,7 @@ function writePointers(
     const { toolFile, owner } = selected;
     if (toolFile.fragment) return;
     const target = getSelectedTarget(selected, state) ?? toolFile.target;
-    const fragments = collectPointerFragments(declarations, selected);
+    const fragments = collectPointerOnlyPaths(declarations, selected);
     for (const pointer of buildPointerFiles(owner, toolFile, target)) {
         if (toolFile.source === undefined || toolFile.pointer?.folders !== undefined || !fragments.has(pointer.path))
             state.files.set(pointer.path, pointer);

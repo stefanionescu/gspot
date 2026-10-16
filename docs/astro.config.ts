@@ -1,9 +1,9 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
-import { referenceData } from '#cli/reference.ts';
 import starlightLlmsTxt from 'starlight-llms-txt';
 import { pruneUnusedStyles } from './src/styles.ts';
 import { SIDEBAR } from './src/config/navigation.ts';
+import { readReferenceData } from '#cli/reference.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
 import { AGENT_STEPS, LLMS_DESCRIPTION } from './src/config/setup.ts';
 import { description } from '@gspothq/cli/package.json' with { type: 'json' };
@@ -35,7 +35,7 @@ export default defineConfig({
             name: 'settings-schema',
             hooks: {
                 'astro:build:done': async ({ dir }) => {
-                    const { schema, schemaFile } = referenceData();
+                    const { schema, schemaFile } = readReferenceData();
                     await writeFile(new URL(schemaFile, dir), JSON.stringify(schema) + '\n');
                 },
             },

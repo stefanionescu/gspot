@@ -175,7 +175,7 @@ async function runTsc(
     metadataRoot: string,
     project: TypeScriptProject | undefined,
 ): Promise<CheckResult> {
-    const required = checkedTsconfigOptions(session.settingsFile.settings.level, planned.scope);
+    const required = selectCheckedTsconfigOptions(session.settingsFile.settings.level, planned.scope);
     const target = project === undefined ? join(session.root, planned.scope.scope.path, TSCONFIG_FILE) : project.path;
     if (
         isProjectChecked(session.reads, {
@@ -323,7 +323,7 @@ function selectRequiredTsconfigOptions(level: Level, selected: Manifest[]): Reco
  * @param selection the effective scope configuration.
  * @returns the enabled compiler flags.
  */
-function checkedTsconfigOptions(level: Level, selection: ScopeSelection): Record<string, boolean> {
+function selectCheckedTsconfigOptions(level: Level, selection: ScopeSelection): Record<string, boolean> {
     return Object.fromEntries(
         Object.entries(selectRequiredTsconfigOptions(level, selection.selected)).filter(
             ([name]) => !selection.view.rulesOff(TYPESCRIPT_TSCONFIG_CHECK).includes(name),
@@ -353,7 +353,7 @@ function writeScopeTsconfig(
         scope: scope.scope.path,
         files: session.repository.files,
         scopes: session.repository.scopes,
-        options: checkedTsconfigOptions(session.settingsFile.settings.level, scope),
+        options: selectCheckedTsconfigOptions(session.settingsFile.settings.level, scope),
     });
 }
 

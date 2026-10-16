@@ -7,7 +7,7 @@ import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { IGNORE_SECTION_TITLES } from '#cli/config/generation/ignore-files.ts';
-import { globSections, ignoreSections } from '#cli/generation/ignore-files.ts';
+import { buildGlobSections, buildIgnoreSections } from '#cli/generation/ignore-files.ts';
 import { JSCONFIG_FILE, TSCONFIG_FILE, SOURCE_SELECTION_FIELDS } from '#cli/config/parsers/tsconfig.ts';
 
 import {
@@ -28,8 +28,8 @@ function buildJsconfig(context: ToolFileContext): string {
     const scope = context.selection.scope.path;
     const scopes = context.scopes.map((entry) => entry.scope);
     const importStyle = context.selection.view.options('tools.eslint').import_extension;
-    const declarationPaths = globSections(
-        ignoreSections(context.session).filter(
+    const declarationPaths = buildGlobSections(
+        buildIgnoreSections(context.session).filter(
             (section) =>
                 context.session.settingsFile.settings.level !== 'all' || section.title !== IGNORE_SECTION_TITLES.build,
         ),

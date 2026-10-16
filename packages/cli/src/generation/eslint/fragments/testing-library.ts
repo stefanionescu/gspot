@@ -15,9 +15,9 @@ import {
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildTestingLibraryFragment(
-    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'scopeDependencies'>,
+    context: Pick<EslintContext, 'eslintPresets' | 'blockWriter' | 'eslintFiles' | 'scopeDependencies'>,
 ): EslintFragment {
-    const { eslintPresets, eslintModule, eslintFiles, scopeDependencies } = context;
+    const { eslintPresets, blockWriter, eslintFiles, scopeDependencies } = context;
 
     const imports: string[] = ["import testingLibrary from 'eslint-plugin-testing-library';"];
 
@@ -33,7 +33,7 @@ function buildTestingLibraryFragment(
             const block = preset.blocks[0] as EslintPresets[string]['blocks'][number];
             output.push(
                 '\n',
-                eslintModule.block(
+                blockWriter.block(
                     {
                         files: eslintFiles.tests,
                         ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),

@@ -9,7 +9,7 @@ import { readPushedCommits } from '#cli/repository/revisions/push.ts';
  * @param planned the selected history check.
  * @returns the empty history result or its readiness refusal.
  */
-function historyResult(session: Session, planned: PlannedCheck): CheckResult {
+function buildHistoryResult(session: Session, planned: PlannedCheck): CheckResult {
     const result = { ...buildBaseResult(planned, session), fileCount: 0 };
     return session.repository.hasGit
         ? result
@@ -48,7 +48,7 @@ async function runOverPushedCommits(
     perCommit: (commit: string) => CheckResult | Promise<CheckResult>,
 ): Promise<CheckResult> {
     const started = performance.now();
-    let result = historyResult(session, planned);
+    let result = buildHistoryResult(session, planned);
     if (result.status === 'skipped') return result;
     const commits = await readPushedCommits(session.root, planned.commits, session.cancelSignal);
     if (!Array.isArray(commits)) return { ...result, status: 'error', note: commits.error };
@@ -65,10 +65,10 @@ async function runOverPushedCommits(
  * @param checkName the sibling check identifier.
  * @returns the sibling executable and authored arguments.
  */
-function siblingCommand(planned: PlannedCheck, checkName: string): string[] {
+function getSiblingCommand(planned: PlannedCheck, checkName: string): string[] {
     const manifest = planned.manifest as NonNullable<PlannedCheck['manifest']>;
     const sibling = manifest.checks.find(({ name }) => name === checkName) as (typeof manifest.checks)[number];
     return sibling.command as string[];
 }
 
-export { historyResult, siblingCommand, runOverPushedCommits };
+export { getSiblingCommand, buildHistoryResult, runOverPushedCommits };

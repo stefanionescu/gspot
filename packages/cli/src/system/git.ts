@@ -3,8 +3,8 @@ import { resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { TRAILING_NEWLINE } from '#cli/config/text.ts';
-import { environmentKey, readEnvironmentVariable } from '#cli/system/environment.ts';
 import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
+import { normalizeEnvironmentKey, readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { StdoutRead, SpawnResult, SpawnOptions, ByteSpawnResult } from '#cli/types/system/processes.ts';
 
 import type {
@@ -116,7 +116,7 @@ export function buildGitEnvironment(
     if (
         // eslint-disable-next-line n/no-process-env -- reason: Git scans variable names to isolate repository-local settings.
         !Object.keys(process.env).some((key) => {
-            const name = environmentKey(key);
+            const name = normalizeEnvironmentKey(key);
             return name.startsWith(GIT_VARIABLE_PREFIX) && !GIT_NONLOCAL_ENVIRONMENT_NAME.test(name);
         })
     )
@@ -134,7 +134,7 @@ export function buildGitEnvironment(
     if ([GIT_EXECUTABLE, GIT_CLONE_COMMAND].every((part, index) => commandArguments[index] === part))
         return { env: { ...isolated, ...explicit } };
     const overrides = Object.fromEntries(
-        Object.entries(explicit).filter(([name]) => !metadata.includes(environmentKey(name))),
+        Object.entries(explicit).filter(([name]) => !metadata.includes(normalizeEnvironmentKey(name))),
     );
     const source = (sourceMetadata.source ??= readInheritedGitEnvironment(origin));
     if ('failure' in source) return source;

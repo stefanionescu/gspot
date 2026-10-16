@@ -113,7 +113,7 @@ test('a failed fix removes its scratch folder and keeps the source bytes', async
     );
     const temporary = join(sandbox.path, 'scratch');
     await mkdir(temporary);
-    using _temporaryDirectory = spyOn(os, 'tmpdir').mockReturnValue(temporary);
+    using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
     const report = await runFixers(session, [planned], { isDryRun: true });
     expect(report.results).toMatchObject([{ status: 'failed' }]);
     expect(await readdir(temporary)).toStrictEqual([]);
@@ -138,7 +138,7 @@ test.each([...SCRATCH_FAILURES])(
         }
         const temporary = join(sandbox.path, 'scratch');
         await mkdir(temporary);
-        using _temporaryDirectory = spyOn(os, 'tmpdir').mockReturnValue(temporary);
+        using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
         expect(await captureRejection(runFixers(session, [planned], { isDryRun: true }))).toContain(message);
         expect(await readdir(temporary)).toStrictEqual([]);
         // The copy row replaces the source with a directory before the run.

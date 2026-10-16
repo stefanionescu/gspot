@@ -14,7 +14,7 @@ import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { readPushBase, readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { type Finding, type CheckInput, type CheckResult } from '#cli/types/checks/run/check.ts';
-import { historyResult, siblingCommand, runOverPushedCommits } from '#cli/checks/general/pushed-commits.ts';
+import { getSiblingCommand, buildHistoryResult, runOverPushedCommits } from '#cli/checks/general/pushed-commits.ts';
 
 import {
     ENV_KEY_LINE,
@@ -23,8 +23,8 @@ import {
     ENV_READ_LANGUAGES,
     GITLEAKS_LOG_OPTIONS,
     GITLEAKS_STAGED_FLAG,
-    TRUFFLEHOG_ENUMERATOR,
     GITLEAKS_STAGED_CHECK,
+    TRUFFLEHOG_GIT_COMMAND,
 } from '#cli/config/checks/general/secrets.ts';
 
 async function readEnvironmentReferences(
@@ -74,7 +74,7 @@ function findMissingEnvironmentKeys(
  * @returns the check result.
  */
 export async function checkSecretsGitleaksPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const command = siblingCommand(planned, GITLEAKS_STAGED_CHECK).filter(
+    const command = getSiblingCommand(planned, GITLEAKS_STAGED_CHECK).filter(
         (argument) => argument !== GITLEAKS_STAGED_FLAG,
     );
     return runOverPushedCommits(session, planned, (commit) =>
@@ -92,7 +92,7 @@ export async function checkSecretsGitleaksPushed(session: Session, planned: Plan
  */
 export async function checkSecretsTrufflehogPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
-    const base = historyResult(session, planned);
+    const base = buildHistoryResult(session, planned);
     if (base.status === 'skipped') return base;
     const commits = await readPushedCommits(session.root, planned.commits, session.cancelSignal);
     if (!Array.isArray(commits)) return { ...base, status: 'error', note: commits.error };
@@ -101,7 +101,7 @@ export async function checkSecretsTrufflehogPushed(session: Session, planned: Pl
     const since = planned.base ?? (await readPushBase(session.root, session.cancelSignal));
     const result = await runCheckCommand(session, planned, {
         command: [
-            ...TRUFFLEHOG_ENUMERATOR,
+            ...TRUFFLEHOG_GIT_COMMAND,
             pathToFileURL(session.root).href,
             '--branch',
             head.trim(),

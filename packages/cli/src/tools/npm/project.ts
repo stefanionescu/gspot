@@ -12,13 +12,13 @@ import { writeYarnSettings } from '#cli/tools/npm/yarn.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import { readContainedPath } from '#cli/system/files/reads.ts';
 import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
-import { lockfileResult } from '#cli/tools/project-lockfiles.ts';
 import { REINSTALL_HINT } from '#cli/config/tools/credentials.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
+import { buildLockfileResult } from '#cli/tools/project-lockfiles.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 import { parseVersionOutput, classifyToolVersion } from '#cli/tools/versions.ts';
@@ -278,10 +278,10 @@ async function prepareNpmLockfile(
                 'The npm lockfile includes repository registry credentials. Existing files were preserved. Remove credentials from the registry URL and run: gspot install',
             ),
         );
-        return lockfileResult(project.lockfilePath, recorded, original);
+        return buildLockfileResult(project.lockfilePath, recorded, original);
     }
     const lockfile = await createNpmLockfile(context, manifest, project, recorded, yarn);
-    return lockfileResult(project.lockfilePath, lockfile, original);
+    return buildLockfileResult(project.lockfilePath, lockfile, original);
 }
 
 /**

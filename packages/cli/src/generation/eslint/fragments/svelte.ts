@@ -9,9 +9,9 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildSvelteFragment(
-    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'configurations'>,
+    context: Pick<EslintContext, 'eslintPresets' | 'blockWriter' | 'configurations'>,
 ): EslintFragment {
-    const { eslintPresets, eslintModule, configurations } = context;
+    const { eslintPresets, blockWriter, configurations } = context;
 
     const imports: string[] = [
         "import sveltePlugin from 'eslint-plugin-svelte';",
@@ -22,9 +22,9 @@ function buildSvelteFragment(
     const presets = eslintPresets.get('svelte') as FragmentPresets;
     const typed = configurations.includes('typescript');
     output.push(
-        serializeBlocks(eslintModule, buildArrayPresetBlocks(presets.recommended, 'sveltePlugin', promotePresetRules)),
+        serializeBlocks(blockWriter, buildArrayPresetBlocks(presets.recommended, 'sveltePlugin', promotePresetRules)),
         '\n',
-        eslintModule.block(
+        blockWriter.block(
             {
                 files: SVELTE_FILES,
                 rules: SVELTE_RULES,

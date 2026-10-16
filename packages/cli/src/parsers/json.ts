@@ -33,7 +33,7 @@ export function parseJsonFile(path: string, source: string, schema?: z.ZodType):
  * @param schema the fields and constraints to validate.
  * @returns the validated value or a source diagnostic.
  */
-export function safeParseJson<T>(text: string, schema: z.ZodType<T>): Parsed<T> {
+export function parseJsonResult<T>(text: string, schema: z.ZodType<T>): Parsed<T> {
     let value: unknown;
     try {
         value = JSON.parse(text);

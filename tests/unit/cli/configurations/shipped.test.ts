@@ -33,7 +33,7 @@ test('each lint-rule list names the pinned package version', () => {
 });
 
 /** Read every installer pin under the name shared across configuration declarations. */
-function toolPins(tool: ToolDeclaration): (readonly [string, string])[] {
+function listToolPins(tool: ToolDeclaration): (readonly [string, string])[] {
     return [
         ...(tool.version === undefined ? [] : [[`tool:${tool.name}`, tool.version] as const]),
         ...Object.entries(tool.installers).flatMap(([installer, pin]) =>
@@ -46,7 +46,7 @@ test('configurations agree on every tool and installer pin', () => {
     const versions = new Map<string, string>();
     const violations: string[] = [];
     const manifests = [...readManifests(createReadCache(process.cwd())).values()];
-    const pins = manifests.flatMap(({ tools }) => tools).flatMap((tool) => toolPins(tool));
+    const pins = manifests.flatMap(({ tools }) => tools).flatMap((tool) => listToolPins(tool));
     for (const [name, version] of pins) {
         const previous = versions.get(name);
         if (previous !== undefined && previous !== version) violations.push(`${name}: ${previous}, ${version}`);

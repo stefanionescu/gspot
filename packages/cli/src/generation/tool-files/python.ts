@@ -4,7 +4,7 @@ import { relative } from 'node:path/posix';
 import { stringify } from '@decimalturn/toml-patch';
 import { TOML_FORMAT } from '#cli/config/generation/tool-files.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
-import { globSections, ignoreSections } from '#cli/generation/ignore-files.ts';
+import { buildGlobSections, buildIgnoreSections } from '#cli/generation/ignore-files.ts';
 import { type PythonInputs, type ToolFileContext } from '#cli/types/generation/files.ts';
 import { RUFF_ISORT, RUFF_IGNORED_RULES, BASEDPYRIGHT_OPTIONS } from '#cli/config/generation/python.ts';
 
@@ -18,7 +18,7 @@ function buildPythonInputs(context: ToolFileContext): PythonInputs {
     const { session, selection, level } = context;
     const root = session.installedRoot;
     const base = posix.relative(posix.dirname(context.targetPath), '.');
-    const exclusions = globSections(ignoreSections(session));
+    const exclusions = buildGlobSections(buildIgnoreSections(session));
     return {
         ruffRules: selection.selected.flatMap((manifest) => [
             ...manifest.ruff.recommended,

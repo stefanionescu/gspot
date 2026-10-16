@@ -7,9 +7,9 @@ import { type EslintContext, type EslintFragment } from '#cli/types/generation/e
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildDrizzleFragment(
-    context: Pick<EslintContext, 'eslintModule' | 'eslintFiles' | 'settings'>,
+    context: Pick<EslintContext, 'blockWriter' | 'eslintFiles' | 'settings'>,
 ): EslintFragment {
-    const { eslintModule, eslintFiles, settings } = context;
+    const { blockWriter, eslintFiles, settings } = context;
 
     const imports: string[] = ["import drizzlePlugin from 'eslint-plugin-drizzle';"];
 
@@ -17,7 +17,7 @@ function buildDrizzleFragment(
     const rule = ['error', { drizzleObjectName: settings['drizzle.client_names'] }];
     output.push(
         '\n',
-        eslintModule.block(
+        blockWriter.block(
             {
                 files: eslintFiles.code,
                 rules: Object.fromEntries(DRIZZLE_RULES.map((name) => [name, rule])),

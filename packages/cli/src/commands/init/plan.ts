@@ -1,5 +1,5 @@
-import { colors } from '#cli/system/terminal.ts';
 import { formatCount } from '#cli/system/text.ts';
+import { getColors } from '#cli/system/terminal.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
@@ -208,7 +208,7 @@ function buildInitPlan(
  * @returns the text
  */
 function formatInitPlan(plan: InitPlan): string {
-    const { dim } = colors();
+    const { dim } = getColors();
     const lines = [
         ...formatTemplateSection(plan.template),
         ...formatConfigurationSection(plan.configurations, plan.level),

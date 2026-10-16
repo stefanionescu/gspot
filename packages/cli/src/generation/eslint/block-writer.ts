@@ -4,8 +4,8 @@ import { buildScopeFiles } from '#cli/generation/eslint/files.ts';
 import { serializeBlock, indentEslintBlock } from '#cli/generation/eslint/print.ts';
 
 import type {
-    EslintModule,
-    EslintModuleInput,
+    BlockWriter,
+    BlockWriterInput,
     EslintSettingsBlock,
     EslintRuleExpression,
 } from '#cli/types/generation/eslint.ts';
@@ -13,7 +13,7 @@ import type {
 // Your own options apply only to rules that this block already enables.
 function buildOptionBlocks(
     block: EslintSettingsBlock & { rules: Record<string, unknown> },
-    input: EslintModuleInput,
+    input: BlockWriterInput,
 ): EslintSettingsBlock[] {
     return input.ruleOptions.flatMap((options): EslintSettingsBlock[] => {
         const entries = Object.entries(block.rules).flatMap(([name, value]): [string, unknown][] => {
@@ -36,7 +36,7 @@ function buildOptionBlocks(
 // Preset syntax belongs to the first block; option blocks retain only their own rules.
 function formatBlocks(
     blocks: EslintSettingsBlock[],
-    input: EslintModuleInput,
+    input: BlockWriterInput,
     runtime: string | undefined,
     preset: EslintRuleExpression | undefined,
 ): string {
@@ -68,7 +68,7 @@ function formatBlocks(
  * @param input the level, file selectors, your own options, and optional fragment scope.
  * @returns the emitted blocks and their rule options in the same order.
  */
-function createBlockWriter(input: EslintModuleInput): EslintModule {
+function createBlockWriter(input: BlockWriterInput): BlockWriter {
     const { allRules, isAll, codeFiles, scope } = input;
     return {
         block: (payload, runtime, preset) => {

@@ -8,7 +8,7 @@ import { eslintPresetSchema } from '#cli/configurations/schema/manifest.ts';
 import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
 
 import {
-    type EslintModule,
+    type BlockWriter,
     type EslintPresets,
     type FragmentPreset,
     type EslintSettingsBlock,
@@ -63,8 +63,8 @@ function buildPresetBlocks(
         block: FragmentPreset['blocks'][number],
         index: number,
         source: string,
-    ) => Parameters<EslintModule['block']>,
-): Parameters<EslintModule['block']>[] {
+    ) => Parameters<BlockWriter['block']>,
+): Parameters<BlockWriter['block']>[] {
     const source = serializePresetAccess(importName, preset.source);
     return preset.blocks.map((block, index) => transform(block, index, source));
 }
@@ -80,7 +80,7 @@ function buildArrayPresetBlocks(
     preset: FragmentPreset,
     importName: string,
     transform: (block: FragmentPreset['blocks'][number]) => EslintSettingsBlock,
-): Parameters<EslintModule['block']>[] {
+): Parameters<BlockWriter['block']>[] {
     return buildPresetBlocks(preset, importName, (block, index, source) => [
         transform(block),
         `...${source}[${String(index)}]`,

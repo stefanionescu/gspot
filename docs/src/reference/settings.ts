@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { JSONSchema } from 'zod/v4/core';
-import type { referenceData } from '#cli/reference.ts';
 import type { ReferencePage } from '../types/reference.ts';
+import type { readReferenceData } from '#cli/reference.ts';
 import { LANGUAGE_SETTING, SETTINGS_SUBPAGES, SCHEMA_TYPE_LABELS } from '../config/reference.ts';
 import { escapeCell, formatSection, formatDefinitions, buildReferencePage } from './markdown.ts';
 
@@ -50,7 +50,7 @@ function formatSetting(
     schema: JSONSchema.JSONSchema,
     name: string,
     value: JSONSchema.JSONSchema | boolean,
-    data: ReturnType<typeof referenceData>,
+    data: ReturnType<typeof readReferenceData>,
 ): [string, string] {
     const language = LANGUAGE_SETTING.exec(name)?.groups?.['language'];
     const declared = data.settings.filter(({ setting }) => setting.name === name);
@@ -92,7 +92,7 @@ function formatSettingKeys(
     schema: JSONSchema.JSONSchema,
     prefix: string,
     value: JSONSchema.JSONSchema | boolean,
-    data: ReturnType<typeof referenceData>,
+    data: ReturnType<typeof readReferenceData>,
 ): string {
     const rows: [string, string][] = [];
     function collect(name: string, node: JSONSchema.JSONSchema | boolean): void {
@@ -104,10 +104,10 @@ function formatSettingKeys(
     return formatDefinitions(rows);
 }
 
-function formatLimitsGuide(data: ReturnType<typeof referenceData>): string {
+function formatLimitsGuide(data: ReturnType<typeof readReferenceData>): string {
     const { setting } = data.settings.find(
         ({ setting }) => setting.name.startsWith('limits.') && setting.reason_needed === 'raising',
-    ) as ReturnType<typeof referenceData>['settings'][number];
+    ) as ReturnType<typeof readReferenceData>['settings'][number];
     const key = setting.name;
     const value = Number(setting.default) + 1;
     return (
@@ -120,7 +120,7 @@ function formatLimitsGuide(data: ReturnType<typeof referenceData>): string {
     );
 }
 
-function formatScopeGuide(node: JSONSchema.JSONSchema | boolean, data: ReturnType<typeof referenceData>): string {
+function formatScopeGuide(node: JSONSchema.JSONSchema | boolean, data: ReturnType<typeof readReferenceData>): string {
     const properties = listSchemaProperties(data.schema, node);
     return (
         'A scope selects settings for a folder. See [Monorepos and scopes](/configure/monorepos/) for inheritance.\n\n' +
@@ -140,9 +140,9 @@ function formatScopeGuide(node: JSONSchema.JSONSchema | boolean, data: ReturnTyp
     );
 }
 
-function formatNamingGuide(data: ReturnType<typeof referenceData>): string {
+function formatNamingGuide(data: ReturnType<typeof readReferenceData>): string {
     const { setting } = data.settings.find(({ setting }) => setting.name === 'naming.max_words') as ReturnType<
-        typeof referenceData
+        typeof readReferenceData
     >['settings'][number];
     const value = Number(setting.default) + 1;
     return (
@@ -160,7 +160,7 @@ function formatNamingGuide(data: ReturnType<typeof referenceData>): string {
  * @param data settings variants and JSON Schema from the CLI
  * @returns reference pages by path
  */
-export function buildSettingsPages(data: ReturnType<typeof referenceData>): Map<string, ReferencePage> {
+export function buildSettingsPages(data: ReturnType<typeof readReferenceData>): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>();
     const sections: string[] = [];
     for (const [name, node] of listSchemaProperties(data.schema, data.schema)) {

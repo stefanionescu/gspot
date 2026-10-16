@@ -96,7 +96,7 @@ test('a staged check during a merge conflict exits 2, names the conflict, and le
     readGitOutput(sandbox.path, ['commit', '-qam', 'Main']);
     expect(runGit(sandbox.path, ['merge', '-q', 'other']).code).not.toBe(0);
     await using temporary = await testdir();
-    using _temporaryDirectory = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
+    using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
     const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('Resolve index conflicts');
@@ -119,7 +119,7 @@ test('a staged check over a file name that is not UTF-8 exits 2 and leaves no sc
     });
     expect(await indexed.exited, await new Response(indexed.stderr).text()).toBe(0);
     await using temporary = await testdir();
-    using _temporaryDirectory = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
+    using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
     const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('Revision paths must be valid');

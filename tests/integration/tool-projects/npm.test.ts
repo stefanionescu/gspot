@@ -176,7 +176,7 @@ test.each([...PACKAGE_MANAGER_ROWS])(
 );
 
 // Own the authenticated registry's requests and lifetime for its real npm client.
-function authenticatedRegistry(token: string) {
+function createAuthenticatedRegistry(token: string) {
     const requests = { rejected: 0, authenticated: 0 };
     const server = Bun.serve({
         hostname: '127.0.0.1',
@@ -207,7 +207,7 @@ test('registry settings from the repository .npmrc authenticate an isolated proj
     await using repository = await testdir();
     await using isolated = await testdir();
     const token = 'synthetic-registry-credential';
-    await using registry = authenticatedRegistry(token);
+    await using registry = createAuthenticatedRegistry(token);
     const requests = registry.requests;
     const url = registry.url;
     await createFileTree(repository.path, {

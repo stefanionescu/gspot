@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
-import type { referenceData } from '#cli/reference.ts';
 import type { ReferencePage } from '../types/reference.ts';
+import type { readReferenceData } from '#cli/reference.ts';
 import { escapeCell, formatSection, formatDefinitions, buildReferencePage } from './markdown.ts';
 import { DETECTION_LABELS, REFERENCE_FOLDERS, CONFIGURATION_GUIDES } from '../config/reference.ts';
 
-type Manifest = ReturnType<typeof referenceData>['configurations'][number];
+type Manifest = ReturnType<typeof readReferenceData>['configurations'][number];
 
 // Describe each detection value, including content expressions.
 function formatDetectionConditions(detect: Manifest['detect']): string[] {
@@ -58,7 +58,7 @@ function formatConfigurationChecks(manifest: Manifest): string {
  * @param data the CLI reference data
  * @returns its public reference page
  */
-function buildConfigurationPage(manifest: Manifest, data: ReturnType<typeof referenceData>): ReferencePage {
+function buildConfigurationPage(manifest: Manifest, data: ReturnType<typeof readReferenceData>): ReferencePage {
     const { configuration } = manifest;
     const tools = manifest.tools.map((tool) =>
         tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
@@ -121,7 +121,7 @@ function buildConfigurationPage(manifest: Manifest, data: ReturnType<typeof refe
  * @param data CLI reference data
  * @returns generated pages
  */
-export function buildConfigurationPages(data: ReturnType<typeof referenceData>): Map<string, ReferencePage> {
+export function buildConfigurationPages(data: ReturnType<typeof readReferenceData>): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>([
         [
             'configurations/index.md',

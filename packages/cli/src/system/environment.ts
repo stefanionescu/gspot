@@ -14,7 +14,7 @@ export function buildSpawnEnvironment(overrides?: Record<string, string | undefi
     const entries = Object.entries(process.env);
     if (overrides !== undefined) entries.push(...Object.entries(overrides));
     for (const [key, value] of entries) {
-        const name = environmentKey(key);
+        const name = normalizeEnvironmentKey(key);
         if (value === undefined) variables.delete(name);
         else variables.set(name, [key, value]);
     }
@@ -35,7 +35,7 @@ export function readEnvironmentVariable(name: string): string | undefined {
  * @param name the variable name.
  * @returns its comparison key.
  */
-export function environmentKey(name: string): string {
+export function normalizeEnvironmentKey(name: string): string {
     return process.platform === 'win32' ? name.toUpperCase() : name;
 }
 

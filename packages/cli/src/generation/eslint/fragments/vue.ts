@@ -10,9 +10,9 @@ import { pickPresetFields, promotePresetRules, buildArrayPresetBlocks } from '#c
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildVueFragment(
-    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'configurations'>,
+    context: Pick<EslintContext, 'eslintPresets' | 'blockWriter' | 'configurations'>,
 ): EslintFragment {
-    const { eslintPresets, eslintModule, configurations } = context;
+    const { eslintPresets, blockWriter, configurations } = context;
 
     const imports: string[] = [
         "import vuePlugin from 'eslint-plugin-vue';",
@@ -24,16 +24,16 @@ function buildVueFragment(
     const presets = eslintPresets.get('vue') as FragmentPresets;
     const typed = configurations.includes('typescript');
     output.push(
-        serializeBlocks(eslintModule, buildArrayPresetBlocks(presets.recommended, 'vuePlugin', promotePresetRules)),
+        serializeBlocks(blockWriter, buildArrayPresetBlocks(presets.recommended, 'vuePlugin', promotePresetRules)),
         serializeBlocks(
-            eslintModule,
+            blockWriter,
             buildArrayPresetBlocks(presets.accessibility, 'vueAccessibility', (block) => ({
                 ...pickPresetFields(block),
                 files: ['**/*.vue'],
             })),
         ),
         '\n',
-        eslintModule.block(
+        blockWriter.block(
             {
                 files: ['**/*.vue'],
                 rules: {

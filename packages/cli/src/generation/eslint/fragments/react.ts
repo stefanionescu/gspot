@@ -9,8 +9,8 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
  * @param context the selected presets, rule printer, and scope settings.
  * @returns the imports and ESLint blocks for this configuration.
  */
-function buildReactFragment(context: Pick<EslintContext, 'eslintPresets' | 'eslintModule'>): EslintFragment {
-    const { eslintPresets, eslintModule } = context;
+function buildReactFragment(context: Pick<EslintContext, 'eslintPresets' | 'blockWriter'>): EslintFragment {
+    const { eslintPresets, blockWriter } = context;
 
     const imports: string[] = [
         "import reactHooks from 'eslint-plugin-react-hooks';",
@@ -22,7 +22,7 @@ function buildReactFragment(context: Pick<EslintContext, 'eslintPresets' | 'esli
     const presets = eslintPresets.get('react') as FragmentPresets;
     output.push(
         '\n',
-        eslintModule.block(
+        blockWriter.block(
             {
                 files: JSX_CODE_FILES,
                 rules: {

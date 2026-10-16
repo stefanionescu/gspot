@@ -16,7 +16,7 @@ import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { NEXT_LAYOUT, NEXT_PACKAGE, NEXTJS_SANDBOX, REFERENCE_PROJECT_FILES } from '#tests/data/checks/nextjs.ts';
 
 // Runs the named checks alone, expects the exit code, and returns the report.
-async function checked(repository: Sandbox, checks: string[], code: number): Promise<RunReport> {
+async function readCheckReport(repository: Sandbox, checks: string[], code: number): Promise<RunReport> {
     const result = await spawnGspot(repository.root, ['check', '--only', ...checks, '--json'], repository.environment);
     expect(result.code, result.stdout + result.stderr).toBe(code);
     return JSON.parse(result.stdout) as RunReport;
@@ -55,9 +55,9 @@ function buildNextjsPlan(): InstalledSandboxPlan {
 }
 
 test('type checking delegates to the Next.js check only when it runs', async () => {
-    const direct = await checked(installedSandbox(), ['typescript/tsc'], 0);
+    const direct = await readCheckReport(installedSandbox(), ['typescript/tsc'], 0);
     expect(direct.checks).toMatchObject([{ check: 'typescript/tsc', status: 'passed' }]);
-    const delegated = await checked(installedSandbox(), ['typescript/tsc', 'nextjs/tsc'], 0);
+    const delegated = await readCheckReport(installedSandbox(), ['typescript/tsc', 'nextjs/tsc'], 0);
     expect(delegated.checks.find(({ check }) => check === 'nextjs/tsc')?.status).toBe('passed');
     expect(delegated.checks.find(({ check }) => check === 'typescript/tsc')).toMatchObject({
         status: 'skipped',
@@ -73,12 +73,12 @@ test('the i18n rules reject literal markup', async () => {
                 'app/layout.tsx': NEXT_LAYOUT.replace('<body>{children}</body>', '<body>Welcome{children}</body>'),
             },
         });
-        const literal = await checked(installedSandbox(), ['javascript/eslint'], 1);
+        const literal = await readCheckReport(installedSandbox(), ['javascript/eslint'], 1);
         expect(literal.checks[0]!.findings).toContainEqual(
             matchFields({ rule: 'i18next/no-literal-string', file: 'app/layout.tsx', line: 13 }),
         );
     }
-    const corrected = await checked(installedSandbox(), ['javascript/eslint'], 0);
+    const corrected = await readCheckReport(installedSandbox(), ['javascript/eslint'], 0);
     expect(corrected.checks[0]!.findings).toStrictEqual([]);
 });
 
@@ -94,7 +94,7 @@ test('nextjs/tsc generates types and checks a referenced project without writing
         check: 'nextjs/tsc',
         files: { ...REFERENCE_PROJECT_FILES, 'tsconfig.json': authored },
     });
-    const failed = await checked(installedSandbox(), ['nextjs/tsc'], 1);
+    const failed = await readCheckReport(installedSandbox(), ['nextjs/tsc'], 1);
     expect(failed.checks).toMatchObject([{ check: 'nextjs/tsc', status: 'failed' }]);
     expect(failed.checks[0]!.findings).toContainEqual(
         matchFields({
@@ -105,7 +105,7 @@ test('nextjs/tsc generates types and checks a referenced project without writing
         }),
     );
     await Bun.write(join(root, 'compiler-ref/source.ts'), 'export const value: number = 1;\n');
-    const passed = await checked(installedSandbox(), ['nextjs/tsc'], 0);
+    const passed = await readCheckReport(installedSandbox(), ['nextjs/tsc'], 0);
     expect(passed.checks).toMatchObject([{ check: 'nextjs/tsc', status: 'passed', findings: [] }]);
     expect(await Bun.file(join(root, 'tsconfig.json')).text()).toBe(authored);
     expect(await Bun.file(join(root, 'compiler-ref/tsconfig.json')).text()).toBe(

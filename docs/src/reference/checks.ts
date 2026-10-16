@@ -1,9 +1,9 @@
-import type { referenceData } from '#cli/reference.ts';
 import type { ReferencePage } from '../types/reference.ts';
+import type { readReferenceData } from '#cli/reference.ts';
 import { CHECK_RUN_LABELS, REFERENCE_FOLDERS } from '../config/reference.ts';
 import { formatSection, formatDefinitions, buildReferencePage } from './markdown.ts';
 
-type Manifest = ReturnType<typeof referenceData>['configurations'][number];
+type Manifest = ReturnType<typeof readReferenceData>['configurations'][number];
 type CheckDeclaration = Manifest['checks'][number];
 
 /**
@@ -58,7 +58,7 @@ export function buildCheckPage(check: CheckDeclaration, manifest: Manifest): Ref
  * @returns the index page
  */
 export function buildCheckIndex(
-    checks: ReturnType<typeof referenceData>['checks'],
+    checks: ReturnType<typeof readReferenceData>['checks'],
     groups: Record<string, string>,
 ): ReferencePage {
     return buildReferencePage(

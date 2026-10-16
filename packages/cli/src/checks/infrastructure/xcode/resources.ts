@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { camelCase } from 'scule';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { safeParseJson } from '#cli/parsers/json.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
+import { parseJsonResult } from '#cli/parsers/json.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listSourcePaths } from '#cli/repository/coverage.ts';
@@ -63,7 +63,7 @@ export function checkXcodeAssets(input: CheckInput): Finding[] {
     return listSourcePaths(input.files, [ASSET_CONTENTS])
         .filter((path) => path.includes(XCASSETS_FOLDER))
         .flatMap((path) => {
-            const read = safeParseJson(readCachedBytes(input.reads, path).toString('utf8'), assetContentsSchema);
+            const read = parseJsonResult(readCachedBytes(input.reads, path).toString('utf8'), assetContentsSchema);
             const at = { file: path, line: 1 };
             if ('error' in read) return [buildFinding(input, at, 'syntax', read.error)];
             if (!path.endsWith(IMAGE_SET)) return [];
@@ -118,7 +118,7 @@ export function checkXcodeUnusedAssets(input: CheckInput): Finding[] {
  */
 export function checkXcstrings(input: CheckInput): Finding[] {
     return listSourcePaths(input.files, [XCSTRINGS_SUFFIX]).flatMap((path) => {
-        const read = safeParseJson(readCachedBytes(input.reads, path).toString('utf8'), stringsFileSchema);
+        const read = parseJsonResult(readCachedBytes(input.reads, path).toString('utf8'), stringsFileSchema);
         const at = { file: path, line: 1 };
         if ('error' in read) return [buildFinding(input, at, 'syntax', read.error)];
         const strings = read.value;

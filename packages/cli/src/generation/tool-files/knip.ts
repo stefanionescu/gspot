@@ -9,7 +9,7 @@ import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
-import { globSections, ignoreSections, settingsSections } from '#cli/generation/ignore-files.ts';
+import { buildGlobSections, buildIgnoreSections, buildSettingsSections } from '#cli/generation/ignore-files.ts';
 
 import {
     KNIP_IGNORED,
@@ -89,9 +89,9 @@ function buildKnipFile(context: ToolFileContext): string {
     const { extra } = selection.view;
     const options = selection.view.options('tools.knip');
     const scanner = selection.view.options('dependencies').bun_scanner;
-    const ignoredPaths = globSections([
-        ...ignoreSections(context.session),
-        ...settingsSections(context.selection.view, 'javascript/knip'),
+    const ignoredPaths = buildGlobSections([
+        ...buildIgnoreSections(context.session),
+        ...buildSettingsSections(context.selection.view, 'javascript/knip'),
     ]);
     const pointers = scopes.flatMap((selection) =>
         selection.selected.flatMap((manifest) =>

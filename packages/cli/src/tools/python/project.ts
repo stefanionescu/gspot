@@ -13,13 +13,13 @@ import type { InstallContext } from '#cli/types/install.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
-import { lockfileResult } from '#cli/tools/project-lockfiles.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
+import { buildLockfileResult } from '#cli/tools/project-lockfiles.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { normalizePythonPackage } from '#cli/parsers/dependency-files.ts';
 import { parsePythonSettings, writePythonSettings } from '#cli/tools/python/settings.ts';
@@ -169,7 +169,7 @@ async function preparePythonLockfile(context: InstallContext, manifest: Generate
             credentials,
             new GspotError('installation', UV_LOCKFILE_CREDENTIAL_MESSAGE),
         );
-        return lockfileResult(UV_LOCKFILE, recorded, original);
+        return buildLockfileResult(UV_LOCKFILE, recorded, original);
     }
     using scratch = createScratchFolder();
     const work = scratch.path;
@@ -183,7 +183,7 @@ async function preparePythonLockfile(context: InstallContext, manifest: Generate
         executable,
         credentials,
     });
-    return lockfileResult(UV_LOCKFILE, readPythonLockfile(work, credentials, project), original);
+    return buildLockfileResult(UV_LOCKFILE, readPythonLockfile(work, credentials, project), original);
 }
 
 /**

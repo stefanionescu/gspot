@@ -1,6 +1,6 @@
 import { openSession } from '#cli/session.ts';
 import { findRoot } from '#cli/repository/read.ts';
-import { scopeLabel } from '#cli/system/terminal.ts';
+import { formatScopeLabel } from '#cli/system/terminal.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
@@ -66,7 +66,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
     for (const configuration of selected) {
         lines.push(`  ${configuration.name}`);
         for (const [name, checks] of Map.groupBy(configuration.checks, (check) => check.name)) {
-            const states = checks.map((check) => `${scopeLabel(check.scope)}: ${check.state}`);
+            const states = checks.map((check) => `${formatScopeLabel(check.scope)}: ${check.state}`);
             lines.push(`    ${name}  ${states.join(', ')}`);
         }
     }

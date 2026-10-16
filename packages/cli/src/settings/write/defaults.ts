@@ -13,7 +13,7 @@ import { findDeclaration, getSettingValue } from '#cli/settings/inherit.ts';
 import { detectDefaults, buildKnownSettings } from '#cli/settings/known.ts';
 import { type Settings, type WrittenTable } from '#cli/types/settings/values.ts';
 
-function changesInheritedValue(
+function isInheritedValueChanged(
     name: string,
     key: string,
     segments: string[],
@@ -61,7 +61,7 @@ function dropTableDefaults(
         fields
             .filter(({ declaration }) => declaration !== undefined)
             .flatMap(({ name, value, key, segments }) => {
-                return changesInheritedValue(name, key, segments, writtenTable, tables, settings)
+                return isInheritedValueChanged(name, key, segments, writtenTable, tables, settings)
                     ? [[name, value]]
                     : [];
             }),

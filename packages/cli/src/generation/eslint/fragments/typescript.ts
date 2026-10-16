@@ -9,9 +9,9 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildTypescriptFragment(
-    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'json' | 'eslint'>,
+    context: Pick<EslintContext, 'eslintPresets' | 'blockWriter' | 'eslintFiles' | 'json' | 'eslint'>,
 ): EslintFragment {
-    const { eslintPresets, eslintModule, eslintFiles, json, eslint } = context;
+    const { eslintPresets, blockWriter, eslintFiles, json, eslint } = context;
 
     const imports: string[] = [
         "import tseslint from 'typescript-eslint';",
@@ -22,7 +22,7 @@ function buildTypescriptFragment(
     const presets = eslintPresets.get('typescript') as FragmentPresets;
     output.push(
         serializeBlocks(
-            eslintModule,
+            blockWriter,
             buildPresetBlocks(presets.strict, 'tseslint', ({ parser, ...block }, index, source) => [
                 { ...block, files: parser ? eslintFiles.typescriptSource : eslintFiles.typescript },
                 `...${source}[${String(index)}]`,
@@ -37,12 +37,12 @@ function buildTypescriptFragment(
 
     output.push(
         '\n',
-        eslintModule.block(
+        blockWriter.block(
             { files: eslintFiles.typescript, rules: TYPESCRIPT_RULES },
             `plugins: { '@typescript-eslint': tseslint.plugin }, languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } }, settings: { 'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] }, 'import-x/resolver-next': [createTypeScriptImportResolver({ project: ${json(projects)}.map((project) => join(root, project)) })] }`,
         ),
         ',\n',
-        eslintModule.block({
+        blockWriter.block({
             files: eslintFiles.tests,
             rules: TYPESCRIPT_TEST_RULES_OFF,
         }),

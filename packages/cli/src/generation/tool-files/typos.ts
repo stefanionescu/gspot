@@ -4,7 +4,7 @@ import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { IGNORE_SECTION_TITLES } from '#cli/config/generation/ignore-files.ts';
-import { globSections, ignoreSections, settingsSections } from '#cli/generation/ignore-files.ts';
+import { buildGlobSections, buildIgnoreSections, buildSettingsSections } from '#cli/generation/ignore-files.ts';
 
 import {
     type IgnoreSection,
@@ -50,8 +50,8 @@ function buildTyposSections(context: ToolFileContext): IgnoreSection[] {
     );
     const excludedFormats = TYPOS_EXCLUDED_FILES.filter((path) => !excludedLockfiles.includes(path));
     const sections = [
-        ...ignoreSections(context.session),
-        ...settingsSections(context.selection.view, 'spelling/typos'),
+        ...buildIgnoreSections(context.session),
+        ...buildSettingsSections(context.selection.view, 'spelling/typos'),
     ].map((section) => {
         if (section.title === IGNORE_SECTION_TITLES.lockfiles)
             return {
@@ -67,7 +67,7 @@ function buildTyposSections(context: ToolFileContext): IgnoreSection[] {
     const seen = new Set<string>();
     const grouped: IgnoreSection[] = sections.map((section) => ({
         ...section,
-        patterns: globSections([section]).filter((path) => {
+        patterns: buildGlobSections([section]).filter((path) => {
             if (seen.has(path)) return false;
             seen.add(path);
             return true;

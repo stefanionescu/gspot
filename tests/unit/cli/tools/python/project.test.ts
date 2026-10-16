@@ -21,7 +21,7 @@ import {
 } from '#tests/data/tools/python-tool-project.ts';
 
 /** Resolve the selected Python version in the shared installed-project arrangement. */
-function pythonProjectFiles(): Record<string, string> {
+function buildPythonProjectFiles(): Record<string, string> {
     return {
         'gspot.toml': buildSettingsText([]),
         '.gspot/pyproject.toml': PYTHON_TOOL_PROJECT.replaceAll('{python-version}', PYTHON_VERSION),
@@ -32,7 +32,7 @@ function pythonProjectFiles(): Record<string, string> {
 
 test.each(['venv', 'sync'])('a failed uv %s can be repaired and hides index passwords', async (step) => {
     await using repository = await testdir();
-    await createFileTree(repository.path, pythonProjectFiles());
+    await createFileTree(repository.path, buildPythonProjectFiles());
     const calls: string[][] = [];
     using _boundary = fakeCommand('unavailable-uv', (command) => {
         calls.push([...command]);
@@ -67,7 +67,7 @@ test.each(['venv', 'sync'])('a failed uv %s can be repaired and hides index pass
 
 test('a successful uv run refuses a password in its new lockfile and keeps the tool project files', async () => {
     await using repository = await testdir();
-    await createFileTree(repository.path, pythonProjectFiles());
+    await createFileTree(repository.path, buildPythonProjectFiles());
     using boundary = fakeCommand('synthetic-uv', async (_command, options) => {
         await writeFile(
             join(options.cwd, 'uv.lock'),

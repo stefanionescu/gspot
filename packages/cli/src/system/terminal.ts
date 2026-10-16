@@ -27,7 +27,7 @@ function printJson(record: unknown): void {
  * Read the palette for the configured command output.
  * @returns the enabled or disabled color functions.
  */
-function colors(): ReturnType<typeof pc.createColors> {
+function getColors(): ReturnType<typeof pc.createColors> {
     return pc.createColors(options.color);
 }
 
@@ -54,7 +54,7 @@ function setOutputOptions(next: OutputOptions): void {
  * @param text the line
  */
 function warn(text: string): void {
-    process.stderr.write(`${colors().yellow('[warn]')} ${text}\n`);
+    process.stderr.write(`${getColors().yellow('[warn]')} ${text}\n`);
 }
 
 /**
@@ -145,7 +145,7 @@ function printFailure(error: unknown, output: Pick<OutputOptions, 'json'>): numb
  * @param path the repository-relative scope path.
  * @returns the root label or the supplied child path.
  */
-function scopeLabel(path: string): string {
+function formatScopeLabel(path: string): string {
     return path === '' ? ROOT_SCOPE_LABEL : path;
 }
 
@@ -189,12 +189,12 @@ async function runCancelableCommand<Json extends object>(
 export {
     warn,
     print,
-    colors,
-    scopeLabel,
+    getColors,
     printResult,
     formatNotes,
     printFailure,
     isColorAllowed,
+    formatScopeLabel,
     setOutputOptions,
     runCancelableCommand,
 };

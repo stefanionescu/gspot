@@ -112,7 +112,7 @@ export type IgnoreSection = { title: string; patterns: string[] };
 export type ToolFileSelection = { toolFile: ToolFileDeclaration; owner: ToolFileInputs };
 
 /** A whole-file declaration with the text built for one selected scope. */
-export type ToolFileOutput = ToolFileSelection & { toolFile: WholeToolFile; file: GeneratedFile };
+export type ToolFileContent = ToolFileSelection & { toolFile: WholeToolFile; file: GeneratedFile };
 
 /** The mutable destinations and output files collected during one generation. */
 export type ToolFileGenerationState = { targets: Map<string, Map<string, string>>; files: Map<string, GeneratedFile> };

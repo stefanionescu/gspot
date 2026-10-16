@@ -14,9 +14,9 @@ import {
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildNextjsFragment(
-    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'scope' | 'files' | 'json'>,
+    context: Pick<EslintContext, 'eslintPresets' | 'blockWriter' | 'eslintFiles' | 'scope' | 'files' | 'json'>,
 ): EslintFragment {
-    const { eslintPresets, eslintModule, eslintFiles, scope, files, json } = context;
+    const { eslintPresets, blockWriter, eslintFiles, scope, files, json } = context;
 
     const imports: string[] = [
         "import nextPlugin from '@next/eslint-plugin-next';",
@@ -29,7 +29,7 @@ function buildNextjsFragment(
     const hasPages = files('').some((path) => NEXT_PAGES_FOLDERS.some((folder) => path.startsWith(prefix + folder)));
     output.push(
         '\n',
-        eslintModule.block(
+        blockWriter.block(
             {
                 files: JSX_CODE_FILES,
                 rules: {
@@ -48,7 +48,7 @@ function buildNextjsFragment(
             },
         ),
         ',\n',
-        eslintModule.block({
+        blockWriter.block({
             files: NEXT_SERVER_FILES.flatMap((place) => eslintFiles.code.map((pattern) => [place, pattern])),
             rules: { 'gspot/require-server-only': NEXT_RULES['gspot/require-server-only'] },
         }),

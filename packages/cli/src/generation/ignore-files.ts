@@ -111,7 +111,7 @@ function moveIgnorePatterns(patterns: string[], scope: string): string[] {
 }
 
 // Collect the generated destinations and pointers that external scanners must leave alone.
-function collectToolExclusions(session: Parameters<typeof ignoreSections>[0]): string[] {
+function collectToolExclusions(session: Parameters<typeof buildIgnoreSections>[0]): string[] {
     const { repository, scopes } = session;
     const needed = new Set(session.neededToolManifests.map((manifest) => manifest.configuration.name));
     return scopes.flatMap((selection) =>
@@ -133,7 +133,7 @@ function collectToolExclusions(session: Parameters<typeof ignoreSections>[0]): s
  * @param session the repository inventory, selected configurations, and effective settings.
  * @returns the ordered build, tool, generated, dependency, lockfile, and environment exclusions.
  */
-function ignoreSections(
+function buildIgnoreSections(
     session: Pick<Session, 'reads' | 'repository' | 'scopes' | 'neededToolManifests'>,
 ): IgnoreSection[] {
     const { reads, repository, scopes } = session;
@@ -155,7 +155,7 @@ function ignoreSections(
                         usesSemgrep ||
                         repository.files.some((file) =>
                             buildPathMatcher(
-                                globSections([{ title: IGNORE_SECTION_TITLES.build, patterns: [pattern] }]),
+                                buildGlobSections([{ title: IGNORE_SECTION_TITLES.build, patterns: [pattern] }]),
                             )(file.path),
                         ),
                 ),
@@ -193,7 +193,7 @@ function ignoreSections(
  * @param check the check that supplies whole-file path exclusions.
  * @returns the check-wide path exclusions with their reasons.
  */
-function settingsSections(view: ScopeView, check: string): IgnoreSection[] {
+function buildSettingsSections(view: ScopeView, check: string): IgnoreSection[] {
     return view
         .ignoresFor(check)
         .filter(({ rule }) => rule === undefined)
@@ -241,7 +241,7 @@ function ignoreFileText(options: { sections: IgnoreSection[]; scope: string; pur
  * @param sections the ordered exclusion groups and their written reasons.
  * @returns the equivalent deduplicated glob selectors.
  */
-function globSections(sections: IgnoreSection[]): string[] {
+function buildGlobSections(sections: IgnoreSection[]): string[] {
     const patterns = sections.flatMap((section) => section.patterns);
     return [
         ...new Set(
@@ -266,7 +266,10 @@ function globSections(sections: IgnoreSection[]): string[] {
  */
 function buildPrettierignore(context: ToolFileContext): string {
     return ignoreFileText({
-        sections: [...ignoreSections(context.session), ...settingsSections(context.selection.view, 'format/prettier')],
+        sections: [
+            ...buildIgnoreSections(context.session),
+            ...buildSettingsSections(context.selection.view, 'format/prettier'),
+        ],
         scope: dirname(context.targetPath) === '.' ? '' : dirname(context.targetPath),
         purpose: IGNORE_FILE_PURPOSES.prettier,
     });
@@ -279,10 +282,13 @@ function buildPrettierignore(context: ToolFileContext): string {
  */
 function buildSemgrepignore(context: ToolFileContext): string {
     return ignoreFileText({
-        sections: [...ignoreSections(context.session), ...settingsSections(context.selection.view, 'security/semgrep')],
+        sections: [
+            ...buildIgnoreSections(context.session),
+            ...buildSettingsSections(context.selection.view, 'security/semgrep'),
+        ],
         scope: dirname(context.targetPath) === '.' ? '' : dirname(context.targetPath),
         purpose: IGNORE_FILE_PURPOSES.semgrep,
     });
 }
 
-export { globSections, ignoreSections, settingsSections, buildSemgrepignore, buildPrettierignore };
+export { buildGlobSections, buildSemgrepignore, buildIgnoreSections, buildPrettierignore, buildSettingsSections };

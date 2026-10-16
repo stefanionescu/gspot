@@ -26,7 +26,7 @@ export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<s
 export type EslintRuleOptions = PathExpressions & { scope: string; rules: NonNullable<EslintSettings['rules']> };
 
 /** Generated rule blocks retain their level, project paths, and your own options. */
-export type EslintModuleInput = {
+export type BlockWriterInput = {
     source: string;
     allRules: EslintAllRules;
     isAll: boolean;
@@ -110,7 +110,7 @@ export type EslintSettingsBlock = {
 };
 
 /** The actual default blocks and an emitter bound to the owning scope. */
-export type EslintModule = {
+export type BlockWriter = {
     block: (block: EslintSettingsBlock, runtime?: string, preset?: EslintRuleExpression) => string;
 };
 
@@ -171,7 +171,7 @@ export type EslintContext = {
     nodeFiles: string[];
     ruleOptions: EslintRuleOptions[];
     eslint: EslintParts;
-    eslintModule: EslintModule;
+    blockWriter: BlockWriter;
     eslintFiles: EslintFiles;
     settingsBlocks: EslintRuleBlock[];
     eslintAllRules: Set<string>;

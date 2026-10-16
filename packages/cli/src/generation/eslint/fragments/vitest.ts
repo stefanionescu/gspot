@@ -7,16 +7,16 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildVitestFragment(
-    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'testRuleNames'>,
+    context: Pick<EslintContext, 'eslintPresets' | 'blockWriter' | 'eslintFiles' | 'testRuleNames'>,
 ): EslintFragment {
-    const { eslintPresets, eslintModule, eslintFiles, testRuleNames } = context;
+    const { eslintPresets, blockWriter, eslintFiles, testRuleNames } = context;
 
     const imports: string[] = ["import vitest from '@vitest/eslint-plugin';"];
 
     const output: string[] = ['\n'];
     const preset = (eslintPresets.get('vitest') as FragmentPresets).recommended;
     output.push(
-        eslintModule.block(
+        blockWriter.block(
             {
                 files: eslintFiles.tests,
                 rules: {

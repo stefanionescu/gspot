@@ -1,7 +1,7 @@
 import { quoteArgument } from '#cli/system/text.ts';
-import { scopeLabel } from '#cli/system/terminal.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { formatScopeLabel } from '#cli/system/terminal.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { readCachedPrefix } from '#cli/system/files/reads.ts';
@@ -42,7 +42,7 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
                 return [
                     {
                         configuration: id,
-                        evidence: `no detection evidence in ${scopeLabel(path)}`,
+                        evidence: `no detection evidence in ${formatScopeLabel(path)}`,
                         command: `gspot remove ${id}${scopeArgument} (if you no longer need it)`,
                     },
                 ];

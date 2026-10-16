@@ -69,7 +69,7 @@ function matchColonToken(text: string, at: number): Omit<SqlToken, 'start'> | un
 }
 
 // The reader for each character that can start a lexeme.
-function quotedAt(text: string, at: number): Omit<SqlToken, 'start'> {
+function matchQuotedToken(text: string, at: number): Omit<SqlToken, 'start'> {
     return { end: findDoubledQuoteEnd(text, at + 1, text[at] ?? ''), kind: 'other' };
 }
 
@@ -82,8 +82,8 @@ const READERS: Record<string, (text: string, at: number) => Omit<SqlToken, 'star
     },
     E: matchEscapedString,
     e: matchEscapedString,
-    "'": quotedAt,
-    '"': quotedAt,
+    "'": matchQuotedToken,
+    '"': matchQuotedToken,
     $: matchDollarTag,
     '\\': (text: string, at: number): Omit<SqlToken, 'start'> => {
         return { end: findLineEnd(text, at, '\r\n'), kind: 'command' };

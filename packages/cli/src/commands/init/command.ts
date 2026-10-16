@@ -10,10 +10,10 @@ import { generate } from '#cli/generation/generate.ts';
 import { planDeletion } from '#cli/ownership/plans.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { listExpectedPaths } from '#cli/apply/stale.ts';
-import { print, colors } from '#cli/system/terminal.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { readTemplate } from '#cli/settings/templates.ts';
 import { type Command } from '@commander-js/extra-typings';
+import { print, getColors } from '#cli/system/terminal.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { type FileContents } from '#cli/types/system/files.ts';
@@ -71,7 +71,7 @@ async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJ
         const template = await readTemplate(options.from, options.cwd);
         effective = { ...options, template };
     }
-    const prepared = await printInitPlan(root, effective);
+    const prepared = await planInit(root, effective);
     const { plan, settingsText } = prepared;
     print(formatDetection(prepared.detection));
     print(formatInitPlan(plan));
@@ -135,7 +135,7 @@ function registerInit(program: Command, onResult: CommandCompletion): void {
  * @param options the init options, with a template's answers folded in
  * @returns the plan, the settings text, and the files it read
  */
-async function printInitPlan(repositoryRoot: string, options: InitOptions): Promise<InitPrepared> {
+async function planInit(repositoryRoot: string, options: InitOptions): Promise<InitPrepared> {
     const reads = createReadCache(repositoryRoot);
     const manifests = readManifests(reads);
     const repository = await readRepository(reads, { declarations: [], scopes: [], manifests });
@@ -246,7 +246,7 @@ function writeInitFiles(repositoryRoot: string, prepared: InitPrepared): string[
         prepared.read,
     );
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
-    const version = colors().dim(`gspot ${session.version}`);
+    const version = getColors().dim(`gspot ${session.version}`);
     return [
         'written: gspot.toml, .gspot/',
         ...applied.notes.filter((note) => !INIT_INSTALL_NOTES.has(note)),

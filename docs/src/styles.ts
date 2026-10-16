@@ -2,7 +2,7 @@ import { PurgeCSS } from 'purgecss';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { referenceData } from '#cli/reference.ts';
+import { readReferenceData } from '#cli/reference.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { glob, rename, readFile, writeFile } from 'node:fs/promises';
 
@@ -25,7 +25,7 @@ import {
  * @returns after writing the styles and their references.
  */
 export async function pruneUnusedStyles(siteFolder: URL): Promise<void> {
-    const { extractor, tokenEnd, pseudoClasses } = referenceData().styles;
+    const { extractor, tokenEnd, pseudoClasses } = readReferenceData().styles;
     // Include utility class separators, but discard a JavaScript property's trailing colon.
     function extractStyleTokens(content: string): string[] {
         return [...content.matchAll(extractor)]

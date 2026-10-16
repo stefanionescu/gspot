@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { openSession } from '#cli/session.ts';
-import { colors } from '#cli/system/terminal.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { findRoot } from '#cli/repository/read.ts';
+import { getColors } from '#cli/system/terminal.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { readHookStatus } from '#cli/apply/hooks.ts';
 import { type Session } from '#cli/types/planning.ts';
@@ -46,7 +46,7 @@ function formatTools(tools: ToolInspection[]): string[] {
     return tools.map((tool) => {
         const isBroken = !isToolAvailable(tool);
         const tail = isBroken ? [tool.note, tool.hint].filter((part) => part !== undefined).join(' ') : tool.path;
-        const label = colors()[TOOL_STATE_COLORS[tool.state]](tool.state.padEnd(COLUMN_WIDTHS.label));
+        const label = getColors()[TOOL_STATE_COLORS[tool.state]](tool.state.padEnd(COLUMN_WIDTHS.label));
         return `  ${label} ${formatToolVersion(tool).padEnd(width)} ${tail}`.trimEnd();
     });
 }

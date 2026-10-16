@@ -105,7 +105,7 @@ function buildSelectedFragments(
                 scope,
                 testFiles: selection.view.test_files,
                 scopeDependencies: Object.keys(getProjectDependencies(session.dependencyFiles, scope)),
-                eslintModule: module,
+                blockWriter: module,
                 eslintFiles: {
                     ...inputs.eslintFiles,
                     tests: selection.view.test_files.flatMap((test) =>

@@ -2,11 +2,11 @@ import { openSession } from '#cli/session.ts';
 import { readAsset } from '#cli/system/assets.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { scopeLabel } from '#cli/system/terminal.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { formatScopeLabel } from '#cli/system/terminal.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
@@ -89,7 +89,7 @@ function formatSettingScope(key: string, declaration: SettingDeclaration, entry:
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
     return [
         '',
-        `Scope: ${scopeLabel(scope)}`,
+        `Scope: ${formatScopeLabel(scope)}`,
         `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
         `Current value: ${JSON.stringify(value)} (from ${source})`,
         ...(value !== undefined && isLoosening(declaration, value, shipped)

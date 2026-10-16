@@ -17,8 +17,8 @@ import { getCachedValue, getCachedMapValue } from '#cli/system/files/cache.ts';
 import { listFragmentConfigurations } from '#cli/generation/eslint/fragments/build.ts';
 import { buildFilePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
 import { listScriptPaths, buildRuntimeBlocks } from '#cli/generation/eslint/runtimes.ts';
-import { globSections, ignoreSections, settingsSections } from '#cli/generation/ignore-files.ts';
 import type { EslintParts, EslintFacts, EslintPresets, EslintContext } from '#cli/types/generation/eslint.ts';
+import { buildGlobSections, buildIgnoreSections, buildSettingsSections } from '#cli/generation/ignore-files.ts';
 
 import {
     buildImportStyleBlocks,
@@ -67,9 +67,9 @@ function buildEslintFacts({ session, selection }: ToolFileContext): EslintFacts 
         repositorySettings: session.settingsFile.settings,
         selection,
         nodeFiles,
-        generatedPatterns: globSections([
-            ...ignoreSections(session),
-            ...settingsSections(selection.view, 'javascript/eslint'),
+        generatedPatterns: buildGlobSections([
+            ...buildIgnoreSections(session),
+            ...buildSettingsSections(selection.view, 'javascript/eslint'),
         ]),
     };
 }
@@ -162,7 +162,7 @@ function buildEslintContext(input: ToolFileContext): EslintContext {
             ...buildIgnoreBlocks(repositorySettings),
         ],
         eslintAllRules: allRules,
-        eslintModule: createBlockWriter({
+        blockWriter: createBlockWriter({
             source: 'JavaScript and repository settings',
             allRules,
             isAll: repositorySettings.level === 'all',

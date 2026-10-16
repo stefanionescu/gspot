@@ -1,8 +1,8 @@
 import type { Loader } from 'astro/loaders';
 import { buildCommandPages } from './commands.ts';
-import { referenceData } from '#cli/reference.ts';
 import { buildSettingsPages } from './settings.ts';
 import { buildPluginPages } from './eslint-plugin.ts';
+import { readReferenceData } from '#cli/reference.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import type { ReferencePage } from '../types/reference.ts';
 import { buildCheckPage, buildCheckIndex } from './checks.ts';
@@ -21,7 +21,7 @@ import {
  * @returns pages keyed by their Markdown path
  */
 function buildReferencePages(): Map<string, ReferencePage> {
-    const data = referenceData();
+    const data = readReferenceData();
     const pages = new Map([
         ...buildCommandPages(data.commands),
         ...buildConfigurationPages(data),

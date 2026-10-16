@@ -129,7 +129,7 @@ function readSingleExpression(body: ts.ConciseBody): ts.Expression | undefined {
     return undefined;
 }
 
-function forwardedExpression(body: ts.ConciseBody): ts.Expression | undefined {
+function findForwardedExpression(body: ts.ConciseBody): ts.Expression | undefined {
     const expression = readSingleExpression(body);
     if (expression === undefined) return undefined;
     const operations = listTypescriptNodes(expression);
@@ -139,7 +139,7 @@ function forwardedExpression(body: ts.ConciseBody): ts.Expression | undefined {
         : expression;
 }
 
-function exportedFindings(
+function checkModuleExports(
     input: CheckInput,
     program: ts.Program,
     importers: Map<ts.Symbol, Set<string>>,
@@ -156,7 +156,7 @@ function exportedFindings(
         if (
             callable === undefined ||
             convertToPosixPath(relative(input.root, callable.getSourceFile().fileName)) !== path ||
-            forwardedExpression(callable.body as ts.ConciseBody) === undefined
+            findForwardedExpression(callable.body as ts.ConciseBody) === undefined
         )
             return [];
         const name = symbol.getName() === 'export=' ? 'The default export' : symbol.getName();
@@ -193,6 +193,11 @@ export function checkExportedFunctions(input: CheckInput): Finding[] {
     return sources
         .filter(({ path }) => selected.has(path))
         .flatMap(({ path }) =>
-            exportedFindings(input, program, importers, program.getSourceFile(join(input.root, path)) as ts.SourceFile),
+            checkModuleExports(
+                input,
+                program,
+                importers,
+                program.getSourceFile(join(input.root, path)) as ts.SourceFile,
+            ),
         );
 }

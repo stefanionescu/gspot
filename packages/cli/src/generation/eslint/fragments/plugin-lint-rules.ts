@@ -13,7 +13,7 @@ function buildLintRuleFragment(context: EslintContext, configuration: string): E
     return {
         imports: [...declaration.imports],
         blocks:
-            context.eslintModule.block(
+            context.blockWriter.block(
                 {
                     files: declaration.files === 'code' ? context.eslintFiles.code : declaration.files,
                     ...(declaration.ignores === undefined ? {} : { ignores: context[declaration.ignores] }),

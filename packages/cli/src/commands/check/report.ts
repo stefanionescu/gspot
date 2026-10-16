@@ -1,6 +1,6 @@
 import { formatCount } from '#cli/system/text.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { warn, colors } from '#cli/system/terminal.ts';
+import { warn, getColors } from '#cli/system/terminal.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { Finding, RunReport, FixReport, CheckResult, CheckProgress } from '#cli/types/checks/run/check.ts';
@@ -71,10 +71,11 @@ function formatLocation(finding: Finding): string {
 
 // Shared help follows the last finding that needs it.
 function formatFinding(finding: Finding, next?: Finding): string[] {
-    const rule = finding.rule === undefined || finding.rule === finding.check ? '' : `${colors().cyan(finding.rule)}  `;
+    const rule =
+        finding.rule === undefined || finding.rule === finding.check ? '' : `${getColors().cyan(finding.rule)}  `;
     const lines = [`  ${formatLocation(finding)}${rule}${finding.message}`];
     if (finding.help !== undefined && finding.help !== '' && next?.help !== finding.help)
-        lines.push(`  ${colors().dim('help:')} ${finding.help}`);
+        lines.push(`  ${getColors().dim('help:')} ${finding.help}`);
     return lines;
 }
 
@@ -90,20 +91,20 @@ function formatCheckFindings(findings: readonly Finding[], verbose: boolean): st
     const hidden = findings.length - shown.length;
     if (hidden > 0) {
         const message = `and ${String(hidden)} more (--verbose prints every finding)`;
-        lines.push(`  ${colors().dim(message)}`);
+        lines.push(`  ${getColors().dim(message)}`);
     }
     return lines;
 }
 
 function formatCheck(check: CheckResult, { verbose }: { verbose: boolean }): string[] {
-    const status = colors()[CHECK_STATUS_COLORS[check.status]](check.status);
+    const status = getColors()[CHECK_STATUS_COLORS[check.status]](check.status);
     const scope = check.scope === '' ? '' : `${check.scope}  `;
     const tail = formatCheckTail(check);
     const lines = [`${scope}${check.check}  ${status}  ${tail}`.trimEnd()];
-    if (verbose && check.command) lines.push(`  ${colors().dim('$ ' + check.command.join(' '))}`);
+    if (verbose && check.command) lines.push(`  ${getColors().dim('$ ' + check.command.join(' '))}`);
     if (check.status === 'failed') lines.push(...formatCheckFindings(check.findings, verbose));
     if ((check.status === 'failed' || check.status === 'error') && check.reproduce !== undefined)
-        lines.push(`  ${colors().dim('run again:')} ${check.reproduce}`);
+        lines.push(`  ${getColors().dim('run again:')} ${check.reproduce}`);
     return lines;
 }
 
@@ -113,7 +114,7 @@ function formatIgnores(report: RunReport, { verbose }: { verbose: boolean }): st
     return report.ignores.map((ignore) => {
         const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
         const paths = ignore.paths === undefined ? '' : ` ${ignore.paths.join(' ')}`;
-        return `ignore     ${ignore.check}${rule}${paths}  ${ignore.reason === undefined ? '' : colors().dim(ignore.reason)}  (${String(ignore.matched)} matched)`;
+        return `ignore     ${ignore.check}${rule}${paths}  ${ignore.reason === undefined ? '' : getColors().dim(ignore.reason)}  (${String(ignore.matched)} matched)`;
     });
 }
 
@@ -133,7 +134,7 @@ function formatSummary(report: RunReport): string {
         );
     parts.push(`Passed: ${formatCount(passed, 'check')}.`, `Skipped: ${formatCount(skipped, 'check')}.`);
     const text = parts.join(' ');
-    return report.exitCode === 0 ? text : colors().red(text);
+    return report.exitCode === 0 ? text : getColors().red(text);
 }
 
 function formatComparison(comparison: RunReport['comparison']): string {

@@ -1,7 +1,7 @@
 import { JSCPD_IGNORED } from '#cli/config/generation/tool-files.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
-import { globSections, ignoreSections, settingsSections } from '#cli/generation/ignore-files.ts';
+import { buildGlobSections, buildIgnoreSections, buildSettingsSections } from '#cli/generation/ignore-files.ts';
 /**
  * Build jscpd file from the selected settings.
  * @param context the repository, scope settings, tool declaration, and output path.
@@ -19,9 +19,9 @@ function buildJscpdFile(context: ToolFileContext): string {
             gitignore: true,
             ignore: [
                 ...JSCPD_IGNORED,
-                ...globSections([
-                    ...ignoreSections(context.session),
-                    ...settingsSections(context.selection.view, 'duplication/jscpd'),
+                ...buildGlobSections([
+                    ...buildIgnoreSections(context.session),
+                    ...buildSettingsSections(context.selection.view, 'duplication/jscpd'),
                 ]),
             ],
         },

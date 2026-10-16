@@ -7,15 +7,15 @@ import { type EslintContext, type EslintFragment } from '#cli/types/generation/e
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildJestFragment(
-    context: Pick<EslintContext, 'eslintModule' | 'eslintFiles' | 'testRuleNames'>,
+    context: Pick<EslintContext, 'blockWriter' | 'eslintFiles' | 'testRuleNames'>,
 ): EslintFragment {
-    const { eslintModule, eslintFiles, testRuleNames } = context;
+    const { blockWriter, eslintFiles, testRuleNames } = context;
 
     const imports: string[] = ["import jest from 'eslint-plugin-jest';"];
 
     const output: string[] = [
         '\n',
-        eslintModule.block(
+        blockWriter.block(
             {
                 files: eslintFiles.tests,
                 rules: {

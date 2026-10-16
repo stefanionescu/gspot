@@ -3,12 +3,12 @@ import { join, posix } from 'node:path';
 import { visit } from 'unist-util-visit';
 import { statSync, readdirSync } from 'node:fs';
 import { parseJsonFile } from '#cli/parsers/json.ts';
-import { scopeLabel } from '#cli/system/terminal.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { parseMiseTasks } from '#cli/parsers/mise.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
+import { formatScopeLabel } from '#cli/system/terminal.ts';
 import { TRAILING_SLASH } from '#cli/config/system/paths.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
@@ -253,7 +253,7 @@ export function checkDocsRequiredFiles(input: CheckInput): Finding[] {
                 input,
                 { file: readme },
                 'missing-readme',
-                `The scope ${scopeLabel(input.scope.scope.path)} has no README.md.`,
+                `The scope ${formatScopeLabel(input.scope.scope.path)} has no README.md.`,
             ),
         );
     if (

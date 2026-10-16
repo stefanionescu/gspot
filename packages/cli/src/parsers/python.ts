@@ -158,7 +158,7 @@ function importNames(node: Node): EnvironmentScope {
 }
 
 // Calculate import identities and lexical declarations once for each source.
-function pythonNames(root: Node): EnvironmentNames {
+function collectPythonNames(root: Node): EnvironmentNames {
     const entries: EnvironmentNames = new Map();
     const nodes = [
         ...root.descendantsOfType([...PYTHON_IMPORT_NODES]),
@@ -183,7 +183,7 @@ function pythonNames(root: Node): EnvironmentNames {
 }
 
 // Resolve lexical imports before applying the environment read rule.
-function environmentKind(node: Node, name: string, entries: EnvironmentNames): EnvironmentKind {
+function findEnvironmentKind(node: Node, name: string, entries: EnvironmentNames): EnvironmentKind {
     for (
         let scope: Node | null = findDeclarationScope(node);
         scope !== null;
@@ -206,10 +206,10 @@ function readReceiver(node: Node): Node | null {
 }
 
 // Find Python os environment objects and calls.
-function pythonEnvironment(node: Node, entries: EnvironmentNames, environment: Set<number>): boolean {
+function isPythonEnvironmentRead(node: Node, entries: EnvironmentNames, environment: Set<number>): boolean {
     const receiver = readReceiver(node);
     if (receiver?.type !== 'identifier') return false;
-    const kind = environmentKind(node, receiver.text, entries);
+    const kind = findEnvironmentKind(node, receiver.text, entries);
     if (kind === OS_MODULE) return environment.has(node.id);
     if (kind === 'getenv') return node.type === 'call';
     return kind === 'environ';
@@ -223,7 +223,7 @@ function isEnvironmentRead(
 ): boolean {
     if (node.type === 'call' && readers.includes(node.childForFieldName('function')?.text ?? '')) return true;
     if (node.type === 'identifier' && node.parent?.type !== 'subscript') return false;
-    return pythonEnvironment(node, entries, environment);
+    return isPythonEnvironmentRead(node, entries, environment);
 }
 
 function expandEnvironmentExpression(node: Node): Node {
@@ -248,7 +248,7 @@ function readEnvironmentLiteral(node: Node): Node | null | undefined {
  * @returns the environment reads and their source positions.
  */
 function readPythonEnvironment(syntaxRoot: Node, readers: readonly string[]): EnvironmentRead[] {
-    const entries = pythonNames(syntaxRoot);
+    const entries = collectPythonNames(syntaxRoot);
     const nodes = syntaxRoot.descendantsOfType(['attribute', 'call', 'identifier']);
     const environment = new Set(
         nodes

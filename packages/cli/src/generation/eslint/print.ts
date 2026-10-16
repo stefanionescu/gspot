@@ -7,7 +7,7 @@ import { ESLINT_INDENT, ESLINT_BASE_IMPORTS } from '#cli/config/generation/eslin
 
 import type {
     EslintParts,
-    EslintModule,
+    BlockWriter,
     EslintPlugins,
     EslintFileSelector,
     EslintSettingsBlock,
@@ -188,7 +188,7 @@ function serializeImports(plugins: EslintPlugins, fragments: string): string {
  *
  * @returns the serialized ESLint blocks.
  */
-function serializeBlocks(module: EslintModule, blocks: Parameters<EslintModule['block']>[]): string {
+function serializeBlocks(module: BlockWriter, blocks: Parameters<BlockWriter['block']>[]): string {
     return blocks.map((block) => '\n' + module.block(...block) + ',\n').join('');
 }
 

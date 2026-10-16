@@ -4,7 +4,7 @@ import { serializeBlocks, serializePresetAccess } from '#cli/generation/eslint/p
 import { ASTRO_FILES, ASTRO_RULES, ASTRO_SCRIPT_FILES } from '#cli/config/generation/eslint-fragments.ts';
 
 import {
-    type EslintModule,
+    type BlockWriter,
     type EslintContext,
     type EslintFragment,
     type FragmentPresets,
@@ -16,14 +16,14 @@ import {
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildAstroFragment(
-    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'configurations'>,
+    context: Pick<EslintContext, 'eslintPresets' | 'blockWriter' | 'configurations'>,
 ): EslintFragment {
-    const { eslintPresets, eslintModule, configurations } = context;
+    const { eslintPresets, blockWriter, configurations } = context;
 
     const imports: string[] = ["import astroPlugin from 'eslint-plugin-astro';"];
 
     const presets = eslintPresets.get('astro') as FragmentPresets;
-    const blocks: Parameters<EslintModule['block']>[] = (['recommended', 'accessibility'] as const).flatMap((name) =>
+    const blocks: Parameters<BlockWriter['block']>[] = (['recommended', 'accessibility'] as const).flatMap((name) =>
         buildPresetBlocks(presets[name], 'astroPlugin', (block, index, source) => [
             {
                 ...pickPresetFields(block),
@@ -54,7 +54,7 @@ function buildAstroFragment(
             ],
         );
     }
-    return { imports: imports, blocks: serializeBlocks(eslintModule, blocks) + '\n' };
+    return { imports: imports, blocks: serializeBlocks(blockWriter, blocks) + '\n' };
 }
 
 export { buildAstroFragment };

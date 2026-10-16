@@ -13,7 +13,7 @@ import {
     ESLINT_PLUGIN_IMPORTS,
 } from '#cli/config/generation/eslint.ts';
 import {
-    type EslintModule,
+    type BlockWriter,
     type EslintPlugins,
     type SelectorGroup,
     type EslintContext,
@@ -33,7 +33,7 @@ function buildBlocksBeforeFragments(
     base: EslintContext,
     view: Pick<ScopeView, 'limit' | 'options'>,
     plugins: EslintPlugins,
-): Parameters<EslintModule['block']>[] {
+): Parameters<BlockWriter['block']>[] {
     const { eslintFiles, isAll, json } = base;
     const config = base.eslint;
     const rules = buildLevelRules(view, isAll ? BASE_SELECTORS : []);
@@ -47,7 +47,7 @@ function buildBlocksBeforeFragments(
                 .map((name) => [name, 'error']),
         ),
     );
-    const projectBlocks: Parameters<EslintModule['block']>[] = [
+    const projectBlocks: Parameters<BlockWriter['block']>[] = [
         ...config.importStyleBlocks,
         ...config.scopeBlocks,
         ...config.boundaryBlocks,
@@ -77,7 +77,7 @@ function buildBlocksBeforeFragments(
                           rules: { 'no-restricted-imports': ['error', { paths: config.restrictedImports }] },
                       },
                   ],
-              ] satisfies Parameters<EslintModule['block']>[])),
+              ] satisfies Parameters<BlockWriter['block']>[])),
     ];
 }
 
@@ -94,12 +94,12 @@ function buildBlocksAfterFragments(
     base: EslintContext,
     view: Pick<ScopeView, 'limit' | 'options'>,
     fragmentSelectors: SelectorGroup[],
-): Parameters<EslintModule['block']>[] {
+): Parameters<BlockWriter['block']>[] {
     const { eslintFiles, isAll, json } = base;
     const config = base.eslint;
     const selectors = isAll ? BASE_SELECTORS : [];
     const rules = buildLevelRules(view, selectors);
-    const runtimes: Parameters<EslintModule['block']>[] = config.runtimes.map(({ runtime }, index) => {
+    const runtimes: Parameters<BlockWriter['block']>[] = config.runtimes.map(({ runtime }, index) => {
         const isNode = ['node', 'nodeBuiltin', 'commonjs'].includes(runtime);
         let names = runtime;
         if (runtime === 'node') names = 'nodeBuiltin';
@@ -121,7 +121,7 @@ function buildBlocksAfterFragments(
     return [
         ...runtimes,
         ...fragmentSelectors.map(
-            (group): Parameters<EslintModule['block']> => [
+            (group): Parameters<BlockWriter['block']> => [
                 {
                     files: buildScopeFiles(eslintFiles.code, group.scope ?? '', group.files ?? ['**/*']),
                     ignores: [
@@ -171,7 +171,7 @@ function buildBasePresetBlocks(
     presets: EslintPresets,
     sources: readonly (readonly [string, string])[],
     codeFiles: string[],
-): Parameters<EslintModule['block']>[] {
+): Parameters<BlockWriter['block']>[] {
     return sources.flatMap(([name, importName]) => {
         const selected = presets[name] as EslintPresets[string];
         const files = name === 'packageJson' ? [PACKAGE_JSON_PATTERN] : codeFiles;

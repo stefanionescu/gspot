@@ -71,7 +71,7 @@ function detectCiProvider(repositoryRoot: string, tooling: ExistingTools): InitA
     );
 }
 
-function headTables(
+function buildHeadTables(
     draft: SettingsDraft,
     repository: Repository,
     manifests: Map<string, Manifest>,
@@ -131,7 +131,7 @@ function buildInitSettings(
     manifests: Map<string, Manifest>,
     formats: Map<string, TomlTable>,
 ): string {
-    const document = headTables(draft, repository, manifests, formats);
+    const document = buildHeadTables(draft, repository, manifests, formats);
     if (draft.commitScopes !== undefined) setKey(document, 'tools.commitlint.scopes', draft.commitScopes);
     if (draft.hooks) setKey(document, 'hooks.enabled', true);
     else Reflect.deleteProperty(document, 'hooks');

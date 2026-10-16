@@ -8,9 +8,9 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildReactDomFragment(
-    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'configurations'>,
+    context: Pick<EslintContext, 'eslintPresets' | 'blockWriter' | 'configurations'>,
 ): EslintFragment {
-    const { eslintPresets, eslintModule, configurations } = context;
+    const { eslintPresets, blockWriter, configurations } = context;
 
     const imports: string[] = ["import accessibility from 'eslint-plugin-jsx-a11y';"];
 
@@ -19,7 +19,7 @@ function buildReactDomFragment(
         const preset = (eslintPresets.get('react-dom') as FragmentPresets).accessibility;
         output.push(
             '\n',
-            eslintModule.block(
+            blockWriter.block(
                 {
                     files: JSX_CODE_FILES,
                     ...(preset.blocks[0].rules === undefined ? {} : { rules: preset.blocks[0].rules }),

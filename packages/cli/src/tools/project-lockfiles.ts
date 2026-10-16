@@ -88,6 +88,6 @@ export async function prepareLockfiles(context: InstallContext, files: Generated
  * @param original the recorded copy, when the file exists.
  * @returns the replacement bytes with the previous file attached for write validation.
  */
-export function lockfileResult(path: string, content: string, original: FileContents | undefined): GeneratedFile {
+export function buildLockfileResult(path: string, content: string, original: FileContents | undefined): GeneratedFile {
     return { path, content, kind: 'lock', ...(original === undefined ? {} : { read: original }) };
 }

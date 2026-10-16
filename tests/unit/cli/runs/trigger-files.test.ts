@@ -22,7 +22,7 @@ import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/cha
  * Plant project and file checks on the real selected child scopes.
  * @param session the test-owned session whose selected checks to replace.
  */
-async function projectChecks(session: Session): Promise<void> {
+async function fakeProjectChecks(session: Session): Promise<void> {
     await fakeTool(session.root, '.gspot/mock-tsc', "console.log('Project finding'); process.exitCode = 1");
     const manifest = session.manifests.get('typescript')!;
     const check: CheckDeclaration = {
@@ -55,7 +55,7 @@ test.each([...PROJECT_TRIGGERS])(
         else readGitOutput(sandbox.path, ['mv', 'api/source.ts', 'web/source.ts']);
         await mkdir(join(sandbox.path, 'api'), { recursive: true });
         const session = await openSession(sandbox.path);
-        await projectChecks(session);
+        await fakeProjectChecks(session);
         const revision =
             selection === 'staged'
                 ? await readStagedPaths(sandbox.path).then(({ staged }) => ({ staged }))
@@ -91,7 +91,7 @@ test('a deleted file from another language does not trigger a TypeScript project
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': TWO_SCOPES_SETTINGS, 'api/kept.ts': 'export {};\n' });
     const session = await openSession(sandbox.path);
-    await projectChecks(session);
+    await fakeProjectChecks(session);
     const planned = planRun(session, {
         ...PROJECT_OPTIONS,
         only: [...PROJECT_OPTIONS.only],
@@ -115,7 +115,7 @@ configurations = []
         'web/kept.ts': 'export {};\n',
     });
     const session = await openSession(sandbox.path);
-    await projectChecks(session);
+    await fakeProjectChecks(session);
     const planned = planRun(session, {
         ...PROJECT_OPTIONS,
         only: [...PROJECT_OPTIONS.only],
