@@ -4,8 +4,6 @@
 [![License: Apache-2.0](docs/assets/readme/badges/license.svg)](LICENSE.md)
 
 gspot sets up linters, formatters, and security scanners for your repository and runs them before every commit.
-Code from you and from your coding agent meets the same checks, with the same tool versions, on every machine and
-in CI.
 
 ## What it does
 
