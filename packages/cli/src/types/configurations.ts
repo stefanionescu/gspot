@@ -114,7 +114,7 @@ export type CheckDeclaration = Omit<ParsedCheck, 'example'> & {
     example?: string;
 };
 
-/** One [[check]] entry as written. */
+/** One [[check]] record as written. */
 export type ParsedCheck = {
     name: string;
     level: Level;

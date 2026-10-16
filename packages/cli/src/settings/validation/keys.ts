@@ -86,7 +86,7 @@ function validateWrittenKey(
         return [
             {
                 path: key.split('.'),
-                message: `\`${key}\` does not loosen the default. Write its value without a reason form.`,
+                message: `\`${key}\` does not loosen the default. Write it as a plain value, without a reason.`,
             },
         ];
     if (match.declaration.type === 'list') return listErrors(key, written, match, shipped);

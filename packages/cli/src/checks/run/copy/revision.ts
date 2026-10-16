@@ -275,7 +275,7 @@ function listStyleFiles(files: Files, folder: string): string[] {
  *
  * @param repositoryRoot the checkout that provides revision objects and installed prerequisites.
  * @param source selected revision.
- * @param action operation using the disposable copy.
+ * @param action operation using the scratch copy.
  * @param cancelSignal command cancellation.
  *
  * @returns the operation result.

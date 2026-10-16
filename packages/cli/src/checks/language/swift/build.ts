@@ -116,7 +116,7 @@ export async function checkSwiftBuild(input: CheckInput): Promise<Finding[]> {
 
 /**
  * Runs the SwiftLint analyzer rules over the compiler log of the build.
- * @param input the Swift project settings and analyzer tool configuration.
+ * @param input the Swift project settings and the analyzer tool file.
  * @returns the findings.
  */
 export async function checkSwiftlintAnalyze(input: CheckInput): Promise<Finding[]> {
@@ -140,7 +140,7 @@ export async function checkSwiftlintAnalyze(input: CheckInput): Promise<Finding[
 
 /**
  * Runs Periphery over the project and reports every declaration nothing uses.
- * @param input the project scope and unused-declaration tool configuration.
+ * @param input the project scope and the unused-declaration tool file.
  * @returns the findings.
  */
 export async function checkSwiftPeriphery(input: CheckInput): Promise<Finding[]> {

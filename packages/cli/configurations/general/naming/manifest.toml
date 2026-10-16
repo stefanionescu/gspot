@@ -26,7 +26,7 @@ why = "A file named `enhanced-utils.ts` is a home for code nobody placed; the ca
 
 [[check]]
 example = "A naming allowance for an identifier that no selected source contains reports an unmatched settings entry. Remove the obsolete allowance or correct it to the exact required identifier and scope."
-help = "Remove the entry that matches nothing, or fix its name or path."
+help = "Remove the record that matches nothing, or fix its name or path."
 level = "all"
 name = "allowed-names"
 runs = "once"

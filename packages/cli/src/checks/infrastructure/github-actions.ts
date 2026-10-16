@@ -66,7 +66,7 @@ function prepareActionlintText(text: string): string {
 }
 
 /**
- * Runs actionlint. If a workflow or action uses a $/ reference, checks a temporary copy with that reference changed to ./.
+ * Runs actionlint. If a workflow or action uses a $/ reference, checks a scratch copy with that reference changed to ./.
  * @param session the open session.
  * @param planned the workflow and action files selected for this invocation.
  * @returns the check result.

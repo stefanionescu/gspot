@@ -144,7 +144,7 @@ const formatSchema = formatFields.extend({
 /**
  * Accept a setting value with its explanation in the same TOML entry.
  * @param schema the setting's value schema
- * @returns the value schema and its reason form
+ * @returns the value schema and its reasoned value
  */
 function allowReasonedValue<Output, Input>(
     schema: z.ZodType<Output, Input>,
@@ -161,7 +161,7 @@ function allowReasonedValue<Output, Input>(
 /**
  * Read one value together with its required explanation.
  * @param schema the field's value validator and description
- * @returns the value read from its strict reason envelope
+ * @returns the value read from its strict reasoned value
  */
 function buildReasonedValueSchema<Output, Input>(
     schema: z.ZodType<Output, Input>,

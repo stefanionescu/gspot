@@ -36,7 +36,7 @@ export function checkUnmatchedPatterns(input: CheckInput): Finding[] {
                     buildFinding(
                         input,
                         { file: SETTINGS_FILE, line: 1 },
-                        'unused-entry',
+                        'unused-record',
                         `${pattern} under ${where} matches no tracked file or folder.`,
                     ),
                 );

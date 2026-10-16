@@ -53,7 +53,7 @@ function formatConfigurationChecks(manifest: Manifest): string {
 }
 
 /**
- * Describe a built-in configuration from its selection, settings, and check owners.
+ * Describe a shipped configuration from its selection, settings, and check owners.
  * @param manifest the validated configuration manifest
  * @param data the CLI reference data
  * @returns its public reference page

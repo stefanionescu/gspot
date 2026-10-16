@@ -42,7 +42,7 @@ function convertToReference(value: unknown, key: string, env: Record<string, str
     return value;
 }
 
-// Read each Yarn environment owner and replace credential values with references.
+// Read each Yarn environment setting and replace credential values with references.
 function buildEnvironmentSettings(env: Record<string, string>, secrets: string[]): Record<string, unknown> {
     const environmentSettings = YARN_ENVIRONMENT_SETTINGS.flatMap<[string, unknown]>((source) => {
         const entries = Object.entries(env).flatMap<[string, unknown]>(([key, value]) => {

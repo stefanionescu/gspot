@@ -24,7 +24,7 @@ summary = "Compares every generated file with what gspot writes from the setting
 why = "A generated file that no longer matches the settings runs a tool with settings nobody chose."
 
 [[check]]
-example = "An `[[ignore]]` entry for `bash/shellcheck` with `paths = [\"nowhere/**\"]` reports `unmatched-pattern` when that path matches no selected file. Remove the obsolete entry or correct its path to the actual exception, preserving its reason."
+example = "An `[[ignore]]` record for `bash/shellcheck` with `paths = [\"nowhere/**\"]` reports `unmatched-pattern` when that path matches no selected file. Remove the obsolete record or correct its path to the actual exception, preserving its reason."
 help = "Remove the entry or correct its path."
 level = "recommended"
 name = "unmatched-patterns"

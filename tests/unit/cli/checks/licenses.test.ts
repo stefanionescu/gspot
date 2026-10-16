@@ -78,7 +78,7 @@ test.each([...ALLOWED_PACKAGE_CASES])('allowed-packages: an allowed package: $na
     expect(await checkFindings(sandbox.path, 'licenses/allowed')).toStrictEqual(
         findings.map(({ rule, message }) =>
             matchFields({
-                file: rule === 'unused-entry' ? 'gspot.toml' : 'pyproject.toml',
+                file: rule === 'unused-record' ? 'gspot.toml' : 'pyproject.toml',
                 line: 1,
                 rule,
                 message: matchSubstring(message),

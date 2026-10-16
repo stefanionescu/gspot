@@ -49,7 +49,7 @@ export const INSTALLED_TOOL_FOLDERS = {
 /** The lifecycle state folder never enters command checks or generated plans. */
 export const STATE_FOLDER_PATTERN = new RegExp(`(?:^|/)\\${STATE_PATH}(?:/|$)`, 'iu');
 
-/** The prefix of generated tool configuration paths. */
+/** The prefix of generated tool file paths. */
 export const TOOL_FILE_PREFIX = `${TOOL_FILES_FOLDER}/`;
 
 /** Tool folders replaced as complete installations. */

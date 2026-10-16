@@ -8,7 +8,7 @@ export const ALLOWED_PACKAGE_SCOPE_CASES = [
         findings: [
             {
                 file: 'gspot.toml',
-                rule: 'unused-entry',
+                rule: 'unused-record',
                 message: 'Absent_Package@2.0.0 is absent from the installed project dependencies.',
             },
         ],
@@ -49,7 +49,7 @@ export const ALLOWED_PACKAGE_CASES = [
         package: 'strict@2.0.0',
         findings: [
             { rule: 'disallowed-license', message: 'strict@1.0.0 uses GPL-3.0-only' },
-            { rule: 'unused-entry', message: 'strict@2.0.0 is absent from the installed project dependencies' },
+            { rule: 'unused-record', message: 'strict@2.0.0 is absent from the installed project dependencies' },
         ],
     },
     {

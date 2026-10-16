@@ -240,7 +240,7 @@ function formatDetectedScopes(summary: DetectionSummary): string | undefined {
 function formatExistingTools(summary: DetectionSummary): (string | undefined)[] {
     const { tooling } = summary;
     const hooks = tooling.hooks.map(
-        (hook) => `${hook.path}/  ${hook.files.join(', ')} (${hook.kind === 'husky' ? 'husky' : 'hand-written'})`,
+        (hook) => `${hook.path}/  ${hook.files.join(', ')} (${hook.kind === 'husky' ? 'husky' : 'your own'})`,
     );
     const lint = tooling.lintFolders.map((folder) => `${folder}/`);
     return [

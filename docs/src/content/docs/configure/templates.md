@@ -11,7 +11,7 @@ A template copies your gspot.toml, without scopes, for use in another repository
 gspot export gspot.template.toml
 ```
 
-A template carries every `gspot.toml` entry except scopes, including command checks. Empty tables you wrote stay in the export. It copies only what you wrote, not the defaults. The destination's `gspot/unmatched-patterns` check reports carried paths that match no tracked file or folder. Review path choices for the destination. Commands that name local executables produce a warning.
+A template carries every `gspot.toml` setting and record except scopes, including command checks. Empty tables you wrote stay in the export. It copies only what you wrote, not the defaults. The destination's `gspot/unmatched-patterns` check reports carried paths that match no tracked file or folder. Review path choices for the destination. Commands that name local executables produce a warning.
 
 A template carries the hooks, CI, and rules settings, but no hook scripts, lockfiles, or installed tools.
 Export can write anywhere, but not over `gspot.toml` or a file gspot generates.

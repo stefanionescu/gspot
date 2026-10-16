@@ -80,7 +80,7 @@ reason = "A pattern that matches no file here."
 `,
         expected: {
             file: 'gspot.toml',
-            rule: 'unused-entry',
+            rule: 'unused-record',
             line: 1,
         },
         corrected: {

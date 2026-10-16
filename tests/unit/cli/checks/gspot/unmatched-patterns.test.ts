@@ -40,7 +40,7 @@ test.each([...UNUSED_PATH_CASES])(
                 check: 'gspot/unmatched-patterns',
                 file: 'gspot.toml',
                 line: 1,
-                rule: 'unused-entry',
+                rule: 'unused-record',
             })),
         );
     },

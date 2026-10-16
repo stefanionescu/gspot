@@ -59,7 +59,7 @@ export type PlanOptions = {
     messageFile?: string;
 };
 
-/** One check to plan: its check declaration and the manifest it came from, none for a [[check]] entry. */
+/** One check to plan: its check declaration and the manifest it came from, none for a [[check]] record. */
 export type CheckCandidate = { check: CheckDeclaration; manifest?: Manifest };
 
 /** What planning one scope needs. */

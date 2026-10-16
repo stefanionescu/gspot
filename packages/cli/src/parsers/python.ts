@@ -244,7 +244,7 @@ function readEnvironmentLiteral(node: Node): Node | null | undefined {
 /**
  * Read Python environment access and configured reader calls through lexical import aliases.
  * @param syntaxRoot the parsed Python source.
- * @param readers the configured environment reader functions.
+ * @param readers the configured environment functions.
  * @returns the environment reads and their source positions.
  */
 function readPythonEnvironment(syntaxRoot: Node, readers: readonly string[]): EnvironmentRead[] {

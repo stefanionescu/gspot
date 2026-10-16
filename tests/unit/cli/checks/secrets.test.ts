@@ -37,7 +37,7 @@ test('a nested scope uses the default example environment file names', async () 
     expect(await checkFindings(sandbox.path, 'secrets/env-examples', { scope: 'app' })).toStrictEqual([]);
 });
 
-test('keys read through Bun.env and custom reader functions are reported until the example file lists them', async () => {
+test('keys read through Bun.env and custom environment functions are reported until the example file lists them', async () => {
     await using sandbox = await testdir();
     const settings = buildSettingsText([], { tables: READER_TABLES });
     await createFileTree(sandbox.path, { ...READER_FILES, 'gspot.toml': settings });
@@ -55,7 +55,7 @@ test('keys read through Bun.env and custom reader functions are reported until t
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(settings);
 });
 
-test('each scope checks its own example env files and reader functions', async () => {
+test('each scope checks its own example env files and environment functions', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...ENVIRONMENT_READER_FILES,
@@ -80,7 +80,7 @@ test('each scope checks its own example env files and reader functions', async (
     expect(corrected.report.checks.map((check) => check.status)).toEqual(['passed', 'passed', 'passed']);
 });
 
-test('Bun.env reads are checked with no reader functions declared', async () => {
+test('Bun.env reads are checked with no environment functions declared', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSettingsText([]),

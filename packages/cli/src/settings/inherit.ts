@@ -302,7 +302,7 @@ function getSettingTable(key: string): string {
 }
 
 /**
- * Read a written setting value from its reason envelope or plain form.
+ * Read a written setting value from its reasoned value or its plain value.
  * @param written the authored setting.
  * @returns the value that a settings mutation changes.
  */
@@ -312,7 +312,7 @@ function getWrittenValue(written: unknown): unknown {
 }
 
 /**
- * Replace a written value while retaining its authored reason envelope.
+ * Replace a written value while keeping the reason of its reasoned value.
  * @param written the original setting
  * @param value the changed setting value
  * @returns the replacement in the same written form

@@ -130,7 +130,7 @@ export function readNamingSettings(
             ),
         ),
         ...settings.naming.override.map((rule, index) =>
-            compileOverride(rule, `[[naming.override]] entry ${String(index + 1)}`),
+            compileOverride(rule, `[[naming.override]] record ${String(index + 1)}`),
         ),
     ];
     return {

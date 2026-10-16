@@ -25,7 +25,7 @@ export type ExtraOverride<Options> = {
 /** Plugin list used only when the formatter has applicable plugins. */
 export type PrettierPluginOptions = { plugins?: string[] };
 
-/** Effective formatting choices and authored overrides for one generated Prettier config file. */
+/** Effective formatting choices and authored overrides for one generated Prettier tool file. */
 export type PrettierInput = {
     settings: Settings;
     format: FormatSettings;

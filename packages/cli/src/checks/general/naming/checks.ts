@@ -155,8 +155,8 @@ export async function checkNamingAllowedNames(input: CheckInput): Promise<Findin
                 buildFinding(
                     input,
                     { file: SETTINGS_FILE },
-                    'unused-entry',
-                    `[[naming.override]] entry ${String(index + 1)} allowed_names includes "${name}", which no identifier under its paths uses.`,
+                    'unused-record',
+                    `[[naming.override]] record ${String(index + 1)} allowed_names includes "${name}", which no identifier under its paths uses.`,
                 ),
             );
     });

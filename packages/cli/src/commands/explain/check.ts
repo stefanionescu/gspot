@@ -75,7 +75,7 @@ function getFacts(
     };
 }
 
-// The lines about this repository: a [[command_check]] entry's command and paths, or whether the selection includes the configuration.
+// The lines about this repository: a [[command_check]] record's command and paths, or whether the selection includes the configuration.
 function formatRepositoryUse(
     session: Session | undefined,
     declared: CommandCheck | undefined,
@@ -128,7 +128,7 @@ function describeCheck(
 }
 
 /**
- * Explains a check by name: a shipped check, or a [[command_check]] entry of the settings.
+ * Explains a check by name: a shipped check, or a [[command_check]] record of the settings.
  * @param session the session, or undefined outside a repository
  * @param checkName a shipped check ID or a configured command check ID to look up.
  * @param reads the run cache.

@@ -166,7 +166,7 @@ function findUnavailableCompanion(
  * @param commandRun.command the executable and authored arguments.
  * @param commandRun.toolPath the resolved executable path.
  * @param commandRun.options the command and scratch-copy options.
- * @returns the disposable copy and prepared command.
+ * @returns the scratch copy and prepared command.
  */
 export async function prepareInScratch(
     planned: PlannedCheck,

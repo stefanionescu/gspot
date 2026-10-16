@@ -80,7 +80,7 @@ test('configuration-names: names other configurations allow are checked like any
     expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
-test('configuration-names: SwiftLint owns Swift type case and length; banned terms are still reported in types and parameters', async () => {
+test('configuration-names: SwiftLint owns Swift type case and length; banned words are still reported in types and parameters', async () => {
     await using sandbox = await testdir();
     const sourceText = 'typealias URLSession = String\n';
     await createFileTree(sandbox.path, {

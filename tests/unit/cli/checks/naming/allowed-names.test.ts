@@ -25,7 +25,7 @@ test.each([...UNUSED_NAME_CASES])(
         for (const [index, name] of unusedNames.entries()) {
             expect(findings[index]).toMatchObject({
                 file: 'gspot.toml',
-                rule: 'unused-entry',
+                rule: 'unused-record',
                 message: matchSubstring(`"${name}"`),
             });
         }
@@ -46,7 +46,7 @@ test('allowed_names that no identifier in the override paths uses are reported',
     const mismatched = await checkReport(sandbox.path, ALLOWED_NAMES_CHECK_COMMAND);
     expect(mismatched.code, mismatched.stdout + mismatched.stderr).toBe(1);
     expect(mismatched.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
-        { file: 'gspot.toml', rule: 'unused-entry', message: matchSubstring('allowed_names includes "remoteRecord"') },
+        { file: 'gspot.toml', rule: 'unused-record', message: matchSubstring('allowed_names includes "remoteRecord"') },
     ]);
     await Bun.write(join(sandbox.path, 'gspot.toml'), ALLOWED_NAME_SETTINGS);
     await Bun.write(join(sandbox.path, 'web/source.js'), 'export const localRecord = 1;\n');

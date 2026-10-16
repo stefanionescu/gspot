@@ -121,7 +121,7 @@ export function listChildScopes(session: Pick<Session, 'scopes'>, scope: ScopeSe
 }
 
 /**
- * Whether a general per-file check runs once at the root unless it reads a config file for a scope.
+ * Whether a general per-file check runs once at the root unless it reads a tool file for a scope.
  *
  * @param manifest the manifest that declares the check.
  * @param check the execution mode and command arguments to inspect.

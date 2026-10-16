@@ -175,7 +175,7 @@ export async function checkAllowedLicenses(input: CheckInput): Promise<Finding[]
                 buildFinding(
                     input,
                     { file: SETTINGS_FILE, line: 1 },
-                    'unused-entry',
+                    'unused-record',
                     `${name} is absent from the installed project dependencies${where}. Remove the \`[[licenses.allowed_package]]\` record or correct its exact version.`,
                 ),
             );

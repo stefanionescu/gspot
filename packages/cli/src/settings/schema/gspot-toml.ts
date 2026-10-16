@@ -243,7 +243,7 @@ function buildJsonSchema(): Record<string, unknown> {
 }
 
 /**
- * Locate one setting in the handwritten root, configuration, and tool schemas.
+ * Locate one setting in the root, configuration, and tool schemas.
  * @param key the dotted setting key
  * @returns its authoritative schema, or undefined when the key names no setting
  */
