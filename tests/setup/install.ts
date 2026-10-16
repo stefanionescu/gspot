@@ -28,11 +28,15 @@ import type { LockedInputs, ToolProjectFiles } from '#tests/types/packages.ts';
 import { open, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 import { MISE_TRUST, PINNED_TOOLS_FILE, TEST_RUN_FOLDER_NAME } from '#tests/data/test-setup.ts';
 
-/** Give real hook repositories the same authored runtime pins as this repository. */
+/** Give real hook repositories the same authored runtime pins as this repository. A clone keeps its committed file. */
 async function installRuntimes(root: string): Promise<void> {
-    const runtimeSettings: unknown = parse(await readFile(join(import.meta.dir, '../..', PINNED_TOOLS_FILE), 'utf8'));
-    const { tools } = z.object({ tools: z.object({ bun: z.string(), node: z.string() }) }).parse(runtimeSettings);
-    await writeFile(join(root, PINNED_TOOLS_FILE), stringify({ tools }));
+    if (!(await Bun.file(join(root, PINNED_TOOLS_FILE)).exists())) {
+        const runtimeSettings: unknown = parse(
+            await readFile(join(import.meta.dir, '../..', PINNED_TOOLS_FILE), 'utf8'),
+        );
+        const { tools } = z.object({ tools: z.object({ bun: z.string(), node: z.string() }) }).parse(runtimeSettings);
+        await writeFile(join(root, PINNED_TOOLS_FILE), stringify({ tools }));
+    }
     const trusted = await runCommand([...MISE_TRUST, PINNED_TOOLS_FILE], { cwd: root });
     if (trusted.code !== 0) throw new Error(`Sandbox runtime trust failed: ${trusted.stdout}${trusted.stderr}`);
 }

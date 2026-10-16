@@ -28,12 +28,7 @@ function dropOperatingSystemSkips(record: string, report: RunReport): string {
         .trimEnd()
         .split('\n')
         .filter((line) => !/^(?:Failed:|Could not run:|Passed:|Skipped:|Time:)/u.test(line))
-        .filter(
-            (line) =>
-                !unsupported.some(
-                    (check) => line.startsWith(`root  ${check} `) || line.startsWith(`skipped    ${check}  (`),
-                ),
-        )
+        .filter((line) => !unsupported.some((check) => line.startsWith(`${check}  `)))
         .join('\n')
         .replaceAll(/\b\d+(?:\.\d+)?s\b/gu, '0.0s')
         .trimEnd();
