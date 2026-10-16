@@ -30,14 +30,12 @@ test.each(
         MISE_CEILING_PATHS: dirname(root),
     };
 
-    const runtimePins = (
-        parse(await readFile(join(import.meta.dir, '../../mise.toml'), 'utf8')) as {
-            tools: Record<string, string>;
-        }
-    ).tools;
+    const runtimePins = parse(await readFile(join(import.meta.dir, '../../mise.toml'), 'utf8')) as {
+        tools: Record<string, string>;
+    };
     await linkQuickstartTools(root, environment);
     for (const command of [
-        ['mise', 'use', `node@${runtimePins['node']!}`, `npm:@gspothq/cli@${packageManifest.version}`],
+        ['mise', 'use', `node@${runtimePins.tools['node']!}`, `npm:@gspothq/cli@${packageManifest.version}`],
         ...row.projectCommands,
     ]) {
         const created = await runCommand([...command], { cwd: root, env: environment });
@@ -50,7 +48,17 @@ test.each(
         ...QUICKSTART_COMMANDS,
     ]) {
         const result = await runCommand([...command], { cwd: root, env: environment });
-        expect(result.code, `${command.join(' ')}\n${result.stdout}${result.stderr}`).toBe(code);
+        const launchFailure =
+            result.code === code
+                ? ''
+                : await runCommand(['mise', 'which', 'gspot'], { cwd: root, env: environment }).then(
+                      async (selected) => {
+                          const limit = 4096;
+                          const launcher = selected.code === 0 ? await readFile(selected.stdout.trim(), 'utf8') : '';
+                          return `\nLauncher selection (${String(selected.code)}):\n${selected.stdout}${selected.stderr}\n${launcher.slice(0, limit)}${launcher.length > limit ? '\n[launcher truncated]' : ''}`;
+                      },
+                  );
+        expect(result.code, `${command.join(' ')}\n${result.stdout}${result.stderr}${launchFailure}`).toBe(code);
     }
     const source = join(root, row.sourcePath);
     const original = await readFile(source);
@@ -61,19 +69,11 @@ test.each(
     const rejected = await runCommand(command, { cwd: root, env: environment });
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
     expect(rejected.stdout).toContain(row.message);
-    rejectInvalidCommit();
+    rejectInvalidCommit(root, row.rule, environment);
     readGitOutput(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', row.sourcePath]);
     expect(await readFile(source)).toStrictEqual(original);
     const corrected = await runCommand(command, { cwd: root, env: environment });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-
-    /** Check that the installed hook rejects the invalid staged source. */
-    function rejectInvalidCommit(): void {
-        readGitOutput(root, ['add', '-A']);
-        const refused = runGit(root, ['commit', '-qm', 'feat: Add invalid source'], environment);
-        expect(refused.code).not.toBe(0);
-        expect(refused.stdout + refused.stderr).toContain(row.rule);
-    }
 });
 
 /**
@@ -102,4 +102,12 @@ async function linkQuickstartTools(tutorialRoot: string, environment: Record<str
         const linked = await runCommand(['mise', 'link', requirement, folder], { cwd: tutorialRoot, env: environment });
         expect(linked.code, `Quickstart tool linking failed: ${linked.stdout}${linked.stderr}`).toBe(0);
     }
+}
+
+/** Check that the installed hook rejects the invalid staged source. */
+function rejectInvalidCommit(repositoryRoot: string, rule: string, environment: Record<string, string>): void {
+    readGitOutput(repositoryRoot, ['add', '-A']);
+    const refused = runGit(repositoryRoot, ['commit', '-qm', 'feat: Add invalid source'], environment);
+    expect(refused.code).not.toBe(0);
+    expect(refused.stdout + refused.stderr).toContain(rule);
 }
