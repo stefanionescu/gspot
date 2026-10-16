@@ -65,8 +65,6 @@ test("licenses/allowed reads installed Python packages, ignores the project's pi
     await createFileTree(root, files);
     const environment = await runCommand(['uv', 'venv', '.venv'], { cwd: root });
     expect(environment.code, environment.stdout + environment.stderr).toBe(0);
-    const applied = await runGspot(root, ['apply', '--json']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     await installToolProjects(root);
     const location = await runCommand(
         [
@@ -92,7 +90,7 @@ test("licenses/allowed reads installed Python packages, ignores the project's pi
     await Bun.write(
         join(root, 'gspot.toml'),
         buildSettingsText(['licenses'], {
-            tables: '[licenses]\nallowed = ["MIT"]\n[[licenses.allowed_package]]\nname = "Licensed._Example"\nversion = "1.0.0"\nreason = "GPL-3.0-only. This fixture tests name normalization."\n',
+            tables: '[licenses]\nallowed = ["MIT"]\n[[licenses.allowed_package]]\nname = "Licensed._Example"\nversion = "1.0.0"\nreason = "GPL-3.0-only. This test checks name normalization."\n',
             level: 'all',
         }),
     );
@@ -110,8 +108,6 @@ test('an allowed package at the root covers the same package in a scope with no 
         }),
         ...FONT_PACKAGE_FILES,
     });
-    const applied = await runGspot(sandbox.path, ['apply', '--json']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     await installToolProjects(sandbox.path);
     using state = new DisposableStack();
     state.use(

@@ -15,6 +15,7 @@ import { writeLockedInputs, installToolProjects } from '#tests/setup/install.ts'
 
 import {
     ZIP_LAYOUT,
+    REGISTRY_HOST,
     PYTHON_INDEX_NAME,
     RUFF_VERSION_OUTPUT,
     PYTHON_SANDBOX_FILES,
@@ -113,7 +114,7 @@ async function createPythonIndex(
     const authentication = `Basic ${Buffer.from(credentials).toString('base64')}`;
     let requests = 0;
     const server = Bun.serve({
-        hostname: '127.0.0.1',
+        hostname: REGISTRY_HOST,
         port: 0,
         fetch(request) {
             requests += 1;
@@ -130,7 +131,7 @@ async function createPythonIndex(
         get requests() {
             return requests;
         },
-        url: `http://${user}:${password}@127.0.0.1:${String(server.port)}/simple`,
+        url: `http://${user}:${password}@${REGISTRY_HOST}:${String(server.port)}/simple`,
         async [Symbol.asyncDispose]() {
             await server.stop(true);
         },

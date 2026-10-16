@@ -11,6 +11,7 @@ import type { spawnProcess } from '#cli/system/processes.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
+import { NPM_TOOL_FOLDER } from '#tests/data/tools/installation.ts';
 
 /**
  * Replace one child command and run the others normally.
@@ -84,7 +85,7 @@ export async function fakeNpmTool(root: string, tool: string): Promise<ToolDecla
     const declaration = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), tool);
     const installer = declaration.installers['npm'];
     if (installer === undefined) throw new Error(`The tool ${tool} has no npm installer.`);
-    const installed = join(root, '.gspot/node_modules', installer.name);
+    const installed = join(root, NPM_TOOL_FOLDER, installer.name);
     await mkdir(installed, { recursive: true });
     await writeFile(
         join(installed, 'package.json'),
@@ -92,7 +93,7 @@ export async function fakeNpmTool(root: string, tool: string): Promise<ToolDecla
     );
     await fakeTool(
         root,
-        `.gspot/node_modules/.bin/${tool}`,
+        `${NPM_TOOL_FOLDER}/.bin/${tool}`,
         `console.log(${JSON.stringify(declaration.version)}); process.exitCode = ${String(declaration.version_exit_code ?? 0)};`,
     );
     return declaration;

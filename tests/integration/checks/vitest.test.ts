@@ -19,15 +19,15 @@ import {
     UNTESTED_SOURCE,
 } from '#tests/data/checks/vitest.ts';
 
-const installedSandbox = {
+const vitestProjectFiles = {
     ...VITEST_SANDBOX.files,
     'package.json': JSON.stringify({ ...VITEST_PACKAGE, devDependencies: { vitest: vitestManifest.version } }) + '\n',
 };
 
 test('vitest/coverage reports a coverage limit and passes after the fix, in the root and a scope', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, installedSandbox);
-    await createFileTree(join(sandbox.path, 'app'), installedSandbox);
+    await createFileTree(sandbox.path, vitestProjectFiles);
+    await createFileTree(join(sandbox.path, 'app'), vitestProjectFiles);
     await linkInstalledModules(join(sandbox.path, 'node_modules'));
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
@@ -62,8 +62,8 @@ configurations = ["typescript", "vitest"]
 
 test.each([80, 0])('vitest/coverage with a %i limit runs without its coverage package only at 0', async (limit) => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, installedSandbox);
-    await createFileTree(join(sandbox.path, 'app'), installedSandbox);
+    await createFileTree(sandbox.path, vitestProjectFiles);
+    await createFileTree(join(sandbox.path, 'app'), vitestProjectFiles);
     await linkInstalledModules(join(sandbox.path, 'node_modules'));
     await rm(join(sandbox.path, 'node_modules/@vitest/coverage-v8'));
     await Bun.write(

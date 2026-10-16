@@ -8,45 +8,43 @@ import { BLOCK_FORMATS, MALFORMED_BLOCKS } from '#tests/data/system.ts';
 import { readBlock, replaceBlock, findBlockSpan } from '#cli/system/managed-blocks.ts';
 
 describe('blocks', () => {
-    {
-        test('managed block updates and removal keep your text around the block', async () => {
-            await using folder = await testdir();
-            const original = '# Authored\r\n\r\nKeep these trailing lines.\r\n\r\n';
-            await createFileTree(folder.path, { 'AGENTS.md': original });
-            const prefix = 'Additional instructions.\n';
-            const suffix = '\nLater authored instructions.\n';
-            {
-                using log = openWriter(folder.path);
-                writePlans(log, [planBlock(log, 'AGENTS.md', 'first instructions', 'markdown')]);
-                const installed = log.files.read('AGENTS.md')!.bytes.toString('utf8');
-                expect(installed.startsWith(original)).toBe(true);
-                await writeFile(join(folder.path, 'AGENTS.md'), prefix + installed + suffix);
-                writePlans(log, [planBlock(log, 'AGENTS.md', 'updated instructions', 'markdown')]);
-                expect(log.files.read('AGENTS.md')!.bytes.toString('utf8')).toBe(
-                    prefix +
-                        replaceBlock(original, 'updated instructions', { path: 'AGENTS.md', style: 'markdown' }) +
-                        suffix,
-                );
-            }
-            {
-                using log = openWriter(folder.path);
-                writePlans(log, [planRemoval(log, 'AGENTS.md')]);
-                expect(log.files.read('AGENTS.md')!.bytes.toString('utf8')).toBe(prefix + original + suffix);
-            }
-        });
+    test('managed block updates and removal keep your text around the block', async () => {
+        await using folder = await testdir();
+        const original = '# Authored\r\n\r\nKeep these trailing lines.\r\n\r\n';
+        await createFileTree(folder.path, { 'AGENTS.md': original });
+        const prefix = 'Additional instructions.\n';
+        const suffix = '\nLater authored instructions.\n';
+        {
+            using log = openWriter(folder.path);
+            writePlans(log, [planBlock(log, 'AGENTS.md', 'first instructions', 'markdown')]);
+            const installed = log.files.read('AGENTS.md')!.bytes.toString('utf8');
+            expect(installed.startsWith(original)).toBe(true);
+            await writeFile(join(folder.path, 'AGENTS.md'), prefix + installed + suffix);
+            writePlans(log, [planBlock(log, 'AGENTS.md', 'updated instructions', 'markdown')]);
+            expect(log.files.read('AGENTS.md')!.bytes.toString('utf8')).toBe(
+                prefix +
+                    replaceBlock(original, 'updated instructions', { path: 'AGENTS.md', style: 'markdown' }) +
+                    suffix,
+            );
+        }
+        {
+            using log = openWriter(folder.path);
+            writePlans(log, [planRemoval(log, 'AGENTS.md')]);
+            expect(log.files.read('AGENTS.md')!.bytes.toString('utf8')).toBe(prefix + original + suffix);
+        }
+    });
 
-        test('removing the only block deletes the file', async () => {
-            await using folder = await testdir();
-            await createFileTree(folder.path, { 'AGENTS.md': '' });
-            {
-                using log = openWriter(folder.path);
+    test('removing the only block deletes the file', async () => {
+        await using folder = await testdir();
+        await createFileTree(folder.path, { 'AGENTS.md': '' });
+        {
+            using log = openWriter(folder.path);
 
-                writePlans(log, [planBlock(log, 'AGENTS.md', 'instructions', 'markdown')]);
-                writePlans(log, [planRemoval(log, 'AGENTS.md')]);
-                expect(log.files.read('AGENTS.md')).toBeUndefined();
-            }
-        });
-    }
+            writePlans(log, [planBlock(log, 'AGENTS.md', 'instructions', 'markdown')]);
+            writePlans(log, [planRemoval(log, 'AGENTS.md')]);
+            expect(log.files.read('AGENTS.md')).toBeUndefined();
+        }
+    });
 });
 describe('managed-blocks', () => {
     test('a managed block is appended and replaced without changing your own text', () => {

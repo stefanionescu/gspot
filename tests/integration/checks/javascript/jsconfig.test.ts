@@ -14,8 +14,6 @@ import { JSCONFIG_CASES, JSCONFIG_SANDBOX, JAVASCRIPT_PROJECT_FILES } from '#tes
 
 const installedSandbox = registerSharedSandbox(JSCONFIG_SANDBOX);
 
-// The compiler passes after the source correction.
-
 test("javascript/tsc uses gspot's own TypeScript when the project has none", async () => {
     const sandbox = { path: installedSandbox().root };
     const sourceFiles = {
