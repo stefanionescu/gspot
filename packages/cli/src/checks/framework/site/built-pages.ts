@@ -25,7 +25,7 @@ import {
     HTTP_OK_STATUS,
     HTML_EXTENSION,
     HTML_REPORT_FILE,
-    PURGECSS_PROGRAM,
+    PURGECSS_CONTENT,
     SITEMAP_LOCATION,
     LINKINATOR_STATES,
     LINKINATOR_PROGRAM,
@@ -209,8 +209,8 @@ export async function purgecss(input: CheckInput): Promise<Finding[]> {
     );
     const result = await runCheckTool(
         input,
-        { tool: PURGECSS, entry: PURGECSS_PROGRAM },
-        { cwd: build.folder, stdin: JSON.stringify({ configuration: config, css: sheets }) },
+        [PURGECSS, '--config', config, '--css', ...sheets, '--content', ...PURGECSS_CONTENT, '--rejected'],
+        { cwd: build.folder },
     );
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
     const report = purgecssReportSchema.parse(JSON.parse(result.stdout));

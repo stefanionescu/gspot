@@ -1,40 +1,5 @@
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
 
-const VERSION_PAIR_CASES = [
-    {
-        name: 'different ranges with equal installed versions pass',
-        left: '^19.0.0',
-        right: '~19.1.1',
-        installedLeft: '19.1.1',
-        installedRight: '19.1.1',
-        findings: 0,
-    },
-    {
-        name: 'equal ranges with different installed versions report the pair',
-        left: '^19.0.0',
-        right: '^19.0.0',
-        installedLeft: '19.1.1',
-        installedRight: '19.1.0',
-        findings: 1,
-    },
-    {
-        name: 'an uninstalled pair has no version to compare',
-        left: '^19.0.0',
-        right: '^19.0.0',
-        installedLeft: undefined,
-        installedRight: undefined,
-        findings: 0,
-    },
-    {
-        name: 'one uninstalled package has no paired version to compare',
-        left: '^19.0.0',
-        right: '^19.0.0',
-        installedLeft: '19.1.1',
-        installedRight: undefined,
-        findings: 0,
-    },
-] as const;
-
 /** The compiler options of a test React web repository. */
 const WEB_TSCONFIG = {
     compilerOptions: {
@@ -137,7 +102,6 @@ export {
     WEB_PACKAGES,
     REACT_SANDBOX,
     EXPO_DEPENDENCIES,
-    VERSION_PAIR_CASES,
     REACT_NATIVE_TSCONFIG,
     REACT_NATIVE_DEPENDENCIES,
 };

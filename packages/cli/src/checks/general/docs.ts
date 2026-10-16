@@ -1,9 +1,7 @@
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
-import type { RootContent } from 'mdast';
 import { visit } from 'unist-util-visit';
 import { readJson } from '#cli/parsers/json.ts';
-import { toString } from 'mdast-util-to-string';
 import { statSync, readdirSync } from 'node:fs';
 import { globPaths } from '#cli/system/files.ts';
 import { findingAt } from '#cli/checks/finding.ts';
@@ -29,11 +27,8 @@ import {
     MISE_RUN,
     PATH_CHARS,
     README_FILE,
-    START_WORDS,
     LICENSE_PATH,
-    SECTION_DEPTH,
     COMMAND_FENCES,
-    CONTENTS_TITLE,
     FILE_EXTENSION,
     TITLE_ATTRIBUTE,
     MISE_CONF_FILES,
@@ -137,40 +132,6 @@ function lineFindings(input: CheckInput, file: string, prose: NumberedLine, inde
         )
         .toArray();
     return [...paths, ...runs];
-}
-
-function openingFindings(input: CheckInput, file: string, nodes: RootContent[]): Finding[] {
-    const title = nodes.findIndex((node) => node.type === 'heading' && node.depth === 1);
-    const start = title === -1 ? 0 : title;
-    const section = nodes.findIndex(
-        (node, index) => index >= start && node.type === 'heading' && node.depth === SECTION_DEPTH,
-    );
-    const opening = nodes.slice(start, section === -1 ? nodes.length : section);
-    return opening.some((node) => node.type === 'paragraph')
-        ? []
-        : [
-              findingAt(
-                  input,
-                  { file, line: nodes[start]?.position?.start.line ?? 1 },
-                  'opening-paragraph',
-                  'Add a paragraph between the title and the first H2.',
-              ),
-          ];
-}
-
-function sectionFindings(input: CheckInput, file: string, nodes: RootContent[], limit: number): Finding[] {
-    const sections = nodes
-        .filter((node) => node.type === 'heading' && node.depth === SECTION_DEPTH)
-        .map((node) => toString(node).trim().toLowerCase());
-    if (sections.length <= limit || sections.includes(CONTENTS_TITLE)) return [];
-    return [
-        findingAt(
-            input,
-            { file, line: 1 },
-            'contents',
-            `This README has ${String(sections.length)} H2 headings, over the limit of ${String(limit)}. Add a Contents section.`,
-        ),
-    ];
 }
 
 function taskSources(input: CheckInput, scope: string): TaskSources {
@@ -306,40 +267,4 @@ export function requiredFiles(input: CheckInput): Finding[] {
     )
         findings.push(findingAt(input, { file: LICENSE_PATH }, 'missing-license', 'The root has no LICENSE file.'));
     return findings;
-}
-
-/**
- * The shape findings for every README in the check's files.
- * @param input the check input.
- * @returns the findings.
- */
-export function readmeShape(input: CheckInput): Finding[] {
-    const limit = input.selection.view.options('limits').headings_before_contents;
-    const roots = new Set([README_FILE, ...input.scopeEntries.map((scope) => `${scope.path}/${README_FILE}`)]);
-    return input.files
-        .filter(
-            (file) =>
-                (file.path === README_FILE || file.path.endsWith(`/${README_FILE}`)) &&
-                statSync(join(input.root, file.path), { throwIfNoEntry: false }) !== undefined,
-        )
-        .flatMap((file) => {
-            const nodes = fromMarkdown(readSource(input.root, file.path, input.reads).toString('utf8')).children;
-            const findings = [
-                ...openingFindings(input, file.path, nodes),
-                ...sectionFindings(input, file.path, nodes, limit),
-            ];
-            if (roots.has(file.path)) {
-                const sections = nodes.filter((node) => node.type === 'heading' && node.depth === SECTION_DEPTH);
-                if (sections.every((node) => START_WORDS.every((word) => !toString(node).toLowerCase().includes(word))))
-                    findings.push(
-                        findingAt(
-                            input,
-                            { file: file.path, line: 1 },
-                            'start-section',
-                            `Add a section whose heading names ${START_WORDS.join(', ')}.`,
-                        ),
-                    );
-            }
-            return findings;
-        });
 }

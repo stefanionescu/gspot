@@ -81,7 +81,7 @@ function lockfileFindings(input: CheckInput): Finding[] {
  * @param input the selected files and this run's read cache.
  * @returns parsed package fields by repository-relative path.
  */
-export function packageJsonFiles(input: CheckInput): Map<string, PackageJson> {
+function packageJsonFiles(input: CheckInput): Map<string, PackageJson> {
     return new Map(
         input.files
             .filter(

@@ -48,11 +48,6 @@ allowed_names = ["LinkChecker"]
 reason = "Linkinator exports LinkChecker under this exact name."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/framework/site/purgecss-program.ts", "docs/src/styles.ts"]
-allowed_names = ["PurgeCSS"]
-reason = "PurgeCSS exports its class under this exact name."
-
-[[naming.override]]
 paths = ["packages/cli/src/checks/general/licenses.ts"]
 allowed_names = ["License", "Name", "Version"]
 reason = "pip-licenses identifies these JSON fields with this exact capitalization."
@@ -385,7 +380,7 @@ import_extension = "ts"
 
 [tools.knip]
 ignore_dependencies = { value = ["@fontsource-variable/geist", "@fontsource-variable/geist-mono", "tree-sitter-bash", "tree-sitter-css", "tree-sitter-html", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript"], reason = "The build imports these packages through CSS or copies their grammar files by path." }
-entry = ["tests/setup/prepare-run.ts", "scripts/build.ts", "tests/setup/integration.ts", "packages/cli/src/checks/framework/site/linkinator-program.ts", "packages/cli/src/checks/framework/site/purgecss-program.ts", "packages/cli/configurations/language/markdown/markdownlint-cli2.mjs"]
+entry = ["tests/setup/prepare-run.ts", "scripts/build.ts", "tests/setup/integration.ts", "packages/cli/src/checks/framework/site/linkinator-program.ts", "packages/cli/configurations/language/markdown/markdownlint-cli2.mjs"]
 
 [tools.typos]
 extra = { value = { type = { license_names = { extend-glob = ["gspot.toml"], extend-words = { axe = "axe" } }, zod_types = { extend-glob = ["objects.ts"], extend-words = { optin = "optin" } } } }, reason = "Typos splits the published axe-core license name; Zod names its optional input marker optin." }

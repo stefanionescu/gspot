@@ -6,13 +6,6 @@ export const OPTIONAL_GENERATED_PATHS = [GITHUB_WORKFLOW, GITLAB_WORKFLOW, YARN_
 
 export const FILE_EXTENSION = /\.[a-z0-9]+$/iu;
 
-export const START_WORDS = ['install', 'setup', 'start', 'requirements'] as const;
-
-export const CONTENTS_TITLE = 'contents';
-
-// README sections use second-level headings.
-export const SECTION_DEPTH = 2;
-
 export const TRAILING_PUNCTUATION = '.,;:';
 
 export const PATH_CHARS = /^[\w./-]+$/u;

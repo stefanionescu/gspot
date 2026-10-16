@@ -8,8 +8,6 @@ export const HTTP_OK_STATUS = 200;
 
 export const LINKINATOR_PROGRAM = 'dist/linkinator-program.js';
 
-export const PURGECSS_PROGRAM = 'dist/purgecss-program.js';
-
 export const TEXT_SUFFIXES = new Set([
     '.htm',
     '.html',
@@ -37,9 +35,6 @@ export const ASSET_FOLDER = /(?:^|\/)(?:assets|public|static)\//u;
 
 /** How many lines of build output accompany a failure. */
 export const OUTPUT_TAIL_LINES = 10;
-
-/** How many changed output files a reproducibility failure lists. */
-export const SHOWN_DIFFERENCES = 10;
 
 export const LINKINATOR_STATES = ['OK', 'BROKEN', 'SKIPPED'] as const;
 

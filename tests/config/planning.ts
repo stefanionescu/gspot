@@ -94,15 +94,13 @@ const NEXT_INTL_PROJECTS = [
     },
 ] as const;
 
-/** Manifest and lockfile changes trigger frozen installs. Other project inputs remain analysis-only. */
+/** Lockfile changes trigger the dependency advisory scan. Other inputs remain analysis-only. */
 const LOCKFILE_TRIGGER_NAMES = [
-    'package.json',
     'bun.lock',
     'package-lock.json',
     'npm-shrinkwrap.json',
     'pnpm-lock.yaml',
     'yarn.lock',
-    'pyproject.toml',
     'uv.lock',
 ] as const;
 

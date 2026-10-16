@@ -136,7 +136,6 @@ type LimitFields<NumberValue> = Partial<
         | 'sentence_words'
         | 'list_item_words'
         | 'paragraph_sentences'
-        | 'headings_before_contents'
         | 'min_duplicate_lines'
         | 'min_duplicate_tokens'
         | 'duplicate_percent',
@@ -165,7 +164,6 @@ type ParsedLimitFields = {
     sentence_words: number;
     list_item_words: number;
     paragraph_sentences: number;
-    headings_before_contents: number;
     min_duplicate_lines: number;
     min_duplicate_tokens: number;
     duplicate_percent: number;

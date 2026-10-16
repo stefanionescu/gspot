@@ -140,11 +140,6 @@ export const DEFAULT_FIELDS = {
         description: 'The most sentences one paragraph may have.',
         reason_needed: 'raising',
     },
-    headings_before_contents: {
-        configurations: ['docs'],
-        description: 'How many H2 headings a README may have before it needs a Contents list.',
-        reason_needed: 'raising',
-    },
     min_duplicate_lines: {
         configurations: ['duplication'],
         description: 'The fewest lines a copied block has before it counts.',
@@ -234,7 +229,6 @@ export const DEFAULT_VALUES = {
     sentence_words: 30,
     list_item_words: 45,
     paragraph_sentences: 6,
-    headings_before_contents: 6,
     min_duplicate_lines: 8,
     min_duplicate_tokens: 40,
     duplicate_percent: 4,

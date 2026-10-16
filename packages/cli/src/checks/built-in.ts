@@ -5,6 +5,7 @@ import { sqlFunctions } from '#cli/checks/language/sql.ts';
 import { runBuiltInCheck } from '#cli/execution/built-in.ts';
 import { svelteCheck } from '#cli/checks/framework/svelte.ts';
 import { deptry } from '#cli/checks/language/python/deptry.ts';
+import { siteBuild } from '#cli/checks/framework/site/build.ts';
 import { bashSafety } from '#cli/checks/language/bash/safety.ts';
 import { commitlintPushed } from '#cli/checks/general/commits.ts';
 import { allowedLicenses } from '#cli/checks/general/licenses.ts';
@@ -15,12 +16,12 @@ import { ansibleLint } from '#cli/checks/infrastructure/ansible.ts';
 import { shellcheck } from '#cli/checks/language/bash/shellcheck.ts';
 import { bashWrappers } from '#cli/checks/language/bash/wrappers.ts';
 import { pydoclint } from '#cli/checks/language/python/pydoclint.ts';
-import { versionPairs } from '#cli/checks/framework/version-pairs.ts';
 import { envReads } from '#cli/checks/general/structure/env-reads.ts';
 import { nginxConfigTest } from '#cli/checks/infrastructure/nginx.ts';
 import { fileLines } from '#cli/checks/general/structure/file-lines.ts';
 import { loneFiles } from '#cli/checks/general/structure/lone-files.ts';
 import { suppressions } from '#cli/checks/general/gspot/suppressions.ts';
+import { missingPaths, requiredFiles } from '#cli/checks/general/docs.ts';
 import { actionlint } from '#cli/checks/infrastructure/github-actions.ts';
 import { translationsMessages } from '#cli/checks/library/translations.ts';
 import { staleGeneratedFiles } from '#cli/checks/stale-generated-files.ts';
@@ -41,16 +42,13 @@ import { bashPrivatePrefix } from '#cli/checks/language/bash/private-prefix.ts';
 import { pythonPipInstalls } from '#cli/checks/language/python/pip-installs.ts';
 import { typescriptTsconfig } from '#cli/checks/language/typescript/tsconfig.ts';
 import { sharedPrefixes } from '#cli/checks/general/structure/shared-prefixes.ts';
-import { siteBuild, buildReproducible } from '#cli/checks/framework/site/build.ts';
 import { lockfileHosts } from '#cli/checks/general/dependencies/lockfile-hosts.ts';
-import { staleLockfile } from '#cli/checks/general/dependencies/stale-lockfile.ts';
 import { bashUnreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
 import { bashUnusedFunctions } from '#cli/checks/language/bash/unused-functions.ts';
 import { trivialFunctions } from '#cli/checks/general/structure/trivial-functions.ts';
 import { bashVariableDefaults } from '#cli/checks/language/bash/variable-defaults.ts';
 import { recording, references } from '#cli/checks/library/swift-snapshot-testing.ts';
 import { type BuiltInCheck, type BuiltInChecks } from '#cli/types/execution/check.ts';
-import { readmeShape, missingPaths, requiredFiles } from '#cli/checks/general/docs.ts';
 import { trufflehog, envExamples, gitleaksPushed } from '#cli/checks/general/secrets.ts';
 import { fileFolderClashes } from '#cli/checks/general/structure/file-folder-clashes.ts';
 import { markdownFences, markdownlintArguments } from '#cli/checks/language/markdown.ts';
@@ -59,7 +57,6 @@ import { svgo, webManifest, unusedAssets } from '#cli/checks/framework/site/sour
 import { trivyImage, dockerignore, dockerCompose } from '#cli/checks/infrastructure/docker.ts';
 import { settingsFormat, fixSettingsFormat } from '#cli/checks/general/gspot/settings-format.ts';
 import { namingPaths, namingSettings, namingIdentifiers } from '#cli/checks/general/naming/checks.ts';
-import { NEXT_VERSION_PAIRS, REACT_VERSION_PAIRS } from '#cli/config/checks/framework/version-pairs.ts';
 import { nextjsTsc, nextConfig, nextjsBuild, nextjsRouteSegments } from '#cli/checks/framework/nextjs.ts';
 import { xcstrings, xcodeAssets, xcodeUnusedAssets } from '#cli/checks/infrastructure/xcode/resources.ts';
 import { postgresMigrationOrder, postgresEditedMigrations } from '#cli/checks/database/postgres/history.ts';
@@ -122,14 +119,12 @@ export const CHECK_FUNCTIONS = {
     'typescript/tsconfig': typescriptTsconfig,
     'docs/missing-paths': missingPaths,
     'docs/required-files': requiredFiles,
-    'docs/readme-shape': readmeShape,
     'markdown/fences': markdownFences,
     'duplication/jscpd': jscpd,
     'secrets/env-examples': envExamples,
     'repository/tracked-files': trackedFiles,
     'security/codeql': codeql,
     'dependencies/package-json': packageJson,
-    'dependencies/stale-lockfile': staleLockfile,
     'licenses/allowed': allowedLicenses,
     'dependencies/lockfile-hosts': lockfileHosts,
     'drizzle/relations': drizzleRelations,
@@ -137,14 +132,11 @@ export const CHECK_FUNCTIONS = {
     'nextjs/route-segments': nextjsRouteSegments,
     'nextjs/next-config': nextConfig,
     'nextjs/build': nextjsBuild,
-    'nextjs/version-pairs': (input) => versionPairs(input, NEXT_VERSION_PAIRS),
-    'react/version-pairs': (input) => versionPairs(input, REACT_VERSION_PAIRS),
     'cloudflare/headers': cloudflareHeaders,
     'cloudflare/redirects': cloudflareRedirects,
     'cloudflare/wrangler': cloudflareWrangler,
     'cloudflare/stale-types': staleGeneratedFiles,
     'site/build': siteBuild,
-    'site/build-reproducible': buildReproducible,
     'site/html-validate': htmlValidate,
     'site/purgecss': purgecss,
     'site/linkinator': (input) => linkinator(input, false),

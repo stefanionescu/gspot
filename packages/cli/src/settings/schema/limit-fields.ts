@@ -70,11 +70,6 @@ const limitFields = {
         DEFAULT_VALUES.paragraph_sentences,
         DEFAULT_FIELDS.paragraph_sentences,
     ),
-    headings_before_contents: settingField(
-        reasonValue(wholeNumber),
-        DEFAULT_VALUES.headings_before_contents,
-        DEFAULT_FIELDS.headings_before_contents,
-    ),
     min_duplicate_lines: settingField(
         reasonValue(z.number().int().positive()),
         DEFAULT_VALUES.min_duplicate_lines,

@@ -58,7 +58,6 @@
         "jsonc-parser": "3.3.1",
         "libpg-query": "18.1.4",
         "mdast-util-from-markdown": "2.0.3",
-        "mdast-util-to-string": "4.0.0",
         "nypm": "0.6.10",
         "p-limit": "7.3.2",
         "picocolors": "1.1.1",
@@ -80,7 +79,6 @@
       "devDependencies": {
         "@bacons/xcode": "1.0.0-alpha.33",
         "@pgsql/types": "18.0.0",
-        "@types/mdast": "4.0.4",
         "@types/npmcli__config": "6.0.4",
         "@types/picomatch": "4.0.2",
         "@types/semver": "7.7.1",

@@ -119,7 +119,6 @@
                 "scripts/build.ts",
                 "tests/setup/integration.ts",
                 "packages/cli/src/checks/framework/site/linkinator-program.ts",
-                "packages/cli/src/checks/framework/site/purgecss-program.ts",
                 "packages/cli/configurations/language/markdown/markdownlint-cli2.mjs",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
@@ -165,7 +164,6 @@
         "packages/cli": {
             "entry": [
                 "src/checks/framework/site/linkinator-program.ts",
-                "src/checks/framework/site/purgecss-program.ts",
                 "configurations/language/markdown/markdownlint-cli2.mjs",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",

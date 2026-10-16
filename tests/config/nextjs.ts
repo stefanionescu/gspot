@@ -82,16 +82,6 @@ export default config;
         },
         expected: { file: 'next.config.mjs', rule: 'checks-off', line: 2 },
     },
-    {
-        check: 'react/version-pairs',
-        files: {
-            'node_modules/react/package.json': '{"name":"react","version":"19.1.1"}\n',
-            'node_modules/react-dom/package.json': '{"name":"react-dom","version":"18.3.1"}\n',
-            'package.json':
-                '{"name":"example","version":"1.0.0","private":true,"type":"module","dependencies":{"next":"16.3.5","next-intl":"4.3.9","react":"19.1.1","react-dom":"18.3.1"}}\n',
-        },
-        expected: { file: 'package.json', rule: 'version-pair', line: 1 },
-    },
 ] as const;
 
 /** A missing imported page dependency fails native bundling. */

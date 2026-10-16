@@ -87,16 +87,6 @@ summary = "Checks that the framework configuration turns no build check off and 
 why = "A build that ignores lint and type errors ships them, and a key under env is readable by every visitor."
 help = "Remove the switch, and read the secret on the server."
 
-[[check]]
-name = "version-pairs"
-example = "Different installed versions of `next` and its lint package report an alignment finding. Install the same version of both and update the lockfile with the package manager."
-level = "recommended"
-stage = "commit"
-runs = "once"
-summary = "Checks that Next.js and its lint packages use the same installed version."
-why = "A lint package a version behind flags what the framework allows and allows what it removed."
-help = "Move both packages to the same version."
-
 [eslint]
 all_level_rules = ["@next/next/next-script-for-ga", "@next/next/no-html-link-for-pages", "@next/next/no-img-element", "@next/next/no-page-custom-font"]
 

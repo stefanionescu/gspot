@@ -208,7 +208,7 @@ test('EditorConfig checks source files beyond the Prettier extensions and skips 
     expect(planned!.skip).toBeUndefined();
 });
 
-test('dependencies/stale-lockfile runs only when a declared trigger file changes', async () => {
+test('dependencies/osv runs only when a declared trigger file changes', async () => {
     await using sandbox = await testdir({
         ...Object.fromEntries(
             LOCKFILE_TRIGGER_NAMES.flatMap((filename) => [
@@ -216,11 +216,11 @@ test('dependencies/stale-lockfile runs only when a declared trigger file changes
                 ['app/' + filename, ''],
             ]),
         ),
-        'ignored/package.json': '{"name":"ignored","private":true}\n',
+        'ignored/uv.lock': '',
         'gspot.toml': settingsText(['dependencies'], {
             level: 'all',
             tables: `[[ignore]]
-check = "dependencies/stale-lockfile"
+check = "dependencies/osv"
 paths = ["ignored/**"]
 reason = "This external project has its own installation."
 [[scope]]
@@ -235,7 +235,7 @@ configurations = ["dependencies"]
         'app/source.txt': 'Child source.\n',
     });
     const session = await openSession(sandbox.path);
-    const options = { stage: 'push' as const, only: ['dependencies/stale-lockfile'] };
+    const options = { stage: 'push' as const, only: ['dependencies/osv'] };
     const [whole] = planRun(session, options);
     for (const prefix of ['', 'app/']) {
         for (const filename of LOCKFILE_TRIGGER_NAMES) {
@@ -246,7 +246,7 @@ configurations = ["dependencies"]
         const [unrelated] = planRun(session, { ...options, staged: [prefix + 'source.txt'] });
         expect(isActive(unrelated!)).toBe(false);
     }
-    expect(isActive(planRun(session, { ...options, staged: ['ignored/package.json'] })[0]!)).toBe(false);
+    expect(isActive(planRun(session, { ...options, staged: ['ignored/uv.lock'] })[0]!)).toBe(false);
     expect(isActive(planRun(session, { ...options, changed: ['source.txt'] })[0]!)).toBe(false);
     await unlink(join(sandbox.path, 'app/uv.lock'));
     const reopened = await openSession(sandbox.path);

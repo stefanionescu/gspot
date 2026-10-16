@@ -1,7 +1,6 @@
 import { ALT_TEXT_PAGE } from '#tests/config/site/built-pages.ts';
 
 export const BUILD_OUTPUT_CHECKS = [
-    'site/build-reproducible',
     'site/html-validate',
     'site/purgecss',
     'site/linkinator',
@@ -78,26 +77,6 @@ configurations = ["site"]
 [site]
 build_command = ["bun", "build.js"]
 `;
-
-export const REPRODUCIBILITY_CASES = [
-    {
-        name: 'keeps the absolute source path fixed',
-        script: "import {mkdirSync,writeFileSync} from 'node:fs'; mkdirSync('dist'); writeFileSync('dist/index.html',process.cwd());",
-        findings: [],
-    },
-    {
-        name: 'reports output files that appear and disappear',
-        script: `import {existsSync,mkdirSync,writeFileSync} from 'node:fs';
-const second = existsSync('built-once');
-mkdirSync('dist', {recursive:true});
-writeFileSync(second ? 'dist/later.html' : 'dist/earlier.html', 'built');
-writeFileSync('built-once', 'yes');`,
-        findings: [
-            { file: 'dist/earlier.html', rule: 'not-reproducible' },
-            { file: 'dist/later.html', rule: 'not-reproducible' },
-        ],
-    },
-] as const;
 
 export const WORKSPACE_SITE_FILES = {
     'gspot.toml': `configurations = []

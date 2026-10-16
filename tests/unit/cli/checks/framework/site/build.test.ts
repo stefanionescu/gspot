@@ -8,19 +8,17 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
-import { fileMode } from '#cli/system/safe-folder/reads.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
+import { containing, textContaining } from '#tests/setup/matchers.ts';
 import { checkReport, buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { filesUnder, requireBuild } from '#cli/checks/framework/site/build.ts';
-import { rejection, containing, textContaining } from '#tests/setup/matchers.ts';
-import { stat, chmod, mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
 import {
     SITE_SETTINGS,
     SITE_BUILD_SCRIPT,
     BUILD_OUTPUT_CHECKS,
     WORKSPACE_SITE_FILES,
-    REPRODUCIBILITY_CASES,
 } from '#tests/config/site/build.ts';
 
 test('a push run builds the site without changing committed dist files or Git status', async () => {
@@ -32,46 +30,11 @@ test('a push run builds the site without changing committed dist files or Git st
         'dist/index.html': 'committed output\n',
     });
     commitAll(sandbox.path);
-    const outcome = await checkReport(sandbox.path, [
-        'check',
-        '--only',
-        'site/build',
-        'site/build-reproducible',
-        '--json',
-    ]);
+    const outcome = await checkReport(sandbox.path, ['check', '--only', 'site/build', '--json']);
     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
-    expect(outcome.report.checks).toMatchObject([
-        { check: 'site/build', status: 'passed' },
-        { check: 'site/build-reproducible', status: 'passed' },
-    ]);
+    expect(outcome.report.checks).toMatchObject([{ check: 'site/build', status: 'passed' }]);
     expect(gitOutput(sandbox.path, ['status', '--porcelain=v1'])).toBe('');
     expect(await Bun.file(join(sandbox.path, 'dist/index.html')).text()).toBe('committed output\n');
-});
-
-test("the second build leaves the first build's output for the other site checks", async () => {
-    await using sandbox = await testdir();
-    using resources = new DisposableStack();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': SITE_SETTINGS,
-        'build.js': SITE_BUILD_SCRIPT,
-        'dist/index.html': 'edited output',
-    });
-    await chmod(join(sandbox.path, 'dist/index.html'), 0o640);
-    const request = buildCheckInput(await openSession(sandbox.path), 'site/build-reproducible', {
-        paths: ['build.js'],
-        resources: resources,
-    });
-    const first = await requireBuild(request);
-    const before = await readFile(join(first.folder, 'index.html'), 'utf8');
-    expect(first.isBuilt).toBe(true);
-    expect(await CHECK_FUNCTIONS['site/build-reproducible'](request)).toStrictEqual([]);
-    expect(await readFile(join(first.folder, 'index.html'), 'utf8')).toBe(before);
-    expect(await readFile(join(sandbox.path, 'dist/index.html'), 'utf8')).toBe('edited output');
-    // Windows keeps no POSIX mode bits, so the file stays at its default there.
-    const output = await stat(join(sandbox.path, 'dist/index.html'));
-    expect(output.mode & 0o777).toBe(fileMode({ mode: 0o640 }));
-    resources.dispose();
-    expect(await pathExists(first.cwd)).toBe(false);
 });
 
 test('a build that reads an untracked file fails until the file is in the paths', async () => {
@@ -84,7 +47,7 @@ test('a build that reads an untracked file fails until the file is in the paths'
 readFileSync('local-input.txt');
 ${SITE_BUILD_SCRIPT}`,
     });
-    const request = buildCheckInput(await openSession(sandbox.path), 'site/build-reproducible', {
+    const request = buildCheckInput(await openSession(sandbox.path), 'site/build', {
         paths: ['build.js'],
         resources: resources,
     });
@@ -92,49 +55,12 @@ ${SITE_BUILD_SCRIPT}`,
         containing({ rule: 'build', message: textContaining('local-input.txt') }),
     ]);
     const corrected = await requireBuild(
-        buildCheckInput(await openSession(sandbox.path), 'site/build-reproducible', {
+        buildCheckInput(await openSession(sandbox.path), 'site/build', {
             paths: ['build.js', 'local-input.txt'],
             resources: resources,
         }),
     );
     expect(corrected.isBuilt).toBe(true);
-    expect(await pathExists(join(sandbox.path, 'dist'))).toBe(false);
-});
-
-test("a failed second build keeps the first build's output", async () => {
-    await using sandbox = await testdir();
-    using resources = new DisposableStack();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': SITE_SETTINGS,
-        'build.js': `${SITE_BUILD_SCRIPT}
-if (existsSync('built-once')) throw new Error('Test build failure');
-writeFileSync('built-once', 'yes');`,
-    });
-    const request = buildCheckInput(await openSession(sandbox.path), 'site/build-reproducible', {
-        paths: ['build.js'],
-        resources: resources,
-    });
-    const first = await requireBuild(request);
-    expect(first.isBuilt).toBe(true);
-    expect(await rejection(CHECK_FUNCTIONS['site/build-reproducible'](request))).toContain(
-        'The second site build failed',
-    );
-    expect(await readFile(join(first.folder, 'index.html'), 'utf8')).toBe('first');
-    expect(await pathExists(join(sandbox.path, 'dist'))).toBe(false);
-});
-
-test.each([...REPRODUCIBILITY_CASES])('reproducibility $name', async ({ script, findings: expected }) => {
-    await using sandbox = await testdir();
-    using resources = new DisposableStack();
-    await createFileTree(sandbox.path, { 'gspot.toml': SITE_SETTINGS, 'build.js': script });
-    const input = buildCheckInput(await openSession(sandbox.path), 'site/build-reproducible', {
-        paths: ['build.js'],
-        resources,
-    });
-    const findings = await CHECK_FUNCTIONS['site/build-reproducible'](input);
-    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([...expected]);
-    expect(await readFile(join(sandbox.path, 'build.js'), 'utf8')).toBe(script);
-    expect(await pathExists(join(sandbox.path, 'built-once'))).toBe(false);
     expect(await pathExists(join(sandbox.path, 'dist'))).toBe(false);
 });
 
@@ -200,7 +126,6 @@ test("a scope's site build copies only the workspace packages it depends on", as
     expect(built.isBuilt, built.outputTail).toBe(true);
     expect(await readFile(join(built.folder, 'index.html'), 'utf8')).toBe('<h1>Workspace site</h1>');
     expect(await pathExists(join(built.cwd, '../packages/unused/private.txt'))).toBe(false);
-    expect(await CHECK_FUNCTIONS['site/build-reproducible'](input)).toStrictEqual([]);
     expect(await pathExists(join(sandbox.path, 'web/dist'))).toBe(false);
     expect(await readFile(join(sandbox.path, 'packages/core/value.js'), 'utf8')).toBe(
         'export const value = "<h1>Workspace site</h1>";',

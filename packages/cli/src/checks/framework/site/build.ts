@@ -1,18 +1,16 @@
 import { join, relative } from 'node:path';
 import { GspotError } from '#cli/errors.ts';
-import { contentDigest } from '#cli/text.ts';
 import { memo } from '#cli/system/file-reads.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { listFolderFiles } from '#cli/system/files.ts';
 import { toPosix, isInside } from '#cli/system/paths.ts';
+import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { type SiteBuild } from '#cli/types/checks/framework.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import { portableSegments } from '#cli/system/safe-folder/names.ts';
-import { statSync, lstatSync, readFileSync, realpathSync } from 'node:fs';
+import { OUTPUT_TAIL_LINES } from '#cli/config/checks/framework/site.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
-import { OUTPUT_TAIL_LINES, SHOWN_DIFFERENCES } from '#cli/config/checks/framework/site.ts';
 
 const BUILD_MEMO = { create: () => new Map<string, Promise<SiteBuild>>() };
 
@@ -34,10 +32,6 @@ async function runBuild(input: CheckInput, scratch: string): Promise<SiteBuild> 
         .slice(-OUTPUT_TAIL_LINES)
         .join(' | ');
     return { cwd, command, folder, isBuilt, outputTail };
-}
-
-function buildDigests(folder: string): Map<string, string> {
-    return new Map(filesUnder(folder).map((path) => [path, contentDigest(readFileSync(join(folder, path)))]));
 }
 
 /**
@@ -125,37 +119,4 @@ export async function siteBuild(input: CheckInput): Promise<Finding[]> {
             `${JSON.stringify(build.command)} did not build the site: ${build.outputTail}`,
         ),
     ];
-}
-
-/**
- * Build one scratch copy twice at the same path, with clean build folders, and compare the files.
- * @param input the check input.
- * @returns one finding for each file that differs, appears, or disappears.
- */
-export async function buildReproducible(input: CheckInput): Promise<Finding[]> {
-    using scratch = await copyIntoScratch(checkCopyInputs(input));
-    using files = openSafeFolder(scratch.path, 'system');
-    const target = input.selection.view.options('site').build_folder;
-    files.removeTree(target);
-    const first = await runBuild(input, scratch.path);
-    if (!first.isBuilt) throw new GspotError('skip', 'The site did not build.');
-    const before = buildDigests(first.folder);
-    files.removeTree(target);
-    const second = await runBuild(input, scratch.path);
-    if (!second.isBuilt)
-        throw new Error(`The second site build failed: ${JSON.stringify(second.command)}: ${second.outputTail}`);
-    const after = buildDigests(second.folder);
-    const differences = [...new Set([...before.keys(), ...after.keys()])].filter(
-        (path) => before.get(path) !== after.get(path),
-    );
-    return differences
-        .slice(0, SHOWN_DIFFERENCES)
-        .map((path) =>
-            findingAt(
-                input,
-                { file: repositoryPath(input, first, join(first.folder, path)), line: 1 },
-                'not-reproducible',
-                'Two builds of the same tree wrote this file differently. Look for a timestamp, a random value, or an unordered list.',
-            ),
-        );
 }

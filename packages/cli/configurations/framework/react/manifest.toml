@@ -30,16 +30,6 @@ kind = "library"
 version = "0.5.7"
 npm = "eslint-plugin-react-refresh"
 
-[[check]]
-name = "version-pairs"
-example = "Different installed versions of react and react-dom report an alignment finding. Install the same version of both and update the lockfile with the package manager."
-level = "recommended"
-stage = "commit"
-runs = "once"
-summary = "Checks that react and react-dom use the same installed version."
-why = "React and its DOM renderer ship together and expect matching versions."
-help = "Install the same version of react and react-dom."
-
 [[naming.override]]
 paths = ["**/*.tsx", "**/*.jsx"]
 categories = ["files"]

@@ -125,18 +125,6 @@ why = "Two package managers install two different trees."
 help = "Name one packageManager in the root package.json, use it in every package, mark a workspace root private, and delete the other lockfile."
 
 [[check]]
-name = "stale-lockfile"
-example = "Adding a dependency to a package manifest without updating its lockfile reports an outdated lockfile. Run the owning package manager installation, inspect its manifest and lockfile changes, and retain both together."
-level = "recommended"
-stage = "push"
-runs = "once"
-needs = ["network"]
-files = { filenames = ["package.json", "bun.lock", "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "pyproject.toml", "uv.lock"] }
-summary = "Runs each package manager's frozen install in a temporary copy."
-why = "A lockfile that lags its manifest installs versions nobody reviewed the moment someone runs a plain install."
-help = "Run the install of the package manager once and commit the lockfile it writes."
-
-[[check]]
 name = "lockfile-hosts"
 example = "A locked package URL pointing to a host outside `dependencies.allowed_registries` reports that host. Resolve the package again from the approved registry, or review and explicitly allow the required host."
 level = "recommended"

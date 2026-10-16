@@ -54,17 +54,6 @@ why = "Other site checks read the built files, so a failed build hides their fin
 help = "Run the build command by hand and fix what it prints. Name the command under site.build_command."
 
 [[check]]
-name = "build-reproducible"
-example = "A build that embeds the current timestamp produces different bytes across repeated builds. Remove the timestamp from built files or derive it from a stable declared input, then rerun the reproducibility check."
-level = "all"
-stage = "push"
-runs = "scope"
-needs = ["build"]
-summary = "Builds the site twice and compares its files."
-why = "A build that differs from run to run cannot be cached, compared, or trusted to hold what was reviewed."
-help = "Take the timestamp, the random value, or the unordered list out of the build."
-
-[[check]]
 name = "html-validate"
 tool = "html-validate"
 example = "A template emitting `<img src=\"logo.png\">` without alternative text can produce an accessibility finding in the built HTML. Add meaningful `alt` text in the template, or `alt=\"\"` for a decorative image, and rebuild."

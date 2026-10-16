@@ -29,11 +29,6 @@ export type LinkinatorConstructor = new () => {
     >;
 };
 
-/** The selected native PurgeCSS package's public analysis API. */
-export type PurgecssConstructor = new () => {
-    purge(options: Record<string, unknown>): Promise<unknown>;
-};
-
 /** Web manifest data validated before inspecting its icon paths. */
 export type WebManifest = { name?: unknown; icons?: { src?: string | undefined }[] | undefined };
 

@@ -100,75 +100,6 @@ const AGE_CASES = [
     { name: 'stricter', source: '[install]\nminimumReleaseAge = 1209600\n', expected: TWO_WEEKS_SECONDS },
 ] as const;
 
-/** Local dependency projects retain their exact authored manifests. */
-const LOCAL_NPM_PROJECT = {
-    manifestPath: 'package.json',
-    manifest: '{"private":true,"dependencies":{"library":"file:./library"}}',
-    changed: '{"private":true,"dependencies":{"other":"file:./other"}}',
-    files: {
-        'library/package.json': '{"name":"library","version":"1.0.0"}\n',
-        'other/package.json': '{"name":"other","version":"1.0.0"}\n',
-    },
-} as const;
-
-const LOCAL_UV_PROJECT = {
-    manifestPath: 'pyproject.toml',
-    manifest: `[project]
-name = "example"
-version = "1.0.0"
-dependencies = ["library"]
-[tool.uv.sources]
-library = { path = "library" }
-other = { path = "other" }
-`,
-    changed: `[project]
-name = "example"
-version = "1.0.0"
-dependencies = ["other"]
-[tool.uv.sources]
-library = { path = "library" }
-other = { path = "other" }
-`,
-    files: {
-        'library/pyproject.toml': `[project]
-name = "library"
-version = "1.0.0"
-`,
-        'other/pyproject.toml': `[project]
-name = "other"
-version = "1.0.0"
-`,
-    },
-} as const;
-
-const LOCKFILES = [
-    {
-        ...LOCAL_NPM_PROJECT,
-        name: 'Bun',
-        lockfileName: 'bun.lock',
-        command: ['bun', 'install', '--lockfile-only', '--ignore-scripts'],
-    },
-    {
-        ...LOCAL_NPM_PROJECT,
-        name: 'npm',
-        lockfileName: 'package-lock.json',
-        command: ['npm', 'install', '--package-lock-only', '--ignore-scripts'],
-    },
-    {
-        ...LOCAL_NPM_PROJECT,
-        name: 'Yarn Classic',
-        lockfileName: 'yarn.lock',
-        command: ['yarn', 'install', '--non-interactive', '--ignore-scripts'],
-    },
-    {
-        ...LOCAL_NPM_PROJECT,
-        name: 'pnpm',
-        lockfileName: 'pnpm-lock.yaml',
-        command: ['pnpm', 'install', '--lockfile-only', '--ignore-scripts'],
-    },
-    { ...LOCAL_UV_PROJECT, name: 'uv', lockfileName: 'uv.lock', command: ['uv', 'lock'] },
-] as const;
-
 /** Syncpack filenames for replacement checks. */
 const SYNCPACK_FILES = [
     {
@@ -199,12 +130,4 @@ const SYNCPACK_FILES = [
     },
 ] as const;
 
-export {
-    AGE_CASES,
-    LOCKFILES,
-    HOST_LOCKFILE,
-    SYNCPACK_FILES,
-    TWO_WEEKS_SECONDS,
-    LOCKFILE_HOST_CASES,
-    DEPENDENCIES_REPOSITORY,
-};
+export { AGE_CASES, HOST_LOCKFILE, SYNCPACK_FILES, TWO_WEEKS_SECONDS, LOCKFILE_HOST_CASES, DEPENDENCIES_REPOSITORY };

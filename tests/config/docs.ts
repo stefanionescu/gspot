@@ -111,13 +111,6 @@ export const LICENSE = `MIT License
 Copyright (c) 2026 Alex Garcia
 `;
 
-export const MISSING_SECTIONS_README = `# A
-# B
-## Table of contents
-
-x
-`;
-
 export const DOCS_SETTINGS = `configurations = ["docs"]\n[[scope]]\npath = "api"\n\nconfigurations = ["docs"]\n[[ignore]]\ncheck = "docs/lychee"\npaths = ["api/ignored/**"]\nreason = "These pages are evaluated only after the documentation build."\n`;
 
 export const DOCS_CASES = [

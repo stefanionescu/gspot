@@ -1,8 +1,4 @@
-export const CLI_ENTRY_POINTS = [
-    'src/main.ts',
-    'src/checks/framework/site/linkinator-program.ts',
-    'src/checks/framework/site/purgecss-program.ts',
-] as const;
+export const CLI_ENTRY_POINTS = ['src/main.ts', 'src/checks/framework/site/linkinator-program.ts'] as const;
 export const CLI_BANNER = '#!/usr/bin/env node';
 export const CLI_EXECUTABLE = 'gspot.js';
 export const DIST_FOLDER = 'dist';
