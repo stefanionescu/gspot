@@ -14,9 +14,8 @@ import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { DOCKER_TOOL } from '#cli/config/checks/infrastructure/docker.ts';
+import { RAN_STATUSES, FAILED_STATUSES } from '#cli/config/execution/run.ts';
 import { emptyResult, reproduceLine, buildRunReport } from '#cli/execution/report.ts';
-import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
-import { RAN_STATUSES, JOBS_VARIABLE, FAILED_STATUSES } from '#cli/config/execution/run.ts';
 
 import type {
     Finding,
@@ -139,9 +138,7 @@ function settleResult(pass: RunState, check: PlannedCheck, result: CheckResult):
 
 // Runs every active check under the job limit and reports each result as it settles.
 async function runChecks(pass: RunState, executables: RunnableCheck[]): Promise<CheckResult[]> {
-    const wanted = Number(environmentVariable(environmentVariables(), JOBS_VARIABLE) ?? '');
-    const jobs = Number.isSafeInteger(wanted) && wanted > 0 ? wanted : availableParallelism();
-    const limiter = pLimit(jobs);
+    const limiter = pLimit(availableParallelism());
     // runOne catches check errors; these rejections cover ignore matching and onResult callbacks before resource disposal.
     const settled = await Promise.allSettled(
         executables.map((executable) =>

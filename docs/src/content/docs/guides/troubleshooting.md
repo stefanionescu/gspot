@@ -37,13 +37,6 @@ See [Generated files](/guides/generated-files/) for how gspot keeps your edits.
 ## A check runs slowly
 
 Run the reproduce command in the report to time that check alone. `--verbose` prints each command.
-Set `GSPOT_JOBS` to a smaller number when tools compete for memory, as on a small CI machine:
-
-```shell
-GSPOT_JOBS=2 gspot check
-```
-
-On Windows, run `$env:GSPOT_JOBS = "2"` first, then `gspot check`.
 
 ## No terminal accepts the question
 

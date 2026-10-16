@@ -12,11 +12,10 @@ description: The meaning of the exit codes of gspot, and the environment variabl
 
 Each [command page](/reference/commands/) lists its own exit codes.
 
-| Variable       | Purpose                                                                                                        |
-| -------------- | -------------------------------------------------------------------------------------------------------------- |
-| `GSPOT_JOBS`   | A whole number, 1 or more, that limits how many checks run at once. Any other value uses every processor core. |
-| `GITHUB_TOKEN` | Lets gspot read a template from a private GitHub repository, Mise reads it for tool downloads from GitHub.     |
-| `NO_COLOR`     | Any non-empty value turns color off.                                                                           |
+| Variable       | Purpose                                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------- |
+| `GITHUB_TOKEN` | Lets gspot read a template from a private GitHub repository, Mise reads it for tool downloads from GitHub. |
+| `NO_COLOR`     | Any non-empty value turns color off.                                                                       |
 
 For examples, see [Troubleshooting](/guides/troubleshooting/#a-check-runs-slowly).
 

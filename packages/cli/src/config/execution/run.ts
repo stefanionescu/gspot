@@ -8,7 +8,4 @@ export const FIX_DIFF_CONTEXT = 3;
 
 export const RAN_STATUSES = new Set<(typeof CHECK_STATUSES)[number]>(['passed', 'failed']);
 
-/** Optional native process concurrency override. */
-export const JOBS_VARIABLE = 'GSPOT_JOBS';
-
 export const INCOMPLETE_STATUSES = new Set<(typeof CHECK_STATUSES)[number]>(['missing', 'error']);
