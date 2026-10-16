@@ -1,5 +1,5 @@
 import { stripUndefined } from '#cli/system/values.ts';
-import { literalGlob } from '#cli/repository/matchers.ts';
+import { escapeGlob } from '#cli/repository/matchers.ts';
 import { scopeFiles } from '#cli/generation/eslint/files.ts';
 import { levelRules } from '#cli/generation/eslint/blocks.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
@@ -144,7 +144,7 @@ export function fileBlocks(
                 {
                     files: scopeFiles(eslintFiles.code, group.scope ?? '', group.files ?? ['**/*']),
                     ignores: [
-                        ...(group.ignoredScopes ?? []).map((scope) => `${literalGlob(scope)}/**`),
+                        ...(group.ignoredScopes ?? []).map((scope) => `${escapeGlob(scope)}/**`),
                         ...(group.ignores ?? []),
                     ],
                     rules: { 'no-restricted-syntax': ['error', ...selectors, ...group.selectors] },

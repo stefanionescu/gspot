@@ -1,10 +1,10 @@
 import { dirname, relative } from 'node:path';
 import { headerFor } from '#cli/generation/headers.ts';
-import { coveredBy } from '#cli/repository/coverage.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
+import { listCoveredFiles } from '#cli/repository/coverage.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { isInScope, joinScope, nestedScopes } from '#cli/repository/scopes.ts';
+import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import type { GeneratedFile, ToolFileInputs } from '#cli/types/generation/files.ts';
 import { convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
 import { TARGET_PLACEHOLDER, TARGET_JSON_PLACEHOLDER, TARGET_MODULE_PLACEHOLDER } from '#cli/config/configurations.ts';
@@ -91,12 +91,12 @@ export function pointerPaths(
         return [];
     const scope = selection.scope.path;
     if (pointer.directories === undefined) return [toolFile.per_scope ? joinScope(scope, pointer.path) : pointer.path];
-    const children = nestedScopes(
+    const children = listNestedScopes(
         context.scopes.map((entry) => entry.scope.path),
         scope,
     );
-    const matches = pathMatcher(pointer.directories);
-    const owned = coveredBy(
+    const matches = buildPathMatcher(pointer.directories);
+    const owned = listCoveredFiles(
         manifest.files,
         selection.selected,
         files,

@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
-import { scopeOf } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
+import { findScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
@@ -114,7 +114,7 @@ export function readFormatTables(
                 posix.join(repository.root, scope, PACKAGE_JSON),
                 Object.fromEntries(
                     packageManifests
-                        .filter((entry) => scopeOf(entry.path, draft.scopes).path === scope)
+                        .filter((entry) => findScope(entry.path, draft.scopes).path === scope)
                         .flatMap((entry) => Object.entries(entry.dependencies)),
                 ),
             );

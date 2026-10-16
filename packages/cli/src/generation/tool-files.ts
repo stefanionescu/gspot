@@ -2,7 +2,7 @@
 
 import { join, dirname } from 'node:path/posix';
 import { headerFor } from '#cli/generation/headers.ts';
-import { targetInScope } from '#cli/repository/scopes.ts';
+import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { prettierPlugins } from '#cli/planning/needed-tools.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { emitTarget } from '#cli/generation/tool-file-builders.ts';
@@ -145,7 +145,7 @@ function deduplicateToolFiles(scope: string, targets: ToolFileTarget[], generate
     const available = new Set(generated.files.map(({ path }) => path));
     for (const { toolFile, owner } of targets) {
         if (!toolFile.per_scope) continue;
-        for (const pointer of pointerFiles(owner, toolFile, targetInScope(scope, toolFile, available))) {
+        for (const pointer of pointerFiles(owner, toolFile, buildScopeTarget(scope, toolFile, available))) {
             const index = generated.files.findIndex(({ path }) => path === pointer.path);
             if (index !== -1) generated.files[index] = pointer;
         }

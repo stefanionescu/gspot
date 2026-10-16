@@ -7,7 +7,7 @@ import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { ANY_FOLDER_PREFIX } from '#cli/config/system/paths.ts';
 import { GIT_ENTRY_MODES } from '#cli/config/repository/revisions.ts';
-import type { GitEntry, GitStream, AttributeRule, GitIndexEntry } from '#cli/types/parsers/git.ts';
+import type { GitEntry, GitStream, GitIndexEntry, AttributePattern } from '#cli/types/parsers/git.ts';
 
 import {
     TREE_ENTRY,
@@ -88,7 +88,7 @@ function parseBlobSize(header: string, hash: string): number {
  * @param folder the repository-relative folder containing the declarations.
  * @returns selectors rooted in that folder and their declared attributes.
  */
-export function parseAttributePatterns(text: string, folder: string): AttributeRule[] {
+export function parseAttributePatterns(text: string, folder: string): AttributePattern[] {
     // eslint-disable-next-line complexity -- reason: Git attribute records need complete field validation and one parser position; splitting it repeats record state.
     return text.split('\n').flatMap((line) => {
         const trimmed = line.trim();

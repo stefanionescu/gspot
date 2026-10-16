@@ -2,8 +2,8 @@ import { extractParentFolder } from '#cli/system/paths.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { DirectoryEntry } from '#cli/types/checks/general.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { isInGspotFolder, extensionsTagged } from '#cli/repository/classify.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
+import { isInGspotFolder, listTaggedExtensions } from '#cli/repository/classify.ts';
 
 /**
  * The code files the folder checks look at: no Markdown and nothing under .gspot.
@@ -11,7 +11,7 @@ import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts'
  * @returns the code files.
  */
 export function structureSources(input: CheckInput): TrackedFile[] {
-    const documents = extensionsTagged('markdown');
+    const documents = listTaggedExtensions('markdown');
     return input.files.filter(
         (file) =>
             file.kind === 'source' &&

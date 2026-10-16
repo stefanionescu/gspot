@@ -3,25 +3,25 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
-import { aliasesFor } from '#cli/generation/eslint/aliases.ts';
+import { readScopeAliases } from '#cli/generation/eslint/aliases.ts';
 import { ALIAS_FILES, ALIAS_PROJECT } from '#tests/config/repository.ts';
 
 test.each([...ALIAS_FILES])('alias reads report a malformed $path', async ({ path, diagnostic }) => {
     await using sandbox = await testdir({ [path]: '{ "compilerOptions": { "paths": {} },' });
-    expect(() => aliasesFor(sandbox.path, '', createReadCache(sandbox.path))).toThrow(
+    expect(() => readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toThrow(
         diagnostic.replace('{PATH}', join(sandbox.path, path)),
     );
 });
 
 test('root and child aliases read their own files, and tsconfig paths win', async () => {
     await using sandbox = await testdir(ALIAS_PROJECT);
-    expect(aliasesFor(sandbox.path, '', createReadCache(sandbox.path))).toStrictEqual({
+    expect(readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toStrictEqual({
         '#app/': 'src/',
         '#root/': 'root/',
         '@root/': 'typed/',
         '#shared/': 'compiler/',
     });
-    expect(aliasesFor(sandbox.path, 'web', createReadCache(sandbox.path))).toStrictEqual({
+    expect(readScopeAliases(sandbox.path, 'web', createReadCache(sandbox.path))).toStrictEqual({
         '#app/': 'web/src/',
         '@web/': 'web/typed/',
         '#shared/': 'web/compiler/',
@@ -37,7 +37,7 @@ test('alias reads follow extends into a linked node_modules package', async () =
     await createFileTree(dependency.path, { 'tsconfig.json': '{"compilerOptions":{"strict":true}}' });
     await mkdir(join(sandbox.path, 'node_modules'));
     await symlink(dependency.path, join(sandbox.path, 'node_modules/shared-config'), 'dir');
-    expect(aliasesFor(sandbox.path, '', createReadCache(sandbox.path))).toStrictEqual({});
+    expect(readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toStrictEqual({});
 });
 
 test('inherited aliases are read relative to the file that declares them', async () => {
@@ -46,19 +46,19 @@ test('inherited aliases are read relative to the file that declares them', async
         'tsconfig.json': '{"extends":"./configs/tsconfig.json"}',
         'configs/tsconfig.json': '{"compilerOptions":{"paths":{"@app/*":["../src/*"]}}}',
     });
-    expect(aliasesFor(sandbox.path, '', createReadCache(sandbox.path))).toStrictEqual({
+    expect(readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toStrictEqual({
         '@app/': 'src/',
     });
     await writeFile(
         join(sandbox.path, 'configs/tsconfig.json'),
         '{"compilerOptions":{"baseUrl":"../app","paths":{"@app/*":["src/*"]}}}',
     );
-    expect(aliasesFor(sandbox.path, '', createReadCache(sandbox.path))).toStrictEqual({
+    expect(readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toStrictEqual({
         '@app/': 'app/src/',
     });
 });
 
 test('alias reads name a missing extended file', async () => {
     await using sandbox = await testdir({ 'tsconfig.json': '{"extends":"./missing-base.json"}' });
-    expect(() => aliasesFor(sandbox.path, '', createReadCache(sandbox.path))).toThrow('missing-base.json');
+    expect(() => readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toThrow('missing-base.json');
 });

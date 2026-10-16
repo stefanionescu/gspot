@@ -8,7 +8,7 @@ import type { EmitInputs } from '#cli/types/generation/files.ts';
 import { stylelintComponents } from '#cli/planning/needed-tools.ts';
 import type { RuleNamesFile } from '#cli/types/generation/eslint.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
-import { projectDependencies } from '#cli/repository/dependency-files.ts';
+import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 
 import {
     TAILWIND_AT_RULES,
@@ -84,7 +84,7 @@ export function stylelintToolFile(
     const { rulesOff, configurations } = selection.view;
     const options = selection.view.options('tools.stylelint');
     const isAll = level === 'all';
-    const scopeDependencies = Object.keys(projectDependencies(packageManifests, selection.scope.path));
+    const scopeDependencies = Object.keys(getProjectDependencies(packageManifests, selection.scope.path));
     const stylelintRuleNames = ruleNamesFileSchema.parse(JSON.parse(readAsset(STYLELINT_RULE_NAMES_FILE))).rules;
 
     const off = rulesOff('css/stylelint');

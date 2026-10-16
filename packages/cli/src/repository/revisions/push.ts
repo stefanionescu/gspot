@@ -47,7 +47,7 @@ function parseLine(line: string): PushLine {
 }
 
 // Peel every live local and comparison object in one Git operation, including annotated tags.
-async function peelCommits(
+async function readPeeledCommits(
     root: string,
     lines: PushLine[],
     cancelSignal?: AbortSignal,
@@ -81,7 +81,7 @@ async function readShallowBoundaries(root: string, cancelSignal?: AbortSignal): 
 }
 
 // Compare an update with its previous commit, or a new ref with Git's remote-tracking namespace.
-async function comparison(context: PushSearch, hash: string, remoteHash: string): Promise<Comparison> {
+async function readComparison(context: PushSearch, hash: string, remoteHash: string): Promise<Comparison> {
     const { root, cancelSignal } = context;
     if (!ABSENT_HASH.test(remoteHash)) {
         if (!context.commits.has(remoteHash))
@@ -104,7 +104,7 @@ async function comparison(context: PushSearch, hash: string, remoteHash: string)
 // The revision a pushed commit forms: its history back to the comparison, its tree, and its changed paths.
 async function buildRevision(context: PushSearch, line: PushLine, hash: string): Promise<PushRevision> {
     const { root, cancelSignal, boundaries } = context;
-    const { base, changed, range } = await comparison(context, hash, line.remoteHash);
+    const { base, changed, range } = await readComparison(context, hash, line.remoteHash);
     const history = await readGitLines(root, [...REV_LIST_ARGUMENTS, ...range, '--'], { cancelSignal });
     const tree = await readGitText(root, [...TREE_ARGUMENTS, `${hash}${TREE_SUFFIX}`], { cancelSignal });
     const selected = changed === undefined ? undefined : [...new Set(changed)].toSorted((a, b) => a.localeCompare(b));
@@ -175,7 +175,7 @@ export async function selectPush(
     const context: PushSearch = {
         root,
         cancelSignal,
-        commits: await peelCommits(root, lines, cancelSignal),
+        commits: await readPeeledCommits(root, lines, cancelSignal),
         remote: remotes.find((name) => name === remote),
         boundaries: shallow ? await readShallowBoundaries(root, cancelSignal) : new Set<string>(),
     };
@@ -204,7 +204,7 @@ export async function readPushBase(root: string, cancelSignal?: AbortSignal): Pr
  * @param cancelSignal cancellation for the Git commands.
  * @returns the exact selected commits or the Git selection error.
  */
-export async function pushedCommits(
+export async function readPushedCommits(
     root: string,
     commits: string[] | undefined,
     cancelSignal?: AbortSignal,

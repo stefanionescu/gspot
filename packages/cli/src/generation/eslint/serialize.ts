@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { literalGlob } from '#cli/repository/matchers.ts';
+import { escapeGlob } from '#cli/repository/matchers.ts';
 import { scopeFiles } from '#cli/generation/eslint/files.ts';
 import { ESLINT_BASE_IMPORTS } from '#cli/config/generation/eslint.ts';
 
@@ -86,7 +86,7 @@ export function eslintModule(input: EslintModuleInput): EslintModule {
                     : {
                           files: (payload.files ?? codeFiles).map((entry) => [
                               ...(Array.isArray(entry) ? entry : [entry]),
-                              joinScope(literalGlob(scope.path), '**/*'),
+                              joinScope(escapeGlob(scope.path), '**/*'),
                           ]),
                           ignores: [...(payload.ignores ?? []), ...scope.excluded],
                       };

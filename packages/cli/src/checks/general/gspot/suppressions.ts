@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
-import { coveredBy } from '#cli/repository/coverage.ts';
+import { findScope } from '#cli/repository/scopes.ts';
 import { toolName } from '#cli/configurations/tool-pins.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
+import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { REASON_ABOVE } from '#cli/config/checks/general/gspot.ts';
 import { isReasonAccepted } from '#cli/settings/errors/reasons.ts';
 import type { SourceComment } from '#cli/types/parsers/comments.ts';
@@ -31,7 +31,7 @@ function suppressionSyntaxes(selection: ScopeSelection, file: TrackedFile): Supp
     const readers = new Set(
         selected.flatMap((manifest) =>
             manifest.checks.flatMap((check) =>
-                coveredBy(
+                listCoveredFiles(
                     check.files ?? manifest.files,
                     selected,
                     [file],
@@ -73,7 +73,8 @@ export async function suppressions(input: CheckInput): Promise<Finding[]> {
     const found: Finding[] = [];
     for (const [scope, selection] of selections) {
         for (const file of input.files.filter(
-            (file) => file.kind === 'source' && file.tags.includes('text') && scopeOf(file.path, scopes).path === scope,
+            (file) =>
+                file.kind === 'source' && file.tags.includes('text') && findScope(file.path, scopes).path === scope,
         )) {
             const forms = suppressionSyntaxes(selection, file);
             const source = readCachedBytes(input.reads, file.path).toString('utf8');

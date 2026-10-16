@@ -8,10 +8,10 @@ import { findingAt } from '#cli/checks/finding.ts';
 import type { Parsed } from '#cli/types/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
 import { walkSqlTree } from '#cli/parsers/sql/postgres.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
-import { extensionsTagged } from '#cli/repository/classify.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { readCachedText, readCachedBytes } from '#cli/system/files/reads.ts';
@@ -217,8 +217,8 @@ export async function supabaseDenoCheck(input: CheckInput): Promise<Finding[]> {
 export function supabaseServiceRoleKey(input: CheckInput): Finding[] {
     const folder = input.selection.view.options('supabase').functions_folder;
     const tests = input.selection.view.test_files;
-    const isAllowed = pathMatcher([`${folder}/**`, ...tests]);
-    const extensions = [...extensionsTagged(...ADMIN_KEY_TAGS), ...ADMIN_KEY_EXTENSIONS];
+    const isAllowed = buildPathMatcher([`${folder}/**`, ...tests]);
+    const extensions = [...listTaggedExtensions(...ADMIN_KEY_TAGS), ...ADMIN_KEY_EXTENSIONS];
     const files = input.files.filter(
         (file) =>
             file.kind === 'source' &&

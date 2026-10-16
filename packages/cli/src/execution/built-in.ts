@@ -1,6 +1,6 @@
 import { emptyResult } from '#cli/execution/report.ts';
-import { workspaceSourceFiles } from '#cli/tools/npm/packages.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { listWorkspaceDependencyFiles } from '#cli/tools/npm/packages.ts';
 
 import type {
     Finding,
@@ -41,7 +41,12 @@ export function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope'
         generatedPaths: session.generatedPaths,
         timeoutSeconds: session.timeoutSeconds,
         dependencyFiles: () =>
-            workspaceSourceFiles(session.root, planned.scope.scope.path, session.repository.files, session.reads),
+            listWorkspaceDependencyFiles(
+                session.root,
+                planned.scope.scope.path,
+                session.repository.files,
+                session.reads,
+            ),
         root: session.root,
         check: planned.check,
         files: planned.files,

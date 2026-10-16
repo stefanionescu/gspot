@@ -1,5 +1,5 @@
 import { joinScope } from '#cli/repository/scopes.ts';
-import { literalGlob } from '#cli/repository/matchers.ts';
+import { escapeGlob } from '#cli/repository/matchers.ts';
 import { nodePatterns, sourcePattern } from '#cli/generation/eslint/files.ts';
 
 import type {
@@ -113,7 +113,7 @@ export function boundaryBlocks(context: EslintContext): EslintBlock[] {
     const trpcPaths = modules.some(({ name }) => name === TRPC_SERVER_MODULE)
         ? scopes
               .filter(({ selected }) => selected.some(({ configuration }) => configuration.name === TRPC_CONFIGURATION))
-              .map(({ scope }) => joinScope(literalGlob(scope.path), '**/*'))
+              .map(({ scope }) => joinScope(escapeGlob(scope.path), '**/*'))
         : [];
     const input = { modules, tests, enforceTests, trpcPaths };
     return [

@@ -2,7 +2,7 @@
 import { openFiles } from '#cli/system/files/open.ts';
 import type { FileEdit } from '#cli/types/ownership.ts';
 import type { ReplacedFiles } from '#cli/types/commands/init.ts';
-import type { Tooling, FoundToolFile } from '#cli/types/repository/inventory.ts';
+import type { ExistingTools, FoundToolFile } from '#cli/types/repository/inventory.ts';
 
 // Records what init does with one file: a shared file stays for the developer, and init deletes an owned one.
 function recordOutcome(entry: FoundToolFile, replaced: ReplacedFiles): void {
@@ -25,7 +25,7 @@ function recordOutcome(entry: FoundToolFile, replaced: ReplacedFiles): void {
  */
 export function planReplacedFiles(
     root: string,
-    tooling: Tooling,
+    tooling: ExistingTools,
     tools: Set<string>,
     toolFiles: FileEdit[],
 ): ReplacedFiles {

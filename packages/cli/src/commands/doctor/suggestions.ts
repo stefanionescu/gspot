@@ -8,9 +8,9 @@ import { readCachedPrefix } from '#cli/system/files/reads.ts';
 import { type Generated } from '#cli/types/generation/files.ts';
 import { hasGeneratedHeader } from '#cli/repository/classify.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
-import { readTooling, readLintJobs } from '#cli/repository/existing-tools.ts';
+import { readLintJobs, readExistingTools } from '#cli/repository/existing-tools.ts';
 import { type Suggestions, type SuggestionRow } from '#cli/types/commands/doctor.ts';
-import { type Tooling, type FoundToolFile } from '#cli/types/repository/inventory.ts';
+import { type ExistingTools, type FoundToolFile } from '#cli/types/repository/inventory.ts';
 
 function configurationSuggestions(session: Session): Pick<Suggestions, 'detected' | 'suggested' | 'undetected'> {
     const { root, repository, manifests, packageManifests, settingsFile } = session;
@@ -107,7 +107,12 @@ function buildFileRow(
     };
 }
 
-function unownedToolFiles(session: Session, tooling: Tooling, tools: Set<string>, outputs: Generated): SuggestionRow[] {
+function unownedToolFiles(
+    session: Session,
+    tooling: ExistingTools,
+    tools: Set<string>,
+    outputs: Generated,
+): SuggestionRow[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
     const generated = new Set(outputs.files.map((file) => file.path));
     return tooling.toolFiles
@@ -141,7 +146,7 @@ function unownedToolFiles(session: Session, tooling: Tooling, tools: Set<string>
 export function listSuggestions(session: Session): Suggestions {
     const { packageManifests } = session;
     const manifests = session.neededToolManifests;
-    const tooling = readTooling(session.root, session.repository.files, packageManifests, session.reads);
+    const tooling = readExistingTools(session.root, session.repository.files, packageManifests, session.reads);
     const generated = emitAll(session);
     const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));

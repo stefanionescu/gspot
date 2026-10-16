@@ -16,8 +16,8 @@ import { LICENSE_FILE } from '#cli/config/repository/inventory.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
 import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
-import { scopeOf, isInScope, joinScope } from '#cli/repository/scopes.ts';
 import type { PathIndex, TaskSources } from '#cli/types/checks/general.ts';
+import { findScope, isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { listExecutableNames, includeParentFolders } from '#cli/system/paths.ts';
 import { MISE_FILES, RUNNER_NAMES, MISE_TASKS_FOLDER } from '#cli/config/repository/existing-tools.ts';
 
@@ -235,7 +235,7 @@ function cleanPathToken(token: string): string {
 export function missingPaths(input: CheckInput): Finding[] {
     const files = input.files.filter((file) => file.kind === 'source' && file.path.endsWith('.md'));
     const known = knownPaths(input);
-    const projects = Map.groupBy(files, (file) => scopeOf(file.path, input.scopeEntries).path);
+    const projects = Map.groupBy(files, (file) => findScope(file.path, input.scopeEntries).path);
     return [...projects].flatMap(([scope, sources]) => {
         const index: PathIndex = { known, tasks: taskSources(input, scope) };
         return sources.flatMap((file) => {

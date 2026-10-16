@@ -10,8 +10,8 @@ import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { targetInScope } from '#cli/repository/scopes.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
+import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import { EDITORCONFIG_SETTINGS } from '#tests/config/formatting.ts';
@@ -179,7 +179,7 @@ test.each([...LEVELS])("every configuration's tool files parse at level %s", asy
             .filter((file) => file.level !== 'all' || level === 'all')
             .filter((file) => file.tool.length === 0 || file.tool.some((name) => tools.has(name)))
             .filter((file) => file.check.length === 0 || file.check.some((name) => checkNames.has(name)))
-            .map((file) => targetInScope(scope.path, file, paths));
+            .map((file) => buildScopeTarget(scope.path, file, paths));
         expect(targets.length).toBeGreaterThan(0);
         expect(new Set(targets).difference(paths)).toStrictEqual(new Set<string>());
     }

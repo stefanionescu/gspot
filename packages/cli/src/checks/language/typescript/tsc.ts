@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { chmodSync, writeFileSync } from 'node:fs';
-import { scopeOf } from '#cli/repository/scopes.ts';
 import { join, dirname, relative } from 'node:path';
+import { findScope } from '#cli/repository/scopes.ts';
 import { emptyResult } from '#cli/execution/report.ts';
 import { checkInput } from '#cli/execution/built-in.ts';
 import { coveredInputs } from '#cli/planning/checks.ts';
@@ -62,7 +62,7 @@ function scopeCompilerProject(
     const { root, repository } = session;
     const files = new Set(
         repository.files
-            .filter((file) => file.kind === 'source' && scopeOf(file.path, repository.scopes).path === scope)
+            .filter((file) => file.kind === 'source' && findScope(file.path, repository.scopes).path === scope)
             .map((file) => join(root, file.path)),
     );
     return {

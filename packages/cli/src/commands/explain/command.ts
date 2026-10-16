@@ -1,18 +1,18 @@
 // Explain a check, rule, configuration, setting, or file path.
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
 import { quoteArgument } from '#cli/system/text.ts';
+import { findScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { printResult } from '#cli/system/terminal.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { coveredBy } from '#cli/repository/coverage.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
+import { listCoveredFiles } from '#cli/repository/coverage.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { isReasonNeeded } from '#cli/settings/errors/reasons.ts';
 import { unknownSettingError } from '#cli/settings/errors/keys.ts';
@@ -205,11 +205,11 @@ function uncheckedNote(file: TrackedFile): string | undefined {
  */
 function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
     const { path } = file;
-    const scope = scopeOf(path, session.repository.scopes);
+    const scope = findScope(path, session.repository.scopes);
     const selection = session.scopes.find((entry) => entry.scope.path === scope.path) as ScopeSelection;
     const configurations = selection.selected.filter(
         (manifest) =>
-            coveredBy(
+            listCoveredFiles(
                 manifest.files,
                 selection.selected,
                 [file],
@@ -232,7 +232,9 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
                 ...(check.manifest === undefined ? {} : { configuration: check.manifest.configuration.name }),
             })),
         ignores: session.settingsFile.settings.ignore
-            .filter((entry) => entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(path))
+            .filter(
+                (entry) => entry.paths === undefined || entry.paths.length === 0 || buildPathMatcher(entry.paths)(path),
+            )
             .map((entry) => ({
                 check: entry.check,
                 ...(entry.rule === undefined ? {} : { rule: entry.rule }),

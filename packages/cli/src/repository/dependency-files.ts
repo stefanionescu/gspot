@@ -4,9 +4,9 @@ import { posix } from 'node:path';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: Scope discovery and dependency selection share these hoisted calculations within the repository module.
 import { isInScope } from '#cli/repository/scopes.ts';
-import { isToolingPath } from '#cli/repository/classify.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import { HOOK_PACKAGES } from '#cli/config/repository/hooks.ts';
+import { isInstalledToolPath } from '#cli/repository/classify.ts';
 import { readText, readCachedText } from '#cli/system/files/reads.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { packageJsonSchema, selectDependencyFileParser } from '#cli/parsers/dependency-files.ts';
@@ -21,7 +21,7 @@ import { type PackageJson, type DependencyMap, type DependencyFile } from '#cli/
 // eslint-disable-next-line sonarjs/cognitive-complexity -- reason: Package declarations accept strings and package-manager records; this reader validates both forms together.
 export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]): Promise<DependencyFile[]> {
     const manifests: DependencyFile[] = [];
-    for (const file of files.filter((file) => file.kind === 'source' && !isToolingPath(file.path))) {
+    for (const file of files.filter((file) => file.kind === 'source' && !isInstalledToolPath(file.path))) {
         try {
             const parse = selectDependencyFileParser(file.path);
             if (parse === undefined) continue;
@@ -50,25 +50,25 @@ export function readPackageJson(root: string, path: string): PackageJson | undef
 
 /**
  * True when an npm manifest holds only declared npm tools or recognized Git hook managers.
- * @param projectManifest the parsed project manifest.
+ * @param dependencyFile the parsed project manifest.
  * @param npmNames declared npm installer packages.
  * @returns whether it holds tooling only.
  */
-export function isToolsOnlyPackage(projectManifest: DependencyFile, npmNames: ReadonlySet<string>): boolean {
-    if (projectManifest.kind !== 'package.json') return false;
-    const names = Object.keys(projectManifest.installed);
+export function isToolOnlyPackage(dependencyFile: DependencyFile, npmNames: ReadonlySet<string>): boolean {
+    if (dependencyFile.kind !== 'package.json') return false;
+    const names = Object.keys(dependencyFile.installed);
     if (names.length === 0) return false;
     return names.every((name) => npmNames.has(name) || new Set<string | undefined>(HOOK_PACKAGES).has(name));
 }
 
 /**
  * Get dependencies from the nearest declared npm project that contains a scope.
- * @param manifests validated source project manifests.
+ * @param dependencyFiles validated source project manifests.
  * @param scope the repository-relative project scope.
  * @returns declared dependencies without borrowing from children or siblings.
  */
-export function projectDependencies(manifests: DependencyFile[], scope: string): DependencyMap {
-    const owner = manifests
+export function getProjectDependencies(dependencyFiles: DependencyFile[], scope: string): DependencyMap {
+    const owner = dependencyFiles
         .filter(
             (manifest) =>
                 manifest.kind === 'package.json' &&

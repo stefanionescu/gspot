@@ -6,7 +6,7 @@ import { mkdir, unlink, symlink } from 'node:fs/promises';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { LINKED_RULE_FOLDERS } from '#tests/config/tooling.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { readTooling, readLintJobs, hasIniSection } from '#cli/repository/existing-tools.ts';
+import { readLintJobs, hasIniSection, readExistingTools } from '#cli/repository/existing-tools.ts';
 
 test('tool discovery finds nested tool files and skips .gspot and vendored folders', async () => {
     await using sandbox = await testdir();
@@ -22,7 +22,7 @@ test('tool discovery finds nested tool files and skips .gspot and vendored folde
         scopeEntries: [],
         manifests: configurationManifests(),
     });
-    const discovered = readTooling(sandbox.path, repository.files, []);
+    const discovered = readExistingTools(sandbox.path, repository.files, []);
     expect(discovered.toolFiles.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);
 });
 
@@ -91,7 +91,7 @@ test('tool discovery reads tool sections through a link inside the repository', 
     const source = '[tool.ruff]\nline-length = 100\n';
     await createFileTree(sandbox.path, { 'settings/python.toml': source });
     await symlink('settings/python.toml', join(sandbox.path, 'pyproject.toml'));
-    const tooling = readTooling(sandbox.path, [], []);
+    const tooling = readExistingTools(sandbox.path, [], []);
     expect(tooling.toolFiles).toContainEqual({
         tool: 'ruff',
         path: 'pyproject.toml',
@@ -111,10 +111,10 @@ test.each([...LINKED_RULE_FOLDERS])(
         const root = join(sandbox.path, 'project');
         await mkdir(dirname(join(root, path)), { recursive: true });
         await symlink(join(sandbox.path, 'outside'), join(root, path), 'dir');
-        expect(readTooling(root, [], []).rulesDirectories).toStrictEqual([path]);
+        expect(readExistingTools(root, [], []).rulesDirectories).toStrictEqual([path]);
         await unlink(join(root, path));
         await createFileTree(root, { [`${path}/guide.md`]: 'authored rules\n' });
-        expect(readTooling(root, [], []).rulesDirectories).toStrictEqual([path]);
+        expect(readExistingTools(root, [], []).rulesDirectories).toStrictEqual([path]);
     },
 );
 

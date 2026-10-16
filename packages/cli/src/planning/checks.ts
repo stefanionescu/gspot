@@ -1,7 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { stripUndefined } from '#cli/system/values.ts';
-import { coveredBy } from '#cli/repository/coverage.ts';
 import { isOutsideChildren } from '#cli/repository/scopes.ts';
+import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
@@ -172,7 +172,7 @@ export function coveredInputs(session: Session, check: PlannedCheck): TrackedFil
     const files = check.files.filter((file) => isOutsideChildren(file.path, children));
     return owners === undefined
         ? []
-        : coveredBy(
+        : listCoveredFiles(
               owners,
               check.scope.selected,
               files,

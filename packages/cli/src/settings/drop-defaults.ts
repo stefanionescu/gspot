@@ -5,9 +5,9 @@ import { selectForScope } from '#cli/repository/coverage.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { WrittenTable } from '#cli/types/settings/values.ts';
-import { isInScope, byScopeDepth } from '#cli/repository/scopes.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { knownSettings, detectedDefaults } from '#cli/settings/view.ts';
+import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { mergeValue, writtenValue, declarationFor, settingDefault, settingCandidates } from '#cli/settings/inherit.ts';
 
@@ -108,7 +108,7 @@ export function dropDefaults(settings: TomlTable): TomlTable {
             const scope = trimTrailingSlashes(table['path'] as string);
             return { scope, table, known: knownSettings(selectForScope(selection, scope, manifests), level) };
         }),
-    ].toSorted((left, right) => byScopeDepth(left.scope, right.scope));
+    ].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
     // The writer has no project input to prove a computed default. Keep a written choice until the writer knows that input.
     const unproved = [...detectedDefaults({})].filter(([, value]) => value === undefined);
     for (const [key] of unproved) for (const table of tables) table.known.defaults.delete(key);

@@ -5,9 +5,9 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { buildTrackedFile } from '#tests/setup/tracked-file.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { pathMatcher, filenameMatcher } from '#cli/repository/matchers.ts';
-import { coveredBy, isCovered, selectForScope } from '#cli/repository/coverage.ts';
+import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import { DECLARATION_FILES, GENERATED_SELECTIONS } from '#tests/config/repository.ts';
+import { isCovered, selectForScope, listCoveredFiles } from '#cli/repository/coverage.ts';
 
 import {
     JEST_CASES,
@@ -26,24 +26,24 @@ test('files are covered by extension, file name at any depth, tag and glob', () 
         isCovered(
             bash.files,
             buildTrackedFile('scripts/build.sh'),
-            filenameMatcher(bash.files.filenames),
-            pathMatcher(bash.files.paths),
+            buildFilenameMatcher(bash.files.filenames),
+            buildPathMatcher(bash.files.paths),
         ),
     ).toBe(true);
     expect(
         isCovered(
             bash.files,
             buildTrackedFile('.gspot/hooks/pre-commit', ['text', 'shebang:shell']),
-            filenameMatcher(bash.files.filenames),
-            pathMatcher(bash.files.paths),
+            buildFilenameMatcher(bash.files.filenames),
+            buildPathMatcher(bash.files.paths),
         ),
     ).toBe(true);
     expect(
         isCovered(
             bash.files,
             buildTrackedFile('README.md'),
-            filenameMatcher(bash.files.filenames),
-            pathMatcher(bash.files.paths),
+            buildFilenameMatcher(bash.files.filenames),
+            buildPathMatcher(bash.files.paths),
         ),
     ).toBe(false);
     const filenames = { ...bash.files, extensions: [], filenames: ['_headers'], tags: [] };
@@ -51,8 +51,8 @@ test('files are covered by extension, file name at any depth, tag and glob', () 
         isCovered(
             filenames,
             buildTrackedFile('public/_headers'),
-            filenameMatcher(filenames.filenames),
-            pathMatcher(filenames.paths),
+            buildFilenameMatcher(filenames.filenames),
+            buildPathMatcher(filenames.paths),
         ),
     ).toBe(true);
     const paths = { ...bash.files, extensions: [], tags: [], paths: ['infra/**'] };
@@ -60,16 +60,16 @@ test('files are covered by extension, file name at any depth, tag and glob', () 
         isCovered(
             paths,
             buildTrackedFile('infra/config.txt'),
-            filenameMatcher(paths.filenames),
-            pathMatcher(paths.paths),
+            buildFilenameMatcher(paths.filenames),
+            buildPathMatcher(paths.paths),
         ),
     ).toBe(true);
     expect(
         isCovered(
             paths,
             buildTrackedFile('docs/config.txt'),
-            filenameMatcher(paths.filenames),
-            pathMatcher(paths.paths),
+            buildFilenameMatcher(paths.filenames),
+            buildPathMatcher(paths.paths),
         ),
     ).toBe(false);
 });
@@ -77,7 +77,7 @@ test('files are covered by extension, file name at any depth, tag and glob', () 
 test('a configuration that covers the language files gets them', () => {
     const selected = selectConfigurations(['bash'], manifests);
     const structure = manifests.get('structure')!;
-    const owned = coveredBy(
+    const owned = listCoveredFiles(
         structure.files,
         selected,
         [buildTrackedFile('a.sh'), buildTrackedFile('README.md')],
@@ -105,7 +105,7 @@ test.each([
         buildTrackedFile('src/index.ts'),
     ];
     expect(
-        coveredBy(
+        listCoveredFiles(
             manifests.get('format')!.files,
             selectConfigurations(configurations, manifests),
             files,
@@ -122,11 +122,11 @@ test.each(MIGRATION_CASES)(
         const selected = selectConfigurations(['postgres'], manifests);
         const files = MIGRATION_PATHS.map((path) => buildTrackedFile(path));
         const table = manifests.get('postgres')!.files;
-        const owned = coveredBy(table, selected, files, scope, [], {});
+        const owned = listCoveredFiles(table, selected, files, scope, [], {});
         expect(owned.map((file) => file.path)).toStrictEqual([...expected]);
         expect(owned[0]).toBe(files.find((file) => file.path === expected[0]));
-        expect(coveredBy({ ...table, kinds: ['binary'] }, selected, files, scope, [], {})).toStrictEqual([]);
-        expect(coveredBy({ ...table, paths: [] }, selected, files, scope, [], {})).toStrictEqual([]);
+        expect(listCoveredFiles({ ...table, kinds: ['binary'] }, selected, files, scope, [], {})).toStrictEqual([]);
+        expect(listCoveredFiles({ ...table, paths: [] }, selected, files, scope, [], {})).toStrictEqual([]);
         expect(files.map((file) => file.path)).toStrictEqual([...MIGRATION_PATHS]);
     },
 );
@@ -134,7 +134,7 @@ test.each(MIGRATION_CASES)(
 test.each([...JEST_CASES])('Jest covers the test paths of scope "$scope"', ({ scope, tests, expected }) => {
     const selected = selectConfigurations(['jest'], manifests);
     const files = JEST_PATHS.map((path) => buildTrackedFile(path));
-    const owned = coveredBy(manifests.get('jest')!.files, selected, files, scope, [...tests], {});
+    const owned = listCoveredFiles(manifests.get('jest')!.files, selected, files, scope, [...tests], {});
     expect(owned.map(({ path }) => path)).toStrictEqual([...expected]);
     for (const file of owned) expect(files).toContain(file);
     expect(files.map(({ path }) => path)).toStrictEqual([...JEST_PATHS]);

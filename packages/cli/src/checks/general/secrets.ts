@@ -5,13 +5,13 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { extensionsTagged } from '#cli/repository/classify.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { mergeRuns, historyResult } from '#cli/checks/general/history.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
-import { readPushBase, pushedCommits } from '#cli/repository/revisions/push.ts';
+import { readPushBase, readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { type Finding, type CheckInput, type CheckResult } from '#cli/types/execution/check.ts';
 
 import {
@@ -36,7 +36,7 @@ export async function gitleaksPushed(session: Session, planned: PlannedCheck): P
     const started = performance.now();
     let result = historyResult(session, planned, 'Secret history requires a Git repository.');
     if (result.status === 'skipped') return result;
-    const commits = await pushedCommits(session.root, planned.commits, session.cancelSignal);
+    const commits = await readPushedCommits(session.root, planned.commits, session.cancelSignal);
     if (!Array.isArray(commits)) return { ...result, status: 'error', note: commits.error };
     const command = (
         ((planned.manifest as Manifest).checks.find(({ name }) => name === GITLEAKS_STAGED_CHECK) as CheckDeclaration)
@@ -64,7 +64,7 @@ export async function trufflehog(session: Session, planned: PlannedCheck): Promi
     const started = performance.now();
     const base = historyResult(session, planned, 'Verified secret history requires a Git repository.');
     if (base.status === 'skipped') return base;
-    const commits = await pushedCommits(session.root, planned.commits, session.cancelSignal);
+    const commits = await readPushedCommits(session.root, planned.commits, session.cancelSignal);
     if (!Array.isArray(commits))
         return { ...base, status: 'error', note: 'Cannot select commits for verified secret scanning.' };
     if (commits.length === 0) return { ...base, note: 'No selected commits to scan.' };
@@ -118,7 +118,7 @@ export function envExamples(input: CheckInput): Finding[] {
                 ),
         ),
     ];
-    const extensions = extensionsTagged(...ENV_READ_LANGUAGES);
+    const extensions = listTaggedExtensions(...ENV_READ_LANGUAGES);
     const candidates = inScope.filter(
         (file) => file.kind === 'source' && extensions.some((extension) => file.path.endsWith(extension)),
     );

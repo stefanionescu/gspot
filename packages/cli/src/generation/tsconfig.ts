@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { scopeOf } from '#cli/repository/scopes.ts';
+import { findScope } from '#cli/repository/scopes.ts';
 import { join, dirname, resolve, relative } from 'node:path';
 import { readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
@@ -31,7 +31,7 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
             .filter(
                 (file) =>
                     (file.tags.includes('typescript') || DECLARATION_EXTENSIONS.has(extractExtension(file.path))) &&
-                    scopeOf(file.path, scopeEntries).path === scope,
+                    findScope(file.path, scopeEntries).path === scope,
             )
             .map((file) => file.path),
         reads,
@@ -58,12 +58,12 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
         (file) =>
             file.kind === 'source' &&
             (file.tags.includes('typescript') || DECLARATION_EXTENSIONS.has(extractExtension(file.path))) &&
-            scopeOf(file.path, scopeEntries).path === scope,
+            findScope(file.path, scopeEntries).path === scope,
     );
     // Svelte reads these extra extensions through include; tsc ignores them as unsupported sources.
     const components = files.filter(
         (file) =>
-            file.kind === 'source' && file.tags.includes('svelte') && scopeOf(file.path, scopeEntries).path === scope,
+            file.kind === 'source' && file.tags.includes('svelte') && findScope(file.path, scopeEntries).path === scope,
     );
     return {
         compilerOptions: {

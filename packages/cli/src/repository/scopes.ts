@@ -1,13 +1,13 @@
 // Discovers project scopes and resolves paths within them.
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
-import { literalGlob } from '#cli/repository/matchers.ts';
-import { isToolingPath } from '#cli/repository/classify.ts';
+import { escapeGlob } from '#cli/repository/matchers.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { npmToolNames } from '#cli/configurations/tool-pins.ts';
+import { isInstalledToolPath } from '#cli/repository/classify.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: Scope discovery and dependency selection share these hoisted calculations within the repository module.
-import { isToolsOnlyPackage } from '#cli/repository/dependency-files.ts';
+import { isToolOnlyPackage } from '#cli/repository/dependency-files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
 import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -29,7 +29,7 @@ export function isInScope(path: string, scope: string): boolean {
  * @param scope the parent scope, empty for the repository root.
  * @returns the nested paths in their original order.
  */
-export function nestedScopes(paths: readonly string[], scope: string): string[] {
+export function listNestedScopes(paths: readonly string[], scope: string): string[] {
     return paths.filter((path) => path !== scope && isInScope(path, scope));
 }
 
@@ -39,7 +39,7 @@ export function nestedScopes(paths: readonly string[], scope: string): string[] 
  * @param right the second scope path.
  * @returns the comparison result.
  */
-export function byScopeDepth(left: string, right: string): number {
+export function compareScopeDepth(left: string, right: string): number {
     const leftDepth = left === '' ? 0 : left.split('/').length;
     const rightDepth = right === '' ? 0 : right.split('/').length;
     return leftDepth - rightDepth || left.localeCompare(right);
@@ -51,13 +51,13 @@ export function byScopeDepth(left: string, right: string): number {
  * @param scope the project scope, empty for the root.
  * @returns true only when no exclusion or partial selector leaves scope content active.
  */
-export function coversScope(paths: string[], scope: string): boolean {
+export function isScopeCovered(paths: string[], scope: string): boolean {
     if (paths.some((path) => path.startsWith(GLOB_EXCLUDE))) return false;
     if (WHOLE_TREE_GLOBS.some((pattern) => paths.includes(pattern))) return true;
     if (scope === '') return false;
     const segments = scope.split('/');
     return segments.some((_, index) => {
-        const literal = literalGlob(segments.slice(0, index + 1).join('/'));
+        const literal = escapeGlob(segments.slice(0, index + 1).join('/'));
         return paths.includes(literal) || paths.includes(`${literal}${FOLDER_CONTENTS}`);
     });
 }
@@ -89,7 +89,7 @@ export function joinScope(scope: string, path: string): string {
  * @param generatedPaths the files emitted by this session.
  * @returns the scopePath file or its emitted root fallback.
  */
-export function targetInScope(
+export function buildScopeTarget(
     scope: string,
     toolFile: ToolFileDeclaration,
     generatedPaths: ReadonlySet<string>,
@@ -116,16 +116,16 @@ export function findScopes(
     const configurations = [...manifests];
     const patterns = configurations.flatMap((manifest) => manifest.detect.project_files);
     const npmNames = npmToolNames(configurations);
-    const lintOnly = new Set(
-        packageManifests.filter((fact) => isToolsOnlyPackage(fact, npmNames)).map((fact) => fact.path),
+    const toolOnlyPackages = new Set(
+        packageManifests.filter((fact) => isToolOnlyPackage(fact, npmNames)).map((fact) => fact.path),
     );
     const folders = new Set<string>();
     const sources = files.filter(
-        (file) => file.kind === 'source' && !lintOnly.has(file.path) && !isToolingPath(file.path),
+        (file) => file.kind === 'source' && !toolOnlyPackages.has(file.path) && !isInstalledToolPath(file.path),
     );
     for (const file of sources) {
         for (const pattern of patterns) {
-            const folder = projectFolder(file.path, pattern);
+            const folder = findProjectFolder(file.path, pattern);
             if (folder !== undefined && folder !== '') folders.add(folder);
         }
     }
@@ -140,7 +140,7 @@ export function findScopes(
  * @param pattern a project file name, a folder name such as `*.xcodeproj`, or a short path such as `supabase/config.toml`.
  * @returns the project folder, '' for the root, or undefined for other files.
  */
-export function projectFolder(path: string, pattern: string): string | undefined {
+export function findProjectFolder(path: string, pattern: string): string | undefined {
     const segments = path.split('/');
     const wanted = pattern.split('/');
     for (let start = 0; start + wanted.length <= segments.length; start += 1) {
@@ -165,7 +165,7 @@ export function projectFolder(path: string, pattern: string): string | undefined
  * @param scopes the scopes.
  * @returns the scope.
  */
-export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
+export function findScope(path: string, scopes: ScopeEntry[]): ScopeEntry {
     const root: ScopeEntry = scopes.find((scope) => scope.path === '') ?? { ...ROOT_SCOPE, configurations: [] };
     return (
         scopes

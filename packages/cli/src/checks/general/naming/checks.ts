@@ -1,13 +1,13 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { isCovered } from '#cli/repository/coverage.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { scopeOf, isInScope } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import { findScope, isInScope } from '#cli/repository/scopes.ts';
 import { namingDefaults } from '#cli/configurations/manifests.ts';
 import { nameFindings } from '#cli/checks/general/naming/names.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
-import { pathMatcher, filenameMatcher } from '#cli/repository/matchers.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
+import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import type { FileNames, Identifier, NamingSource, NamingSettings } from '#cli/types/checks/general.ts';
 import { identifiersOf, fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 
@@ -16,8 +16,8 @@ function sourceFiles(input: CheckInput): NamingSource[] {
         .filter((manifest) => manifest.configuration.group === 'language')
         .map((manifest) => ({
             manifest,
-            filenames: filenameMatcher(manifest.files.filenames),
-            paths: pathMatcher(manifest.files.paths),
+            filenames: buildFilenameMatcher(manifest.files.filenames),
+            paths: buildPathMatcher(manifest.files.paths),
         }));
     return input.files
         .filter((file) => file.kind === 'source')
@@ -31,7 +31,7 @@ function sourceFiles(input: CheckInput): NamingSource[] {
 }
 
 function findingsFor(input: CheckInput, settings: NamingSettings, identifiers: Identifier[]): Finding[] {
-    const isTestFile = pathMatcher(input.selection.view.test_files);
+    const isTestFile = buildPathMatcher(input.selection.view.test_files);
     return identifiers.flatMap((identifier) =>
         nameFindings(identifier, {
             check: input.check,
@@ -69,7 +69,7 @@ async function declaredNames(input: CheckInput): Promise<FileNames[]> {
         const scopeInput = {
             ...input,
             selection,
-            files: input.files.filter((file) => scopeOf(file.path, input.scopeEntries).path === selection.scope.path),
+            files: input.files.filter((file) => findScope(file.path, input.scopeEntries).path === selection.scope.path),
         };
         const paths = pathIdentifiers(scopeInput);
         for (const { file, language } of sourceFiles(scopeInput)) {
@@ -114,13 +114,13 @@ export async function namingSettings(input: CheckInput): Promise<Finding[]> {
                 ...input,
                 selection,
                 files: input.repositoryFiles.filter(
-                    (file) => scopeOf(file.path, input.scopeEntries).path === selection.scope.path,
+                    (file) => findScope(file.path, input.scopeEntries).path === selection.scope.path,
                 ),
             }),
         )
         .filter((identifier) => identifier.category === 'directories');
     return input.settingsFile.settings.naming.override.flatMap((override, index) => {
-        const matches = pathMatcher(override.paths);
+        const matches = buildPathMatcher(override.paths);
         const declared = new Set(
             files
                 .filter((file) => matches(file.path))

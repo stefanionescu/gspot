@@ -2,12 +2,12 @@
 import { posix } from 'node:path';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { isInScope, byScopeDepth } from '#cli/repository/scopes.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { literalGlob, pathMatcher, filenameMatcher } from '#cli/repository/matchers.ts';
+import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { selectConfigurations, sourceConfigurations } from '#cli/configurations/select.ts';
 import { SETTING_PLACEHOLDER, TEST_FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { FileMatch, ConfigurationSelection } from '#cli/types/repository/selection.ts';
+import { escapeGlob, buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
 
 // The owners with the file types of the selected Prettier or ESLint plugins, when the table takes them.
 function addPluginExtensions(owners: FileMatch, selected: Manifest[]): FileMatch {
@@ -23,7 +23,7 @@ function addPluginExtensions(owners: FileMatch, selected: Manifest[]): FileMatch
 
 // Build both pattern matchers once for a configuration's file table.
 function fileMatchers(table: FileMatch) {
-    return { table, filenames: filenameMatcher(table.filenames), paths: pathMatcher(table.paths) };
+    return { table, filenames: buildFilenameMatcher(table.filenames), paths: buildPathMatcher(table.paths) };
 }
 
 /**
@@ -56,7 +56,7 @@ export function isCovered(
  * @param settings the settings for the scope, with repository-relative path values.
  * @returns the files owned.
  */
-export function coveredBy(
+export function listCoveredFiles(
     table: FileMatch,
     selected: Manifest[],
     files: TrackedFile[],
@@ -65,14 +65,14 @@ export function coveredBy(
     settings: Record<string, unknown>,
 ): TrackedFile[] {
     const ownsTests = table.paths.includes(TEST_FILES_PLACEHOLDER);
-    const tests = pathMatcher(testFiles);
+    const tests = buildPathMatcher(testFiles);
     const defaults: FileMatch[] = [];
     const settingPatterns = table.paths.flatMap((path) => {
         if (path === TEST_FILES_PLACEHOLDER) return [];
         const name = [...path.matchAll(SETTING_PLACEHOLDER)][0]?.groups?.['name'];
         if (name === undefined) return [];
         const value = settings[name];
-        if (typeof value === 'string') return [path.replace(SETTING_PLACEHOLDER, () => literalGlob(value))];
+        if (typeof value === 'string') return [path.replace(SETTING_PLACEHOLDER, () => escapeGlob(value))];
         defaults.push(
             ...selected
                 .filter((manifest) => manifest.configuration.name === name.split('.', 1)[0])
@@ -80,7 +80,7 @@ export function coveredBy(
         );
         return [];
     });
-    const settingMatches = pathMatcher(settingPatterns);
+    const settingMatches = buildPathMatcher(settingPatterns);
     const owners = addPluginExtensions(
         {
             ...table,
@@ -91,8 +91,8 @@ export function coveredBy(
         selected,
     );
     const candidates = files.filter((file) => isInScope(file.path, scope) && owners.kinds.includes(file.kind));
-    const filenames = filenameMatcher(owners.filenames);
-    const paths = pathMatcher(owners.paths);
+    const filenames = buildFilenameMatcher(owners.filenames);
+    const paths = buildPathMatcher(owners.paths);
     const defaultMatchers = defaults.map((table) => fileMatchers(table));
     const languages = (owners.languages ? sourceConfigurations(selected) : []).map(({ files }) => fileMatchers(files));
     return candidates.filter((file) => {
@@ -138,7 +138,7 @@ export function selectForScope(
         settings,
         ...Object.entries(settings.scope)
             .filter(([ancestor]) => isInScope(scope, ancestor))
-            .toSorted(([left], [right]) => byScopeDepth(left, right))
+            .toSorted(([left], [right]) => compareScopeDepth(left, right))
             .map(([, entry]) => entry),
     ];
     for (const table of tables) {

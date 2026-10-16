@@ -6,14 +6,14 @@ import type { Generated } from '#cli/types/generation/files.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/selection.ts';
-import type { Tooling, Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { Repository, ScopeEntry, TrackedFile, ExistingTools } from '#cli/types/repository/inventory.ts';
 
 type InitPlanInputs = {
     root: string;
     hasGit: boolean;
     index: Repository['index'];
     options: InitOptions;
-    tooling: Tooling;
+    tooling: ExistingTools;
     selection: InitSelection;
     everySelected: Manifest[];
     answers: InitAnswers;
@@ -76,7 +76,7 @@ type DetectionSummary = {
     files: TrackedFile[];
     detected: ConfigurationEvidence[];
     scopes: ScopeEntry[];
-    tooling: Tooling;
+    tooling: ExistingTools;
     owned: string[];
     unowned: string[];
     manifests: Map<string, Manifest>;

@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { extensionsTagged } from '#cli/repository/classify.ts';
 import { HOOK_DIRECTORIES } from '#cli/config/repository/hooks.ts';
+import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { SPEC_SUFFIX, INDEX_STEMS } from '#cli/config/checks/general/structure.ts';
@@ -13,7 +13,7 @@ import { directoryTree, structureSources, isDependencyFolder } from '#cli/checks
 function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {
     const extension = extractExtension(name);
     // A selected configuration declares <name>.<kind>.<ext> file names, such as NestJS, so these do not count as a shared prefix.
-    if (extension.endsWith('x') || !extensionsTagged('javascript', 'typescript').includes(extension)) return false;
+    if (extension.endsWith('x') || !listTaggedExtensions('javascript', 'typescript').includes(extension)) return false;
     const parts = extractStem(name).replace(SPEC_SUFFIX, '').split('.');
     const kind = parts.at(-1);
     return parts.length > 1 && kind !== undefined && kinds.has(kind);

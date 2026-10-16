@@ -6,7 +6,7 @@ import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { targetInScope } from '#cli/repository/scopes.ts';
+import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { SEMGREP_IGNORE_CASES, SWIFT_IGNORE_FOLDERS } from '#tests/config/semgrep.ts';
 
 test('a scoped semgrepignore rebases shared generated-file patterns', async () => {
@@ -105,7 +105,7 @@ test('JWT rules are written only where the nearest package.json has jsonwebtoken
         ({ target }) => target === '.gspot/config/semgrep/javascript.yml',
     )!;
     for (const scope of ['', 'jwt', 'jwt/child', 'other']) {
-        const target = targetInScope(scope, declaration, paths);
+        const target = buildScopeTarget(scope, declaration, paths);
         const text = output.files.find((file) => file.path === target)!.content;
         const parsed: unknown = parseDocument(text).toJS();
         if (scope.startsWith('jwt')) {

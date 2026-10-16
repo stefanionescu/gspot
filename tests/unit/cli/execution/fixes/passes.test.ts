@@ -12,7 +12,7 @@ import { type RunOptions } from '#cli/types/execution/check.ts';
 import { DECLARATION_FILES } from '#tests/config/repository.ts';
 import { checkReport, buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { projectDependencies } from '#cli/repository/dependency-files.ts';
+import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 import { TEXT_FIX, TEXT_CHECK, FIX_LINTER_CASES } from '#tests/config/execution.ts';
 import { REACT_VUE_PACKAGES, CLEAR_DEPENDENCIES_SCRIPT, ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/config/npm.ts';
 
@@ -263,8 +263,8 @@ format = "none"
         expect(outcome.fixes?.results).toMatchObject([
             { check: 'project/update-package', status: 'changed', changed: ['package.json'] },
         ]);
-        expect(projectDependencies(session.packageManifests, '')).toStrictEqual({ react: '19.0.0' });
-        expect(projectDependencies(session.packageManifests, 'app')).toStrictEqual({ vue: '3.5.0' });
+        expect(getProjectDependencies(session.packageManifests, '')).toStrictEqual({ react: '19.0.0' });
+        expect(getProjectDependencies(session.packageManifests, 'app')).toStrictEqual({ vue: '3.5.0' });
         expect(await Bun.file(join(sandbox.path, 'package.json')).text()).toBe(ROOT_PACKAGE_WITHOUT_DEPENDENCIES);
         expect(await Bun.file(join(sandbox.path, 'app/package.json')).text()).toBe(
             REACT_VUE_PACKAGES['app/package.json'],

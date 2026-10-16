@@ -4,9 +4,9 @@ import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { tableValuesSchema } from '#cli/settings/schema/tables.ts';
 import { commandSchema } from '#cli/configurations/schema/parts.ts';
-import { isInScope, byScopeDepth } from '#cli/repository/scopes.ts';
 import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
+import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { isRecord, getValueAt, createTable, stripUndefined } from '#cli/system/values.ts';
 import { ALL_LANGUAGES, CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/values.ts';
 
@@ -138,7 +138,7 @@ export function everyTable(settings: Settings): SettingsTable[] {
 export function tablesFor(settings: Settings, scope: string | undefined): SettingsTable[] {
     return everyTable(settings)
         .filter((entry) => entry.scope === undefined || isInScope(scope ?? '', entry.scope))
-        .toSorted((left, right) => byScopeDepth(left.scope ?? '', right.scope ?? ''));
+        .toSorted((left, right) => compareScopeDepth(left.scope ?? '', right.scope ?? ''));
 }
 
 /**

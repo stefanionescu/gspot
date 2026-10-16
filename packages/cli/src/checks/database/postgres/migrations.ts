@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
-import { coveredBy } from '#cli/repository/coverage.ts';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { MIGRATION_VERSION } from '#cli/config/parsers/sql.ts';
+import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import type { Migration } from '#cli/types/checks/database.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
@@ -43,7 +43,7 @@ function migrationPaths(input: CheckInput): string[] {
         manifest.checks
             .filter((check) => check.name === 'postgres/squawk')
             .flatMap((check) =>
-                coveredBy(
+                listCoveredFiles(
                     check.files ?? manifest.files,
                     input.selection.selected,
                     input.files,

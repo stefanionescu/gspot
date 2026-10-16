@@ -1,6 +1,6 @@
 import { getValueAt } from '#cli/system/values.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
 import { join, dirname, relative } from 'node:path';
+import { findScope } from '#cli/repository/scopes.ts';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import type { JsconfigInput } from '#cli/types/generation/typescript.ts';
@@ -35,7 +35,7 @@ export function buildJsconfig(input: JsconfigInput): Record<string, unknown> {
             importStyle === 'extensionless' &&
             file.kind === 'source' &&
             file.tags.includes('javascript') &&
-            scopeOf(file.path, scopeEntries).path === scope,
+            findScope(file.path, scopeEntries).path === scope,
     );
     const hasSourceSelection = SOURCE_SELECTION_FIELDS.some(
         (field) => getValueAt(jsconfigOwner?.raw, [field]) !== undefined,

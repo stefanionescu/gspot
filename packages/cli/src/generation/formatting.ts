@@ -1,11 +1,11 @@
 import { dirname, relative } from 'node:path';
 import { everyTable } from '#cli/settings/inherit.ts';
-import { byScopeDepth } from '#cli/repository/scopes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import type { Settings, ScopeView } from '#cli/types/settings/values.ts';
-import { literalGlob, includeFolderContents } from '#cli/repository/matchers.ts';
+import { escapeGlob, includeFolderContents } from '#cli/repository/matchers.ts';
 import type { WrittenFormat, FormatSettings } from '#cli/types/settings/file.ts';
 
 import {
@@ -59,7 +59,7 @@ function rebaseOverrides(
 
 function formatEntries(settings: Settings): ScopeFormat[] {
     const tables = everyTable(settings)
-        .toSorted((first, second) => byScopeDepth(first.scope ?? '', second.scope ?? ''))
+        .toSorted((first, second) => compareScopeDepth(first.scope ?? '', second.scope ?? ''))
         .flatMap(({ scope = '', table }) => {
             const authored = table.written['format'];
             if (table.format === undefined || !isRecord(authored)) return [];
@@ -85,7 +85,7 @@ function formatSettingOverrides(settings: Settings, fromConfig: (pattern: string
         const expanded = includeFolderContents(paths);
         const files = expanded.filter((path) => !path.startsWith('!')).map((path) => fromConfig(path));
         const excludeFiles = expanded.filter((path) => path.startsWith('!')).map((path) => fromConfig(path.slice(1)));
-        if (scope !== '') excludeFiles.push(`!${fromConfig(literalGlob(scope))}/**`);
+        if (scope !== '') excludeFiles.push(`!${fromConfig(escapeGlob(scope))}/**`);
         return { files, excludeFiles, options: prettierOptions(format) };
     });
 }
@@ -113,7 +113,7 @@ function editorconfigSelector(pattern: string, scope: string): string {
         throw new Error(
             `EditorConfig cannot intersect selector ${JSON.stringify(pattern)} with scope ${scope}. Use a root-relative selector within that scope.`,
         );
-    return `${literalGlob(scope)}/${pattern}`;
+    return `${escapeGlob(scope)}/${pattern}`;
 }
 
 /**

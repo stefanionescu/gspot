@@ -5,10 +5,10 @@ import { parseJsonFile } from '#cli/parsers/json.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { FULL_PERCENTAGE } from '#cli/config/units.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { coveredBy } from '#cli/repository/coverage.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
 import { sourceConfigurations } from '#cli/configurations/select.ts';
@@ -66,7 +66,7 @@ export async function jscpd(input: CheckInput): Promise<Finding[]> {
     const owned = [
         ...new Set(
             sourceConfigurations(input.selection.selected).flatMap((manifest) =>
-                coveredBy(
+                listCoveredFiles(
                     manifest.files,
                     input.selection.selected,
                     input.files,

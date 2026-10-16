@@ -8,12 +8,12 @@ import { type Command } from '@commander-js/extra-typings';
 import { readVersionPin } from '#cli/apply/version-pin.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { submodulePaths } from '#cli/repository/tracked.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { CI_FILE_LABELS } from '#cli/config/generation/ci.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { colors, printResult } from '#cli/system/terminal.ts';
 import type { ToolInspection } from '#cli/types/tools/find.ts';
+import { listSubmodulePaths } from '#cli/repository/tracked.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { inspectTool, isToolAvailable } from '#cli/tools/find.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
@@ -87,7 +87,7 @@ function buildDoctorReport(session: Session, pinned: string | undefined): Doctor
     });
     const isBroken = [!hooks.ready, tools.some((tool) => !isToolAvailable(tool))].includes(true);
     return {
-        submodules: submodulePaths(session.repository.index),
+        submodules: listSubmodulePaths(session.repository.index),
         tools,
         suggestions: listSuggestions(session),
         hooks: hooks.text,

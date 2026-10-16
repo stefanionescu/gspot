@@ -8,8 +8,8 @@ import { openSession } from '#cli/commands/session.ts';
 import { buildInitOptions } from '#tests/setup/init.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { containingAll } from '#tests/setup/matchers.ts';
-import { targetInScope } from '#cli/repository/scopes.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
+import { buildScopeTarget } from '#cli/repository/scopes.ts';
 
 test('typos.toml keeps quoted words and paths and adds no settings', async () => {
     const words = ['café', "apostrophe'word", 'long-term'];
@@ -99,7 +99,7 @@ spelling.locale = "en-us"
         ['british', 'en-gb'],
         ['british/american', 'en-us'],
     ] as const) {
-        const path = targetInScope(scope, declaration, paths);
+        const path = buildScopeTarget(scope, declaration, paths);
         const target = output.files.find((file) => file.path === path)!;
         expect(parse(target.content)['default']).toMatchObject({ locale });
     }

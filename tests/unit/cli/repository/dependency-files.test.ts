@@ -10,8 +10,8 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { PYTHON_WORKSPACE_FILES } from '#tests/config/python/tool-project.ts';
 import { REACT_VUE_PACKAGES, ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/config/npm.ts';
-import { readPackageJson, projectDependencies, readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { PACKAGE_FIELDS, PROJECT_DEPENDENCY_FILES, PROJECT_DEPENDENCY_SCOPES } from '#tests/config/repository.ts';
+import { readPackageJson, readDependencyFiles, getProjectDependencies } from '#cli/repository/dependency-files.ts';
 
 test('Python dependency file reads keep their dependencies and report invalid text', async () => {
     await using sandbox = await testdir();
@@ -74,7 +74,7 @@ test('declared framework dependencies follow the nearest npm project', async () 
     });
     const manifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     for (const { scope, dependencies } of PROJECT_DEPENDENCY_SCOPES) {
-        expect(projectDependencies(manifests, scope), scope).toStrictEqual(dependencies);
+        expect(getProjectDependencies(manifests, scope), scope).toStrictEqual(dependencies);
     }
 });
 
@@ -94,7 +94,7 @@ test('a broken package.json stops the next session and a fixed one changes the s
     const current = await openSession(sandbox.path);
     expect(
         current.scopes.map((selection) =>
-            Object.keys(projectDependencies(current.packageManifests, selection.scope.path)),
+            Object.keys(getProjectDependencies(current.packageManifests, selection.scope.path)),
         ),
     ).toStrictEqual([[], ['vue']]);
 });

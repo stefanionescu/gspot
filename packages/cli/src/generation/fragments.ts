@@ -1,24 +1,24 @@
 // What the selected fragments add to a generated target: emitted text, imports, file globs, and selectors.
 import ts from 'typescript';
 import type { Session } from '#cli/types/planning.ts';
-import { literalGlob } from '#cli/repository/matchers.ts';
+import { escapeGlob } from '#cli/repository/matchers.ts';
 import { filePatterns } from '#cli/generation/eslint/files.ts';
 import { eslintModule } from '#cli/generation/eslint/serialize.ts';
-import { isInScope, nestedScopes } from '#cli/repository/scopes.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { vueFragment } from '#cli/generation/eslint/fragments/vue.ts';
 import { zodFragment } from '#cli/generation/eslint/fragments/zod.ts';
 import { expoFragment } from '#cli/generation/eslint/fragments/expo.ts';
 import { jestFragment } from '#cli/generation/eslint/fragments/jest.ts';
+import { isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { astroFragment } from '#cli/generation/eslint/fragments/astro.ts';
 import { reactFragment } from '#cli/generation/eslint/fragments/react.ts';
-import { projectDependencies } from '#cli/repository/dependency-files.ts';
 import { nestjsFragment } from '#cli/generation/eslint/fragments/nestjs.ts';
 import { nextjsFragment } from '#cli/generation/eslint/fragments/nextjs.ts';
 import { svelteFragment } from '#cli/generation/eslint/fragments/svelte.ts';
 import { vitestFragment } from '#cli/generation/eslint/fragments/vitest.ts';
 import type { EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 import { fragmentSelectorGroups } from '#cli/generation/eslint/selectors.ts';
+import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 import { drizzleFragment } from '#cli/generation/eslint/fragments/drizzle.ts';
 import { expressFragment } from '#cli/generation/eslint/fragments/express.ts';
 import { zustandFragment } from '#cli/generation/eslint/fragments/zustand.ts';
@@ -81,7 +81,7 @@ function emittedFragments(
     for (const { manifest } of fragments) {
         for (const selection of scopes.filter((entry) => entry.selected.includes(manifest))) {
             const scope = selection.scope.path;
-            const children = nestedScopes(
+            const children = listNestedScopes(
                 scopes.map((entry) => entry.scope.path),
                 scope,
             );
@@ -93,14 +93,14 @@ function emittedFragments(
                 isAll: inputs.isAll,
                 codeFiles: inputs.eslintFiles.code,
                 ruleOptions: inputs.ruleOptions,
-                scope: { path: scope, excluded: children.map((path) => `${literalGlob(path)}/**`) },
+                scope: { path: scope, excluded: children.map((path) => `${escapeGlob(path)}/**`) },
             });
             const fragment = emitFragment(manifest, {
                 ...inputs,
                 ...selection.view,
                 scope,
                 testFiles: selection.view.test_files,
-                scopeDependencies: Object.keys(projectDependencies(session.packageManifests, scope)),
+                scopeDependencies: Object.keys(getProjectDependencies(session.packageManifests, scope)),
                 eslintModule: module,
                 eslintFiles: {
                     ...inputs.eslintFiles,

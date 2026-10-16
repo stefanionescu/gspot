@@ -1,6 +1,6 @@
 import { stringify } from '@decimalturn/toml-patch';
 import type { Session } from '#cli/types/planning.ts';
-import { byScopeDepth } from '#cli/repository/scopes.ts';
+import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { generatedIgnores, selectedIgnorePaths } from '#cli/generation/ignore-patterns.ts';
@@ -56,7 +56,7 @@ export function typosToolFile(
     const allowed = Object.fromEntries<string>(input.settingsFile.settings.allowed_words.map((word) => [word, word]));
     const spellingScopes = input.scopes
         .filter(({ view }) => view.configurations.includes('spelling'))
-        .toSorted((left, right) => byScopeDepth(left.scope.path, right.scope.path));
+        .toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path));
     const settingsType = settingsDictionary(spellingScopes);
     const types = Object.fromEntries<TyposDictionary>(
         (typos?.type === undefined ? [] : Object.entries(typos.type)).map(([name, dictionary]) => [

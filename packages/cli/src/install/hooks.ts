@@ -6,8 +6,8 @@ import { HOOK_ARGS } from '#cli/config/generation/hooks.ts';
 import { readHooks } from '#cli/repository/existing-tools.ts';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
-import type { Tooling } from '#cli/types/repository/inventory.ts';
 import { HOOKS_PATH_SETTING } from '#cli/config/repository/hooks.ts';
+import type { ExistingTools } from '#cli/types/repository/inventory.ts';
 import type { HookName, StartRunner } from '#cli/types/generation/files.ts';
 import type { HookPlan, HookStatus, HookContext } from '#cli/types/install.ts';
 import { readGitPrefix, readGitSetting, runGitBlocking, readHooksFolder } from '#cli/system/git.ts';
@@ -15,7 +15,7 @@ import { HOOK_COMMAND, SET_HOOKS_PATH, UNSET_HOOKS_PATH, SAMPLE_HOOK_SUFFIX } fr
 
 // Read this clone's existing hook mechanisms: another folder, a hook tool, or scripts
 // in the default Git hooks folder.
-function otherHooks(root: string, own: string): Tooling['hooks'] {
+function otherHooks(root: string, own: string): ExistingTools['hooks'] {
     const found = readHooks(root).filter((hook) => !(hook.kind === 'hooksPath' && hook.path === own));
     const directory = readHooksFolder(root);
     if (readGitSetting(root, HOOKS_PATH_SETTING) !== undefined || !existsSync(directory)) return found;
@@ -35,7 +35,7 @@ function otherHooks(root: string, own: string): Tooling['hooks'] {
 }
 
 // The hook commands a foreign setup must invoke; install and readiness use the same instructions.
-function otherHooksNote(hooks: Tooling['hooks'], runner: StartRunner): string {
+function otherHooksNote(hooks: ExistingTools['hooks'], runner: StartRunner): string {
     const lines = (Object.keys(HOOK_ARGS) as HookName[]).map((name) => `  ${name}: ${hookLine(name, runner)}`);
     return `hooks already run from ${hooks.map((hook) => hook.path).join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`;
 }

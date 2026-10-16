@@ -1,5 +1,5 @@
 /** An empty inventory leaves each scenario to supply only the evidence its question reads. */
-export const EMPTY_TOOLING = {
+export const EMPTY_EXISTING_TOOLS = {
     toolFiles: [],
     hooks: [],
     ci: [],

@@ -1,10 +1,10 @@
 // Each rule comparison uses the closest containing project.
 
 import { isDeepStrictEqual } from 'node:util';
-import { literalGlob } from '#cli/repository/matchers.ts';
+import { escapeGlob } from '#cli/repository/matchers.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { isInScope, byScopeDepth, nestedScopes } from '#cli/repository/scopes.ts';
 import type { EslintContext, EslintRuleBlock } from '#cli/types/generation/eslint.ts';
+import { isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { nodePatterns, globSelectors, sourcePattern } from '#cli/generation/eslint/files.ts';
 
 import {
@@ -28,7 +28,7 @@ import {
 export function parentSelection(scopes: ScopeSelection[], path: string): ScopeSelection | undefined {
     return scopes
         .filter(({ scope }) => scope.path !== path && isInScope(path, scope.path))
-        .toSorted((left, right) => byScopeDepth(left.scope.path, right.scope.path))
+        .toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path))
         .at(-1);
 }
 
@@ -62,10 +62,10 @@ export function environmentRuleBlocks(
                           sourcePattern(...ENVIRONMENT_LANGUAGES),
                           ...nodePatterns(nodeFiles, selection.scope.path),
                           ...owners.map((path) => `!${path}`),
-                          ...nestedScopes(
+                          ...listNestedScopes(
                               environmentScopes.map(({ scope }) => scope.path),
                               selection.scope.path,
-                          ).map((path) => `!${literalGlob(path)}/**`),
+                          ).map((path) => `!${escapeGlob(path)}/**`),
                       ]),
                       rules: ENVIRONMENT_RULES,
                   },
@@ -86,7 +86,7 @@ export function trivialRuleBlocks(input: Pick<EslintContext, 'scopes' | 'setting
     if (settings.level !== 'all') return [];
     const blocks: EslintRuleBlock[] = [];
     const allowIndex = settings.structure.reexports === 'index-only';
-    for (const selection of scopes.toSorted((a, b) => byScopeDepth(a.scope.path, b.scope.path))) {
+    for (const selection of scopes.toSorted((a, b) => compareScopeDepth(a.scope.path, b.scope.path))) {
         const parent = parentSelection(scopes, selection.scope.path);
         const limits = ['javascript', 'typescript']
             .map((language) => ({

@@ -1,7 +1,7 @@
-import { literalGlob } from '#cli/repository/matchers.ts';
+import { escapeGlob } from '#cli/repository/matchers.ts';
 import { globSelectors } from '#cli/generation/eslint/files.ts';
-import { joinScope, nestedScopes } from '#cli/repository/scopes.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
+import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import type { EslintContext, EslintRuntimeBlock } from '#cli/types/generation/eslint.ts';
 
 import {
@@ -29,7 +29,7 @@ function frameworkRuntime(configurations: string[]): string | undefined {
  */
 export function scriptPaths({ selection }: Pick<EslintContext, 'selection'>): string[] {
     const scripts = selection.view.roles['scripts'];
-    return [...scripts, joinScope(literalGlob(selection.scope.path), MISE_SCRIPT_PATH)];
+    return [...scripts, joinScope(escapeGlob(selection.scope.path), MISE_SCRIPT_PATH)];
 }
 
 /**
@@ -45,11 +45,11 @@ export function runtimeBlocks(scopes: ScopeSelection[]): EslintRuntimeBlock[] {
     const blocks: EslintRuntimeBlock[] = [];
     for (const selection of scopes.toSorted((left, right) => left.scope.path.length - right.scope.path.length)) {
         const scope = selection.scope.path;
-        const children = nestedScopes(
+        const children = listNestedScopes(
             scopes.map((entry) => entry.scope.path),
             scope,
-        ).map((path) => `!${literalGlob(path)}/**`);
-        const prefix = joinScope(literalGlob(scope), '');
+        ).map((path) => `!${escapeGlob(path)}/**`);
+        const prefix = joinScope(escapeGlob(scope), '');
         const tool = selection.view.values[ESLINT_SETTINGS_TABLE];
         blocks.push(
             { scope, runtime: 'node', ...globSelectors([`${prefix}**/*`, ...children]) },

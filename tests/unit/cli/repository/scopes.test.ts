@@ -4,14 +4,14 @@ import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
-import { packageWorkspaces } from '#cli/tools/npm/packages.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
+import { listWorkspaceFolders } from '#cli/tools/npm/packages.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { NESTED_SCOPES_SETTINGS } from '#tests/config/settings/scopes.ts';
 import { PYTHON_WORKSPACE_FILES } from '#tests/config/python/tool-project.ts';
-import { joinScope, findScopes, projectFolder } from '#cli/repository/scopes.ts';
+import { joinScope, findScopes, findProjectFolder } from '#cli/repository/scopes.ts';
 
 import {
     SCOPE_PATHS,
@@ -43,11 +43,11 @@ test('a command check reads each matching file once across nested scopes', async
 });
 
 test.each(PROJECT_FILE_FOLDERS)('%s with the project file %s marks the folder %j', (path, pattern, folder) => {
-    expect(projectFolder(path, pattern)).toBe(folder);
+    expect(findProjectFolder(path, pattern)).toBe(folder);
 });
 
 test.each(NOT_PROJECT_FILES)('%s is no project file for %s', (path, pattern) => {
-    expect(projectFolder(path, pattern)).toBeUndefined();
+    expect(findProjectFolder(path, pattern)).toBeUndefined();
 });
 
 test.each([...WORKSPACE_DECLARATIONS])(
@@ -64,7 +64,7 @@ test.each([...WORKSPACE_DECLARATIONS])(
             scopeEntries: [],
             manifests: configurationManifests(),
         });
-        expect(packageWorkspaces(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+        expect(listWorkspaceFolders(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
             'packages/api',
             'packages/lint',
         ]);
@@ -88,10 +88,10 @@ test('workspace detection stays inside the given folder', async () => {
     });
     for (const directory of ['child', 'empty']) {
         const root = join(sandbox.path, directory);
-        expect(packageWorkspaces(root)).toStrictEqual([]);
+        expect(listWorkspaceFolders(root)).toStrictEqual([]);
     }
     await writeFile(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
-    expect(packageWorkspaces(join(sandbox.path, 'empty'))).toStrictEqual([]);
+    expect(listWorkspaceFolders(join(sandbox.path, 'empty'))).toStrictEqual([]);
 });
 
 test.each([...INVALID_WORKSPACE_FILES])(
@@ -99,10 +99,10 @@ test.each([...INVALID_WORKSPACE_FILES])(
     async ({ path, parseError }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'package.json': '{}', [path]: '{' });
-        expect(() => packageWorkspaces(sandbox.path)).toThrow(parseError);
+        expect(() => listWorkspaceFolders(sandbox.path)).toThrow(parseError);
         await Bun.file(join(sandbox.path, path)).delete();
         await mkdir(join(sandbox.path, path));
-        expect(() => packageWorkspaces(sandbox.path)).toThrow('EISDIR: illegal operation on a directory, read');
+        expect(() => listWorkspaceFolders(sandbox.path)).toThrow('EISDIR: illegal operation on a directory, read');
     },
 );
 
@@ -122,8 +122,8 @@ test.each([
         });
         const root = join(directory.path, 'project');
         await symlink('../../outside', join(root, 'packages/linked'), 'dir');
-        expect(() => packageWorkspaces(root)).toThrow(`Workspace package leaves the repository: ${join(escaped)}`);
-        expect(packageWorkspaces(join(root, 'packages'))).toStrictEqual([]);
+        expect(() => listWorkspaceFolders(root)).toThrow(`Workspace package leaves the repository: ${join(escaped)}`);
+        expect(listWorkspaceFolders(join(root, 'packages'))).toStrictEqual([]);
     },
 );
 
@@ -143,7 +143,7 @@ test('broad workspace patterns skip .gspot/.venv and its outside interpreter lin
         scopeEntries: [],
         manifests: configurationManifests(),
     });
-    expect(packageWorkspaces(root)).toStrictEqual(['packages/app']);
+    expect(listWorkspaceFolders(root)).toStrictEqual(['packages/app']);
     expect(
         findScopes(
             repository.files,
@@ -161,7 +161,7 @@ test('workspace detection does not parse an unused lower-priority file', async (
         'lerna.json': 'malformed inactive configuration',
         'packages/app/package.json': '{"name":"inside"}',
     });
-    expect(packageWorkspaces(directory.path)).toStrictEqual(['packages/app']);
+    expect(listWorkspaceFolders(directory.path)).toStrictEqual(['packages/app']);
 });
 
 test('every folder that holds a project file is a scope, the root and lint-only packages aside', async () => {
@@ -209,7 +209,7 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
         scopeEntries: [],
         manifests: configurationManifests(),
     });
-    expect(packageWorkspaces(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+    expect(listWorkspaceFolders(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'packages/custom',
         'packages/hooks',
         'packages/next',

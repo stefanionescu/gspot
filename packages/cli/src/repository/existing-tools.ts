@@ -8,10 +8,10 @@ import { isRecord } from '#cli/system/values.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { npmToolNames } from '#cli/configurations/tool-pins.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
@@ -21,8 +21,8 @@ import { join, extname, dirname, basename, relative } from 'node:path';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import { statSync, lstatSync, existsSync, readdirSync, realpathSync } from 'node:fs';
-import { readPackageJson, isToolsOnlyPackage } from '#cli/repository/dependency-files.ts';
-import type { CiJob, Tooling, TrackedFile, FoundToolFile } from '#cli/types/repository/inventory.ts';
+import { readPackageJson, isToolOnlyPackage } from '#cli/repository/dependency-files.ts';
+import type { CiJob, TrackedFile, ExistingTools, FoundToolFile } from '#cli/types/repository/inventory.ts';
 
 import {
     LEFTHOOK_NAMES,
@@ -71,8 +71,8 @@ function isLintCommand(command: string): boolean {
 }
 
 // The files in a folder under a root, without dot files; none when the folder does not exist.
-function listFolder(root: string, rel: string): string[] {
-    const path = join(root, rel);
+function listFolder(root: string, folder: string): string[] {
+    const path = join(root, folder);
     if (!existsSync(path)) return [];
     const realRoot = realpathSync(root);
     const target = realpathSync(path);
@@ -83,12 +83,12 @@ function listFolder(root: string, rel: string): string[] {
         .filter((entry) => !entry.startsWith('.') || entry === KEPT_DOT_FILE);
 }
 
-function hookDirectory(root: string, dir: string, hooksPath: string): Tooling['hooks'][number] | undefined {
-    if (hooksPath === dir) return undefined;
-    const files = listFolder(root, dir);
-    if (files.length === 0 && lstatSync(join(root, dir), { throwIfNoEntry: false })?.isSymbolicLink() !== true)
+function detectHookFolder(root: string, folder: string, hooksPath: string): ExistingTools['hooks'][number] | undefined {
+    if (hooksPath === folder) return undefined;
+    const files = listFolder(root, folder);
+    if (files.length === 0 && lstatSync(join(root, folder), { throwIfNoEntry: false })?.isSymbolicLink() !== true)
         return undefined;
-    return { kind: dir === HUSKY_DIRECTORY ? 'husky' : 'githooks', path: dir, files };
+    return { kind: folder === HUSKY_DIRECTORY ? 'husky' : 'githooks', path: folder, files };
 }
 
 const ciStepSchema = z.object({ run: z.string().optional() } satisfies SchemaShape<{ run?: string | undefined }>);
@@ -113,7 +113,7 @@ const ciJobSchema = z.object({
 } satisfies SchemaShape<CiJob>);
 const ciDocumentSchema = z.record(z.string(), z.unknown()) satisfies z.ZodType<Record<string, unknown>>;
 
-function jobCommands(job: CiJob): string[] {
+function listJobCommands(job: CiJob): string[] {
     if (job.script !== undefined) return Array.isArray(job.script) ? job.script : [job.script];
     return (job.steps ?? []).flatMap((step) => (step.run === undefined ? [] : [step.run]));
 }
@@ -124,12 +124,12 @@ function isLintJob(name: string, job: CiJob): boolean {
         name
             .toLowerCase()
             .split(JOB_NAME_SEPARATORS)
-            .some((word) => LINT_WORDS.has(word)) || jobCommands(job).some((command) => isLintCommand(command))
+            .some((word) => LINT_WORDS.has(word)) || listJobCommands(job).some((command) => isLintCommand(command))
     );
 }
 
 // Find lint commands in the CI document's jobs.
-function lintJobs(path: string, document: unknown): string[] {
+function listLintCommands(path: string, document: unknown): string[] {
     const parsed = ciDocumentSchema.safeParse(document);
     if (!parsed.success) return [];
     const source = path.startsWith(GITHUB_WORKFLOWS_FOLDER) ? ciDocumentSchema.safeParse(parsed.data['jobs']) : parsed;
@@ -155,7 +155,7 @@ function findReplacedToolFiles(
     tool: string,
     replace: NonNullable<ToolDeclaration['replace']>[number],
 ): FoundToolFile[] {
-    const matches = pathMatcher([replace.file, `**/${replace.file}`]);
+    const matches = buildPathMatcher([replace.file, `**/${replace.file}`]);
     const candidates = new Set(inventory);
     if (
         !picomatch.scan(replace.file).isGlob &&
@@ -212,7 +212,7 @@ function hasToolSection(
  * @param root the repository root.
  * @returns each set of hooks with where it lives.
  */
-export function readHooks(root: string): Tooling['hooks'] {
+export function readHooks(root: string): ExistingTools['hooks'] {
     const manifest = readPackageJson(root, PACKAGE_JSON);
     const packageHooks = manifest !== undefined && Object.hasOwn(manifest, SIMPLE_GIT_HOOKS_KEY);
     const hooksPath = readGitSetting(root, HOOKS_PATH_SETTING) ?? '';
@@ -238,7 +238,7 @@ export function readHooks(root: string): Tooling['hooks'] {
                   },
               ]),
         ...HOOK_DIRECTORIES.filter((dir) => dir !== HOOKS_DIRECTORY && dir !== MISE_HOOK_DIRECTORY)
-            .map((dir) => hookDirectory(root, dir, hooksPath))
+            .map((dir) => detectHookFolder(root, dir, hooksPath))
             .filter((hook) => hook !== undefined),
         ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
         ...(present.includes(PRE_COMMIT_FILE)
@@ -267,7 +267,7 @@ export function readLintJobs(root: string, paths: string[]): string[] {
                 const detail = error instanceof Error ? error.message : String(error);
                 throw new Error(`Cannot read CI configuration ${path}: ${detail}`, { cause: error });
             }
-            return lintJobs(path, document);
+            return listLintCommands(path, document);
         });
 }
 
@@ -279,16 +279,16 @@ export function readLintJobs(root: string, paths: string[]): string[] {
  * @param reads the cached file reads for this run.
  * @returns tool files, hooks, CI, agent files, and lint folders.
  */
-export function readTooling(
+export function readExistingTools(
     root: string,
     files: TrackedFile[],
     packageManifests: DependencyFile[],
     reads?: ReadCache,
-): Tooling {
+): ExistingTools {
     const paths = new Set(files.map((file) => file.path));
     const npmNames = npmToolNames(configurationManifests(reads).values());
     const lintOnlyManifests = packageManifests
-        .filter((fact) => fact.kind === 'package.json' && isToolsOnlyPackage(fact, npmNames))
+        .filter((fact) => fact.kind === 'package.json' && isToolOnlyPackage(fact, npmNames))
         .map((fact) => fact.path)
         .toSorted((a, b) => Number(a === 'package.json') - Number(b === 'package.json'));
 

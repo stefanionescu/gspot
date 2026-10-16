@@ -9,7 +9,7 @@ import { copyRevision } from '#cli/execution/copy/revision.ts';
 import type { GitHookReport } from '#tests/types/processes.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
-import { submodulePaths, readIndexEntries } from '#cli/repository/tracked.ts';
+import { readIndexEntries, listSubmodulePaths } from '#cli/repository/tracked.ts';
 import { listHeadEntries, listRevisionEntries } from '#cli/repository/revisions/tree-entries.ts';
 import { chmod, mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
 
@@ -73,7 +73,7 @@ import {
             gitOutput(sandbox.path, ['commit', '-qm', 'Gitlink']);
             await mkdir(join(sandbox.path, 'vendor'));
             await symlink(outside.path, join(sandbox.path, path), 'dir');
-            expect(submodulePaths(await readIndexEntries(sandbox.path))).toStrictEqual([path]);
+            expect(listSubmodulePaths(await readIndexEntries(sandbox.path))).toStrictEqual([path]);
             const session = await openSession(sandbox.path);
             expect(session.repository.files.map((file) => file.path)).toStrictEqual(['gspot.toml', 'source.txt']);
             const expected = gitOutput(sandbox.path, ['write-tree']);
@@ -83,7 +83,7 @@ import {
                 expect(gitOutput(copy, ['write-tree'])).toBe(expected);
                 expect(await readdir(join(copy, path))).toStrictEqual([]);
                 expect(await Bun.file(join(copy, 'source.txt')).text()).toBe('selected source');
-                expect(submodulePaths(await readIndexEntries(copy))).toStrictEqual([path]);
+                expect(listSubmodulePaths(await readIndexEntries(copy))).toStrictEqual([path]);
             });
             expect(await Bun.file(join(outside.path, 'package.json')).text()).toBe('{');
             expect(await Bun.file(join(outside.path, 'source.txt')).text()).toBe('outside source');

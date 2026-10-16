@@ -5,7 +5,7 @@ import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
-import { pushedCommits } from '#cli/repository/revisions/push.ts';
+import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
 test('reports an unborn index and its unstaged edits', async () => {
@@ -63,25 +63,25 @@ test('push comparison tells a missing upstream from an upstream whose commit is 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     commitAll(sandbox.path);
-    expect(await pushedCommits(sandbox.path, undefined)).toStrictEqual([]);
+    expect(await readPushedCommits(sandbox.path, undefined)).toStrictEqual([]);
     await Bun.write(join(sandbox.path, 'source.ts'), 'export const changed = true;\n');
     gitOutput(sandbox.path, ['add', '.']);
     gitOutput(sandbox.path, ['commit', '-qm', 'Second']);
     gitOutput(sandbox.path, ['branch', 'upstream']);
     gitOutput(sandbox.path, ['branch', '--set-upstream-to=upstream']);
-    expect(await pushedCommits(sandbox.path, undefined)).toStrictEqual([]);
+    expect(await readPushedCommits(sandbox.path, undefined)).toStrictEqual([]);
     gitOutput(sandbox.path, ['update-ref', '-d', 'refs/heads/upstream']);
-    expect(await rejection(pushedCommits(sandbox.path, undefined))).toContain('Git merge-base failed');
+    expect(await rejection(readPushedCommits(sandbox.path, undefined))).toContain('Git merge-base failed');
 });
 
 test('push comparison reports an unborn or broken HEAD instead of inventing a base', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     gitOutput(sandbox.path, ['init']);
-    expect(await pushedCommits(sandbox.path, undefined)).toStrictEqual([]);
+    expect(await readPushedCommits(sandbox.path, undefined)).toStrictEqual([]);
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, '.git/HEAD'), 'broken head');
-    expect(await rejection(pushedCommits(sandbox.path, undefined))).toContain('Cannot read committed Git history');
+    expect(await rejection(readPushedCommits(sandbox.path, undefined))).toContain('Cannot read committed Git history');
 });
 
 test('a new branch compares with the remote default without losing unpushed commits', async () => {
@@ -94,7 +94,7 @@ test('a new branch compares with the remote default without losing unpushed comm
     gitOutput(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
     gitOutput(sandbox.path, ['checkout', '-qb', 'topic']);
     gitOutput(sandbox.path, ['commit', '--allow-empty', '-qm', 'Unpublished']);
-    expect(await pushedCommits(sandbox.path, undefined)).toStrictEqual([
+    expect(await readPushedCommits(sandbox.path, undefined)).toStrictEqual([
         gitOutput(sandbox.path, ['rev-parse', 'HEAD']),
     ]);
     const { reference, commits } = await readChangedPaths(sandbox.path, '');

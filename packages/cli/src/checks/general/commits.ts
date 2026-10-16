@@ -4,8 +4,8 @@ import { runGit } from '#cli/system/git.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
-import { pushedCommits } from '#cli/repository/revisions/push.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
+import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { mergeRuns, historyResult } from '#cli/checks/general/history.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
@@ -21,7 +21,7 @@ export async function commitlintPushed(session: Session, planned: PlannedCheck):
     const started = performance.now();
     let result = historyResult(session, planned, 'Commit messages require a Git repository.');
     if (result.status === 'skipped') return result;
-    const commits = await pushedCommits(session.root, planned.commits, session.cancelSignal);
+    const commits = await readPushedCommits(session.root, planned.commits, session.cancelSignal);
     if (!Array.isArray(commits)) return { ...result, status: 'error', note: commits.error };
     using folder = createScratchFolder();
     const scratch = folder.path;

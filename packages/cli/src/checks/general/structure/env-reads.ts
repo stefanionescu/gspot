@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { CONVENTION_SOURCES } from '#cli/checks/general/structure/conventions.ts';
 
@@ -118,7 +118,7 @@ function pythonEnvironment(node: Node, entries: EnvironmentNames, environment: S
 export async function envReads(input: CheckInput): Promise<Finding[]> {
     const readerPaths = input.selection.view.roles['environment_readers'];
     if (readerPaths.length === 0) return [];
-    const isReader = pathMatcher(readerPaths);
+    const isReader = buildPathMatcher(readerPaths);
     const parsed = await parseCached(input, CONVENTION_SOURCES);
     const owned = new Set(
         parsed

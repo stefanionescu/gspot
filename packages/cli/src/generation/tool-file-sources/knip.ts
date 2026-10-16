@@ -5,10 +5,10 @@ import type { Session } from '#cli/types/planning.ts';
 import { prefixScopePath } from '#cli/settings/paths.ts';
 import { pointerPaths } from '#cli/generation/pointers.ts';
 import { collectPins } from '#cli/configurations/tool-pins.ts';
-import { packageWorkspaces } from '#cli/tools/npm/packages.ts';
 import type { EmitInputs } from '#cli/types/generation/files.ts';
-import { isInScope, byScopeDepth } from '#cli/repository/scopes.ts';
+import { listWorkspaceFolders } from '#cli/tools/npm/packages.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import { generatedIgnores, selectedIgnorePaths } from '#cli/generation/ignore-patterns.ts';
 
@@ -36,7 +36,7 @@ function entryFiles(settings: Settings, scopes: ScopeSelection[], scope: string)
     });
     const declared = scopes
         .filter((entry) => isInScope(scope, entry.scope.path))
-        .toSorted((left, right) => byScopeDepth(right.scope.path, left.scope.path))
+        .toSorted((left, right) => compareScopeDepth(right.scope.path, left.scope.path))
         .slice(0, 1)
         .flatMap(({ selected, view }) => [
             ...(selected.some((manifest) => manifest.configuration.name === 'javascript')
@@ -64,7 +64,7 @@ function entryFiles(settings: Settings, scopes: ScopeSelection[], scope: string)
  */
 function knipWorkspaces(root: string, settings: Settings, scopes: ScopeSelection[]) {
     const selected = scopes.filter(({ view }) => view.configurations.includes('javascript'));
-    const paths = [...new Set(['', ...packageWorkspaces(root)])];
+    const paths = [...new Set(['', ...listWorkspaceFolders(root)])];
     return Object.fromEntries(
         paths.map((path) => {
             const workspace = selected.find((entry) => entry.scope.path === path);

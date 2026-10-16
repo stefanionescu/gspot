@@ -14,7 +14,7 @@ import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { readCachedBytes, readCachedPrefix } from '#cli/system/files/reads.ts';
-import { readIndexEntries, listRepositoryFiles } from '#cli/repository/tracked.ts';
+import { readIndexEntries, listTrackedFiles } from '#cli/repository/tracked.ts';
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 import { trimGitLine, isOutsideGit, runGitBlocking, isGitRepository } from '#cli/system/git.ts';
 import { mergeAttributes, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
@@ -59,7 +59,7 @@ export async function readRepository(
     const root = reads.root;
     const hasGit = isGitRepository(root);
     const index = hasGit ? await readIndexEntries(root) : [];
-    const entries = await listRepositoryFiles(root, index, hasGit);
+    const entries = await listTrackedFiles(root, index, hasGit);
     using directory = openFiles(root);
     const files: TrackedFile[] = [];
     const attributes = hasGit
@@ -110,7 +110,7 @@ export async function readRepository(
  * @param paths tracked root-relative paths.
  * @returns the selectors declared by Git attributes.
  */
-export function readGeneratedPatterns(reads: ReadCache, paths: string[]): string[] {
+export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[] {
     return [
         ...new Set(
             paths
@@ -140,16 +140,16 @@ export function readGeneratedPatterns(reads: ReadCache, paths: string[]): string
  * @returns the root.
  */
 export function findRoot(start: string): string {
-    const directory = realpathSync(start);
-    const top = runGitBlocking(directory, [...GIT_TOP_LEVEL_ARGUMENTS]);
+    const folder = realpathSync(start);
+    const top = runGitBlocking(folder, [...GIT_TOP_LEVEL_ARGUMENTS]);
     const gitRoot = top.code === 0 ? resolve(trimGitLine(top.stdout)) : undefined;
-    if (gitRoot === undefined && !isOutsideGit(runGitBlocking(directory, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE })))
-        throw new Error(`Git root discovery failed in ${directory} (exit ${String(top.code)}): ${top.stderr.trim()}`);
-    let current = directory;
+    if (gitRoot === undefined && !isOutsideGit(runGitBlocking(folder, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE })))
+        throw new Error(`Git root discovery failed in ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`);
+    let current = folder;
     while (statSync(join(current, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {
         if (current === gitRoot) return gitRoot;
         const parent = dirname(current);
-        if (parent === current) return directory;
+        if (parent === current) return folder;
         current = parent;
     }
     return current;

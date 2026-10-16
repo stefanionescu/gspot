@@ -6,7 +6,7 @@ import type { Session } from '#cli/types/planning.ts';
 import type { FileEdit } from '#cli/types/ownership.ts';
 import { relativeTarget } from '#cli/generation/pointers.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
-import { isInScope, nestedScopes, targetInScope } from '#cli/repository/scopes.ts';
+import { isInScope, listNestedScopes, buildScopeTarget } from '#cli/repository/scopes.ts';
 import type { GeneratedFile, PackageRedirectInputs } from '#cli/types/generation/files.ts';
 
 function redirectTargets({ selection, manifest, tool, consumed, paths, scopePaths }: PackageRedirectInputs) {
@@ -14,7 +14,7 @@ function redirectTargets({ selection, manifest, tool, consumed, paths, scopePath
         .filter((replacement) => replacement.redirect === true)
         .flatMap((replacement) =>
             manifest.toolFiles
-                .map((file) => ({ file, target: targetInScope(selection.scope.path, file, paths) }))
+                .map((file) => ({ file, target: buildScopeTarget(selection.scope.path, file, paths) }))
                 .filter(
                     ({ file, target }) =>
                         !file.fragment &&
@@ -27,7 +27,7 @@ function redirectTargets({ selection, manifest, tool, consumed, paths, scopePath
                     let children: string[] = [];
                     if (file.per_scope) {
                         scope = selection.scope.path;
-                        children = nestedScopes(scopePaths, scope);
+                        children = listNestedScopes(scopePaths, scope);
                     }
                     let pointerTarget = target;
                     if (file.pointer !== undefined) {

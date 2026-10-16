@@ -1,6 +1,6 @@
 // Which files a planned check runs over: what it owns, less excluded and child-scope paths, narrowed to a selection.
-import { coveredBy } from '#cli/repository/coverage.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
+import { listCoveredFiles } from '#cli/repository/coverage.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { toolFileName } from '#cli/configurations/manifests.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -29,7 +29,7 @@ function scopeCoveredFiles(context: PlanInputs, entry: PlanEntry, scopePath: str
     const matches =
         owners === undefined
             ? applicationInputs
-            : coveredBy(
+            : listCoveredFiles(
                   owners,
                   scope.selected,
                   applicationInputs,
@@ -46,8 +46,9 @@ function coveredFiles(context: PlanInputs, entry: PlanEntry, scopePath: string):
     const { session, scope } = context;
     const { check, manifest } = entry;
     if (check.runs !== 'files') return scopeCoveredFiles(context, entry, scopePath);
-    if (!manifest) return session.repository.files.filter((file) => pathMatcher(check.files?.paths ?? [])(file.path));
-    return coveredBy(
+    if (!manifest)
+        return session.repository.files.filter((file) => buildPathMatcher(check.files?.paths ?? [])(file.path));
+    return listCoveredFiles(
         check.files ?? manifest.files,
         scope.selected,
         session.repository.files,
@@ -64,7 +65,7 @@ function withoutIgnored(
     scope: ScopeSelection,
 ): Pick<PlannedCheck, 'files' | 'skip'> {
     const paths = scope.view.ignoresFor(check.name).flatMap((entry) => (entry.rule === undefined ? entry.paths : []));
-    const isIgnored = pathMatcher(paths);
+    const isIgnored = buildPathMatcher(paths);
     const selected = files.filter((file) => !isIgnored(file.path));
     return {
         files: selected,
@@ -106,7 +107,7 @@ function missingTriggers(context: PlanInputs, entry: PlanEntry, scopePath: strin
         return classifyFile(session.root, raw, prefix, { declarations: [], attributes: session.repository.attributes });
     });
     return withoutIgnored(
-        coveredBy(owners, scope.selected, missing, scopePath, scope.view.test_files, scope.view.settings),
+        listCoveredFiles(owners, scope.selected, missing, scopePath, scope.view.test_files, scope.view.settings),
         check,
         scope,
     ).files.map((file) => file.path);

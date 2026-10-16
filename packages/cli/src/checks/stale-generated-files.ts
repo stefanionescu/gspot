@@ -1,8 +1,8 @@
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { type GeneratedPath } from '#cli/types/configurations.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
@@ -76,7 +76,7 @@ function generatedInputs(input: CheckInput) {
 
     const targets = declared.filter((entry) => entry.kind !== 'pattern');
     const patterns = declared.filter((entry) => entry.kind === 'pattern').map((entry) => entry.path);
-    const isMatched = pathMatcher(patterns);
+    const isMatched = buildPathMatcher(patterns);
     const selected = input.files
         .map((file) => posix.relative(input.selection.scope.path, file.path))
         .filter((path) => isMatched(path));

@@ -1,8 +1,8 @@
 import { everyTable } from '#cli/settings/inherit.ts';
 import { activeIgnores } from '#cli/settings/view.ts';
-import { literalGlob } from '#cli/repository/matchers.ts';
+import { escapeGlob } from '#cli/repository/matchers.ts';
 import { parentSelection } from '#cli/generation/eslint/structure.ts';
-import { byScopeDepth, nestedScopes } from '#cli/repository/scopes.ts';
+import { listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, ScopeView, ScopeSelection } from '#cli/types/settings/values.ts';
 import { BASE_RULES, NODE_RULES, ALL_LEVEL_RULES } from '#cli/config/generation/eslint-rules.ts';
 import { scopeFiles, nodePatterns, globSelectors, sourcePattern } from '#cli/generation/eslint/files.ts';
@@ -36,7 +36,7 @@ import type {
  */
 export function ruleOptions(settings: Settings): EslintRuleOptions[] {
     const tables = everyTable(settings).toSorted((first, second) =>
-        byScopeDepth(first.scope ?? '', second.scope ?? ''),
+        compareScopeDepth(first.scope ?? '', second.scope ?? ''),
     );
     const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scope = '', table }) =>
         table.tools?.['eslint'] === undefined ? [] : [{ scope, settings: table.tools['eslint'] }],
@@ -83,11 +83,11 @@ export function ignoreBlocks(settings: Settings): EslintRuleBlock[] {
 export function manifestRuleBlocks(scopes: ScopeSelection[]): EslintRuleBlock[] {
     return scopes.flatMap((selection) => {
         const scope = selection.scope.path;
-        const children = nestedScopes(
+        const children = listNestedScopes(
             scopes.map((entry) => entry.scope.path),
             scope,
         );
-        const excluded = children.map((path) => `!${literalGlob(path)}/**`);
+        const excluded = children.map((path) => `!${escapeGlob(path)}/**`);
         return selection.selected
             .flatMap((manifest) => manifest.eslint.rules_off)
             .map(({ files, rules }) => ({
@@ -116,7 +116,7 @@ export function importStyleBlocks(scopes: ScopeSelection[], nodeFiles: string[])
     });
     return changed.flatMap((entry) => {
         const path = entry.scope.path;
-        const children = nestedScopes(
+        const children = listNestedScopes(
             changed.map(({ scope }) => scope.path),
             path,
         );
@@ -126,10 +126,10 @@ export function importStyleBlocks(scopes: ScopeSelection[], nodeFiles: string[])
             : [
                   {
                       files: [sourcePattern(...CODE_LANGUAGES), ...nodePatterns(nodeFiles, path)].map((pattern) => [
-                          path === '' ? '**/*' : `${literalGlob(path)}/**/*`,
+                          path === '' ? '**/*' : `${escapeGlob(path)}/**/*`,
                           pattern,
                       ]),
-                      ignores: children.map((child) => `${literalGlob(child)}/**`),
+                      ignores: children.map((child) => `${escapeGlob(child)}/**`),
                       settings: {
                           n: {
                               tryExtensions: IMPORT_EXTENSIONS,

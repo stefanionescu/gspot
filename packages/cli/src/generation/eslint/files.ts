@@ -1,8 +1,8 @@
-import { extensionsTagged } from '#cli/repository/classify.ts';
 import { joinScope, isInScope } from '#cli/repository/scopes.ts';
+import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import type { PathExpressions } from '#cli/types/repository/inventory.ts';
 import { CODE_LANGUAGES, COMPONENT_CONFIGURATIONS } from '#cli/config/generation/eslint.ts';
-import { literalGlob, pathMatcher, includeFolderContents } from '#cli/repository/matchers.ts';
+import { escapeGlob, buildPathMatcher, includeFolderContents } from '#cli/repository/matchers.ts';
 import type { EslintFiles, EslintFileInputs, EslintSettingsBlock } from '#cli/types/generation/eslint.ts';
 
 /**
@@ -15,7 +15,7 @@ import type { EslintFiles, EslintFileInputs, EslintSettingsBlock } from '#cli/ty
 export function filePatterns(input: EslintFileInputs): EslintFiles {
     const { tests, scripts, nodeFiles } = input;
     const source = sourcePattern(...CODE_LANGUAGES);
-    const matchesSource = pathMatcher([source]);
+    const matchesSource = buildPathMatcher([source]);
     const selected = input.components.flatMap(({ configuration, tools }) =>
         tools
             .flatMap(({ eslint }) => eslint?.extensions ?? [])
@@ -23,7 +23,7 @@ export function filePatterns(input: EslintFileInputs): EslintFiles {
             .map((extension) => ({ pattern: `**/*${extension}`, configuration: configuration.name })),
     );
     const components = selected.map(({ pattern }) => pattern);
-    const covered = pathMatcher([source, ...components]);
+    const covered = buildPathMatcher([source, ...components]);
     const node = nodePatterns(
         nodeFiles.filter((path) => !covered(path)),
         '',
@@ -56,7 +56,7 @@ export function filePatterns(input: EslintFileInputs): EslintFiles {
  * @returns the repository-relative file pattern.
  */
 export function sourcePattern(...languages: string[]): string {
-    return `**/*.{${extensionsTagged(...languages)
+    return `**/*.{${listTaggedExtensions(...languages)
         .map((extension) => extension.slice(1))
         .join(',')}}`;
 }
@@ -70,7 +70,7 @@ export function sourcePattern(...languages: string[]): string {
  * @returns literal file patterns that cannot select neighboring filenames.
  */
 export function nodePatterns(paths: string[], scope: string): string[] {
-    return paths.filter((path) => isInScope(path, scope)).map((path) => literalGlob(path));
+    return paths.filter((path) => isInScope(path, scope)).map((path) => escapeGlob(path));
 }
 
 /**
@@ -105,7 +105,7 @@ export function scopeFiles(
     return files.flatMap((file) =>
         paths.map((path) => [
             ...(Array.isArray(file) ? file : [file]),
-            joinScope(literalGlob(scope), '**/*'),
+            joinScope(escapeGlob(scope), '**/*'),
             ...(Array.isArray(path) ? path : [path]),
         ]),
     );

@@ -1,6 +1,6 @@
 // Opens the selected check input and owns temporary compiler resources for tests.
 import { spyOn } from 'bun:test';
-import { scopeOf } from '#cli/repository/scopes.ts';
+import { findScope } from '#cli/repository/scopes.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
@@ -48,7 +48,7 @@ export function buildCheckInput(
     const paths = options.paths?.map((source) => normalizeOutputPath(source));
     const files = session.repository.files.filter(
         (file) =>
-            (check.runs === 'once' || scopeOf(file.path, session.repository.scopes).path === path) &&
+            (check.runs === 'once' || findScope(file.path, session.repository.scopes).path === path) &&
             (paths === undefined || paths.includes(file.path)),
     );
     return {

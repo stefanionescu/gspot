@@ -1,9 +1,9 @@
 import { basename } from 'node:path';
-import { scopeOf } from '#cli/repository/scopes.ts';
-import { coveredBy } from '#cli/repository/coverage.ts';
+import { findScope } from '#cli/repository/scopes.ts';
 import { coverageArguments } from '#cli/planning/checks.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
+import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { PIP_LICENSES_COMMAND } from '#cli/config/tools/python.ts';
 import { PRETTIER_TOOL } from '#cli/config/generation/formatting.ts';
 import { settingsSkip, isSettingEmpty } from '#cli/planning/skips.ts';
@@ -164,13 +164,15 @@ export function licenseProjects(
     const entries = scopes.map((selection) => selection.scope);
     return scopes.flatMap((selection) =>
         files
-            .filter((file) => !isInGspotFolder(file.path) && scopeOf(file.path, entries).path === selection.scope.path)
+            .filter(
+                (file) => !isInGspotFolder(file.path) && findScope(file.path, entries).path === selection.scope.path,
+            )
             .flatMap((file) => {
                 if (
                     !selection.selected.some(
                         (manifest) =>
                             manifest.configuration.name === LICENSES_CONFIGURATION &&
-                            coveredBy(
+                            listCoveredFiles(
                                 check.files ?? manifest.files,
                                 selection.selected,
                                 [file],

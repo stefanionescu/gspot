@@ -37,9 +37,9 @@ export type FileKind = (typeof FILE_KINDS)[number];
 /** A generated path declared by a selected shipped configuration. */
 export type FileDeclaration = { paths: string[]; kind: 'generated'; configuration: string };
 
-export type FileClassification = { kind: FileKind; source: string };
+export type FileClassification = { kind: FileKind; origin: string };
 
-export type Tooling = {
+export type ExistingTools = {
     toolFiles: FoundToolFile[];
     hooks: {
         kind: 'githooks' | 'husky' | 'lefthook' | 'simple-git-hooks' | 'pre-commit' | 'hooksPath';
@@ -70,12 +70,12 @@ export type FoundToolFile = {
 /** Content evidence for classifying a tracked file prefix. */
 export type ContentPrefix = { isBinary: boolean; firstLine: string };
 /** Directory entries together with inherited and locally authored ignore rules. */
-export type DirectoryContents = { entries: Dirent[]; rules: PathIgnore[] };
+export type DirectoryContents = { entries: Dirent[]; ignores: PathIgnore[] };
 /** A directory waiting for a read with its inherited ignore rules. */
-export type PendingDirectory = { directory: string; rules: PathIgnore[] };
+export type PendingDirectory = { folder: string; ignores: PathIgnore[] };
 
 /** Authored declarations and effective Git attributes used for classification. */
-export type FileClassificationRules = { declarations: FileDeclaration[]; attributes: Repository['attributes'] };
+export type ClassificationInputs = { declarations: FileDeclaration[]; attributes: Repository['attributes'] };
 
 /** What detection reads from a scope's tree once, for every manifest to look at. */
 export type ScopeContents = {

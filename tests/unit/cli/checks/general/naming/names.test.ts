@@ -2,8 +2,8 @@ import { test, expect } from 'bun:test';
 import { parseSettings } from '#cli/settings/read.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { TERMS } from '#tests/config/naming/settings.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import { nameFindings } from '#cli/checks/general/naming/names.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
@@ -50,7 +50,7 @@ const namingSettings: NamingSettings = {
     reserved: new Map([['config', ['directories', 'variables']]]),
     rules: [
         {
-            matches: pathMatcher(['**']),
+            matches: buildPathMatcher(['**']),
             languages: undefined,
             categories: undefined,
             allowed: new Set(['requestAnimationFrame', 'enhancedThing']),
@@ -61,7 +61,7 @@ const namingSettings: NamingSettings = {
             source: 'required API names',
         },
         {
-            matches: pathMatcher(['api/route.ts']),
+            matches: buildPathMatcher(['api/route.ts']),
             languages: undefined,
             categories: undefined,
             allowed: new Set(['Content-Type']),
@@ -72,7 +72,7 @@ const namingSettings: NamingSettings = {
             source: 'An external protocol fixes this name.',
         },
         {
-            matches: pathMatcher(['**']),
+            matches: buildPathMatcher(['**']),
             languages: undefined,
             categories: new Set(['variables']),
             allowed: new Set(['i', '_']),
@@ -83,7 +83,7 @@ const namingSettings: NamingSettings = {
             source: 'shipped rule 1',
         },
         {
-            matches: pathMatcher(['**/acceptance/**']),
+            matches: buildPathMatcher(['**/acceptance/**']),
             languages: undefined,
             categories: undefined,
             allowed: undefined,
@@ -94,7 +94,7 @@ const namingSettings: NamingSettings = {
             source: 'shipped rule 2',
         },
         {
-            matches: pathMatcher(['**/*.sh']),
+            matches: buildPathMatcher(['**/*.sh']),
             languages: new Set(['bash']),
             categories: new Set(['functions']),
             allowed: undefined,
@@ -176,7 +176,7 @@ test('a reserved word is allowed only in its named categories', () => {
 test('a prefix rule allows handle in functions and methods and reports it in variables', () => {
     const rule = {
         ...namingSettings.rules[4]!,
-        matches: pathMatcher(['src/**']),
+        matches: buildPathMatcher(['src/**']),
         languages: new Set(['typescript', 'javascript']),
         structuralPrefix: /^handle(?=[A-Z])/u,
         categories: new Set(['functions', 'methods']),

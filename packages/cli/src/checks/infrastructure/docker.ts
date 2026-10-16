@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { parse } from 'yaml';
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
+import { findScope } from '#cli/repository/scopes.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { runCommandGroups } from '#cli/execution/command/check.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
@@ -66,7 +66,7 @@ function composeDocuments(input: CheckInput): ComposeDocuments {
         .filter(({ name }) => name === COMPOSE_CHECK)
         .flatMap(({ files }) => files?.paths ?? [])
         .toArray();
-    const isCompose = pathMatcher(patterns);
+    const isCompose = buildPathMatcher(patterns);
     const documents: ComposeDocuments = { declarations: [], contexts: new Map() };
     for (const group of composeGroups(input.files.filter(({ path }) => isCompose(path)))) {
         const declarations = [...group.before, group.last].flatMap(({ path }) => {
@@ -218,7 +218,7 @@ export function dockerignore(input: CheckInput): Finding[] {
             );
         })
         .flatMap(({ path: dockerfile }): Finding[] => {
-            const scope = scopeOf(dockerfile, input.scopeEntries);
+            const scope = findScope(dockerfile, input.scopeEntries);
             const selection = input.selections.find((entry) => entry.scope.path === scope.path) as ScopeSelection;
             const required = [
                 ...DOCKERIGNORE_ENTRIES,
@@ -296,7 +296,7 @@ export async function trivyImage(input: CheckInput): Promise<Finding[]> {
  * @returns the findings and process outcome.
  */
 export async function dockerCompose(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const isCompose = pathMatcher(planned.check.files?.paths ?? []);
+    const isCompose = buildPathMatcher(planned.check.files?.paths ?? []);
     const groups = composeGroups(planned.files.filter(({ path }) => isCompose(path)));
     return runCommandGroups(
         session,

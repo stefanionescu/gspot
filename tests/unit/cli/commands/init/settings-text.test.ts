@@ -5,9 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { parseSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readRepository } from '#cli/repository/read.ts';
-import { EMPTY_TOOLING } from '#tests/config/tooling.ts';
 import { parseTemplate } from '#cli/settings/templates.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { EMPTY_EXISTING_TOOLS } from '#tests/config/tooling.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/xcode.ts';
 import { emitSettings, parseTomlText } from '#cli/settings/file.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -30,13 +30,13 @@ test.each([...CI_PREFERENCE_CASES])(
         gitOutput(sandbox.path, ['config', 'remote.origin.url', remote]);
         expect(
             proposeCi(sandbox.path, {
-                ...EMPTY_TOOLING,
-                toolFiles: [...EMPTY_TOOLING.toolFiles],
-                hooks: [...EMPTY_TOOLING.hooks],
-                agentFiles: [...EMPTY_TOOLING.agentFiles],
-                rulesDirectories: [...EMPTY_TOOLING.rulesDirectories],
-                lintFolders: [...EMPTY_TOOLING.lintFolders],
-                lintOnlyManifests: [...EMPTY_TOOLING.lintOnlyManifests],
+                ...EMPTY_EXISTING_TOOLS,
+                toolFiles: [...EMPTY_EXISTING_TOOLS.toolFiles],
+                hooks: [...EMPTY_EXISTING_TOOLS.hooks],
+                agentFiles: [...EMPTY_EXISTING_TOOLS.agentFiles],
+                rulesDirectories: [...EMPTY_EXISTING_TOOLS.rulesDirectories],
+                lintFolders: [...EMPTY_EXISTING_TOOLS.lintFolders],
+                lintOnlyManifests: [...EMPTY_EXISTING_TOOLS.lintOnlyManifests],
                 ci: [...ci],
             }),
         ).toBe(expected);
@@ -248,13 +248,13 @@ test.each([...LINT_JOBS])(
         await createFileTree(sandbox.path, { [path]: content });
         expect(
             proposeCi(sandbox.path, {
-                ...EMPTY_TOOLING,
-                toolFiles: [...EMPTY_TOOLING.toolFiles],
-                hooks: [...EMPTY_TOOLING.hooks],
-                agentFiles: [...EMPTY_TOOLING.agentFiles],
-                rulesDirectories: [...EMPTY_TOOLING.rulesDirectories],
-                lintFolders: [...EMPTY_TOOLING.lintFolders],
-                lintOnlyManifests: [...EMPTY_TOOLING.lintOnlyManifests],
+                ...EMPTY_EXISTING_TOOLS,
+                toolFiles: [...EMPTY_EXISTING_TOOLS.toolFiles],
+                hooks: [...EMPTY_EXISTING_TOOLS.hooks],
+                agentFiles: [...EMPTY_EXISTING_TOOLS.agentFiles],
+                rulesDirectories: [...EMPTY_EXISTING_TOOLS.rulesDirectories],
+                lintFolders: [...EMPTY_EXISTING_TOOLS.lintFolders],
+                lintOnlyManifests: [...EMPTY_EXISTING_TOOLS.lintOnlyManifests],
                 ci: [path],
             }),
         ).toBe('none');

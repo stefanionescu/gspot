@@ -1,7 +1,7 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { targetInScope } from '#cli/repository/scopes.ts';
 import { convertToSystemPath } from '#cli/system/paths.ts';
+import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { toolFileName } from '#cli/configurations/manifests.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 
@@ -121,7 +121,7 @@ export function toolFilePath(session: CommandSource, planned: SubstitutionCheck,
     );
     if (!target)
         throw new Error(`Check ${planned.check.name} names {tool_file:${name}} and no configuration writes it.`);
-    return targetInScope(planned.scope.scope.path, target, session.generatedPaths());
+    return buildScopeTarget(planned.scope.scope.path, target, session.generatedPaths());
 }
 
 /**
@@ -171,7 +171,7 @@ export function scratchFiles(session: CommandSource, planned: SubstitutionCheck,
     const scope = planned.scope.scope.path;
     const owned = (planned.manifest?.toolFiles ?? [])
         .filter((config) => !config.fragment)
-        .map((config) => targetInScope(scope, config, session.generatedPaths()));
+        .map((config) => buildScopeTarget(scope, config, session.generatedPaths()));
     return [
         ...new Set([
             ...planned.files.map(({ path }) => path),

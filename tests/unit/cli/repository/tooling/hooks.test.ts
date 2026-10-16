@@ -5,7 +5,7 @@ import { gitOutput } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { readTooling } from '#cli/repository/existing-tools.ts';
+import { readExistingTools } from '#cli/repository/existing-tools.ts';
 import { unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { LEFTHOOK_FILES, LINKED_HOOK_FILES, LINKED_HOOK_FOLDERS } from '#tests/config/tooling.ts';
@@ -16,14 +16,14 @@ test('hook discovery keeps spaces in core.hooksPath and refuses a broken Git con
     await createFileTree(sandbox.path, { [`${hooksPath}/pre-commit`]: '#!/bin/sh\nexit 0\n' });
     gitOutput(sandbox.path, ['init', '-q']);
     gitOutput(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
-    expect(readTooling(sandbox.path, [], []).hooks).toStrictEqual([
+    expect(readExistingTools(sandbox.path, [], []).hooks).toStrictEqual([
         { kind: 'hooksPath', path: hooksPath, files: ['pre-commit'] },
     ]);
     const original = await readFile(join(sandbox.path, '.git/config'));
     await writeFile(join(sandbox.path, '.git/config'), '[core\n');
-    expect(() => readTooling(sandbox.path, [], [])).toThrow('Git configuration core.hooksPath failed');
+    expect(() => readExistingTools(sandbox.path, [], [])).toThrow('Git configuration core.hooksPath failed');
     await writeFile(join(sandbox.path, '.git/config'), original);
-    expect(readTooling(sandbox.path, [], []).hooks).toStrictEqual([
+    expect(readExistingTools(sandbox.path, [], []).hooks).toStrictEqual([
         { kind: 'hooksPath', path: hooksPath, files: ['pre-commit'] },
     ]);
 });
@@ -37,7 +37,7 @@ test('a hooks folder outside the repository that core.hooksPath names is listed'
     const root = join(sandbox.path, 'project');
     gitOutput(root, ['init', '-q']);
     gitOutput(root, ['config', 'core.hooksPath', '../hooks']);
-    expect(readTooling(root, [], []).hooks).toStrictEqual([
+    expect(readExistingTools(root, [], []).hooks).toStrictEqual([
         { kind: 'hooksPath', path: '../hooks', files: ['pre-commit'] },
     ]);
 });
@@ -50,7 +50,7 @@ test('pre-commit is found from its configuration file', async () => {
         scopeEntries: [],
         manifests: configurationManifests(),
     });
-    expect(readTooling(sandbox.path, files, []).hooks).toStrictEqual([
+    expect(readExistingTools(sandbox.path, files, []).hooks).toStrictEqual([
         { kind: 'pre-commit', path: '.pre-commit-config.yaml', files: [] },
     ]);
 });
@@ -58,14 +58,14 @@ test('pre-commit is found from its configuration file', async () => {
 test('hook discovery ignores a package.json without hooks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'package.json': '{}' });
-    expect(readTooling(sandbox.path, [], []).hooks).toStrictEqual([]);
+    expect(readExistingTools(sandbox.path, [], []).hooks).toStrictEqual([]);
 });
 
 test('hook discovery refuses a malformed package.json', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'package.json': '{' });
-    expect(() => readTooling(sandbox.path, [], [])).toThrow(Error);
-    expect(() => readTooling(sandbox.path, [], [])).toThrow('package.json');
+    expect(() => readExistingTools(sandbox.path, [], [])).toThrow(Error);
+    expect(() => readExistingTools(sandbox.path, [], [])).toThrow('package.json');
 });
 
 test('hook discovery reports other hook folders and leaves gspot and task scripts out', async () => {
@@ -77,7 +77,7 @@ test('hook discovery reports other hook folders and leaves gspot and task script
         '.gspot/hooks/pre-commit': '#!/bin/sh\nexit 0\n',
         '.mise/tasks/hook/pre-commit': '#!/bin/sh\nexit 0\n',
     });
-    const hooks = readTooling(sandbox.path, [], []).hooks;
+    const hooks = readExistingTools(sandbox.path, [], []).hooks;
     expect(hooks.toSorted((left, right) => left.path.localeCompare(right.path))).toStrictEqual([
         { kind: 'githooks', path: '.git-hooks', files: ['pre-commit'] },
         { kind: 'githooks', path: '.githooks', files: ['pre-commit'] },
@@ -95,11 +95,11 @@ test.each([...LINKED_HOOK_FOLDERS])(
         });
         const root = join(sandbox.path, 'project');
         await symlink('../outside', join(root, path), 'dir');
-        expect(readTooling(root, [], []).hooks).toStrictEqual([{ kind, path, files: [] }]);
+        expect(readExistingTools(root, [], []).hooks).toStrictEqual([{ kind, path, files: [] }]);
         await unlink(join(root, path));
         await createFileTree(root, { 'authored-hooks/pre-commit': '#!/bin/sh\nexit 0\n' });
         await symlink('authored-hooks', join(root, path), 'dir');
-        expect(readTooling(root, [], []).hooks).toStrictEqual([{ kind, path, files: ['pre-commit'] }]);
+        expect(readExistingTools(root, [], []).hooks).toStrictEqual([{ kind, path, files: ['pre-commit'] }]);
     },
 );
 
@@ -111,7 +111,7 @@ test.each([...LINKED_HOOK_FILES])('a linked $path counts as $kind configuration'
     });
     const root = join(sandbox.path, 'project');
     await symlink('../outside/configuration', join(root, path));
-    expect(readTooling(root, [], []).hooks).toStrictEqual([{ kind, path, files: [] }]);
+    expect(readExistingTools(root, [], []).hooks).toStrictEqual([{ kind, path, files: [] }]);
 });
 
 test.each([...LEFTHOOK_FILES])('hook discovery reports %s', async (path) => {
@@ -121,9 +121,9 @@ test.each([...LEFTHOOK_FILES])('hook discovery reports %s', async (path) => {
         'hook-settings.yaml': 'unrelated hook configuration\n',
         'source.ts': 'export {};\n',
     });
-    expect(readTooling(sandbox.path, [], []).hooks).toStrictEqual([{ kind: 'lefthook', path, files: [] }]);
+    expect(readExistingTools(sandbox.path, [], []).hooks).toStrictEqual([{ kind: 'lefthook', path, files: [] }]);
     await unlink(join(sandbox.path, path));
-    expect(readTooling(sandbox.path, [], []).hooks).toStrictEqual([]);
+    expect(readExistingTools(sandbox.path, [], []).hooks).toStrictEqual([]);
 });
 
 test('a read error in a hooks folder reaches the caller', async () => {
@@ -134,7 +134,7 @@ test('a read error in a hooks folder reaches the caller', async () => {
     });
     let caught: unknown;
     try {
-        readTooling(sandbox.path, [], []);
+        readExistingTools(sandbox.path, [], []);
     } catch (error) {
         caught = error;
     }
@@ -144,7 +144,7 @@ test('a read error in a hooks folder reaches the caller', async () => {
 
 test('simple-git-hooks is found from its package.json key', async () => {
     await using sandbox = await testdir({ 'package.json': '{"simple-git-hooks":{"pre-commit":"echo authored"}}' });
-    expect(readTooling(sandbox.path, [], []).hooks).toStrictEqual([
+    expect(readExistingTools(sandbox.path, [], []).hooks).toStrictEqual([
         { kind: 'simple-git-hooks', path: 'package.json', files: [] },
     ]);
 });

@@ -2,7 +2,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { listCodeLines } from '#cli/parsers/bash.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import type { ScriptFile, ScriptReport } from '#cli/types/checks/language.ts';
 import { functionAt, readScripts } from '#cli/checks/language/bash/scripts.ts';
@@ -118,7 +118,7 @@ function withoutDeclaration(code: string): string {
  * @returns the findings.
  */
 export async function bashScriptLayout(input: CheckInput): Promise<Finding[]> {
-    const isOwner = pathMatcher(input.selection.view.roles.environment_readers);
+    const isOwner = buildPathMatcher(input.selection.view.roles.environment_readers);
     const index = await readScripts(input);
     return index
         .filter((file) => !OTHER_SHEBANG.test(file.lines[0] ?? ''))

@@ -5,8 +5,8 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { BYTES_PER_KB } from '#cli/config/units.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
@@ -238,7 +238,7 @@ export async function siteSize(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
     const files = filesUnder(build.folder);
     return limits.flatMap((limit) => {
-        const isCounted = pathMatcher(limit.paths);
+        const isCounted = buildPathMatcher(limit.paths);
         const bytes = files
             .filter((entry) => isCounted(repositoryPath(input, build, join(build.folder, entry))))
             .reduce((sum, path) => sum + gzipSync(readBytes(build.folder, path)).length, 0);
@@ -268,7 +268,7 @@ export async function sitemap(input: CheckInput): Promise<Finding[]> {
     if (sitemapFile === undefined) return [];
     const urls = sitemapUrls(build.folder, files);
     const listed = new Set(urls.flatMap((url) => pageOf(url)));
-    const isLeftOut = pathMatcher(input.selection.view.options('site').allowed_unlisted_pages);
+    const isLeftOut = buildPathMatcher(input.selection.view.options('site').allowed_unlisted_pages);
     const missing = urls
         .filter((url) => pageOf(url).every((page) => !files.has(page)))
         .map((url) =>

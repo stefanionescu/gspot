@@ -19,7 +19,7 @@ import { locateCandidates, readMiseBinPaths } from '#cli/tools/find.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { MISSING_PACKAGE_MANAGER_MESSAGE } from '#cli/config/tools/npm.ts';
 import { misePins, toolProjectPins } from '#cli/configurations/tool-pins.ts';
-import { classifyFile, fileDeclarations } from '#cli/repository/classify.ts';
+import { classifyFile, listFileDeclarations } from '#cli/repository/classify.ts';
 import { selectNpmClient, readNpmClientVersion } from '#cli/tools/npm/client.ts';
 import type { Settings, SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts';
 import { rootView, scopeView, knownSettings, detectedDefaults } from '#cli/settings/view.ts';
@@ -74,7 +74,7 @@ async function readSessionRepository(
     const selected = new Map(
         ['', ...Object.keys(settings.scope)].map((path) => [path, selectForScope(settings, path, manifests)]),
     );
-    const declarations = fileDeclarations(selected);
+    const declarations = listFileDeclarations(selected);
     const repository = await readRepository(reads, {
         declarations,
         scopeEntries: Object.entries(settings.scope).map(([path, scope]) => ({

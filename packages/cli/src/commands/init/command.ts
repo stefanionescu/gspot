@@ -18,11 +18,11 @@ import { detectionText } from '#cli/commands/init/detection.ts';
 import { readFormatTables } from '#cli/commands/init/format.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { readTooling } from '#cli/repository/existing-tools.ts';
 import { planReplacedFiles } from '#cli/commands/init/replace.ts';
-import { type Tooling } from '#cli/types/repository/inventory.ts';
 import { findRoot, readRepository } from '#cli/repository/read.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { readExistingTools } from '#cli/repository/existing-tools.ts';
+import { type ExistingTools } from '#cli/types/repository/inventory.ts';
 import { initPlanText, buildInitPlan } from '#cli/commands/init/plan.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { NO_CONFIGURATIONS, INIT_TEMPLATE_DEFAULTS } from '#cli/config/commands/init.ts';
@@ -42,7 +42,7 @@ import type {
 function printDetection(
     inputs: Omit<InitInputs, 'options'>,
     detected: InitSelection,
-    tooling: Tooling,
+    tooling: ExistingTools,
     applicable: Set<string>,
 ): void {
     const { repo, manifests } = inputs;
@@ -154,7 +154,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
     const hooks = settingsSchema.shape.hooks.unwrap().shape.enabled.parse(template.hooks?.enabled);
     const rules = settingsSchema.shape.rules.unwrap().shape.enabled.parse(template.rules?.enabled);
     const selection = selectForInit({ ...inputs, options });
-    const tooling = readTooling(root, repo.files, packageManifests);
+    const tooling = readExistingTools(root, repo.files, packageManifests);
     let ci: InitAnswers['ci'] = 'none';
     if (options.template === undefined) ci = proposeCi(root, tooling);
     else if (templateCi?.enabled === true)

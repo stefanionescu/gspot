@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { testModules } from '#tests/setup/modules.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { targetInScope } from '#cli/repository/scopes.ts';
+import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import type { StylelintToolFile } from '#tests/types/tool-files.ts';
 import { STYLELINT_SCOPE_FILES, STYLELINT_SCOPE_TABLES } from '#tests/config/stylelint.ts';
 
@@ -58,7 +58,7 @@ test.each(['recommended', 'all'] as const)(
         )!;
         expect(generated.files.filter(({ path }) => path.endsWith('/stylelint.json'))).toHaveLength(1);
         for (const scope of ['', 'child']) {
-            const target = targetInScope(scope, declaration, paths);
+            const target = buildScopeTarget(scope, declaration, paths);
             const file = generated.files.find(({ path }) => path === target)!;
             const config = JSON.parse(file.content) as Config;
             expect(config.rules!['color-hex-length']).toBe('long');

@@ -1,9 +1,9 @@
 // The plan initialization shows before writing files, including dry runs.
 import { colors } from '#cli/system/terminal.ts';
 import { stripUndefined } from '#cli/system/values.ts';
-import { submodulePaths } from '#cli/repository/tracked.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
+import { listSubmodulePaths } from '#cli/repository/tracked.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
 import { readLintJobs } from '#cli/repository/existing-tools.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
@@ -177,7 +177,7 @@ export function buildInitPlan(
         delete: replaced.deleted,
         retained: [
             ...replaced.retained,
-            ...submodulePaths(planning.index).map((path) => ({ path, note: 'submodule; contents are not read' })),
+            ...listSubmodulePaths(planning.index).map((path) => ({ path, note: 'submodule; contents are not read' })),
             ...keptCiRows(answers.ci, tooling.ci, readLintJobs(root, tooling.ci)),
         ],
         change: [...change, ...replaced.changed, ...buildPinnedDependencyRows(planning, requirements)],

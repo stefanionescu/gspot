@@ -1,7 +1,7 @@
 import { parse, stringify } from 'yaml';
 import type { Session } from '#cli/types/planning.ts';
-import { byScopeDepth } from '#cli/repository/scopes.ts';
-import { projectDependencies } from '#cli/repository/dependency-files.ts';
+import { compareScopeDepth } from '#cli/repository/scopes.ts';
+import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 import type { EmitInputs, SemgrepDocument } from '#cli/types/generation/files.ts';
 import { gitignorePatterns, scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
 import { SEMGREP_IGNORED, SEMGREP_ENV_PATTERNS_INDEX } from '#cli/config/generation/tool-file-sources.ts';
@@ -27,14 +27,14 @@ export function semgrepToolFile(
         packageManifests,
     }: Pick<EmitInputs, 'selection' | 'scopes'> & Pick<Session, 'packageManifests'>,
 ): string {
-    const scopeDependencies = Object.keys(projectDependencies(packageManifests, selection.scope.path));
+    const scopeDependencies = Object.keys(getProjectDependencies(packageManifests, selection.scope.path));
     const document = parse(source) as SemgrepDocument;
     if (configuration === 'javascript' && !scopeDependencies.includes('jsonwebtoken'))
         document.rules = document.rules.filter((rule) => !rule.id.startsWith('gspot.javascript.jwt-'));
     if (configuration === 'supabase') {
         const functions = scopes
             .filter(({ view }) => view.configurations.includes('supabase'))
-            .toSorted((left, right) => byScopeDepth(left.scope.path, right.scope.path))
+            .toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path))
             .map(({ view: { settings } }) => `/${String(settings['supabase.functions_folder'])}/**`);
         for (const rule of document.rules) if (rule.paths !== undefined) rule.paths.include = functions;
     }

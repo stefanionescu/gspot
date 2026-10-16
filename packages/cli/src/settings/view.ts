@@ -4,7 +4,7 @@
 // configurations override an earlier scalar default; other scalar disagreements produce conflicts.
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { coversScope } from '#cli/repository/scopes.ts';
+import { isScopeCovered } from '#cli/repository/scopes.ts';
 import { toolsSchema } from '#cli/settings/schema/tools.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { IgnoreEntry } from '#cli/types/settings/file.ts';
@@ -215,7 +215,7 @@ function scopeView(known: KnownSettings, settings: Settings, selected: Manifest[
         rulesOff: (check) =>
             ignores
                 .filter((entry) => entry.check === check)
-                .filter((entry) => entry.paths.length === 0 || coversScope(entry.paths, scope))
+                .filter((entry) => entry.paths.length === 0 || isScopeCovered(entry.paths, scope))
                 .map((entry) => entry.rule)
                 .filter((rule) => rule !== undefined),
         extra: (name) => {

@@ -2,11 +2,11 @@
 import { posix } from 'node:path';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { MARKERS } from '#cli/config/system/managed-blocks.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Lockfile } from '#cli/types/parsers/lockfiles.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependency-files.ts';
 import { DOT_GSPOT, VALE_PACKAGE_DIRECTORY } from '#cli/config/system/locations.ts';
@@ -21,7 +21,7 @@ import {
     type ContentPrefix,
     type FileDeclaration,
     type FileClassification,
-    type FileClassificationRules,
+    type ClassificationInputs,
 } from '#cli/types/repository/inventory.ts';
 import {
     TEXT_TAG,
@@ -59,21 +59,21 @@ import {
 
 // Every tracked path has one kind: source, generated, vendored, binary.
 
-function declaredKind(path: string, rules: FileClassificationRules): FileClassification | undefined {
-    const attribute = attributeKind(rules.attributes.get(path));
+function findDeclaredKind(path: string, rules: ClassificationInputs): FileClassification | undefined {
+    const attribute = findAttributeKind(rules.attributes.get(path));
     if (attribute !== undefined) return attribute;
-    const declaration = rules.declarations.find((entry) => pathMatcher(entry.paths)(path));
-    return declaration === undefined ? undefined : { kind: declaration.kind, source: declaration.configuration };
+    const declaration = rules.declarations.find((entry) => buildPathMatcher(entry.paths)(path));
+    return declaration === undefined ? undefined : { kind: declaration.kind, origin: declaration.configuration };
 }
 
-function attributeKind(attributes: Record<string, string> | undefined): FileClassification | undefined {
+function findAttributeKind(attributes: Record<string, string> | undefined): FileClassification | undefined {
     if (attributes === undefined) return undefined;
     if (new Set<string | undefined>(SET_VALUES).has(attributes[GENERATED_ATTRIBUTE]))
-        return { kind: 'generated', source: GITATTRIBUTES_FILE };
+        return { kind: 'generated', origin: GITATTRIBUTES_FILE };
     if (new Set<string | undefined>(SET_VALUES).has(attributes[VENDORED_ATTRIBUTE]))
-        return { kind: 'vendored', source: GITATTRIBUTES_FILE };
+        return { kind: 'vendored', origin: GITATTRIBUTES_FILE };
     const isBinary = attributes[TEXT_ATTRIBUTE] === 'unset' || attributes[FILTER_ATTRIBUTE] === LFS_FILTER;
-    return isBinary ? { kind: 'binary', source: GITATTRIBUTES_FILE } : undefined;
+    return isBinary ? { kind: 'binary', origin: GITATTRIBUTES_FILE } : undefined;
 }
 
 // License texts belong to another party. A code file whose name looks like a license stays source.
@@ -84,24 +84,24 @@ function isLicenseFile(path: string): boolean {
 }
 
 // Tool paths and banners identify generated files; downloaded Vale styles belong to another party.
-function fileOrigin(path: string, prefix: Buffer): FileClassification | undefined {
-    if (isValePackageFile(path)) return { kind: 'vendored', source: 'gspot' };
-    if (path.startsWith(`${DOT_GSPOT}/`)) return { kind: 'generated', source: 'gspot' };
-    if (GENERATED_BUILD_WRAPPERS.has(posix.basename(path))) return { kind: 'generated', source: 'build wrapper' };
+function findGeneratedKind(path: string, prefix: Buffer): FileClassification | undefined {
+    if (isValePackageFile(path)) return { kind: 'vendored', origin: 'gspot' };
+    if (path.startsWith(`${DOT_GSPOT}/`)) return { kind: 'generated', origin: 'gspot' };
+    if (GENERATED_BUILD_WRAPPERS.has(posix.basename(path))) return { kind: 'generated', origin: 'build wrapper' };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
     if (hasGeneratedHeader(start) || GENERATED_BANNERS.some((banner) => banner.test(start)))
-        return { kind: 'generated', source: 'banner' };
+        return { kind: 'generated', origin: 'banner' };
     return undefined;
 }
 
 // Higher-priority kinds take precedence; only a wholly managed instruction document makes remaining content generated.
-function sourceKind(root: string, entry: FileEntry, prefix: Buffer): FileClassification {
+function classifyManagedDocument(root: string, entry: FileEntry, prefix: Buffer): FileClassification {
     if (entry.symlink || !entry.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
         return SOURCE_KIND;
     const text = readBytes(root, entry.path).toString('utf8');
     const span = findBlockSpan(text, { path: entry.path, style: 'markdown' });
     if (span === undefined || `${text.slice(0, span.start)}${text.slice(span.end)}`.trim() !== '') return SOURCE_KIND;
-    return { kind: 'generated', source: 'gspot' };
+    return { kind: 'generated', origin: 'gspot' };
 }
 
 /**
@@ -123,19 +123,19 @@ function isValePackageFile(path: string): boolean {
  * @param rules the generated and vendored declarations and captured Git attributes.
  * @returns the kind and where it came from.
  */
-function kindOf(
+function classifyKind(
     file: { root: string; entry: FileEntry; prefix: Buffer; isBinary: boolean },
-    rules: FileClassificationRules,
+    rules: ClassificationInputs,
 ): FileClassification {
     const { root, entry, isBinary, prefix } = file;
     const { path } = entry;
-    const declared = declaredKind(path, rules);
+    const declared = findDeclaredKind(path, rules);
     if (declared) return declared;
     // Explicit text attributes override binary content and extension hints.
     if (isBinary && rules.attributes.get(path)?.[TEXT_ATTRIBUTE] !== ATTRIBUTE_SET)
-        return { kind: 'binary', source: 'content' };
-    if (isLicenseFile(path)) return { kind: 'vendored', source: 'license' };
-    const managed = fileOrigin(path, prefix);
+        return { kind: 'binary', origin: 'content' };
+    if (isLicenseFile(path)) return { kind: 'vendored', origin: 'license' };
+    const managed = findGeneratedKind(path, prefix);
     if (managed) return managed;
     if (
         path
@@ -143,8 +143,8 @@ function kindOf(
             .slice(0, -1)
             .some((segment) => new Set<string | undefined>(VENDORED_FOLDERS).has(segment))
     )
-        return { kind: 'vendored', source: 'directory' };
-    return sourceKind(root, entry, prefix);
+        return { kind: 'vendored', origin: 'directory' };
+    return classifyManagedDocument(root, entry, prefix);
 }
 
 function sniff(buffer: Buffer): ContentPrefix {
@@ -154,12 +154,12 @@ function sniff(buffer: Buffer): ContentPrefix {
     return { isBinary: false, firstLine: newline === -1 ? text : text.slice(0, newline) };
 }
 
-function shebangTags(firstLine: string): string[] {
+function listShebangTags(firstLine: string): string[] {
     const interpreter = parseShebang(firstLine);
     if (interpreter === undefined) return [];
     const shebang =
         (SHEBANG_INTERPRETERS as Readonly<Record<string, string>>)[interpreter] ??
-        (SHEBANG_INTERPRETERS as Readonly<Record<string, string>>)[withoutTrailingVersion(interpreter)];
+        (SHEBANG_INTERPRETERS as Readonly<Record<string, string>>)[stripTrailingVersion(interpreter)];
     if (shebang === undefined) return [];
     const dialect = (INTERPRETER_DIALECTS as Readonly<Record<string, string>>)[interpreter] ?? DEFAULT_DIALECT;
     const runtime = JAVASCRIPT_RUNTIMES.find((name) => name === interpreter);
@@ -171,14 +171,14 @@ function shebangTags(firstLine: string): string[] {
     ];
 }
 
-function textTags(tags: Set<string>, firstLine: string): Tagged {
-    for (const tag of shebangTags(firstLine)) tags.add(tag);
+function tagTextFile(tags: Set<string>, firstLine: string): Tagged {
+    for (const tag of listShebangTags(firstLine)) tags.add(tag);
     if (Object.values(INTERPRETER_DIALECTS).some((dialect) => tags.has(dialect))) tags.delete('bash');
     tags.add(TEXT_TAG);
     return { tags: [...tags], binary: false };
 }
 
-function withoutTrailingVersion(word: string): string {
+function stripTrailingVersion(word: string): string {
     let end = word.length;
     while (end > 0 && VERSION_CHARACTERS.includes(word[end - 1] ?? '')) end -= 1;
     return word.slice(0, end);
@@ -226,13 +226,13 @@ function findLockfile(path: string): Lockfile | undefined {
  * @param rules the file declarations used for classification.
  * @returns the file kind and its classification source.
  */
-function classifyFile(root: string, entry: FileEntry, prefix: Buffer, rules: FileClassificationRules): TrackedFile {
-    const tagged = tagEntry(entry, prefix);
-    const verdict = kindOf({ root, entry, prefix, isBinary: tagged.binary }, rules);
+function classifyFile(root: string, entry: FileEntry, prefix: Buffer, rules: ClassificationInputs): TrackedFile {
+    const tagged = tagFile(entry, prefix);
+    const verdict = classifyKind({ root, entry, prefix, isBinary: tagged.binary }, rules);
     const file: TrackedFile = {
         path: entry.path,
         kind: verdict.kind,
-        kindSource: verdict.source,
+        kindSource: verdict.origin,
         tags: tagged.tags,
         executable: entry.executable,
         size: entry.size,
@@ -246,7 +246,7 @@ function classifyFile(root: string, entry: FileEntry, prefix: Buffer, rules: Fil
  * @param prefix the captured first bytes.
  * @returns the path and content tags, and whether the file contains binary bytes.
  */
-function tagEntry(entry: FileEntry, prefix: Buffer): Tagged {
+function tagFile(entry: FileEntry, prefix: Buffer): Tagged {
     const extension = extractExtension(entry.path);
     const base = posix.basename(entry.path);
     const flags: [boolean, string][] = [
@@ -265,7 +265,7 @@ function tagEntry(entry: FileEntry, prefix: Buffer): Tagged {
         return { tags: [BINARY_TAG, ...tags], binary: true };
     const sniffed = sniff(prefix);
     if (sniffed.isBinary) return { tags: [BINARY_TAG, ...tags], binary: true };
-    return textTags(tags, sniffed.firstLine);
+    return tagTextFile(tags, sniffed.firstLine);
 }
 
 /**
@@ -273,7 +273,7 @@ function tagEntry(entry: FileEntry, prefix: Buffer): Tagged {
  * @param tags the language or content tags to select.
  * @returns extensions in inventory order.
  */
-function extensionsTagged(...tags: string[]): string[] {
+function listTaggedExtensions(...tags: string[]): string[] {
     return Object.entries(EXTENSION_TAGS)
         .filter(([, owned]) => tags.some((tag) => new Set<string>(owned).has(tag)))
         .map(([extension]) => extension);
@@ -284,7 +284,7 @@ function extensionsTagged(...tags: string[]): string[] {
  * @param selected the actual manifests selected by each written scope.
  * @returns file declarations with internal configuration origins retained.
  */
-function fileDeclarations(selected: Map<string, Manifest[]>): FileDeclaration[] {
+function listFileDeclarations(selected: Map<string, Manifest[]>): FileDeclaration[] {
     return selected
         .entries()
         .flatMap(([path, manifests]) =>
@@ -317,16 +317,16 @@ function isInGspotFolder(path: string): boolean {
  * @param path the repository-relative path.
  * @returns whether project discovery must leave out the path.
  */
-function isToolingPath(path: string): boolean {
+function isInstalledToolPath(path: string): boolean {
     return isInGspotFolder(path) || path.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part));
 }
 
 export {
     findLockfile,
     classifyFile,
-    isToolingPath,
     isInGspotFolder,
-    extensionsTagged,
-    fileDeclarations,
     hasGeneratedHeader,
+    isInstalledToolPath,
+    listTaggedExtensions,
+    listFileDeclarations,
 };

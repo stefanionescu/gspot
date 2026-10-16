@@ -1,8 +1,8 @@
 import picomatch from 'picomatch';
 import type { Session } from '#cli/types/planning.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import { fileDeclarations } from '#cli/repository/classify.ts';
-import { readGeneratedPatterns } from '#cli/repository/read.ts';
+import { readLinguistPatterns } from '#cli/repository/read.ts';
+import { listFileDeclarations } from '#cli/repository/classify.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { BRACE_TOKENS, ALWAYS_IGNORED } from '#cli/config/generation/ignore-patterns.ts';
 
@@ -104,7 +104,7 @@ export function scopeIgnorePatterns(patterns: string[], scope: string): string[]
  */
 export function generatedIgnores(session: Pick<Session, 'reads' | 'repository' | 'scopes'>): string[] {
     const { reads, repository, scopes } = session;
-    const declarations = fileDeclarations(new Map(scopes.map(({ scope, selected }) => [scope.path, selected])));
+    const declarations = listFileDeclarations(new Map(scopes.map(({ scope, selected }) => [scope.path, selected])));
     const tracked = repository.index.length === 0 ? repository.files : repository.index;
     return [
         ...new Set([
@@ -114,7 +114,7 @@ export function generatedIgnores(session: Pick<Session, 'reads' | 'repository' |
                     ignoredFolders.map((folder) => `**/${folder}/**`),
                 ),
             ),
-            ...readGeneratedPatterns(
+            ...readLinguistPatterns(
                 reads,
                 tracked.map(({ path }) => path),
             ),

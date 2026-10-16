@@ -3,16 +3,16 @@ import { basename } from 'node:path/posix';
 import type { Session } from '#cli/types/planning.ts';
 import { settingValue } from '#cli/settings/inherit.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { aliasesFor } from '#cli/generation/eslint/aliases.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
 import { eslintModule } from '#cli/generation/eslint/serialize.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
+import { readScopeAliases } from '#cli/generation/eslint/aliases.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { boundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
 import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
-import { literalGlob, pathMatcher } from '#cli/repository/matchers.ts';
-import { projectDependencies } from '#cli/repository/dependency-files.ts';
+import { escapeGlob, buildPathMatcher } from '#cli/repository/matchers.ts';
+import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 import { scriptPaths, runtimeBlocks } from '#cli/generation/eslint/runtimes.ts';
 import { filePatterns, nodePatterns, sourcePattern } from '#cli/generation/eslint/files.ts';
 import { trivialRuleBlocks, environmentRuleBlocks } from '#cli/generation/eslint/structure.ts';
@@ -40,7 +40,7 @@ import {
 
 // Root and nested rules share the same boundary folders and their project's aliases.
 function importBoundariesRule(scopes: ScopeSelection[], aliases: Record<string, string>) {
-    const scopePaths = scopes.map((entry) => literalGlob(entry.scope.path)).filter((path) => path !== '');
+    const scopePaths = scopes.map((entry) => escapeGlob(entry.scope.path)).filter((path) => path !== '');
     return ['error', { folders: [...ESLINT_BOUNDARY_FOLDERS, ...scopePaths], aliases }];
 }
 
@@ -51,9 +51,9 @@ function scopeBlocks(context: EslintContext): EslintBlock[] {
         .filter((entry) => entry.scope.path !== '')
         .map((entry) => {
             const path = entry.scope.path;
-            const aliases = aliasesFor(root, path, reads);
+            const aliases = readScopeAliases(root, path, reads);
             return {
-                files: [`${literalGlob(path)}/${sourcePattern(...CODE_LANGUAGES)}`, ...nodePatterns(nodeFiles, path)],
+                files: [`${escapeGlob(path)}/${sourcePattern(...CODE_LANGUAGES)}`, ...nodePatterns(nodeFiles, path)],
                 rules: {
                     [IMPORT_BOUNDARIES_RULE]: importBoundariesRule(scopes, aliases),
                 },
@@ -84,7 +84,7 @@ function calculateConfiguration(context: EslintContext, projects: string[]): Esl
     const { root, reads, scopes, selection, nodeFiles, settings } = context;
     const { view } = selection;
     const tool = view.options(ESLINT_SETTINGS_TABLE);
-    const aliases = aliasesFor(root, '', reads);
+    const aliases = readScopeAliases(root, '', reads);
     return {
         projects,
         nodeFiles,
@@ -136,7 +136,7 @@ function moduleInputs(session: Session, selection: ScopeSelection, pluginLevels:
         ...Object.entries(pluginLevels).flatMap(([name, level]) => (level === 'all' ? [`gspot/${name}`] : [])),
     ]);
     const presets = new Map<string, EslintPresets>();
-    const recognized = pathMatcher([sourcePattern(...CODE_LANGUAGES)]);
+    const recognized = buildPathMatcher([sourcePattern(...CODE_LANGUAGES)]);
     const nodeFiles = repository.files
         .filter((file) => !recognized(file.path) && file.kind === 'source' && file.tags.includes(NODE_SHEBANG_TAG))
         .map((file) => file.path);
@@ -212,7 +212,7 @@ export function eslintInputs(
         roles: selection.view.roles,
         testFiles: selection.view.test_files,
         scope: selection.scope.path,
-        scopeDependencies: Object.keys(projectDependencies(session.packageManifests, selection.scope.path)),
+        scopeDependencies: Object.keys(getProjectDependencies(session.packageManifests, selection.scope.path)),
         testRuleNames: TEST_RULE_NAMES,
         isAll,
         repositorySettings,

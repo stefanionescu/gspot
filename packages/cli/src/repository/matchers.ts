@@ -28,7 +28,7 @@ function pathExpressions(patterns: string[]): PathExpressions {
  * @param patterns the globs, a leading `!` excludes.
  * @returns the matcher.
  */
-export function pathMatcher(patterns: string[]): (path: string) => boolean {
+export function buildPathMatcher(patterns: string[]): (path: string) => boolean {
     const key = JSON.stringify(patterns);
     const cached = matcherCache.get(key);
     if (cached) return cached;
@@ -60,9 +60,9 @@ export function includeFolderContents(patterns: string[]): string[] {
  * @param names the literal filenames and glob selectors.
  * @returns the same filename matcher for detection and ownership.
  */
-export function filenameMatcher(names: string[]): (path: string) => boolean {
+export function buildFilenameMatcher(names: string[]): (path: string) => boolean {
     const literals = new Set(names.filter((name) => !picomatch.scan(name).isGlob));
-    const globs = pathMatcher(names.filter((name) => picomatch.scan(name).isGlob));
+    const globs = buildPathMatcher(names.filter((name) => picomatch.scan(name).isGlob));
     return (path) => {
         const base = posix.basename(path);
         return literals.has(base) || literals.has(path) || globs(base) || globs(path);
@@ -74,6 +74,6 @@ export function filenameMatcher(names: string[]): (path: string) => boolean {
  * @param path the literal repository path.
  * @returns a glob with every special character escaped.
  */
-export function literalGlob(path: string): string {
+export function escapeGlob(path: string): string {
     return path.replaceAll(GLOB_SPECIAL_CHARACTERS, String.raw`\$&`);
 }

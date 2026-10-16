@@ -1,9 +1,9 @@
 import ignore from 'ignore';
-import { coversScope } from '#cli/repository/scopes.ts';
+import { isScopeCovered } from '#cli/repository/scopes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { TOOL_IGNORE_ARGUMENT } from '#cli/config/planning.ts';
 import { missingBuild } from '#cli/configurations/tool-pins.ts';
-import { projectDependencies } from '#cli/repository/dependency-files.ts';
+import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
@@ -19,7 +19,7 @@ function conditionSkip(check: PlannedCheck, hasGit: boolean, projects: Dependenc
         };
     if (
         dependencies !== undefined &&
-        !dependencies.some((name) => name in projectDependencies(projects, check.scope.scope.path))
+        !dependencies.some((name) => name in getProjectDependencies(projects, check.scope.scope.path))
     )
         return { cause: 'condition', note: `Needs a project dependency: ${dependencies.join(', ')}.` };
     if (git !== true || hasGit) return undefined;
@@ -35,7 +35,7 @@ function ignoreSkip(scope: ScopeSelection, check: CheckDeclaration): SettingsSki
         .ignoresFor(check.name)
         .find(
             (entry) =>
-                entry.rule === undefined && (entry.paths.length === 0 || coversScope(entry.paths, scope.scope.path)),
+                entry.rule === undefined && (entry.paths.length === 0 || isScopeCovered(entry.paths, scope.scope.path)),
         );
     if (ignored === undefined) return undefined;
     const reason = `: ${ignored.reason}`;

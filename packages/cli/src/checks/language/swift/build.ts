@@ -1,9 +1,9 @@
 import { join, posix, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { type Files } from '#cli/types/system/files.ts';
-import { targetInScope } from '#cli/repository/scopes.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
+import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { toolFindings } from '#cli/execution/command/output.ts';
@@ -162,7 +162,7 @@ export function swiftlintConfigurationFiles(input: CheckInput): string[] {
             .values()
             .flatMap((manifest) => manifest.toolFiles)
             .filter((config) => !config.fragment && config.pointer?.path === SWIFTLINT_CONFIG_FILE)
-            .map((config) => targetInScope(input.selection.scope.path, config, input.generatedPaths())),
+            .map((config) => buildScopeTarget(input.selection.scope.path, config, input.generatedPaths())),
     ];
     for (const file of input.files) {
         for (

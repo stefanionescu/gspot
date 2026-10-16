@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { emptyResult } from '#cli/execution/report.ts';
-import { targetInScope } from '#cli/repository/scopes.ts';
+import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { SEMGREP_TOOL } from '#cli/config/checks/general/security.ts';
@@ -19,7 +19,7 @@ function semgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
         manifest.toolFiles
             .filter((file) => file.tool.includes(SEMGREP_TOOL) && file.target.endsWith('.yml'))
             .filter((file) => file.level !== 'all' || session.settingsFile.settings.level === 'all')
-            .map((file) => targetInScope(scope.path, file, generatedPaths)),
+            .map((file) => buildScopeTarget(scope.path, file, generatedPaths)),
     );
     return [...new Set([...declared, ...view.options('tools.semgrep').rule_files])];
 }

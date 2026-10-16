@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { BYTES_PER_KB } from '#cli/config/units.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
+import { findScope } from '#cli/repository/scopes.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { LFS_FILTER } from '#cli/config/repository/inventory.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 
@@ -39,7 +39,7 @@ export function largeFiles(input: CheckInput): Finding[] {
 export function trackedFiles(input: CheckInput): Finding[] {
     const scopes = input.selections.map(({ scope }) => scope);
     const matchers = input.selections.map(({ scope, selected, view }) => {
-        const matches = pathMatcher(
+        const matches = buildPathMatcher(
             selected.flatMap((manifest) => manifest.ignored_folders.map((name) => `**/${name}/**`)),
         );
         const examples = new Set(view.options('secrets').env_examples);
@@ -61,7 +61,7 @@ export function trackedFiles(input: CheckInput): Finding[] {
         .filter((path) =>
             matchers.some(
                 ({ scope, matches }) =>
-                    scopeOf(path, scopes).path === scope.path && matches(posix.relative(scope.path, path)),
+                    findScope(path, scopes).path === scope.path && matches(posix.relative(scope.path, path)),
             ),
         )
         .map((path) =>

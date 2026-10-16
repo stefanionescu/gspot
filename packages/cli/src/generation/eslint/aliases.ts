@@ -9,19 +9,19 @@ import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import { TRAILING_STAR, LOCAL_PATH_PREFIX, PATHS_BASE_OPTION } from '#cli/config/repository/aliases.ts';
 
-function importTarget(target: unknown): string | undefined {
+function findImportTarget(target: unknown): string | undefined {
     if (typeof target === 'string') return target;
     if (!isRecord(target)) return undefined;
     return Object.values(target).find((value) => typeof value === 'string');
 }
 
-function packageAliases(root: string, prefix: string): Record<string, string> {
+function readPackageAliases(root: string, prefix: string): Record<string, string> {
     const aliases: Record<string, string> = {};
     const path = `${prefix}package.json`;
-    const manifest = readPackageJson(root, path);
-    const imports = manifest?.imports === undefined ? [] : Object.entries(manifest.imports);
+    const packageJson = readPackageJson(root, path);
+    const imports = packageJson?.imports === undefined ? [] : Object.entries(packageJson.imports);
     for (const [pattern, target] of imports) {
-        const found = importTarget(target);
+        const found = findImportTarget(target);
         if (found === undefined) continue;
         if (!found.startsWith(LOCAL_PATH_PREFIX)) continue;
         const alias = found.slice(LOCAL_PATH_PREFIX.length).replace(TRAILING_STAR, '');
@@ -37,9 +37,9 @@ function packageAliases(root: string, prefix: string): Record<string, string> {
  * @param reads the run-owned compiler configuration cache.
  * @returns aliases relative to the repository root.
  */
-export function aliasesFor(root: string, scope: string, reads: ReadCache): Record<string, string> {
+export function readScopeAliases(root: string, scope: string, reads: ReadCache): Record<string, string> {
     const prefix = joinScope(scope, '');
-    const aliases = packageAliases(root, prefix);
+    const aliases = readPackageAliases(root, prefix);
     const path = join(root, prefix, TSCONFIG_FILE);
     const config = readTsconfig(root, path, reads);
     if (config === undefined) return aliases;

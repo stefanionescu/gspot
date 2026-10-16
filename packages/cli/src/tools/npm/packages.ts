@@ -20,7 +20,7 @@ import { listSourceFiles, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool, type Package } from '@manypkg/tools';
 import { type PackageJson, type InstalledDependency } from '#cli/types/parsers/dependency-files.ts';
 
-function workspacePackages(root: string): Package[] {
+function listWorkspacePackages(root: string): Package[] {
     const manifest = readPackageJson(root, PACKAGE_JSON);
     for (const tool of [PnpmTool, LernaTool, RushTool]) {
         if (!tool.isMonorepoRootSync(root)) continue;
@@ -33,15 +33,15 @@ function workspacePackages(root: string): Package[] {
     return YarnTool.getPackagesSync(root).packages;
 }
 
-const WORKSPACE_SOURCE_MEMO = { create: () => new Map<string, string[]>() };
+const WORKSPACE_FILES_MEMO = { create: () => new Map<string, string[]>() };
 
 /**
  * The folders of the npm package workspaces the repository declares, the root left out.
  * @param root the repository root.
  * @returns the root-relative folders.
  */
-function packageWorkspaces(root: string): string[] {
-    const packages = workspacePackages(root);
+function listWorkspaceFolders(root: string): string[] {
+    const packages = listWorkspacePackages(root);
     for (const found of packages)
         if (!isInside(relative(realpathSync(root), realpathSync(found.dir))))
             throw new GspotError('filesystem', `Workspace package leaves the repository: ${found.relativeDir}`);
@@ -56,8 +56,8 @@ function packageWorkspaces(root: string): string[] {
  * @param reads the metadata cache.
  * @returns workspace dependency paths.
  */
-function workspaceSourceFiles(root: string, scope: string, files: TrackedFile[], reads: ReadCache): string[] {
-    const cache = getCachedValue(reads, WORKSPACE_SOURCE_MEMO);
+function listWorkspaceDependencyFiles(root: string, scope: string, files: TrackedFile[], reads: ReadCache): string[] {
+    const cache = getCachedValue(reads, WORKSPACE_FILES_MEMO);
     const project = files
         .map((file) => file.path)
         .filter(
@@ -69,7 +69,7 @@ function workspaceSourceFiles(root: string, scope: string, files: TrackedFile[],
     const held = cache.get(key);
     if (held !== undefined) return held;
     const projectFolder = posix.relative('.', posix.dirname(project));
-    const ordered = [...new Set([projectFolder, ...packageWorkspaces(root)])].toSorted(
+    const ordered = [...new Set([projectFolder, ...listWorkspaceFolders(root)])].toSorted(
         (left, right) => right.length - left.length,
     );
     const packages = new Map(ordered.map((path) => [path, readPackageJson(root, posix.join(path, 'package.json'))]));
@@ -111,8 +111,8 @@ function workspaceSourceFiles(root: string, scope: string, files: TrackedFile[],
             return owner !== undefined && visited.has(owner);
         })
         .map((file) => file.path);
-    const packageManifests = [...visited].map((path) => posix.join(path, PACKAGE_JSON));
-    selected.push(...packageFiles(root, packageManifests));
+    const packageJsonPaths = [...visited].map((path) => posix.join(path, PACKAGE_JSON));
+    selected.push(...listPackageFiles(root, packageJsonPaths));
     cache.set(key, selected);
     return selected;
 }
@@ -120,11 +120,11 @@ function workspaceSourceFiles(root: string, scope: string, files: TrackedFile[],
 /**
  * Select existing files that package manifests declare for publication.
  * @param root the repository root.
- * @param manifests the package.json paths.
+ * @param packageJsonPaths the package.json paths.
  * @returns the repository-relative package files.
  */
-function packageFiles(root: string, manifests: string[]): string[] {
-    return manifests.flatMap((path) => {
+function listPackageFiles(root: string, packageJsonPaths: string[]): string[] {
+    return packageJsonPaths.flatMap((path) => {
         const folder = dirname(path);
         const patterns = (readPackageJson(root, path)?.files ?? []).flatMap((pattern) => [
             pattern,
@@ -146,8 +146,8 @@ function installedPackage(files: Files | undefined, root: string, manifest: stri
         let text: string | undefined;
         if (files === undefined) text = readFileSync(manifest, 'utf8');
         else {
-            const directory = files.realPath(convertToPosixPath(relative(root, dirname(manifest))));
-            const path = convertToPosixPath(relative(root, join(directory, basename(manifest))));
+            const folder = files.realPath(convertToPosixPath(relative(root, dirname(manifest))));
+            const path = convertToPosixPath(relative(root, join(folder, basename(manifest))));
             text = readText(root, path);
         }
         return text === undefined ? undefined : parseJsonFile(manifest, text, packageJsonSchema);
@@ -164,7 +164,7 @@ function installedPackage(files: Files | undefined, root: string, manifest: stri
  * @param name the installed dependency name.
  * @returns the resolved manifest and its version, or undefined when the dependency does not exist.
  */
-function installedDependency(root: string, manifest: string, name: string): InstalledDependency | undefined {
+function findInstalledDependency(root: string, manifest: string, name: string): InstalledDependency | undefined {
     const require = createRequire(join(root, manifest));
     let path: string;
     try {
@@ -176,4 +176,10 @@ function installedDependency(root: string, manifest: string, name: string): Inst
     return { path, version: installedPackage(undefined, root, path)?.version };
 }
 
-export { packageFiles, installedPackage, packageWorkspaces, installedDependency, workspaceSourceFiles };
+export {
+    listPackageFiles,
+    installedPackage,
+    listWorkspaceFolders,
+    findInstalledDependency,
+    listWorkspaceDependencyFiles,
+};

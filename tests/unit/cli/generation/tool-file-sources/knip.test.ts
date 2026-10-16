@@ -7,8 +7,8 @@ import { openSession } from '#cli/commands/session.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { containingAll } from '#tests/setup/matchers.ts';
-import { targetInScope } from '#cli/repository/scopes.ts';
 import { parseOutput } from '#cli/parsers/output/formats.ts';
+import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import type { KnipToolFile } from '#tests/types/tool-files.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -137,7 +137,7 @@ test("Knip ignores gspot's pointer files and reports other configuration-like fi
     const markdown = session.manifests
         .get('markdown')!
         .toolFiles.find(({ tool }) => tool.includes('markdownlint-cli2'))!;
-    expect(targetInScope('child', markdown, new Set(generated.map(({ path }) => path)))).toBe(markdown.target);
+    expect(buildScopeTarget('child', markdown, new Set(generated.map(({ path }) => path)))).toBe(markdown.target);
     await createFileTree(
         sandbox.path,
         Object.fromEntries([configuration, ...pointers].map(({ path, content }) => [path, content])),

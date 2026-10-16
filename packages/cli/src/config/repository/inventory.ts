@@ -186,7 +186,7 @@ export const SHEBANG_TAGS = {
 } as const;
 
 /** Ordinary source content after higher-priority inventory classifications. */
-export const SOURCE_KIND = { kind: 'source', source: 'default' } as const;
+export const SOURCE_KIND = { kind: 'source', origin: 'default' } as const;
 
 export const SHEBANG_TAG = 'shebang:';
 

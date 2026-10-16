@@ -48,17 +48,17 @@ export async function visitGitBlobs(
     visit: (blobs: AsyncIterable<readonly [string, Buffer]>) => Promise<void>,
     cancelSignal?: AbortSignal,
 ): Promise<void> {
-    const objects = [...new Set(requested)];
-    if (objects.length === 0) return;
+    const blobs = [...new Set(requested)];
+    if (blobs.length === 0) return;
     const result = await runGit(
         root,
         [...BLOBS_ARGUMENTS],
         {
-            stdin: objects.join('\n') + '\n',
+            stdin: blobs.join('\n') + '\n',
             cancelSignal,
         },
         async (chunks) => {
-            await visit(parseGitBlobs(chunks, objects));
+            await visit(parseGitBlobs(chunks, blobs));
         },
     );
     if (result.code !== 0)
@@ -77,8 +77,8 @@ export async function readBlobs(root: string, requested: string[], cancelSignal?
     await visitGitBlobs(
         root,
         requested,
-        async (objects) => {
-            for await (const [hash, bytes] of objects) blobs.set(hash, bytes);
+        async (entries) => {
+            for await (const [hash, bytes] of entries) blobs.set(hash, bytes);
         },
         cancelSignal,
     );

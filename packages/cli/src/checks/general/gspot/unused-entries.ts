@@ -3,9 +3,9 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { everyTable } from '#cli/settings/inherit.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { type PathVisitor } from '#cli/types/settings/values.ts';
 import { NEGATED_PATTERN } from '#cli/config/checks/general/gspot.ts';
@@ -24,7 +24,7 @@ export function unusedEntries(input: CheckInput): Finding[] {
         const findings: Finding[] = [];
         const schema = scope === '' ? settingsSchema : scopeSchema;
         const visit: PathVisitor = (pattern, keys, role) => {
-            const matches = pathMatcher([pattern.replace(NEGATED_PATTERN, '')]);
+            const matches = buildPathMatcher([pattern.replace(NEGATED_PATTERN, '')]);
             if (role !== 'destination' && !candidates.some((candidate) => matches(candidate))) {
                 const names = keys
                     .filter((part): part is string => typeof part === 'string')

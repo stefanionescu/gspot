@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { nestedScopes } from '#cli/repository/scopes.ts';
-import { literalGlob } from '#cli/repository/matchers.ts';
+import { escapeGlob } from '#cli/repository/matchers.ts';
+import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { SelectorGroup } from '#cli/types/generation/eslint.ts';
 import type { SelectorPaths } from '#cli/types/generation/fragments.ts';
 import { REEXPORT_SELECTORS } from '#cli/config/generation/eslint-rules.ts';
@@ -80,7 +80,7 @@ export function fragmentSelectorGroups(
 ): SelectorGroup[] {
     const scopePaths = scopes.map((entry) => entry.scope.path);
     return scopes.flatMap((scope) => {
-        const prefix = literalGlob(scope.scope.path);
+        const prefix = escapeGlob(scope.scope.path);
         const declarations = scope.selected.flatMap((manifest) => (isAll ? manifest.eslint.selectors : []));
         const applied: SelectorPaths[] = [
             ...new Map(declarations.map((entry) => [entry.selector, entry])).values(),
@@ -117,7 +117,7 @@ export function fragmentSelectorGroups(
         return selectorGroups(applied).map((group) => ({
             ...group,
             scope: scope.scope.path,
-            ignoredScopes: nestedScopes(scopePaths, scope.scope.path),
+            ignoredScopes: listNestedScopes(scopePaths, scope.scope.path),
         }));
     });
 }

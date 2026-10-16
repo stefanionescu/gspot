@@ -8,7 +8,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { bodyPointer } from '#cli/generation/pointers.ts';
-import { targetInScope } from '#cli/repository/scopes.ts';
+import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { MODULE_VALUE, MODULE_TARGETS } from '#tests/config/serialization.ts';
@@ -51,7 +51,7 @@ test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
         );
         expect(files.find((file) => file.path === `${prefix}.swiftlint.yml`)!.content).toContain('parent_config:');
         expect(files.some((file) => file.path === 'omitted/AppTests/.swiftlint.yml')).toBe(false);
-        const childConfig = targetInScope(
+        const childConfig = buildScopeTarget(
             child,
             session.manifests.get('swift')!.toolFiles.find(({ tool }) => tool.includes('swiftlint'))!,
             new Set(files.map(({ path }) => path)),

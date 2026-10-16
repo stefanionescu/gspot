@@ -1,4 +1,4 @@
-import { literalGlob } from '#cli/repository/matchers.ts';
+import { escapeGlob } from '#cli/repository/matchers.ts';
 import { presetSource } from '#cli/generation/eslint/serialize.ts';
 import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 import { NESTJS_ALL_LEVEL_RULES, NESTJS_INJECTABLE_FILTER_PATHS } from '#cli/config/generation/eslint-fragments.ts';
@@ -47,7 +47,7 @@ export function nestjsFragment({
     const sources = selected
         .map((preset) => `...${presetSource('nestjsTyped', preset.source)}.map((block) => block.rules)`)
         .join(', ');
-    const prefix = scope === '' ? '' : `${literalGlob(scope)}/`;
+    const prefix = scope === '' ? '' : `${escapeGlob(scope)}/`;
     output.push(
         '\n',
         eslintModule.block(

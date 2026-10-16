@@ -5,13 +5,13 @@ import { applyFixers } from '#cli/execution/fixes.ts';
 import { activeIgnores } from '#cli/settings/view.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { findTool } from '#cli/execution/command/tool.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { fileDeclarations } from '#cli/repository/classify.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { IgnoreEntry } from '#cli/types/settings/file.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
+import { listFileDeclarations } from '#cli/repository/classify.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { DOCKER_TOOL } from '#cli/config/checks/infrastructure/docker.ts';
 import { RAN_STATUSES, FAILED_STATUSES } from '#cli/config/execution/run.ts';
@@ -39,7 +39,7 @@ import type {
 function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
     if (entry.check !== finding.check) return false;
     if (entry.rule !== undefined && entry.rule !== finding.rule) return false;
-    return entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(finding.file);
+    return entry.paths === undefined || entry.paths.length === 0 || buildPathMatcher(entry.paths)(finding.file);
 }
 
 // The plan and, for each planned check, the function that runs it.
@@ -63,7 +63,7 @@ async function refreshAfterFixes(session: Session): Promise<void> {
     session.reads = createReadCache(session.root);
     const selected = new Map(session.scopes.map((selection) => [selection.scope.path, selection.selected]));
     session.repository = await readRepository(session.reads, {
-        declarations: fileDeclarations(selected),
+        declarations: listFileDeclarations(selected),
         scopeEntries: scopes,
         manifests: session.manifests,
     });

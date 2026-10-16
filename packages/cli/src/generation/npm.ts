@@ -2,8 +2,8 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
-import { installedDependency } from '#cli/tools/npm/packages.ts';
 import { toolProjectPins } from '#cli/configurations/tool-pins.ts';
+import { findInstalledDependency } from '#cli/tools/npm/packages.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/generation/eslint.ts';
 import type { GeneratedFile, NpmProjectInputs } from '#cli/types/generation/files.ts';
 import { YARN_SETTINGS, NPM_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
@@ -27,7 +27,7 @@ export function npmProject({ root, scopes, manifests, installer }: NpmProjectInp
     const nextVersions = scopes
         .filter(({ selected }) => selected.some(({ configuration }) => configuration.name === NEXTJS_CONFIGURATION))
         .flatMap(({ scope }) => {
-            const version = installedDependency(root, join(scope.path, 'package.json'), NEXT_PACKAGE)?.version;
+            const version = findInstalledDependency(root, join(scope.path, 'package.json'), NEXT_PACKAGE)?.version;
             return version === undefined ? [] : [{ scope: scope.path, major: semver.major(version) }];
         });
     const majors = new Set(nextVersions.map(({ major }) => major));

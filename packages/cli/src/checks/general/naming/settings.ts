@@ -1,7 +1,7 @@
 import { splitByCase } from 'scule';
 import { tablesFor } from '#cli/settings/inherit.ts';
 import { stripUndefined } from '#cli/system/values.ts';
-import { pathMatcher } from '#cli/repository/matchers.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { namingDefaults } from '#cli/configurations/manifests.ts';
@@ -23,7 +23,7 @@ function toSet(names: string[] | undefined): Set<string> | undefined {
 
 function compileOverride(rule: NamingOverride, source: string): CompiledOverride {
     return {
-        matches: pathMatcher(rule.paths ?? ['**']),
+        matches: buildPathMatcher(rule.paths ?? ['**']),
         languages: toSet(rule.languages),
         categories: toSet(rule.categories),
         allowed: toSet(rule.allowed_names),

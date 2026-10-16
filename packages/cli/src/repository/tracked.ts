@@ -25,7 +25,7 @@ import {
 
 // A link to a folder, or one that leaves the repository, stays out of the inventory, so checks cannot read past it. A dangling link remains
 // listed with no size.
-function symlinkEntry(root: string, path: string): FileEntry | undefined {
+function readSymlinkFile(root: string, path: string): FileEntry | undefined {
     const link = { path, size: 0, executable: false, symlink: true };
     let target: string;
     try {
@@ -40,7 +40,7 @@ function symlinkEntry(root: string, path: string): FileEntry | undefined {
     return stat.isDirectory() ? undefined : { ...link, size: stat.size };
 }
 
-function readFileEntry(
+function readListedFile(
     root: string,
     path: string,
     executables: ReadonlySet<string> | undefined,
@@ -57,28 +57,28 @@ function readFileEntry(
                 .some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part))
         )
             return { path, size: stat.size, executable: false, symlink: true };
-        return symlinkEntry(root, path);
+        return readSymlinkFile(root, path);
     }
     if (stat.isDirectory()) return undefined;
     const isExecutable = executables === undefined ? (stat.mode & EXECUTABLE_BITS) !== 0 : executables.has(path);
     return { path, size: stat.size, executable: isExecutable, symlink: false };
 }
 
-function directoryContents(root: string, directory: string, inherited: PathIgnore[]): DirectoryContents {
-    const entries = readdirSync(join(root, directory), { withFileTypes: true });
-    const rules = [...inherited];
+function readFolderListing(root: string, folder: string, inherited: PathIgnore[]): DirectoryContents {
+    const entries = readdirSync(join(root, folder), { withFileTypes: true });
+    const ignores = [...inherited];
     if (entries.some((entry) => entry.name === GITIGNORE_FILE && entry.isFile())) {
-        rules.push({
-            base: directory,
-            matcher: ignore().add(readBytes(root, `${directory}${GITIGNORE_FILE}`).toString('utf8')),
+        ignores.push({
+            base: folder,
+            matcher: ignore().add(readBytes(root, `${folder}${GITIGNORE_FILE}`).toString('utf8')),
         });
     }
-    return { entries, rules };
+    return { entries, ignores };
 }
 
-function isIgnored(candidate: string, rules: PathIgnore[]): boolean {
+function isIgnored(candidate: string, ignores: PathIgnore[]): boolean {
     let ignored = false;
-    for (const { base, matcher } of rules) {
+    for (const { base, matcher } of ignores) {
         const result = matcher.test(candidate.slice(base.length));
         if (result.ignored) ignored = true;
         else if (result.unignored) ignored = false;
@@ -88,19 +88,19 @@ function isIgnored(candidate: string, rules: PathIgnore[]): boolean {
 
 function walkPaths(root: string): string[] {
     const paths: string[] = [];
-    const pending: PendingDirectory[] = [{ directory: '', rules: [] }];
+    const pending: PendingDirectory[] = [{ folder: '', ignores: [] }];
     for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
-        const { directory } = next;
-        const { entries, rules } = directoryContents(root, directory, next.rules);
+        const { folder } = next;
+        const { entries, ignores } = readFolderListing(root, folder, next.ignores);
         const retained = entries.filter((entry) => {
             if (entry.name === GIT_FOLDER || entry.isSymbolicLink()) return false;
-            const path = `${directory}${entry.name}`;
+            const path = `${folder}${entry.name}`;
             const candidate = entry.isDirectory() ? `${path}/` : path;
-            return !isIgnored(candidate, rules) && !STATE_FOLDER_PATTERN.test(path.normalize('NFC'));
+            return !isIgnored(candidate, ignores) && !STATE_FOLDER_PATTERN.test(path.normalize('NFC'));
         });
         for (const entry of retained) {
-            const path = `${directory}${entry.name}`;
-            if (entry.isDirectory()) pending.push({ directory: `${path}/`, rules });
+            const path = `${folder}${entry.name}`;
+            if (entry.isDirectory()) pending.push({ folder: `${path}/`, ignores });
             else if (entry.isFile()) paths.push(path);
         }
     }
@@ -142,7 +142,7 @@ export async function readIndexEntries(root: string, cancelSignal?: AbortSignal)
  * @param entries the shared index listing.
  * @returns sorted, unique submodule paths.
  */
-export function submodulePaths(entries: GitIndexEntry[]): string[] {
+export function listSubmodulePaths(entries: GitIndexEntry[]): string[] {
     return [...new Set(entries.filter((entry) => entry.mode === GITLINK_MODE).map((entry) => entry.path))].toSorted(
         (left, right) => left.localeCompare(right),
     );
@@ -155,7 +155,7 @@ export function submodulePaths(entries: GitIndexEntry[]): string[] {
  * @param hasGit whether the directory belongs to a Git repository.
  * @returns the entries with size, executable bit, and symlink flag.
  */
-export async function listRepositoryFiles(
+export async function listTrackedFiles(
     root: string,
     indexEntries: GitIndexEntry[],
     hasGit = true,
@@ -166,7 +166,7 @@ export async function listRepositoryFiles(
         listed === undefined
             ? walkPaths(root)
             : [...index.map((entry) => entry.path), ...listed.split('\0').filter(Boolean)];
-    const submodules = submodulePaths(index);
+    const submodules = listSubmodulePaths(index);
     // Windows file systems keep no executable bit, so the same index listing supplies it.
     const executables =
         process.platform === 'win32'
@@ -183,6 +183,6 @@ export async function listRepositoryFiles(
                 !submodules.some((module) => isInScope(path, module)),
         )
         .toSorted((a, b) => a.localeCompare(b))
-        .map((path) => readFileEntry(root, path, executables))
+        .map((path) => readListedFile(root, path, executables))
         .filter((entry) => entry !== undefined);
 }
