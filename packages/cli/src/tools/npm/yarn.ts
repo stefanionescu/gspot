@@ -10,6 +10,8 @@ import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import { YARN_SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { addEnvironmentReference } from '#cli/tools/npm/registry.ts';
+import { GSPOT_PACKAGES } from '#cli/config/generation/file-edits.ts';
+import { formatHold, readRootHoldDays } from '#cli/generation/release-holds.ts';
 
 import {
     YARN_SECRET_KEYS,
@@ -116,6 +118,8 @@ async function writeYarnSettings(
             secrets,
         );
     }
+    settings['npmMinimalAgeGate'] = formatHold('minutes', readRootHoldDays(context.session.scopes));
+    settings['npmPreapprovedPackages'] = [...GSPOT_PACKAGES];
     writeFileSync(join(work, YARN_INSTALL_SETTINGS_FILE), stringify(settings), { mode: PRIVATE_FILE });
     return secrets.filter((value) => value.length > 0);
 }

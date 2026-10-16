@@ -97,8 +97,8 @@ For tests, `data/` replaces `config/` in these folder rules.
 - The configurations gspot ships live in `packages/cli/configurations/`. The code that reads them lives in
   `packages/cli/src/configurations/`. The schema of `gspot.toml` lives in `packages/cli/src/settings/schema/`.
 
-Unit tests make no network calls. Integration and e2e tests install real tools, so they may reach the npm registry,
-PyPI, the Vale package downloads, and Docker Hub; where a local server exists, they use it.
+Unit tests make no network calls. Integration and e2e tests install real tools. They may reach the npm registry, PyPI,
+GitHub releases, the Vale package downloads, and Docker Hub; where a local server exists, they use it.
 
 `.mise/tasks/` holds Bash task files. They run commands and import nothing.
 

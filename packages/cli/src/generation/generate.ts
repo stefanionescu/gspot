@@ -3,7 +3,6 @@ import type { RuleFile } from '#cli/types/rules.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { buildBunfigEdits } from '#cli/generation/bunfig.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
@@ -20,6 +19,7 @@ import { AGENTS_FILE, CLAUDE_FILE, CLAUDE_BLOCK } from '#cli/config/rules.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
 import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
+import { readRootHoldDays, buildReleaseHoldEdits } from '#cli/generation/release-holds.ts';
 import { listSelectedManifests, isConfigurationSelected } from '#cli/configurations/select.ts';
 import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/projects.ts';
 import { DOT_GSPOT, STATE_PATH, VERSION_PIN_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
@@ -184,7 +184,7 @@ function generate(session: Session): GenerationResult {
     const toolFiles = session.toolFiles();
     generated.files.push(...toolFiles.files);
     generated.fileEdits.push(
-        ...buildBunfigEdits(root, scopes),
+        ...buildReleaseHoldEdits(root, scopes),
         ...buildPointerFieldEdits(session, generated.files, toolFiles.targets),
     );
     generated.files.push(
@@ -198,7 +198,7 @@ function generate(session: Session): GenerationResult {
                   manifests,
                   isYarnBerry: packageManager === 'yarn' && isYarnBerry(session.requirePackageManager()),
               })),
-        ...buildPythonProject(manifests),
+        ...buildPythonProject(manifests, readRootHoldDays(scopes)),
         buildMiseProject(manifests, session.reads),
     );
     buildWorkflow(session, generated);

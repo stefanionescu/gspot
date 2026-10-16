@@ -100,6 +100,20 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
 }
 
 /**
+ * Parses TOML and names the file on invalid syntax.
+ * @param input the file path and TOML text.
+ * @returns the parsed table.
+ * @throws a file-specific error with the parser failure as its cause.
+ */
+function parseTomlFile(input: TomlInput): Record<string, unknown> {
+    try {
+        return parseToml(input.source) as Record<string, unknown>;
+    } catch (error) {
+        throw new Error(`${input.path} is not valid TOML. Fix the file, then run gspot apply.`, { cause: error });
+    }
+}
+
+/**
  * Reads and edits TOML keys while preserving comments and layout.
  * @param input the file path and TOML text.
  * @returns the document used by managed config-file edits.
@@ -133,18 +147,4 @@ export function openTomlFile(input: TomlInput): EditableFile {
             return buildPatchedToml(original, document);
         },
     };
-}
-
-/**
- * Parses TOML and names the file on invalid syntax.
- * @param input the file path and TOML text.
- * @returns the parsed table.
- * @throws a file-specific error with the parser failure as its cause.
- */
-export function parseTomlFile(input: TomlInput): Record<string, unknown> {
-    try {
-        return parseToml(input.source) as Record<string, unknown>;
-    } catch (error) {
-        throw new Error(`${input.path} is not valid TOML. Fix the file, then run gspot apply.`, { cause: error });
-    }
 }

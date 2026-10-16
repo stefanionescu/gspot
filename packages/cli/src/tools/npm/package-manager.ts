@@ -30,6 +30,11 @@ const exactVersionSchema = z
         'Package manager version must be exact.',
     ) satisfies z.ZodType<string>;
 
+/**
+ * Split a packageManager field such as `npm@11.17.0+sha512.abc` into a name and a version.
+ * @param value the field.
+ * @returns the name and the version, without the hash.
+ */
 function parsePackageManagerField(value: string): PackageManagerDeclaration {
     const [name, declared, ...verbatim] = value.split('@');
     if (verbatim.length > 0) throw new Error('Invalid packageManager declaration.');
@@ -138,4 +143,4 @@ function readPackageManagerVersion(
     return packageManagerSchema.parse({ name, version: result.stdout.trim() });
 }
 
-export { isYarnBerry, selectPackageManager, readPackageManagerVersion };
+export { isYarnBerry, selectPackageManager, parsePackageManagerField, readPackageManagerVersion };

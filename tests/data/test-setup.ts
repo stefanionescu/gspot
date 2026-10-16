@@ -227,3 +227,6 @@ export const BASE_INSTALLED_FILES = {
     'style.css': 'body { color: black; }\n',
     'pyproject.toml': '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = []\n',
 } as const;
+
+/** The publish time the local registry reports for packed packages, older than any release hold. */
+export const PACKED_PUBLISH_TIME = '2025-01-01T00:00:00.000Z';

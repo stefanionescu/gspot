@@ -11,6 +11,7 @@ import {
     NPM_PACK_FLAGS,
     UPSTREAM_REGISTRY,
     GSPOT_PACKAGE_SCOPE,
+    PACKED_PUBLISH_TIME,
     PACKED_PACKAGES_FILE,
 } from '#tests/data/test-setup.ts';
 
@@ -73,6 +74,7 @@ export async function createNpmRegistry(
             return Response.json({
                 name,
                 'dist-tags': { latest: entry.version },
+                time: { [entry.version]: PACKED_PUBLISH_TIME },
                 versions: {
                     [entry.version]: { ...manifest, dist: { tarball: `${url.origin}/${tarball}`, integrity } },
                 },

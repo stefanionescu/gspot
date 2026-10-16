@@ -49,12 +49,30 @@ Replace the placeholders with the host and your reason. Downloads must still use
 
 ## Release age
 
-`dependencies.min_release_age_days` sets the minimum age for npm releases. gspot writes the setting for supported
-package managers. To require seven days:
+A new release waits `dependencies.min_release_age_days` days, 7 by default, before any installer may install it. gspot
+writes this hold into the settings file of each installer that a folder uses:
+
+| Installer           | File                  | Key and unit                     |
+| ------------------- | --------------------- | -------------------------------- |
+| Bun 1.3 or newer    | `bunfig.toml`         | `minimumReleaseAge`, seconds     |
+| npm 11.17 or newer  | `.npmrc`              | `min-release-age`, days          |
+| pnpm 10.16 or newer | `pnpm-workspace.yaml` | `minimumReleaseAge`, minutes     |
+| Yarn 4.10 or newer  | `.yarnrc.yml`         | `npmMinimalAgeGate`, minutes     |
+| uv 0.9.17 or newer  | `pyproject.toml`      | `[tool.uv] exclude-newer`        |
+| mise                | `mise.toml`           | `[settings] minimum_release_age` |
+
+- A longer hold that a file already has stays.
+- `@gspothq/cli` and `@gspothq/eslint-plugin` go on each exclude list, so a gspot upgrade installs the day it comes
+  out. Your own excludes stay.
+- gspot installs its own tools in `.gspot/` with the same hold.
+- mise holds back version requests such as `latest`. A version you pin exactly installs at once.
+- Yarn 1 has no hold. `dependencies/release-age` reports a `packageManager` version too old to hold releases back.
+
+To require 14 days:
 
 ```shell
-gspot set dependencies.min_release_age_days 7
-gspot install
+gspot set dependencies.min_release_age_days 14
+gspot apply
 ```
 
 Use `gspot explain dependencies.min_release_age_days` to inspect its default and when a change needs a reason.

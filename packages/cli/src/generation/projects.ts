@@ -4,6 +4,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
+import { formatHold } from '#cli/generation/release-holds.ts';
 import { TOML_FORMAT } from '#cli/config/generation/tool-files.ts';
 import { findInstalledDependency } from '#cli/tools/npm/packages.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/generation/eslint.ts';
@@ -102,10 +103,11 @@ export function buildNpmProject({ root, scopes, manifests, isYarnBerry }: NpmPro
  * Keep Python lint dependencies in a tool project owned by gspot.
  *
  * @param manifests the selected manifests.
+ * @param days the release hold, so uv installs no release newer than that.
  *
  * @returns the Python tool project files, or none without Python tools.
  */
-export function buildPythonProject(manifests: Manifest[]): GeneratedFile[] {
+export function buildPythonProject(manifests: Manifest[], days: number): GeneratedFile[] {
     const { python: dependencies } = listToolProjectPins(manifests);
     if (dependencies.length === 0) return [];
     return [
@@ -114,7 +116,7 @@ export function buildPythonProject(manifests: Manifest[]): GeneratedFile[] {
             content:
                 stringify({ project: { ...PYTHON_TOOL_PROJECT, dependencies } }, TOML_FORMAT) +
                 `\n${UV_PROJECT_TABLE}\n` +
-                stringify({ package: false }, TOML_FORMAT),
+                stringify({ package: false, 'exclude-newer': formatHold('uv-duration', days) }, TOML_FORMAT),
             kind: 'tool_file',
         },
     ];

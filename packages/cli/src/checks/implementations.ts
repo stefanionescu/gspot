@@ -28,6 +28,7 @@ import { checkLockfiles } from '#cli/checks/general/dependencies/lockfiles.ts';
 import { checkDockerignore } from '#cli/checks/infrastructure/dockerignore.ts';
 import { checkActionlint } from '#cli/checks/infrastructure/github-actions.ts';
 import { checkBashDocComments } from '#cli/checks/language/bash/doc-comments.ts';
+import { checkReleaseAge } from '#cli/checks/general/dependencies/release-age.ts';
 import { checkGeneratedFiles } from '#cli/checks/general/gspot/generated-files.ts';
 import { checkBashFunctionSize } from '#cli/checks/language/bash/function-size.ts';
 import { checkBashScriptLayout } from '#cli/checks/language/bash/script-layout.ts';
@@ -124,6 +125,7 @@ export const CHECK_IMPLEMENTATIONS = {
     'secrets/env-examples': { check: checkSecretsEnvExamples },
     'repository/local-files': { check: checkIgnoredFilesTracked },
     'dependencies/package-json': { check: checkPackageJson },
+    'dependencies/release-age': { check: checkReleaseAge },
     'licenses/allowed': { check: checkAllowedLicenses },
     'dependencies/lockfiles': { check: checkLockfiles },
     'cloudflare/headers': { check: checkCloudflareHeaders },

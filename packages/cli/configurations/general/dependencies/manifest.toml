@@ -63,6 +63,17 @@ tool = "syncpack"
 why = "Two versions of one dependency in a workspace mean two behaviors, and a bug that appears in one package only."
 
 [[check]]
+example = "npm 10.9.2 in packageManager reports a finding, because it ignores min-release-age. Declare npm 11.17.0 or newer."
+files = { filenames = ["package.json"] }
+help = "Upgrade the package manager that the root package.json names to the version the finding gives."
+level = "recommended"
+name = "release-age"
+runs = "once"
+stage = "commit"
+summary = "Checks that the package manager in the root package.json holds back releases newer than dependencies.min_release_age_days."
+why = "gspot writes a release hold for each package manager. An older version ignores it and installs a new release the day it appears."
+
+[[check]]
 example = "A root package.json without packageManager reports a finding. Declare the package manager and its exact version."
 files = { filenames = ["package.json"] }
 help = "Name one packageManager in the root package.json."

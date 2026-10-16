@@ -146,7 +146,7 @@ test('init does not overwrite a shared file created after the plan', async () =>
     const plan = (preview.json as InitJson).plan!;
     expect(plan.change).toContainEqual({
         path: 'bunfig.toml',
-        note: 'managed install.minimumReleaseAge fields; other content stays',
+        note: 'managed install.minimumReleaseAge, install.minimumReleaseAgeExcludes fields; other content stays',
     });
     const authored = '[install]\nexact = true\n';
     let mode = 0;

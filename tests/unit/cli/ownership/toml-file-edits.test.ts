@@ -9,7 +9,7 @@ import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { planRemoval, planManagedKeys } from '#cli/ownership/plans.ts';
-import { TWO_WEEKS_SECONDS } from '#tests/data/checks/dependencies.ts';
+import { OWN_PACKAGES, TWO_WEEKS_SECONDS } from '#tests/data/checks/dependencies.ts';
 
 describe('toml-file-edits', () => {
     test('managed TOML tasks refuse a malformed file and an edited key, and create new tables', async () => {
@@ -96,6 +96,7 @@ describe('toml-file-edits', () => {
             install: {
                 exact: true,
                 minimumReleaseAge: TWO_WEEKS_SECONDS,
+                minimumReleaseAgeExcludes: [...OWN_PACKAGES],
                 security: { scanner: '@socketsecurity/bun-security-scanner' },
             },
         });

@@ -13,6 +13,8 @@ import { REINSTALL_HINT } from '#cli/config/tools/credentials.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { runTool, assertWithinTimeLimit } from '#cli/tools/run.ts';
+import { readRootHoldDays } from '#cli/generation/release-holds.ts';
+import { addToolReleaseHold } from '#cli/tools/npm/release-hold.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
 import { buildLockfileResult } from '#cli/tools/project-lockfiles.ts';
@@ -117,6 +119,7 @@ async function runPackageManager(
     const env = await readRegistryEnvironment(root);
     const credentials = extractRegistryCredentials(env);
     using settings = createScratchFolder();
+    const hold = addToolReleaseHold(work, commandArguments, packageManager, readRootHoldDays(context.session.scopes));
     try {
         writeNpmrc(settings.path, env);
         env[`${NPM_SETTING_PREFIX}userconfig`] = join(settings.path, NPMRC_FILE);
@@ -127,8 +130,8 @@ async function runPackageManager(
             credentials.push(...(await writeYarnSettings(context, work, env)));
             env['YARN_RC_FILENAME'] = YARN_INSTALL_SETTINGS_FILE;
         }
-        steps.push(commandArguments);
-        const result = await runTool(commandArguments, {
+        steps.push(hold.command);
+        const result = await runTool(hold.command, {
             cancelSignal: context.cancelSignal,
             cwd: work,
             env,
@@ -154,6 +157,7 @@ async function runPackageManager(
         return { env, lockfile };
     } finally {
         rmSync(join(work, YARN_INSTALL_SETTINGS_FILE), { force: true });
+        if (hold.written !== undefined) rmSync(join(work, hold.written), { force: true });
     }
 }
 

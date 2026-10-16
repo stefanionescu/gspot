@@ -114,7 +114,7 @@ export const SETTING_DECLARATIONS = {
     },
     'dependencies.min_release_age_days': {
         configurations: ['dependencies'],
-        description: 'The minimum age in days for releases installed through Bun.',
+        description: 'How many days a new release waits before any installer that gspot sets up may install it.',
         reason_needed: 'lowering',
     },
     'dependencies.allowed_registries': {

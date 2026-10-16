@@ -14,7 +14,8 @@ pages. The sidebar is `src/config/navigation.ts`.
 The release deploys the site to the `gspot-docs` Worker at `generativespotting.com`, with the Wrangler login of the
 person who releases.
 
-The mise install path picks up a release 24 hours after you publish it.
+A user who pins `npm:@gspothq/cli` to an exact version with mise gets a new release at once. mise holds back a
+request for `latest` for its `minimum_release_age`, 24 hours unless the repository sets another.
 
 ## Asset licenses
 
