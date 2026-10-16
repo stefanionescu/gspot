@@ -60,7 +60,7 @@ test.each([
         ['set', 'tools.markdownlint.rules', '{ MD013 = false }'],
         'gspot ignore markdown/markdownlint --rule <rule> --reason',
     ],
-    ['a key without a value', ['set', 'limits.file_lines'], "missing required argument 'values'"],
+    ['a key without a value', ['set', 'limits.file_lines'], "Missing required argument 'values'"],
     [
         'an undeclared scope',
         ['set', 'limits.file_lines', '100', '--scope', 'web'],

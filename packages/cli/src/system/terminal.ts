@@ -1,5 +1,6 @@
 import pc from 'picocolors';
 import { GspotError } from '#cli/system/errors.ts';
+import { PROGRAM_HELP } from '#cli/config/commands/help.ts';
 import { CommanderError } from '@commander-js/extra-typings';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { CommandResult, OutputOptions, CommandFailureJson, CanceledCommandJson } from '#cli/types/terminal.ts';
@@ -11,6 +12,7 @@ import {
     COMMAND_SUGGESTION,
     RESULT_JSON_INDENT,
     UNKNOWN_COMMAND_NAME,
+    COMMANDER_ERROR_PREFIX,
 } from '#cli/config/terminal.ts';
 
 let options: OutputOptions = { json: false, color: false };
@@ -101,6 +103,8 @@ function formatNotes(notes: string[]): string {
  */
 function formatArgumentError(error: CommanderError): string {
     const { message } = error;
+    // With no command, Commander raises a help error after writing the help to the silent error stream.
+    if (error.code === 'commander.help') return PROGRAM_HELP;
     if (error.code === 'commander.unknownCommand') {
         const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
         const suggestion = COMMAND_SUGGESTION.exec(message)?.[1];
@@ -109,7 +113,8 @@ function formatArgumentError(error: CommanderError): string {
     }
     if (error.code === 'commander.missingMandatoryOptionValue' && message.includes('--reason'))
         return 'gspot ignore needs --reason "<why>".';
-    return message;
+    const text = message.slice(COMMANDER_ERROR_PREFIX.length);
+    return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
 }
 
 /**

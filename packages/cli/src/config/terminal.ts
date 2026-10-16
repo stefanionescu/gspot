@@ -30,6 +30,9 @@ const FIXER_ERROR_MESSAGE = /^(?:[\w.]*(?:Error|error))(?: \[[^\]]+\])?:\s*/u;
 const UNKNOWN_COMMAND_NAME = /unknown command '([^']+)'/u;
 const COMMAND_SUGGESTION = /\(Did you mean ([^?)]+)\??\)/u;
 
+/** Commander starts every argument error with this lower-case label. */
+const COMMANDER_ERROR_PREFIX = 'error: ';
+
 export {
     EXIT_ERROR,
     NOTE_STATUSES,
@@ -44,4 +47,5 @@ export {
     FIXER_ERROR_MESSAGE,
     COMMIT_PREFIX_LENGTH,
     UNKNOWN_COMMAND_NAME,
+    COMMANDER_ERROR_PREFIX,
 };

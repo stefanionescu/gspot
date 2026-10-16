@@ -1,8 +1,8 @@
 import { registerAdd } from '#cli/commands/add.ts';
 import { registerSet } from '#cli/commands/set.ts';
 import { findRoot } from '#cli/repository/read.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { registerList } from '#cli/commands/list.ts';
+import { Command } from '@commander-js/extra-typings';
 import { registerApply } from '#cli/commands/apply.ts';
 import { registerUnset } from '#cli/commands/unset.ts';
 import { registerExport } from '#cli/commands/export.ts';
@@ -16,7 +16,6 @@ import packageManifest from '#cli-package' with { type: 'json' };
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
 import { registerInstall } from '#cli/commands/install/command.ts';
-import { Command, CommanderError } from '@commander-js/extra-typings';
 import { VERSION_PIN_COMMANDS } from '#cli/config/commands/program.ts';
 import { COMMAND_HELP, PROGRAM_HELP } from '#cli/config/commands/help.ts';
 import { PROCESS_ARGUMENTS_START } from '#cli/config/system/processes.ts';
@@ -89,10 +88,6 @@ async function runProgram(commandArguments: string[]): Promise<number> {
         printResult(result);
         return result.exitCode;
     } catch (error) {
-        if (commandJson && error instanceof CommanderError && error.code === 'commander.help')
-            return printFailure(new GspotError('arguments', 'Name a command. Run gspot --help to see them.'), {
-                json: commandJson,
-            });
         return printFailure(error, { json: commandJson });
     }
 }
