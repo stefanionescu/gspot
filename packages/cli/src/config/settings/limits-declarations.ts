@@ -1,8 +1,7 @@
 export const LIMITS_DECLARATIONS = {
     'limits.file_lines': {
         configurations: ['sql', 'structure'],
-        description:
-            'File limits are 140 for Bash, 400 for SQL, and 300 otherwise. Blank lines and comment-only lines do not count.',
+        description: 'The most lines one file may have. Blank lines and comment-only lines do not count.',
         reason_needed: 'raising',
         languages: ['typescript', 'javascript', 'python', 'swift', 'sql', 'bash'],
         language_defaults: { sql: 400, bash: 140 },

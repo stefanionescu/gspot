@@ -274,7 +274,7 @@ export function hasToolError(check: CheckDeclaration, tool: ToolDeclaration | un
  */
 export function formatOutputTail(
     result: Pick<SpawnResult, 'stdout' | 'stderr'>,
-    placeholder = 'The tool printed no diagnostic.',
+    placeholder = 'The tool printed no error output.',
 ): string {
     const output = [result.stderr, result.stdout]
         .map((stream) => stream.trim().split('\n').slice(-TAIL_LINES).join('\n'))

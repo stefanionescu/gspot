@@ -19,7 +19,7 @@ test.each([
     {
         buildCode: 0,
         analyzerCode: 7,
-        message: /^The swiftlint command failed \(exit 7\): The tool printed no diagnostic\.$/u,
+        message: /^The swiftlint command failed \(exit 7\): The tool printed no error output\.$/u,
     },
 ])(
     'analyzer: build exit $buildCode and analyzer exit $analyzerCode report the failed stage',

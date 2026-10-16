@@ -278,7 +278,7 @@ export async function checkNginxSyntax(input: CheckInput): Promise<BuiltInCheckR
     );
     if (certificate.code !== 0)
         throw new Error(
-            `The openssl command could not write the temporary certificate: ${formatOutputTail(certificate, 'The tool printed no diagnostic.')}`,
+            `The openssl command could not write the temporary certificate: ${formatOutputTail(certificate)}`,
         );
     const findings: Finding[] = [];
     const checked = new Set<string>();

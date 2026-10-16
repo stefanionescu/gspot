@@ -114,10 +114,7 @@ export async function checkStaleGeneratorOutputs(input: CheckInput): Promise<Fin
     let stdout = '';
     for (const invocation of commands) {
         const result = await runCheckTool(input, invocation.commandArguments, { cwd });
-        if (result.code !== 0)
-            throw new Error(
-                `The generator command failed: ${formatOutputTail(result, 'The tool printed no diagnostic.')}`,
-            );
+        if (result.code !== 0) throw new Error(`The generator command failed: ${formatOutputTail(result)}`);
         stdout = result.stdout;
     }
     const after = readOutputContents(folder.path, input.scope.scope.path, patterns, targets);

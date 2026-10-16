@@ -1,10 +1,10 @@
 export const RULES_HEADING = '# Rules';
 
-export const FIRST_READ = [
+export const FIRST_READ: readonly string[] = [
     'general/engineering/agent/WORKING.md',
     'general/prose/WRITING.md',
     'general/engineering/agent/TALKING.md',
-] as const;
+];
 
 export const RULE_FILE_PATTERN = /^[A-Z0-9-]+\.md$/u;
 

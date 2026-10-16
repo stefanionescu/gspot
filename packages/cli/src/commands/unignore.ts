@@ -78,11 +78,11 @@ async function runUnignoreCommand(
     const known = listCheckIds(Object.values(settings.commandChecks), reads);
     if (!known.includes(options.check)) throw new GspotError('arguments', formatUnknownCheck(options.check, known));
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, options);
-    const [noun, verb, pronoun] = everywhere === 1 ? ['ignore', 'covers', 'it'] : ['ignores', 'cover', 'them'];
+    const [verb, pronoun] = everywhere === 1 ? ['covers', 'it'] : ['cover', 'them'];
     const warning =
         everywhere === 0
             ? ''
-            : `Kept ${String(everywhere)} ${noun} that ${verb} every path. To delete ${pronoun}, run gspot unignore without --paths.\n`;
+            : `Kept ${formatCount(everywhere, 'ignore')} that ${verb} every path. To delete ${pronoun}, run gspot unignore without --paths.\n`;
     const warningFields = stripUndefined({ warning: everywhere === 0 ? undefined : warning.trim() });
     if (deleted === 0 && changedIgnores === 0) {
         return {

@@ -6,6 +6,7 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
 import { runCommandGroups } from '#cli/checks/run/command/check.ts';
 import { TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
 import { formatOutputTail } from '#cli/checks/run/command/output.ts';
@@ -242,7 +243,7 @@ export async function checkDockerCompose(session: Session, planned: PlannedCheck
         planned,
         groups.map(({ last, before }) => {
             const command = (planned.check.command as string[]).flatMap((part) =>
-                part === '{file}'
+                part === FILE_PLACEHOLDER
                     ? [
                           ...before.flatMap(({ path }) => [
                               posix.relative(planned.scope.scope.path, path),

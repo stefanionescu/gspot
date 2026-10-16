@@ -5,6 +5,7 @@ import { listStaleFiles } from '#cli/apply/stale.ts';
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import type { Session } from '#cli/types/planning.ts';
+import { MISE_PROGRAM } from '#cli/config/tools/find.ts';
 import { installValePackages } from '#cli/tools/vale.ts';
 import { TOOL_PROJECT_INPUTS } from '#cli/config/install.ts';
 import { installMiseTools } from '#cli/commands/install/mise.ts';
@@ -33,7 +34,7 @@ export async function installTools(
     const steps: (readonly string[])[] = [];
     const notes: string[] = [];
     const tools = listDistinctTools(manifests);
-    const mise = which.sync('mise', { nothrow: true });
+    const mise = which.sync(MISE_PROGRAM, { nothrow: true });
     const context: InstallContext = {
         session,
         writer: log,

@@ -194,9 +194,8 @@ function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
         { aliasDuplicateObjects: false },
     );
     spaceWorkflowGroups(workflow);
-    const path = GITHUB_WORKFLOW;
-    const content = `${formatHeader(path)}${workflow.toString({ lineWidth: 0 })}`;
-    return { path, content, kind: 'workflow' };
+    const content = `${formatHeader(GITHUB_WORKFLOW)}${workflow.toString({ lineWidth: 0 })}`;
+    return { path: GITHUB_WORKFLOW, content, kind: 'workflow' };
 }
 
 /**
@@ -208,11 +207,10 @@ function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
  */
 function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
     const command = buildGspotCommand(pipeline);
-    const setup = [
-        ...(pipeline.setupCommand === undefined
+    const setup =
+        pipeline.setupCommand === undefined
             ? []
-            : [pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' ')]),
-    ];
+            : [pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' ')];
     const check = [GITLAB_BASE_LINE, buildCheckScript(`${command} check`)].join('\n');
     const branches = OPERATING_SYSTEMS.flatMap((system) =>
         TOOL_BUILDS.filter((build) => build.startsWith(`${system.name}-`)).flatMap((build) => {
@@ -243,7 +241,6 @@ function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
                       'fi',
                   ].join('\n'),
               ];
-    const path = GITLAB_WORKFLOW;
     const content = stringify({
         gspot: {
             stage: 'test',
@@ -253,7 +250,7 @@ function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
             script: ['set -euo pipefail', ...setup, `${command} install`, check, ...manual],
         },
     });
-    return { path, content: `${formatHeader(path)}${content}`, kind: 'workflow' };
+    return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}`, kind: 'workflow' };
 }
 
 export { buildGithubWorkflow, buildGitlabWorkflow };

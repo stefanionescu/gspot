@@ -41,7 +41,7 @@ export function extractUrlPasswords(url: string): string[] {
  * @param result the captured package-manager streams.
  * @param credentials credentials read from repository registry settings.
  *
- * @returns the redacted tail, or an explicit absence of diagnostics.
+ * @returns the redacted tail, or a sentence that says the tool printed nothing.
  */
 export function redactInstallOutput(result: Pick<SpawnResult, 'stdout' | 'stderr'>, credentials: string[]): string {
     const secrets = [...new Set(credentials.filter((value) => value !== ''))]
@@ -50,7 +50,7 @@ export function redactInstallOutput(result: Pick<SpawnResult, 'stdout' | 'stderr
     let output = `${result.stdout}\n${result.stderr}`;
     for (const secret of secrets) output = output.replaceAll(secret, REDACTED);
     output = output.replace(URL_CREDENTIALS, `$1${REDACTED}@`).trim();
-    if (output === '') return 'The package manager provided no diagnostics.';
+    if (output === '') return 'The package manager printed no error output.';
     return output.length > INSTALL_OUTPUT_LIMIT
         ? `[Earlier output omitted]\n${output.slice(-INSTALL_OUTPUT_LIMIT)}`
         : output;

@@ -53,12 +53,12 @@ async function measureXcodeCoverage(input: CheckInput, plan: SwiftBuildPlan, cwd
     const tested = await runCheckTool(input, [...plan.commandArguments, ...XCODE_COVERAGE_FLAGS, bundle], { cwd });
     if (tested.code !== 0)
         throw new Error(
-            `Cannot measure coverage because the test run exited ${String(tested.code)}: ${formatOutputTail(tested, 'The test runner printed no diagnostic.')}`,
+            `Cannot measure coverage because the test run exited ${String(tested.code)}: ${formatOutputTail(tested, 'The test runner printed no error output.')}`,
         );
     const viewed = await runCheckTool(input, [...XCCOV_COMMAND, bundle], { cwd });
     if (viewed.code !== 0)
         throw new Error(
-            `The test run wrote no coverage report: ${formatOutputTail(viewed, 'The coverage viewer printed no diagnostic.')}`,
+            `The test run wrote no coverage report: ${formatOutputTail(viewed, 'The coverage viewer printed no error output.')}`,
         );
     return xccovSchema.parse(JSON.parse(viewed.stdout));
 }

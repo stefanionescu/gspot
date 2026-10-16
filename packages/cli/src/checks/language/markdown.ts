@@ -132,7 +132,6 @@ export async function checkMarkdownFences(input: CheckInput): Promise<Finding[]>
     for (const file of input.files) {
         const text = readCachedBytes(input.reads, file.path).toString('utf8');
         const syntaxFindings = await validateCodeFences(text, input);
-        input.cancelSignal?.throwIfAborted();
         findings.push(
             ...syntaxFindings.map((finding) =>
                 buildFinding(

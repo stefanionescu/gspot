@@ -165,7 +165,7 @@ export async function checkSiteHtmlValidate(input: CheckInput): Promise<Finding[
             cwd: build.folder,
         });
         if (result.code === 1 && parsed.length === 0)
-            throw new Error(`HTML validation failed without diagnostics: ${result.stderr}`);
+            throw new Error(`HTML validation failed without findings: ${result.stderr}`);
         findings.push(
             ...parsed.map((finding) => ({
                 ...finding,

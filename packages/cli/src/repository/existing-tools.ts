@@ -58,13 +58,12 @@ import {
 
 // Whether a CI command line runs a linter: eslint, a two-word lint command, or a runner's lint task.
 function isLintCommand(command: string): boolean {
-    const runners = new Set<string>(RUNNER_NAMES);
     const words = command.split(COMMAND_SEPARATORS).filter((word) => word !== '');
     return words.some((word, index) => {
         if (word === ESLINT_TOOL) return true;
         const next = words[index + 1];
         if (next !== undefined && LINT_PAIRS.has(`${word} ${next}`)) return true;
-        if (!runners.has(word)) return false;
+        if (!RUNNER_NAMES.includes(word)) return false;
         const task = next === RUN_WORD ? words[index + TASK_AFTER_RUN] : next;
         return task === LINT_TASK;
     });

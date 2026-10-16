@@ -35,7 +35,7 @@ export const MISE_FILES = [
 // In "<runner> run <task>", the task sits two words after the runner.
 export const TASK_AFTER_RUN = 2;
 
-export const RUNNER_NAMES = [...NPM_CLIENTS, 'mise'] as const;
+export const RUNNER_NAMES: readonly string[] = [...NPM_CLIENTS, 'mise'];
 export const INI_EXTENSIONS: ReadonlySet<string> = new Set(['.ini', '.cfg']);
 
 export const GITLAB_CI_FILE = '.gitlab-ci.yml';

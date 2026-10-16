@@ -31,6 +31,7 @@ import {
     GIT_EMPTY_INDEX,
     DEPENDENCY_FILES,
     GIT_SHARED_CLONE,
+    GIT_UPDATE_INDEX,
 } from '#cli/config/checks/run/copy.ts';
 
 // Refuses a copy whose Vale configuration differs from the configuration that selected its installed packages.
@@ -296,7 +297,7 @@ export async function copyRevision<Result>(
     // The clone shares its object store for reads; the copy owns its index and working tree.
     if (source.kind === 'commit') await readGitText(scratch.path, [...GIT_SET_HEAD, source.hash], { cancelSignal });
     await readGitText(scratch.path, GIT_EMPTY_INDEX, { cancelSignal });
-    await readGitText(scratch.path, ['update-index', '-z', '--index-info'], { cancelSignal, stdin: index });
+    await readGitText(scratch.path, GIT_UPDATE_INDEX, { cancelSignal, stdin: index });
     const tree = trimGitLine(await readGitText(scratch.path, GIT_WRITE_TREE, { cancelSignal }));
     await writeRevisionFiles(toplevel, scratch.path, entries, cancelSignal);
     copyValePackages(

@@ -57,9 +57,8 @@ function stripAllLevelSections(text: string, level: Level): string {
 
 function groupFilesByArea(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();
-    const firstReads = new Set<string>(FIRST_READ);
     for (const file of files) {
-        if (firstReads.has(file.path)) continue;
+        if (FIRST_READ.includes(file.path)) continue;
         const area = GROUP_LABELS[file.group];
         const list = rows.get(area) ?? [];
         const scopes = file.scopes.map((path) => path + '/').join(', ');

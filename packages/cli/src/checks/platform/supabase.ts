@@ -183,7 +183,9 @@ export async function checkSupabaseDenoLint(input: CheckInput): Promise<Finding[
         try {
             report = denoLintReportSchema.parse(JSON.parse(result.stdout));
         } catch (error) {
-            throw new Error(formatOutputTail(result, 'Deno lint returned invalid JSON diagnostics'), { cause: error });
+            throw new Error(formatOutputTail(result, 'Deno lint printed a report that is not valid JSON.'), {
+                cause: error,
+            });
         }
         const broken = report.errors.map((entry) =>
             buildFinding(
