@@ -66,73 +66,73 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
     };
 }
 
-function buildInactiveFileRow(session: Session, config: FoundToolFile, manifest: Manifest): SuggestionRow {
+function buildInactiveFileRow(session: Session, toolFile: FoundToolFile, manifest: Manifest): SuggestionRow {
     if (manifest.configuration.when?.git === true && !session.repository.hasGit)
-        return { path: config.path, note: `${config.tool} requires a Git repository`, command: 'git init' };
+        return { path: toolFile.path, note: `${toolFile.tool} requires a Git repository`, command: 'git init' };
     const checks = manifest.checks.filter(
         (check) =>
-            (typeof check.tool === 'object' ? Object.values(check.tool) : [check.tool]).includes(config.tool) ||
-            check.command?.[0] === config.tool,
+            (typeof check.tool === 'object' ? Object.values(check.tool) : [check.tool]).includes(toolFile.tool) ||
+            check.command?.[0] === toolFile.tool,
     );
-    const note = `no applicable ${config.tool} check at level ${session.settingsFile.settings.level}`;
+    const note = `no applicable ${toolFile.tool} check at level ${session.settingsFile.settings.level}`;
     if (
         session.settingsFile.settings.level === 'recommended' &&
         checks.length > 0 &&
         checks.every((check) => check.level === 'all')
     )
-        return { path: config.path, note, command: 'gspot set level all' };
-    return { path: config.path, note, command: 'none; add the source files required by this check' };
+        return { path: toolFile.path, note, command: 'gspot set level all' };
+    return { path: toolFile.path, note, command: 'none; add the source files required by this check' };
 }
 
 function buildFileRow(
     session: Session,
-    config: FoundToolFile,
+    toolFile: FoundToolFile,
     tools: Set<string>,
     configuration: Manifest,
 ): SuggestionRow {
-    if (tools.has(config.tool))
+    if (tools.has(toolFile.tool))
         return {
-            path: config.path,
-            note: `beside the generated ${config.tool} tool file`,
-            command: config.shared
-                ? `move any ${config.table ?? config.key ?? config.tool} setting you still need into gspot.toml, then delete the section`
+            path: toolFile.path,
+            note: `beside the generated ${toolFile.tool} tool file`,
+            command: toolFile.shared
+                ? `move any ${toolFile.table ?? toolFile.key ?? toolFile.tool} setting you still need into gspot.toml, then delete the section`
                 : 'move any setting you still need into gspot.toml, then delete the file',
         };
-    if (configuration.configuration.group === 'general') return buildInactiveFileRow(session, config, configuration);
+    if (configuration.configuration.group === 'general') return buildInactiveFileRow(session, toolFile, configuration);
     return {
-        path: config.path,
-        note: `the ${configuration.configuration.name} configuration configures ${config.tool}`,
+        path: toolFile.path,
+        note: `the ${configuration.configuration.name} configuration configures ${toolFile.tool}`,
         command: `gspot add ${configuration.configuration.name}`,
     };
 }
 
 function listUnownedToolFiles(
     session: Session,
-    tooling: ExistingTools,
+    existingTools: ExistingTools,
     tools: Set<string>,
     outputs: GenerationResult,
 ): SuggestionRow[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
     const generated = new Set(outputs.files.map((file) => file.path));
-    return tooling.toolFiles
-        .filter((config) => tracked.has(config.path) && !generated.has(config.path))
+    return existingTools.toolFiles
+        .filter((toolFile) => tracked.has(toolFile.path) && !generated.has(toolFile.path))
         .filter(
-            (config) =>
+            (toolFile) =>
                 !outputs.fileEdits.some(
                     (output) =>
-                        output.path === config.path && output.changes.some((field) => field.path[0] === config.key),
+                        output.path === toolFile.path && output.changes.some((field) => field.path[0] === toolFile.key),
                 ),
         )
         .filter(
-            (config) =>
-                !hasGeneratedHeader(readCachedPrefix(session.reads, config.path, HEADER_BYTES).toString('utf8')),
+            (toolFile) =>
+                !hasGeneratedHeader(readCachedPrefix(session.reads, toolFile.path, HEADER_BYTES).toString('utf8')),
         )
-        .flatMap((config) =>
+        .flatMap((toolFile) =>
             session.manifests
                 .values()
-                .filter((manifest) => manifest.tools.some((tool) => tool.name === config.tool))
+                .filter((manifest) => manifest.tools.some((tool) => tool.name === toolFile.tool))
                 .take(1)
-                .map((manifest) => buildFileRow(session, config, tools, manifest))
+                .map((manifest) => buildFileRow(session, toolFile, tools, manifest))
                 .toArray(),
         );
 }
@@ -145,17 +145,17 @@ function listUnownedToolFiles(
 export function listSuggestions(session: Session): Suggestions {
     const { dependencyFiles } = session;
     const manifests = session.neededToolManifests;
-    const tooling = readExistingTools(session.root, session.repository.files, dependencyFiles, session.reads);
+    const existingTools = readExistingTools(session.root, session.repository.files, dependencyFiles, session.reads);
     const generated = generate(session);
     const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
         ...listConfigurationSuggestions(session),
-        unowned: listUnownedToolFiles(session, tooling, tools, generated),
+        unowned: listUnownedToolFiles(session, existingTools, tools, generated),
         written: [
             ...readLintJobs(
                 session.root,
-                tooling.ci.filter((path) => !workflows.has(path)),
+                existingTools.ci.filter((path) => !workflows.has(path)),
             ).map((path) => ({ path, note: 'an existing lint job', command: 'none; informational' })),
         ],
     };

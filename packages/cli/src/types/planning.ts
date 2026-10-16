@@ -70,7 +70,7 @@ export type PlanInputs = {
     platform: string;
     narrow: Set<string> | undefined;
     children: string[];
-    projects: DependencyFile[];
+    dependencyFiles: DependencyFile[];
 };
 
 /** Saved selection state, with an enabling setting only when it must exist. */

@@ -61,9 +61,9 @@ function buildToolProjectRows(everySelected: Manifest[], reads: ReadCache): Init
 }
 
 // Name dependencies that the generated tool project now pins without deleting the authored manifest.
-function buildPinnedDependencyRows({ root, tooling }: InitPlanInputs, requirements: Manifest[]): InitFileRow[] {
+function buildPinnedDependencyRows({ root, existingTools }: InitPlanInputs, requirements: Manifest[]): InitFileRow[] {
     const pinned = new Set(Object.keys(listToolProjectPins(requirements).npm));
-    return tooling.toolOnlyPackages.flatMap((path) => {
+    return existingTools.toolOnlyPackages.flatMap((path) => {
         const manifest = readPackageJson(root, path) as PackageJson;
         const names = [
             ...new Set(
@@ -159,7 +159,7 @@ function buildInitPlan(
         generated,
     }: { settings: Settings; settingsText: string; requirements: Manifest[]; generated: GenerationResult },
 ): InitPlan {
-    const { root, hasGit, tooling, selection, answers, replaced, options } = planning;
+    const { root, hasGit, existingTools, selection, answers, replaced, options } = planning;
     const template = options.template && {
         source: options.template.source,
         digest: options.template.digest,
@@ -192,10 +192,10 @@ function buildInitPlan(
         retained: [
             ...replaced.retained,
             ...listSubmodulePaths(planning.index).map((path) => ({ path, note: 'submodule; contents are not read' })),
-            ...buildKeptCiRows(answers.ci, tooling.ci, readLintJobs(root, tooling.ci)),
+            ...buildKeptCiRows(answers.ci, existingTools.ci, readLintJobs(root, existingTools.ci)),
         ],
         change: [...change, ...replaced.changed, ...buildPinnedDependencyRows(planning, requirements)],
-        noLongerRuns: tooling.lintFolders.map((folder) => ({
+        noLongerRuns: existingTools.lintFolders.map((folder) => ({
             path: `${folder}/`,
             note: 'a folder of lint scripts; check remaining references before deleting it',
         })),
@@ -238,19 +238,19 @@ function formatDetectedScopes(summary: DetectionSummary): string | undefined {
 }
 
 function formatExistingTools(summary: DetectionSummary): (string | undefined)[] {
-    const { tooling } = summary;
-    const hooks = tooling.hooks.map(
+    const { existingTools } = summary;
+    const hooks = existingTools.hooks.map(
         (hook) => `${hook.path}/  ${hook.files.join(', ')} (${hook.kind === 'husky' ? 'husky' : 'your own'})`,
     );
-    const lint = tooling.lintFolders.map((folder) => `${folder}/`);
+    const lint = existingTools.lintFolders.map((folder) => `${folder}/`);
     return [
         formatDetectionRow('hooks', hooks.length === 0 ? ['none'] : hooks),
-        formatDetectionRow('ci', tooling.ci.length === 0 ? ['none'] : tooling.ci),
+        formatDetectionRow('ci', existingTools.ci.length === 0 ? ['none'] : existingTools.ci),
         formatDetectionRow('agent files', [
-            ...tooling.agentFiles,
-            ...tooling.ruleFolders.map((folder) => `${folder}/`),
+            ...existingTools.agentFiles,
+            ...existingTools.ruleFolders.map((folder) => `${folder}/`),
         ]),
-        formatDetectionRow('lint tooling', lint.length === 0 ? [] : [...lint, 'yours; gspot leaves them alone']),
+        formatDetectionRow('lint existingTools', lint.length === 0 ? [] : [...lint, 'yours; gspot leaves them alone']),
     ];
 }
 
@@ -263,9 +263,9 @@ function formatReplacedFiles(summary: DetectionSummary): string[] {
 }
 
 /**
- * The detection header: tracked files, the evidence for each configuration group, scopes, and tooling.
+ * The detection header: tracked files, the evidence for each configuration group, scopes, and existingTools.
  * @param summary what init detected
- * @returns the text, ending with a blank line when the repository has tooling
+ * @returns the text, ending with a blank line when the repository has existingTools
  */
 function formatDetection(summary: DetectionSummary): string {
     const languages = summary.detected

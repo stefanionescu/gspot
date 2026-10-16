@@ -14,7 +14,7 @@ type InitPlanInputs = {
     hasGit: boolean;
     index: Repository['index'];
     options: InitOptions;
-    tooling: ExistingTools;
+    existingTools: ExistingTools;
     selection: InitSelection;
     everySelected: Manifest[];
     answers: InitAnswers;
@@ -78,7 +78,7 @@ type DetectionSummary = {
     files: TrackedFile[];
     detected: ConfigurationEvidence[];
     scopes: Scope[];
-    tooling: ExistingTools;
+    existingTools: ExistingTools;
     owned: string[];
     unowned: string[];
     manifests: Map<string, Manifest>;

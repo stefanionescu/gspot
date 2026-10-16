@@ -10,7 +10,7 @@ import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configuration
 import type { Skip, System, Session, ToolIgnore, PlanInputs, PlannedCheck, SettingsSkip } from '#cli/types/planning.ts';
 
 // Conditions belong to the planned check, so its declaration and scope cannot disagree.
-function findConditionSkip(check: PlannedCheck, hasGit: boolean, projects: DependencyFile[]): Skip {
+function findConditionSkip(check: PlannedCheck, hasGit: boolean, dependencyFiles: DependencyFile[]): Skip {
     const { configuration, git, dependencies } = { ...check.manifest?.configuration.when, ...check.check.when };
     if (configuration !== undefined && !check.scope.view.configurations.includes(configuration))
         return {
@@ -19,7 +19,7 @@ function findConditionSkip(check: PlannedCheck, hasGit: boolean, projects: Depen
         };
     if (
         dependencies !== undefined &&
-        !dependencies.some((name) => name in getProjectDependencies(projects, check.scope.scope.path))
+        !dependencies.some((name) => name in getProjectDependencies(dependencyFiles, check.scope.scope.path))
     )
         return { cause: 'condition', note: `Needs a project dependency: ${dependencies.join(', ')}.` };
     if (git !== true || hasGit) return undefined;
@@ -119,18 +119,18 @@ export function findSettingsSkip(
  * @param inputs.session the repository session.
  * @param inputs.options the command options.
  * @param inputs.platform the operating system name.
- * @param inputs.projects the parsed dependency files.
+ * @param inputs.dependencyFiles the parsed dependency files.
  *
  * @returns the first skip, or undefined when the check can run.
  */
 export function findFirstSkip(check: PlannedCheck, inputs: PlanInputs): Skip {
-    const { session, options, platform, projects } = inputs;
+    const { session, options, platform, dependencyFiles } = inputs;
     const settings = session.settingsFile.settings;
     const hasGit = session.repository.hasGit;
     const host = { platform, arch: process.arch };
     const selected = findSettingsSkip(settings, check.scope, check.check);
     if (selected !== undefined) return selected;
-    const condition = findConditionSkip(check, hasGit, projects);
+    const condition = findConditionSkip(check, hasGit, dependencyFiles);
     if (condition !== undefined) return condition;
     return options.includeUnsupported === true ? undefined : findSystemSkip(check.check, check.tool, host);
 }

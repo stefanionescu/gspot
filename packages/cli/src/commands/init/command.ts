@@ -42,13 +42,13 @@ import {
     type DetectionSummary,
 } from '#cli/types/commands/init.ts';
 
-function buildInitAnswers(root: string, options: InitOptions, tooling: ExistingTools): InitAnswers {
+function buildInitAnswers(root: string, options: InitOptions, existingTools: ExistingTools): InitAnswers {
     const template = options.template === undefined ? INIT_TEMPLATE_DEFAULTS : options.template.tables;
     const { ci: templateCi } = template;
     const hooks = settingsSchema.shape.hooks.unwrap().shape.enabled.parse(template.hooks?.enabled);
     const rules = settingsSchema.shape.rules.unwrap().shape.enabled.parse(template.rules?.enabled);
     let ci: InitAnswers['ci'] = 'none';
-    if (options.template === undefined) ci = detectCiProvider(root, tooling);
+    if (options.template === undefined) ci = detectCiProvider(root, existingTools);
     else if (templateCi?.enabled === true)
         ci = settingsSchema.shape.ci.unwrap().in.shape.provider.parse(templateCi.provider);
     return { hooks, ci, rules };
@@ -143,8 +143,8 @@ async function planInit(repositoryRoot: string, options: InitOptions): Promise<I
     const scopes = repository.scopes;
     const inputs = { root: repositoryRoot, repository, dependencyFiles, scopes, manifests };
     const selection = selectForInit({ ...inputs, options });
-    const tooling = readExistingTools(repositoryRoot, repository.files, dependencyFiles, reads);
-    const answers = buildInitAnswers(repositoryRoot, options, tooling);
+    const existingTools = readExistingTools(repositoryRoot, repository.files, dependencyFiles, reads);
+    const answers = buildInitAnswers(repositoryRoot, options, existingTools);
     const draft = buildSettingsDraft(selection, answers);
     const effective = { ...draft, ...stripUndefined({ template: options.template }) };
     const formats = readFormatTables(effective, repository, manifests, dependencyFiles);
@@ -154,28 +154,28 @@ async function planInit(repositoryRoot: string, options: InitOptions): Promise<I
     const everySelected = listSelectedManifests(session.scopes);
     const applicable = session.neededToolManifests;
     const tools = new Set(applicable.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
-    const detectedTools = [...new Set(tooling.toolFiles.map((config) => config.tool))].toSorted((a, b) =>
+    const detectedTools = [...new Set(existingTools.toolFiles.map((toolFile) => toolFile.tool))].toSorted((a, b) =>
         a.localeCompare(b),
     );
     const detection: DetectionSummary = {
         files: repository.files,
         detected: selection.detected,
         scopes: selection.scopes,
-        tooling,
+        existingTools,
         owned: detectedTools.filter((tool) => tools.has(tool)),
         unowned: detectedTools.filter((tool) => !tools.has(tool)),
         manifests,
         hasGit: repository.hasGit,
     };
     const generated = generate(session);
-    const replaced = planReplacedFiles(repositoryRoot, tooling, tools, generated.fileEdits);
+    const replaced = planReplacedFiles(repositoryRoot, existingTools, tools, generated.fileEdits);
     const planning: InitPlanInputs = {
         reads,
         root: repositoryRoot,
         hasGit: repository.hasGit,
         index: session.repository.index,
         options,
-        tooling,
+        existingTools,
         selection,
         everySelected,
         answers,
