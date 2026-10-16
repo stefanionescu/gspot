@@ -1,8 +1,10 @@
+import { realpathSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, win32 } from 'node:path';
 import { isLinux } from '#tests/setup/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { type CheckDeclaration } from '#cli/types/configurations.ts';
 import { parseCommandFindings } from '#cli/checks/run/command/output.ts';
@@ -112,6 +114,17 @@ test('grouped output drops line endings and makes absolute paths relative', asyn
     const findings = parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path });
     expect(findings).toHaveLength(1);
     expect(findings[0]).toMatchObject({ file: 'settings/café.toml', line: 1, message: 'Incorrect spacing' });
+});
+
+// Docker Compose prints the resolved path, such as /private/var on macOS for a root under /var.
+test('a message that names a file by its resolved absolute path names it relative to the root', async () => {
+    await using sandbox = await testdir();
+    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get('docker/compose')!.check;
+    const file = `${convertToPosixPath(realpathSync.native(sandbox.path))}/api/compose.yml`;
+    const output = `validating ${file}: services.api.bogus false schema\n`;
+    expect(parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path })).toMatchObject([
+        { message: 'validating api/compose.yml: services.api.bogus false schema' },
+    ]);
 });
 
 test('EditorConfig output keeps file and line findings', async () => {

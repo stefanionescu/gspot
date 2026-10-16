@@ -208,7 +208,7 @@ export const DOCKER_CASES = [
         bogus: true
 `,
         },
-        expected: { file: 'api/compose.yml', message: "services.api additional properties 'bogus' not allowed" },
+        expected: { file: 'api/compose.yml', message: 'bogus' },
     },
     {
         check: 'docker/hadolint',

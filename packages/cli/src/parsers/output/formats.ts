@@ -1,8 +1,8 @@
 // Defines tool-output formats and validates their declarations.
 import { z } from 'zod';
 import { realpathSync } from 'node:fs';
-import { posix, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import { sep, posix, isAbsolute } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { DRIVE_LETTER } from '#cli/config/system/paths.ts';
@@ -40,19 +40,41 @@ import {
     DEFAULT_GROUPED_PATTERN,
 } from '#cli/config/parsers/output.ts';
 
+/**
+ * Resolve a path the way tools print it after they follow links.
+ * @param path the path to resolve.
+ * @returns the resolved path with POSIX separators, or undefined when nothing exists at the path.
+ */
+function readRealPath(path: string): string | undefined {
+    try {
+        // The call gives Windows paths one drive letter case and their long folder names.
+        return convertToPosixPath(realpathSync.native(path));
+    } catch (error) {
+        if (MISSING_PATH_CODES.has((error as NodeJS.ErrnoException).code ?? '')) return undefined;
+        throw error;
+    }
+}
+
 function stripRoot(root: string, file: string): string {
     const prefix = `${root}/`;
     if (file.startsWith(prefix)) return file.slice(prefix.length);
     if (!isAbsolute(file)) return file;
-    try {
-        // The call gives Windows paths one drive letter case and their long folder names.
-        const realRoot = `${convertToPosixPath(realpathSync.native(root))}/`;
-        const realFile = convertToPosixPath(realpathSync.native(file));
-        return realFile.startsWith(realRoot) ? realFile.slice(realRoot.length) : file;
-    } catch (error) {
-        if (MISSING_PATH_CODES.has((error as NodeJS.ErrnoException).code ?? '')) return file;
-        throw error;
-    }
+    const realRoot = readRealPath(root);
+    const realFile = readRealPath(file);
+    if (realRoot === undefined || realFile === undefined) return file;
+    return realFile.startsWith(`${realRoot}/`) ? realFile.slice(realRoot.length + 1) : file;
+}
+
+/**
+ * List the forms of the root that a tool can print in a message.
+ * The longest form comes first, so that a shorter form never cuts a longer one.
+ * @param root the root with POSIX separators.
+ * @returns the given root and its resolved form with POSIX separators and with system separators.
+ */
+function listRootPrefixes(root: string): string[] {
+    const roots = [root, readRealPath(root) ?? root];
+    const prefixes = new Set(roots.flatMap((form) => [`${form}/`, `${form.replaceAll('/', sep)}${sep}`]));
+    return [...prefixes].toSorted((first, second) => second.length - first.length);
 }
 
 function hasFilePaths(output: OutputSpec): boolean {
@@ -128,8 +150,11 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
         root,
         cwd,
     });
+    const prefixes = listRootPrefixes(rootPath);
     return findings.map((finding) => {
-        const formatted = { ...finding, fixable: check.fix !== undefined && finding.fixable };
+        let message = finding.message;
+        for (const prefix of prefixes) message = message.replaceAll(prefix, '');
+        const formatted = { ...finding, message, fixable: check.fix !== undefined && finding.fixable };
         if (output.file_type !== 'path' || finding.file === '') return formatted;
         const file = normalizeOutputPath(finding.file);
         const absolute =
