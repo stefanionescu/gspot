@@ -7,22 +7,16 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 ## What you need
 
-Use Git and Node.js 24.15 or newer. Bun can install and start gspot, but the checks run on Node.js.
-Use your package manager for a repository with `package.json`, or mise for another repository.
+Git and Node.js 24.15 or newer. The tools that your checks run need these:
 
-Program tools such as Gitleaks, typos, and ShellCheck need mise on both paths.
-Without mise, `gspot install` installs npm tools and Python tools when `PATH` includes uv.
-It names each missing program, including uv, and exits 0. A check with a missing program exits 2;
-`gspot doctor` lists the missing tools.
+| Tools                                                            | What you need                                                                                           |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| npm tools, such as ESLint or markdownlint                        | Node.js and the project's npm, pnpm, Yarn, or Bun package manager. With no declaration, gspot uses npm. |
+| Python tools, such as Ruff or yamllint                           | uv; gspot installs its pinned Python version when needed.                                               |
+| Program tools, such as ShellCheck, Gitleaks, and typos           | mise, or the exact pinned tools on `PATH`. `gspot doctor` lists missing tools.                          |
+| Project commands, such as Jest, Vitest, Next.js, or Swift builds | Your project's runtime, dependencies, and build tools.                                                  |
 
-Run `gspot init --dry-run` to see which tools your repository needs. gspot installs only what its checks and fixers need. File types count too: Markdown files in a Python repository still need Node.js for the Markdown checks.
-
-| Tools                                                                        | What you need                                                                                           |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| npm tools, such as ESLint or markdownlint                                    | Node.js and the project's npm, pnpm, Yarn, or Bun package manager. With no declaration, gspot uses npm. |
-| Python tools, such as Ruff or yamllint                                       | uv; gspot installs its pinned Python version when needed.                                               |
-| Program tools: command-line programs such as ShellCheck, Gitleaks, and typos | mise, or the exact pinned tools on `PATH`. `gspot doctor` lists missing tools.                          |
-| Project commands, such as Jest, Vitest, Next.js, or Swift builds             | Your project's runtime, dependencies, and build tools.                                                  |
+`gspot init --dry-run` shows which tools your repository needs.
 
 ### Operating system limits
 
