@@ -3,7 +3,6 @@ import type { FileEdit } from '#cli/types/ownership.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
-import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 import type { RUNNERS, HOOK_ARGUMENTS } from '#cli/config/generation/hooks.ts';
 import { type ReadCache, type FileContents } from '#cli/types/system/files.ts';
 import type { Level, Manifest, ToolDeclaration, ToolFileDeclaration } from '#cli/types/configurations.ts';
@@ -81,7 +80,8 @@ export type NpmProjectInputs = {
     root: string;
     scopes: ScopeSelection[];
     manifests: Manifest[];
-    packageManager: PackageManager | undefined;
+    /** Yarn 2 or later, which needs the settings that keep a node_modules folder. */
+    isYarnBerry: boolean;
 };
 
 export type SwiftVersionInput = { root: string; scope: string; reads: ReadCache };

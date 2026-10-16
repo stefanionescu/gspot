@@ -161,11 +161,6 @@ allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["packages/cli/src/generation/projects.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
 paths = ["packages/cli/src/session.ts"]
 allowed_names = ["buildPackageManagerAccess", "getPackageManagerIdentity", "packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
@@ -206,18 +201,13 @@ allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/generation/files.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
 paths = ["packages/cli/src/types/parsers/dependency-files.ts"]
 allowed_names = ["PackageManager", "PackageManagerDeclaration", "packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
 paths = ["packages/cli/src/types/planning.ts"]
-allowed_names = ["getPackageManager", "requirePackageManager"]
+allowed_names = ["getPackageManager", "getPackageManagerName", "requirePackageManager", "requirePackageManagerName"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]

@@ -4,7 +4,6 @@ import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
-import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
 import { TOML_FORMAT } from '#cli/config/generation/tool-files.ts';
 import { findInstalledDependency } from '#cli/tools/npm/packages.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/generation/eslint.ts';
@@ -56,12 +55,11 @@ export function buildMiseProject(manifests: Manifest[], reads: ReadCache): Gener
  * @param inputs.root the repository root.
  * @param inputs.scopes the selected source scopes.
  * @param inputs.manifests the selected tool declarations.
- * @param inputs.packageManager the repository package manager, or undefined without one.
+ * @param inputs.isYarnBerry true for Yarn 2 or later as the repository package manager.
  *
- * @returns the tool project's files, or none without a package manager.
+ * @returns the tool project's files.
  */
-export function buildNpmProject({ root, scopes, manifests, packageManager }: NpmProjectInputs): GeneratedFile[] {
-    if (packageManager === undefined) return [];
+export function buildNpmProject({ root, scopes, manifests, isYarnBerry }: NpmProjectInputs): GeneratedFile[] {
     const pins = listToolProjectPins(manifests).npm;
     const nextVersions = scopes
         .filter(({ selected }) => selected.some(({ configuration }) => configuration.name === NEXTJS_CONFIGURATION))
@@ -91,7 +89,7 @@ export function buildNpmProject({ root, scopes, manifests, packageManager }: Npm
             kind: 'tool_file',
         },
     ];
-    if (isYarnBerry(packageManager))
+    if (isYarnBerry)
         files.push({
             path: YARN_SETTINGS,
             content: YARN_TOOL_PROJECT_SETTINGS,

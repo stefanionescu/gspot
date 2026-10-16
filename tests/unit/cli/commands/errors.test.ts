@@ -52,7 +52,7 @@ test('help works and exits 0 after an argument error', async () => {
     expect(help.stdout).toContain('Change gspot.toml:');
 });
 
-test('a failed npm version lookup gives the tool error in text and JSON', async () => {
+test('apply starts no npm, and install reports a failed npm version lookup in text and JSON', async () => {
     await using folder = await testdir();
     await createFileTree(folder.path, {
         'gspot.toml': buildSettingsText(['bash']),
@@ -64,17 +64,23 @@ test('a failed npm version lookup gives the tool error in text and JSON', async 
         if (command[0] !== 'npm' || command[1] !== '--version') return run(command, options);
         return { code: 7, missing: false, duration: 0, stdout: '', stderr: 'version lookup failed' };
     });
-    const human = await runGspot(folder.path, ['apply', '--dry-run']);
+    const preview = await runGspot(folder.path, ['apply', '--dry-run']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    expect(boundary).not.toHaveBeenCalledWith(['npm', '--version'], expect.anything());
+    const human = await runGspot(folder.path, ['install']);
     expect(human.code, human.stdout + human.stderr).toBe(2);
     expect(human.stdout).toBe('');
-    expect(human.stderr).toBe('Cannot determine the npm version for the tool project.\n');
+    expect(human.stderr).toBe(
+        'Cannot determine the npm version for the tool project.\nTool installation is incomplete. Run: gspot install\n',
+    );
     expect(await readTree(folder.path)).toStrictEqual(before);
-    const structured = await runGspot(folder.path, ['apply', '--dry-run', '--json']);
+    const structured = await runGspot(folder.path, ['install', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(2);
     expect(structured.stderr).toBe('');
     expect(JSON.parse(structured.stdout)).toStrictEqual({
-        error: 'tool',
-        message: 'Cannot determine the npm version for the tool project.',
+        error: 'installation',
+        message:
+            'Cannot determine the npm version for the tool project.\nTool installation is incomplete. Run: gspot install',
     });
     expect(boundary).toHaveBeenCalledWith(['npm', '--version'], expect.objectContaining({ cwd: folder.path }));
     expect(await readTree(folder.path)).toStrictEqual(before);

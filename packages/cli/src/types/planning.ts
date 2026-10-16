@@ -24,8 +24,12 @@ export type Session = {
     installedRoot: string;
     reads: ReadCache;
     resources: DisposableStack;
+    /** The package manager with its version, which an undeclared version reads from the program. */
     getPackageManager: () => PackageManager | undefined;
     requirePackageManager: () => PackageManager;
+    /** The package manager name, which starts no program. */
+    getPackageManagerName: () => PackageManager['name'] | undefined;
+    requirePackageManagerName: () => PackageManager['name'];
     cancelSignal?: AbortSignal | undefined;
     version: string;
     settingsFile: SettingsFile;

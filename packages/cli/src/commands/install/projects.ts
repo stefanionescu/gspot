@@ -40,7 +40,7 @@ export async function installToolProjects(context: InstallContext): Promise<stri
                 }),
             ),
     );
-    if (session.getPackageManager() !== undefined) {
+    if (session.getPackageManagerName() !== undefined) {
         notes.push(await installNpmTools(context));
     }
     if (uvPath !== undefined && listToolProjectPins(manifests).python.length > 0) {

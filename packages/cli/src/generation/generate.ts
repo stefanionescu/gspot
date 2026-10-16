@@ -9,6 +9,7 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
+import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/generation/ci.ts';
@@ -172,7 +173,7 @@ function generate(session: Session): GenerationResult {
         scopes,
     } = session;
     const { root } = repository;
-    const packageManager = session.getPackageManager();
+    const packageManager = session.getPackageManagerName();
     const manifests = session.neededToolManifests;
     const generated: GenerationResult = {
         notes: [],
@@ -188,7 +189,15 @@ function generate(session: Session): GenerationResult {
     );
     generated.files.push(
         ...buildHookFiles(root, settings, session.startRunner),
-        ...buildNpmProject({ root, scopes, manifests, packageManager }),
+        // Only Yarn needs the version, which an undeclared package manager reads from the program.
+        ...(packageManager === undefined
+            ? []
+            : buildNpmProject({
+                  root,
+                  scopes,
+                  manifests,
+                  isYarnBerry: packageManager === 'yarn' && isYarnBerry(session.requirePackageManager()),
+              })),
         ...buildPythonProject(manifests),
         buildMiseProject(manifests, session.reads),
     );

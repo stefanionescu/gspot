@@ -82,6 +82,11 @@ function buildPackageManagerAccess(getSession: () => Session, installedRoot: str
             state ??= readPackageManagerVersion(installedRoot, identity, timeoutSeconds);
             return state;
         },
+        getPackageManagerName: () => identity?.name,
+        requirePackageManagerName: () => {
+            if (identity === undefined) throw new GspotError('installation', MISSING_PACKAGE_MANAGER_MESSAGE);
+            return identity.name;
+        },
     };
 }
 
@@ -222,6 +227,8 @@ export async function openSession(
         timeoutSeconds,
         requirePackageManager: packageManager.requirePackageManager,
         getPackageManager: packageManager.getPackageManager,
+        getPackageManagerName: packageManager.getPackageManagerName,
+        requirePackageManagerName: packageManager.requirePackageManagerName,
         root,
         installedRoot,
         startRunner: await selectRunner(root),

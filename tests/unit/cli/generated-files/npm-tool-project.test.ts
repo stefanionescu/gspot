@@ -5,6 +5,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { STYLESHEET_CASES } from '#tests/data/checks/css.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildNpmProject } from '#cli/generation/projects.ts';
+import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
@@ -74,7 +75,7 @@ test.each([...YARN_CLIENTS])(
             root: process.cwd(),
             scopes: [],
             manifests: [],
-            packageManager,
+            isYarnBerry: isYarnBerry(packageManager),
         });
         expect(files.map((file) => file.path)).toStrictEqual(
             settings ? ['.gspot/package.json', '.gspot/.yarnrc.yml'] : ['.gspot/package.json'],

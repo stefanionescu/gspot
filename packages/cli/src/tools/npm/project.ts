@@ -298,7 +298,7 @@ async function installNpmTools(context: InstallContext): Promise<string> {
     const manifest = owner.read(NPM_TOOL_PROJECT_FILE);
     if (manifest === undefined) return '';
     const packageManager = session.requirePackageManager();
-    const project = parseToolProject(manifest.bytes.toString('utf8'), session.requirePackageManager().name);
+    const project = parseToolProject(manifest.bytes.toString('utf8'), session.requirePackageManagerName());
     const lockfile = owner.read(project.lockfilePath)?.bytes.toString('utf8');
     if (lockfile === undefined || !isLockfileCurrent(packageManager.name, lockfile, project.dependencies))
         throw new GspotError('installation', 'Run: gspot install');

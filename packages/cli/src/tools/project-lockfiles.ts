@@ -36,7 +36,7 @@ function recordLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
  * @returns missing, mismatched, or current lockfiles.
  */
 export function listStaleLockfiles(
-    session: Pick<Session, 'root' | 'requirePackageManager'>,
+    session: Pick<Session, 'root' | 'requirePackageManagerName'>,
     generated: GeneratedFile[],
 ): StaleLockfile[] {
     const { root } = session;
@@ -46,7 +46,7 @@ export function listStaleLockfiles(
         .flatMap((manifest) => {
             const npm =
                 manifest.path === NPM_TOOL_PROJECT_FILE
-                    ? parseToolProject(manifest.content, session.requirePackageManager().name)
+                    ? parseToolProject(manifest.content, session.requirePackageManagerName())
                     : undefined;
             const python =
                 manifest.path === PYTHON_TOOL_PROJECT_FILE
@@ -59,7 +59,7 @@ export function listStaleLockfiles(
             const matches =
                 npm === undefined
                     ? isPythonLockfileCurrent(python as PythonToolProject, content)
-                    : isLockfileCurrent(session.requirePackageManager().name, content, npm.dependencies);
+                    : isLockfileCurrent(session.requirePackageManagerName(), content, npm.dependencies);
             return matches ? [{ path }] : [{ path, kind: 'changed' as const }];
         });
 }

@@ -85,7 +85,7 @@ function listStaleFileEdits(files: Files, generated: GenerationResult): StaleFil
  * @returns the stale files in path order.
  */
 export function listStaleFiles(
-    session: Pick<Session, 'root' | 'requirePackageManager' | 'repository' | 'settingsFile'>,
+    session: Pick<Session, 'root' | 'requirePackageManagerName' | 'repository' | 'settingsFile'>,
     generated: GenerationResult,
 ): StaleFile[] {
     using files = openFiles(session.root);
@@ -110,7 +110,7 @@ export function listStaleFiles(
  * @returns the destination paths.
  */
 export function listExpectedPaths(
-    session: Pick<Session, 'requirePackageManager'>,
+    session: Pick<Session, 'requirePackageManagerName'>,
     generated: GenerationResult,
 ): Set<string> {
     const paths = new Set([
@@ -119,7 +119,7 @@ export function listExpectedPaths(
     ]);
     for (const file of generated.files) {
         if (file.path === NPM_TOOL_PROJECT_FILE)
-            paths.add(parseToolProject(file.content, session.requirePackageManager().name).lockfilePath);
+            paths.add(parseToolProject(file.content, session.requirePackageManagerName()).lockfilePath);
         if (file.path === PYTHON_TOOL_PROJECT_FILE) paths.add(UV_LOCKFILE);
     }
     return paths;
