@@ -1,8 +1,5 @@
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 
-/** The [rules] table after default expansion. */
-export type RulesSettings = { enabled: boolean; exclude: string[]; instruction_files: string[] };
-
 /** A selected rule's destination, final text, and path within the rules folder. */
 export type RuleFile = {
     path: string;

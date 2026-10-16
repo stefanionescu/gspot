@@ -7,7 +7,6 @@ export type PathFormat = 'portable' | 'system';
 
 export type SafeFolderState = {
     root: string;
-    pathFormat: PathFormat;
     partsOf: (path: string) => string[];
     locks: Map<string, string>;
 };

@@ -83,7 +83,6 @@ function listOf(bounds: SafeFolderState, path: string | undefined): string[] {
 export function openSafeFolder(root: string, pathFormat: PathFormat = 'portable'): SafeFolder {
     const bounds: SafeFolderState = {
         root: realPath(root),
-        pathFormat,
         partsOf: pathFormat === 'portable' ? portableSegments : systemSegments,
         locks: new Map(),
     };

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import type { RulesSettings } from '#cli/types/rules.ts';
 import { relativePath } from '#cli/settings/schema/parts.ts';
+import type { ParsedRules } from '#cli/types/settings/tables.ts';
 import type { WrittenSettings } from '#cli/types/settings/file.ts';
 
 export const rulesSchema = z.strictObject({
@@ -18,4 +18,4 @@ export const rulesSchema = z.strictObject({
             description:
                 'Other files that get the managed block, besides AGENTS.md. Paths are relative to the repository root.',
         }),
-} satisfies SchemaShape<RulesSettings, NonNullable<WrittenSettings['rules']>>);
+} satisfies SchemaShape<ParsedRules, NonNullable<WrittenSettings['rules']>>);

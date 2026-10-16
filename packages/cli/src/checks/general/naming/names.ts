@@ -1,10 +1,10 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
+import type { NamingCase } from '#cli/types/settings/tables.ts';
 import { splitParts } from '#cli/checks/general/naming/settings.ts';
 import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
 
 import type {
-    CaseName,
     Identifier,
     NamingInputs,
     NamingContext,
@@ -46,7 +46,7 @@ const CASE_TESTS = {
     snake: (name) => name !== '' && name.split('_').every((word) => LOWER_WORD.test(word)),
     'upper-snake': (name) => name !== '' && name.split('_').every((word) => UPPER_WORD.test(word)),
     'timestamp-snake': isSnakeMigration,
-} satisfies Record<CaseName, (name: string) => boolean>;
+} satisfies Record<NamingCase, (name: string) => boolean>;
 
 function isConsecutive(parts: string[], termParts: string[]): boolean {
     for (let start = 0; start + termParts.length <= parts.length; start += 1) {

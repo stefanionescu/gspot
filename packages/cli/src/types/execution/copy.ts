@@ -30,7 +30,7 @@ export type ScratchCopyPlan = {
 /** Exact source files and explicitly owned dependency trees. */
 export type ScratchCopyPaths = Omit<ScratchCopyPlan, 'target' | 'files' | 'dependencies'> & {
     paths: string[];
-    dependencies?: DependencyCopy[];
+    dependencies: DependencyCopy[];
 };
 
 /** Ignored declaration prerequisites and the configurations that selected them. */

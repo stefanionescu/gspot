@@ -1,4 +1,3 @@
-import type { SettingsFile } from '#cli/types/settings/values.ts';
 import type { ToolDeclaration, InstalledToolFolder } from '#cli/types/configurations.ts';
 
 type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'system' | 'error';
@@ -28,7 +27,6 @@ export type ToolSearch = {
     cwd?: string;
     inspections: Map<string, ToolInspection>;
     miseBinPaths?: string[];
-    settingsFile?: SettingsFile;
 };
 export type AvailableToolInspection = ToolInspection & { path: string };
 export type LocateOptions = {

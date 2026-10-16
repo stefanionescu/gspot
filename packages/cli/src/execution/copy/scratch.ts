@@ -85,7 +85,6 @@ export async function copyIntoScratch(source: ScratchCopyPaths): Promise<Scratch
     try {
         const input = {
             ...source,
-            dependencies: source.dependencies ?? [],
             target: folder.path,
             files: new Set(source.paths),
         };

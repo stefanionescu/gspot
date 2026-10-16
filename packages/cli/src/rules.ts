@@ -7,11 +7,12 @@ import { isExcluded } from '#cli/settings/errors/values.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
 import { ruleFiles } from '#cli/configurations/manifests.ts';
 import { detectConditions } from '#cli/repository/detect.ts';
+import type { ParsedRules } from '#cli/types/settings/tables.ts';
 import { RULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import { type Repository } from '#cli/types/repository/inventory.ts';
 import { type Level, type Manifest } from '#cli/types/configurations.ts';
 import { type DependencyFile } from '#cli/types/parsers/dependency-files.ts';
-import type { RuleFile, RuleSource, RuleSection, RulesSettings, ManagedBlockValues } from '#cli/types/rules.ts';
+import type { RuleFile, RuleSource, RuleSection, ManagedBlockValues } from '#cli/types/rules.ts';
 import { FIRST_READ, RULES_HEADING, CHECKS_CLOSING, ALL_LEVEL_MARKER, RULES_ONLY_CLOSING } from '#cli/config/rules.ts';
 
 // The rules of the selected configurations; a file with a condition installs only when the repository meets it.
@@ -105,7 +106,7 @@ function ruleSections(text: string): RuleSection[] {
  * @returns each rule with its final content and destination.
  */
 export function selectRuleFiles(
-    rules: RulesSettings,
+    rules: ParsedRules,
     manifests: Manifest[],
     repository: Repository,
     level: Level,

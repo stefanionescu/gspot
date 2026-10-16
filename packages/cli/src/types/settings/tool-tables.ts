@@ -2,6 +2,8 @@ import type { JsonValue } from '#cli/types/parsers/json.ts';
 import type { ReasonValue } from '#cli/types/settings/file.ts';
 import type { RULE_CONDITIONS, IMPORT_EXTENSIONS, DOCSTRING_CONVENTIONS } from '#cli/config/settings/schema.ts';
 
+type ParsedExtraOptions = { extra?: Record<string, unknown> | undefined };
+
 type WrittenTools = {
     hadolint?: { trusted_registries?: string[] | undefined } | undefined;
     nginx?: { image?: string | undefined } | undefined;
@@ -170,21 +172,11 @@ type ParsedStylelint = {
 
 type ParsedSquawk = { assume_in_transaction: boolean };
 
-type ParsedPrettier = { extra?: Record<string, unknown> | undefined };
-
-type ParsedEditorconfigChecker = { extra?: Record<string, unknown> | undefined };
-
-type ParsedTypos = { extra?: Record<string, unknown> | undefined };
-
-type ParsedShellcheck = { extra?: Record<string, unknown> | undefined };
-
 type ParsedKnip = { extra?: Record<string, unknown> | undefined; entry: string[]; ignore_dependencies: string[] };
 
 type ParsedPurgecss = { safelist: string[] };
 
 type ParsedV8r = { schema: { paths: string[]; url: string }[] };
-
-type ParsedTaplo = { extra?: Record<string, unknown> | undefined };
 
 type ParsedTools = {
     hadolint?: ParsedHadolint | undefined;
@@ -200,14 +192,14 @@ type ParsedTools = {
     markdownlint?: ParsedMarkdownlint | undefined;
     stylelint?: ParsedStylelint | undefined;
     squawk?: ParsedSquawk | undefined;
-    prettier?: ParsedPrettier | undefined;
-    'editorconfig-checker'?: ParsedEditorconfigChecker | undefined;
-    typos?: ParsedTypos | undefined;
-    shellcheck?: ParsedShellcheck | undefined;
+    prettier?: ParsedExtraOptions | undefined;
+    'editorconfig-checker'?: ParsedExtraOptions | undefined;
+    typos?: ParsedExtraOptions | undefined;
+    shellcheck?: ParsedExtraOptions | undefined;
     knip?: ParsedKnip | undefined;
     purgecss?: ParsedPurgecss | undefined;
     v8r?: ParsedV8r | undefined;
-    taplo?: ParsedTaplo | undefined;
+    taplo?: ParsedExtraOptions | undefined;
 };
 
 export type { ParsedTools, WrittenTools };

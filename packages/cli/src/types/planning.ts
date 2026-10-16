@@ -16,7 +16,6 @@ export type Session = {
     timeoutSeconds: number;
     root: string;
     uvPath: string;
-    cwd?: string;
     inspections: Map<string, ToolInspection>;
     miseBinPaths?: string[];
     startRunner: StartRunner;

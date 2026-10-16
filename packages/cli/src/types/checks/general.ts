@@ -1,8 +1,9 @@
 import type { Node, Tree } from 'web-tree-sitter';
+import type { NamingCase } from '#cli/types/settings/tables.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { SPELLING_LOCALES } from '#cli/config/settings/schema.ts';
 import type { CheckInput, FindingPlace } from '#cli/types/execution/check.ts';
-import type { CASE_NAMES, ACRONYM_STYLES, NAMED_CATEGORIES } from '#cli/config/checks/general/naming.ts';
+import type { ACRONYM_STYLES, NAMED_CATEGORIES } from '#cli/config/checks/general/naming.ts';
 
 type AllowedPackage = { name: string; version: string; reason: string };
 
@@ -46,12 +47,12 @@ export type CompiledOverride = {
     isDigitsAllowed: boolean;
     isRepeatAllowed: boolean;
     structuralPrefix: RegExp | undefined;
-    caseNames: CaseName[] | undefined;
+    caseNames: NamingCase[] | undefined;
     source: string;
 };
 
 /** The limits and cases one identifier category gets. */
-export type CategoryLimits = { caseNames: CaseName[]; maxChars: number; maxWords: number };
+export type CategoryLimits = { caseNames: NamingCase[]; maxChars: number; maxWords: number };
 
 /** The settings after merging gspot.toml, ready to validate against. */
 export type NamingSettings = {
@@ -86,7 +87,7 @@ export type NamingDefaults = {
     allowed_names: string[];
     languages: Record<
         string,
-        { acronyms: (typeof ACRONYM_STYLES)[number]; categories: Record<string, { cases: CaseName[] }> }
+        { acronyms: (typeof ACRONYM_STYLES)[number]; categories: Record<string, { cases: NamingCase[] }> }
     >;
     override: NamingOverride[];
 };
@@ -103,7 +104,7 @@ export type NamingOverride = {
     allow_digits?: boolean | undefined;
     allow_repeated_words?: boolean | undefined;
     allowed_names?: string[] | undefined;
-    cases?: CaseName[] | undefined;
+    cases?: NamingCase[] | undefined;
     reason?: string | undefined;
 };
 
@@ -138,8 +139,6 @@ export type IsSubstantial = (node: Node, language: CountedLanguage, limit: numbe
 export type DirectoryEntry = { name: string; kind: 'file' | 'dir' };
 
 export type ValeAlert = { file: string; line: number; column: number; check: string; message: string };
-
-export type CaseName = (typeof CASE_NAMES)[number];
 
 /** Parsed trees and their captures used by the convention checks. */
 export type ConventionSource = { path: string; language: CountedLanguage; tree: Tree; captures: Map<string, Node[]> };
