@@ -14,7 +14,7 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import { writePlans, openWriter } from '#cli/ownership/writer.ts';
 import { EXTERNAL_INPUT_CASES } from '#tests/config/generated-files.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';

@@ -1,4 +1,4 @@
-import { compact } from '#cli/objects.ts';
+import { compact } from '#cli/system/values.ts';
 import { literalGlob } from '#cli/repository/selectors.ts';
 import { scopeFiles } from '#cli/generation/eslint/files.ts';
 import { levelRules } from '#cli/generation/eslint/blocks.ts';

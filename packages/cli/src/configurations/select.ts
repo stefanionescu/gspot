@@ -1,4 +1,4 @@
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { SOURCE_GROUPS } from '#cli/config/configurations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { type Manifest, type SelectionWalk } from '#cli/types/configurations.ts';

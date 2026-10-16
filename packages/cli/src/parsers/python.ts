@@ -1,7 +1,7 @@
 // Reads Python modules, declarations, and imports.
 // Reads Python modules, declarations, and imports.
 import type { Node } from 'web-tree-sitter';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { ParseCache, SourceInput } from '#cli/types/parsers/tree-sitter.ts';
 import { PYTHON_EXTENSION, PYTHON_FUNCTION_NODES } from '#cli/config/parsers/python.ts';

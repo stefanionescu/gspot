@@ -2,8 +2,8 @@
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import type { Parsed } from '#cli/types/errors.ts';
-import { valueAt, isRecord, normalizeTables } from '#cli/objects.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
+import { valueAt, isRecord, normalizeTables } from '#cli/system/values.ts';
 import { JSONC_OPTIONS, JSONC_EXTENSION } from '#cli/config/parsers/json.ts';
 import { parse, modify, applyEdits, type ParseError, printParseErrorCode } from 'jsonc-parser';
 

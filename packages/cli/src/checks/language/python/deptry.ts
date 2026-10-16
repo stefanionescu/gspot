@@ -3,9 +3,9 @@
 import { z } from 'zod';
 import { parse } from 'smol-toml';
 import { join, posix } from 'node:path';
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { childScopes } from '#cli/planning/files.ts';
-import { readText } from '#cli/system/file-reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';

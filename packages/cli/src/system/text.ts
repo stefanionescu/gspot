@@ -1,4 +1,5 @@
-import { isUtf8 } from 'node:buffer';
+// Formats text, computes source positions, and hashes content.
+
 import { createHash } from 'node:crypto';
 import { distance } from 'fastest-levenshtein';
 import type { TextPosition } from '#cli/types/text.ts';
@@ -58,17 +59,6 @@ export function codeList(items: readonly string[]): string {
  */
 export function contentDigest(content: string | Uint8Array): string {
     return createHash(DIGEST_ALGORITHM).update(content).digest('hex');
-}
-
-/**
- * Decode UTF-8 bytes as text.
- *
- * @param bytes the bytes.
- *
- * @returns the text, or undefined when the bytes lack UTF-8 encoding.
- */
-export function decodeUtf8(bytes: Uint8Array): string | undefined {
-    return isUtf8(bytes) ? Buffer.from(bytes).toString('utf8') : undefined;
 }
 
 /**

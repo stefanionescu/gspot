@@ -1,5 +1,4 @@
 // Reads host information and constructs command environments.
-// Reads host information and constructs command environments.
 import { isCI } from 'std-env';
 import envPaths from 'env-paths';
 import { isAbsolute } from 'node:path';

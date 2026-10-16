@@ -8,8 +8,8 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { PYPROJECT } from '#tests/config/python/project.ts';
+import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
 import { pydoclint } from '#cli/checks/language/python/pydoclint.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/executables.ts';
 
 import {
     NUMPY_DOCSTRING_MODULE,

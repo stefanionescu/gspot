@@ -1,3 +1,4 @@
+// Defines coded errors for command failures.
 import type { ErrorCode } from '#cli/types/errors.ts';
 
 // An error with a failure code so callers can branch.

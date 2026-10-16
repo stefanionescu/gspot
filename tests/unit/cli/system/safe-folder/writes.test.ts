@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { fileMode } from '#cli/system/safe-folder/reads.ts';
+import { fileMode } from '#cli/system/files/entries.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import { link, stat, symlink, readFile } from 'node:fs/promises';
 import { OUTSIDE_LINKS, MODE_REPLACEMENTS, LINK_TARGET_REFUSALS } from '#tests/config/system.ts';
 

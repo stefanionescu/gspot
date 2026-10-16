@@ -1,7 +1,7 @@
 import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/errors.ts';
 import { executeRun } from '#cli/execution/run.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';

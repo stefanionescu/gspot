@@ -1,10 +1,10 @@
-import { readText } from '#cli/system/file-reads.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { SECONDS_PER_DAY } from '#cli/config/units.ts';
 import type { FileEdit } from '#cli/types/ownership.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 
 import {

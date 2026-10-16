@@ -1,7 +1,7 @@
 // Reads findings from declared JSON fields.
 import { isAbsolute } from 'node:path';
-import { valueAt } from '#cli/objects.ts';
-import { GspotError } from '#cli/errors.ts';
+import { valueAt } from '#cli/system/values.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { JSON_START } from '#cli/config/parsers/output.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
 import { toPosix, toolOutputPath } from '#cli/system/paths.ts';

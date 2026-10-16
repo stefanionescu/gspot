@@ -2,9 +2,9 @@
 // The revisions a push sends, resolved from the ref and object pairs Git hands the pre-push hook.
 // Reads the revisions included in a push.
 import { resolve } from 'node:path';
-import { GspotError } from '#cli/errors.ts';
 import { readFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
+import { GspotError } from '#cli/system/errors.ts';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
 import { readPushBase } from '#cli/repository/revisions/changes.ts';
 import { gitText, gitLines, gitPaths, isShallow } from '#cli/system/git.ts';

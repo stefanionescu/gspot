@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { compact } from '#cli/objects.ts';
+import { compact } from '#cli/system/values.ts';
 import { readAsset } from '#cli/system/assets.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint.ts';

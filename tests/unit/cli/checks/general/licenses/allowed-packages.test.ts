@@ -5,8 +5,8 @@ import * as processes from '#cli/system/processes.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { prepareLicenseSandbox } from '#tests/setup/licenses.ts';
+import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
 import { containing, textContaining } from '#tests/setup/matchers.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/executables.ts';
 import { LICENSE_SETTINGS, ALLOWED_PACKAGE_CASES, ALLOWED_PACKAGE_SCOPE_CASES } from '#tests/config/licenses.ts';
 
 test.each([...ALLOWED_PACKAGE_SCOPE_CASES])('allowed packages: $name', async (scenario) => {

@@ -1,8 +1,8 @@
 import { test, expect, describe } from 'bun:test';
 import { stripVTControlCharacters } from 'node:util';
-import { configureOutput } from '#cli/terminal/print.ts';
+import { configureOutput } from '#cli/system/terminal.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { runText, progress } from '#cli/terminal/check-report.ts';
+import { runText, progress } from '#cli/commands/check/report.ts';
 
 import {
     REPORT,

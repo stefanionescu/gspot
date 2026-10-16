@@ -1,4 +1,4 @@
-import { compact } from '#cli/objects.ts';
+import { compact } from '#cli/system/values.ts';
 import { NODE_TOOL } from '#cli/config/tools/npm.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';

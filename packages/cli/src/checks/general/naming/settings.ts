@@ -1,5 +1,5 @@
 import { splitByCase } from 'scule';
-import { compact } from '#cli/objects.ts';
+import { compact } from '#cli/system/values.ts';
 import { tablesFor } from '#cli/settings/inherit.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';

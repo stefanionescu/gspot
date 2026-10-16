@@ -1,6 +1,6 @@
-import { GspotError } from '#cli/errors.ts';
 import { dirname, delimiter } from 'node:path';
 import { assetPath } from '#cli/system/assets.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/planning.ts';
 import type { ToolSearch } from '#cli/types/tools/find.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';

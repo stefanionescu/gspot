@@ -1,7 +1,7 @@
 import which from 'which';
 import Config from '@npmcli/config';
-import { isRecord } from '#cli/objects.ts';
-import { GspotError } from '#cli/errors.ts';
+import { isRecord } from '#cli/system/values.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, resolve } from 'node:path';
 import { realpathSync, writeFileSync } from 'node:fs';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';

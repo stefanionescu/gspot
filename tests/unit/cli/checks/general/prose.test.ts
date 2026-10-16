@@ -6,7 +6,7 @@ import { VALE_ALERT } from '#tests/config/prose.ts';
 import * as processes from '#cli/system/processes.ts';
 import { containing } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
 import { processResult } from '#tests/setup/processes.ts';

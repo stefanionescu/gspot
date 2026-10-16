@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import { checkReport, buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { ASSET_SETTING_CASES, UNREADABLE_RESOURCES, INVALID_RESOURCE_DOCUMENTS } from '#tests/config/xcode.ts';
 

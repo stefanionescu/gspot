@@ -1,3 +1,4 @@
+// Prints command results and failures with the selected output options.
 import pc from 'picocolors';
 import { RESULT_JSON_INDENT } from '#cli/config/terminal.ts';
 import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';

@@ -1,10 +1,10 @@
 // Explain a check, rule, configuration, setting, or file path.
-import { GspotError } from '#cli/errors.ts';
-import { quoteArgument } from '#cli/text.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { readText } from '#cli/system/file-reads.ts';
-import { printResult } from '#cli/terminal/print.ts';
+import { quoteArgument } from '#cli/system/text.ts';
 import { coveredBy } from '#cli/repository/select.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { printResult } from '#cli/system/terminal.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { findRoot } from '#cli/repository/find-root.ts';

@@ -1,5 +1,5 @@
 // Writes test settings and reads settings errors.
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { REPORT_PROGRAM } from '#tests/config/execution.ts';

@@ -1,4 +1,4 @@
-import { compact } from '#cli/objects.ts';
+import { compact } from '#cli/system/values.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { ParsedSettings } from '#cli/types/settings/file.ts';

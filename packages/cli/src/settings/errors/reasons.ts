@@ -1,5 +1,5 @@
-import { isRecord } from '#cli/objects.ts';
 import { isDeepStrictEqual } from 'node:util';
+import { isRecord } from '#cli/system/values.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { SettingsError } from '#cli/types/settings/file.ts';
 import { REASON_WORDS_MIN } from '#cli/config/settings/values.ts';

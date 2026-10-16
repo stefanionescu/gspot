@@ -6,7 +6,7 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
-import { readText, readSource } from '#cli/system/file-reads.ts';
+import { readText, readSource } from '#cli/system/files/reads.ts';
 import { runCommandGroups } from '#cli/execution/command/check.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';

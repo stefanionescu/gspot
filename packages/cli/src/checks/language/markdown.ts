@@ -1,8 +1,8 @@
 import { visit } from 'unist-util-visit';
 import { parseAllDocuments } from 'yaml';
-import { positionAt } from '#cli/text.ts';
+import { positionAt } from '#cli/system/text.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { TomlError, parse as parseToml } from 'smol-toml';

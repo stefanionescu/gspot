@@ -1,5 +1,5 @@
 import { Query, type Node } from 'web-tree-sitter';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { isInGspotFolder } from '#cli/repository/selectors.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { SourceInput } from '#cli/types/parsers/tree-sitter.ts';

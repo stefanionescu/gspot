@@ -1,12 +1,12 @@
 import { cp } from 'node:fs/promises';
-import { GspotError } from '#cli/errors.ts';
 import { runGit } from '#cli/system/git.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { MODE_BITS } from '#cli/config/system/modes.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { systemSegments } from '#cli/system/files/names.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { GIT_IGNORED_PATHS } from '#cli/config/execution/copy.ts';
-import { systemSegments } from '#cli/system/safe-folder/names.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { toPosix, isInside, extensionOf } from '#cli/system/paths.ts';
 import { readTsconfig, projectSources } from '#cli/parsers/tsconfig.ts';

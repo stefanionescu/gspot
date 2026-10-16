@@ -7,8 +7,8 @@ import { checkReport } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
+import { virtualEnvironmentBin } from '#cli/system/paths.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
-import { virtualEnvironmentBin } from '#cli/system/executables.ts';
 import { IMPORT_CONTRACT_REPORT } from '#tests/config/python/imports.ts';
 import { toolDeclaration, toolProjectPins } from '#cli/configurations/tool-pins.ts';
 

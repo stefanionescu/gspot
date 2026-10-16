@@ -1,6 +1,6 @@
-import { isRecord } from '#cli/objects.ts';
 import { isDeepStrictEqual } from 'node:util';
 import type { JSONSchema } from 'zod/v4/core';
+import { isRecord } from '#cli/system/values.ts';
 import { sortedToml } from '#cli/settings/file.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { cell, table, section, referencePage } from './markdown.ts';

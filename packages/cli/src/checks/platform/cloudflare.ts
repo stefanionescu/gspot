@@ -1,5 +1,5 @@
-import { readSource } from '#cli/system/file-reads.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import type { HeaderBlock, HeaderBlocks } from '#cli/types/checks/platform.ts';

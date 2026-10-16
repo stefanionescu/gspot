@@ -1,6 +1,6 @@
 import type { z } from 'zod';
-import { isRecord } from '#cli/objects.ts';
-import { GspotError } from '#cli/errors.ts';
+import { isRecord } from '#cli/system/values.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { everyTable } from '#cli/settings/inherit.ts';
 import { knownSettings } from '#cli/settings/view.ts';
 import { selectForScope } from '#cli/repository/select.ts';

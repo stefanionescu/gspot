@@ -1,5 +1,5 @@
 // JSON text the way Prettier prints it: objects one key per line, arrays on one line when they fit.
-import { isRecord } from '#cli/objects.ts';
+import { isRecord } from '#cli/system/values.ts';
 import { extensionOf } from '#cli/system/paths.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { generatedHeader } from '#cli/parsers/generated-header.ts';

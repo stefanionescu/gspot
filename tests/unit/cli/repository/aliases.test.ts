@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { aliasesFor } from '#cli/repository/aliases.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { ALIAS_FILES, ALIAS_PROJECT } from '#tests/config/repository.ts';
 

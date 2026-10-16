@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
-import { globPaths } from '#cli/system/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { globPaths } from '#cli/system/files/folders.ts';
 import { mkdir, unlink, symlink } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { OUTSIDE_PATTERNS, LINKED_MISE_FOLDERS } from '#tests/config/system.ts';

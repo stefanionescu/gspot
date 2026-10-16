@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { coveredBy } from '#cli/repository/select.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { toolName } from '#cli/configurations/tool-pins.ts';
 import { REASON_ABOVE } from '#cli/config/checks/general/gspot.ts';
 import { isReasonAccepted } from '#cli/settings/errors/reasons.ts';

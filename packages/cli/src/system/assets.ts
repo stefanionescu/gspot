@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import { toPosix } from '#cli/system/paths.ts';
-import { globPaths } from '#cli/system/files.ts';
 import { statSync, readFileSync } from 'node:fs';
+import { globPaths } from '#cli/system/files/folders.ts';
 import { ALL_FILES_GLOB, GRAMMARS_FOLDER, CLI_PACKAGE_JSON, PACKAGE_SEARCH_DEPTH } from '#cli/config/system/assets.ts';
 
 let cachedPackageFolder: string | undefined;

@@ -1,4 +1,4 @@
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';

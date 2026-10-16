@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
-import { positionAt } from '#cli/text.ts';
+import { positionAt } from '#cli/system/text.ts';
 import { TYPO } from '#tests/config/spelling.ts';
 import { rejection } from '#tests/setup/matchers.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { sqlIdentifiers } from '#cli/checks/general/naming/sql.ts';
 import { parseSqlFile, parsePostgres } from '#cli/parsers/sql/postgres.ts';
 

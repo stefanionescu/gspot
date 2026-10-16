@@ -1,5 +1,5 @@
 // The access checks of the schema the migrations build: row security, grants, and definer functions.
-import { positionAt } from '#cli/text.ts';
+import { positionAt } from '#cli/system/text.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { nodeOf, nodesOf } from '#cli/parsers/sql/postgres.ts';
 import type { Migration } from '#cli/types/checks/database.ts';

@@ -1,9 +1,9 @@
 // Parses Git index, tree, and blob output.
 import { z } from 'zod';
 import { posix } from 'node:path';
-import { decodeUtf8 } from '#cli/text.ts';
-import { GspotError } from '#cli/errors.ts';
 import { LINE_FEED } from '#cli/config/text.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { ANY_FOLDER_PREFIX } from '#cli/config/system/paths.ts';
 import { GIT_ENTRY_MODES } from '#cli/config/repository/revisions.ts';

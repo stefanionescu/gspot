@@ -1,7 +1,7 @@
-import { GspotError } from '#cli/errors.ts';
 import { toPosix } from '#cli/system/paths.ts';
 import { join, posix, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/repository/inventory.ts';
 import { requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';

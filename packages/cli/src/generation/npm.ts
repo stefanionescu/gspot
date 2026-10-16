@@ -1,6 +1,6 @@
 import semver from 'semver';
 import { join } from 'node:path';
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { isYarnBerry } from '#cli/parsers/npm-client.ts';
 import { toolProjectPins } from '#cli/configurations/tool-pins.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/generation/eslint.ts';

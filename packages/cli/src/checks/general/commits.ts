@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { runGit } from '#cli/system/git.ts';
-import { scratchFolder } from '#cli/system/files.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { scratchFolder } from '#cli/system/files/folders.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { pushedCommits } from '#cli/repository/revisions/changes.ts';

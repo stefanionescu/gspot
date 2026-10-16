@@ -1,9 +1,9 @@
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { writePlans } from '#cli/ownership/writer.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import { startRunner } from '#cli/generation/hooks.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { VERSION_PIN_FILE } from '#cli/config/system/locations.ts';
 import packageManifest from '../../package.json' with { type: 'json' };

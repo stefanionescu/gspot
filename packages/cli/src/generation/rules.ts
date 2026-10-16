@@ -1,4 +1,4 @@
-// Choose the rule files for the selected configurations and level, and build the managed block gspot writes into the agent instructions file.
+// Selects agent rules and builds their managed instruction block.
 import { posix } from 'node:path';
 import { readAsset } from '#cli/system/assets.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';

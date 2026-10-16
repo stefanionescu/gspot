@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { findingAt } from '#cli/checks/finding.ts';
 import { hasValePackages } from '#cli/install/vale.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { toPosix, extensionOf } from '#cli/system/paths.ts';
 import { VALE_CONFIG } from '#cli/config/system/locations.ts';

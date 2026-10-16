@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isRecord } from '#cli/objects.ts';
+import { isRecord } from '#cli/system/values.ts';
 import type { PathVisitor } from '#cli/types/settings/values.ts';
 import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';

@@ -2,10 +2,10 @@
 import { z } from 'zod';
 import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
-import { isRecord } from '#cli/objects.ts';
 import { parse as parseToml } from 'smol-toml';
 import { isInside } from '#cli/system/paths.ts';
-import { readText } from '#cli/system/file-reads.ts';
+import { isRecord } from '#cli/system/values.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';

@@ -8,8 +8,8 @@ import { buildInitArguments } from '#tests/setup/init.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, spawnGspot } from '#tests/setup/run-gspot.ts';
+import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
 import { containing, textContaining } from '#tests/setup/matchers.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/executables.ts';
 import { sandboxPath, installToolProjects } from '#tests/setup/install.ts';
 
 import {

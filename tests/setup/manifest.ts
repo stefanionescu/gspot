@@ -1,6 +1,6 @@
 // Parses the configuration declarations needed by a test.
 import { parse } from 'smol-toml';
-import { compact } from '#cli/objects.ts';
+import { compact } from '#cli/system/values.ts';
 import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
 import type { ManifestDeclaration } from '#cli/types/configurations.ts';
 

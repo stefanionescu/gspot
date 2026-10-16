@@ -1,5 +1,5 @@
-import { isRecord } from '#cli/objects.ts';
 import plugin from '#eslint-plugin/plugin.ts';
+import { isRecord } from '#cli/system/values.ts';
 import { REFERENCE_FOLDERS } from '../config/reference.ts';
 import type { ReferencePage } from '../types/reference.ts';
 import { cell, table, referencePage } from './markdown.ts';

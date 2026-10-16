@@ -1,48 +1,14 @@
-// Reads repository files and caches calculations for one run.
-// Lazily initialized values share the lifetime of their execution read cache.
-import { decodeUtf8 } from '#cli/text.ts';
-import { sourcePath } from '#cli/system/safe-folder/reads.ts';
-import type { MemoKey, ReadCache } from '#cli/types/system/files.ts';
+// Reads contained files, text, and bounded prefixes.
+import { isUtf8 } from 'node:buffer';
+import { join, relative } from 'node:path';
+import { isInside } from '#cli/system/paths.ts';
+import { systemSegments } from '#cli/system/files/names.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { openSync, readSync, closeSync, readFileSync, realpathSync } from 'node:fs';
 
 // Use this run's resolved root when it belongs to the requested repository.
 function realRoot(root: string, reads?: ReadCache): string {
     return reads?.root === root ? root : realpathSync(root);
-}
-/**
- * Reuse one value produced by a stable key during this run.
- * @param reads the run-owned source and derived-value cache.
- * @param key the producer whose identity and return type own the entry.
- * @returns the existing value or the producer's first result.
- */
-export function memo<Value extends object>(reads: ReadCache, key: MemoKey<Value>): Value {
-    const held = reads.memo.get(key);
-    // Only this key's producer writes its entry; its return type owns the stored value.
-    if (held !== undefined) return held as Value;
-    const value = key.create();
-    reads.memo.set(key, value);
-    return value;
-}
-
-/**
- * Reuse one calculated entry within a run-owned map.
- * @param reads the current run's read cache.
- * @param key the map producer.
- * @param entry the calculation's key.
- * @param create the calculation.
- * @returns the existing entry or its first calculated value.
- */
-export function memoized<Key, Value>(
-    reads: ReadCache,
-    key: MemoKey<Map<Key, Value>>,
-    entry: Key,
-    create: () => Value,
-): Value {
-    const values = memo(reads, key);
-    if (values.has(entry)) return values.get(entry) as Value;
-    const value = create();
-    values.set(entry, value);
-    return value;
 }
 
 /**
@@ -106,10 +72,25 @@ export function readText(root: string, path: string, reads?: ReadCache): string 
 }
 
 /**
- * Give source bytes and derived values to one repository root.
- * @param root the repository directory.
- * @returns the session-owned read cache.
+ * Read a written source path while refusing links outside the root's real path.
+ * @param root the resolved directory.
+ * @param path the root-relative source.
+ * @param partsOf the owner's path validation.
+ * @returns the contained path.
  */
-export function createReadCache(root: string): ReadCache {
-    return { root: realpathSync(root), sources: new Map(), memo: new Map(), parsed: new Map() };
+export function sourcePath(root: string, path: string, partsOf = systemSegments): string {
+    const target = realpathSync(join(root, ...partsOf(path)));
+    if (!isInside(relative(root, target))) throw new Error(`Source link leaves the repository: ${path}`);
+    return target;
+}
+
+/**
+ * Decode UTF-8 bytes as text.
+ *
+ * @param bytes the bytes.
+ *
+ * @returns the text, or undefined when the bytes lack UTF-8 encoding.
+ */
+export function decodeUtf8(bytes: Uint8Array): string | undefined {
+    return isUtf8(bytes) ? Buffer.from(bytes).toString('utf8') : undefined;
 }

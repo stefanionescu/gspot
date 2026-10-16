@@ -1,9 +1,9 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { openSafeFolder } from '#cli/system/files/open.ts';
+import { portableSegments } from '#cli/system/files/names.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { PORTABLE_PATH_ESCAPES } from '#tests/config/system.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
-import { portableSegments } from '#cli/system/safe-folder/names.ts';
 
 // Windows file names cannot contain a newline, quote, or colon.
 test.skipIf(isWindows)(

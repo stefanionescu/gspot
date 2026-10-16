@@ -1,6 +1,6 @@
 // Parses Bash scripts and counts their functions and control flow.
-import { blankOut } from '#cli/text.ts';
 import type { Node } from 'web-tree-sitter';
+import { blankOut } from '#cli/system/text.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { ParseCache } from '#cli/types/parsers/tree-sitter.ts';

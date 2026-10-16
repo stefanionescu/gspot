@@ -1,10 +1,10 @@
 // Write settings through the same validation and mutation.
-import { GspotError } from '#cli/errors.ts';
-import { quoteArgument } from '#cli/text.ts';
-import { printResult } from '#cli/terminal/print.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { quoteArgument } from '#cli/system/text.ts';
 import { parseTomlText } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { knownSettings } from '#cli/settings/view.ts';
+import { printResult } from '#cli/system/terminal.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { selectForScope } from '#cli/repository/select.ts';
@@ -12,10 +12,10 @@ import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { RECORD_FIELDS } from '#cli/config/settings/file.ts';
-import { compact, valueAt, isRecord } from '#cli/objects.ts';
 import { isLoosening } from '#cli/settings/errors/reasons.ts';
 import { unknownSettingError } from '#cli/settings/errors/keys.ts';
 import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { compact, valueAt, isRecord } from '#cli/system/values.ts';
 import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { setKey, addToList, findScopeTable } from '#cli/settings/edit.ts';

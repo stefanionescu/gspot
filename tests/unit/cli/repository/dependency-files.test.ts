@@ -6,7 +6,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { readRepository } from '#cli/repository/read.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { projectDependencies } from '#cli/repository/scopes.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { PYTHON_WORKSPACE_FILES } from '#tests/config/python/tool-project.ts';

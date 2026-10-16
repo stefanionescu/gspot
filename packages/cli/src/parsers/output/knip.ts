@@ -1,6 +1,6 @@
 // Reads Knip issue categories and source locations.
 import { z } from 'zod';
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
 import type { KnipReport, KnipSymbol } from '#cli/types/parsers/output.ts';

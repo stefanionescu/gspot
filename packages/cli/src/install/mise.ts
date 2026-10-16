@@ -1,7 +1,7 @@
 import which from 'which';
 import { join } from 'node:path';
-import { GspotError } from '#cli/errors.ts';
 import { runTool } from '#cli/tools/run.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { systemSkip } from '#cli/planning/skips.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import type { Session } from '#cli/types/planning.ts';

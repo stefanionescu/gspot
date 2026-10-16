@@ -1,13 +1,12 @@
 // Lists Git-index files and untracked repository files.
 import ignore from 'ignore';
-import { decodeUtf8 } from '#cli/text.ts';
-import { GspotError } from '#cli/errors.ts';
 import { isInside } from '#cli/system/paths.ts';
 import { join, posix, relative } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { readSource } from '#cli/system/file-reads.ts';
 import { parseIndexEntries } from '#cli/parsers/git.ts';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
+import { decodeUtf8, readSource } from '#cli/system/files/reads.ts';
 import { GIT_LOCALE, WORK_TREE_ARGV } from '#cli/config/system/git.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/system/locations.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';

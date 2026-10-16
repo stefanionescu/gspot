@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { stat, mkdir, rmdir, readFile } from 'node:fs/promises';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import { STATE_DIRECTORY } from '#cli/config/system/locations.ts';
 
 test('a lock removed after a failed create can be taken', async () => {

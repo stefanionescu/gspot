@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { join, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { scratchFolder } from '#cli/system/files.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { scratchFolder } from '#cli/system/files/folders.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { toPosix, toolOutputPath } from '#cli/system/paths.ts';
 import { toolFindings } from '#cli/execution/command/output.ts';

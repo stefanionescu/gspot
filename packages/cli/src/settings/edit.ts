@@ -1,10 +1,10 @@
-import { GspotError } from '#cli/errors.ts';
 import { isDeepStrictEqual } from 'node:util';
+import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { writtenValue, replaceWrittenValue } from '#cli/settings/inherit.ts';
-import { valueAt, isRecord, createTable, normalizeTables } from '#cli/objects.ts';
+import { valueAt, isRecord, createTable, normalizeTables } from '#cli/system/values.ts';
 import { sortedToml, emitSettings, parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
 import type { Mutation, TomlTable, SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/file.ts';
 

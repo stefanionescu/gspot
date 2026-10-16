@@ -1,4 +1,4 @@
-import { colors } from '#cli/terminal/print.ts';
+import { colors } from '#cli/system/terminal.ts';
 import { MS_PER_SECOND } from '#cli/config/units.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { Columns } from '#cli/types/terminal.ts';

@@ -7,7 +7,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { buildManifest } from '#tests/setup/manifest.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { runtimeDetectionRows } from '#tests/setup/sandbox.ts';
 import { buildTrackedFile } from '#tests/setup/tracked-file.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';

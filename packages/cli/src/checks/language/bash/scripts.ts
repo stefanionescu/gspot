@@ -1,9 +1,10 @@
+import { memoized } from '#cli/system/files/cache.ts';
 import { parseBashScript } from '#cli/parsers/bash.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { isInGspotFolder } from '#cli/repository/selectors.ts';
 import { type ScriptFile } from '#cli/types/checks/language.ts';
 import { type CheckInput } from '#cli/types/execution/check.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/inventory.ts';
-import { memoized, readSource } from '#cli/system/file-reads.ts';
 import { type ScriptFunction } from '#cli/types/parsers/bash.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 

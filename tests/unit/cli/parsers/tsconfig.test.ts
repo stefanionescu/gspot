@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 
 test('readTsconfigProject uses the nearest covering ancestor and refuses an excluded child', async () => {

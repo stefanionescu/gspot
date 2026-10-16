@@ -1,8 +1,8 @@
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { isRecord } from '#cli/objects.ts';
-import { GspotError } from '#cli/errors.ts';
-import { contentDigest } from '#cli/text.ts';
+import { isRecord } from '#cli/system/values.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { contentDigest } from '#cli/system/text.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { templateSchema } from '#cli/settings/schema/templates.ts';
 import { emitSettings, parseTomlText } from '#cli/settings/file.ts';

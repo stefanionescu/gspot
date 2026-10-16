@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { fileMode } from '#cli/system/safe-folder/reads.ts';
+import { fileMode } from '#cli/system/files/entries.ts';
 import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
 import { writePlans, openWriter } from '#cli/ownership/writer.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/stylelint.ts';

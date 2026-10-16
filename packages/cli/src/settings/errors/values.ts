@@ -1,15 +1,15 @@
 import { FIRST_READ } from '#cli/config/rules.ts';
-import { valueAt, isRecord } from '#cli/objects.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { everyTable } from '#cli/settings/inherit.ts';
+import { valueAt, isRecord } from '#cli/system/values.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import { configurationSettings } from '#cli/settings/view.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
-import { similar, codeList, quoteArgument } from '#cli/text.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import { RULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { pathKey, trimTrailingSlashes } from '#cli/system/paths.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
+import { similar, codeList, quoteArgument } from '#cli/system/text.ts';
 import type { ToolTable, SettingsError, RuleExcludeError } from '#cli/types/settings/file.ts';
 import { allChecks, ruleFiles, configurationManifests } from '#cli/configurations/manifests.ts';
 

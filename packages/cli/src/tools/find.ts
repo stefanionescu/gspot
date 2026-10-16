@@ -1,12 +1,11 @@
 import which from 'which';
 import { statSync } from 'node:fs';
-import { compact } from '#cli/objects.ts';
+import { compact } from '#cli/system/values.ts';
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
 import { runBlocking } from '#cli/system/processes.ts';
-import { toPosix, isInside } from '#cli/system/paths.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import { toolTimeoutMilliseconds } from '#cli/tools/run.ts';
 import type { ToolAvailability } from '#cli/types/tools/run.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { toolProjectPackage } from '#cli/configurations/tool-pins.ts';
@@ -14,8 +13,8 @@ import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import { readToolVersion, toolVersionState } from '#cli/tools/versions.ts';
-import { executableNames, virtualEnvironmentBin } from '#cli/system/executables.ts';
 import { installedPackage, installedDependency } from '#cli/repository/dependency-files.ts';
+import { toPosix, isInside, executableNames, virtualEnvironmentBin } from '#cli/system/paths.ts';
 import { DOT_GSPOT, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/system/locations.ts';
 
 import type {

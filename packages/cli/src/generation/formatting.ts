@@ -1,8 +1,8 @@
 import { dirname, relative } from 'node:path';
 import { toPosix } from '#cli/system/paths.ts';
-import { compact, isRecord } from '#cli/objects.ts';
 import { everyTable } from '#cli/settings/inherit.ts';
 import { byScopeDepth } from '#cli/repository/scopes.ts';
+import { compact, isRecord } from '#cli/system/values.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import type { Settings, ScopeView } from '#cli/types/settings/values.ts';
 import type { WrittenFormat, FormatSettings } from '#cli/types/settings/file.ts';

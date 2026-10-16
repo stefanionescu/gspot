@@ -11,7 +11,7 @@ import { readVersionPin } from '#cli/apply/version-pin.ts';
 import { reportText } from '#cli/commands/save-settings.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
-import { noteLines, printResult } from '#cli/terminal/print.ts';
+import { noteLines, printResult } from '#cli/system/terminal.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/save-settings.ts';
 
 function staleFilesText(drift: StaleFile[]): string {

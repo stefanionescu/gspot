@@ -2,8 +2,8 @@
 import { z } from 'zod';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
-import { GspotError } from '#cli/errors.ts';
 import { runTool } from '#cli/tools/run.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';

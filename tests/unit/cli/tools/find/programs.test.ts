@@ -13,10 +13,10 @@ import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { inspectTool, locateCandidates } from '#cli/tools/find.ts';
+import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
 import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/executables.ts';
 import { chmod, mkdir, unlink, symlink, readFile } from 'node:fs/promises';
 
 test("inspectTool finds the project compiler, and the original repository's compiler from a scratch copy", async () => {

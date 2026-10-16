@@ -3,7 +3,7 @@ import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { mkdir, unlink, symlink } from 'node:fs/promises';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { LINKED_RULE_FOLDERS } from '#tests/config/tooling.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readTooling, readLintJobs, hasIniSection } from '#cli/repository/tooling.ts';

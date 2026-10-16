@@ -1,6 +1,6 @@
-import { GspotError } from '#cli/errors.ts';
 import { resolve, relative } from 'node:path';
 import { toPosix } from '#cli/system/paths.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { hookLine } from '#cli/generation/hooks.ts';
 import { readHooks } from '#cli/repository/tooling.ts';
 import { HOOK_ARGS } from '#cli/config/generation/hooks.ts';

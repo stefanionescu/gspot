@@ -1,8 +1,8 @@
-import { GspotError } from '#cli/errors.ts';
-import { valueAt, isRecord } from '#cli/objects.ts';
-import { printResult } from '#cli/terminal/print.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
+import { printResult } from '#cli/system/terminal.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { valueAt, isRecord } from '#cli/system/values.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';

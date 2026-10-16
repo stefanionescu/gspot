@@ -1,6 +1,8 @@
-// Converts and compares system and repository paths.
-import { sep, posix, isAbsolute } from 'node:path';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
+// Builds, converts, and compares system and repository paths.
+import { sep, join, posix, isAbsolute } from 'node:path';
+import { EXECUTABLE_LAYOUTS, DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
+
+const systemExecutables = EXECUTABLE_LAYOUTS[process.platform === 'win32' ? 'windows' : 'posix'];
 
 /**
  * Forward slashes on every operating system, for selectors, records, and output.
@@ -105,4 +107,32 @@ export function includeParentFolders(paths: readonly string[]): Set<string> {
         for (let depth = 1; depth < segments.length; depth += 1) expanded.add(segments.slice(0, depth).join('/'));
     }
     return expanded;
+}
+
+/**
+ * Name executable candidates in the system's preferred shim order.
+ * @param name the executable name without a suffix.
+ * @returns names used by tool-project verification and tool discovery.
+ */
+export function executableNames(name: string): string[] {
+    return systemExecutables.executableSuffixes.map((suffix) => name + suffix);
+}
+
+/**
+ * Locate the command directory of a Python virtual environment.
+ * @param folder the environment directory.
+ * @returns its Scripts directory on Windows or bin directory elsewhere.
+ */
+export function virtualEnvironmentBin(folder: string): string {
+    return join(folder, systemExecutables.environmentDirectory);
+}
+
+/**
+ * Locate one Python interpreter or console script inside its virtual environment.
+ * @param folder the environment directory.
+ * @param name the executable name.
+ * @returns the executable path with the system's Python launcher suffix.
+ */
+export function virtualEnvironmentExecutable(folder: string, name: string): string {
+    return join(virtualEnvironmentBin(folder), name + systemExecutables.environmentSuffix);
 }

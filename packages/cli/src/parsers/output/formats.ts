@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { realpathSync } from 'node:fs';
 import { isAbsolute } from 'node:path';
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { jsonFindings } from '#cli/parsers/output/json.ts';

@@ -3,8 +3,8 @@ import { createFileTree } from 'testdirs';
 import { join, relative } from 'node:path';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { virtualEnvironmentBin } from '#cli/system/paths.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
-import { virtualEnvironmentBin } from '#cli/system/executables.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { ALLOWED_PACKAGE_SCOPE_CASES } from '#tests/config/licenses.ts';
 

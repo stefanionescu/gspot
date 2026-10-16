@@ -7,7 +7,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { EMPTY_TOOLING } from '#tests/config/tooling.ts';
 import { parseTemplate } from '#cli/settings/templates.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/xcode.ts';
 import { emitSettings, parseTomlText } from '#cli/settings/file.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';

@@ -5,7 +5,7 @@ import { gitOutput } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { readTooling } from '#cli/repository/tooling.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { LEFTHOOK_FILES, LINKED_HOOK_FILES, LINKED_HOOK_FOLDERS } from '#tests/config/tooling.ts';

@@ -1,14 +1,11 @@
-// Claims file locks and reclaims abandoned locks.
-// Releases every lock this root still holds, leaving a lock another writer took over. The folders only a lock kept
-// go too, so a writer that wrote nothing leaves nothing.
-
+// Claims writer locks and recovers abandoned locks.
 import { posix } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { PRIVATE_FILE, PRIVATE_DIRECTORY } from '#cli/config/system/modes.ts';
 import type { FileCopy, SafeFolderState } from '#cli/types/system/safe-folder.ts';
-import { readEntry, checkedPath, preparedPath } from '#cli/system/safe-folder/reads.ts';
+import { readEntry, checkedPath, preparedPath } from '#cli/system/files/entries.ts';
 import { linkSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, writeFileSync } from 'node:fs';
-import { LOCK_TOKEN_SEPARATOR, LOCK_RECOVERY_SUFFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system/safe-folder.ts';
+import { LOCK_TOKEN_SEPARATOR, LOCK_RECOVERY_SUFFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files.ts';
 
 // Creates the lock file with the token, or returns false when another holder already owns the file.
 function tryLock(target: string, token: string): boolean {

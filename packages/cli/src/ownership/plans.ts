@@ -1,14 +1,14 @@
-import { decodeUtf8 } from '#cli/text.ts';
 import { join, relative } from 'node:path';
 import { AGENTS_FILE } from '#cli/config/rules.ts';
 import { attributeRules } from '#cli/parsers/git.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { listFolderFiles } from '#cli/system/files.ts';
+import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import { sameEntry } from '#cli/system/files/entries.ts';
 import { toPosix, isInside } from '#cli/system/paths.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { sameEntry } from '#cli/system/safe-folder/reads.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
+import { listFolderFiles } from '#cli/system/files/folders.ts';
 import { planKeyChanges } from '#cli/ownership/managed-keys.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { hasGeneratedHeader } from '#cli/parsers/generated-header.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';

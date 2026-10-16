@@ -1,7 +1,7 @@
 import semver from 'semver';
 import { join, dirname } from 'node:path';
-import { GspotError } from '#cli/errors.ts';
 import { detectPackageManager } from 'nypm';
+import { GspotError } from '#cli/system/errors.ts';
 import { runBlocking } from '#cli/system/processes.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';

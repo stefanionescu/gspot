@@ -3,7 +3,7 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { tomlRange, addTomlComment, tomlCommentAnchors } from '#cli/parsers/toml/comments.ts';
 import type { TomlSyntax, TomlComments, TomlCommentAnchor } from '#cli/types/parsers/toml.ts';
-import { valueAt, isRecord, createTable, isRecordArray, normalizeTables } from '#cli/objects.ts';
+import { valueAt, isRecord, createTable, isRecordArray, normalizeTables } from '#cli/system/values.ts';
 import { METADATA_PREFIXES, IGNORE_IDENTITY_FIELDS, TEMPLATE_COMMENT_PREFIX } from '#cli/config/settings/file.ts';
 
 function sameValue(left: unknown, right: unknown): boolean {

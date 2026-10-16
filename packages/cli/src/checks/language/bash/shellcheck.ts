@@ -1,4 +1,4 @@
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
 import { runCommandGroups } from '#cli/execution/command/check.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';

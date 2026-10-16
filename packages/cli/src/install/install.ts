@@ -1,5 +1,5 @@
 import which from 'which';
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { findStaleFiles } from '#cli/apply/stale.ts';
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { installHooks } from '#cli/install/hooks.ts';

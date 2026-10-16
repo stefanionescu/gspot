@@ -11,10 +11,10 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import { SHELLCHECK_RC } from '#tests/config/bash/tools.ts';
 import { prepareNpmLockfile } from '#cli/tools/npm/project.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import { UV_LOCKFILE_ARGUMENTS } from '#cli/config/tools/python.ts';
 import { NPM_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
 

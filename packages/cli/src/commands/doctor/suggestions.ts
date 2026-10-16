@@ -1,7 +1,7 @@
-import { quoteArgument } from '#cli/text.ts';
 import { emitAll } from '#cli/generation/files.ts';
+import { quoteArgument } from '#cli/system/text.ts';
 import { type Session } from '#cli/types/planning.ts';
-import { readPrefix } from '#cli/system/file-reads.ts';
+import { readPrefix } from '#cli/system/files/reads.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { everyManifest } from '#cli/configurations/select.ts';

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { writeFileSync } from 'node:fs';
 import { parse, stringify } from 'smol-toml';
-import { readText } from '#cli/system/file-reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { HTTP_URL } from '#cli/config/tools/diagnostics.ts';

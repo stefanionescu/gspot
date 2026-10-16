@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { parsePbxproj } from '#cli/parsers/xcode.ts';
 import { PBXPROJ } from '#cli/config/parsers/xcode.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
 import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';

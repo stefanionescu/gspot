@@ -1,7 +1,7 @@
 import { join, posix } from 'node:path';
-import { globPaths } from '#cli/system/files.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
+import { globPaths } from '#cli/system/files/folders.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';

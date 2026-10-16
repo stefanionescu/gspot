@@ -1,7 +1,7 @@
 // Reads secret findings from TruffleHog reports.
 // Reads secret findings from TruffleHog reports.
 import { z } from 'zod';
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
 import type { Finding } from '#cli/types/execution/check.ts';

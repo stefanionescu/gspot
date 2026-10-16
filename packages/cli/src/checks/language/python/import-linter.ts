@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { parse } from 'smol-toml';
-import { GspotError } from '#cli/errors.ts';
 import { join, posix, basename } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readText } from '#cli/system/file-reads.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { hasIniSection } from '#cli/repository/tooling.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';

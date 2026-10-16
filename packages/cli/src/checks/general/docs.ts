@@ -3,16 +3,14 @@ import { join, posix } from 'node:path';
 import { visit } from 'unist-util-visit';
 import { readJson } from '#cli/parsers/json.ts';
 import { statSync, readdirSync } from 'node:fs';
-import { globPaths } from '#cli/system/files.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { parseMiseTasks } from '#cli/parsers/mise.ts';
-import { readSource } from '#cli/system/file-reads.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
+import { globPaths } from '#cli/system/files/folders.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
-import { includeParentFolders } from '#cli/system/paths.ts';
 import { TRAILING_SLASH } from '#cli/config/system/paths.ts';
-import { executableNames } from '#cli/system/executables.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/parsers/output.ts';
 import { LICENSE_FILE } from '#cli/config/repository/inventory.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
@@ -20,6 +18,7 @@ import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { scopeOf, isInScope, joinScope } from '#cli/repository/scopes.ts';
 import type { PathIndex, TaskSources } from '#cli/types/checks/general.ts';
+import { executableNames, includeParentFolders } from '#cli/system/paths.ts';
 import { MISE_FILES, RUNNER_NAMES, MISE_TASKS_FOLDER } from '#cli/config/repository/tooling.ts';
 
 import {

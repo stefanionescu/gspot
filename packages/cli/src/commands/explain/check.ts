@@ -1,6 +1,6 @@
 // Explain a check, or one rule of the tool a check runs.
-import { compact } from '#cli/objects.ts';
-import { quoteArgument } from '#cli/text.ts';
+import { compact } from '#cli/system/values.ts';
+import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { configurationSettings } from '#cli/settings/view.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';

@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { createReadCache } from '#cli/system/files/cache.ts';
+import { readText, readPrefix, readSource } from '#cli/system/files/reads.ts';
 import { rm, link, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { readText, readPrefix, readSource, createReadCache } from '#cli/system/file-reads.ts';
 
 test('reads tell a missing optional file, required bytes, and invalid UTF-8 apart', async () => {
     await using directory = await testdir();

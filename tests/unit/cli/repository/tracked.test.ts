@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
 import * as processes from '#cli/system/processes.ts';
 import { readRepository } from '#cli/repository/read.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { findRoot, isGitRepository } from '#cli/repository/find-root.ts';

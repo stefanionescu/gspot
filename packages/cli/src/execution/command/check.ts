@@ -1,15 +1,15 @@
 import { join, relative } from 'node:path';
 import { toPosix } from '#cli/system/paths.ts';
-import { readText } from '#cli/system/file-reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { emptyResult } from '#cli/execution/report.ts';
 import { checkInput } from '#cli/execution/built-in.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import { RAN_STATUSES } from '#cli/config/execution/run.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { coverageArguments } from '#cli/planning/checks.ts';
 import { checkCompanions } from '#cli/planning/needed-tools.ts';
 import type { ExecutionFailure } from '#cli/types/tools/run.ts';
 import { copyIntoScratch } from '#cli/execution/copy/scratch.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { batchedCommands } from '#cli/execution/command/batches.ts';

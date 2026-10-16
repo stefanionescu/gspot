@@ -1,8 +1,8 @@
 // Add written configuration choices through the settings transaction.
-import { compact } from '#cli/objects.ts';
-import { GspotError } from '#cli/errors.ts';
-import { printResult } from '#cli/terminal/print.ts';
+import { compact } from '#cli/system/values.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
+import { printResult } from '#cli/system/terminal.ts';
 import { findScopeTable } from '#cli/settings/edit.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';

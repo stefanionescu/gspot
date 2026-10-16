@@ -1,5 +1,5 @@
 // Retains TOML comments at their syntax entries.
-import { valueAt } from '#cli/objects.ts';
+import { valueAt } from '#cli/system/values.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 

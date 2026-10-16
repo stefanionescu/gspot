@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { parseComments } from '#cli/parsers/comments.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { COMMENT_MARKERS } from '#cli/config/checks/general/structure.ts';

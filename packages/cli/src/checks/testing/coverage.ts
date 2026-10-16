@@ -1,5 +1,5 @@
-import { decodeUtf8 } from '#cli/text.ts';
 import { join, relative } from 'node:path';
+import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { type CheckInput } from '#cli/types/execution/check.ts';
 import { type CoverageReport } from '#cli/types/checks/testing.ts';

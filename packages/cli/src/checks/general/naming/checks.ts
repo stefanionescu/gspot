@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { isCovered } from '#cli/repository/select.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { scopeOf, isInScope } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { namingDefaults } from '#cli/configurations/manifests.ts';

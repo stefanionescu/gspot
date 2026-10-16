@@ -1,4 +1,4 @@
-import { positionAt } from '#cli/text.ts';
+import { positionAt } from '#cli/system/text.ts';
 import { sqlTokens } from '#cli/parsers/sql/lexer.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { SqlNamed, Identifier } from '#cli/types/checks/general.ts';

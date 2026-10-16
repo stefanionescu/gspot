@@ -1,4 +1,4 @@
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 

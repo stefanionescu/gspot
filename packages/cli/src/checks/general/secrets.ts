@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { GspotError } from '#cli/errors.ts';
 import { gitText } from '#cli/system/git.ts';
 import { findingAt } from '#cli/checks/finding.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';

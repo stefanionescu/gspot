@@ -1,5 +1,5 @@
-import { GspotError } from '#cli/errors.ts';
-import { isRecord, isRecordArray } from '#cli/objects.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { isRecord, isRecordArray } from '#cli/system/values.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { TomlTable, LayoutSection } from '#cli/types/settings/file.ts';

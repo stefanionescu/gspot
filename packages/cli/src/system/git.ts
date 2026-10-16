@@ -1,8 +1,7 @@
 // Runs Git commands with repository environment isolation.
-// Runs Git commands with repository environment isolation.
 import { resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { TRAILING_NEWLINE } from '#cli/config/text.ts';
 import { run, runBlocking } from '#cli/system/processes.ts';
 import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';

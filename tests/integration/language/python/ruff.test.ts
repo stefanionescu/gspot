@@ -13,8 +13,8 @@ import { containingAll } from '#tests/setup/matchers.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
+import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
 import { toolsPath, installToolProjects } from '#tests/setup/install.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/executables.ts';
 
 import {
     VERSION_SOURCE,

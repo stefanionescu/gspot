@@ -12,7 +12,7 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { gitignoreBlock } from '#cli/generation/files.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { installToolProjects } from '#tests/setup/install.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/executables.ts';
+import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
 
 import {
     PYTHON_INDEX_NAME,

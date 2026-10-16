@@ -1,10 +1,11 @@
 import { posix } from 'node:path';
 import { coveredBy } from '#cli/repository/select.ts';
+import { memoized } from '#cli/system/files/cache.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
 import { MIGRATION_VERSION } from '#cli/config/parsers/sql.ts';
 import type { Migration } from '#cli/types/checks/database.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { memoized, readSource } from '#cli/system/file-reads.ts';
 import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
 import { MIGRATION_DOWN, DOWN_MIGRATION_SUFFIX } from '#cli/config/checks/database.ts';
 

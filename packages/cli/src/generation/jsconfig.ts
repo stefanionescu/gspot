@@ -1,4 +1,4 @@
-import { valueAt } from '#cli/objects.ts';
+import { valueAt } from '#cli/system/values.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { join, dirname, relative } from 'node:path';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';

@@ -1,9 +1,9 @@
 // Authored source selectors that match no tracked file or folder.
 
 import { findingAt } from '#cli/checks/finding.ts';
-import { valueAt, isRecord } from '#cli/objects.ts';
 import { everyTable } from '#cli/settings/inherit.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
+import { valueAt, isRecord } from '#cli/system/values.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';

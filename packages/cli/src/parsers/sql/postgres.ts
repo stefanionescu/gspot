@@ -1,11 +1,11 @@
 // Reads PostgreSQL statements and their parse trees.
 // SQL payloads use PostgreSQL's node union; procedural output has a separate external shape.
-import { memo } from '#cli/system/file-reads.ts';
+import { memo } from '#cli/system/files/cache.ts';
 import type { Parsed } from '#cli/types/errors.ts';
 import { maskPsqlSyntax } from '#cli/parsers/sql/lexer.ts';
-import { positionAt, codePointLength } from '#cli/text.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { Node, RawStmt, ParseResult } from '@pgsql/types';
+import { positionAt, codePointLength } from '#cli/system/text.ts';
 import type { SqlFile, SqlNodeFields, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
 
 const SQL_MEMO = { create: () => new Map<string, Promise<SqlFile>>() };

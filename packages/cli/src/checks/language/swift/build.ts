@@ -1,9 +1,10 @@
 import { join, posix, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
+import { memoized } from '#cli/system/files/cache.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { targetInScope } from '#cli/repository/scopes.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
-import { memoized, readText } from '#cli/system/file-reads.ts';
 import { toPosix, toolOutputPath } from '#cli/system/paths.ts';
 import { toolFindings } from '#cli/execution/command/output.ts';
 import { type SafeFolder } from '#cli/types/system/safe-folder.ts';

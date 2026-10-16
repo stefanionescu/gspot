@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { readJson } from '#cli/parsers/json.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';

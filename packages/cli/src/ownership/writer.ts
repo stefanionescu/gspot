@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
+import { sameEntry } from '#cli/system/files/entries.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import { WRITER_LOCK_FILE } from '#cli/config/ownership.ts';
-import { sameEntry } from '#cli/system/safe-folder/reads.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
 
 // Remove empty folders left by a removed generated file.

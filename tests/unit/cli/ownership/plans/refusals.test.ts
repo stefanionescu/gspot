@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { fileMode } from '#cli/system/safe-folder/reads.ts';
+import { fileMode } from '#cli/system/files/entries.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { writePlans, openWriter } from '#cli/ownership/writer.ts';
 import { OWNERSHIP_REFUSAL } from '#tests/config/generated-files.ts';

@@ -1,5 +1,5 @@
 // Checking every revision a push sends, each in its own copy, with one report for the push.
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { checkTree } from '#cli/commands/check/tree.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';

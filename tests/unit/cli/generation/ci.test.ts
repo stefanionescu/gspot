@@ -1,8 +1,8 @@
 import { parse } from 'yaml';
 import { join, delimiter } from 'node:path';
-import { quoteArgument } from '#cli/text.ts';
 import { chmod, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
+import { quoteArgument } from '#cli/system/text.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';

@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { valueAt } from '#cli/objects.ts';
+import { valueAt } from '#cli/system/values.ts';
 import { readTree } from '#tests/setup/files.ts';
 import { containing } from '#tests/setup/matchers.ts';
 import { settingsText } from '#tests/setup/settings.ts';

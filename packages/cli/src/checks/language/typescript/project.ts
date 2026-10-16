@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import assert from 'node:assert/strict';
-import { memo } from '#cli/system/file-reads.ts';
+import { memo } from '#cli/system/files/cache.ts';
 import { emptyResult } from '#cli/execution/report.ts';
 import { coveredInputs } from '#cli/planning/checks.ts';
 import { toPosix, isInside } from '#cli/system/paths.ts';

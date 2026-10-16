@@ -1,7 +1,7 @@
 // Detects configurations from repository files and dependencies.
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
 import { extensionOf } from '#cli/system/paths.ts';
-import { readText } from '#cli/system/file-reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { npmToolNames } from '#cli/configurations/tool-pins.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';

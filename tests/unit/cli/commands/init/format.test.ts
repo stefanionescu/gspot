@@ -4,7 +4,7 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { parseTemplate } from '#cli/settings/templates.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readFormatTables } from '#cli/commands/init/format.ts';
 import type { SettingsDraft } from '#cli/types/commands/init.ts';
 import { initSettingsText } from '#cli/commands/init/settings-text.ts';

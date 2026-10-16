@@ -2,15 +2,16 @@
 import { z } from 'zod';
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
+import { memo } from '#cli/system/files/cache.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { toPosix, isInside } from '#cli/system/paths.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { memo, readText } from '#cli/system/file-reads.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { join, dirname, resolve, relative } from 'node:path';
+import { portableSegments } from '#cli/system/files/names.ts';
 import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
-import { portableSegments } from '#cli/system/safe-folder/names.ts';
 import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 import { TSCONFIG_FILE, TS_NO_INPUTS_CODE, TS_EMPTY_FILES_CODE } from '#cli/config/parsers/tsconfig.ts';
 

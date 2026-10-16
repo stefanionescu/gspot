@@ -1,6 +1,6 @@
 // The plan initialization shows before writing files, including dry runs.
-import { compact } from '#cli/objects.ts';
-import { colors } from '#cli/terminal/print.ts';
+import { compact } from '#cli/system/values.ts';
+import { colors } from '#cli/system/terminal.ts';
 import { readLintJobs } from '#cli/repository/tooling.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import type { Manifest } from '#cli/types/configurations.ts';

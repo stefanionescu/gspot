@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import { GspotError } from '#cli/errors.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/parsers/dependency-files.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { PIP_INSTALL, INSTALL_EXTENSIONS } from '#cli/config/checks/language/python.ts';

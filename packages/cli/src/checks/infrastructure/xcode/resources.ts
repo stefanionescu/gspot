@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { camelCase } from 'scule';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { parseJsonDocument } from '#cli/parsers/json.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { findingAt, sourcePaths } from '#cli/checks/finding.ts';

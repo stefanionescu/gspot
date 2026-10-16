@@ -1,7 +1,7 @@
 import { emitAll } from '#cli/generation/files.ts';
 import { readSettings } from '#cli/settings/read.ts';
-import { printResult } from '#cli/terminal/print.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
+import { printResult } from '#cli/system/terminal.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { installTools } from '#cli/install/install.ts';
 import { findRoot } from '#cli/repository/find-root.ts';

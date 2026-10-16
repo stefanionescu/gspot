@@ -5,11 +5,11 @@ import type { Session } from '#cli/types/planning.ts';
 import { listStrayPaths } from '#cli/ownership/plans.ts';
 import { staleLockfiles } from '#cli/tools/lockfiles.ts';
 import { DIFF_CONTEXT_LINES } from '#cli/config/apply.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import { currentBlock } from '#cli/system/managed-blocks.ts';
 import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
 import { parseToolProject } from '#cli/parsers/tool-project.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 

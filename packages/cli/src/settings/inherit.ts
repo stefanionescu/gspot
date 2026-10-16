@@ -7,7 +7,7 @@ import { commandSchema } from '#cli/configurations/schema/parts.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/scopes.ts';
 import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
-import { compact, valueAt, isRecord, createTable } from '#cli/objects.ts';
+import { compact, valueAt, isRecord, createTable } from '#cli/system/values.ts';
 import { ALL_LANGUAGES, CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/values.ts';
 
 import type {

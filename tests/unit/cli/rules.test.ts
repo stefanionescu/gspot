@@ -8,9 +8,9 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import { managedBlock, selectRuleFiles } from '#cli/rules.ts';
 import { RULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import { test, spyOn, expect, describe, beforeAll } from 'bun:test';
+import { managedBlock, selectRuleFiles } from '#cli/generation/rules.ts';
 import { allChecks, configurationManifests } from '#cli/configurations/manifests.ts';
 import { DRIZZLE_DRIVERS, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests/config/rules.ts';
 

@@ -1,16 +1,16 @@
 // Selects positional repository paths and refuses unknown check IDs.
 // Checking one tree: the working tree, or a copy of the index or of a pushed commit.
-import { codeList } from '#cli/text.ts';
-import { compact } from '#cli/objects.ts';
-import { GspotError } from '#cli/errors.ts';
 import { resolve, relative } from 'node:path';
+import { codeList } from '#cli/system/text.ts';
+import { compact } from '#cli/system/values.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { hookStatus } from '#cli/install/hooks.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { warn, colors } from '#cli/terminal/print.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { runText } from '#cli/terminal/check-report.ts';
+import { warn, colors } from '#cli/system/terminal.ts';
+import { runText } from '#cli/commands/check/report.ts';
 import { toPosix, isInside } from '#cli/system/paths.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';

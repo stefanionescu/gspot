@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { quoteArgument } from '#cli/text.ts';
+import { quoteArgument } from '#cli/system/text.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { JsonValue } from '#cli/types/parsers/json.ts';
 import type { TableSettings } from '#cli/types/settings/tables.ts';

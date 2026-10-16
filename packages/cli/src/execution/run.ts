@@ -1,14 +1,14 @@
 import pLimit from 'p-limit';
-import { GspotError } from '#cli/errors.ts';
 import { availableParallelism } from 'node:os';
+import { GspotError } from '#cli/system/errors.ts';
 import { applyFixers } from '#cli/execution/fixes.ts';
 import { activeIgnores } from '#cli/settings/view.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { findTool } from '#cli/execution/command/tool.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
 import { fileDeclarations } from '#cli/repository/select.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import type { IgnoreEntry } from '#cli/types/settings/file.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';

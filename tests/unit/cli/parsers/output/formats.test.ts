@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { join, win32 } from 'node:path';
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { isLinux } from '#tests/setup/operating-systems.ts';
 import { commandOutcome } from '#cli/execution/command/output.ts';

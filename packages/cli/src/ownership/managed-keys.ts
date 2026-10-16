@@ -1,7 +1,7 @@
-import { decodeUtf8 } from '#cli/text.ts';
 import { isDeepStrictEqual } from 'node:util';
-import { normalizeTables } from '#cli/objects.ts';
 import { openJsonFile } from '#cli/parsers/json.ts';
+import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import { normalizeTables } from '#cli/system/values.ts';
 import { openTomlFile } from '#cli/parsers/toml/document.ts';
 import type { FileCopy } from '#cli/types/system/safe-folder.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';

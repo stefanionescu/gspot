@@ -1,9 +1,9 @@
 // Discovers project scopes and resolves paths within them.
 import picomatch from 'picomatch';
 import { realpathSync } from 'node:fs';
-import { GspotError } from '#cli/errors.ts';
 import type { Package } from '@manypkg/tools';
-import { memo } from '#cli/system/file-reads.ts';
+import { memo } from '#cli/system/files/cache.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { posix, basename, relative } from 'node:path';
 import { toPosix, isInside } from '#cli/system/paths.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';

@@ -1,6 +1,6 @@
-import { quoteArgument } from '#cli/text.ts';
 import { Scalar, Document, stringify } from 'yaml';
 import { systemSkip } from '#cli/planning/skips.ts';
+import { quoteArgument } from '#cli/system/text.ts';
 import { name as cliName } from '../../package.json';
 import { TOOL_BUILDS } from '#cli/config/configurations.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';

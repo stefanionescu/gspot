@@ -1,5 +1,5 @@
-import { compact } from '#cli/objects.ts';
-import { GspotError } from '#cli/errors.ts';
+import { compact } from '#cli/system/values.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { coveredBy } from '#cli/repository/select.ts';
 import { isOutsideChildren } from '#cli/repository/scopes.ts';
 import { currentOperatingSystem } from '#cli/system/environment.ts';

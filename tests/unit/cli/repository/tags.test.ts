@@ -3,7 +3,7 @@ import { tagEntry } from '#cli/repository/tags.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { SHEBANGS } from '#tests/config/repository.ts';
 import { readRepository } from '#cli/repository/read.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 test('tags and kinds come from the extension, the file name, and the content', async () => {

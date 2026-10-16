@@ -1,11 +1,11 @@
 // Reads spelling findings from Typos reports.
 import { z } from 'zod';
-import { GspotError } from '#cli/errors.ts';
 import { resolve, relative } from 'node:path';
 import { toPosix } from '#cli/system/paths.ts';
-import { codePointLength } from '#cli/text.ts';
 import { LINE_FEED } from '#cli/config/text.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { codePointLength } from '#cli/system/text.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
 import type { TypoEntry } from '#cli/types/parsers/output.ts';

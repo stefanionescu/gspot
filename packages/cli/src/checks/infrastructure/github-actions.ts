@@ -1,5 +1,5 @@
 import { join, posix } from 'node:path';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { GIT_FOLDER } from '#cli/config/repository/tracked.ts';

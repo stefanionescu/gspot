@@ -1,8 +1,8 @@
-import { GspotError } from '#cli/errors.ts';
-import { compact, isRecord } from '#cli/objects.ts';
-import { printResult } from '#cli/terminal/print.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
-import { counted } from '#cli/terminal/check-report.ts';
+import { printResult } from '#cli/system/terminal.ts';
+import { counted } from '#cli/commands/check/report.ts';
+import { compact, isRecord } from '#cli/system/values.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';

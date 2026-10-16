@@ -1,5 +1,5 @@
 // Foreign key columns that no index leads with, read from the schema the migrations build.
-import { positionAt } from '#cli/text.ts';
+import { positionAt } from '#cli/system/text.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';

@@ -1,5 +1,5 @@
 // Writes cross-platform test programs and pinned npm tool executables.
-import { quoteArgument } from '#cli/text.ts';
+import { quoteArgument } from '#cli/system/text.ts';
 import { join, dirname, basename } from 'node:path';
 import { EXECUTABLE_MODE } from '#tests/config/files.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';

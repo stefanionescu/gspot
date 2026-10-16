@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
 import { containing, textContaining } from '#tests/setup/matchers.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';

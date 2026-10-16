@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { compact } from '#cli/objects.ts';
+import { compact } from '#cli/system/values.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { toolsSchema } from '#cli/settings/schema/tools.ts';
 import { TABLE_FIELDS } from '#cli/config/settings/values.ts';

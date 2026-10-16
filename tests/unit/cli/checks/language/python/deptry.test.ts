@@ -6,9 +6,9 @@ import { openSession } from '#cli/commands/session.ts';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
+import { virtualEnvironmentBin } from '#cli/system/paths.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
-import { virtualEnvironmentBin } from '#cli/system/executables.ts';
 
 test('deptry skips a scope without pyproject.toml', async () => {
     await using sandbox = await testdir();

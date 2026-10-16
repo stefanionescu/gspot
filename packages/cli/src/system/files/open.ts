@@ -1,20 +1,19 @@
-// Opens a safe folder with confined reads and writes.
-// The sorted names in a directory inside the root, or none when the entry does not exist.
+// Opens confined file handles and walks files under their root.
 import type { Stats } from 'node:fs';
-import { replaceEntry } from '#cli/system/safe-folder/writes.ts';
-import { takeLock, releaseLocks } from '#cli/system/safe-folder/lock.ts';
-import { systemSegments, portableSegments } from '#cli/system/safe-folder/names.ts';
+import { sourcePath } from '#cli/system/files/reads.ts';
+import { takeLock, releaseLocks } from '#cli/system/files/lock.ts';
+import { systemSegments, portableSegments } from '#cli/system/files/names.ts';
 import type { FileCopy, PathFormat, SafeFolder, SafeFolderState } from '#cli/types/system/safe-folder.ts';
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
 
 import {
     readEntry,
     sameEntry,
-    sourcePath,
     checkedPath,
+    replaceEntry,
     preparedPath,
     validateCopy,
-} from '#cli/system/safe-folder/reads.ts';
+} from '#cli/system/files/entries.ts';
 
 // The stat of an entry inside the root excluding links, or undefined when the entry does not exist.
 function statOf(bounds: SafeFolderState, path: string): Stats | undefined {

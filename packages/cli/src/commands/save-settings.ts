@@ -1,6 +1,6 @@
-import { GspotError } from '#cli/errors.ts';
 import { emitAll } from '#cli/generation/files.ts';
-import { noteLines } from '#cli/terminal/print.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { noteLines } from '#cli/system/terminal.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { openSession } from '#cli/commands/session.ts';

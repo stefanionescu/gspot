@@ -1,5 +1,5 @@
 // Reads committed Git entries and blob contents.
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { runGit, runGitForBytes } from '#cli/system/git.ts';
 import { readIndexEntries } from '#cli/repository/tracked.ts';

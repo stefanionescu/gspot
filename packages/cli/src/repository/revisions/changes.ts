@@ -1,5 +1,5 @@
 // Selects files changed between repository revisions.
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { readHead } from '#cli/repository/revisions/objects.ts';
 import { runGit, gitText, gitLines, gitPaths, isShallow } from '#cli/system/git.ts';
 import type { StagedPaths, ChangedPaths, CommitSelection } from '#cli/types/repository/revisions.ts';

@@ -1,13 +1,13 @@
 // The check command's flags, its pre-push input, and the cancellation the termination signals cause.
-import { compact } from '#cli/objects.ts';
-import { GspotError } from '#cli/errors.ts';
 import { addAbortSignal } from 'node:stream';
 import { resolve, relative } from 'node:path';
+import { compact } from '#cli/system/values.ts';
 import { constants, accessSync } from 'node:fs';
+import { GspotError } from '#cli/system/errors.ts';
 import { Option } from '@commander-js/extra-typings';
-import { printResult } from '#cli/terminal/print.ts';
+import { printResult } from '#cli/system/terminal.ts';
 import { checkTree } from '#cli/commands/check/tree.ts';
-import { progress } from '#cli/terminal/check-report.ts';
+import { progress } from '#cli/commands/check/report.ts';
 import type { Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';

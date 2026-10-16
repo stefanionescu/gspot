@@ -1,6 +1,6 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { parseOutput } from '#cli/parsers/output/formats.ts';
 import { INVALID_KNIP_REPORTS } from '#tests/config/knip.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';

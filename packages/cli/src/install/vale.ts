@@ -1,11 +1,11 @@
-import { GspotError } from '#cli/errors.ts';
 import { runTool } from '#cli/tools/run.ts';
 import { toPosix } from '#cli/system/paths.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, resolve } from 'node:path';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/find.ts';
 import { installationDiagnostics } from '#cli/tools/diagnostics.ts';

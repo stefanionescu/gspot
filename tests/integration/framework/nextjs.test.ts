@@ -7,7 +7,7 @@ import { containing } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
 import { installedModules } from '#tests/setup/modules.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { prepareInstalledSandbox } from '#tests/setup/sandbox.ts';

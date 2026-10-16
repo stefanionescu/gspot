@@ -1,6 +1,6 @@
-import { GspotError } from '#cli/errors.ts';
 import { registerAdd } from '#cli/commands/add.ts';
 import { registerSet } from '#cli/commands/set.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { registerList } from '#cli/commands/list.ts';
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { registerApply } from '#cli/commands/apply.ts';
@@ -17,7 +17,7 @@ import packageManifest from '#cli-package' with { type: 'json' };
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
 import { Command, CommanderError } from '@commander-js/extra-typings';
-import { printError, isColorAllowed, configureOutput } from '#cli/terminal/print.ts';
+import { printError, isColorAllowed, configureOutput } from '#cli/system/terminal.ts';
 
 function printFailure(error: unknown, isJson: boolean): number {
     if (error instanceof CommanderError) {

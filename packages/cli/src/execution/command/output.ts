@@ -1,6 +1,6 @@
 import { statSync } from 'node:fs';
-import { GspotError } from '#cli/errors.ts';
 import { join, isAbsolute } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { toolOutputPath } from '#cli/system/paths.ts';
 import { toolTimeoutSeconds } from '#cli/tools/run.ts';

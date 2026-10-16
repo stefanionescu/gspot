@@ -1,4 +1,4 @@
-import { colors } from '#cli/terminal/print.ts';
+import { colors } from '#cli/system/terminal.ts';
 import { expectedPaths } from '#cli/apply/stale.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { type Writer } from '#cli/types/ownership.ts';

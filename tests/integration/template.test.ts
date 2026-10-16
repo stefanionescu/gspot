@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { contentDigest } from '#cli/text.ts';
 import { commitAll } from '#tests/setup/git.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { contentDigest } from '#cli/system/text.ts';
 import { parseTomlText } from '#cli/settings/file.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';

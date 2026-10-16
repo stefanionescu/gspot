@@ -4,7 +4,7 @@
 import { posix } from 'node:path';
 import { tagEntry } from '#cli/repository/tags.ts';
 import { extensionOf } from '#cli/system/paths.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { blockSpan } from '#cli/system/managed-blocks.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { MARKERS } from '#cli/config/system/managed-blocks.ts';

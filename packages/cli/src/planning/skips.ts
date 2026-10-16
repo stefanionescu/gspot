@@ -1,5 +1,5 @@
 import ignore from 'ignore';
-import { readText } from '#cli/system/file-reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { TOOL_IGNORE_ARGUMENT } from '#cli/config/planning.ts';
 import { missingBuild } from '#cli/configurations/tool-pins.ts';
 import { coversScope, projectDependencies } from '#cli/repository/scopes.ts';

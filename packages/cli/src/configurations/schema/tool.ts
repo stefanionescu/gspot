@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { compact } from '#cli/objects.ts';
+import { compact } from '#cli/system/values.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { ToolInput, ToolFields, InstallerPin, ToolDeclaration } from '#cli/types/configurations.ts';
 import { regexSchema, commandSchema, conditionSchema, versionFloorSchema } from '#cli/configurations/schema/parts.ts';

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { GspotError } from '#cli/errors.ts';
 import { createRequire } from 'node:module';
 import { findingAt } from '#cli/checks/finding.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';

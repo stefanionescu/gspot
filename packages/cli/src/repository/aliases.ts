@@ -1,6 +1,6 @@
 // Resolves package and TypeScript import aliases.
-import { isRecord } from '#cli/objects.ts';
 import { toPosix } from '#cli/system/paths.ts';
+import { isRecord } from '#cli/system/values.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';

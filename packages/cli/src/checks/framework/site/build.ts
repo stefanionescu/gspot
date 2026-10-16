@@ -1,13 +1,13 @@
 import { join, relative } from 'node:path';
-import { GspotError } from '#cli/errors.ts';
-import { memo } from '#cli/system/file-reads.ts';
+import { memo } from '#cli/system/files/cache.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import { listFolderFiles } from '#cli/system/files.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { toPosix, isInside } from '#cli/system/paths.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { portableSegments } from '#cli/system/files/names.ts';
+import { listFolderFiles } from '#cli/system/files/folders.ts';
 import { type SiteBuild } from '#cli/types/checks/framework.ts';
-import { portableSegments } from '#cli/system/safe-folder/names.ts';
 import { OUTPUT_TAIL_LINES } from '#cli/config/checks/framework/site.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';

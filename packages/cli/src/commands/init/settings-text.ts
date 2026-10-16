@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
-import { compact } from '#cli/objects.ts';
 import { setKey } from '#cli/settings/edit.ts';
+import { compact } from '#cli/system/values.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readGitSetting } from '#cli/system/git.ts';
 import { emitSettings } from '#cli/settings/file.ts';
-import { readText } from '#cli/system/file-reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { detectedDefaults } from '#cli/settings/view.ts';
 import { readLintJobs } from '#cli/repository/tooling.ts';
 import { selectForScope } from '#cli/repository/select.ts';

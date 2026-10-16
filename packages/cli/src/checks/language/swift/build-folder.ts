@@ -1,16 +1,16 @@
-import { GspotError } from '#cli/errors.ts';
-import { contentDigest } from '#cli/text.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { toPosix } from '#cli/system/paths.ts';
 import { join, posix, relative } from 'node:path';
-import { readSource } from '#cli/system/file-reads.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { contentDigest } from '#cli/system/text.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { cacheDirectory } from '#cli/system/environment.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/system/modes.ts';
+import { openSafeFolder, walkSafeFolder } from '#cli/system/files/open.ts';
 import type { FileCopy, SafeFolder } from '#cli/types/system/safe-folder.ts';
-import { openSafeFolder, walkSafeFolder } from '#cli/system/safe-folder/open.ts';
 import type { SwiftBuildPlan, SwiftBuildPurpose, PreparedSwiftBuild } from '#cli/types/checks/language.ts';
 
 import {

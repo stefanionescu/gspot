@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { valueAt, isRecord } from '#cli/objects.ts';
-import { similar, codeList, quoteArgument } from '#cli/text.ts';
+import { valueAt, isRecord } from '#cli/system/values.ts';
 import type { SettingsError } from '#cli/types/settings/file.ts';
 import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
+import { similar, codeList, quoteArgument } from '#cli/system/text.ts';
 import { isLoosening, reasonError, isReasonNeeded, isReasonAccepted } from '#cli/settings/errors/reasons.ts';
 
 import type {

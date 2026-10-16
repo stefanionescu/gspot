@@ -1,7 +1,7 @@
 import { createTwoFilesPatch } from 'diff';
 import { toPosix } from '#cli/system/paths.ts';
-import { readSource } from '#cli/system/file-reads.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
+import { readSource } from '#cli/system/files/reads.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';

@@ -1,5 +1,5 @@
 import { join } from 'node:path/posix';
-import { readText } from '#cli/system/file-reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/planning.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { PBXPROJ_NAME } from '#cli/config/parsers/xcode.ts';

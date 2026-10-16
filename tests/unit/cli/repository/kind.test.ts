@@ -7,8 +7,8 @@ import { headerFor } from '#cli/generation/headers.ts';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { readRepository } from '#cli/repository/read.ts';
-import { createReadCache } from '#cli/system/file-reads.ts';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 

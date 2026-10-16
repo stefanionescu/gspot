@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 
 test('rmdir refuses linked and outside parents and keeps folders that are not empty', async () => {
     await using sandbox = await testdir();

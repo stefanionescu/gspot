@@ -1,5 +1,5 @@
 // The report a run ends with: every result, the ignores that matched, the skips, and the exit code.
-import { quoteArgument } from '#cli/text.ts';
+import { quoteArgument } from '#cli/system/text.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { FAILED_STATUSES, INCOMPLETE_STATUSES } from '#cli/config/execution/run.ts';

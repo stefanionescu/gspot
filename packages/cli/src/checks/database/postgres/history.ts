@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { memoized } from '#cli/system/file-reads.ts';
+import { memoized } from '#cli/system/files/cache.ts';
 import { FROZEN_NONE } from '#cli/config/parsers/sql.ts';
 import { MIGRATION_DOWN } from '#cli/config/checks/database.ts';
 import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';

@@ -2,8 +2,8 @@
 import { parse as parseToml } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
 import { PATCH_FORMAT } from '#cli/config/parsers/toml.ts';
-import { valueAt, isRecord, normalizeTables } from '#cli/objects.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
+import { valueAt, isRecord, normalizeTables } from '#cli/system/values.ts';
 import type { TomlInput, TomlSyntax, TomlComments, TomlTextChunk, TomlTableOptions } from '#cli/types/parsers/toml.ts';
 
 import {

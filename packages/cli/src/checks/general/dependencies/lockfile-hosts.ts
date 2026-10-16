@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/system/file-reads.ts';
+import { readSource } from '#cli/system/files/reads.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { LOCKFILE_URL, NPM_DOWNLOAD, BINARY_BUN_LOCKFILE } from '#cli/config/checks/general/dependencies.ts';

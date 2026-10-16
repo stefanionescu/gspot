@@ -1,6 +1,6 @@
 // What init replaces: the tool files of the selected tools, read before init writes anything.
 import type { FileEdit } from '#cli/types/ownership.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
+import { openSafeFolder } from '#cli/system/files/open.ts';
 import type { ReplacedFiles } from '#cli/types/commands/init.ts';
 import type { Tooling, FoundToolFile } from '#cli/types/repository/inventory.ts';
 

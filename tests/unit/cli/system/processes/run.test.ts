@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { chmod } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
+import { executableNames } from '#cli/system/paths.ts';
 import { prepareCommand } from '#tests/setup/processes.ts';
 import { run, runBlocking } from '#cli/system/processes.ts';
-import { executableNames } from '#cli/system/executables.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 

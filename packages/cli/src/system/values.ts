@@ -1,3 +1,4 @@
+// Reads and changes parsed values and tables.
 import type { Defined } from '#cli/types/objects.ts';
 
 /**

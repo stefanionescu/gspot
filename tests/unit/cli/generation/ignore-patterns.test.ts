@@ -1,8 +1,8 @@
 import prettier from 'prettier';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { valueAt } from '#cli/objects.ts';
 import { parse, stringify } from 'smol-toml';
+import { valueAt } from '#cli/system/values.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitFile } from '#tests/setup/generate.ts';

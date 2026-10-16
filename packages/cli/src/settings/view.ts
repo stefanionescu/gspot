@@ -2,7 +2,7 @@
 // configurations override an earlier scalar default; other scalar disagreements produce conflicts.
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { memo } from '#cli/system/file-reads.ts';
+import { memo } from '#cli/system/files/cache.ts';
 import { coversScope } from '#cli/repository/scopes.ts';
 import { toolsSchema } from '#cli/settings/schema/tools.ts';
 import type { IgnoreEntry } from '#cli/types/settings/file.ts';

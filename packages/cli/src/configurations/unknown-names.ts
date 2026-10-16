@@ -1,4 +1,4 @@
-import { similar, codeList } from '#cli/text.ts';
+import { similar, codeList } from '#cli/system/text.ts';
 import type { Manifest, UnknownConfiguration, ConfigurationDeclaration } from '#cli/types/configurations.ts';
 
 /**

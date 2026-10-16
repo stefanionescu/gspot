@@ -1,8 +1,8 @@
-import { compact } from '#cli/objects.ts';
-import { GspotError } from '#cli/errors.ts';
-import { quoteArgument } from '#cli/text.ts';
-import { printResult } from '#cli/terminal/print.ts';
+import { compact } from '#cli/system/values.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { quoteArgument } from '#cli/system/text.ts';
 import { parseSettings } from '#cli/settings/read.ts';
+import { printResult } from '#cli/system/terminal.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
