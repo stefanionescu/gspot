@@ -1,6 +1,7 @@
 ---
 title: Ignore a finding
 description: Record an ignore with a reason, then inspect or remove it.
+tableOfContents: false
 ---
 
 ```shell

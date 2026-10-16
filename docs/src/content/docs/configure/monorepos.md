@@ -42,8 +42,8 @@ To see the scope and the checks of a file, run `gspot explain` with the path. St
 with `./` when it also names a configuration or a check: `gspot explain bash` explains the configuration, and
 a path prefixed with `./` explains the file.
 
-When a tool needs its own tool file per scope, gspot writes it under
-`.gspot/config/<path>/`.
+When a scope needs a tool file with other text than the shared copy, gspot writes it to
+`.gspot/config/<tool>/<scope path>/<file>`.
 
 ## Settings in a scope
 

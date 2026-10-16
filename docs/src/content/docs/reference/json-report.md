@@ -4,7 +4,7 @@ description: Read check reports and command errors as JSON.
 ---
 
 Use `gspot check --json` to write one report to standard output. The process exit code matches `exitCode`.
-Diagnostics remain on standard error. Run from any folder in the repository.
+Progress and error text stay on standard error. Run from any folder in the repository.
 
 ```shell
 gspot check --json

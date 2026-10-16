@@ -10,7 +10,7 @@ To create a Python library, run `uv init --lib` in the repository root. Then ins
 ```shell
 uv sync
 mise exec -- gspot install
-mise exec -- gspot check --only python/ruff python/pyright
+mise exec -- gspot check --only python/ruff python/basedpyright
 ```
 
 An explicit `[tool.pydoclint]` style in `pyproject.toml` wins. Otherwise, pydoclint follows the project Ruff pydocstyle convention, then `tools.ruff.docstring_convention` when it equals `google` or `numpy`. Without a declared style, gspot detects sections that use Google or NumPy conventions in source docstrings. Other conventions do not select a pydoclint style. If neither a declaration nor the source selects a style, pydoclint uses its default.

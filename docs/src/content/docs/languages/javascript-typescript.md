@@ -100,9 +100,9 @@ See the [JavaScript configuration](/reference/configurations/javascript/) for se
 
 ## Next.js
 
-Next.js builds run at `all` when the selected scope contains an `app/`, `src/app/`,
-`pages/`, or `src/pages/` tree. The project must provide a supported Next.js executable
-and the dependencies its build needs. `recommended` retains the Next.js type check.
+The Next.js configuration runs `nextjs/tsc` instead of `typescript/tsc`, at level `recommended` and stage `push`.
+The check has Next.js write its types, then type-checks the app with the strict compiler options. The project must
+provide Next.js 15.5 or later. The Next.js Semgrep rules run in `security/semgrep`.
 
 ## React Native
 

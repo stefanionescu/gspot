@@ -17,8 +17,8 @@ Run `gspot add jest`, then run the coverage check:
 gspot check --only jest/coverage
 ```
 
-The check runs Jest in a copy of your sources, so your working tree and reports stay unchanged. Failed tests and missed coverage limits exit with `1`. A suite that cannot load, or a missing
-report, exits with `2`.
+The check runs Jest in your working tree. Failed tests and missed coverage limits exit with `1`. A suite that cannot
+load, or a missing report, exits with `2`.
 
 To require full function coverage:
 
