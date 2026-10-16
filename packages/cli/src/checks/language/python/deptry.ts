@@ -8,9 +8,9 @@ import { childScopes } from '#cli/planning/files.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import { buildUvRunCommand } from '#cli/tools/python/project.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
-import { pythonProjectCommand } from '#cli/tools/python/project.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { DEPTRY_COMMAND, DEPTRY_EXCLUDE_FLAG } from '#cli/config/checks/language/python.ts';
@@ -38,7 +38,7 @@ export async function deptry(session: Session, planned: PlannedCheck): Promise<C
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
     const exclusions: string[] = deptrySchema.parse(parse(text)).tool.deptry.extend_exclude;
     return await runCheckCommand(session, planned, {
-        command: pythonProjectCommand(planned.scope, join(session.root, planned.scope.scope.path), [
+        command: buildUvRunCommand(planned.scope, join(session.root, planned.scope.scope.path), [
             ...DEPTRY_COMMAND,
             ...[
                 String.raw`(^|.*[/\\])${RegExp.escape(DOT_GSPOT)}([/\\]|$)`,

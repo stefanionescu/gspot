@@ -47,7 +47,7 @@ function emitWorkflow(session: Session, generated: Generated): void {
     generated.files.push(
         (settings.ci.provider === 'github' ? githubFile : gitlabFile)({
             version,
-            npmClient: session.npmClient(),
+            npmClient: session.getPackageManager(),
             setupCommand: settings.ci.setup_command,
             operatingSystems: settings.ci.operating_systems,
             hasSwift: isConfigurationSelected(scopes, SWIFT_CONFIGURATION),
@@ -166,7 +166,7 @@ export function emitAll(session: Session): Generated {
         scopes,
     } = session;
     const { root, files } = repository;
-    const npmClient = session.npmClient();
+    const npmClient = session.getPackageManager();
     const manifests = session.neededToolManifests;
     const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const checks = session.configuredChecks;

@@ -149,11 +149,6 @@ allowed_names = ["resolved"]
 reason = "The npm lockfile format names each package download URL resolved."
 
 [[naming.override]]
-paths = ["packages/cli/src/tools/npm/project.ts"]
-allowed_names = ["assertWrapperVersion", "resolveNpmLockfile", "runNpmWrappersOnce"]
-reason = "The final placement keeps these package-manager wrapper and lockfile calculation names."
-
-[[naming.override]]
 paths = ["packages/cli/src/types/generation/eslint.ts"]
 allowed_names = ["customSyntax"]
 reason = "Stylelint names its parser option customSyntax."
@@ -165,12 +160,12 @@ reason = "Zod names its schema information property _zod."
 
 [[naming.override]]
 paths = ["packages/cli/src/tools/npm/package-manager.ts"]
-allowed_names = ["package-manager", "packageManagerDeclarationSchema", "packageManagerSchema", "parsePackageManagerField", "readPackageManagerDeclaration"]
+allowed_names = ["detectPackageManager", "package-manager", "packageManager", "packageManagerDeclarationSchema", "packageManagerSchema", "parsePackageManagerField", "readPackageManagerDeclaration", "readPackageManagerVersion", "selectPackageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
 paths = ["packages/cli/src/commands/session.ts"]
-allowed_names = ["packageManager"]
+allowed_names = ["getPackageManagerIdentity", "packageManager", "packageManagerIdentity", "packageManagerState"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
@@ -180,17 +175,32 @@ reason = "The repository Names table requires package manager for npm, pnpm, Yar
 
 [[naming.override]]
 paths = ["packages/cli/src/tools/npm/tool-project.ts"]
-allowed_names = ["packageManagerName"]
+allowed_names = ["packageManager", "packageManagerName"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
 paths = ["packages/cli/src/types/planning.ts"]
-allowed_names = ["requirePackageManager"]
+allowed_names = ["getPackageManager", "requirePackageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
 paths = ["packages/cli/src/types/tools/project.ts"]
-allowed_names = ["requirePackageManager"]
+allowed_names = ["PackageManagerArguments", "PackageManagerCommand", "packageManager", "requirePackageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["packages/cli/src/tools/npm/lockfiles.ts"]
+allowed_names = ["packageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["packages/cli/src/tools/npm/project.ts"]
+allowed_names = ["assertPackageManagerVersion", "packageManager", "runPackageManager", "selectPackageManagerArguments"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/parsers/dependency-files.ts"]
+allowed_names = ["PackageManager", "PackageManagerDeclaration"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [architecture.roles]

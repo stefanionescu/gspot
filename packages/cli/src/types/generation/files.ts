@@ -4,8 +4,8 @@ import type { HOOK_ARGS } from '#cli/config/generation/hooks.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
-import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 import { type FileCopy, type ReadCache } from '#cli/types/system/files.ts';
+import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 import type { Manifest, ToolDeclaration, ToolFileDeclaration } from '#cli/types/configurations.ts';
 
 /** Applicable checks and their required tools at one generation boundary. */
@@ -95,7 +95,7 @@ export type NpmProjectInputs = {
     root: string;
     scopes: ScopeSelection[];
     manifests: Manifest[];
-    installer: NpmClient | undefined;
+    installer: PackageManager | undefined;
 };
 
 export type SwiftVersionInput = { root: string; scope: string; reads: ReadCache };

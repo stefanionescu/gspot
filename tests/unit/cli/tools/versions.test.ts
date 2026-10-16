@@ -1,8 +1,8 @@
 import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { inspectTool } from '#cli/tools/find.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildProgramPin } from '#tests/setup/pins.ts';

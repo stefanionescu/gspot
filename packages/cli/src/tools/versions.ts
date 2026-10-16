@@ -15,7 +15,7 @@ import { TOOL_ENV, NO_VERSION, VERSION_FLAG } from '#cli/config/tools/run.ts';
 import type { ToolInspection, ParsedToolVersion } from '#cli/types/tools/find.ts';
 
 // The version the first package.json above a folder declares for the named package, searching upward.
-function versionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
+function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
         const manifest = join(folder, 'package.json');
         if (files !== undefined && !isInGspotFolder(convertToPosixPath(relative(root, manifest)))) return undefined;
@@ -34,7 +34,7 @@ function versionAbove(files: Files | undefined, root: string, start: string, nam
  *
  * @returns the declared version, or undefined when no package.json above the file names the package.
  */
-function packageVersion(root: string, path: string, name: string | undefined): string | undefined {
+function readPackageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
     using files = isInGspotFolder(convertToPosixPath(relative(root, path))) ? openFiles(root) : undefined;
     const folder = dirname(
@@ -43,16 +43,16 @@ function packageVersion(root: string, path: string, name: string | undefined): s
     // A Windows shim in node_modules/.bin has its own file, so find its package
     // found by name beside that folder.
     const start = basename(folder) === basename(NPM_BIN_FOLDER) ? join(dirname(folder), name) : folder;
-    return versionAbove(files, root, start, name);
+    return findVersionAbove(files, root, start, name);
 }
 
-function parsedVersion(text: string, tool: ToolDeclaration): string | undefined {
+function extractVersion(text: string, tool: ToolDeclaration): string | undefined {
     if (tool.version_pattern === undefined) return semver.coerce(text)?.version;
     const match = new RegExp(tool.version_pattern, 'u').exec(text);
     return match?.[1] ?? match?.[0];
 }
 
-function versionFailure(
+function findVersionFailure(
     result: SpawnResult,
     tool: ToolDeclaration,
     text: string,
@@ -78,7 +78,7 @@ function versionFailure(
  *
  * @returns ok, outdated below the floor, newer above the pin, or error for no version.
  */
-export function toolVersionState(
+export function classifyToolVersion(
     found: string,
     want: string | undefined,
     floor: string | undefined,
@@ -110,7 +110,7 @@ export function readToolVersion(
     timeoutSeconds: number,
 ): ParsedToolVersion {
     const npm = tool.installers['npm'];
-    const installedVersion = packageVersion(root, path, npm?.name);
+    const installedVersion = readPackageVersion(root, path, npm?.name);
     const result = spawnProcessBlocking([path, ...(tool.version_command ?? [VERSION_FLAG])], {
         cwd,
         timeoutSeconds: timeoutSeconds,
@@ -139,20 +139,20 @@ export function isBelowFloor(found: string | undefined, floor: string | undefine
  *
  * @param tool the declared tool and its installation pin.
  * @param result the completed process result.
- * @param installedPackage the installed package path.
+ * @param installedVersion the installed package path.
  *
  * @returns the parsed version or its inspection failure.
  */
 export function parseVersionOutput(
     tool: ToolDeclaration,
     result: SpawnResult,
-    installedPackage?: string,
+    installedVersion?: string,
 ): ParsedToolVersion {
     const npm = tool.installers['npm'];
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
     // An npm tool reports the version its package declares.
-    const version = (npm?.version === tool.version ? installedPackage : undefined) ?? parsedVersion(text, tool);
-    const failure = versionFailure(result, tool, text, version);
+    const version = (npm?.version === tool.version ? installedVersion : undefined) ?? extractVersion(text, tool);
+    const failure = findVersionFailure(result, tool, text, version);
     if (failure !== undefined) return failure;
     if (version === undefined || semver.coerce(version) === null)
         return { state: 'error', note: `${tool.name} did not report a valid version: ${text}` };

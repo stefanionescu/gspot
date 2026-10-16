@@ -9,8 +9,8 @@ import { readBlock } from '#cli/system/managed-blocks.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
-import { staleLockfiles } from '#cli/tools/project-lockfiles.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
+import { listStaleLockfiles } from '#cli/tools/project-lockfiles.ts';
 
 import {
     UV_LOCKFILE,
@@ -91,7 +91,7 @@ export function findStaleFiles(
 ): StaleFile[] {
     using files = openFiles(session.root);
     const known = expectedPaths(session, generated);
-    const lockfiles = staleLockfiles(session, generated.files);
+    const lockfiles = listStaleLockfiles(session, generated.files);
     const strays = listStrayPaths(session, known).map((path): StaleFile => ({ path, kind: 'stray' }));
     return [
         ...lockfiles.flatMap(({ path, kind }) => (kind === undefined ? [] : [{ path, kind }])),

@@ -8,8 +8,8 @@ import type { SchemaShape } from '#cli/types/objects.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { toolFindings } from '#cli/execution/command/output.ts';
+import { buildUvRunCommand } from '#cli/tools/python/project.ts';
 import { hasIniSection } from '#cli/repository/existing-tools.ts';
-import { pythonProjectCommand } from '#cli/tools/python/project.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { BROKEN_CONTRACT, IMPORT_LINTER_FILES, LINT_IMPORTS_COMMAND } from '#cli/config/checks/language/python.ts';
@@ -50,7 +50,7 @@ export async function importLinter(input: CheckInput): Promise<Finding[]> {
     if (configuration === undefined) throw new GspotError('skip', 'This scope has no import-linter configuration.');
     const result = await runCheckTool(
         input,
-        pythonProjectCommand(input.selection, join(input.root, input.selection.scope.path), [
+        buildUvRunCommand(input.selection, join(input.root, input.selection.scope.path), [
             ...LINT_IMPORTS_COMMAND,
             basename(configuration),
         ]),

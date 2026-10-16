@@ -5,14 +5,14 @@ import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { HTTP_URL } from '#cli/config/tools/diagnostics.ts';
-import { registryPasswords } from '#cli/tools/diagnostics.ts';
+import { extractUrlPasswords } from '#cli/tools/credentials.ts';
 import { join, isAbsolute, resolve as absolutePath } from 'node:path';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { URL_SCHEME, INDEX_SETTINGS, UV_SETTINGS_FILE } from '#cli/config/tools/python.ts';
 import type { PythonIndexSettings, PythonSettingsSources } from '#cli/types/tools/project.ts';
 
 // Preserve absolute URLs and paths; resolve an authored local index against its repository.
-function indexLocation(root: string, value: string): string {
+function normalizeIndexLocation(root: string, value: string): string {
     if (URL_SCHEME.test(value)) return value;
     if (isAbsolute(value)) return value;
     return absolutePath(root, value);
@@ -67,14 +67,14 @@ export function parsePythonSettings(root: string, sources: PythonSettingsSources
         selected['find-links'] = z
             .array(z.string())
             .parse(selected['find-links'])
-            .map((value) => indexLocation(root, value));
+            .map((value) => normalizeIndexLocation(root, value));
     if (selected['index'] !== undefined)
         selected['index'] = z
             .array(uvIndexSchema)
             .parse(selected['index'])
             .map((index) => ({
                 ...index,
-                url: indexLocation(root, index.url),
+                url: normalizeIndexLocation(root, index.url),
             }));
     const credentials = Object.entries(selected).flatMap(([key, value]) => {
         const entries: unknown[] = Array.isArray(value) ? value : [value];
@@ -82,7 +82,7 @@ export function parsePythonSettings(root: string, sources: PythonSettingsSources
             key === 'index'
                 ? entries.map((entry) => uvIndexSchema.parse(entry).url)
                 : entries.filter((entry) => typeof entry === 'string');
-        return settingEntries.filter((value) => HTTP_URL.test(value)).flatMap((value) => registryPasswords(value));
+        return settingEntries.filter((value) => HTTP_URL.test(value)).flatMap((value) => extractUrlPasswords(value));
     });
     return { settings: selected, credentials };
 }

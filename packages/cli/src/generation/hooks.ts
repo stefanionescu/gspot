@@ -1,9 +1,9 @@
 import { name as cliName } from '../../package.json';
-import { selectNpmClient } from '#cli/tools/npm/client.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
 import { readGitPrefix, isGitRepository } from '#cli/system/git.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
+import { selectPackageManager } from '#cli/tools/npm/package-manager.ts';
 import type { HookName, StartRunner, GeneratedFile } from '#cli/types/generation/files.ts';
 import { RUNNERS, HOOK_ARGS, HOOK_SHEBANG, COMMIT_MESSAGE_PATH_LINES } from '#cli/config/generation/hooks.ts';
 
@@ -35,7 +35,7 @@ export async function startRunner(root: string): Promise<StartRunner> {
     const manifest = readPackageJson(root, 'package.json');
     const hasDependency =
         manifest?.dependencies?.[cliName] !== undefined || manifest?.devDependencies?.[cliName] !== undefined;
-    const client = hasDependency ? await selectNpmClient(root, []) : undefined;
+    const client = hasDependency ? await selectPackageManager(root, []) : undefined;
     const name = client === undefined ? 'mise' : client.name;
     const runner = RUNNERS[name];
     return { name, ...runner, pin: runner.pin.replace('<package>', cliName) };

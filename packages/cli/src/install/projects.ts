@@ -41,7 +41,7 @@ export async function installToolProjects(context: InstallContext): Promise<stri
                 }),
             ),
     );
-    if (session.npmClient() !== undefined) {
+    if (session.getPackageManager() !== undefined) {
         notes.push(await installNpmTools(session, log.files, tools, steps));
     }
     if (uvPath !== undefined && toolProjectPins(manifests).python.length > 0) {

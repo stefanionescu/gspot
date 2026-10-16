@@ -11,7 +11,7 @@ import { fakeCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
-import { registryEnvironment } from '#cli/tools/npm/registry.ts';
+import { readRegistryEnvironment } from '#cli/tools/npm/registry.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/parsers/dependency-files.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/tools/npm/project.ts';
@@ -60,7 +60,7 @@ test('registry settings from the repository .npmrc authenticate an isolated proj
     const missing = await runTool(command, {
         timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         cwd: isolated.path,
-        env: await registryEnvironment(repository.path),
+        env: await readRegistryEnvironment(repository.path),
     });
     expect(missing.code).not.toBe(0);
     expect(requests.rejected).toBeGreaterThan(0);
@@ -70,7 +70,7 @@ test('registry settings from the repository .npmrc authenticate an isolated proj
     const corrected = await runTool(command, {
         timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         cwd: isolated.path,
-        env: await registryEnvironment(repository.path),
+        env: await readRegistryEnvironment(repository.path),
     });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(JSON.parse(corrected.stdout)).toBe('1.0.0');
@@ -251,6 +251,6 @@ test.each([
 ])('invalid .npmrc settings keep their error for $source', async ({ source, message: diagnostic }) => {
     await using repository = await testdir();
     await createFileTree(repository.path, { '.npmrc': source, 'package.json': '{"private":true}\n' });
-    expect(await rejection(registryEnvironment(repository.path))).toBe(diagnostic);
+    expect(await rejection(readRegistryEnvironment(repository.path))).toBe(diagnostic);
     expect(await readFile(join(repository.path, '.npmrc'), 'utf8')).toBe(source);
 });

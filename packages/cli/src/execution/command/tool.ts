@@ -5,13 +5,13 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import type { ToolSearch } from '#cli/types/tools/find.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { checkCompanions } from '#cli/planning/needed-tools.ts';
-import { runTool, toolTimeoutSeconds } from '#cli/tools/run.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
-import { inspectTool, toolAvailability } from '#cli/tools/find.ts';
+import { runTool, getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import { executionFailure } from '#cli/execution/command/output.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
+import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import type { ToolRunOptions, ToolAvailability } from '#cli/types/tools/run.ts';
 import { environmentKey, readEnvironmentVariable } from '#cli/system/environment.ts';
 
@@ -54,7 +54,7 @@ export async function runPlannedTool(
     view: ScopeView,
     name: string,
 ): Promise<PlannedToolResult> {
-    const result = await runTool(argv, { ...options, timeoutSeconds: toolTimeoutSeconds(view) });
+    const result = await runTool(argv, { ...options, timeoutSeconds: getToolTimeoutSeconds(view) });
     return { result, failure: executionFailure(result, name, view) };
 }
 
@@ -74,7 +74,7 @@ export function findTool(
     tool: ToolDeclaration,
     env?: Record<string, string>,
 ): ToolAvailability {
-    return toolAvailability(tool, inspectTool({ ...session, cwd }, env === undefined ? tool : { ...tool, env }));
+    return buildToolAvailability(tool, inspectTool({ ...session, cwd }, env === undefined ? tool : { ...tool, env }));
 }
 
 // A nested tool runs from its selected installation even inside a scratch copy.

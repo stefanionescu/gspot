@@ -1,11 +1,11 @@
 import { expectedPaths } from '#cli/apply/stale.ts';
-import type { Writer } from '#cli/types/ownership.ts';
-import type { Session } from '#cli/types/planning.ts';
+import { type Writer } from '#cli/types/ownership.ts';
+import { type Session } from '#cli/types/planning.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
 import { writeVersionPin } from '#cli/apply/version-pin.ts';
-import type { Generated } from '#cli/types/generation/files.ts';
-import { staleLockfiles } from '#cli/tools/project-lockfiles.ts';
-import type { ApplyReport, WriteRequest } from '#cli/types/apply.ts';
+import { type Generated } from '#cli/types/generation/files.ts';
+import { listStaleLockfiles } from '#cli/tools/project-lockfiles.ts';
+import { type ApplyReport, type WriteRequest } from '#cli/types/apply.ts';
 import { writePlans, notOverwrittenError } from '#cli/ownership/writer.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { planBlock, planRemoval, listStrayPaths, planManagedKeys, planReplacement } from '#cli/ownership/plans.ts';
@@ -130,7 +130,7 @@ export function writeGeneratedFiles(
             report.written.includes(file.path) &&
             (file.kind === 'lock' || [NPM_TOOL_PROJECT_FILE, PYTHON_TOOL_PROJECT_FILE].includes(file.path)),
     );
-    const hasDrift = staleLockfiles(session, generated.files).some((lockfile) => lockfile.kind !== undefined);
+    const hasDrift = listStaleLockfiles(session, generated.files).some((lockfile) => lockfile.kind !== undefined);
     if (dependenciesChanged || hasDrift) report.notes.push('Tool dependencies need installation. Run: gspot install');
     if (generated.fileEdits.length > 0)
         report.notes.push(

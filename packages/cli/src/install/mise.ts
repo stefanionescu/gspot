@@ -4,14 +4,14 @@ import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { systemSkip } from '#cli/planning/skips.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
-import type { Session } from '#cli/types/planning.ts';
+import { type Session } from '#cli/types/planning.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
-import type { InstallContext } from '#cli/types/install.ts';
+import { type InstallContext } from '#cli/types/install.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
+import { redactInstallOutput } from '#cli/tools/credentials.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
-import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
-import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import { locateCandidates, readMiseBinPaths } from '#cli/tools/find.ts';
+import { type ToolDeclaration } from '#cli/types/configurations.ts';
+import { locateCandidates, readMiseBinPaths } from '#cli/tools/locate.ts';
 import { MISE_TRUST_ARGUMENTS, MISE_INSTALL_ARGUMENTS } from '#cli/config/install.ts';
 import { pinOf, misePins, missingBuild, toolProjectPins } from '#cli/configurations/tool-pins.ts';
 
@@ -77,7 +77,7 @@ export async function installMiseTools(context: InstallContext): Promise<string>
         if (result.code !== 0)
             throw new GspotError(
                 'installation',
-                `The command ${command.join(' ')} failed (exit ${String(result.code)}):\n${installationDiagnostics(result, [])}`,
+                `The command ${command.join(' ')} failed (exit ${String(result.code)}):\n${redactInstallOutput(result, [])}`,
             );
     }
     session.miseBinPaths = readMiseBinPaths(

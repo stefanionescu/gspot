@@ -23,9 +23,9 @@ import { prepareLockfiles } from '#cli/tools/project-lockfiles.ts';
 import { selectLockfileName } from '#cli/tools/npm/tool-project.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 import { testModules, installedModules } from '#tests/setup/modules.ts';
 import type { LockedInputs, ToolProjectFiles } from '#tests/types/npm.ts';
+import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/e2e.ts';
 import { open, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
@@ -257,7 +257,7 @@ export async function writeLockedInputs(root: string, suppliedLog?: Writer): Pro
     }
     await prepareLockfiles(session, generated.files, log.files, []);
     writeGeneratedFiles(session, generated, log);
-    const client = session.npmClient();
+    const client = session.getPackageManager();
     const inputs = client === undefined ? undefined : await readToolProjectFiles(root, client.name);
     const lockfilePath = join(root, '.gspot/uv.lock');
     return {
@@ -283,7 +283,7 @@ export async function installCompiler(root: string, folder = join(root, 'node_mo
 }
 
 /** Captures the generated manifest, lockfile, and ownership bytes before an installation journey. */
-export async function readToolProjectFiles(root: string, installer: NpmClient['name']): Promise<ToolProjectFiles> {
+export async function readToolProjectFiles(root: string, installer: PackageManager['name']): Promise<ToolProjectFiles> {
     const lockfilePath = join(root, '.gspot', selectLockfileName(installer));
     await using lockfile = await open(lockfilePath, 'r');
     const attributes = await lockfile.stat();

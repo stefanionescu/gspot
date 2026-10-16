@@ -2,7 +2,7 @@ import { statSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { toolTimeoutSeconds } from '#cli/tools/run.ts';
+import { getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import { normalizeOutputPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { TAIL_LINES } from '#cli/config/execution/command.ts';
@@ -238,7 +238,7 @@ export function executionFailure(
     if (result.isTimedOut === true)
         return {
             status: 'error',
-            note: `${name} ran longer than tool_timeout_seconds (${String(toolTimeoutSeconds(view))}s) and was stopped.`,
+            note: `${name} ran longer than tool_timeout_seconds (${String(getToolTimeoutSeconds(view))}s) and was stopped.`,
         };
     if (result.missing) return { status: 'missing', note: `${name} could not be started: ${result.stderr.trim()}` };
     if (result.isErrored === true)

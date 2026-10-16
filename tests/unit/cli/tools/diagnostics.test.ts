@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
 import { INSTALL_OUTPUT_LIMIT } from '#cli/config/tools/diagnostics.ts';
 import { LEAKED_LOCKFILES, REGISTRY_PASSWORDS } from '#tests/config/tools.ts';
-import { registryPasswords, installationDiagnostics, assertCredentialFreeLockfile } from '#cli/tools/diagnostics.ts';
+import { extractUrlPasswords, redactInstallOutput, assertCredentialFreeLockfile } from '#cli/tools/credentials.ts';
 
 test.each(REGISTRY_PASSWORDS)('registry passwords are read in both encodings from %s', (url, expected) => {
-    expect(registryPasswords(url)).toStrictEqual([...expected]);
+    expect(extractUrlPasswords(url)).toStrictEqual([...expected]);
 });
 
 test.each(LEAKED_LOCKFILES)('a lockfile that holds %s is refused', (lockfile) => {
@@ -16,7 +16,7 @@ test.each(LEAKED_LOCKFILES)('a lockfile that holds %s is refused', (lockfile) =>
 
 test('installation output hides the password in a registry URL', () => {
     expect(
-        installationDiagnostics(
+        redactInstallOutput(
             { stdout: '', stderr: 'GET https://alex:unknown-password@registry.example.com/private-tool: 404' },
             [],
         ),
@@ -26,7 +26,7 @@ test('installation output hides the password in a registry URL', () => {
 test('installation output hides known passwords in raw, URL-encoded, and base64 form before it is shortened', () => {
     const credential = 'synthetic-secret/with spaces';
     const printed = [credential, encodeURIComponent(credential), Buffer.from(credential).toString('base64')];
-    const output = installationDiagnostics(
+    const output = redactInstallOutput(
         { stdout: 'Earlier output\n'.repeat(INSTALL_OUTPUT_LIMIT), stderr: `Missing tool: ${printed.join(' ')}` },
         [credential],
     );

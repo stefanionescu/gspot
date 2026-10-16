@@ -17,8 +17,8 @@ import { HTTP_URL } from '#cli/config/tools/diagnostics.ts';
 import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
 import { selectLockfileName } from '#cli/tools/npm/tool-project.ts';
 import { PNPM_ROOT_IMPORTER } from '#cli/config/parsers/lockfiles.ts';
-import type { BunPackage, NpmClientRun } from '#cli/types/tools/project.ts';
-import type { NpmClient, DependencyMap } from '#cli/types/parsers/dependency-files.ts';
+import type { BunPackage, PackageCommandResult } from '#cli/types/tools/project.ts';
+import type { DependencyMap, PackageManager } from '#cli/types/parsers/dependency-files.ts';
 import { INTEGRITY, NPM_SETTING_PREFIX, YARN_DESCRIPTOR_SEPARATOR } from '#cli/config/tools/npm.ts';
 
 const devDependenciesSchema = z.object({
@@ -61,7 +61,10 @@ const bunPackagesSchema = z.looseObject({ packages: z.record(z.string(), z.array
 const bunPackageSchema = z.tuple([z.string(), z.string(), z.record(z.string(), z.unknown()), z.string()]);
 
 // Whether a parsed Yarn lockfile resolves each requested descriptor to its pinned version.
-function yarnMatches(entries: Record<string, { version?: string | undefined }>, dependencies: DependencyMap): boolean {
+function isYarnLockfileCurrent(
+    entries: Record<string, { version?: string | undefined }>,
+    dependencies: DependencyMap,
+): boolean {
     return Object.entries(dependencies).every(([dependency, version]) =>
         Object.entries(entries).some(([descriptors, entry]) => {
             const requested = new Set(descriptors.split(YARN_DESCRIPTOR_SEPARATOR));
@@ -74,7 +77,7 @@ function yarnMatches(entries: Record<string, { version?: string | undefined }>, 
 }
 
 // The registry a package resolves through: its scope's, or the default one.
-function registryFor(name: string, env: Record<string, string>): string | undefined {
+function findPackageRegistry(name: string, env: Record<string, string>): string | undefined {
     const scope = name.startsWith('@') ? name.split('/', 1)[0] : undefined;
     const scopeRegistry = scope === undefined ? undefined : env[`${NPM_SETTING_PREFIX}${scope}:registry`];
     return scopeRegistry ?? env[`${NPM_SETTING_PREFIX}registry`];
@@ -87,7 +90,7 @@ function isStandardTarball(entry: BunPackage, env: Record<string, string>): bool
     const name = identity.slice(0, separator);
     const version = identity.slice(separator + 1);
     if (semver.valid(version) === null || !INTEGRITY.test(integrity)) return false;
-    const registry = registryFor(name, env);
+    const registry = findPackageRegistry(name, env);
     if (registry === undefined) return false;
     const base = registry.endsWith('/') ? registry : `${registry}/`;
     const filename = posix.basename(name);
@@ -95,7 +98,7 @@ function isStandardTarball(entry: BunPackage, env: Record<string, string>): bool
 }
 
 // The registry-relative form of a resolved URL under the registry, or undefined when it lies elsewhere.
-function relativeReference(address: string, base: URL): string | undefined {
+function stripRegistryPrefix(address: string, base: URL): string | undefined {
     if (!HTTP_URL.test(address)) return undefined;
     const url = new URL(address);
     if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname)) return undefined;
@@ -117,7 +120,7 @@ function stripYarnRegistryUrls(content: string, registry: string): string {
     const base = new URL(registry.endsWith('/') ? registry : `${registry}/`);
     let edited = content;
     for (const entry of Object.values(expected)) {
-        const relative = entry.resolved === undefined ? undefined : relativeReference(entry.resolved, base);
+        const relative = entry.resolved === undefined ? undefined : stripRegistryPrefix(entry.resolved, base);
         if (relative === undefined) continue;
         edited = edited.replaceAll(JSON.stringify(entry.resolved), JSON.stringify(relative));
         entry.resolved = relative;
@@ -157,7 +160,7 @@ function stripBunRegistryUrls(content: string, env: Record<string, string>): str
  *
  * @returns the dependencies recorded for the root project.
  */
-function rootLockfileDependencies(name: Exclude<NpmClient['name'], 'yarn'>, content: string): DependencyMap {
+function parseRootDependencies(name: Exclude<PackageManager['name'], 'yarn'>, content: string): DependencyMap {
     if (name === 'npm' || name === 'bun') {
         const root =
             name === 'npm'
@@ -181,13 +184,13 @@ function rootLockfileDependencies(name: Exclude<NpmClient['name'], 'yarn'>, cont
  *
  * @returns true when the lockfile matches.
  */
-export function lockfileMatches(name: NpmClient['name'], content: string, dependencies: DependencyMap): boolean {
+export function isLockfileCurrent(name: PackageManager['name'], content: string, dependencies: DependencyMap): boolean {
     try {
         if (name === 'yarn') {
             const parsed = yarnLockfileSchema.safeParse(parseSyml(content));
-            return parsed.success && yarnMatches(parsed.data, dependencies);
+            return parsed.success && isYarnLockfileCurrent(parsed.data, dependencies);
         }
-        return isDeepStrictEqual(rootLockfileDependencies(name, content), dependencies);
+        return isDeepStrictEqual(parseRootDependencies(name, content), dependencies);
     } catch {
         return false;
     }
@@ -197,15 +200,19 @@ export function lockfileMatches(name: NpmClient['name'], content: string, depend
  * Remove registry locations from portable lockfile bytes.
  *
  * @param work the tool project directory.
- * @param client the selected package manager.
+ * @param packageManager the selected package manager.
  * @param root0 the values for this generated file.
  * @param root0.env the environment for the tool process.
  * @param root0.lockfile the resolved lockfile bytes.
  */
-export function stripRegistryUrls(work: string, client: NpmClient, { env, lockfile }: NpmClientRun): void {
-    const lockfilePath = join(work, selectLockfileName(client.name));
-    if (client.name === 'bun') writeFileSync(lockfilePath, stripBunRegistryUrls(lockfile, env));
-    if (client.name !== 'yarn' || isYarnBerry(client)) return;
+export function stripRegistryUrls(
+    work: string,
+    packageManager: PackageManager,
+    { env, lockfile }: PackageCommandResult,
+): void {
+    const lockfilePath = join(work, selectLockfileName(packageManager.name));
+    if (packageManager.name === 'bun') writeFileSync(lockfilePath, stripBunRegistryUrls(lockfile, env));
+    if (packageManager.name !== 'yarn' || isYarnBerry(packageManager)) return;
     const registry = env[`${NPM_SETTING_PREFIX}registry`];
     if (registry === undefined)
         throw new GspotError('installation', 'A Yarn 1 lockfile needs npm_config_registry to relocate its URLs.');

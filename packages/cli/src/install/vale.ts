@@ -5,10 +5,10 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
+import { redactInstallOutput } from '#cli/tools/credentials.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
-import { inspectTool, toolAvailability } from '#cli/tools/find.ts';
-import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
+import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { DOT_GSPOT, VALE_CONFIG, VALE_PACKAGE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { VALE_STYLES_PATH, VALE_INSTALL_PREFIX, VALE_INSTALL_ARGUMENTS } from '#cli/config/install.ts';
@@ -43,7 +43,7 @@ export async function installValePackages(context: InstallContext): Promise<stri
     const level = search.settingsFile.settings.level;
     if (level === 'recommended') return '';
     const tool = toolDeclaration(search.neededToolManifests, 'vale');
-    const available = toolAvailability(tool, inspectTool(search, tool));
+    const available = buildToolAvailability(tool, inspectTool(search, tool));
     if ('status' in available) throw new GspotError('tool', available.note);
     using files = openFiles(root);
     const temporary = mkdtempSync(join(files.realPath(DOT_GSPOT), VALE_INSTALL_PREFIX));
@@ -71,7 +71,7 @@ export async function installValePackages(context: InstallContext): Promise<stri
             },
             {
                 matches: result.code !== 0,
-                message: `Vale sync failed (exit ${String(result.code)}):\n${installationDiagnostics(result, [])}`,
+                message: `Vale sync failed (exit ${String(result.code)}):\n${redactInstallOutput(result, [])}`,
             },
         ].find(({ matches }) => matches);
         if (failure !== undefined) throw new GspotError('installation', failure.message);

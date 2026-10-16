@@ -5,7 +5,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, resolve } from 'node:path';
 import { realpathSync, writeFileSync } from 'node:fs';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
-import { registryPasswords } from '#cli/tools/diagnostics.ts';
+import { extractUrlPasswords } from '#cli/tools/credentials.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import npmDefinitions from '@npmcli/config/lib/definitions/index.js';
 
@@ -85,7 +85,7 @@ export function addEnvironmentReference(env: Record<string, string>, prefix: str
  *
  * @returns the registry secrets that diagnostics must redact.
  */
-export function registryCredentials(env: Record<string, string>): string[] {
+export function extractRegistryCredentials(env: Record<string, string>): string[] {
     const credentials = Object.entries(env)
         .filter(([key]) => CREDENTIAL_KEY.test(key))
         .map(([, value]) => value)
@@ -98,7 +98,7 @@ export function registryCredentials(env: Record<string, string>): string[] {
         });
     const passwords = Object.entries(env)
         .filter(([key]) => CONNECTION_URL_KEY.test(key))
-        .flatMap(([, value]) => registryPasswords(value));
+        .flatMap(([, value]) => extractUrlPasswords(value));
     return [...credentials, ...encoded, ...passwords];
 }
 
@@ -126,7 +126,7 @@ export function writeNpmrc(work: string, env: Record<string, string>): void {
  *
  * @returns the environment variables that carry the registry settings.
  */
-export async function registryEnvironment(root: string): Promise<Record<string, string>> {
+export async function readRegistryEnvironment(root: string): Promise<Record<string, string>> {
     const effective = await readRegistrySettings(root);
     const env: Record<string, string> = Object.fromEntries(
         Object.entries(effective)

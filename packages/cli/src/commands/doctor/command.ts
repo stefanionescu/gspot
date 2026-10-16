@@ -15,7 +15,7 @@ import { colors, printResult } from '#cli/system/terminal.ts';
 import type { ToolInspection } from '#cli/types/tools/find.ts';
 import { listSubmodulePaths } from '#cli/repository/tracked.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
-import { inspectTool, isToolAvailable } from '#cli/tools/find.ts';
+import { inspectTool, isToolAvailable } from '#cli/tools/inspect.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { collectPins, missingBuild } from '#cli/configurations/tool-pins.ts';
 import { type Suggestions, type DoctorReport } from '#cli/types/commands/doctor.ts';

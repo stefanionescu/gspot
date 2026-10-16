@@ -47,6 +47,6 @@ export async function runTool(command: readonly string[], options: ToolRunOption
  *
  * @returns the timeout in seconds.
  */
-export function toolTimeoutSeconds(view: Pick<ScopeView, 'settings'>): number {
+export function getToolTimeoutSeconds(view: Pick<ScopeView, 'settings'>): number {
     return Number(view.settings[TOOL_TIMEOUT_SETTING]);
 }

@@ -12,7 +12,7 @@ import { prepareCommand } from '#tests/setup/processes.ts';
 import { installNpmTools } from '#cli/tools/npm/project.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
-import { selectNpmClient, readNpmClientVersion } from '#cli/tools/npm/client.ts';
+import { selectPackageManager, readPackageManagerVersion } from '#cli/tools/npm/package-manager.ts';
 import { VERSION_SOURCES, NON_EXACT_PNPM_VERSIONS, NPM_CLIENT_DECLARATIONS } from '#tests/config/npm.ts';
 
 test('without a declaration or Bun on PATH, the tool project uses npm at the version it prints', async () => {
@@ -21,17 +21,17 @@ test('without a declaration or Bun on PATH, the tool project uses npm at the ver
     await createFileTree(bin.path, { npm: '#!/bin/sh\necho 10.9.0\n', 'npm.cmd': '@echo 10.9.0\r\n' });
     await chmod(join(bin.path, 'npm'), 0o755);
     using _environment = useEnvironment({ PATH: bin.path });
-    const installer = await selectNpmClient(sandbox.path, []);
+    const installer = await selectPackageManager(sandbox.path, []);
     expect(installer).toStrictEqual({ name: 'npm' });
     expect(
-        readNpmClientVersion(sandbox.path, installer, rootSettingSchemas.tool_timeout_seconds.parse(undefined)),
+        readPackageManagerVersion(sandbox.path, installer, rootSettingSchemas.tool_timeout_seconds.parse(undefined)),
     ).toStrictEqual({ name: 'npm', version: '10.9.0' });
 });
 
 test.each([...NPM_CLIENT_DECLARATIONS])('%s names the npm client and its version', async (_, files, expected) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, files);
-    const { name, version } = await selectNpmClient(sandbox.path, []);
+    const { name, version } = await selectPackageManager(sandbox.path, []);
     expect([name, version]).toStrictEqual(expected.split('@'));
 });
 
@@ -42,7 +42,7 @@ test.each([...NON_EXACT_PNPM_VERSIONS])(
         await createFileTree(sandbox.path, {
             'package.json': manifest,
         });
-        expect(await rejection(selectNpmClient(sandbox.path, []))).toContain('needs an exact pnpm version');
+        expect(await rejection(selectPackageManager(sandbox.path, []))).toContain('needs an exact pnpm version');
     },
 );
 
@@ -60,8 +60,8 @@ test.each([...VERSION_SOURCES])(
         await createFileTree(repository.path, { 'gspot.toml': settingsText([]) });
         const session = await openSession(repository.path);
         using owner = openFiles(repository.path);
-        const identity = await selectNpmClient(repository.path, []);
-        const installer = readNpmClientVersion(
+        const identity = await selectPackageManager(repository.path, []);
+        const installer = readPackageManagerVersion(
             repository.path,
             identity,
             rootSettingSchemas.tool_timeout_seconds.parse(undefined),

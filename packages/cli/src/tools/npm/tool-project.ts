@@ -4,7 +4,7 @@ import semver from 'semver';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
+import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 import type { NpmProjectFile, NpmToolProject } from '#cli/types/tools/project.ts';
 import { DOT_GSPOT, NPM_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
 import type { Lockfile, ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
@@ -32,7 +32,7 @@ const toolProjectSchema = z.strictObject({
  * @param packageManagerName the selected package manager name.
  * @returns the dependencies and selected lockfile path.
  */
-export function parseToolProject(text: string, packageManagerName: NpmClient['name']): NpmToolProject {
+export function parseToolProject(text: string, packageManagerName: PackageManager['name']): NpmToolProject {
     const parsed = toolProjectSchema.parse(parseJsonFile(NPM_TOOL_PROJECT_FILE, text));
     const lockfile = selectLockfileName(packageManagerName);
     return { dependencies: parsed.devDependencies, lockfile, lockfilePath: `${DOT_GSPOT}/${lockfile}` };
@@ -40,12 +40,12 @@ export function parseToolProject(text: string, packageManagerName: NpmClient['na
 
 /**
  * Select the lockfile of a npm tool project's manager.
- * @param npmClient the validated package manager.
+ * @param packageManager the validated package manager.
  * @returns the lockfile basename declared by its registry entry.
  */
-export function selectLockfileName(npmClient: NpmClient['name']): ToolProjectLockfileName {
+export function selectLockfileName(packageManager: PackageManager['name']): ToolProjectLockfileName {
     return (
-        LOCKFILES.filter((entry) => 'toolProject' in entry).find((entry) => entry.client === npmClient) as Extract<
+        LOCKFILES.filter((entry) => 'toolProject' in entry).find((entry) => entry.client === packageManager) as Extract<
             Lockfile,
             { toolProject: true }
         >

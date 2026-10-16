@@ -27,17 +27,35 @@ const yarnConfigEntrySchema = z.object({ key: z.string() } satisfies SchemaShape
 const yarnSettingSchema = z.json();
 
 // Convert connection settings recursively while retaining secrets for redaction.
-function yarnReference(value: unknown, key: string, env: Record<string, string>, secrets: string[]): unknown {
+function convertToReference(value: unknown, key: string, env: Record<string, string>, secrets: string[]): unknown {
     if (typeof value === 'string') {
         if (new Set<string>(YARN_SECRET_KEYS).has(key)) secrets.push(value);
         return addEnvironmentReference(env, YARN_SETTING_VARIABLE_PREFIX, value);
     }
-    if (Array.isArray(value)) return value.map((entry) => yarnReference(entry, key, env, secrets));
+    if (Array.isArray(value)) return value.map((entry) => convertToReference(entry, key, env, secrets));
     if (value !== null && typeof value === 'object')
         return Object.fromEntries(
-            Object.entries(value).map(([name, entry]) => [name, yarnReference(entry, name, env, secrets)]),
+            Object.entries(value).map(([name, entry]) => [name, convertToReference(entry, name, env, secrets)]),
         );
     return value;
+}
+
+function buildEnvironmentSettings(env: Record<string, string>, secrets: string[]): Record<string, unknown> {
+    const environmentSettings = YARN_ENVIRONMENT_SETTINGS.flatMap<[string, unknown]>((source) => {
+        const entries = Object.entries(env).flatMap<[string, unknown]>(([key, value]) => {
+            const name = source.pattern.exec(key)?.[1];
+            return name === undefined
+                ? []
+                : [
+                      [
+                          name,
+                          { ...source.defaults, [source.field]: convertToReference(value, source.field, env, secrets) },
+                      ],
+                  ];
+        });
+        return entries.length === 0 ? [] : [[source.setting, Object.fromEntries(entries)]];
+    });
+    return Object.fromEntries<unknown>(environmentSettings);
 }
 
 /**
@@ -51,7 +69,7 @@ function yarnReference(value: unknown, key: string, env: Record<string, string>,
  *
  * @returns the credential values the lockfile must not contain.
  */
-export async function yarnSettings(
+export async function writeYarnSettings(
     root: string,
     work: string,
     env: Record<string, string>,
@@ -62,20 +80,11 @@ export async function yarnSettings(
     const secrets: string[] = [];
     const registry = env[`${NPM_SETTING_PREFIX}registry`];
     if (registry !== undefined) {
-        settings['npmRegistryServer'] = yarnReference(registry, 'npmRegistryServer', env, secrets);
+        settings['npmRegistryServer'] = convertToReference(registry, 'npmRegistryServer', env, secrets);
         const url = new URL(registry);
         if (url.protocol === 'http:') settings['unsafeHttpWhitelist'] = [url.hostname];
     }
-    const environmentSettings = YARN_ENVIRONMENT_SETTINGS.flatMap((source) => {
-        const entries = Object.entries(env).flatMap(([key, value]) => {
-            const name = source.pattern.exec(key)?.[1];
-            return name === undefined
-                ? []
-                : [[name, { ...source.defaults, [source.field]: yarnReference(value, source.field, env, secrets) }]];
-        });
-        return entries.length === 0 ? [] : [[source.setting, Object.fromEntries(entries)]];
-    });
-    Object.assign(settings, Object.fromEntries(environmentSettings));
+    Object.assign(settings, buildEnvironmentSettings(env, secrets));
     steps.push(YARN_CONFIG_LIST);
     const listed = await runTool(YARN_CONFIG_LIST, { cwd: root, env, timeoutSeconds });
     if (listed.code !== 0)
@@ -97,7 +106,12 @@ export async function yarnSettings(
             env,
         });
         if (read.code !== 0) throw new GspotError('installation', `Cannot read Yarn setting ${entry.key}.`);
-        settings[entry.key] = yarnReference(yarnSettingSchema.parse(JSON.parse(read.stdout)), entry.key, env, secrets);
+        settings[entry.key] = convertToReference(
+            yarnSettingSchema.parse(JSON.parse(read.stdout)),
+            entry.key,
+            env,
+            secrets,
+        );
     }
     writeFileSync(join(work, YARN_INSTALL_SETTINGS_FILE), stringify(settings), { mode: PRIVATE_FILE });
     return secrets.filter((value) => value.length > 0);

@@ -4,11 +4,11 @@ import { parse } from 'smol-toml';
 import { runTool } from '#cli/tools/run.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
-import { unavailableNote } from '#cli/tools/find.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { Files } from '#cli/types/system/files.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { formatUnavailableNote } from '#cli/tools/inspect.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
@@ -19,7 +19,7 @@ import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { normalizePythonPackage } from '#cli/parsers/dependency-files.ts';
 import { parsePythonSettings, writePythonSettings } from '#cli/tools/python/settings.ts';
-import { installationDiagnostics, assertCredentialFreeLockfile } from '#cli/tools/diagnostics.ts';
+import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/tools/credentials.ts';
 import { DOT_GSPOT, UV_LOCKFILE, PYTHON_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
 
 import type {
@@ -51,7 +51,7 @@ function readPythonLockfile(work: string, credentials: string[], project: Python
             'The uv lockfile includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install',
         ),
     );
-    if (!pythonLockfileMatches(project, lockfile))
+    if (!isPythonLockfileCurrent(project, lockfile))
         throw new GspotError(
             'installation',
             'The uv lockfile does not match the tool project. Existing files were preserved.',
@@ -79,7 +79,7 @@ async function runUv({
     if (result.missing)
         throw new GspotError(
             'tool',
-            unavailableNote(toolDeclaration(configurationManifests().values(), UV_TOOL), {
+            formatUnavailableNote(toolDeclaration(configurationManifests().values(), UV_TOOL), {
                 name: UV_TOOL,
                 state: 'missing',
             }),
@@ -87,13 +87,13 @@ async function runUv({
     if (result.code !== 0)
         throw new GspotError(
             'installation',
-            `UV ${String(args[0])} failed (exit ${String(result.code)}). Check Python downloads and index settings, then run: gspot install.\n${installationDiagnostics(result, credentials)}`,
+            `UV ${String(args[0])} failed (exit ${String(result.code)}). Check Python downloads and index settings, then run: gspot install.\n${redactInstallOutput(result, credentials)}`,
         );
     return result;
 }
 
 // Requirements as one text each, with the package name normalized, in order, so a project and its lockfile compare.
-function requirementTexts(requirements: PythonRequirement[]): string[] {
+function normalizeRequirements(requirements: PythonRequirement[]): string[] {
     return requirements
         .map(({ name, specifier }) => `${normalizePythonPackage(name)}${specifier}`)
         .toSorted((left, right) => left.localeCompare(right));
@@ -142,7 +142,7 @@ export async function preparePythonLockfile(
     const project = parse(manifest.content) as PythonToolProject;
     const original = owner.read(UV_LOCKFILE);
     const recorded = original?.bytes.toString('utf8');
-    if (pythonLockfileMatches(project, recorded)) {
+    if (isPythonLockfileCurrent(project, recorded)) {
         const { credentials } = parsePythonSettings(preparation.root, {
             uv: readText(preparation.root, UV_SETTINGS_FILE),
             project: readText(preparation.root, PYPROJECT_TOML),
@@ -231,7 +231,7 @@ export async function installPythonTools(
  *
  * @returns the uv project command without synchronizing the project or its lockfile.
  */
-export function pythonProjectCommand(
+export function buildUvRunCommand(
     selection: ScopeSelection,
     scopeRoot: string,
     command: [string, ...string[]],
@@ -259,7 +259,7 @@ export function pythonProjectCommand(
  *
  * @returns whether both validated inputs describe the same requirements.
  */
-export function pythonLockfileMatches(project: PythonToolProject, lockfile: string | undefined): lockfile is string {
+export function isPythonLockfileCurrent(project: PythonToolProject, lockfile: string | undefined): lockfile is string {
     if (lockfile === undefined) return false;
     const manifest = project.project;
     let document: unknown;
@@ -276,5 +276,5 @@ export function pythonLockfileMatches(project: PythonToolProject, lockfile: stri
     const expected = manifest.dependencies
         .map((value) => value.replace(PINNED_PACKAGE_NAME, normalizePythonPackage))
         .toSorted((left, right) => left.localeCompare(right));
-    return isDeepStrictEqual(requirementTexts(projectEntry.metadata['requires-dist']), expected);
+    return isDeepStrictEqual(normalizeRequirements(projectEntry.metadata['requires-dist']), expected);
 }

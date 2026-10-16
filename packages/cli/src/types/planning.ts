@@ -4,7 +4,7 @@ import type { StartRunner } from '#cli/types/generation/files.ts';
 import type { ParsedLicenses } from '#cli/types/checks/general.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts';
-import type { NpmClient, DependencyFile } from '#cli/types/parsers/dependency-files.ts';
+import type { PackageManager, DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { Manifest, ParsedCheck, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
 /** Settings, repository inventory, and selected configurations shared by planning and generation. */
@@ -23,8 +23,8 @@ export type Session = {
     installedRoot: string;
     reads: ReadCache;
     resources: DisposableStack;
-    npmClient: () => NpmClient | undefined;
-    requirePackageManager: () => NpmClient;
+    getPackageManager: () => PackageManager | undefined;
+    requirePackageManager: () => PackageManager;
     cancelSignal?: AbortSignal | undefined;
     version: string;
     settingsFile: SettingsFile;

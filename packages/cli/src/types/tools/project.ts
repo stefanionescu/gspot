@@ -4,15 +4,15 @@
 
 /** The repository and generated Yarn settings used during package lockfile resolution. */
 /** The repository and declared wrappers verified before installing the package project. */
-import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
+import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 import type { ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
 
 /** One package-manager operation with its repository routing and process limits. */
-export type NpmClientExecution = {
+export type PackageManagerCommand = {
     root: string;
     work: string;
-    client: NpmClient;
-    argv: string[];
+    packageManager: PackageManager;
+    arguments: string[];
     failure: string;
     timeoutSeconds: number;
     steps: (readonly string[])[];
@@ -30,13 +30,13 @@ export type UvExecution = {
 };
 
 /** The isolated execution and credential-free lockfile output. */
-export type NpmClientRun = {
+export type PackageCommandResult = {
     env: Record<string, string>;
     lockfile: string;
 };
 
 /** Native package operations for a declared manager major. */
-export type NpmClientCommands = { lockfile: string[]; install: string[] };
+export type PackageManagerArguments = { lockfile: string[]; install: string[] };
 
 /** Repository identity and the uv executable used during lockfile preparation. */
 export type PythonPreparation = {
@@ -90,4 +90,4 @@ export type NpmProjectFile = {
 };
 
 /** Repository state needed to prepare a locked npm tool project. */
-export type NpmPreparation = { root: string; timeoutSeconds: number; requirePackageManager: () => NpmClient };
+export type NpmPreparation = { root: string; timeoutSeconds: number; requirePackageManager: () => PackageManager };

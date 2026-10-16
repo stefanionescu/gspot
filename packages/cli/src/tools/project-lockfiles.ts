@@ -2,11 +2,11 @@ import { parse as parseToml } from 'smol-toml';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Session } from '#cli/types/planning.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import { lockfileMatches } from '#cli/tools/npm/lockfiles.ts';
 import { prepareNpmLockfile } from '#cli/tools/npm/project.ts';
+import { isLockfileCurrent } from '#cli/tools/npm/lockfiles.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import { preparePythonLockfile, pythonLockfileMatches } from '#cli/tools/python/project.ts';
+import { preparePythonLockfile, isPythonLockfileCurrent } from '#cli/tools/python/project.ts';
 import type { StaleLockfile, PythonToolProject, PythonPreparation } from '#cli/types/tools/project.ts';
 
 import {
@@ -31,7 +31,7 @@ function recordLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
  *
  * @returns missing, mismatched, or current lockfiles.
  */
-export function staleLockfiles(
+export function listStaleLockfiles(
     session: Pick<Session, 'root' | 'requirePackageManager'>,
     generated: GeneratedFile[],
 ): StaleLockfile[] {
@@ -54,8 +54,8 @@ export function staleLockfiles(
             const content = recorded.bytes.toString('utf8');
             const matches =
                 npm === undefined
-                    ? pythonLockfileMatches(python as PythonToolProject, content)
-                    : lockfileMatches(session.requirePackageManager().name, content, npm.dependencies);
+                    ? isPythonLockfileCurrent(python as PythonToolProject, content)
+                    : isLockfileCurrent(session.requirePackageManager().name, content, npm.dependencies);
             return matches ? [{ path }] : [{ path, kind: 'changed' as const }];
         });
 }

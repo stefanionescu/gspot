@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
-import { inspectTool } from '#cli/tools/find.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { findStaleFiles } from '#cli/apply/stale.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';

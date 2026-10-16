@@ -35,7 +35,7 @@ beforeAll(async () => {
         }),
     );
     const session = await openSession(sandbox.path);
-    const client = session.npmClient();
+    const client = session.getPackageManager();
     PIPELINE = {
         ...LINUX_PIPELINE,
         operatingSystems: [...LINUX_PIPELINE.operatingSystems],

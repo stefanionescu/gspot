@@ -1,9 +1,9 @@
 import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { inspectTool } from '#cli/tools/find.ts';
 import { unlink, symlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildLibraryPin } from '#tests/setup/pins.ts';

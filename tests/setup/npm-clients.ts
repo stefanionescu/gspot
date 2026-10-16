@@ -13,8 +13,8 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { createNpmRegistry } from '#tests/setup/install.ts';
 import type { NpmClientSandbox } from '#tests/types/npm.ts';
 import { collectPins } from '#cli/configurations/tool-pins.ts';
-import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
+import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 
 import {
     PNPM_WORKSPACE,
@@ -29,7 +29,7 @@ async function writeNpmClientSandbox(options: {
     root: string;
     artifacts: string;
     registry: NpmRegistry;
-    installer: NpmClient['name'];
+    installer: PackageManager['name'];
     projectPath: string;
 }): Promise<Pick<NpmClientSandbox, 'rootPackage' | 'yarnConfiguration' | 'version'>> {
     const { root, artifacts, registry, installer, projectPath } = options;
@@ -64,7 +64,7 @@ async function writeNpmClientSandbox(options: {
 
 /** Creates an authenticated registry and an authored project for a package manager. */
 export async function createNpmClientSandbox(
-    installer: NpmClient['name'],
+    installer: PackageManager['name'],
     projectPath: string,
 ): Promise<NpmClientSandbox> {
     const resources = new AsyncDisposableStack();

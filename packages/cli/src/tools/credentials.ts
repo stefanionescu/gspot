@@ -24,12 +24,12 @@ export function assertCredentialFreeLockfile(lockfile: string, credentials: stri
 /**
  * Read both encoded and decoded passwords from a registry or proxy URL.
  *
- * @param source the authored URL.
+ * @param url the authored URL.
  *
  * @returns password representations excluded from generated lockfiles and diagnostics.
  */
-export function registryPasswords(source: string): string[] {
-    const password = new URL(source).password;
+export function extractUrlPasswords(url: string): string[] {
+    const password = new URL(url).password;
     if (password.length === 0) return [];
     return [password, decodeURIComponent(password)];
 }
@@ -42,7 +42,7 @@ export function registryPasswords(source: string): string[] {
  *
  * @returns the redacted tail, or an explicit absence of diagnostics.
  */
-export function installationDiagnostics(result: Pick<SpawnResult, 'stdout' | 'stderr'>, credentials: string[]): string {
+export function redactInstallOutput(result: Pick<SpawnResult, 'stdout' | 'stderr'>, credentials: string[]): string {
     const secrets = [...new Set(credentials.filter((value) => value !== ''))]
         .flatMap((value) => [value, encodeURIComponent(value), Buffer.from(value).toString('base64')])
         .toSorted((left, right) => right.length - left.length);
