@@ -8,6 +8,7 @@ import { identify, isRecorded } from '#cli/ownership/log.ts';
 import { sameEntry } from '#cli/system/safe-folder/reads.ts';
 import type { FileCopy } from '#cli/types/system/safe-folder.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
+import { hasGeneratedHeader } from '#cli/parsers/generated-header.ts';
 import { blockSpan, applyBlock } from '#cli/system/managed-blocks.ts';
 import type { BlockSpan, BlockStyle, BlockContext } from '#cli/types/system/managed-blocks.ts';
 import { pruneParents, planKeyChanges, openKeysDocument } from '#cli/ownership/managed-keys.ts';
@@ -32,6 +33,12 @@ function isEdited(existing: OwnedFile | undefined, current: FileCopy | undefined
     return !isRecorded(current, existing.written);
 }
 
+// Preserve an unowned file unless its bytes match or the user authorized replacement.
+function isPreservedUnownedReplacement(request: ReplacementRequest, current: FileCopy): boolean {
+    const owned = request.path.startsWith(`${DOT_GSPOT}/`) || hasGeneratedHeader(current.bytes.toString('utf8'));
+    return !owned && !sameEntry(current, request.next) && request.canReplace !== true;
+}
+
 // Whether the current file must stay: an edited owned file without review, or an unowned file without replace.
 function isPreservedReplacement(
     request: ReplacementRequest,
@@ -39,7 +46,7 @@ function isPreservedReplacement(
     current: FileCopy | undefined,
 ): boolean {
     if (current === undefined) return false;
-    if (existing === undefined) return !sameEntry(current, request.next) && request.canReplace !== true;
+    if (existing === undefined) return isPreservedUnownedReplacement(request, current);
     return (
         isEdited(existing, current) &&
         request.kind !== 'settings' &&

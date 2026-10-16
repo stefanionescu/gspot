@@ -2,14 +2,15 @@ import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { valueAt } from '#cli/objects.ts';
-import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
 import { knownSettings } from '#cli/settings/view.ts';
 import { settingValue } from '#cli/settings/inherit.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { selectForScope } from '#cli/repository/select.ts';
+import { commitAll, gitOutput } from '#tests/setup/git.ts';
 import { readTree, pathExists } from '#tests/setup/files.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
@@ -115,4 +116,22 @@ test('gspot set writes a list of tables typed the TOML way as tables, and the se
         error: 'settings',
         message: 'gspot.toml: tools.eslint.restricted_imports.0: Invalid input: expected object, received string',
     });
+});
+
+test('a fresh clone can change the level without an ownership log', async () => {
+    await using sandbox = await testdir();
+    const source = join(sandbox.path, 'source');
+    const checkout = join(sandbox.path, 'checkout');
+    await createFileTree(source, {
+        'gspot.toml': settingsText(['bash']),
+        'entry.sh': 'echo example\n',
+    });
+    gitOutput(source, ['init', '-q']);
+    expect(await applyCommand({ cwd: source, isDryRun: false })).toHaveProperty('exitCode', 0);
+    commitAll(source);
+    gitOutput(sandbox.path, ['clone', '--quiet', source, checkout]);
+    expect(await pathExists(join(checkout, '.gspot/state/ownership.json'))).toBe(false);
+    const changed = await runGspot(checkout, ['set', 'level', 'all']);
+    expect(changed.code, changed.stdout + changed.stderr).toBe(0);
+    expect(readSettings(checkout).settings.level).toBe('all');
 });

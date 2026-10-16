@@ -70,20 +70,21 @@ function attributePattern(path: string): string {
 
 // Each whole file gspot writes outside its folder keeps LF too, so a CRLF checkout does not read as an edit.
 function attributesBlock(files: Generated['files'], authored: string): string {
-    if (
-        attributeRules(authored, '.').some(
-            ({ pattern, attributes }) =>
-                pattern === '**/*' && AUTO_LF_ATTRIBUTES.every((attribute) => attributes.includes(attribute)),
-        )
-    )
-        return GIT_ATTRIBUTES_BLOCK.split('\n')
-            .filter((line) => !line.endsWith(` ${LF_ATTRIBUTES}`))
-            .join('\n');
+    const inheritsLineEndings = attributeRules(authored, '.').some(
+        ({ pattern, attributes }) =>
+            pattern === '**/*' && AUTO_LF_ATTRIBUTES.every((attribute) => attributes.includes(attribute)),
+    );
+    const block = inheritsLineEndings
+        ? GIT_ATTRIBUTES_BLOCK.split('\n')
+              .filter((line) => !line.endsWith(` ${LF_ATTRIBUTES}`))
+              .join('\n')
+        : GIT_ATTRIBUTES_BLOCK;
     const outside = files.map(({ path }) => path).filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
+    const lineEndings = inheritsLineEndings ? '' : ` ${LF_ATTRIBUTES}`;
     const lines = outside
         .toSorted((left, right) => left.localeCompare(right))
-        .map((path) => `${attributePattern(path)} ${LF_ATTRIBUTES}`);
-    return [GIT_ATTRIBUTES_BLOCK, ...lines].join('\n');
+        .map((path) => `${attributePattern(path)} linguist-generated${lineEndings}`);
+    return [block, ...lines].join('\n');
 }
 
 function emitBlocks(session: Session, manifests: Manifest[], rules: RuleFile[], generated: Generated): void {
