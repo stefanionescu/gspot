@@ -237,12 +237,19 @@ Use ${TYPO.receive}.
 Avoid vale's and ajv's.
 `;
 
+// Only the row that tests the time limit gets a short one; a slow start under load must not fail the other row.
 export const VALE_INSTALL_FAILURES = [
-    ['timeout', 'setInterval(() => {}, 1000);', 'Vale sync ran longer than tool_timeout_seconds (1s).'],
+    [
+        'timeout',
+        'setInterval(() => {}, 1000);',
+        'Vale sync ran longer than tool_timeout_seconds (1s).',
+        'tool_timeout_seconds = 1\n',
+    ],
     [
         'native error',
         'console.error("Registry request failed: https://alex:synthetic-password@example.com/styles.zip"); process.exitCode = 7;',
         'Registry request failed: https://[redacted]@example.com/styles.zip',
+        '',
     ],
 ] as const;
 

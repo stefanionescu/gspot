@@ -18,10 +18,10 @@ import { VALE_PACKAGES_INI, VALE_INSTALL_FAILURES, FIXED_VALE_INSTALL_SCRIPT } f
 
 test.each([...VALE_INSTALL_FAILURES])(
     'a failed Vale package install reports %s, and the next install succeeds after the fix',
-    async (_failure, script, expected) => {
+    async (_failure, script, expected, limit) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['prose'], { level: 'all', tables: 'tool_timeout_seconds=1\n' }),
+            'gspot.toml': buildSettingsText(['prose'], { level: 'all', tables: limit }),
             '.gspot/config/vale.ini': VALE_PACKAGES_INI,
             '.gspot/vale/Google/terms.yml': 'previous bytes\n',
             'guide.md': 'Authored text.\n',
@@ -42,8 +42,10 @@ test.each([...VALE_INSTALL_FAILURES])(
             join(sandbox.path, 'node_modules/.bin/vale.js'),
             launcher.replace(script, FIXED_VALE_INSTALL_SCRIPT),
         );
+        await writeFile(join(sandbox.path, 'gspot.toml'), buildSettingsText(['prose'], { level: 'all' }));
         const steps: (readonly string[])[] = [];
-        expect(await installValePackages({ ...request, steps })).toBe('installed Vale packages in .gspot/vale');
+        const fixed = { ...request, session: await openSession(sandbox.path), steps };
+        expect(await installValePackages(fixed)).toBe('installed Vale packages in .gspot/vale');
         expect(steps).toStrictEqual([[executable, '--config', matchSubstring('vale-'), 'sync']]);
         expect(await readFile(join(sandbox.path, '.gspot/vale/Google/terms.yml'), 'utf8')).toBe('corrected bytes\n');
         expect(hasValePackages(sandbox.path, 'all')).toBe(true);
