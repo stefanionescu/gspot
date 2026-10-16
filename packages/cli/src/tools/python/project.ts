@@ -66,7 +66,6 @@ async function runUv({
     args,
     executable,
     credentials,
-    cancelSignal,
     timeoutSeconds,
     steps,
     configFile = join(work, UV_SETTINGS_FILE),
@@ -76,10 +75,8 @@ async function runUv({
     const result = await runTool(command, {
         cwd: work,
         timeoutSeconds,
-        cancelSignal,
         env: { UV_PROJECT_ENVIRONMENT: join(work, PYTHON_ENVIRONMENT_FOLDER) },
     });
-    cancelSignal?.throwIfAborted();
     if (result.missing)
         throw new GspotError(
             'tool',
@@ -191,7 +188,6 @@ export async function preparePythonLockfile(
         args: UV_LOCKFILE_ARGUMENTS,
         executable,
         credentials,
-        cancelSignal: preparation.cancelSignal,
         timeoutSeconds: preparation.timeoutSeconds,
         steps,
     });
@@ -209,7 +205,6 @@ export async function preparePythonLockfile(
  * @param root the repository root.
  * @param owner the repository reader.
  * @param executable the uv executable.
- * @param cancelSignal the command cancellation signal.
  * @param timeoutSeconds the tool_timeout_seconds setting.
  * @param steps the commands attempted during installation.
  *
@@ -219,7 +214,6 @@ export async function installPythonTools(
     root: string,
     owner: Pick<SafeFolder, 'read'>,
     executable: string,
-    cancelSignal: AbortSignal | undefined,
     timeoutSeconds: number,
     steps: (readonly string[])[],
 ): Promise<string> {
@@ -235,7 +229,6 @@ export async function installPythonTools(
             args,
             executable,
             credentials,
-            cancelSignal,
             timeoutSeconds,
             steps,
             configFile: join(settings.path, UV_SETTINGS_FILE),

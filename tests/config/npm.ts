@@ -175,10 +175,7 @@ const INSTALL_FAILURES = [
     { frozen: true, refusal: 'HTTP 403 Forbidden' },
 ] as const;
 
-const VERSION_SOURCES = [
-    { source: 'authored', operation: 'lockfile', files: DECLARED_VERSION_FILES } as const,
-    { source: 'authored', operation: 'install', files: DECLARED_VERSION_FILES } as const,
-] as const;
+const VERSION_SOURCES = [{ source: 'authored', operation: 'install', files: DECLARED_VERSION_FILES } as const] as const;
 
 const NPM_SANDBOX_PACKAGE = {
     private: true,

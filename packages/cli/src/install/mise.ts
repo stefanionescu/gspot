@@ -6,6 +6,7 @@ import { systemSkip } from '#cli/planning/skips.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import type { InstallContext } from '#cli/types/install.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import { currentOperatingSystem } from '#cli/system/environment.ts';
 import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
@@ -44,19 +45,12 @@ function installationPrograms(session: Session, tools: ToolDeclaration[]) {
 /**
  * Install selected mise programs and refresh their actual executable directories.
  *
- * @param session the repository session.
- * @param tools the selected tool declarations.
- * @param mise the mise executable, or null when unavailable.
- * @param steps the commands attempted during installation.
+ * @param context the selected tools, session, writer, generated files, and attempted commands.
  *
  * @returns the installation note for missing program tools.
  */
-export async function installMiseTools(
-    session: Session,
-    tools: ToolDeclaration[],
-    mise: string | null,
-    steps: (readonly string[])[],
-): Promise<string> {
+export async function installMiseTools(context: InstallContext): Promise<string> {
+    const { session, tools, mise, steps } = context;
     const timeoutSeconds = session.timeoutSeconds;
     const { pins, programs } = installationPrograms(session, tools);
     if (mise === null) {
@@ -79,7 +73,6 @@ export async function installMiseTools(
         const result = await runTool(command, {
             cwd,
             timeoutSeconds,
-            cancelSignal: session.cancelSignal,
         });
         if (result.code !== 0)
             throw new GspotError(

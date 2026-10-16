@@ -173,7 +173,6 @@ test('a uv that copies index credentials into the lockfile is refused and the in
                 {
                     root,
                     uvPath: join(bin, isWindows ? 'uv.cmd' : 'uv'),
-                    cancelSignal: undefined,
                     timeoutSeconds: session.timeoutSeconds,
                 },
                 [],

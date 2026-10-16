@@ -13,7 +13,6 @@ export type NpmClientExecution = {
     argv: string[];
     failure: string;
     timeoutSeconds: number;
-    cancelSignal: AbortSignal | undefined;
     steps: (readonly string[])[];
 };
 
@@ -23,7 +22,6 @@ export type UvExecution = {
     args: readonly string[];
     executable: string;
     credentials: string[];
-    cancelSignal: AbortSignal | undefined;
     timeoutSeconds: number;
     steps: (readonly string[])[];
     configFile?: string;
@@ -41,7 +39,6 @@ export type NpmClientCommands = { lockfile: string[]; install: string[] };
 /** Repository identity and the uv executable used during lockfile preparation. */
 export type PythonPreparation = {
     root: string;
-    cancelSignal?: AbortSignal | undefined;
     uvPath: string;
     timeoutSeconds: number;
 };

@@ -47,7 +47,6 @@ function yarnReference(value: unknown, key: string, env: Record<string, string>,
  * @param work the directory the isolated project runs in.
  * @param env the environment the install runs with, which receives the settings.
  * @param timeoutSeconds the tool timeout in seconds.
- * @param cancelSignal the cancellation signal.
  * @param steps the commands attempted during installation.
  *
  * @returns the credential values the lockfile must not contain.
@@ -57,7 +56,6 @@ export async function yarnSettings(
     work: string,
     env: Record<string, string>,
     timeoutSeconds: number,
-    cancelSignal: AbortSignal | undefined,
     steps: (readonly string[])[],
 ): Promise<string[]> {
     const settings = yarnConnectionSettingsSchema.parse(parse(readFileSync(join(work, '.yarnrc.yml'), 'utf8')));
@@ -79,8 +77,7 @@ export async function yarnSettings(
     });
     Object.assign(settings, Object.fromEntries(environmentSettings));
     steps.push(YARN_CONFIG_LIST);
-    const listed = await runTool(YARN_CONFIG_LIST, { cwd: root, env, timeoutSeconds, cancelSignal });
-    cancelSignal?.throwIfAborted();
+    const listed = await runTool(YARN_CONFIG_LIST, { cwd: root, env, timeoutSeconds });
     if (listed.code !== 0)
         throw new GspotError(
             'installation',
@@ -97,10 +94,8 @@ export async function yarnSettings(
         const read = await runTool(command, {
             cwd: root,
             timeoutSeconds,
-            cancelSignal,
             env,
         });
-        cancelSignal?.throwIfAborted();
         if (read.code !== 0) throw new GspotError('installation', `Cannot read Yarn setting ${entry.key}.`);
         settings[entry.key] = yarnReference(yarnSettingSchema.parse(JSON.parse(read.stdout)), entry.key, env, secrets);
     }

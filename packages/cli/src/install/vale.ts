@@ -2,10 +2,11 @@ import { GspotError } from '#cli/errors.ts';
 import { runTool } from '#cli/tools/run.ts';
 import { toPosix } from '#cli/system/paths.ts';
 import { join, dirname, resolve } from 'node:path';
-import type { ValeInstallation } from '#cli/types/install.ts';
+import type { InstallContext } from '#cli/types/install.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
+import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/find.ts';
 import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
 import { DOT_GSPOT, VALE_CONFIG, VALE_PACKAGE_DIRECTORY } from '#cli/config/system/locations.ts';
@@ -32,16 +33,16 @@ export function hasValePackages(root: string, level: Settings['level']): boolean
 /**
  * Downloads the upstream packages shipped at the selected level, and replaces the installed ones with them. Needs the network.
  *
- * @param request the tool search, selected Vale pin, timeout, and cancellation.
- * @param steps the commands attempted during installation.
+ * @param context the selected tools, session, writer, generated files, and attempted commands.
  *
  * @returns the installation summary.
  */
-export async function installValePackages(request: ValeInstallation, steps: (readonly string[])[]): Promise<string> {
-    const { search, tool, level, timeoutSeconds, cancelSignal } = request;
+export async function installValePackages(context: InstallContext): Promise<string> {
+    const { session: search, steps } = context;
+    const { root, timeoutSeconds } = search;
+    const level = search.settingsFile.settings.level;
     if (level === 'recommended') return '';
-    const { root } = search;
-    if (cancelSignal?.aborted === true) throw new GspotError('installation', 'Vale sync was canceled.');
+    const tool = toolDeclaration(search.neededToolManifests, 'vale');
     const available = toolAvailability(tool, inspectTool(search, tool));
     if ('status' in available) throw new GspotError('tool', available.note);
     using files = openSafeFolder(root);
@@ -59,11 +60,9 @@ export async function installValePackages(request: ValeInstallation, steps: (rea
         steps.push(command);
         const result = await runTool(command, {
             cwd: dirname(config),
-            cancelSignal,
             timeoutSeconds,
         });
         const failure = [
-            { matches: result.isCanceled === true, message: 'Vale sync was canceled.' },
             {
                 matches: result.isTimedOut === true,
                 message: `Vale sync ran longer than tool_timeout_seconds (${String(timeoutSeconds)}s).`,

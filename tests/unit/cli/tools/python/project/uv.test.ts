@@ -32,7 +32,6 @@ test.each(['venv', 'sync'])('a failed uv %s can be repaired and hides index pass
         repository.path,
         log.files,
         'unavailable-uv',
-        undefined,
         rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         [],
     ).catch((error: unknown) => error);
@@ -69,7 +68,6 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
             timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
             root: repository.path,
             uvPath: 'synthetic-uv',
-            cancelSignal: undefined,
         },
         [],
     ).catch((error: unknown) => error);

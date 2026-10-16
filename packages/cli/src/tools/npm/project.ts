@@ -43,7 +43,7 @@ async function resolveNpmLockfile(
     manifest: GeneratedFile,
     project: NpmToolProject,
     recorded: string | undefined,
-    preparation: Pick<Session, 'root' | 'timeoutSeconds' | 'cancelSignal'>,
+    preparation: Pick<Session, 'root' | 'timeoutSeconds'>,
     yarn: string | undefined,
     steps: (readonly string[])[],
 ): Promise<string> {
@@ -67,7 +67,6 @@ async function resolveNpmLockfile(
         argv: npmClientCommands(project.npmClient).lockfile,
         failure: 'lockfile resolution failed',
         timeoutSeconds,
-        cancelSignal: preparation.cancelSignal,
         steps,
     });
     stripRegistryUrls(work, project.npmClient, env);
@@ -92,7 +91,6 @@ async function assertWrapperVersion(
     executable: string,
     tool: ToolDeclaration,
     timeoutSeconds: number,
-    cancelSignal: AbortSignal | undefined,
     steps: (readonly string[])[],
 ): Promise<void> {
     const command = [executable, ...(tool.version_command ?? [VERSION_FLAG])];
@@ -100,10 +98,8 @@ async function assertWrapperVersion(
     const result = await runTool(command, {
         cwd: work,
         timeoutSeconds,
-        cancelSignal,
         ...(tool.env === undefined ? {} : { env: tool.env }),
     });
-    cancelSignal?.throwIfAborted();
     const read = parseVersionOutput(tool, result);
     if (!('version' in read)) throw new GspotError('installation', read.note);
     const want = tool.version ?? read.version;
@@ -122,7 +118,6 @@ async function runNpmWrappersOnce(
     dependencies: Record<string, string>,
     selected: Iterable<ToolDeclaration>,
     timeoutSeconds: number,
-    cancelSignal: AbortSignal | undefined,
     steps: (readonly string[])[],
 ): Promise<void> {
     const root = realPath(work);
@@ -132,14 +127,7 @@ async function runNpmWrappersOnce(
         const name =
             executableNames(tool.name).find((candidate) => existsSync(join(work, NPM_BIN_FOLDER, candidate))) ??
             tool.name;
-        await assertWrapperVersion(
-            work,
-            sourcePath(root, `${NPM_BIN_FOLDER}/${name}`),
-            tool,
-            timeoutSeconds,
-            cancelSignal,
-            steps,
-        );
+        await assertWrapperVersion(work, sourcePath(root, `${NPM_BIN_FOLDER}/${name}`), tool, timeoutSeconds, steps);
     }
 }
 
@@ -167,7 +155,7 @@ function npmClientCommands(client: NpmClient): NpmClientCommands {
  * @returns validated lockfile bytes and the private routing environment.
  */
 async function runNpmClient(request: NpmClientExecution): Promise<NpmClientRun> {
-    const { root, work, client, argv, failure, timeoutSeconds, cancelSignal, steps } = request;
+    const { root, work, client, argv, failure, timeoutSeconds, steps } = request;
     const env = await registryEnvironment(root);
     const credentials = registryCredentials(env);
     using settings = scratchFolder();
@@ -177,18 +165,12 @@ async function runNpmClient(request: NpmClientExecution): Promise<NpmClientRun> 
         env[NPM_CONFIG_DIRECTORY_VARIABLE] = settings.path;
         const berry = isYarnBerry(client);
         if (berry) delete env['YARN_REGISTRY'];
-        const versionCommand = [client.name, VERSION_FLAG];
-        steps.push(versionCommand);
-        const version = await runTool(versionCommand, { cwd: work, env, timeoutSeconds, cancelSignal });
-        cancelSignal?.throwIfAborted();
-        assertNpmClientVersion(client, version);
         if (berry) {
-            credentials.push(...(await yarnSettings(root, work, env, timeoutSeconds, cancelSignal, steps)));
+            credentials.push(...(await yarnSettings(root, work, env, timeoutSeconds, steps)));
             env['YARN_RC_FILENAME'] = YARN_INSTALL_SETTINGS_FILE;
         }
         steps.push(argv);
-        const result = await runTool(argv, { cwd: work, env, timeoutSeconds, cancelSignal });
-        cancelSignal?.throwIfAborted();
+        const result = await runTool(argv, { cwd: work, env, timeoutSeconds });
         if (result.code !== 0) {
             throw new GspotError(
                 'installation',
@@ -216,7 +198,7 @@ async function runNpmClient(request: NpmClientExecution): Promise<NpmClientRun> 
  * @param version the executable's version response.
  * @returns nothing.
  */
-export function assertNpmClientVersion(client: NpmClient, version: SpawnResult): void {
+function assertNpmClientVersion(client: NpmClient, version: SpawnResult): void {
     const requirement = `${String(npmClientMajor(client))}.x`;
     if (version.code !== 0 || !semver.satisfies(version.stdout.trim(), requirement, { includePrerelease: true }))
         throw new GspotError(
@@ -236,10 +218,10 @@ export function assertNpmClientVersion(client: NpmClient, version: SpawnResult):
  *
  * @returns the lockfile and its recorded bytes.
  */
-export async function prepareNpmLockfile(
+async function prepareNpmLockfile(
     manifest: GeneratedFile,
     owner: Pick<SafeFolder, 'read'>,
-    preparation: Pick<Session, 'root' | 'npmClient' | 'timeoutSeconds' | 'cancelSignal'>,
+    preparation: Pick<Session, 'root' | 'npmClient' | 'timeoutSeconds'>,
     yarn: string | undefined,
     steps: (readonly string[])[],
 ): Promise<GeneratedFile> {
@@ -286,8 +268,8 @@ export async function prepareNpmLockfile(
  *
  * @returns the installation summary.
  */
-export async function installNpmTools(
-    session: Pick<Session, 'root' | 'npmClient' | 'timeoutSeconds' | 'cancelSignal'>,
+async function installNpmTools(
+    session: Pick<Session, 'root' | 'npmClient' | 'timeoutSeconds'>,
     owner: Pick<SafeFolder, 'read' | 'removeTree'>,
     tools: Iterable<ToolDeclaration>,
     steps: (readonly string[])[],
@@ -309,8 +291,7 @@ export async function installNpmTools(
     );
     const versionCommand = [project.npmClient.name, VERSION_FLAG];
     steps.push(versionCommand);
-    const version = await runTool(versionCommand, { cwd: root, timeoutSeconds, cancelSignal: session.cancelSignal });
-    session.cancelSignal?.throwIfAborted();
+    const version = await runTool(versionCommand, { cwd: root, timeoutSeconds });
     assertNpmClientVersion(project.npmClient, version);
     owner.removeTree(NODE_MODULES_DIRECTORY);
     const work = join(root, DOT_GSPOT);
@@ -321,9 +302,10 @@ export async function installNpmTools(
         argv: npmClientCommands(project.npmClient).install,
         failure: 'installation failed',
         timeoutSeconds,
-        cancelSignal: session.cancelSignal,
         steps,
     });
-    await runNpmWrappersOnce(work, project.dependencies, tools, timeoutSeconds, session.cancelSignal, steps);
+    await runNpmWrappersOnce(work, project.dependencies, tools, timeoutSeconds, steps);
     return `installed locked npm tools under .gspot/node_modules with ${project.npmClient.name}@${project.npmClient.version}`;
 }
+
+export { installNpmTools, prepareNpmLockfile };

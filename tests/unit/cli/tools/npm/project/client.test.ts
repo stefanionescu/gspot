@@ -8,10 +8,10 @@ import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { prepareCommand } from '#tests/setup/processes.ts';
+import { installNpmTools } from '#cli/tools/npm/project.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
-import { installNpmTools, prepareNpmLockfile } from '#cli/tools/npm/project.ts';
 import { selectNpmClient, readNpmClientVersion } from '#cli/tools/npm/client.ts';
 import { VERSION_SOURCES, NON_EXACT_PNPM_VERSIONS, NPM_CLIENT_DECLARATIONS } from '#tests/config/npm.ts';
 
@@ -48,14 +48,13 @@ test.each([...NON_EXACT_PNPM_VERSIONS])(
 
 test.each([...VERSION_SOURCES])(
     '$source version data cannot skip the program version check before $operation',
-    async ({ files, operation }) => {
+    async ({ files }) => {
         await using repository = await testdir();
         await createFileTree(repository.path, { ...files, source: 'kept\n' });
         const project = '{"private":true,"devDependencies":{"prettier":"3.8.1"}}\n';
-        const original =
-            operation === 'install' ? project : '{"private":true,"devDependencies":{"prettier":"3.8.0"}}\n';
+        const original = project;
         const lockfile = JSON.stringify({
-            workspaces: { '': { devDependencies: { prettier: operation === 'install' ? '3.8.1' : '3.8.0' } } },
+            workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
         });
         await createFileTree(repository.path, { '.gspot/package.json': original, '.gspot/bun.lock': lockfile });
         await createFileTree(repository.path, { 'gspot.toml': settingsText([]) });
@@ -77,17 +76,7 @@ test.each([...VERSION_SOURCES])(
             observed = run(argv, prepared.options, output);
             return observed;
         });
-        const failure = await (
-            operation === 'lockfile'
-                ? prepareNpmLockfile(
-                      { path: '.gspot/package.json', content: project, kind: 'tool_file' },
-                      owner,
-                      session,
-                      undefined,
-                      [],
-                  )
-                : installNpmTools(session, owner, [], [])
-        ).catch((error: unknown) => error);
+        const failure = await installNpmTools(session, owner, [], []).catch((error: unknown) => error);
         expect(boundary).toHaveBeenCalledTimes(1);
         const version = await observed;
         expect(version?.code, version?.stderr).toBe(0);

@@ -240,7 +240,7 @@ export async function expectRefusedInstall(
     const requests = registry.requests;
     const installation =
         owner.files.read('.gspot/package.json') === undefined
-            ? installPythonTools(root, owner.files, 'uv', session.cancelSignal, session.timeoutSeconds, [])
+            ? installPythonTools(root, owner.files, 'uv', session.timeoutSeconds, [])
             : installNpmTools(session, owner.files, tools, []);
     expect(await rejection(installation)).toContain(diagnostic);
     expect(registry.requests).toBe(requests);

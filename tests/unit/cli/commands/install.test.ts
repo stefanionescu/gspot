@@ -2,12 +2,14 @@ import which from 'which';
 import { join, basename } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
+import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildInitOptions } from '#tests/setup/init.ts';
 import { installCommand } from '#cli/commands/install.ts';
+import { textContaining } from '#tests/setup/matchers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { initCommand } from '#cli/commands/init/command.ts';
 import { readTree, pathExists } from '#tests/setup/files.ts';
@@ -40,12 +42,15 @@ enabled = false
     const human = await runGspot(sandbox.path, ['install']);
     expect(human.code, human.stdout + human.stderr).toBe(2);
     expect(human.stdout).toBe('');
-    expect(human.stderr).toBe('gspot stopped: Unexpected process failure.\n');
+    expect(human.stderr).toContain('Unexpected process failure.');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const failed = await runGspot(sandbox.path, ['install', '--json']);
     expect(failed.code).toBe(2);
     expect(failed.stderr).toBe('');
-    expect(JSON.parse(failed.stdout)).toMatchObject({ error: 'failure', message: 'Unexpected process failure.' });
+    expect(JSON.parse(failed.stdout)).toMatchObject({
+        error: 'failure',
+        message: textContaining('Unexpected process failure.'),
+    });
     expect(await readFile(join(sandbox.path, 'gspot.toml'))).toStrictEqual(settings);
     expect(await pathExists(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
     expect(await pathExists(join(sandbox.path, '.gspot/package-lock.json'))).toBe(false);
@@ -58,6 +63,7 @@ test.each([...MISE_FAILURES])(
         using mockResources = new DisposableStack();
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'README.md': 'Authored project.\n' });
+        commitAll(sandbox.path);
         let isRepaired = false;
         const paths = new Map(
             [...configurationManifests().values()]
@@ -157,6 +163,11 @@ test('install after init refuses when uv cannot make the Python lockfile, and wr
 
     const initialized = await initCommand(buildInitOptions(sandbox.path, { configurations: ['python'] }));
     expect(initialized.exitCode, initialized.text).toBe(0);
+    const stale = await installCommand(sandbox.path);
+    expect(stale.text).toContain('Run gspot apply first');
+    expect(locks).toStrictEqual([]);
+    const applied = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const installed = await installCommand(sandbox.path);
     expect(installed.exitCode, installed.text).toBe(2);
     expect(installed.text).toContain('UV lock failed (exit 1).');

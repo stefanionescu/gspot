@@ -64,7 +64,7 @@ export function staleLockfiles(
 /**
  * Append selected npm and Python lockfiles before writing generated files.
  *
- * @param preparation the root, uv executable, selected npm client, timeout, and cancellation.
+ * @param preparation the root, uv executable, selected npm client, and time limit.
  * @param files the generated files.
  * @param owner the repository reader.
  * @param steps the commands attempted during lockfile creation.

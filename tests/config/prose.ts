@@ -239,7 +239,6 @@ Avoid vale's and ajv's.
 
 export const VALE_INSTALL_FAILURES = [
     ['timeout', 'setInterval(() => {}, 1000);', 'Vale sync ran longer than tool_timeout_seconds (1s).'],
-    ['cancellation', 'await Bun.write("sync-started", "unexpected");', 'Vale sync was canceled.'],
     [
         'native error',
         'console.error("Registry request failed: https://alex:synthetic-password@example.com/styles.zip"); process.exitCode = 7;',

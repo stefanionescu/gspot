@@ -1,8 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -16,7 +18,7 @@ import { VALE_PACKAGES_INI, VALE_INSTALL_FAILURES, FIXED_VALE_INSTALL_SCRIPT } f
 
 test.each([...VALE_INSTALL_FAILURES])(
     'a failed Vale package install reports %s, and the next install succeeds after the fix',
-    async (failure, script, expected) => {
+    async (_failure, script, expected) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': settingsText(['prose'], { level: 'all', tables: 'tool_timeout_seconds=1\n' }),
@@ -29,21 +31,19 @@ test.each([...VALE_INSTALL_FAILURES])(
         const executable = join(sandbox.path, 'node_modules/.bin', executableNames('vale')[0]!);
         const launcher = `#!${process.execPath}\nif(process.argv.includes('--version')) console.log(${JSON.stringify(tool.version)}); else {${script}\n}\n`;
         await fakeTool(sandbox.path, 'node_modules/.bin/vale', launcher);
-        const request = { search: session, level: 'all' as const, tool, timeoutSeconds: session.timeoutSeconds };
-        const cancelSignal = failure === 'cancellation' ? AbortSignal.abort() : undefined;
+        using writer = openWriter(sandbox.path);
         const failedSteps: (readonly string[])[] = [];
-        expect(installValePackages({ ...request, cancelSignal }, failedSteps)).rejects.toThrow(expected);
+        const request = { session, writer, generated: emitAll(session), tools: [], mise: null, steps: failedSteps };
+        expect(installValePackages(request)).rejects.toThrow(expected);
         expect(await readFile(join(sandbox.path, '.gspot/vale/Google/terms.yml'), 'utf8')).toBe('previous bytes\n');
-        expect(failedSteps).toStrictEqual(
-            failure === 'cancellation' ? [] : [[executable, '--config', textContaining('vale-'), 'sync']],
-        );
+        expect(failedSteps).toStrictEqual([[executable, '--config', textContaining('vale-'), 'sync']]);
         expect(await readFile(join(sandbox.path, 'guide.md'), 'utf8')).toBe('Authored text.\n');
         await writeFile(
             join(sandbox.path, 'node_modules/.bin/vale.js'),
             launcher.replace(script, FIXED_VALE_INSTALL_SCRIPT),
         );
         const steps: (readonly string[])[] = [];
-        expect(installValePackages(request, steps)).resolves.toBe('installed Vale packages in .gspot/vale');
+        expect(installValePackages({ ...request, steps })).resolves.toBe('installed Vale packages in .gspot/vale');
         expect(steps).toStrictEqual([[executable, '--config', textContaining('vale-'), 'sync']]);
         expect(await readFile(join(sandbox.path, '.gspot/vale/Google/terms.yml'), 'utf8')).toBe('corrected bytes\n');
         expect(hasValePackages(sandbox.path, 'all')).toBe(true);
@@ -79,16 +79,9 @@ test('at level recommended install installs no Vale packages', async () => {
     await createFileTree(sandbox.path, { 'gspot.toml': settingsText(['prose'], { level: 'recommended' }) });
     const session = await openSession(sandbox.path);
     const steps: (readonly string[])[] = [];
+    using writer = openWriter(sandbox.path);
     expect(
-        installValePackages(
-            {
-                search: session,
-                level: 'recommended',
-                tool: toolDeclaration(session.manifests.values(), 'vale'),
-                timeoutSeconds: session.timeoutSeconds,
-            },
-            steps,
-        ),
+        installValePackages({ session, writer, generated: emitAll(session), tools: [], mise: null, steps }),
     ).resolves.toBe('');
     expect(steps).toStrictEqual([]);
     expect(await pathExists(join(sandbox.path, '.gspot/vale'))).toBe(false);
