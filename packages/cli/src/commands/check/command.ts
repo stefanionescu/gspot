@@ -208,7 +208,6 @@ async function runCheck(paths: string[], flags: CheckFlags): Promise<CommandResu
  * Register the check command.
  * @param program the command program
  * @param onResult the sink that writes the completed command result.
- * @returns the registered command with its inferred argument and flag types
  */
 export function registerCheck(program: Command, onResult: CommandCompletion): void {
     program

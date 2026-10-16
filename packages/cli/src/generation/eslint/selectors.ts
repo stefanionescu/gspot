@@ -8,7 +8,7 @@ import { REEXPORT_SELECTORS } from '#cli/config/generation/eslint-rules.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import { ENVIRONMENT_SELECTOR, ESLINT_SETTINGS_TABLE, ALIAS_IMPORT_SELECTORS } from '#cli/config/generation/eslint.ts';
 
-// The paths a loosening setting allows: every entry's paths, in the order written.
+// Each distinct path list once, in the order written.
 function filterDistinctLists(lists: string[][]): string[][] {
     const seen = new Set<string>();
     return lists.filter((list) => {
@@ -22,11 +22,11 @@ function filterDistinctLists(lists: string[][]): string[][] {
 /**
  * Groups the selectors the selected fragments add so each file set gets one no-restricted-syntax rule.
  *
- * A selector without files applies to every code file. Exclude a selector with an allowed setting from the group for
- * the paths that setting names. File and allowed-path intersections produce exclusive blocks,
- * each retaining every selector that applies there in first-mention order.
+ * A selector without files applies to every code file. A selector's except paths leave it out of the groups for those
+ * paths. File and except-path intersections produce exclusive blocks, each retaining every selector that applies there
+ * in first-mention order.
  *
- * @param selectors the selectors of the selected fragments, with the paths their allowed settings hold.
+ * @param selectors the selectors of the selected fragments with their covered and skipped paths.
  *
  * @returns the groups, where an absent files list means every code file.
  */

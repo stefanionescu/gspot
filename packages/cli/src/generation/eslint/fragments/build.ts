@@ -1,8 +1,4 @@
 // What the selected fragments add to a generated target: emitted text, imports, file globs, and selectors.
-
-// The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target
-// written once asks every scope.
-
 import type { Session } from '#cli/types/planning.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import type { Fragment } from '#cli/types/generation/fragments.ts';
@@ -31,6 +27,7 @@ import { buildTestingLibraryFragment } from '#cli/generation/eslint/fragments/te
 
 /**
  * Select the configurations whose fragments contribute to this target.
+ * A target written for one scope asks that scope; a target written once asks every scope.
  * @param scopes the selected projects and their effective settings.
  * @param selection the scope receiving the generated target.
  * @param target the tool-file declaration and its scope requirements.

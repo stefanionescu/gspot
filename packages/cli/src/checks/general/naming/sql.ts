@@ -184,7 +184,7 @@ function extractStatementIdentifiers({
  * The identifiers a valid SQL file declares. Parse failures stop the analysis.
  * @param file the file path.
  * @param source the file text.
- * @param reads optional execution reads shared by SQL checks.
+ * @param reads the execution reads shared by SQL checks.
  * @returns declarations with source locations, or the parser error with an empty list.
  */
 export async function extractSqlIdentifiers(file: string, source: string, reads: ReadCache): Promise<IdentifierRead> {

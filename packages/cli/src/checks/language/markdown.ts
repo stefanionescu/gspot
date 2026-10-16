@@ -123,7 +123,7 @@ async function validateCodeFences(text: string, cache: ParseCache): Promise<Fenc
 }
 
 /**
- * Report invalid tagged examples at their error lines;
+ * Report invalid tagged examples at their error lines.
  * @param input the selected Markdown files and tool execution state.
  * @returns one syntax finding per invalid code example.
  */

@@ -1,3 +1,4 @@
+// Parses Python sources: functions, docstrings, and the names that read environment variables.
 import { type Node } from 'web-tree-sitter';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';

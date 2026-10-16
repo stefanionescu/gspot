@@ -59,9 +59,9 @@ function buildImportStyleBlocks(scopes: ScopeSelection[], nodeFiles: string[]): 
     });
 }
 
-// Root and nested rules share the same boundary folders and their project's aliases.
 /**
  * Build one relative-import boundary rule from the project folders and aliases.
+ * Root and nested rules share the same boundary folders and their project's aliases.
  * @param scopes the selected projects and their effective settings.
  * @param aliases the repository-relative import alias destinations.
  * @returns the relative-import rule setting with its folders and aliases.
@@ -74,7 +74,6 @@ function buildImportBoundariesRule(
     return ['error', { folders: [...ESLINT_BOUNDARY_FOLDERS, ...scopePaths], aliases }];
 }
 
-// Each nested scope resolves its import boundaries against its own aliases.
 /**
  * Resolve nested project boundaries against the aliases of each project.
  * @param context the repository root, read cache, selected scopes, and Node.js script paths.

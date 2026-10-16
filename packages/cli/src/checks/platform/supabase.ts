@@ -72,8 +72,7 @@ function readProjectFile(input: CheckInput): Parsed<SupabaseConfiguration> | und
     }
 }
 
-// Validate Supabase project declarations and the structured diagnostics of edge functions.
-
+// Validate Supabase project declarations and the structured findings of edge functions.
 const supabaseProjectSchema = z.object({
     storage: z
         .object({ buckets: z.record(z.string(), z.unknown()).optional() } satisfies SchemaShape<
@@ -103,9 +102,10 @@ const denoLintReportSchema = z.object({
 } satisfies SchemaShape<DenoLintReport>);
 
 /**
- * The folders that hold one edge function each: every folder under the functions folder with an index file.
+ * The entry file of each edge function: the first index file of each folder directly under the functions folder,
+ * except shared folders.
  * @param input the check input.
- * @returns the folder paths, repository-relative.
+ * @returns the entry file paths, repository-relative.
  */
 function listFunctionEntries(input: CheckInput): string[] {
     const base = input.scope.view.options('supabase').functions_folder;
@@ -132,7 +132,7 @@ function listFunctionEntries(input: CheckInput): string[] {
 export async function checkSupabaseStoragePolicies(input: CheckInput): Promise<Finding[]> {
     const read = readProjectFile(input);
     const at = { file: posix.join(input.scope.scope.path, SUPABASE_CONFIG_TOML), line: 1 };
-    if (read === undefined || 'error' in read) return []; // supabase/project-file reports project syntax errors.
+    if (read === undefined || 'error' in read) return []; // files/taplo-format reports project syntax errors.
     const { value: config } = read;
     const { migrations, findings: syntax } = await readMigrations(input);
     if (syntax.length > 0) return syntax;

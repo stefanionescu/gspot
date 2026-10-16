@@ -26,6 +26,7 @@ function getAssetSetName(path: string): string {
     const name = posix.basename(folder);
     return name.slice(0, name.lastIndexOf('.'));
 }
+
 /** String catalog metadata and translation records. */
 const stringsFileSchema = z.object({
     sourceLanguage: z.string().optional(),
@@ -78,6 +79,7 @@ export function checkXcodeAssets(input: CheckInput): Finding[] {
                 .map((name) => buildFinding(input, at, 'missing-image', `The image ${name} is not in the set.`));
         });
 }
+
 /**
  * Report asset sets that no source or Xcode build setting names.
  * @param input the asset catalogs, source texts, and project settings that name each resource.
@@ -108,6 +110,7 @@ export function checkXcodeUnusedAssets(input: CheckInput): Finding[] {
             ),
         );
 }
+
 /**
  * The findings of every string catalog: it parses, and every string has every locale the catalog uses.
  * @param input the string catalog paths and cached JSON reads.

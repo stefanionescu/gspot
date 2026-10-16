@@ -34,7 +34,7 @@ import {
     GITLAB_MANUAL_CONDITION,
 } from '#cli/config/generation/ci.ts';
 
-// An action pinned to a commit, with the version the pin stands for as its comment, which pinact verifies.
+// An action pinned to a commit, with the version the pin stands for as its comment.
 function buildPinnedAction({ name, sha, version }: ActionPin): Scalar {
     const node = new Scalar(`${name}@${sha}`);
     node.comment = ` ${version}`;

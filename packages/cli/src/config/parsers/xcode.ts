@@ -5,7 +5,6 @@ export const PBXPROJ = '.xcodeproj/project.pbxproj';
 export const PBXPROJ_NAME = 'project.pbxproj';
 
 /** Sticky tokenization refuses unclosed strings, comments, and unsupported syntax. */
-
 export const PROJECT_TOKEN =
     // eslint-disable-next-line sonarjs/regex-complexity -- reason: The lexer must distinguish strings, two comment forms, punctuation, and bare project tokens in one anchored match.
     /\s+|\/\*[\s\S]*?\*\/|\/\/[^\r\n]*|"(?:\\[\s\S]|[^"\\])*"|[{}()=;,]|(?:\/(?![*/])|[^\s{}()=;,"/])+/u;

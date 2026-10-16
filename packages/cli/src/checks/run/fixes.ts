@@ -103,7 +103,7 @@ async function runCommandFix(
     options: CheckRunOptions,
 ): Promise<FixResult> {
     const check = planned.check.name;
-    // applyFixers selects only checks with a validated, nonempty fixer command.
+    // runFixers selects only checks with a validated, nonempty fixer command.
     const command = planned.check.fix as string[];
     const name = command[0] as string;
     const tool =

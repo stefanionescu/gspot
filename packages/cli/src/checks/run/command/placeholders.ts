@@ -149,7 +149,7 @@ export function selectToolFilePath(session: CommandInputs, planned: Substitution
  *
  * @param session the open session.
  * @param planned the planned check.
- * @param command the command to read, the check's own by default.
+ * @param command the command to read.
  *
  * @returns the tool file paths, relative to the root.
  */

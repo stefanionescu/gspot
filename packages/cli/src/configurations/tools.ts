@@ -136,7 +136,7 @@ export function getToolName(check: CheckDeclaration): string | undefined {
 
 /**
  * Select the tool project installation used by both generated projects and tool resolution.
- * @param tool the pin
+ * @param tool the tool declaration
  * @returns the package to install, or undefined when the host or mise supplies it.
  */
 export function findToolProjectPackage(tool: ToolDeclaration): ToolProjectPackage | undefined {

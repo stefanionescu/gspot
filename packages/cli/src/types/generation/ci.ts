@@ -3,7 +3,7 @@ import type { Settings } from '#cli/types/settings/values.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 
-/** An action commit and the release comment verified by pinact. */
+/** An action commit and the release that its comment names. */
 export type ActionPin = { name: string; sha: string; version: string };
 
 export type Pipeline = {

@@ -38,7 +38,6 @@ function listStaleWholeFiles(files: Files, generated: GenerationResult): StaleFi
         const current = files.read(file.path);
         if (current === undefined) return [{ path: file.path, kind: 'missing' }];
         const disk = current.bytes.toString('utf8');
-        // A merge left its markers in the file: regeneration repairs the unreadable configuration.
         if (disk !== file.content)
             return [
                 {

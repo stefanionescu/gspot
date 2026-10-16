@@ -1,3 +1,4 @@
+// Reads and shapes plain values: records, nested keys, and tables.
 import type { Defined } from '#cli/types/shapes.ts';
 
 /**

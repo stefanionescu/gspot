@@ -92,6 +92,7 @@ export function checkCloudflareRedirects(input: CheckInput): Finding[] {
         ),
     );
 }
+
 /**
  * The syntax findings of every headers file.
  * @param input the selected header paths and cached text reads.

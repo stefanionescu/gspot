@@ -91,12 +91,6 @@ function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable {
 }
 
 /**
- * Encode written values in a stable key order without adding or omitting defaults.
- * @param table the written table
- * @returns TOML that retains dates, number kinds, and array order
- */
-
-/**
  * Write the settings while retaining written comments and template provenance.
  * @param previousText the original written document, or empty text for initialization
  * @param settings the written values, before execution defaults

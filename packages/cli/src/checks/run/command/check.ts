@@ -205,7 +205,7 @@ export async function prepareInScratch(
  *
  * @param session the repository or scratch session.
  * @param planned the selected check and files.
- * @param options the optional function that replaces file arguments for this invocation.
+ * @param options the command and scratch-copy options of this invocation.
  *
  * @returns paths and environment shared by tool inspection and execution.
  */

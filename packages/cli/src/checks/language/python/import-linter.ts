@@ -14,8 +14,6 @@ import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { BROKEN_CONTRACT, IMPORT_LINTER_FILES, LINT_IMPORTS_COMMAND } from '#cli/config/checks/language/python.ts';
 
-// Run Python import contracts for one scope and retain the dependency chains behind each broken contract.
-
 function importLinterFile(input: CheckInput): string | undefined {
     for (const file of IMPORT_LINTER_FILES) {
         const path = posix.join(input.scope.scope.path, file);

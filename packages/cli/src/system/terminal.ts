@@ -1,3 +1,4 @@
+// Prints command results, errors, and warnings as text or JSON, and stops a command on a signal.
 import pc from 'picocolors';
 import { GspotError } from '#cli/system/errors.ts';
 import { PROGRAM_HELP } from '#cli/config/commands/help.ts';
@@ -70,7 +71,7 @@ function printError(failure: string | CommandFailureJson): void {
 }
 
 /**
- * Print the completed command in the selected format and retain its exit code.
+ * Print the completed command in the selected format.
  * @param result the command output
  */
 function printResult(result: CommandResult): void {

@@ -79,8 +79,6 @@ async function scanPythonLicenses(input: CheckInput, start: string): Promise<Lic
         .map((entry) => ({ name: `${entry.Name}@${entry.Version}`, license: entry.License }));
 }
 
-// Each installed project uses its deepest selected scope, while authored exceptions keep their table origin.
-
 function hasProjectDependencies(input: CheckInput, manifest: string): boolean {
     if (basename(manifest) !== 'package.json') return true;
     const project = parseJsonFile(manifest, readCachedBytes(input.reads, manifest).toString('utf8'), packageJsonSchema);
@@ -89,6 +87,7 @@ function hasProjectDependencies(input: CheckInput, manifest: string): boolean {
     );
 }
 
+// Each installed project uses its deepest selected scope, while authored exceptions keep their table origin.
 async function scanLicenses(input: CheckInput) {
     const inventories: ProjectLicenses[] = [];
     const projects = listLicenseProjects(input.files, input.selections, input.settingsFile.settings, input.check);

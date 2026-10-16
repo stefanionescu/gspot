@@ -50,9 +50,9 @@ function groupComposeFiles(files: TrackedFile[]): ComposeFiles[] {
     return [...groups.values()];
 }
 
-// Compose declares paths. YAML defines service, image, and build metadata.
 /**
  * Read Compose declarations and resolve their local build contexts.
+ * Compose declares the paths; the YAML holds the service, image, and build metadata.
  * @param input the selected Compose files and source reads.
  * @returns the service declarations and their build contexts.
  */

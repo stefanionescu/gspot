@@ -35,6 +35,7 @@ async function detectDocstringStyle(session: Session, path: string): Promise<Pyt
         module.tree.delete();
     }
 }
+
 async function groupByDocstringStyle(
     session: Session,
     files: TrackedFile[],
@@ -49,6 +50,7 @@ async function groupByDocstringStyle(
     }
     return groups;
 }
+
 const docstringStyleSchema = z.object({
     tool: z
         .object({
@@ -99,6 +101,7 @@ function parsePydoclintOptions(text: string, convention: unknown): PydoclintOpti
     ]);
     return { command: [...PYDOCLINT_COMMAND, ...defaults], style };
 }
+
 /**
  * Check docstrings with their declared style, or detect Google and NumPy sections in source docstrings.
  * @param session the repository and installed tools.

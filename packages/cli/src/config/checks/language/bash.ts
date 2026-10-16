@@ -14,8 +14,6 @@ export const READONLY_WORD = 'readonly';
 /** Strict mode supported by every declared Bash version. */
 export const STRICT_MODE = 'set -euo pipefail';
 
-/** An ssh heredoc, which needs a name and a description on the line above. */
-
 /** Inline runtime embeds, and what to say about them. */
 export const RUNTIME_EMBEDS = [
     [/\bpython[0-9.]*\s+-c\b/u, 'an inline Python command'],

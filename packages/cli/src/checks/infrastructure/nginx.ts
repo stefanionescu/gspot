@@ -167,7 +167,7 @@ function scanAt(text: string, at: number): DirectiveScan {
     return end <= at ? { token: undefined, end: at + 1 } : { token: text.slice(at, end), end };
 }
 
-// The tokens of an nginx configuration: comments, punctuation, quoted arguments, and bare words.
+// The tokens of an nginx configuration: punctuation, quoted arguments, and bare words. Comments give no token.
 function splitTokens(text: string): string[] {
     const found: string[] = [];
     let at = 0;

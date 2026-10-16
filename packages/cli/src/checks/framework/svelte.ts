@@ -67,6 +67,7 @@ function parseSvelteCheckFindings(input: CheckInput, stdout: string): Finding[] 
         ];
     });
 }
+
 /**
  * Runs svelte-check over the scope: the compiler warnings, the accessibility warnings, and the types.
  * @param input the selected sources, compiler settings, and tool locations.

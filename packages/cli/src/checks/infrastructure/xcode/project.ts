@@ -9,11 +9,16 @@ import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { XCODEPROJ_SUFFIX } from '#cli/config/checks/infrastructure/xcode.ts';
 
-// The folder that holds the project bundle, with its trailing slash, or an empty string at the root.
+/**
+ * The folder that holds the project bundle.
+ * @param projectFile the path of the project.pbxproj file.
+ * @returns the folder with its trailing slash, or an empty string at the root.
+ */
 function getProjectFolder(projectFile: string): string {
     const bundle = projectFile.slice(0, projectFile.indexOf(XCODEPROJ_SUFFIX));
     return bundle.slice(0, bundle.lastIndexOf('/') + 1);
 }
+
 /**
  * Report Swift sources outside targets.
  * @param input the selected project files, Swift sources, and cached file reads.

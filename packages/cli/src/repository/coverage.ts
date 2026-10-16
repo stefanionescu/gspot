@@ -1,3 +1,4 @@
+// Selects the tracked files that each check and configuration covers.
 import { posix } from 'node:path';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';

@@ -12,7 +12,6 @@ import {
 } from '#cli/config/checks/general/naming.ts';
 
 // The block that holds a definition: the body of a class, the body of a function, or the module.
-
 function getHolderType(node: Node): string {
     const block = node.parent?.type === 'decorated_definition' ? node.parent.parent : node.parent;
     return block?.type === 'block' ? (block.parent?.type ?? 'module') : 'module';

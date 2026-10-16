@@ -38,8 +38,6 @@ export type FixResult = { check: string; changed: string[] } & (
     | { status: 'failed'; note: string }
 );
 
-/** Pre-fix bytes of changed files, retained only for isolated publication checks. */
-
 export type FixReport = { results: FixResult[]; changed: string[]; diffs: string[] };
 
 export type RunnableCheck = {
@@ -159,9 +157,7 @@ export type ReportInput = {
 /** Checks and fixer outcomes prepared for the subsequent execution pass. */
 export type PlanAfterFixes = { executables: RunnableCheck[]; fixes: FixReport | undefined };
 
-/** Findings retained after settings ignores and the matches credited to their written entries. */
-
-/** A preview fixes a disposable copy and reports differences. */
+/** A preview fixes a scratch copy and reports differences. */
 export type FixOptions = { isDryRun: boolean };
 
 export type ReproduceOptions = {

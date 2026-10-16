@@ -55,7 +55,6 @@ function buildReplacementPlans(
 ): WritePlan[] {
     const authorized = new Map(reviewedOriginals);
     return generated.files.map((file) => {
-        // Replace reviewed originals and files with merge conflict markers.
         const read = file.kind === 'lock' ? file.read : authorized.get(file.path);
         const replacement = {
             bytes: Buffer.from(file.content),

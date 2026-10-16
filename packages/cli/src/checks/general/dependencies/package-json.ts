@@ -22,7 +22,7 @@ function checkRootPackage(input: CheckInput, root: PackageJson | undefined): Fin
 }
 
 /**
- * Check the root package manager and selected lockfiles.
+ * Check the package manager that the root package.json declares.
  * @param input the selected manifests, lockfile paths, and repository settings.
  * @returns the findings.
  */

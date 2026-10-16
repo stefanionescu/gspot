@@ -76,7 +76,7 @@ export function buildFolderIdentifiers(path: string, language: string, container
  * @param file the file path.
  * @param text the file text.
  * @param language the language configuration the file belongs to.
- * @param context optional execution reads and syntax tree resources.
+ * @param context the execution reads and syntax tree resources.
  * @returns the identifiers in document order.
  */
 export async function parseIdentifiers(
