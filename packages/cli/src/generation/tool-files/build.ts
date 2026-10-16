@@ -14,23 +14,19 @@ import { buildYamllintFile } from '#cli/generation/tool-files/yamllint.ts';
 import { buildStylelintFile } from '#cli/generation/tool-files/stylelint.ts';
 import { buildSwiftlintFile } from '#cli/generation/tool-files/swiftlint.ts';
 import { eslintConfiguration } from '#cli/generation/eslint/configuration.ts';
+import { buildPrettierOptions } from '#cli/generation/tool-files/prettier.ts';
 import { buildCommitlintFile } from '#cli/generation/tool-files/commitlint.ts';
 import { buildShellcheckFile } from '#cli/generation/tool-files/shellcheck.ts';
 import { buildSwiftformatFile } from '#cli/generation/tool-files/swiftformat.ts';
 import { buildMarkdownlintFile } from '#cli/generation/tool-files/markdownlint.ts';
 import { buildHtmlValidateFile } from '#cli/generation/tool-files/html-validate.ts';
-import { generatedIgnores, gitignorePatterns } from '#cli/generation/ignore-files.ts';
 import type { ToolFileBuilder, GenerationInputs } from '#cli/types/generation/files.ts';
 import { buildRuffFile, buildBasedpyrightFile } from '#cli/generation/tool-files/python.ts';
 import { buildSemgrepFile, buildSemgrepignore } from '#cli/generation/tool-files/semgrep.ts';
 import { SEMGREP_CONFIGURATION_COMPONENT } from '#cli/config/generation/tool-file-sources.ts';
+import { buildEditorconfigFile, editorconfigOverrides } from '#cli/generation/tool-files/editorconfig.ts';
+import { generatedIgnores, gitignorePatterns, buildPrettierignore } from '#cli/generation/ignore-files.ts';
 
-import {
-    editorconfigToolFile,
-    editorconfigOverrides,
-    prettierConfiguration,
-    prettierignoreToolFile,
-} from '#cli/generation/formatting.ts';
 import {
     buildV8rFile,
     buildGixyFile,
@@ -95,12 +91,12 @@ const builders: Record<string, ToolFileBuilder | undefined> = {
             repository: session.repository,
         }),
     prettierignore: ({ session, selection }) =>
-        prettierignoreToolFile({
+        buildPrettierignore({
             ignoresFor: selection.view.ignoresFor,
             ignoredPaths: gitignorePatterns(session),
         }),
     editorconfig: ({ session, selection }) =>
-        editorconfigToolFile({
+        buildEditorconfigFile({
             format: selection.view.format,
             extra: selection.view.extra,
             editorconfigOverrides: () => editorconfigOverrides(session.settingsFile.settings),
@@ -217,7 +213,7 @@ const builders: Record<string, ToolFileBuilder | undefined> = {
         ),
     'prettier.json': ({ session, selection, targetPath }) =>
         JSON.stringify(
-            prettierConfiguration({
+            buildPrettierOptions({
                 settings: session.settingsFile.settings,
                 format: selection.view.format,
                 extra: selection.view.extra('prettier'),

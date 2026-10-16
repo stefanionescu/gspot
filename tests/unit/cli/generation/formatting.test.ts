@@ -18,7 +18,7 @@ import { buildScopeView } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
-import { prettierConfiguration } from '#cli/generation/formatting.ts';
+import { buildPrettierOptions } from '#cli/generation/tool-files/prettier.ts';
 import { SVELTE_PLUGIN, PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/formatting.ts';
 
 test('format.indent_width reaches EditorConfig, Prettier and each tool file', async () => {
@@ -143,7 +143,7 @@ const { format } = buildScopeView(buildKnownSettings(selected, settings.level), 
 describe('prettierConfiguration', () => {
     test('a plugin is imported from the tool project relative to each tool file', () => {
         expect(
-            prettierConfiguration({
+            buildPrettierOptions({
                 settings: settings,
                 format,
                 targetPath: '.gspot/config/prettier.json',
@@ -152,7 +152,7 @@ describe('prettierConfiguration', () => {
             })['plugins'],
         ).toStrictEqual(['../../.gspot/node_modules/prettier-plugin-svelte/plugin.js']);
         expect(
-            prettierConfiguration({
+            buildPrettierOptions({
                 settings: settings,
                 format,
                 targetPath: 'prettier.config.mjs',
@@ -163,7 +163,7 @@ describe('prettierConfiguration', () => {
     });
 
     test('plugin overrides come before your overrides, and no plugin adds no key', () => {
-        const pluginPolicy = prettierConfiguration({
+        const pluginPolicy = buildPrettierOptions({
             settings: settings,
             format,
             targetPath: '.gspot/config/prettier.json',
@@ -174,7 +174,7 @@ describe('prettierConfiguration', () => {
             { files: '*.svelte', options: { embeddedLanguageFormatting: 'auto' } },
             { files: ['../../docs/**'], options: { printWidth: 80 } },
         ]);
-        const without = prettierConfiguration({
+        const without = buildPrettierOptions({
             settings: settings,
             format,
             targetPath: '.gspot/config/prettier.json',

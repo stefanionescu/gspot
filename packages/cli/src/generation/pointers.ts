@@ -7,9 +7,9 @@ import { formatHeader } from '#cli/generation/header.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
-import { prettierConfiguration } from '#cli/generation/formatting.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { type ToolFileDeclaration } from '#cli/types/configurations.ts';
+import { buildPrettierOptions } from '#cli/generation/tool-files/prettier.ts';
 import { requiredToolNames, listPrettierPlugins } from '#cli/planning/needed-tools.ts';
 import { isInScope, joinScope, listNestedScopes, buildScopeTarget } from '#cli/repository/scopes.ts';
 import { convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
@@ -224,7 +224,7 @@ function buildPointerFiles(context: ToolFileInputs, toolFile: ToolFileDeclaratio
             ? {
                   path,
                   kind: 'pointer',
-                  content: `${formatHeader(path)}export default ${JSON.stringify(prettierConfiguration({ settings: session.settingsFile.settings, format: selection.view.format, extra: selection.view.extra('prettier'), plugins: [...listPrettierPlugins(session.scopes.flatMap(({ selected }) => selected)).values()], targetPath: path }), null, JSON_INDENT)};\n`,
+                  content: `${formatHeader(path)}export default ${JSON.stringify(buildPrettierOptions({ settings: session.settingsFile.settings, format: selection.view.format, extra: selection.view.extra('prettier'), plugins: [...listPrettierPlugins(session.scopes.flatMap(({ selected }) => selected)).values()], targetPath: path }), null, JSON_INDENT)};\n`,
               }
             : buildBodyPointer(pointer, path, target),
     );
