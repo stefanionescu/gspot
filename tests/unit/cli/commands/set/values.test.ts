@@ -6,10 +6,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
-import { knownSettings } from '#cli/settings/view.ts';
-import { settingValue } from '#cli/settings/inherit.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { getSettingValue } from '#cli/settings/inherit.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
+import { buildKnownSettings } from '#cli/settings/known.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTree, pathExists } from '#tests/setup/files.ts';
@@ -70,7 +70,7 @@ test.each([...EXTRA_OPTION_SCOPES])(
         expect(written.code, written.stdout + written.stderr).toBe(0);
         const { settings } = readSettings(sandbox.path);
         const selected = selectForScope(settings, scope, readManifests(createReadCache(process.cwd())));
-        expect(settingValue(knownSettings(selected), settings, key, scope)).toMatchObject({
+        expect(getSettingValue(buildKnownSettings(selected), settings, key, scope)).toMatchObject({
             value: TAPLO_OPTIONS,
             reason: TAPLO_REASON,
             source,

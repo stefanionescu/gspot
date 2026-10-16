@@ -3,11 +3,11 @@ import { join, basename } from 'node:path';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
-import { knownSettings } from '#cli/settings/view.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { buildKnownSettings } from '#cli/settings/known.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -113,7 +113,7 @@ We delve into records.
     );
 });
 
-const { value: defaultMaximum } = knownSettings(
+const { value: defaultMaximum } = buildKnownSettings(
     [readManifests(createReadCache(process.cwd())).get('structure')!],
     'all',
 ).defaults.get('limits.function_parameters')!;

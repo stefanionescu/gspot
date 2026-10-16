@@ -1,25 +1,24 @@
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import { type SchemaShape } from '#cli/types/objects.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
-import { rulesSchema } from '#cli/settings/schema/rules.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
+import { namingSchema } from '#cli/settings/schema/naming.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { SETTINGS_DESCRIPTIONS } from '#cli/config/settings/values.ts';
 import { architectureSchema } from '#cli/settings/schema/architecture.ts';
 import { SCHEMA_FILE, SCHEMA_URL_PREFIX } from '#cli/config/settings/file.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/settings/schema/tools.ts';
+import { levelSchema, commandCheckFields } from '#cli/configurations/schema/parts.ts';
 import { DEFAULT_VALUES, RECORD_DESCRIPTIONS } from '#cli/config/settings/defaults.ts';
-import { namingSchema, configurationTableSchemas } from '#cli/settings/schema/tables.ts';
-import type { WrittenScope, ParsedSettings, WrittenSettings } from '#cli/types/settings/file.ts';
+import { ciSchema, hooksSchema, rulesSchema } from '#cli/settings/schema/integrations.ts';
+import { tableSettingSchemas, configurationTableSchemas } from '#cli/settings/schema/tables.ts';
 
 import {
-    levelSchema,
-    commandSchema,
-    commandCheckFields,
-    operatingSystemSchema,
-} from '#cli/configurations/schema/parts.ts';
+    type WrittenScope,
+    type ParsedSettings,
+    type TemplateTables,
+    type WrittenSettings,
+} from '#cli/types/settings/file.ts';
 import {
-    CI_PROVIDERS,
     ALLOWED_WORD,
     LEVEL_SUMMARY,
     ALL_LEVEL_SUMMARY,
@@ -28,13 +27,13 @@ import {
     DEFAULT_TEST_PATTERNS,
 } from '#cli/config/settings/schema.ts';
 import {
-    reasonValue,
     formatSchema,
     relativePath,
-    relativePaths,
     nonemptyPaths,
+    relativePaths,
     localDateSchema,
-    settingsJsonSchema,
+    allowReasonedValue,
+    calendarDateSchema,
     unwrapSettingSchema,
 } from '#cli/settings/schema/parts.ts';
 
@@ -70,11 +69,8 @@ const commandCheckSchema = z.strictObject({
     NonNullable<WrittenSettings['command_check']>[number]
 >);
 
-const hooksSchema = z.strictObject({
-    enabled: z.boolean().default(false).describe('Install and run the configured Git hooks.'),
-} satisfies SchemaShape<NonNullable<Settings['hooks']>, NonNullable<WrittenSettings['hooks']>>);
-
 const { structure: rootStructure, ...scopeTables } = configurationTableSchemas;
+
 const rootBody = {
     ...scopeTables,
     tools: publicToolsSchema.optional(),
@@ -142,69 +138,8 @@ const scopeBody = {
         .optional(),
 };
 
-const ciFields = {
-    enabled: z.boolean().default(false).describe(SETTINGS_DESCRIPTIONS['ci.enabled']),
-    provider: z.enum(CI_PROVIDERS).default('github').describe(SETTINGS_DESCRIPTIONS['ci.provider']),
-    setup_command: commandSchema.optional().describe(SETTINGS_DESCRIPTIONS['ci.setup_command']),
-    operating_systems: z
-        .array(operatingSystemSchema)
-        .min(1)
-        .default(['linux'])
-        .describe('The operating systems of the CI jobs. GitHub only; refused with provider = "gitlab".'),
-} satisfies SchemaShape<NonNullable<Settings['ci']>, NonNullable<WrittenSettings['ci']>>;
-
-const ciSchema = z
-    .strictObject({
-        ...ciFields,
-        operating_systems: ciFields.operating_systems
-            .unwrap()
-            .optional()
-            .meta({
-                description: ciFields.operating_systems.description,
-                default: ciFields.operating_systems.parse(undefined),
-            }),
-    } satisfies SchemaShape<
-        Omit<NonNullable<Settings['ci']>, 'operating_systems'> &
-            Pick<NonNullable<WrittenSettings['ci']>, 'operating_systems'>,
-        NonNullable<WrittenSettings['ci']>
-    >)
-    .superRefine((ci, context) => {
-        if (ci.provider === 'gitlab' && ci.operating_systems !== undefined)
-            context.addIssue({
-                code: 'custom',
-                path: ['operating_systems'],
-                message: 'ci.operating_systems is GitHub only. Remove it when ci.provider is "gitlab".',
-            });
-    })
-    .transform((ci) => ({
-        ...ci,
-        operating_systems: ci.operating_systems ?? ciFields.operating_systems.parse(undefined),
-    }))
-    .meta({
-        allOf: [
-            {
-                if: { properties: { provider: { const: 'gitlab' } }, required: ['provider'] },
-                // eslint-disable-next-line unicorn/no-thenable -- reason: JSON Schema defines this conditional keyword.
-                then: { not: { required: ['operating_systems'] } },
-            },
-        ],
-    }) satisfies z.ZodType<NonNullable<Settings['ci']>, NonNullable<WrittenSettings['ci']>>;
-
-/** The [hooks], [ci], and [rules] fields as dotted settings; fields without defaults allow omission. */
-export const tableSettingSchemas = Object.fromEntries(
-    Object.entries({ hooks: hooksSchema.shape, ci: ciFields, rules: rulesSchema.shape }).flatMap(([section, fields]) =>
-        Object.entries<z.ZodType>(fields).map(
-            ([key, field]) =>
-                [
-                    `${section}.${key}`,
-                    field.safeParse(undefined).success ? field : field.optional().describe(field.description ?? ''),
-                ] as const,
-        ),
-    ),
-);
-
 /** One scope record: its path, configuration choices, and settings tables. */
-export const scopeSchema = z.strictObject({
+const scopeSchema = z.strictObject({
     path: relativePath.describe(SETTINGS_DESCRIPTIONS['scope.path']),
     configurations: z.array(z.string()).default([]).describe(SETTINGS_DESCRIPTIONS['scope.configurations']),
     removed_configurations: z
@@ -219,11 +154,11 @@ export const scopeSchema = z.strictObject({
 >;
 
 /** Top-level gspot.toml keys shown by gspot list settings and the settings reference. */
-export const rootSettingSchemas = {
+const rootSettingSchemas = {
     level: levelSchema.default('recommended').meta({
         description: `${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY}`,
     }),
-    allowed_words: reasonValue(
+    allowed_words: allowReasonedValue(
         z.array(z.string().regex(ALLOWED_WORD, 'Use a plain word, without a regular expression pattern.')),
     )
         .default([])
@@ -247,7 +182,7 @@ export const rootSettingSchemas = {
         }),
 };
 
-export const settingsSchema = z
+const settingsSchema = z
     .strictObject({
         ...rootSettingSchemas,
         configurations: z.array(z.string()).default([]).describe(SETTINGS_DESCRIPTIONS.configurations),
@@ -293,13 +228,13 @@ export const settingsSchema = z
  * Write the editor schema for the version of gspot that owns these settings.
  * @returns the JSON Schema document
  */
-export function buildJsonSchema(): Record<string, unknown> {
+function buildJsonSchema(): Record<string, unknown> {
     return {
         $schema: JSON_SCHEMA_DIALECT,
         $id: `${SCHEMA_URL_PREFIX}${packageManifest.version}/${SCHEMA_FILE}`,
         title: 'gspot.toml',
         description: 'The settings of gspot for one repository.',
-        ...settingsJsonSchema(settingsSchema),
+        ...convertToJsonSchema(settingsSchema),
     };
 }
 
@@ -308,7 +243,7 @@ export function buildJsonSchema(): Record<string, unknown> {
  * @param key the dotted setting key
  * @returns its authoritative schema, or undefined when the key names no setting
  */
-export function settingSchema(key: string): z.ZodType | undefined {
+function findSettingSchema(key: string): z.ZodType | undefined {
     const direct = Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).find(([name]) => name === key);
     if (direct !== undefined) return direct[1];
     const parts = key.split('.');
@@ -325,3 +260,36 @@ export function settingSchema(key: string): z.ZodType | undefined {
     }
     return schema;
 }
+
+/** Reusable root settings without repository scope records. */
+const templateSchema = settingsSchema.safeExtend({ scope: z.never().optional() } satisfies SchemaShape<
+    Pick<ParsedSettings, 'scope'>,
+    Pick<WrittenSettings, 'scope'>
+>) satisfies z.ZodType<Omit<ParsedSettings, 'scope'>, TemplateTables>;
+/**
+ * Publish settings input schemas while retaining written defaults and declaration metadata.
+ * @param schema the authoritative runtime validator.
+ * @returns its object projection, with TOML dates represented as calendar strings.
+ */
+function convertToJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
+    return z.toJSONSchema(schema, {
+        io: 'input',
+        unrepresentable: ({ zodSchema }) =>
+            zodSchema === localDateSchema ? z.toJSONSchema(calendarDateSchema) : 'throw',
+        override: ({ zodSchema, jsonSchema }) => {
+            const metadata = z.globalRegistry.get(zodSchema);
+            if (metadata && Object.hasOwn(metadata, 'examples'))
+                Object.assign(jsonSchema, { examples: metadata['examples'] });
+        },
+    });
+}
+
+export {
+    scopeSchema,
+    settingsSchema,
+    templateSchema,
+    buildJsonSchema,
+    findSettingSchema,
+    rootSettingSchemas,
+    convertToJsonSchema,
+};

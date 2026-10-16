@@ -1,12 +1,12 @@
 import { FIRST_READ } from '#cli/config/rules.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { everyTable } from '#cli/settings/inherit.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
-import { configurationSettings } from '#cli/settings/view.ts';
+import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { RULES_DIRECTORY } from '#cli/config/system/locations.ts';
+import { listConfigurationSettings } from '#cli/settings/known.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { buildPathKey, trimTrailingSlashes } from '#cli/system/paths.ts';
@@ -14,13 +14,13 @@ import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/t
 import type { ToolTable, SettingsError, RuleExcludeError } from '#cli/types/settings/file.ts';
 import { listRuleFiles, readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 
-function toolRuleErrors(tool: string, table: ToolTable, path: KeyPath, reads: ReadCache): SettingsError[] {
+function validateToolRules(tool: string, table: ToolTable, path: KeyPath, reads: ReadCache): SettingsError[] {
     const rules = table['rules'];
     if (!isRecord(rules)) return [];
     const manifests = readManifests(reads);
     const disabledOptions = [...manifests.values()]
-        .flatMap((manifest) => configurationSettings(manifest.configuration.name))
-        .find((declaration) => declaration.name === `tools.${tool}.rules`)?.off_values;
+        .flatMap((manifest) => listConfigurationSettings(manifest.configuration.name))
+        .find((declaration) => declaration.name === `tools.${tool}.rules`)?.offValues;
     if (disabledOptions === undefined) return [];
     const disabled = Object.entries(rules).filter(([, option]) => {
         const severity: unknown = Array.isArray(option) ? option[0] : option;
@@ -65,22 +65,22 @@ function duplicateScopeErrors(paths: string[]): SettingsError[] {
  * @param reads the run cache.
  * @returns the prohibited changes, at both check levels
  */
-function disabledRuleErrors(settings: Settings, reads: ReadCache): SettingsError[] {
-    const exclusions = ruleExcludeErrors(settings.rules.exclude, reads).map(({ index, message }) => ({
+function validateDisabledRules(settings: Settings, reads: ReadCache): SettingsError[] {
+    const exclusions = validateRuleExcludes(settings.rules.exclude, reads).map(({ index, message }) => ({
         path: ['rules', 'exclude', index],
         message,
     }));
     return [
         ...exclusions,
-        ...everyTable(settings).flatMap(({ table, path }) =>
+        ...listSettingsTables(settings).flatMap(({ table, path }) =>
             (table.tools === undefined ? [] : Object.entries(table.tools)).flatMap(([tool, table]) => {
                 const location = [...path, 'tools', tool];
                 const overrides = Array.isArray(table['override']) ? table['override'] : [];
                 return [
-                    ...toolRuleErrors(tool, table, location, reads),
+                    ...validateToolRules(tool, table, location, reads),
                     ...overrides.flatMap((override: unknown, index) =>
                         isRecord(override)
-                            ? toolRuleErrors(tool, override, [...location, 'override', index], reads)
+                            ? validateToolRules(tool, override, [...location, 'override', index], reads)
                             : [],
                     ),
                 ];
@@ -95,7 +95,7 @@ function disabledRuleErrors(settings: Settings, reads: ReadCache): SettingsError
  * @param settings the normalized settings
  * @returns the errors in plain English
  */
-function pathErrors(root: string, settings: Settings): SettingsError[] {
+function validateScopePaths(root: string, settings: Settings): SettingsError[] {
     const paths = Array.isArray(settings.written['scope'])
         ? settings.written['scope'].flatMap((entry) =>
               isRecord(entry) && typeof entry['path'] === 'string' ? [entry['path']] : [],
@@ -127,7 +127,7 @@ function pathErrors(root: string, settings: Settings): SettingsError[] {
  * @param tools the tool declarations owning refused options.
  * @returns each refused tool option at its written path.
  */
-function extraOptionErrors(table: Partial<Settings>, tools: ToolDeclaration[]): SettingsError[] {
+function validateExtraOptions(table: Partial<Settings>, tools: ToolDeclaration[]): SettingsError[] {
     const errors: SettingsError[] = [];
     for (const tool of tools) {
         const options = table.tools?.[tool.name]?.['extra'];
@@ -158,7 +158,7 @@ function isExcluded(entry: string, path: string): boolean {
  * @param reads the run cache.
  * @returns each error with its position in the exclusion list
  */
-function ruleExcludeErrors(exclude: string[], reads: ReadCache): RuleExcludeError[] {
+function validateRuleExcludes(exclude: string[], reads: ReadCache): RuleExcludeError[] {
     if (exclude.length === 0) return [];
     const paths = [...readManifests(reads).values()].flatMap((manifest) =>
         listRuleFiles(manifest).map((file) => file.path),
@@ -181,4 +181,4 @@ function ruleExcludeErrors(exclude: string[], reads: ReadCache): RuleExcludeErro
     });
 }
 
-export { pathErrors, isExcluded, extraOptionErrors, disabledRuleErrors };
+export { isExcluded, validateScopePaths, validateExtraOptions, validateDisabledRules };

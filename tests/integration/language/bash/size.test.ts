@@ -4,8 +4,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { containing } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { configurationSettings } from '#cli/settings/view.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { listConfigurationSettings } from '#cli/settings/known.ts';
 import { sandboxPath, installToolProjects } from '#tests/setup/install.ts';
 
 import {
@@ -23,7 +23,7 @@ import {
  * @returns its declared numeric default.
  */
 function defaultLimit(name: string): number {
-    const setting = configurationSettings('structure').find(
+    const setting = listConfigurationSettings('structure').find(
         ({ name: key }) => key === name.replace('limits.bash.', 'limits.'),
     )!;
     return Number(setting.language_defaults?.['bash'] ?? setting.default);

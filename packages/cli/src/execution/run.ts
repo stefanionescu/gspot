@@ -2,13 +2,13 @@ import pLimit from 'p-limit';
 import { availableParallelism } from 'node:os';
 import { GspotError } from '#cli/system/errors.ts';
 import { applyFixers } from '#cli/execution/fixes.ts';
-import { activeIgnores } from '#cli/settings/view.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { findTool } from '#cli/execution/command/tool.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { IgnoreEntry } from '#cli/types/settings/file.ts';
+import { listActiveIgnores } from '#cli/settings/scope-view.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { listFileDeclarations } from '#cli/repository/classify.ts';
@@ -188,7 +188,7 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
     const started = new Date();
     const { executables, fixes } = await replanAfterFixes(session, options);
     const planned = executables.map(({ check }) => check);
-    const ignore = activeIgnores(session.settingsFile.settings);
+    const ignore = listActiveIgnores(session.settingsFile.settings);
     const pass: RunState = {
         session,
         options,

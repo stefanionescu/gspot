@@ -4,8 +4,8 @@ import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { knownSettings } from '#cli/settings/view.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { buildKnownSettings } from '#cli/settings/known.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash/tools.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
@@ -16,7 +16,9 @@ import { REASON_VALUES, EXPLAIN_SETTINGS } from '#tests/config/explain.ts';
 import { containing, containingAll, textContaining } from '#tests/setup/matchers.ts';
 
 test("explain shows each scope's default and current naming limit", async () => {
-    const settings = knownSettings(selectConfigurations(['naming'], readManifests(createReadCache(process.cwd()))));
+    const settings = buildKnownSettings(
+        selectConfigurations(['naming'], readManifests(createReadCache(process.cwd()))),
+    );
     const swift = Number(settings.defaults.get('naming.swift.max_characters')?.value);
     const sql = Number(settings.defaults.get('naming.sql.max_words')?.value);
     await using sandbox = await testdir();

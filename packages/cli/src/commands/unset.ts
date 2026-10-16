@@ -6,9 +6,9 @@ import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
-import { unknownSettingError } from '#cli/settings/errors/keys.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { writtenValue, declarationFor } from '#cli/settings/inherit.ts';
+import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
+import { getWrittenValue, findDeclaration } from '#cli/settings/inherit.ts';
 import { saveSettings, startSettingsEdit } from '#cli/commands/save-settings.ts';
 import { deleteKey, findScopeTable, removeFromList } from '#cli/settings/edit.ts';
 
@@ -34,8 +34,8 @@ export function registerUnset(program: Command): void {
             const known = (
                 session.scopes.find((selection) => selection.scope.path === (flags.scope ?? '')) as ScopeSelection
             ).known;
-            const match = declarationFor(known, setting);
-            if (match === undefined) throw new GspotError('arguments', unknownSettingError(known, setting));
+            const match = findDeclaration(known, setting);
+            if (match === undefined) throw new GspotError('arguments', formatUnknownSetting(known, setting));
             if (items.length > 0 && match.declaration.type !== 'list' && match.declaration.type !== 'table')
                 throw new GspotError(
                     'arguments',
@@ -55,7 +55,7 @@ export function registerUnset(program: Command): void {
                             removeFromList(scopeTable, setting, items);
                             return;
                         }
-                        const table = writtenValue(getValueAt(scopeTable, setting.split('.')));
+                        const table = getWrittenValue(getValueAt(scopeTable, setting.split('.')));
                         if (!isRecord(table)) return;
                         for (const item of items) Reflect.deleteProperty(table, item);
                         if (Object.keys(table).length === 0) deleteKey(scopeTable, setting);

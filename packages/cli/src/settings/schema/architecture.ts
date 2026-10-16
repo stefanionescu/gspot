@@ -18,7 +18,7 @@ const architectureRolesSchema = z.strictObject({
     Pick<NonNullable<WrittenArchitecture['roles']>, 'environment_readers'>
 >);
 
-export const architectureSchema = z
+const architectureSchema = z
     .strictObject({
         module: z
             .array(
@@ -78,3 +78,5 @@ export const architectureSchema = z
                     });
             }
     });
+
+export { architectureSchema };

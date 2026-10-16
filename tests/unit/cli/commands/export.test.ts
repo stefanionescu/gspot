@@ -8,7 +8,7 @@ import { applyCommand } from '#cli/commands/apply.ts';
 import { exportCommand } from '#cli/commands/export.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { stat, chmod, symlink, readFile } from 'node:fs/promises';
-import { exportTemplate, downloadTemplate } from '#cli/settings/templates.ts';
+import { readTemplate, exportTemplate } from '#cli/settings/templates.ts';
 
 test('export is repeatable, writes the template again after an edit, and apply leaves it alone', async () => {
     await using directory = await testdir();
@@ -42,7 +42,7 @@ test('export from a nested folder writes a parent path inside the repository', a
     });
     expect(exported.exitCode).toBe(0);
     expect(exported.json).toStrictEqual({ file: 'team.template.toml', leftOut: [], warnings: [] });
-    const restored = await downloadTemplate('team.template.toml', directory.path);
+    const restored = await readTemplate('team.template.toml', directory.path);
     expect(restored.tables.configurations).toStrictEqual(['bash']);
     expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe(settings);
     expect(await readFile(join(directory.path, 'app/entry.sh'), 'utf8')).toBe('echo example\n');
@@ -112,7 +112,7 @@ test('export to a folder outside the repository writes the template and nothing 
     const destination = join(outside.path, 'shared.template.toml');
     const exported = await exportCommand({ cwd: directory.path, file: destination });
     expect(exported.exitCode).toBe(0);
-    const restored = await downloadTemplate(destination, directory.path);
+    const restored = await readTemplate(destination, directory.path);
     expect(restored.tables.rules).toStrictEqual({ enabled: false });
     expect(await readTree(directory.path)).toStrictEqual(before);
 });

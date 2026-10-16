@@ -11,7 +11,7 @@ import { Argument, type Command } from '@commander-js/extra-typings';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { KEY_GAP, LIST_KINDS, VALUE_WIDTH } from '#cli/config/commands/list.ts';
 import { type Settings, type ScopeSelection } from '#cli/types/settings/values.ts';
-import { everyTable, listSettings, writtenSetting } from '#cli/settings/inherit.ts';
+import { listSettings, getWrittenSetting, listSettingsTables } from '#cli/settings/inherit.ts';
 import { type SettingsListJson, type ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 function scopeTag(scope: string | undefined): string {
@@ -83,14 +83,14 @@ function buildConfigurationsResult(session: Session): CommandResult {
  * @returns the rows and the extra tables
  */
 function buildSettingRows(settings: Settings, scopes: ScopeSelection[]): SettingsListJson {
-    const extras = everyTable(settings).flatMap(({ table, scope = '' }) =>
+    const extras = listSettingsTables(settings).flatMap(({ table, scope = '' }) =>
         (table.tools === undefined ? [] : Object.entries(table.tools)).flatMap(([tool, { extra }]) =>
             isRecord(extra)
                 ? [
                       stripUndefined({
                           tool,
                           keys: Object.keys(extra),
-                          reason: writtenSetting(table, `tools.${tool}.extra`)?.reason,
+                          reason: getWrittenSetting(table, `tools.${tool}.extra`)?.reason,
                           scope,
                       }),
                   ]

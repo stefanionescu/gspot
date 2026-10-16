@@ -1,8 +1,8 @@
 import { splitByCase } from 'scule';
-import { tablesFor } from '#cli/settings/inherit.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
+import { listApplicableTables } from '#cli/settings/inherit.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { readNamingDefaults } from '#cli/configurations/manifests.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
@@ -105,7 +105,7 @@ function readNamingSettings(
     const settings = input.settingsFile.settings;
     const reads = input.reads;
     const shipped = readNamingDefaults(reads);
-    const tables = tablesFor(settings, scope).map(({ table }) => table.naming);
+    const tables = listApplicableTables(settings, scope).map(({ table }) => table.naming);
     const bannedWords = [...new Set(tables.flatMap((table) => table?.banned_words ?? []))];
     const terms = [
         ...Object.entries(shipped.groups).flatMap(([group, { terms }]) =>

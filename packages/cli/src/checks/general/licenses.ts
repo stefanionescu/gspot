@@ -14,10 +14,10 @@ import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { licenseProjects } from '#cli/planning/needed-tools.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
-import { everyTable, writtenSetting } from '#cli/settings/inherit.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
 import { configurationTableSchemas } from '#cli/settings/schema/tables.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
+import { getWrittenSetting, listSettingsTables } from '#cli/settings/inherit.ts';
 import { type LicensedPackage, type ProjectLicenses } from '#cli/types/checks/general.ts';
 import { PIP_LICENSES_COMMAND, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
 import { packageJsonSchema, normalizePythonIdentity } from '#cli/parsers/dependency-files.ts';
@@ -155,8 +155,8 @@ export async function allowedLicenses(input: CheckInput): Promise<Finding[]> {
             ];
         });
     });
-    const stale = everyTable(input.settingsFile.settings).flatMap(({ table, scope = '' }) => {
-        const authored = writtenSetting(table, 'licenses.allowed_package');
+    const stale = listSettingsTables(input.settingsFile.settings).flatMap(({ table, scope = '' }) => {
+        const authored = getWrittenSetting(table, 'licenses.allowed_package');
         if (authored === undefined || skipped.some((manifest) => isInScope(manifest, scope))) return [];
         const exceptions = configurationTableSchemas.licenses
             .unwrap()

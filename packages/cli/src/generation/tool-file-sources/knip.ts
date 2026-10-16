@@ -1,9 +1,9 @@
 // The entry files of a folder: what the settings declares for it, then what the configurations of the deepest scope around it know.
 
-import { tablesFor } from '#cli/settings/inherit.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { prefixScopePath } from '#cli/settings/paths.ts';
 import { pointerPaths } from '#cli/generation/pointers.ts';
+import { joinScopeSelector } from '#cli/settings/paths.ts';
+import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import type { EmitInputs } from '#cli/types/generation/files.ts';
 import { listWorkspaceFolders } from '#cli/tools/npm/packages.ts';
@@ -30,7 +30,7 @@ import {
  * @returns entry patterns for each scope.
  */
 function entryFiles(settings: Settings, scopes: ScopeSelection[], scope: string): string[] {
-    const authored = tablesFor(settings, scope).flatMap(({ table }) => {
+    const authored = listApplicableTables(settings, scope).flatMap(({ table }) => {
         const entries = table.tools?.['knip']?.[KNIP_ENTRY_SETTING];
         return Array.isArray(entries) ? entries.filter((entry): entry is string => typeof entry === 'string') : [];
     });
@@ -42,7 +42,7 @@ function entryFiles(settings: Settings, scopes: ScopeSelection[], scope: string)
             ...(selected.some((manifest) => manifest.configuration.name === 'javascript')
                 ? KNIP_JAVASCRIPT_ENTRY_FILES
                 : []
-            ).map((pattern) => prefixScopePath(pattern, scope)),
+            ).map((pattern) => joinScopeSelector(pattern, scope)),
             ...view.test_files,
         ]);
     return [...new Set([...authored, ...declared])].flatMap((pattern) => {

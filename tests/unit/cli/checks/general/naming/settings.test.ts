@@ -1,9 +1,10 @@
 import { test, expect } from 'bun:test';
 import { parseSettings } from '#cli/settings/read.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { buildKnownSettings } from '#cli/settings/known.ts';
+import { buildScopeView } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Identifier } from '#cli/types/checks/general.ts';
-import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import { nameFindings } from '#cli/checks/general/naming/names.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
@@ -22,7 +23,7 @@ const check = listChecksById(readManifests(createReadCache(process.cwd())).value
 
 test('category limits inherit root and scope language settings while explicit categories take precedence', () => {
     const selected = selectConfigurations(['naming'], readManifests(createReadCache(process.cwd())));
-    const known = knownSettings(selected);
+    const known = buildKnownSettings(selected);
     const settings = parseSettings(
         settingsText(['naming'], {
             rules: true,
@@ -30,7 +31,7 @@ test('category limits inherit root and scope language settings while explicit ca
         }),
     );
     for (const { scope, characters, functions, words } of SCOPE_LIMITS) {
-        const view = scopeView(known, settings, selected, scope);
+        const view = buildScopeView(known, settings, selected, scope);
         const effective = readNamingSettings({
             selection: { view: view, scope: { path: scope }, selected: selected },
             settingsFile: { settings: settings },
@@ -49,9 +50,9 @@ test('category limits inherit root and scope language settings while explicit ca
 
 test.each([...NAMING_LANGUAGES])('%s accepts its exact limits and reports the next character or word', (language) => {
     const selected = selectConfigurations(['naming'], readManifests(createReadCache(process.cwd())));
-    const known = knownSettings(selected);
+    const known = buildKnownSettings(selected);
     const settings = parseSettings(settingsText(['naming'], { rules: true }));
-    const view = scopeView(known, settings, selected, '');
+    const view = buildScopeView(known, settings, selected, '');
     const effective = readNamingSettings({
         selection: { view: view, scope: { path: '' }, selected: selected },
         settingsFile: { settings: settings },
@@ -89,7 +90,7 @@ test.each([...LINTER_CHECKED_CATEGORIES])(
     "$language $category: the language's own linter owns case and length; word limits still apply",
     ({ language, category, native }) => {
         const selected = selectConfigurations(['naming'], readManifests(createReadCache(process.cwd())));
-        const known = knownSettings(selected);
+        const known = buildKnownSettings(selected);
         const settings = parseSettings(
             settingsText(['naming'], {
                 rules: true,
@@ -98,7 +99,7 @@ test.each([...LINTER_CHECKED_CATEGORIES])(
             }),
         );
         const effective = readNamingSettings({
-            selection: { view: scopeView(known, settings, selected, ''), scope: { path: '' }, selected: selected },
+            selection: { view: buildScopeView(known, settings, selected, ''), scope: { path: '' }, selected: selected },
             settingsFile: { settings: settings },
             reads: createReadCache(process.cwd()),
         });
@@ -131,7 +132,7 @@ test("a framework's naming rules come after the shipped ones and before the repo
     const selected = selectConfigurations(['naming', 'typescript', 'express'], manifests);
     const effective = readNamingSettings({
         selection: {
-            view: scopeView(knownSettings(selected), settings, selected, ''),
+            view: buildScopeView(buildKnownSettings(selected), settings, selected, ''),
             scope: { path: '' },
             selected,
         },

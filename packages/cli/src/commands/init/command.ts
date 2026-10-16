@@ -5,6 +5,7 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { stripUndefined } from '#cli/system/values.ts';
+import { readTemplate } from '#cli/settings/templates.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { isInteractive } from '#cli/system/environment.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
@@ -12,7 +13,6 @@ import { type CommandResult } from '#cli/types/terminal.ts';
 import { writeInitFiles } from '#cli/commands/init/write.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { print, printResult } from '#cli/system/terminal.ts';
-import { downloadTemplate } from '#cli/settings/templates.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import { readFormatTables } from '#cli/commands/init/format.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
@@ -82,7 +82,7 @@ async function initCommand(input: InitOptions): Promise<CommandResult<InitJson>>
         );
     let effective = options;
     if (options.from !== undefined) {
-        const template = await downloadTemplate(options.from, options.cwd);
+        const template = await readTemplate(options.from, options.cwd);
         effective = { ...options, template };
     }
     const prepared = await planInit(root, effective);

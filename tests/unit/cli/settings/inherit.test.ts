@@ -3,15 +3,15 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { parseSettings } from '#cli/settings/read.ts';
-import { knownSettings } from '#cli/settings/view.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
+import { buildKnownSettings } from '#cli/settings/known.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
-import { settingValue, declarationFor } from '#cli/settings/inherit.ts';
 import { settingsText, settingsErrors } from '#tests/setup/settings.ts';
-import { validateAgainstKnownSettings } from '#cli/settings/errors/keys.ts';
+import { getSettingValue, findDeclaration } from '#cli/settings/inherit.ts';
 
 test('an empty PurgeCSS safelist is inherited, and a scope value applies to its children', async () => {
     await using sandbox = await testdir();
@@ -70,10 +70,10 @@ const selected = selectConfigurations(
     readManifests(createReadCache(process.cwd())),
 );
 
-const baseKnown = knownSettings(selected);
+const baseKnown = buildKnownSettings(selected);
 
 const sql = readManifests(createReadCache(process.cwd())).get('sql')!;
-const known = knownSettings([
+const known = buildKnownSettings([
     sql,
     {
         ...sql,
@@ -85,7 +85,7 @@ const known = knownSettings([
 test('two configurations with different defaults are an error until gspot.toml sets the value', () => {
     const source = settingsText(['sql'], { rules: true });
     const settings = parseSettings(source);
-    expect(validateAgainstKnownSettings(known, settings, new Map(), knownSettings([]))).toStrictEqual([
+    expect(validateKeys(known, settings, new Map(), buildKnownSettings([]))).toStrictEqual([
         {
             path: ['configurations'],
             message:
@@ -93,8 +93,8 @@ test('two configurations with different defaults are an error until gspot.toml s
         },
     ]);
     const corrected = parseSettings(`${source}[tools.sqlfluff]\ndialect = "sqlite"\n`);
-    expect(validateAgainstKnownSettings(known, corrected, new Map(), knownSettings([]))).toStrictEqual([]);
-    expect(settingValue(known, corrected, 'tools.sqlfluff.dialect')).toMatchObject({
+    expect(validateKeys(known, corrected, new Map(), buildKnownSettings([]))).toStrictEqual([]);
+    expect(getSettingValue(known, corrected, 'tools.sqlfluff.dialect')).toMatchObject({
         value: 'sqlite',
         source: 'gspot.toml',
     });
@@ -105,7 +105,7 @@ test('the conflict is reported at the scope that selects both configurations', (
         settingsText([], { rules: true, tables: '\n[[scope]]\npath = "db"\nconfigurations = ["sql"]\n' }),
     );
     expect(
-        validateAgainstKnownSettings(knownSettings([]), settings, new Map([['db', known]]), knownSettings([])),
+        validateKeys(buildKnownSettings([]), settings, new Map([['db', known]]), buildKnownSettings([])),
     ).toStrictEqual([{ path: ['scope', 0, 'configurations'], message: known.errors[0]!.message }]);
 });
 
@@ -117,54 +117,54 @@ test('a scope value settles the scopes below it, and a sibling scope still repor
         }),
     );
     const scopes = new Map(Object.keys(settings.scope).map((path) => [path, known]));
-    expect(validateAgainstKnownSettings(knownSettings([]), settings, scopes, knownSettings([]))).toStrictEqual([
+    expect(validateKeys(buildKnownSettings([]), settings, scopes, buildKnownSettings([]))).toStrictEqual([
         { path: ['scope', 2, 'configurations'], message: known.errors[0]!.message },
     ]);
-    expect(settingValue(known, settings, 'tools.sqlfluff.dialect', 'app/db')).toMatchObject({
+    expect(getSettingValue(known, settings, 'tools.sqlfluff.dialect', 'app/db')).toMatchObject({
         value: 'sqlite',
         source: '[scope "app"]',
     });
 });
 
 test("a written false overrides a configuration's true default", () => {
-    const known = knownSettings(selectConfigurations(['supabase'], readManifests(createReadCache(process.cwd()))));
+    const known = buildKnownSettings(selectConfigurations(['supabase'], readManifests(createReadCache(process.cwd()))));
     const source = settingsText(['supabase'], { rules: true });
     const settings = parseSettings(source);
-    expect(settingValue(known, settings, 'tools.squawk.assume_in_transaction')).toMatchObject({
+    expect(getSettingValue(known, settings, 'tools.squawk.assume_in_transaction')).toMatchObject({
         value: true,
         source: 'configuration supabase',
     });
     const corrected = parseSettings(`${source}[tools.squawk]\nassume_in_transaction = false\n`);
-    expect(settingValue(known, corrected, 'tools.squawk.assume_in_transaction')).toMatchObject({
+    expect(getSettingValue(known, corrected, 'tools.squawk.assume_in_transaction')).toMatchObject({
         value: false,
         source: 'gspot.toml',
     });
 });
 
 test('an inherited default names the configuration that declares it', () => {
-    const known = knownSettings(selectConfigurations(['supabase'], readManifests(createReadCache(process.cwd()))));
+    const known = buildKnownSettings(selectConfigurations(['supabase'], readManifests(createReadCache(process.cwd()))));
     const settings = parseSettings(settingsText(['supabase'], { rules: true }));
-    expect(validateAgainstKnownSettings(known, settings, new Map(), knownSettings([]))).toStrictEqual([]);
-    expect(settingValue(known, settings, 'tools.sqlfluff.dialect')).toMatchObject({
+    expect(validateKeys(known, settings, new Map(), buildKnownSettings([]))).toStrictEqual([]);
+    expect(getSettingValue(known, settings, 'tools.sqlfluff.dialect')).toMatchObject({
         value: 'postgres',
         source: 'configuration postgres',
     });
 });
 
 test('a per-language key maps to its base setting', () => {
-    expect(declarationFor(baseKnown, 'limits.bash.function_lines')?.declaration.name).toBe('limits.function_lines');
-    expect(declarationFor(baseKnown, 'limits.python.file_lines')?.language).toBe('python');
-    expect(declarationFor(baseKnown, 'naming.python.parameters.max_words')?.category).toBe('parameters');
-    expect(declarationFor(baseKnown, 'limits.nope')).toBeUndefined();
+    expect(findDeclaration(baseKnown, 'limits.bash.function_lines')?.declaration.name).toBe('limits.function_lines');
+    expect(findDeclaration(baseKnown, 'limits.python.file_lines')?.language).toBe('python');
+    expect(findDeclaration(baseKnown, 'naming.python.parameters.max_words')?.category).toBe('parameters');
+    expect(findDeclaration(baseKnown, 'limits.nope')).toBeUndefined();
 });
 
 test('limits that no check reads are refused', () => {
-    const known = knownSettings(
+    const known = buildKnownSettings(
         selectConfigurations(['structure', 'sql', 'bash'], readManifests(createReadCache(process.cwd()))),
     );
-    expect(declarationFor(known, 'limits.sql.function_lines')).toBeUndefined();
-    expect(declarationFor(known, 'limits.bash.cyclomatic_complexity')).toBeUndefined();
-    expect(declarationFor(known, 'limits.sql.function_parameters')).toBeUndefined();
+    expect(findDeclaration(known, 'limits.sql.function_lines')).toBeUndefined();
+    expect(findDeclaration(known, 'limits.bash.cyclomatic_complexity')).toBeUndefined();
+    expect(findDeclaration(known, 'limits.sql.function_parameters')).toBeUndefined();
     const errors = settingsErrors(
         settingsText(['sql', 'bash'], {
             rules: true,
@@ -184,9 +184,9 @@ test('a value comes from the configuration default, then the root table, then th
             tables: '[limits]\nfile_lines = 250\n[[scope]]\npath = "api"\nlimits.file_lines = 200\n',
         }),
     );
-    expect(settingValue(baseKnown, settings, 'limits.file_lines')?.value).toBe(250);
-    expect(settingValue(baseKnown, settings, 'limits.file_lines', 'api')?.value).toBe(200);
-    expect(settingValue(baseKnown, settings, 'limits.function_lines')?.source).toBe('configuration structure');
+    expect(getSettingValue(baseKnown, settings, 'limits.file_lines')?.value).toBe(250);
+    expect(getSettingValue(baseKnown, settings, 'limits.file_lines', 'api')?.value).toBe(200);
+    expect(getSettingValue(baseKnown, settings, 'limits.function_lines')?.source).toBe('configuration structure');
 });
 
 test('lists add up across tables without repeats', () => {
@@ -196,7 +196,7 @@ test('lists add up across tables without repeats', () => {
             tables: '[naming]\nbanned_words = ["dispatcher"]\n[[scope]]\npath = "api"\nnaming.banned_words = ["dispatcher", "orchestrator"]\n',
         }),
     );
-    expect(settingValue(baseKnown, settings, 'naming.banned_words', 'api')?.value).toStrictEqual([
+    expect(getSettingValue(baseKnown, settings, 'naming.banned_words', 'api')?.value).toStrictEqual([
         'dispatcher',
         'orchestrator',
     ]);
@@ -212,37 +212,35 @@ test('list defaults add up across configurations before root and scope additions
             defaults: { 'naming.banned_words': terms },
         });
     }
-    const defaults = knownSettings(manifests);
+    const defaults = buildKnownSettings(manifests);
     const settings = parseSettings(
         settingsText(['naming'], {
             rules: true,
             tables: '[naming]\nbanned_words = ["dispatcher", "manager"]\n[[scope]]\npath = "api"\nnaming.banned_words = ["orchestrator", "handler"]\n',
         }),
     );
-    expect(settingValue(defaults, settings, 'naming.banned_words', 'api')?.value).toStrictEqual([
+    expect(getSettingValue(defaults, settings, 'naming.banned_words', 'api')?.value).toStrictEqual([
         'dispatcher',
         'orchestrator',
         'manager',
         'handler',
     ]);
-    expect(
-        validateAgainstKnownSettings(defaults, settings, new Map([['api', defaults]]), knownSettings([])),
-    ).toStrictEqual([]);
+    expect(validateKeys(defaults, settings, new Map([['api', defaults]]), buildKnownSettings([]))).toStrictEqual([]);
 });
 
 test("a scope's rules keep other rules and replace the whole options of the same rule", () => {
-    const known = knownSettings(selectConfigurations(['css'], readManifests(createReadCache(process.cwd()))));
+    const known = buildKnownSettings(selectConfigurations(['css'], readManifests(createReadCache(process.cwd()))));
     const settings = parseSettings(
         settingsText(['css'], {
             rules: true,
             tables: '[tools.stylelint.rules]\nselector-max-id = 0\ncolor-named = ["never", { severity = "error" }]\n[[scope]]\npath = "app"\nconfigurations = []\ntools.stylelint.rules.color-named = ["always-where-possible"]\n',
         }),
     );
-    expect(settingValue(known, settings, 'tools.stylelint.rules', 'app')?.value).toStrictEqual({
+    expect(getSettingValue(known, settings, 'tools.stylelint.rules', 'app')?.value).toStrictEqual({
         'selector-max-id': 0,
         'color-named': ['always-where-possible'],
     });
-    expect(settingValue(known, settings, 'tools.stylelint.rules')?.value).toStrictEqual({
+    expect(getSettingValue(known, settings, 'tools.stylelint.rules')?.value).toStrictEqual({
         'selector-max-id': 0,
         'color-named': ['never', { severity: 'error' }],
     });

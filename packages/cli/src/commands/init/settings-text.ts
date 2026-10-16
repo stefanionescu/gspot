@@ -1,11 +1,10 @@
 import { posix } from 'node:path';
 import { setKey } from '#cli/settings/edit.ts';
 import { readGitSetting } from '#cli/system/git.ts';
-import { emitSettings } from '#cli/settings/file.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { stripUndefined } from '#cli/system/values.ts';
-import { detectedDefaults } from '#cli/settings/view.ts';
+import { detectDefaults } from '#cli/settings/known.ts';
 import { parseBuildSettings } from '#cli/parsers/xcode.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
@@ -13,6 +12,7 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import { CI_FILE_LABELS } from '#cli/config/generation/ci.ts';
 import { ORIGIN_URL_SETTING } from '#cli/config/system/git.ts';
 import { readLintJobs } from '#cli/repository/existing-tools.ts';
+import { formatSettingsText } from '#cli/settings/write/text.ts';
 import { buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import { PBXPROJ, PBXPROJ_NAME } from '#cli/config/parsers/xcode.ts';
 import { TEMPLATE_COMMENT_PREFIX } from '#cli/config/settings/file.ts';
@@ -92,7 +92,7 @@ function headTables(
         swiftFiles.map(({ scope, file }) => {
             const text = readText(repository.root, file);
             const sdkRoot = text === undefined ? undefined : parseBuildSettings(text).sdkRoot;
-            const destination = detectedDefaults(sdkRoot === undefined ? {} : { sdkRoot }).get('xcode.destination');
+            const destination = detectDefaults(sdkRoot === undefined ? {} : { sdkRoot }).get('xcode.destination');
             const xcode = {
                 ...(scope === '' ? swift : {}),
                 project: posix.dirname(file),
@@ -144,7 +144,7 @@ function initSettingsText(
             ? ''
             : `${TEMPLATE_COMMENT_PREFIX}${draft.template.source}, sha256 ${draft.template.digest}.\n`;
     const previous = `${copied}${PREFACE_BODY}`;
-    return emitSettings(previous + (draft.template?.text ?? ''), document);
+    return formatSettingsText(previous + (draft.template?.text ?? ''), document);
 }
 
 /**
@@ -157,7 +157,7 @@ function draftSettings(selection: InitSelection, answers: InitAnswers): Settings
     const scopes = selection.scopes.filter((scope) => scope.path !== '');
     const commitScopes =
         scopes.length > 0 && selection.selectedIds.has('commits')
-            ? (detectedDefaults({ scopes: scopes.map((scope) => posix.basename(scope.path)) }).get(
+            ? (detectDefaults({ scopes: scopes.map((scope) => posix.basename(scope.path)) }).get(
                   'tools.commitlint.scopes',
               ) as string[])
             : undefined;

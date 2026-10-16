@@ -3,9 +3,10 @@ import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { writtenValue, replaceWrittenValue } from '#cli/settings/inherit.ts';
+import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
+import { sortedToml, formatSettingsText } from '#cli/settings/write/text.ts';
+import { getWrittenValue, replaceWrittenValue } from '#cli/settings/inherit.ts';
 import { isRecord, getValueAt, createTable, normalizeTables } from '#cli/system/values.ts';
-import { sortedToml, emitSettings, parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
 import type { Mutation, TomlTable, SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/file.ts';
 
 function splitKey(key: string): SettingKey {
@@ -20,11 +21,11 @@ function splitKey(key: string): SettingKey {
  * @param mutate the change applied once.
  * @returns the new text, validated settings, and change status.
  */
-export function editSettings(root: string, input: SettingsEdit, mutate: Mutation): EditedSettings {
+function updateSettings(root: string, input: SettingsEdit, mutate: Mutation): EditedSettings {
     const { text, table, values } = input;
     mutate(table);
     parseSettings(sortedToml(table), root);
-    const next = sortedToml(table) === values ? text : emitSettings(text, table);
+    const next = sortedToml(table) === values ? text : formatSettingsText(text, table);
     const settings = parseSettings(next, root);
     return { text: next, settings, changed: next !== text, original: input.original };
 }
@@ -35,7 +36,7 @@ export function editSettings(root: string, input: SettingsEdit, mutate: Mutation
  * @param key the dotted key
  * @param value the value to write
  */
-export function setKey(written: TomlTable, key: string, value: unknown): void {
+function setKey(written: TomlTable, key: string, value: unknown): void {
     const { path, name } = splitKey(key);
     const table = createTable(written, path);
     if (table === undefined) throw new Error(`\`${key}\` runs through a value that is not a table.`);
@@ -47,7 +48,7 @@ export function setKey(written: TomlTable, key: string, value: unknown): void {
  * @param written the table to edit
  * @param key the dotted key
  */
-export function deleteKey(written: TomlTable, key: string): void {
+function deleteKey(written: TomlTable, key: string): void {
     const { path, name } = splitKey(key);
     const tables = [written];
     let table = written;
@@ -72,12 +73,12 @@ export function deleteKey(written: TomlTable, key: string): void {
  * @param key the dotted key of the list
  * @param entries the entries to append
  */
-export function addToList(document: TomlTable, key: string, entries: unknown[]): void {
+function addToList(document: TomlTable, key: string, entries: unknown[]): void {
     const { path, name } = splitKey(key);
     const table = createTable(document, path);
     if (table === undefined) throw new Error(`\`${key}\` runs through a value that is not a table.`);
     const written = table[name];
-    const value = writtenValue(written);
+    const value = getWrittenValue(written);
     const existing: unknown[] = Array.isArray(value) ? value : [];
     const list = [...existing];
     for (const entry of entries) {
@@ -99,12 +100,12 @@ export function addToList(document: TomlTable, key: string, entries: unknown[]):
  * @param key the dotted key of the list
  * @param entries the entries to remove
  */
-export function removeFromList(document: TomlTable, key: string, entries: unknown[]): void {
+function removeFromList(document: TomlTable, key: string, entries: unknown[]): void {
     const { path, name } = splitKey(key);
     const table = getValueAt(document, path);
     if (!isRecord(table)) return;
     const written = table[name];
-    const value = writtenValue(written);
+    const value = getWrittenValue(written);
     if (!Array.isArray(value)) return;
     const existing: unknown[] = value;
     const gone = new Set(
@@ -131,7 +132,7 @@ export function removeFromList(document: TomlTable, key: string, entries: unknow
  * @param scope the scope path, if any
  * @returns the required table
  */
-export function findScopeTable(written: TomlTable, scope: string | undefined): TomlTable {
+function findScopeTable(written: TomlTable, scope: string | undefined): TomlTable {
     if (scope === undefined) return written;
     const scopes = written['scope'];
     const scopeTable: unknown = Array.isArray(scopes)
@@ -155,8 +156,10 @@ export function findScopeTable(written: TomlTable, scope: string | undefined): T
  * @param root the repository root
  * @returns the edit input with the original private file
  */
-export function readSettingsEdit(root: string): SettingsEdit {
+function readSettingsEdit(root: string): SettingsEdit {
     const { text, original } = readSettingsFile(root);
     const table = parseTomlText(text, SETTINGS_FILE, 'settings');
     return { text, table, values: sortedToml(table), original };
 }
+
+export { setKey, deleteKey, addToList, updateSettings, findScopeTable, removeFromList, readSettingsEdit };

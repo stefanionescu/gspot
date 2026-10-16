@@ -1,97 +1,29 @@
 import { z } from 'zod';
 import { stripUndefined } from '#cli/system/values.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import { type SchemaShape } from '#cli/types/objects.ts';
 import { toolsSchema } from '#cli/settings/schema/tools.ts';
 import { TABLE_FIELDS } from '#cli/config/settings/values.ts';
-import { limitFields } from '#cli/settings/schema/limit-fields.ts';
+import { limitsSchema } from '#cli/settings/schema/limits.ts';
+import { namingSchema } from '#cli/settings/schema/naming.ts';
 import { commandSchema } from '#cli/configurations/schema/parts.ts';
 import { architectureSchema } from '#cli/settings/schema/architecture.ts';
-import { namingOverrideSchema } from '#cli/configurations/schema/naming.ts';
-import { REEXPORT_MODES, SPELLING_LOCALES, SETTING_LANGUAGES } from '#cli/config/settings/schema.ts';
-import { DEFAULT_VALUES, DEFAULT_FIELDS, RECORD_DESCRIPTIONS } from '#cli/config/settings/defaults.ts';
-import type { TableValues, TableSettings, NamingCategory, NamingLanguage } from '#cli/types/settings/tables.ts';
+import { REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/schema.ts';
+import { type TableValues, type TableSettings } from '#cli/types/settings/tables.ts';
+import { type WrittenLicenses, type WrittenSettings } from '#cli/types/settings/file.ts';
+import { ciFields, hooksSchema, rulesSchema } from '#cli/settings/schema/integrations.ts';
+import { DEFAULT_FIELDS, DEFAULT_VALUES, RECORD_DESCRIPTIONS } from '#cli/config/settings/defaults.ts';
 
-import type {
-    WrittenLimits,
-    WrittenNaming,
-    WrittenLicenses,
-    WrittenSettings,
-    ParsedNamingOverride,
-    WrittenNamingOverride,
-} from '#cli/types/settings/file.ts';
 import {
     percentage,
     wholeNumber,
-    reasonValue,
     formatSchema,
     relativePath,
     relativePaths,
-    nonemptyPaths,
     nonemptyString,
-    nonemptyStrings,
     destinationPath,
-    namingCategorySchema,
+    nonemptyStrings,
+    allowReasonedValue,
 } from '#cli/settings/schema/parts.ts';
-
-const languageLimitsSchema = z.strictObject(limitFields);
-const limitsSchema = z.strictObject({
-    ...limitFields,
-    typescript: languageLimitsSchema.optional(),
-    javascript: languageLimitsSchema.optional(),
-    python: languageLimitsSchema.optional(),
-    bash: languageLimitsSchema.optional(),
-    swift: languageLimitsSchema.optional(),
-    sql: languageLimitsSchema.optional(),
-    css: languageLimitsSchema.optional(),
-    html: languageLimitsSchema.optional(),
-} satisfies SchemaShape<TableSettings<'limits'>, WrittenLimits>);
-
-const namingLanguageSchema = namingCategorySchema.extend({
-    files: namingCategorySchema.optional(),
-    directories: namingCategorySchema.optional(),
-    types: namingCategorySchema.optional(),
-    functions: namingCategorySchema.optional(),
-    parameters: namingCategorySchema.optional(),
-    variables: namingCategorySchema.optional(),
-    properties: namingCategorySchema.optional(),
-} satisfies SchemaShape<
-    Pick<NonNullable<TableSettings<'naming'>[NamingLanguage]>, NamingCategory>,
-    Pick<NonNullable<WrittenNaming[NamingLanguage]>, NamingCategory>
->);
-const namingLists = {
-    banned_words: z.array(z.string()).default([]).meta(DEFAULT_FIELDS.banned_words),
-    override: z
-        .array(
-            namingOverrideSchema.extend({
-                paths: nonemptyPaths.default(['**']).describe(namingOverrideSchema.shape.paths.description as string),
-                languages: z
-                    .array(z.enum(SETTING_LANGUAGES))
-                    .optional()
-                    .describe(namingOverrideSchema.shape.languages.description as string),
-                allow_digits: namingOverrideSchema.shape.allow_digits.default(false),
-                allow_repeated_words: namingOverrideSchema.shape.allow_repeated_words.default(false),
-                reason: z.string().describe(namingOverrideSchema.shape.reason.description as string),
-            } satisfies SchemaShape<
-                Pick<ParsedNamingOverride, 'paths' | 'languages' | 'allow_digits' | 'allow_repeated_words' | 'reason'>,
-                Pick<WrittenNamingOverride, 'paths' | 'languages' | 'allow_digits' | 'allow_repeated_words' | 'reason'>
-            >),
-        )
-        .default([])
-        .meta(DEFAULT_FIELDS.override),
-};
-
-const namingSchema = z.strictObject({
-    ...namingCategorySchema.shape,
-    ...namingLists,
-    typescript: namingLanguageSchema.optional(),
-    javascript: namingLanguageSchema.optional(),
-    python: namingLanguageSchema.optional(),
-    bash: namingLanguageSchema.optional(),
-    swift: namingLanguageSchema.optional(),
-    sql: namingLanguageSchema.optional(),
-    css: namingLanguageSchema.optional(),
-    html: namingLanguageSchema.optional(),
-} satisfies SchemaShape<TableSettings<'naming'>, WrittenNaming>);
 
 const allowedPackageSchema = z.strictObject({
     name: nonemptyString.describe(RECORD_DESCRIPTIONS.package_name),
@@ -114,7 +46,7 @@ const configurationTableSchemas = {
     naming: namingSchema.optional(),
     structure: z
         .strictObject({
-            reexports: reasonValue(z.enum(REEXPORT_MODES)).default('none').meta(TABLE_FIELDS.reexports),
+            reexports: allowReasonedValue(z.enum(REEXPORT_MODES)).default('none').meta(TABLE_FIELDS.reexports),
         } satisfies SchemaShape<TableSettings<'structure'>, NonNullable<WrittenSettings['structure']>>)
         .optional(),
     cloudflare: z
@@ -125,10 +57,10 @@ const configurationTableSchemas = {
         .optional(),
     coverage: z
         .strictObject({
-            lines: reasonValue(percentage).default(0).meta(TABLE_FIELDS.lines),
-            branches: reasonValue(percentage).default(0).meta(TABLE_FIELDS.branches),
-            functions: reasonValue(percentage).default(0).meta(TABLE_FIELDS.functions),
-            statements: reasonValue(percentage).default(0).meta(TABLE_FIELDS.statements),
+            lines: allowReasonedValue(percentage).default(0).meta(TABLE_FIELDS.lines),
+            branches: allowReasonedValue(percentage).default(0).meta(TABLE_FIELDS.branches),
+            functions: allowReasonedValue(percentage).default(0).meta(TABLE_FIELDS.functions),
+            statements: allowReasonedValue(percentage).default(0).meta(TABLE_FIELDS.statements),
             target: z
                 .array(
                     z.strictObject({
@@ -143,10 +75,10 @@ const configurationTableSchemas = {
         .optional(),
     dependencies: z
         .strictObject({
-            min_release_age_days: reasonValue(wholeNumber)
+            min_release_age_days: allowReasonedValue(wholeNumber)
                 .default(DEFAULT_VALUES.min_release_age_days)
                 .meta(TABLE_FIELDS.min_release_age_days),
-            allowed_registries: reasonValue(nonemptyStrings)
+            allowed_registries: allowReasonedValue(nonemptyStrings)
                 .default(['registry.npmjs.org', 'registry.yarnpkg.com'])
                 .meta(TABLE_FIELDS.allowed_registries),
             scanner: nonemptyString.optional().meta(TABLE_FIELDS.scanner),
@@ -155,7 +87,7 @@ const configurationTableSchemas = {
     docs: z
         .strictObject({
             banned_headings: z.array(z.string()).default([]).meta(TABLE_FIELDS.banned_headings),
-            allowed_urls: reasonValue(z.array(z.string())).default([]).meta(TABLE_FIELDS.allowed_urls),
+            allowed_urls: allowReasonedValue(z.array(z.string())).default([]).meta(TABLE_FIELDS.allowed_urls),
         } satisfies SchemaShape<TableSettings<'docs'>, NonNullable<WrittenSettings['docs']>>)
         .optional(),
     drizzle: z
@@ -189,7 +121,7 @@ const configurationTableSchemas = {
         .strictObject({
             build_command: commandSchema.default(['npm', 'run', 'build']).meta(TABLE_FIELDS.build_command),
             build_folder: destinationPath.default('dist').meta(TABLE_FIELDS.build_folder),
-            allowed_unlisted_pages: reasonValue(relativePaths)
+            allowed_unlisted_pages: allowReasonedValue(relativePaths)
                 .default(['404.html'])
                 .meta(TABLE_FIELDS.allowed_unlisted_pages),
             size_limit: z
@@ -259,4 +191,17 @@ const tableValuesSchema = z
     } satisfies SchemaShape<TableValues>)
     .transform(stripUndefined) satisfies z.ZodType<TableValues>;
 
-export { limitsSchema, namingSchema, tableValuesSchema, configurationTableSchemas };
+/** The [hooks], [ci], and [rules] fields as dotted settings; fields without defaults allow omission. */
+const tableSettingSchemas = Object.fromEntries(
+    Object.entries({ hooks: hooksSchema.shape, ci: ciFields, rules: rulesSchema.shape }).flatMap(([section, fields]) =>
+        Object.entries<z.ZodType>(fields).map(
+            ([key, field]) =>
+                [
+                    `${section}.${key}`,
+                    field.safeParse(undefined).success ? field : field.optional().describe(field.description ?? ''),
+                ] as const,
+        ),
+    ),
+);
+
+export { tableValuesSchema, tableSettingSchemas, configurationTableSchemas };

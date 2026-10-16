@@ -17,12 +17,13 @@ import { detectConfigurations } from '#cli/repository/detect.ts';
 import { neededToolManifests } from '#cli/planning/needed-tools.ts';
 import { type Repository } from '#cli/types/repository/inventory.ts';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
+import { rootView, buildScopeView } from '#cli/settings/scope-view.ts';
 import { locateCandidates, readMiseBinPaths } from '#cli/tools/locate.ts';
 import { MISSING_PACKAGE_MANAGER_MESSAGE } from '#cli/config/tools/npm.ts';
+import { detectDefaults, buildKnownSettings } from '#cli/settings/known.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { classifyFile, listFileDeclarations } from '#cli/repository/classify.ts';
 import type { Settings, SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts';
-import { rootView, scopeView, knownSettings, detectedDefaults } from '#cli/settings/view.ts';
 import { selectPackageManager, readPackageManagerVersion } from '#cli/tools/npm/package-manager.ts';
 import { type PackageManager, type PackageManagerDeclaration } from '#cli/types/parsers/dependency-files.ts';
 
@@ -48,16 +49,16 @@ async function scopeSelections(
     const selections = await Promise.all(
         scopes.map(async (scope) => {
             const selected = selectForScope(effective, scope.path, manifests);
-            const known = knownSettings(selected, settings.level, reads);
+            const known = buildKnownSettings(selected, settings.level, reads);
             const build = known.defaults.get('site.build_command');
             if (build !== undefined) {
                 const { name } = await getPackageManagerIdentity();
                 known.defaults.set('site.build_command', {
                     ...build,
-                    value: detectedDefaults({ npmClient: name }).get('site.build_command'),
+                    value: detectDefaults({ npmClient: name }).get('site.build_command'),
                 });
             }
-            const view = scopeView(known, effective, selected, scope.path);
+            const view = buildScopeView(known, effective, selected, scope.path);
             return { scope, selected, known, view };
         }),
     );

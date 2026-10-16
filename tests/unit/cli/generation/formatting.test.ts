@@ -13,9 +13,10 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
+import { buildKnownSettings } from '#cli/settings/known.ts';
+import { buildScopeView } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { prettierConfiguration } from '#cli/generation/formatting.ts';
 import { SVELTE_PLUGIN, PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/formatting.ts';
@@ -135,7 +136,7 @@ const settings = parseSettings(
 
 const selected = selectConfigurations(settings.configurations, readManifests(createReadCache(process.cwd())));
 
-const { format } = scopeView(knownSettings(selected, settings.level), settings, selected, '');
+const { format } = buildScopeView(buildKnownSettings(selected, settings.level), settings, selected, '');
 
 describe('prettierConfiguration', () => {
     test('a plugin is imported from the tool project relative to each tool file', () => {

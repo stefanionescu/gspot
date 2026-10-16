@@ -10,15 +10,16 @@ import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { parseExpiryDate } from '#cli/commands/ignore.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
+import { formatSettingsText } from '#cli/settings/write/text.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import { EDITORCONFIG_SETTINGS } from '#tests/config/formatting.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
-import { emitSettings, parseExpiryDate } from '#cli/settings/file.ts';
 import { SWIFT_FORMAT_SETTINGS } from '#tests/config/swift/projects.ts';
 import { NESTED_PYTHON_SETTINGS } from '#tests/config/python/project.ts';
 import { createEslint, readEslintConfiguration } from '#tests/setup/generate.ts';
@@ -243,7 +244,7 @@ test('TOML tool files keep odd strings and option keys', async () => {
     const option = 'custom."option"';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': emitSettings('', {
+        'gspot.toml': formatSettingsText('', {
             configurations: ['secrets', 'dependencies', 'files', 'docs', 'python'],
             format: { indent_style: 'tab' },
             tools: {

@@ -3,21 +3,22 @@ import { readAsset } from '#cli/system/assets.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { JsonValue } from '#cli/types/parsers/json.ts';
+import type { ToolTable } from '#cli/types/settings/file.ts';
+import { stylelintRules } from '#cli/settings/schema/stylelint.ts';
 import type { TableSettings } from '#cli/types/settings/tables.ts';
 import { RECORD_DESCRIPTIONS } from '#cli/config/settings/defaults.ts';
 import { ESLINT_RUNTIME_NAMES_FILE } from '#cli/config/generation/eslint.ts';
-import type { ToolTable, StylelintOptions } from '#cli/types/settings/file.ts';
 import { JAVASCRIPT_CONFIGURATION_FOLDER } from '#cli/config/configurations.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tool-tables.ts';
 import { YAMLLINT_RULES, COMMITLINT_RULES } from '#cli/config/generation/tool-file-sources.ts';
 
 import {
-    reasonValue,
     relativePath,
     nonemptyPaths,
     nonemptyString,
     nonemptyStrings,
-    reasonEnvelopeSchema,
+    allowReasonedValue,
+    buildReasonedValueSchema,
 } from '#cli/settings/schema/parts.ts';
 import {
     RULE_TOKEN,
@@ -29,7 +30,6 @@ import {
     ESLINT_OPTION_STRING,
     DOCSTRING_CONVENTIONS,
     YAMLLINT_OPTIONS_HELP,
-    STYLELINT_OPTIONS_HELP,
     COMMITLINT_OPTIONS_HELP,
     EXTRA_OPTIONS_DESCRIPTION,
     MARKDOWNLINT_OPTIONS_HELP,
@@ -43,7 +43,7 @@ const extraTable = z.record(z.string(), z.unknown()).describe(EXTRA_OPTIONS_DESC
 
 // Only tools whose writers read the options accept an extra table.
 const toolOptionsSchema = z.strictObject({
-    extra: reasonEnvelopeSchema(extraTable)
+    extra: buildReasonedValueSchema(extraTable)
         .optional()
         .meta({ description: EXTRA_OPTIONS_DESCRIPTION, reason_needed: 'adding' }),
 } satisfies SchemaShape<Pick<TableSettings<'tools.prettier'>, 'extra'>, NonNullable<WrittenTools['prettier']>>);
@@ -64,7 +64,7 @@ const eslintOptions = z.union([z.array(z.never()).max(0), z.tuple([firstEslintOp
 const eslintRules = z.record(z.string(), eslintOptions) satisfies z.ZodType<TableSettings<'tools.eslint'>['rules']>;
 
 // Nested tool options retain the rule key before any option name or tuple index.
-function settingHelp(issue: z.core.$ZodRawIssue, help: string): string {
+function formatRuleHelp(issue: z.core.$ZodRawIssue, help: string): string {
     const path = issue.path ?? [];
     const rule = path[path.indexOf('rules') + 1];
     return help.replace(RULE_TOKEN, quoteArgument(String(rule)));
@@ -77,11 +77,11 @@ const commitlintRules = z.record(
     }),
     z.tuple(
         [
-            z.enum(RULE_CONDITIONS, { error: (issue) => settingHelp(issue, COMMITLINT_OPTIONS_HELP) }),
+            z.enum(RULE_CONDITIONS, { error: (issue) => formatRuleHelp(issue, COMMITLINT_OPTIONS_HELP) }),
             z.json().optional(),
         ],
         {
-            error: (issue) => settingHelp(issue, COMMITLINT_OPTIONS_HELP),
+            error: (issue) => formatRuleHelp(issue, COMMITLINT_OPTIONS_HELP),
         },
     ),
 ) satisfies z.ZodType<TableSettings<'tools.commitlint'>['rules']>;
@@ -89,13 +89,13 @@ const commitlintRules = z.record(
 const yamlOptions = z
     .object(
         {
-            level: z.literal('error', { error: (issue) => settingHelp(issue, YAMLLINT_OPTIONS_HELP) }).optional(),
-            ignore: z.never({ error: (issue) => settingHelp(issue, YAMLLINT_OPTIONS_HELP) }).optional(),
-            'ignore-from-file': z.never({ error: (issue) => settingHelp(issue, YAMLLINT_OPTIONS_HELP) }).optional(),
+            level: z.literal('error', { error: (issue) => formatRuleHelp(issue, YAMLLINT_OPTIONS_HELP) }).optional(),
+            ignore: z.never({ error: (issue) => formatRuleHelp(issue, YAMLLINT_OPTIONS_HELP) }).optional(),
+            'ignore-from-file': z.never({ error: (issue) => formatRuleHelp(issue, YAMLLINT_OPTIONS_HELP) }).optional(),
         } satisfies SchemaShape<
             Omit<NonNullable<NonNullable<NonNullable<WrittenTools['yamllint']>['rules']>['indentation']>, 'spaces'>
         >,
-        { error: (issue) => settingHelp(issue, YAMLLINT_OPTIONS_HELP) },
+        { error: (issue) => formatRuleHelp(issue, YAMLLINT_OPTIONS_HELP) },
     )
     .catchall(z.json());
 
@@ -104,7 +104,7 @@ const yamlRules = z
         indentation: yamlOptions
             .extend({
                 spaces: z
-                    .literal('consistent', { error: (issue) => settingHelp(issue, YAMLLINT_OPTIONS_HELP) })
+                    .literal('consistent', { error: (issue) => formatRuleHelp(issue, YAMLLINT_OPTIONS_HELP) })
                     .optional(),
             } satisfies SchemaShape<
                 Pick<NonNullable<NonNullable<NonNullable<WrittenTools['yamllint']>['rules']>['indentation']>, 'spaces'>
@@ -121,23 +121,6 @@ const yamlRules = z
                     message: `Unknown yamllint rule. Accepted rules: ${YAMLLINT_RULES.join(', ')}.`,
                 });
     });
-
-const stylelintOptions = z
-    .object({
-        severity: z.literal('error', { error: STYLELINT_OPTIONS_HELP }).optional(),
-    } satisfies SchemaShape<StylelintOptions>)
-    .catchall(z.json());
-
-const stylelintValue = z.union([z.literal(true), nonemptyString, z.number(), stylelintOptions]) satisfies z.ZodType<
-    Exclude<TableSettings<'tools.stylelint'>['rules'][string], unknown[]>
->;
-
-const stylelintRules = z.record(
-    nonemptyString,
-    z.union([stylelintValue, z.tuple([z.union([stylelintValue, z.array(z.json())]), stylelintOptions.optional()])], {
-        error: STYLELINT_OPTIONS_HELP,
-    }),
-) satisfies z.ZodType<TableSettings<'tools.stylelint'>['rules']>;
 
 const eslintTable = toolOptionsSchema.extend({
     import_extension: z.enum(IMPORT_EXTENSIONS).default('js').meta(SETTING_FIELDS.eslinttable_import_extension),
@@ -166,7 +149,7 @@ const eslintTable = toolOptionsSchema.extend({
     Omit<NonNullable<WrittenTools['eslint']>, 'extra'>
 >);
 
-export const toolsSchema = z.strictObject({
+const toolsSchema = z.strictObject({
     hadolint: z
         .strictObject({
             trusted_registries: z.array(z.string()).default([]).meta(SETTING_FIELDS.hadolint_trusted_registries),
@@ -266,7 +249,7 @@ export const toolsSchema = z.strictObject({
     knip: toolOptionsSchema
         .extend({
             entry: z.array(relativePath).default([]).meta(SETTING_FIELDS.knip_entry),
-            ignore_dependencies: reasonValue(
+            ignore_dependencies: allowReasonedValue(
                 z.array(
                     z
                         .string()
@@ -283,7 +266,7 @@ export const toolsSchema = z.strictObject({
         .optional(),
     purgecss: z
         .strictObject({
-            safelist: reasonValue(nonemptyStrings).default([]).meta(SETTING_FIELDS.purgecss_safelist),
+            safelist: allowReasonedValue(nonemptyStrings).default([]).meta(SETTING_FIELDS.purgecss_safelist),
         } satisfies SchemaShape<TableSettings<'tools.purgecss'>, NonNullable<WrittenTools['purgecss']>>)
         .optional(),
     v8r: z
@@ -301,3 +284,5 @@ export const toolsSchema = z.strictObject({
         .optional(),
     taplo: toolOptionsSchema.optional(),
 } satisfies SchemaShape<ParsedTools, WrittenTools>);
+
+export { toolsSchema };

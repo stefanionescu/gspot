@@ -1,0 +1,328 @@
+import { isDeepStrictEqual } from 'node:util';
+import { GspotError } from '#cli/system/errors.ts';
+import { stringify, parseDocument } from '@decimalturn/toml-patch';
+import { type KeyPath } from '#cli/types/parsers/editable-file.ts';
+import { type TomlTable, type LayoutSection } from '#cli/types/settings/file.ts';
+import { isRecord, getValueAt, createTable, normalizeTables } from '#cli/system/values.ts';
+
+import {
+    METADATA_PREFIXES,
+    TOML_HEADER_FORMAT,
+    TOML_ASSIGNMENT_FORMAT,
+    IGNORE_IDENTITY_FIELDS,
+    TEMPLATE_COMMENT_PREFIX,
+} from '#cli/config/settings/file.ts';
+import {
+    isKeyValue,
+    getTomlRange,
+    isInlineArray,
+    isInlineTable,
+    addTomlComment,
+    insertTomlComments,
+    listAnchoredComments,
+} from '#cli/parsers/toml/comments.ts';
+import {
+    type TomlBlock,
+    type TomlValue,
+    type TomlSyntax,
+    type TomlComments,
+    type TomlKeyValue,
+    type TomlCommentNode,
+    type TomlCommentAnchor,
+} from '#cli/types/parsers/toml.ts';
+
+function encodeAssignment(key: string, value: unknown, dotted = false): { text: string; pair: TomlKeyValue } {
+    const assignment = stringify({ [key]: value }, TOML_ASSIGNMENT_FORMAT);
+    const text = dotted ? assignment.replace(JSON.stringify(key), key) : assignment;
+    const pair = parseDocument(text).cst.find(isKeyValue) as TomlKeyValue;
+    return { text, pair };
+}
+
+function encodeHeader(path: KeyPath, array: boolean): string {
+    const keys = path.filter((key): key is string => typeof key === 'string');
+    let value: TomlTable = { value: true };
+    for (const key of keys.toReversed()) value = { [key]: value };
+    const text = stringify(value, TOML_HEADER_FORMAT);
+    const section = parseDocument(text).cst.find(
+        (node) => 'items' in node && JSON.stringify(node.key.item.value) === JSON.stringify(keys),
+    ) as Exclude<TomlBlock, TomlKeyValue | TomlCommentNode>;
+    const header = text.slice(...getTomlRange(section.key));
+    return array ? `[${header}]` : header;
+}
+
+function encodeValue(node: TomlValue, text: string, path: KeyPath, comments: TomlComments, indent: string): string {
+    if (isInlineArray(node)) {
+        const items = node.items.map(({ item }, index) => {
+            const keys = [...path, index];
+            const notes = [...comments.values()]
+                .filter(({ path: note }) => path.toReversed()[1] === 'rules' && keys.every((key, i) => note[i] === key))
+                .map(({ path: field }) => insertTomlComments(comments, 'key', field, ''))
+                .filter(Boolean);
+            return insertTomlComments(
+                comments,
+                'item',
+                keys,
+                insertTomlComments(
+                    comments,
+                    'header',
+                    keys,
+                    [...notes, encodeValue(item as TomlValue, text, keys, comments, indent)].join('\n'),
+                ),
+            );
+        });
+        return items.some((item) => item.includes('\n'))
+            ? `[\n${items
+                  .map((item) =>
+                      `${item},`
+                          .split('\n')
+                          .map((line) => `${indent}${line}`)
+                          .join('\n'),
+                  )
+                  .join('\n')}\n]`
+            : `[${items.join(', ')}]`;
+    }
+    if (isInlineTable(node))
+        return `{ ${node.items.map(({ item }) => text.slice(getTomlRange(item.key)[0], getTomlRange(item.value)[0]) + encodeValue(item.value, text, [...path, ...item.key.value], comments, indent)).join(', ')} }`;
+    return text.slice(...getTomlRange(node));
+}
+
+function listScopeAssignments(key: string, value: unknown): [string, unknown][] {
+    const assignments: [string, unknown][] = [];
+    const pending: (readonly [string, unknown])[] = [[key, value]];
+    while (pending.length > 0) {
+        const [name, item] = pending.shift() as [string, unknown];
+        if (isRecord(item) && !Object.hasOwn(item, 'value')) {
+            const nested = Object.entries(item).map(([key, value]) => [`${name}.${key}`, value] as const);
+            pending.unshift(...nested);
+        } else assignments.push([name, item]);
+    }
+    return assignments;
+}
+
+function splitSection(
+    value: TomlTable,
+    path: KeyPath,
+    comments: TomlComments,
+): { assignments: [string, unknown][]; children: LayoutSection[] } {
+    const isScope = path[0] === 'scope' && typeof path[1] === 'number';
+    const isToolRule = (path[0] === 'tools' || path[2] === 'tools') && path.at(-1) === 'rules';
+    const entries = Object.entries(value).map(([key, child]) => {
+        const isTable = isRecord(child);
+        const isReasonedValue = isTable && Object.hasOwn(child, 'value');
+        const childPath = [...path, key];
+        const hasComments = [...comments.values()].some(({ path: note }) =>
+            childPath.every((part, index) => note[index] === part),
+        );
+        const entry = { key, child, isTable, childPath };
+        return {
+            ...entry,
+            isScopeTable: isScope && isTable,
+            isRecordList: isRecordArray(child) && !isToolRule,
+            isInline: isReasonedValue || key === 'output',
+            isCommentedReasonedValue: isReasonedValue && hasComments,
+        };
+    });
+    const scopeAssignments = new Map(
+        entries
+            .filter(({ isScopeTable }) => isScopeTable)
+            .map(({ key, child }) => [key, listScopeAssignments(key, child)] as const),
+    );
+    const sections = entries.map(
+        ({ key, child, isTable, isScopeTable, isRecordList, isInline, isCommentedReasonedValue, childPath }) => {
+            const assignments: [string, unknown][] = [];
+            const children: LayoutSection[] = [];
+            if (isScopeTable) return { assignments: scopeAssignments.get(key) as [string, unknown][], children };
+            if (isTable && isInline && !isCommentedReasonedValue) assignments.push([key, child]);
+            else if (isTable) children.push({ path: childPath, table: child as TomlTable });
+            else if (isRecordList)
+                children.push(
+                    ...(child as TomlTable[]).map((encodeTable, index) => ({
+                        path: [...path, key, index],
+                        table: encodeTable,
+                    })),
+                );
+            else assignments.push([key, child]);
+            return { assignments, children };
+        },
+    );
+    return {
+        assignments: sections.flatMap((section) => section.assignments),
+        children: sections.flatMap((section) => section.children),
+    };
+}
+
+/**
+ * Write ordered tables and retained comments around TOML values.
+ * @param target the ordered written values.
+ * @param indent indentation resolved by the settings emitter.
+ * @param comments comments retained on their keys and headers.
+ * @returns the formatted TOML text.
+ */
+function encodeSettings(target: TomlTable, indent: string, comments: TomlComments): string {
+    const blocks: string[] = [];
+    const root: string[] = [];
+    function encodeTable(value: TomlTable, path: KeyPath): void {
+        const { assignments, children } = splitSection(value, path, comments);
+        const lines = assignments.map(([key, child]) => {
+            const { text, pair } = encodeAssignment(key, child, path[0] === 'scope' && key.includes('.'));
+            return insertTomlComments(
+                comments,
+                'key',
+                [...path, key],
+                text.slice(getTomlRange(pair.key)[0], getTomlRange(pair.value)[0]) +
+                    encodeValue(pair.value, text, [...path, key], comments, indent),
+            );
+        });
+        if (path.length === 0) root.push(...lines);
+        else if (lines.length > 0 || children.length === 0 || comments.has(JSON.stringify(['header', ...path])))
+            blocks.push(
+                [
+                    insertTomlComments(comments, 'header', path, encodeHeader(path, typeof path.at(-1) === 'number')),
+                    ...lines,
+                ].join('\n'),
+            );
+        for (const child of children) {
+            encodeTable(child.table, child.path);
+        }
+    }
+    encodeTable(target, []);
+    const metadata = insertTomlComments(comments, 'provenance', [], '');
+    const output =
+        [metadata, insertTomlComments(comments, 'preamble', [], ''), root.join('\n'), ...blocks]
+            .filter((block) => block !== '')
+            .join('\n\n') + '\n';
+    if (comments.size > 0)
+        throw new GspotError(
+            'settings',
+            [...comments.values()]
+                .map(
+                    ({ path }) =>
+                        `The comment for ${path.map(String).join('.')} cannot be represented in TOML 1.0. Move that field out of its inline table before writing the settings.`,
+                )
+                .join('\n'),
+        );
+    return output;
+}
+
+function isSameValue(left: unknown, right: unknown): boolean {
+    return isDeepStrictEqual(normalizeTables(left), normalizeTables(right));
+}
+
+function listMatchingPositions(
+    original: readonly unknown[],
+    values: readonly unknown[],
+    position: number,
+    path: KeyPath,
+): number[] {
+    const source = original[position];
+    if (!isRecord(source)) {
+        const matches = values.flatMap((value, index) => (isSameValue(value, source) ? [index] : []));
+        const occurrence = original.slice(0, position).filter((value) => isSameValue(value, source)).length;
+        const index = matches[occurrence] ?? matches[0];
+        return index === undefined ? [] : [index];
+    }
+    const matches = values.flatMap((value, index) => {
+        if (!isRecord(value)) return [];
+        if (path[0] === 'ignore')
+            return IGNORE_IDENTITY_FIELDS.every((key) => isSameValue(source[key], value[key])) ? [index] : [];
+        if (source['name'] !== undefined) return isSameValue(source['name'], value['name']) ? [index] : [];
+        return isSameValue(source, value) ? [index] : [];
+    });
+    if (matches.length === 0) return path[0] === 'ignore' || position >= values.length ? [] : [position];
+    return matches.toSorted(
+        (left, right) =>
+            Number(!isSameValue(source['until'], getValueAt(values[left], ['until']))) -
+            Number(!isSameValue(source['until'], getValueAt(values[right], ['until']))),
+    );
+}
+
+function listDestinationPaths(syntax: TomlSyntax, target: TomlTable, path: KeyPath): KeyPath[] {
+    let mapped: KeyPath[] = [[]];
+    for (const [index, key] of path.entries()) {
+        if (typeof key === 'string') {
+            mapped = mapped.map((candidate) => [...candidate, key]);
+            continue;
+        }
+        const prior: unknown = getValueAt(syntax.value, path.slice(0, index));
+        if (!Array.isArray(prior)) return [];
+        const original: readonly unknown[] = prior;
+        mapped = mapped.flatMap((candidate) => {
+            const next: unknown = getValueAt(target, candidate);
+            if (!Array.isArray(next)) return [];
+            const values: readonly unknown[] = next;
+            return listMatchingPositions(original, values, key, path).map((position) => [...candidate, position]);
+        });
+    }
+    return mapped.filter((candidate) => getValueAt(target, candidate) !== undefined);
+}
+
+function findCommentTarget(syntax: TomlSyntax, target: TomlTable, written: TomlTable, owner: TomlCommentAnchor) {
+    const path = listDestinationPaths(syntax, target, owner.path)[0];
+    if (path === undefined) {
+        if (owner.kind === 'item' || getValueAt(written, owner.path) === undefined) return { kind: owner.kind, path };
+        const [header] = [
+            syntax.entries.findLast(
+                (entry) => entry.kind === 'header' && entry.path.every((key, index) => owner.path[index] === key),
+            ),
+        ].flatMap((entry) => (entry?.path.every((key) => typeof key === 'string') === true ? [entry.path] : []));
+        if (header === undefined) return { kind: 'preamble', path: [] };
+        createTable(target, header);
+        return { kind: 'header', path: header };
+    }
+    if (owner.kind !== 'key') return { kind: owner.kind, path };
+    const value: unknown = getValueAt(target, path);
+    if (isRecord(value)) return { kind: 'header', path };
+    if (isRecordArray(value)) return { kind: 'header', path: [...path, 0] };
+    return { kind: owner.kind, path };
+}
+
+/**
+ * Keep exact physical comments on their surviving semantic owner before records merge or move.
+ * An ambiguous split gives its general comments to the first ordered row; path comments follow their own values.
+ * @param syntax the original keys, headers and parsed values
+ * @param target the ordered written values
+ * @param written the draft before omission of tool defaults
+ * @returns source-ordered owned blocks and separately anchored free prose
+ */
+// eslint-disable-next-line sonarjs/cognitive-complexity -- reason: One pass retains comment ownership and physical order. It handles orphan and preamble placement.
+function collectKeptComments(syntax: TomlSyntax, target: TomlTable, written: TomlTable): TomlComments {
+    const comments: TomlComments = new Map();
+    for (const { comment, anchor: owner } of listAnchoredComments(syntax)) {
+        if (METADATA_PREFIXES.some((prefix) => comment.raw.startsWith(prefix))) {
+            if (comment.raw.startsWith(TEMPLATE_COMMENT_PREFIX))
+                addTomlComment(comments, { kind: 'provenance', path: [], comment, placement: 'owned' });
+            continue;
+        }
+        if (owner !== undefined) {
+            const mapped = findCommentTarget(syntax, target, written, owner);
+            addTomlComment(comments, {
+                kind: mapped.kind,
+                path: mapped.path,
+                comment,
+                placement: mapped.kind === 'preamble' ? 'free' : 'owned',
+            });
+            continue;
+        }
+        const next = syntax.entries.find(
+            (entry) =>
+                getTomlRange(entry.node)[0] > getTomlRange(comment)[1] &&
+                listDestinationPaths(syntax, target, entry.path).length > 0,
+        );
+        const anchor = findCommentTarget(syntax, target, written, next ?? { kind: 'preamble', path: [] });
+        addTomlComment(comments, { kind: anchor.kind, path: anchor.path, comment, placement: 'free' });
+    }
+    return comments;
+}
+
+/**
+ * Identify nonempty arrays of parsed tables for native section layout.
+ *
+ * @param value a parsed value.
+ *
+ * @returns whether every array item holds a plain table.
+ */
+function isRecordArray(value: unknown): value is Record<string, unknown>[] {
+    return Array.isArray(value) && value.length > 0 && value.every(isRecord);
+}
+
+export { encodeSettings, collectKeptComments };

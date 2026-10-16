@@ -6,7 +6,7 @@ import { REASON_WORDS_MIN } from '#cli/config/settings/values.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 
-function located(path: KeyPath, text: string | undefined): SettingsError[] {
+function buildErrorsAt(path: KeyPath, text: string | undefined): SettingsError[] {
     return text === undefined ? [] : [{ path, message: text }];
 }
 
@@ -26,7 +26,7 @@ function isLimitLoosening(direction: 'raising' | 'lowering', value: unknown, shi
  * @param command an available command that can correct the entry.
  * @returns the error, or undefined when the reason meets the requirements.
  */
-function reasonError(where: string, reason: string | undefined, command?: string): string | undefined {
+function validateReason(where: string, reason: string | undefined, command?: string): string | undefined {
     if (reason === undefined)
         return `${where} needs a reason. Add \`reason = "..."\` to this entry.${command === undefined ? '' : ' Or run: ' + command}`;
     if (isReasonAccepted(reason)) return undefined;
@@ -35,17 +35,17 @@ function reasonError(where: string, reason: string | undefined, command?: string
 }
 
 // The tool reads extra options; only the surrounding envelope carries a gspot reason.
-function extraReasonErrors(entry: Record<string, unknown>, path: KeyPath): SettingsError[] {
+function validateExtraReason(entry: Record<string, unknown>, path: KeyPath): SettingsError[] {
     const reason = entry['reason'];
-    return located(
+    return buildErrorsAt(
         [...path, 'reason'],
-        reasonError(path.map(String).join('.'), typeof reason === 'string' ? reason : undefined),
+        validateReason(path.map(String).join('.'), typeof reason === 'string' ? reason : undefined),
     );
 }
 
 function ignoreErrors(settings: Settings): SettingsError[] {
     return settings.ignore.flatMap((entry, index) =>
-        located(['ignore', index, 'reason'], reasonError(`ignore.${String(index)}`, entry.reason)),
+        buildErrorsAt(['ignore', index, 'reason'], validateReason(`ignore.${String(index)}`, entry.reason)),
     );
 }
 
@@ -54,20 +54,20 @@ function ignoreErrors(settings: Settings): SettingsError[] {
  * @param settings the normalized settings.
  * @returns the errors in plain English.
  */
-function reasonErrors(settings: Settings): SettingsError[] {
+function validateSettingReasons(settings: Settings): SettingsError[] {
     function visit(value: unknown, path: KeyPath): SettingsError[] {
         const [field, , table] = path.toReversed();
         if (table === 'tools' && field === 'rules') return [];
         if (Array.isArray(value)) return value.flatMap((entry, index) => visit(entry, [...path, index]));
         if (!isRecord(value)) return [];
-        if (path.at(-1) === 'extra') return extraReasonErrors(value, path);
+        if (path.at(-1) === 'extra') return validateExtraReason(value, path);
         const reason = value['reason'];
         const own: SettingsError[] = [];
         if (reason !== undefined)
             own.push(
-                ...located(
+                ...buildErrorsAt(
                     [...path, 'reason'],
-                    reasonError(path.map(String).join('.'), typeof reason === 'string' ? reason : undefined),
+                    validateReason(path.map(String).join('.'), typeof reason === 'string' ? reason : undefined),
                 ),
             );
         return [
@@ -131,4 +131,4 @@ function isReasonNeeded(declaration: SettingDeclaration, before: unknown, after:
     return isLoosening(declaration, after, before);
 }
 
-export { reasonError, isLoosening, reasonErrors, isReasonNeeded, isReasonAccepted };
+export { isLoosening, validateReason, isReasonNeeded, isReasonAccepted, validateSettingReasons };

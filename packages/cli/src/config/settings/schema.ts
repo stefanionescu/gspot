@@ -201,19 +201,19 @@ export const SETTING_FIELDS = {
         configurations: ['commits'],
         description:
             'Options for active commitlint rules, by rule name: an always/never condition and optional value, without a severity. The level decides which rules run. Ignore a finding with gspot ignore commits/commitlint --rule `<rule>` --reason `<why>`.',
-        off_values: [0],
+        offValues: [0],
     },
     yamllint_rules: {
         configurations: ['files'],
         description:
             'Option tables for active YAML rules. The level decides which rules run, and formatting width comes from [format]. Ignore a finding with gspot ignore files/yamllint --rule `<rule>` --reason `<why>`.',
-        off_values: ['disable'],
+        offValues: ['disable'],
     },
     markdownlint_rules: {
         configurations: ['markdown'],
         description:
             'Option tables by Markdown rule ID, such as MD024. The level decides which rules run; ignore a finding with gspot ignore markdown/markdownlint --rule `<rule>` --reason `<why>`.',
-        off_values: [false],
+        offValues: [false],
     },
     stylelint_rules: {
         configurations: ['css'],

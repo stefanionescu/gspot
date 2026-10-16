@@ -38,7 +38,7 @@ type SettingDeclaration = {
     summary: string;
     languages?: string[];
     categories?: string[];
-    off_values?: (string | number | boolean)[];
+    offValues?: (string | number | boolean)[];
 };
 
 type TableValues = {

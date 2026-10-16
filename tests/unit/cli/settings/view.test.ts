@@ -6,14 +6,16 @@ import { openSession } from '#cli/commands/session.ts';
 import { test, expect, setSystemTime } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
+import { parseExpiryDate } from '#cli/commands/ignore.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
+import { buildKnownSettings } from '#cli/settings/known.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
+import { buildScopeView } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { setKey, findScopeTable } from '#cli/settings/edit.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { scopeView, knownSettings } from '#cli/settings/view.ts';
+import { formatSettingsText } from '#cli/settings/write/text.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { emitSettings, parseExpiryDate } from '#cli/settings/file.ts';
 import { NESTED_SCOPE_SETTINGS } from '#tests/config/settings/scopes.ts';
 import { SITE_BUILD_COMMANDS, SITE_NPM_CLIENT_CASES } from '#tests/config/site/build.ts';
 
@@ -47,8 +49,8 @@ test.each(
                 manual.scopes.find((entry) => entry.scope.path === scope)!.view.options('site').build_command,
             ).toStrictEqual([...argv]);
             expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(written);
-            const canonical = emitSettings(written, parseToml(written));
-            expect(emitSettings(canonical, parseToml(canonical))).toBe(canonical);
+            const canonical = formatSettingsText(written, parseToml(written));
+            expect(formatSettingsText(canonical, parseToml(canonical))).toBe(canonical);
             await writeFile(join(sandbox.path, 'gspot.toml'), canonical);
             const reopened = await openSession(sandbox.path);
             expect(
@@ -133,9 +135,9 @@ test('an until date ends at the end of that day in UTC, and the expired ignore s
                 until: parseExpiryDate('2030-05-21'),
             },
         ] as const;
-        const settings = parseSettings(emitSettings('', { configurations: [], ignore: entries }));
+        const settings = parseSettings(formatSettingsText('', { configurations: [], ignore: entries }));
         const selected = selectForScope(settings, '', readManifests(createReadCache(process.cwd())));
-        const view = scopeView(knownSettings(selected), settings, selected, '');
+        const view = buildScopeView(buildKnownSettings(selected), settings, selected, '');
         expect(view.ignoresFor('dependencies/osv')).toStrictEqual([
             { ...entries[3], paths: [] },
             { ...entries[0], paths: [] },
@@ -143,7 +145,7 @@ test('an until date ends at the end of that day in UTC, and the expired ignore s
         expect(view.rulesOff('dependencies/osv')).toStrictEqual(['future', 'permanent']);
         expect(settings.ignore).toStrictEqual([entries[3], entries[1], entries[0], entries[2]]);
         setSystemTime(new Date('2030-05-21T00:00:00.000Z'));
-        const next = scopeView(knownSettings(selected), settings, selected, '');
+        const next = buildScopeView(buildKnownSettings(selected), settings, selected, '');
         expect(next.rulesOff('dependencies/osv')).toStrictEqual(['permanent']);
         expect(view.rulesOff('dependencies/osv')).toStrictEqual(['future', 'permanent']);
     } finally {

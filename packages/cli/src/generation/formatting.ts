@@ -1,7 +1,7 @@
 import { dirname, relative } from 'node:path';
-import { everyTable } from '#cli/settings/inherit.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
+import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import type { Settings, ScopeView } from '#cli/types/settings/values.ts';
@@ -58,7 +58,7 @@ function rebaseOverrides(
 }
 
 function formatEntries(settings: Settings): ScopeFormat[] {
-    const tables = everyTable(settings)
+    const tables = listSettingsTables(settings)
         .toSorted((first, second) => compareScopeDepth(first.scope ?? '', second.scope ?? ''))
         .flatMap(({ scope = '', table }) => {
             const authored = table.written['format'];

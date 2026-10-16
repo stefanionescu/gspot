@@ -3,20 +3,20 @@ import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { parseTomlText } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
-import { knownSettings } from '#cli/settings/view.ts';
 import { printResult } from '#cli/system/terminal.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { buildKnownSettings } from '#cli/settings/known.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { RECORD_FIELDS } from '#cli/config/settings/file.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
-import { isLoosening } from '#cli/settings/errors/reasons.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { unknownSettingError } from '#cli/settings/errors/keys.ts';
-import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { isLoosening } from '#cli/settings/validation/reasons.ts';
+import { findSettingSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
 import { setKey, addToList, findScopeTable } from '#cli/settings/edit.ts';
 import type { Mutation, SettingsEdit } from '#cli/types/settings/file.ts';
@@ -24,7 +24,7 @@ import { DECIMAL, INTEGER, STRUCTURED } from '#cli/config/commands/set.ts';
 import { isRecord, getValueAt, stripUndefined } from '#cli/system/values.ts';
 import { saveSettings, startSettingsEdit } from '#cli/commands/save-settings.ts';
 import { type SetOptions, type ParsedSettingValue } from '#cli/types/commands/save-settings.ts';
-import { settingValue, writtenValue, declarationFor, settingDefault } from '#cli/settings/inherit.ts';
+import { getSettingValue, getWrittenValue, findDeclaration, findSettingDefault } from '#cli/settings/inherit.ts';
 
 import type {
     Settings,
@@ -58,7 +58,7 @@ function buildSettingError(settings: Settings, known: KnownSettings, key: string
     const manifests = readManifests(reads);
     const selectedScope = Object.keys(settings.scope).find(
         (scope) =>
-            declarationFor(knownSettings(selectForScope(settings, scope, manifests), settings.level), key) !==
+            findDeclaration(buildKnownSettings(selectForScope(settings, scope, manifests), settings.level), key) !==
             undefined,
     );
     if (selectedScope !== undefined)
@@ -66,13 +66,13 @@ function buildSettingError(settings: Settings, known: KnownSettings, key: string
             'arguments',
             `A configuration has the setting \`${key}\` in the scope \`${selectedScope}\`; add --scope ${quoteArgument(selectedScope)}.`,
         );
-    return new GspotError('arguments', unknownSettingError(known, key));
+    return new GspotError('arguments', formatUnknownSetting(known, key));
 }
 
 function parseSettingValue(items: string[], declaration: SettingDeclaration): ParsedSettingValue {
     const parsed = items.map((item) => parseItem(item));
     const scalar = parsed.length === 1 ? parsed[0] : parsed;
-    const validation = settingSchema(declaration.name)?.safeParse(scalar);
+    const validation = findSettingSchema(declaration.name)?.safeParse(scalar);
     if (validation?.success === false) {
         const issue = validation.error.issues.find((issue) => issue.code === 'invalid_value');
         if (issue !== undefined)
@@ -93,7 +93,7 @@ function describeSet(
     value: unknown,
     isList: boolean,
 ): string {
-    const previous = settingValue(known, settings, options.key, options.scope);
+    const previous = getSettingValue(known, settings, options.key, options.scope);
     const reason = options.reason === undefined ? '' : `  # ${options.reason}`;
     const was = previous === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
     const items = JSON.stringify(value);
@@ -112,7 +112,7 @@ async function changeSetting(
 ): Promise<CommandResult> {
     const change = parseSettingValue(options.items, declaration);
     const isList = change.type === 'list';
-    const previous = settingValue(known, settings, options.key, options.scope);
+    const previous = getSettingValue(known, settings, options.key, options.scope);
     if (
         isList &&
         options.reason === undefined &&
@@ -120,11 +120,11 @@ async function changeSetting(
         isLoosening(
             declaration,
             change.value,
-            settingDefault(
+            findSettingDefault(
                 known,
-                declarationFor(known, options.key) as DeclarationMatch,
+                findDeclaration(known, options.key) as DeclarationMatch,
                 options.scope ?? '',
-                (dependentKey) => (settingValue(known, settings, dependentKey, options.scope) as SettingEntry).value,
+                (dependentKey) => (getSettingValue(known, settings, dependentKey, options.scope) as SettingEntry).value,
             )?.value,
         )
     )
@@ -137,12 +137,12 @@ async function changeSetting(
         if (change.type === 'list') addToList(scopeTable, options.key, change.value);
         else if (declaration.type === 'table' && isRecord(change.value)) {
             const written = getValueAt(scopeTable, options.key.split('.'));
-            const existing = writtenValue(written);
+            const existing = getWrittenValue(written);
             setKey(scopeTable, options.key, { ...(isRecord(existing) ? existing : {}), ...change.value });
         } else setKey(scopeTable, options.key, change.value);
         if (options.reason !== undefined) {
             const written = getValueAt(scopeTable, options.key.split('.'));
-            const value = writtenValue(written);
+            const value = getWrittenValue(written);
             setKey(scopeTable, options.key, { value, reason: options.reason });
         }
     };
@@ -169,7 +169,7 @@ async function setCommand(options: SetOptions): Promise<CommandResult> {
     const session = await openSession(root, { settings, text: input.text });
     const known = (session.scopes.find((selection) => selection.scope.path === (options.scope ?? '')) as ScopeSelection)
         .known;
-    const match = declarationFor(known, options.key);
+    const match = findDeclaration(known, options.key);
     if (!match) throw buildSettingError(settings, known, options.key, session.reads);
     const shown = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
     return await changeSetting(root, input, settings, known, options, match.declaration, shown);

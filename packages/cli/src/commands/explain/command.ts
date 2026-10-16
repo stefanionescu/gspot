@@ -16,21 +16,21 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { isReasonNeeded } from '#cli/settings/errors/reasons.ts';
-import { unknownSettingError } from '#cli/settings/errors/keys.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
+import { isReasonNeeded } from '#cli/settings/validation/reasons.ts';
 import { REASON_NEEDED_TEXTS } from '#cli/config/commands/explain.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { checkStageSchema } from '#cli/configurations/schema/parts.ts';
+import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
 import { coveredInputs, configuredChecks } from '#cli/planning/checks.ts';
 import { formatUnknownConfiguration } from '#cli/configurations/select.ts';
-import { knownSettings, configurationSettings } from '#cli/settings/view.ts';
 import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
 import { JAVASCRIPT_CONFIGURATION_FOLDER } from '#cli/config/configurations.ts';
 import { ruleNamesFileSchema } from '#cli/generation/tool-file-sources/stylelint.ts';
 import { ESLINT_TOOL, ESLINT_RULE_NAMES_FILE } from '#cli/config/generation/eslint.ts';
-import { settingValue, declarationFor, settingCandidates } from '#cli/settings/inherit.ts';
+import { buildKnownSettings, listConfigurationSettings } from '#cli/settings/known.ts';
+import { getSettingValue, findDeclaration, listCandidateKeys } from '#cli/settings/inherit.ts';
 import { listCheckIds, listRuleFiles, readManifests, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 
 import {
@@ -55,7 +55,7 @@ function explainConfiguration(configurationName: string, reads: ReadCache): Expl
         requires: manifest.configuration.requires,
         tools: manifest.tools.map((tool) => (tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`)),
         checks: manifest.checks.map((check) => ({ check: check.name, stage: check.stage })),
-        settings: configurationSettings(manifest.configuration.name).map((setting) => setting.name),
+        settings: listConfigurationSettings(manifest.configuration.name).map((setting) => setting.name),
         rules: listRuleFiles(manifest).map((file) => file.path),
         alwaysSelected: manifest.configuration.always_selected,
     };
@@ -112,14 +112,14 @@ function scopeLines(key: string, declaration: SettingDeclaration, entry: Setting
 function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
     if (session === undefined) return undefined;
     const scopes = session.scopes.flatMap((selection) => {
-        const match = declarationFor(selection.known, key);
+        const match = findDeclaration(selection.known, key);
         if (match === undefined) return [];
         return [
             {
                 scope: selection.scope.path,
                 declaration: match.declaration,
-                effective: settingValue(selection.known, session.settingsFile.settings, key, selection.scope.path),
-                shipped: settingCandidates(match, key)
+                effective: getSettingValue(selection.known, session.settingsFile.settings, key, selection.scope.path),
+                shipped: listCandidateKeys(match, key)
                     .toReversed()
                     .map((candidate) => selection.known.defaults.get(candidate))
                     .find((entry) => entry !== undefined)?.value,
@@ -163,8 +163,8 @@ function buildUnknownSubjectDiagnostic(session: Session | undefined, subject: st
             listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.check), reads),
         );
     if (subject.includes('.'))
-        return unknownSettingError(
-            knownSettings(
+        return formatUnknownSetting(
+            buildKnownSettings(
                 session?.scopes.flatMap((scope) => scope.selected) ?? [],
                 session?.settingsFile.settings.level,
                 reads,

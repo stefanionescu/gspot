@@ -5,7 +5,7 @@ import { readSettings } from '#cli/settings/read.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { COMMENTED_SETTINGS } from '#tests/config/samples/settings.ts';
 import { link, stat, symlink, readFile, writeFile } from 'node:fs/promises';
-import { setKey, editSettings, readSettingsEdit } from '#cli/settings/edit.ts';
+import { setKey, updateSettings, readSettingsEdit } from '#cli/settings/edit.ts';
 import { parseTomlText, writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 
 const written = COMMENTED_SETTINGS;
@@ -34,7 +34,7 @@ test('an edit planned from old bytes is refused, and a new plan is written', asy
     const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, written);
     const input = readSettingsEdit(sandbox.path);
-    const result = editSettings(sandbox.path, input, (written) => {
+    const result = updateSettings(sandbox.path, input, (written) => {
         setKey(written, 'level', 'all');
     });
     await writeFile(path, `${written}# Concurrent edit.\n`);
@@ -44,7 +44,7 @@ test('an edit planned from old bytes is refused, and a new plan is written', asy
     }).toThrow();
     expect(await readFile(path, 'utf8')).toBe(`${written}# Concurrent edit.\n`);
     const fresh = readSettingsEdit(sandbox.path);
-    const next = editSettings(sandbox.path, fresh, (written) => {
+    const next = updateSettings(sandbox.path, fresh, (written) => {
         setKey(written, 'level', 'all');
     });
     writeSettings(log, next.text, fresh.original);
@@ -81,7 +81,7 @@ test.each(['symlink inside', 'symlink outside', 'hardlink'])(
             : symlink(target, join(root, 'gspot.toml')));
         let evaluated = false;
         expect(() =>
-            editSettings(root, readSettingsEdit(root), () => {
+            updateSettings(root, readSettingsEdit(root), () => {
                 evaluated = true;
             }),
         ).toThrow('regular file with one link');

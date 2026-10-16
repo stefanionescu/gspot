@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import { listAssets } from '#cli/system/assets.ts';
-import { knownSettings } from '#cli/settings/view.ts';
 import { isBelowFloor } from '#cli/tools/versions.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
+import { buildKnownSettings } from '#cli/settings/known.ts';
 import type { CheckContradiction } from './types/manifests.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 import { listChecksById, listDeclaredTools, buildManifestError } from '#cli/configurations/manifests.ts';
@@ -271,7 +271,7 @@ export function assertManifests(manifests: Map<string, Manifest>): void {
     }
     const ownedChecks = listChecksById(entries);
     const checks: Map<string, CheckDeclaration> = new Map([...ownedChecks].map(([name, { check }]) => [name, check]));
-    const settings = knownSettings(entries).declarations;
+    const settings = buildKnownSettings(entries).declarations;
     for (const manifest of entries)
         assertManifestDeclarations(manifest, { manifests, pinOwners, tools, checks, settings });
     for (const manifest of entries) {

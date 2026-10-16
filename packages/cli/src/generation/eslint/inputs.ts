@@ -1,7 +1,7 @@
 // The parts of the ESLint configuration that the settings and the emitted scope decide.
 import { basename } from 'node:path/posix';
 import type { Session } from '#cli/types/planning.ts';
-import { settingValue } from '#cli/settings/inherit.ts';
+import { getSettingValue } from '#cli/settings/inherit.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
@@ -67,7 +67,7 @@ function extraBlock(context: EslintContext): EslintConfiguration['extra'] {
     const entries = selection.view.extra('eslint');
     if (entries === undefined || Object.keys(entries).length === 0) return undefined;
     return {
-        reason: settingValue(selection.known, settings, 'tools.eslint.extra', selection.scope.path)?.reason,
+        reason: getSettingValue(selection.known, settings, 'tools.eslint.extra', selection.scope.path)?.reason,
         entries,
     };
 }

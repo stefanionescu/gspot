@@ -1,158 +1,23 @@
-import type { z } from 'zod';
-import { isRecord } from '#cli/system/values.ts';
-import { everyTable } from '#cli/settings/inherit.ts';
-import { knownSettings } from '#cli/settings/view.ts';
-import { buildSettings } from '#cli/settings/normalize.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
-import { selectForScope } from '#cli/repository/coverage.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { reasonErrors } from '#cli/settings/errors/reasons.ts';
+import { limitsSchema } from '#cli/settings/schema/limits.ts';
+import { namingSchema } from '#cli/settings/schema/naming.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { listDistinctTools } from '#cli/configurations/tools.ts';
-import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
-import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
-import { listUnknownConfigurations } from '#cli/configurations/select.ts';
-import { validateAgainstKnownSettings } from '#cli/settings/errors/keys.ts';
-import type { Settings, SettingsFile } from '#cli/types/settings/values.ts';
-import type { ConfigurationDeclaration } from '#cli/types/configurations.ts';
-import type { WrittenScope, SettingsError } from '#cli/types/settings/file.ts';
-import { RECORD_FIELDS, SETTINGS_REFERENCE_URL } from '#cli/config/settings/file.ts';
-import { listCheckIds, readManifests, formatUnknownCheck } from '#cli/configurations/manifests.ts';
-import { pathErrors, extraOptionErrors, disabledRuleErrors } from '#cli/settings/errors/values.ts';
+import { architectureSchema } from '#cli/settings/schema/architecture.ts';
+import { type Settings, type SettingsFile } from '#cli/types/settings/values.ts';
+import { type WrittenScope, type ParsedSettings } from '#cli/types/settings/file.ts';
+import { SCOPE_EMPTY_RECORDS, COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/values.ts';
 
-function formatNestedSettingsIssues(
-    path: string,
-    prefix: z.core.$ZodIssue['path'],
-    issues: z.core.$ZodIssue[],
-): string[] {
-    return issues.flatMap((issue) => formatSettingsIssue(path, { ...issue, path: [...prefix, ...issue.path] }));
-}
-
-function formatSettingsIssue(path: string, issue: z.core.$ZodIssue): string[] {
-    const branches = issue.code === 'invalid_union' ? issue.errors : [];
-    const envelope = branches.find((errors) =>
-        errors.some((child) => child.path[0] === 'value' || child.path[0] === 'reason'),
-    );
-    if (envelope !== undefined) return formatNestedSettingsIssues(path, issue.path, envelope);
-    if (issue.code === 'invalid_key') return formatNestedSettingsIssues(path, issue.path, issue.issues);
-    const segments = issue.path.filter((part): part is KeyPath[number] => typeof part !== 'symbol');
-    if (issue.code !== 'unrecognized_keys') return formatZodIssue(issue).map((line) => `${path}: ${line}`);
-    const [record, scopeIndex, ...scopeFields] = segments;
-    let where = segments.length === 0 ? 'the top level' : `[${segments.map(String).join('.')}]`;
-    if (record === 'scope') {
-        const section = scopeFields.length === 0 ? '' : ` [${scopeFields.map(String).join('.')}]`;
-        where = `[[scope]] record ${String(Number(scopeIndex) + 1)}${section}`;
-    }
-    return issue.keys.map((key) => {
-        const record = [...scopeFields, key].map(String).join('.');
-        const fields: Readonly<Record<string, readonly string[]>> = RECORD_FIELDS;
-        if (segments[0] === 'scope' && Object.hasOwn(fields, record))
-            return `${path}: Write [[${record}]] at the root.${fields[record]?.includes('paths') === true ? ' Its paths say where it applies.' : ''}`;
-        return `${path}: ${where}: \`${key}\` is not a gspot.toml setting. See ${SETTINGS_REFERENCE_URL} for every key.`;
-    });
-}
-
-function throwErrors(errors: SettingsError[]): never {
-    throw new GspotError('settings', errors.map((error) => errorText(error, SETTINGS_FILE)).join('\n'));
-}
-
-// Commands and check execution validate the same settings.
-function collectErrors(settings: Settings, root: string | undefined, reads: ReadCache): SettingsError[] {
-    return [
-        ...reasonErrors(settings),
-        ...(Array.isArray(settings.written['command_check']) ? settings.written['command_check'] : []).flatMap(
-            (entry, index) =>
-                isRecord(entry) && typeof entry['name'] === 'string' && listCheckIds([], reads).includes(entry['name'])
-                    ? [
-                          {
-                              path: ['command_check', index, 'name'],
-                              message: `The command check ${entry['name']} has the same name as a configuration check. Give it another name.`,
-                          },
-                      ]
-                    : [],
-        ),
-        ...settings.ignore.flatMap((entry, index) => {
-            const checks = listCheckIds(Object.values(settings.check), reads);
-            return checks.includes(entry.check)
-                ? []
-                : [
-                      {
-                          path: ['ignore', index, 'check'],
-                          message: formatUnknownCheck(entry.check, checks),
-                      },
-                  ];
-        }),
-        ...disabledRuleErrors(settings, reads),
-        ...(root === undefined ? [] : pathErrors(root, settings)),
-        ...settingErrors(settings, reads),
-    ];
-}
-
-/**
- * The configuration names the settings select that no manifest defines, each at its declaration.
- * @param settings the parsed settings.
- * @param reads the read cache for this run.
- * @returns one error per unknown name.
- */
-function unknownConfigurationErrors(settings: Settings, reads: ReadCache): SettingsError[] {
-    const manifests = readManifests(reads);
-    const declarations: ConfigurationDeclaration[] = [
-        ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
-        ...Object.entries(settings.scope).flatMap(([, scope], scopeIndex) =>
-            scope.configurations.map((name, index) => ({ name, path: ['scope', scopeIndex, 'configurations', index] })),
-        ),
-    ];
-    return listUnknownConfigurations(declarations, manifests).map(({ path, message: diagnostic }) => ({
-        path,
-        message: diagnostic,
-    }));
-}
-
-/**
- * Every error the selection and the known settings find in a settings whose configuration names all exist.
- * @param settings the parsed settings.
- * @param reads the read cache for this run.
- * @returns the errors, each at the value that raised it.
- */
-function settingErrors(settings: Settings, reads: ReadCache): SettingsError[] {
-    const manifests = readManifests(reads);
-    const errors: SettingsError[] = [];
-    const tools = listDistinctTools([...manifests.values()]);
-    for (const { table, path } of everyTable(settings))
-        errors.push(...extraOptionErrors(table, tools).map((error) => ({ ...error, path: [...path, ...error.path] })));
-    const rootSelected = selectForScope(settings, '', manifests);
-    // Each scope table uses the settings of its selected configurations, including the root configurations.
-    const scopeKnown = new Map(
-        Object.keys(settings.scope).map((scope) => [
-            scope,
-            knownSettings(selectForScope(settings, scope, manifests), settings.level, reads),
-        ]),
-    );
-    errors.push(
-        ...validateAgainstKnownSettings(
-            knownSettings(rootSelected, settings.level, reads),
-            settings,
-            scopeKnown,
-            knownSettings([...manifests.values()], settings.level, reads),
-        ),
-    );
-    return errors;
-}
-
-/**
- * A settings error as text that leads with its file, when given, and the key path it names.
- * @param error the error.
- * @param file the settings file, for a line that names it.
- * @returns the text.
- */
-function errorText(error: SettingsError, file?: string): string {
-    const where = error.path.map(String).join('.');
-    const place = [file, where].filter((part) => part !== undefined && part !== '');
-    return [...place, error.message].join(': ');
-}
+import {
+    throwErrors,
+    collectErrors,
+    formatSettingsIssue,
+    unknownConfigurationErrors,
+} from '#cli/settings/validation/settings.ts';
 
 /**
  * Parse and validate gspot.toml. Throw a GspotError with every settings error.
@@ -162,7 +27,7 @@ function errorText(error: SettingsError, file?: string): string {
  * @param reads the read cache for this run.
  * @returns the normalized settings.
  */
-export function parseSettings(text: string, root?: string, reads = createReadCache(root ?? process.cwd())): Settings {
+function parseSettings(text: string, root?: string, reads = createReadCache(root ?? process.cwd())): Settings {
     const written = parseTomlText(text, SETTINGS_FILE, 'settings');
     const result = settingsSchema.safeParse(written);
     if (!result.success)
@@ -190,8 +55,123 @@ export function parseSettings(text: string, root?: string, reads = createReadCac
  * @param reads the read cache for this run.
  * @returns the settings and the file's text.
  */
-export function readSettings(root: string, reads = createReadCache(root)): SettingsFile {
+function readSettings(root: string, reads = createReadCache(root)): SettingsFile {
     const { text } = readSettingsFile(root);
     const settings = parseSettings(text, root, reads);
     return { settings, text };
 }
+
+function normalizeScopeTables(written: NonNullable<ParsedSettings['scope']>[number]): Settings['scopeTables'][string] {
+    const { architecture, tools, naming, coverage, docs, licenses, site, ...table } = written;
+    const normalized = Object.fromEntries(
+        SCOPE_EMPTY_RECORDS.flatMap(([name, field]) => {
+            const value = { naming, coverage, docs, licenses, site }[name];
+            return value === undefined ? [] : [[name, { ...value, [field]: [] }]];
+        }),
+    );
+    const normalizedTools =
+        tools === undefined
+            ? undefined
+            : stripUndefined({
+                  ...tools,
+                  eslint: tools.eslint === undefined ? undefined : { ...tools.eslint, override: [] },
+              });
+    return stripUndefined({
+        ...table,
+        ...normalized,
+        written,
+        architecture: architecture === undefined ? undefined : normalizeArchitecture({ ...architecture, module: [] }),
+        tools: normalizedTools,
+    });
+}
+
+/**
+ * Fills the architecture table's lists and keeps its optional keys only when written.
+ * @param written the table as written, if any
+ * @returns the architecture configuration
+ */
+function normalizeArchitecture(written: ParsedSettings['architecture']): Settings['architecture'] {
+    return {
+        module: written?.module ?? [],
+        roles: written?.roles ?? architectureSchema.shape.roles.parse(undefined),
+    };
+}
+
+function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['check'] {
+    return Object.fromEntries(
+        (checks ?? []).map((entry) => {
+            const name = entry.name;
+            const { paths, ...definition } = stripUndefined(entry);
+            return [
+                name,
+                {
+                    ...definition,
+                    name,
+                    ...COMMAND_CHECK_DEFAULTS,
+                    summary: entry.summary ?? `Runs the repository's own check ${name}.`,
+                    why: 'The repository declared this command in gspot.toml as part of its gate.',
+                    help: entry.help ?? 'Read the command output; this repository declares the check.',
+                    files: {
+                        ...COMMAND_CHECK_DEFAULTS.files,
+                        extensions: [...COMMAND_CHECK_DEFAULTS.files.extensions],
+                        filenames: [...COMMAND_CHECK_DEFAULTS.files.filenames],
+                        tags: [...COMMAND_CHECK_DEFAULTS.files.tags],
+                        paths,
+                        kinds: [...COMMAND_CHECK_DEFAULTS.files.kinds],
+                    },
+                },
+            ];
+        }),
+    );
+}
+
+/**
+ * Build the settings values from the parsed document.
+ * @param written the validated document
+ * @returns the settings
+ */
+function buildSettings(written: ParsedSettings): Settings {
+    const { command_check: commandChecks, ...document } = written;
+    const tables = stripUndefined({
+        rules: written.rules,
+        hooks: written.hooks,
+        ci: written.ci,
+    });
+    const scopes = (written.scope ?? []).map((scope) => [scope.path, scope] as const);
+    const scopeTables = Object.fromEntries(
+        scopes.map(([path, scope]) => [trimTrailingSlashes(path), normalizeScopeTables(scope)]),
+    );
+    return {
+        ...stripUndefined(document),
+        written: written,
+        level: settingsSchema.shape.level.parse(written.level),
+        configurations: written.configurations,
+        scope: Object.fromEntries(
+            scopes.map(([path, scope]) => [
+                trimTrailingSlashes(path),
+                {
+                    configurations: scope.configurations,
+                    removed_configurations: scope.removed_configurations,
+                },
+            ]),
+        ),
+        removed_configurations: settingsSchema.shape.removed_configurations.parse(written.removed_configurations),
+        limits: written.limits ?? limitsSchema.parse({}),
+        naming: written.naming ?? namingSchema.parse({}),
+        architecture: normalizeArchitecture(written.architecture),
+        structure: {
+            reexports: settingsSchema.shape.structure.unwrap().shape.reexports.parse(written.structure?.reexports),
+        },
+        format: stripUndefined({ ...written.format }),
+        allowed_words: settingsSchema.shape.allowed_words.parse(written.allowed_words),
+        tools: stripUndefined({ ...written.tools }),
+        test_files: settingsSchema.shape.test_files.parse(written.test_files),
+        ignore: (written.ignore ?? []).map((entry) => stripUndefined(entry)),
+        check: normalizeCommandChecks(commandChecks),
+
+        ...tables,
+        scopeTables,
+    };
+}
+
+export { readSettings, parseSettings };

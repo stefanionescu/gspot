@@ -1,4 +1,3 @@
-// Reads and changes parsed values and tables.
 import type { Defined } from '#cli/types/objects.ts';
 
 /**
@@ -21,17 +20,6 @@ export function stripUndefined<T extends object>(value: T): Defined<T> {
  */
 export function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Date);
-}
-
-/**
- * Identify nonempty arrays of parsed tables for native section layout.
- *
- * @param value a parsed value.
- *
- * @returns whether every array item holds a plain table.
- */
-export function isRecordArray(value: unknown): value is Record<string, unknown>[] {
-    return Array.isArray(value) && value.length > 0 && value.every(isRecord);
 }
 
 /**

@@ -2,9 +2,10 @@ import { test, expect } from 'bun:test';
 import { parseSettings } from '#cli/settings/read.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { TERMS } from '#tests/config/naming/settings.ts';
+import { buildKnownSettings } from '#cli/settings/known.ts';
+import { buildScopeView } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import { nameFindings } from '#cli/checks/general/naming/names.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import type { Identifier, NamingSettings } from '#cli/types/checks/general.ts';
@@ -15,9 +16,9 @@ const check = listChecksById(readManifests(createReadCache(process.cwd())).value
 
 test('a number word such as base64 counts as one word; repeated, extra, banned and digit words are still reported', () => {
     const selected = selectConfigurations(['naming'], readManifests(createReadCache(process.cwd())));
-    const known = knownSettings(selected);
+    const known = buildKnownSettings(selected);
     const settings = parseSettings(settingsText(['naming'], { rules: true }));
-    const view = scopeView(known, settings, selected, '');
+    const view = buildScopeView(known, settings, selected, '');
     const effective = readNamingSettings({
         selection: { view: view, scope: { path: '' }, selected: selected },
         settingsFile: { settings: settings },

@@ -3,11 +3,12 @@ import { readFileSync } from 'node:fs';
 import { isRecord } from '#cli/system/values.ts';
 import { hashContent } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { parseTomlText } from '#cli/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { templateSchema } from '#cli/settings/schema/templates.ts';
-import { emitSettings, parseTomlText } from '#cli/settings/file.ts';
+import { formatSettingsText } from '#cli/settings/write/text.ts';
+import { templateSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { listUnknownConfigurations } from '#cli/configurations/select.ts';
 import type { Template, ExportedTemplate } from '#cli/types/settings/file.ts';
@@ -23,14 +24,14 @@ import {
     GITHUB_TOKEN_VARIABLE,
 } from '#cli/config/settings/templates.ts';
 
-function githubRawUrl(source: string): string {
+function buildGithubRawUrl(source: string): string {
     const [location = '', ref = DEFAULT_GIT_REF] = source.slice(GITHUB_PREFIX.length).split('@');
     const [owner = '', repository = '', ...rest] = location.split('/');
     const file = rest.length === 0 ? TEMPLATE_FILE : rest.join('/');
     return `${RAW_HOST}/${owner}/${repository}/${ref}/${file}`;
 }
 
-async function downloadText(url: string): Promise<string> {
+async function readRemoteText(url: string): Promise<string> {
     const token =
         new URL(url).origin === new URL(RAW_HOST).origin ? readEnvironmentVariable(GITHUB_TOKEN_VARIABLE) : undefined;
     const headers = token === undefined ? {} : { Authorization: `Bearer ${token}` };
@@ -55,7 +56,7 @@ function readLocalText(source: string, cwd: string): string {
  * @param settingsText the text of gspot.toml
  * @returns the template text and omission report
  */
-export function exportTemplate(settingsText: string): ExportedTemplate {
+function exportTemplate(settingsText: string): ExportedTemplate {
     const written = parseTomlText(settingsText, SETTINGS_FILE, 'settings');
     const scopes = Array.isArray(written['scope'])
         ? written['scope'].flatMap((scope) =>
@@ -65,7 +66,7 @@ export function exportTemplate(settingsText: string): ExportedTemplate {
     Reflect.deleteProperty(written, 'scope');
     const document = written;
     return {
-        text: emitSettings(settingsText, document),
+        text: formatSettingsText(settingsText, document),
         leftOut: scopes.map((scope) => `scope.${JSON.stringify(scope)}: belongs to this repository`),
     };
 }
@@ -77,7 +78,7 @@ export function exportTemplate(settingsText: string): ExportedTemplate {
  * @returns the validated template
  * @throws GspotError with every template validation error.
  */
-export function parseTemplate(text: string, source: string): Template {
+function parseTemplate(text: string, source: string): Template {
     const written = parseTomlText(text, source, 'template');
     const result = templateSchema.safeParse(written);
     const shape = result.success
@@ -89,7 +90,7 @@ export function parseTemplate(text: string, source: string): Template {
     const named = written['configurations'];
     const declarations = Array.isArray(named) ? named.map((name) => ({ name: String(name) })) : [];
     const unknown = listUnknownConfigurations(declarations, readManifests(createReadCache(process.cwd()))).map(
-        ({ message: diagnostic }) => diagnostic,
+        ({ message }) => message,
     );
     const errors = [...shape, ...unknown];
     if (!result.success || errors.length > 0) throw new GspotError('template', errors.join('\n'));
@@ -107,10 +108,12 @@ export function parseTemplate(text: string, source: string): Template {
  * @param cwd the directory relative local paths start from
  * @returns the validated template
  */
-export async function downloadTemplate(source: string, cwd: string): Promise<Template> {
+async function readTemplate(source: string, cwd: string): Promise<Template> {
     if (source.startsWith(HTTP_PREFIX))
         throw new GspotError('template', 'A template is downloaded over https, not http.');
-    const url = source.startsWith(GITHUB_PREFIX) ? githubRawUrl(source) : source;
-    const text = url.startsWith(HTTPS_PREFIX) ? await downloadText(url) : readLocalText(source, cwd);
+    const url = source.startsWith(GITHUB_PREFIX) ? buildGithubRawUrl(source) : source;
+    const text = url.startsWith(HTTPS_PREFIX) ? await readRemoteText(url) : readLocalText(source, cwd);
     return parseTemplate(text, source);
 }
+
+export { readTemplate, parseTemplate, exportTemplate };

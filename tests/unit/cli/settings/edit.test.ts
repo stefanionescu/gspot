@@ -5,7 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { getValueAt } from '#cli/system/values.ts';
 import { localDateSchema } from '#cli/settings/schema/parts.ts';
 import { DATED_IGNORE } from '#tests/config/samples/settings.ts';
-import { setKey, addToList, deleteKey, editSettings, findScopeTable, readSettingsEdit } from '#cli/settings/edit.ts';
+import { setKey, addToList, deleteKey, updateSettings, findScopeTable, readSettingsEdit } from '#cli/settings/edit.ts';
 
 const initial = 'configurations = ["bash", "naming", "format"]\n';
 
@@ -19,7 +19,7 @@ test('an edit keeps a trailing array comma and writes inline tables without one'
         paths: ['fixture.js'],
         reason: 'The sandbox owns its temporary files.',
     };
-    const proposed = editSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
+    const proposed = updateSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
         setKey(written, 'ignore', [entry]);
     });
     expect(proposed.text).toContain('# Authored selection.');
@@ -27,7 +27,7 @@ test('an edit keeps a trailing array comma and writes inline tables without one'
     expect(proposed.settings.ignore).toStrictEqual([entry]);
     await writeFile(path, proposed.text);
     expect(
-        editSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
+        updateSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
             setKey(written, 'ignore', [entry]);
         }).changed,
     ).toBe(false);
@@ -37,12 +37,12 @@ test('setting a nested key, then deleting it, removes the empty table', async ()
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, initial);
-    const written = editSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
+    const written = updateSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
         setKey(written, 'limits.bash.file_lines', 100);
     }).text;
     expect(written).toContain('[limits.bash]');
     await writeFile(path, written);
-    const removed = editSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
+    const removed = updateSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
         deleteKey(written, 'limits.bash.file_lines');
     }).text;
     expect(removed).not.toContain('[limits');
@@ -51,7 +51,7 @@ test('setting a nested key, then deleting it, removes the empty table', async ()
 test('adding to a list skips values and records that are already there', async () => {
     await using sandbox = await testdir();
     await writeFile(join(sandbox.path, 'gspot.toml'), initial);
-    const written = editSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
+    const written = updateSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
         addToList(written, 'naming.banned_words', ['dispatcher', 'orchestrator']);
         addToList(written, 'naming.banned_words', ['dispatcher']);
         addToList(written, 'format.override', [
@@ -69,7 +69,7 @@ test.each([
 ])('a scope setting written into %s loads with the settings already there', async (_form, scope) => {
     await using sandbox = await testdir();
     await writeFile(join(sandbox.path, 'gspot.toml'), `${initial}[[scope]]\npath = "api"\n${scope}\n`);
-    const result = editSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
+    const result = updateSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
         setKey(findScopeTable(written, 'api'), 'limits.function_lines', 20);
     });
     expect(result.settings.scopeTables['api']?.limits).toMatchObject({ file_lines: 100, function_lines: 20 });
@@ -86,7 +86,7 @@ test('changing an until date in place rewrites it and keeps its comment', async 
     const input = readSettingsEdit(sandbox.path);
     const until = localDateSchema.parse(getValueAt(input.table, ['ignore', 0, 'until']));
     const original = input.values;
-    const result = editSettings(sandbox.path, input, () => until.setUTCDate(21));
+    const result = updateSettings(sandbox.path, input, () => until.setUTCDate(21));
     expect(result.changed).toBe(true);
     expect(result.text).toContain('# Keep the authored expiry.');
     expect(result.text).toContain('until = 2099-05-21');
@@ -97,7 +97,7 @@ test('reordering keys does not change the file', async () => {
     await using sandbox = await testdir();
     const source = `${initial}level = "all"\n`;
     await writeFile(join(sandbox.path, 'gspot.toml'), source);
-    const result = editSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
+    const result = updateSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
         const configurations = written['configurations'];
         Reflect.deleteProperty(written, 'configurations');
         written['configurations'] = configurations;

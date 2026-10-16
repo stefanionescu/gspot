@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { parse, stringify } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { parseExpiryDate } from '#cli/settings/file.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { UNIGNORE_CASES } from '#tests/config/ignore.ts';
+import { parseExpiryDate } from '#cli/commands/ignore.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 
 test.each([...UNIGNORE_CASES])(

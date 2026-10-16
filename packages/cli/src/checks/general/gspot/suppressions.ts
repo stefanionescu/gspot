@@ -4,11 +4,11 @@ import { getToolName } from '#cli/configurations/tools.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { REASON_ABOVE } from '#cli/config/checks/general/gspot.ts';
-import { isReasonAccepted } from '#cli/settings/errors/reasons.ts';
 import type { SourceComment } from '#cli/types/parsers/comments.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { SuppressionSyntax } from '#cli/types/checks/general.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
 

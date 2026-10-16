@@ -3,10 +3,10 @@ import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { configurationSettings } from '#cli/settings/view.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { CommandCheck } from '#cli/types/settings/values.ts';
+import { listConfigurationSettings } from '#cli/settings/known.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { getToolName, getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { Found, CheckFacts, Explanation } from '#cli/types/commands/explain.ts';
@@ -43,7 +43,7 @@ function getFacts(
     manifests: Map<string, Manifest>,
 ): CheckFacts {
     const tool = getToolName(check);
-    const settings = (configuration === undefined ? [] : configurationSettings(configuration.configuration.name))
+    const settings = (configuration === undefined ? [] : listConfigurationSettings(configuration.configuration.name))
         .filter(
             (setting) =>
                 (check.name === 'structure/prefix-collisions' && setting.name === 'limits.prefix_collisions') ||
@@ -190,7 +190,7 @@ export function explainLintRule(tool: string, rule: string, reads: ReadCache): E
     const page = getRulePage(check, ruleTool, identifier, manifests);
     const key = quoteArgument(`tools.${ruleTool}.rules`);
     const entries = quoteArgument(`{ ${JSON.stringify(identifier)} = [<options>] }`);
-    const optionLines = configurationSettings(configuration.configuration.name)
+    const optionLines = listConfigurationSettings(configuration.configuration.name)
         .filter((setting) => setting.name === `tools.${ruleTool}.rules`)
         .map(() => `Change its options: gspot set ${key} ${entries}`);
     let description = `Read the ${ruleTool} documentation for ${identifier}.`;

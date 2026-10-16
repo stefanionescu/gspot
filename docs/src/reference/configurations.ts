@@ -2,8 +2,8 @@ import { posix } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
 import type { ReferencePage } from '../types/reference.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { configurationSettings } from '#cli/settings/view.ts';
 import { listRuleFiles } from '#cli/configurations/manifests.ts';
+import { listConfigurationSettings } from '#cli/settings/known.ts';
 import { cell, table, section, referencePage } from './markdown.ts';
 import { DETECTION_LABELS, REFERENCE_FOLDERS } from '../config/reference.ts';
 
@@ -99,7 +99,7 @@ export function configurationPage(manifest: Manifest, manifests: Manifest[]): Re
         ['Details', guide],
         [
             'Settings',
-            configurationSettings(manifest.configuration.name)
+            listConfigurationSettings(manifest.configuration.name)
                 .map((setting) => `- \`${setting.name}\`: ${setting.summary}`)
                 .join('\n'),
         ],

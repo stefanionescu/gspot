@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { isRecord } from '#cli/system/values.ts';
 import type { PathVisitor } from '#cli/types/settings/values.ts';
-import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
+import { findSettingSchema } from '#cli/settings/schema/gspot-toml.ts';
 
-function tablePaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
+function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
     if (schema instanceof z.ZodUnion) {
         const branch = schema.options.find((option) => z.safeParse(option, value).success) as z.ZodType;
         return mapSettingPaths(branch, value, visit, keys);
@@ -41,12 +41,12 @@ function tablePaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys:
  * @param keys the field's location in its written table.
  * @returns the value with only declared path leaves transformed.
  */
-export function mapSettingPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
+function mapSettingPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
     const role = schema.meta()?.pathRole;
     if (typeof value === 'string' && role !== undefined) return visit(value, keys, role);
     if (schema instanceof z.ZodOptional || schema instanceof z.ZodDefault || schema instanceof z.ZodPrefault)
         return mapSettingPaths(schema.unwrap() as z.ZodType, value, visit, keys);
-    return tablePaths(schema, value, visit, keys);
+    return mapNestedPaths(schema, value, visit, keys);
 }
 
 /**
@@ -55,7 +55,7 @@ export function mapSettingPaths(schema: z.ZodType, value: unknown, visit: PathVi
  * @param scope the repository-relative owning scope.
  * @returns the repository-relative selector.
  */
-export function prefixScopePath(path: string, scope: string): string {
+function joinScopeSelector(path: string, scope: string): string {
     if (scope === '' || path === '') return path;
     return path.startsWith('!') ? `!${scope}/${path.slice(1)}` : `${scope}/${path}`;
 }
@@ -67,10 +67,12 @@ export function prefixScopePath(path: string, scope: string): string {
  * @param scope the owning scope path, empty for repository-root values.
  * @returns repository-relative path values without changing identities or tool options.
  */
-export function settingPaths(key: string, value: unknown, scope: string): unknown {
+function joinDefaultPaths(key: string, value: unknown, scope: string): unknown {
     if (scope === '' || value === undefined) return value;
-    const schema = settingSchema(key);
+    const schema = findSettingSchema(key);
     return schema === undefined
         ? value
-        : mapSettingPaths(schema, value, (path) => prefixScopePath(path, scope), key.split('.'));
+        : mapSettingPaths(schema, value, (path) => joinScopeSelector(path, scope), key.split('.'));
 }
+
+export { mapSettingPaths, joinDefaultPaths, joinScopeSelector };

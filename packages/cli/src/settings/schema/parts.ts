@@ -64,13 +64,13 @@ const relativePaths = z.array(relativePath);
 const nonemptyPaths = relativePaths.min(1);
 
 const namingCategorySchema = z.strictObject({
-    max_characters: reasonValue(z.number().int().positive())
+    max_characters: allowReasonedValue(z.number().int().positive())
         .default(DEFAULT_VALUES.max_characters)
         .meta(SETTING_FIELDS.max_characters),
-    max_words: reasonValue(z.number().int().positive())
+    max_words: allowReasonedValue(z.number().int().positive())
         .default(DEFAULT_VALUES.max_words)
         .meta(SETTING_FIELDS.max_words),
-    cases: reasonValue(z.array(z.enum(CASE_NAMES)))
+    cases: allowReasonedValue(z.array(z.enum(CASE_NAMES)))
         .default([])
         .meta(SETTING_FIELDS.cases),
 } satisfies SchemaShape<ParsedNamingFields, NamingFields<ReasonValue<number>, ReasonValue<NamingCase[]>>>);
@@ -86,24 +86,6 @@ const localDateSchema = z.custom<LocalDate>(
     (value) => value instanceof LocalDate && calendarDateSchema.safeParse(value.toISOString()).success,
     { error: 'Use an unquoted TOML local date in YYYY-MM-DD form, without a time or offset.' },
 );
-
-/**
- * Publish settings input schemas while retaining written defaults and declaration metadata.
- * @param schema the authoritative runtime validator.
- * @returns its object projection, with TOML dates represented as calendar strings.
- */
-function settingsJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
-    return z.toJSONSchema(schema, {
-        io: 'input',
-        unrepresentable: ({ zodSchema }) =>
-            zodSchema === localDateSchema ? z.toJSONSchema(calendarDateSchema) : 'throw',
-        override: ({ zodSchema, jsonSchema }) => {
-            const metadata = z.globalRegistry.get(zodSchema);
-            if (metadata && Object.hasOwn(metadata, 'examples'))
-                Object.assign(jsonSchema, { examples: metadata['examples'] });
-        },
-    });
-}
 
 const formatSchema = formatFields.extend({
     override: z
@@ -153,10 +135,10 @@ const formatSchema = formatFields.extend({
  * @param schema the setting's value schema
  * @returns the value schema and its reason form
  */
-function reasonValue<Output, Input>(
+function allowReasonedValue<Output, Input>(
     schema: z.ZodType<Output, Input>,
 ): z.ZodType<Output, Input | ReasonEnvelope<Input>> {
-    const value = z.union([schema, reasonEnvelopeSchema(schema.describe('The setting value.'))]);
+    const value = z.union([schema, buildReasonedValueSchema(schema.describe('The setting value.'))]);
     const metadata = schema.meta();
     return metadata === undefined ? value : value.meta(metadata);
 }
@@ -166,7 +148,7 @@ function reasonValue<Output, Input>(
  * @param schema the field's value validator and description
  * @returns the value read from its strict reason envelope
  */
-function reasonEnvelopeSchema<Output, Input>(
+function buildReasonedValueSchema<Output, Input>(
     schema: z.ZodType<Output, Input>,
 ): z.ZodType<Output, ReasonEnvelope<Input>> {
     return z
@@ -192,19 +174,18 @@ function unwrapSettingSchema(schema: z.ZodType): z.ZodType {
 export {
     percentage,
     wholeNumber,
-    reasonValue,
     relativePath,
     formatSchema,
-    relativePaths,
     nonemptyPaths,
+    relativePaths,
     nonemptyString,
+    localDateSchema,
     nonemptyStrings,
     destinationPath,
-    localDateSchema,
     limitTableSchema,
     calendarDateSchema,
-    settingsJsonSchema,
+    allowReasonedValue,
     unwrapSettingSchema,
     namingCategorySchema,
-    reasonEnvelopeSchema,
+    buildReasonedValueSchema,
 };

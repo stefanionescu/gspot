@@ -1,6 +1,6 @@
-import { everyTable } from '#cli/settings/inherit.ts';
-import { activeIgnores } from '#cli/settings/view.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
+import { listSettingsTables } from '#cli/settings/inherit.ts';
+import { listActiveIgnores } from '#cli/settings/scope-view.ts';
 import { parentSelection } from '#cli/generation/eslint/structure.ts';
 import { listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, ScopeView, ScopeSelection } from '#cli/types/settings/values.ts';
@@ -35,7 +35,7 @@ import type {
  * @returns one option block per scope and path override, in application order.
  */
 export function ruleOptions(settings: Settings): EslintRuleOptions[] {
-    const tables = everyTable(settings).toSorted((first, second) =>
+    const tables = listSettingsTables(settings).toSorted((first, second) =>
         compareScopeDepth(first.scope ?? '', second.scope ?? ''),
     );
     const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scope = '', table }) =>
@@ -60,7 +60,7 @@ export function ruleOptions(settings: Settings): EslintRuleOptions[] {
  * @returns explicit rule ignores with their path selectors.
  */
 export function ignoreBlocks(settings: Settings): EslintRuleBlock[] {
-    return activeIgnores(settings).flatMap((entry): EslintRuleBlock[] =>
+    return listActiveIgnores(settings).flatMap((entry): EslintRuleBlock[] =>
         entry.rule === undefined || entry.check !== ESLINT_CHECK
             ? []
             : [

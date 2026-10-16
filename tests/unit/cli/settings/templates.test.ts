@@ -3,13 +3,13 @@ import { parse, stringify } from 'smol-toml';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
-import { parseExpiryDate } from '#cli/settings/file.ts';
+import { parseExpiryDate } from '#cli/commands/ignore.ts';
 import { TEMPLATE } from '#tests/config/settings/schema.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { FORMAT_OVERRIDES_SETTINGS } from '#tests/config/formatting.ts';
 import { RAW_HOST, TEMPLATE_FILE } from '#cli/config/settings/templates.ts';
 import { ESLINT_OVERRIDES_SETTINGS } from '#tests/config/eslint/overrides.ts';
-import { parseTemplate, exportTemplate, downloadTemplate } from '#cli/settings/templates.ts';
+import { readTemplate, parseTemplate, exportTemplate } from '#cli/settings/templates.ts';
 
 test.each([
     ['preserves ESLint rules and authored path', ESLINT_OVERRIDES_SETTINGS, 'project.template.toml'],
@@ -89,8 +89,8 @@ test('a template given by absolute path loads from another working folder', asyn
         [source]: 'configurations = ["bash"]\n',
         'project/README.md': '# Project\n',
     });
-    const relative = await downloadTemplate(source, sandbox.path);
-    const absolute = await downloadTemplate(join(sandbox.path, source), join(sandbox.path, 'project'));
+    const relative = await readTemplate(source, sandbox.path);
+    const absolute = await readTemplate(join(sandbox.path, source), join(sandbox.path, 'project'));
     expect(absolute.tables).toStrictEqual(relative.tables);
     expect(absolute.digest).toBe(relative.digest);
 });
@@ -103,7 +103,7 @@ test('templates keep allowed licenses and allowed packages', async () => {
     };
     const exported = exportTemplate(stringify({ configurations: ['licenses'], licenses }));
     await createFileTree(directory.path, { 'licenses.template.toml': exported.text });
-    const restored = await downloadTemplate('licenses.template.toml', directory.path);
+    const restored = await readTemplate('licenses.template.toml', directory.path);
     expect(restored.tables.licenses).toStrictEqual(licenses);
     expect(exported.leftOut).toStrictEqual([]);
 });
@@ -114,14 +114,14 @@ test.each([
     ['github:acme/policies/team/house.template.toml@v2', `${RAW_HOST}/acme/policies/v2/team/house.template.toml`],
 ])('%s is downloaded from %s', async (source, address) => {
     using request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response(TEMPLATE));
-    const template = await downloadTemplate(source, '.');
+    const template = await readTemplate(source, '.');
     expect(request.mock.calls[0]?.[0]).toBe(address);
     expect(template.tables.configurations).toStrictEqual(['bash']);
 });
 
 test('a template address that answers 404 is refused with its status', async () => {
     using request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('Not found', { status: 404 }));
-    expect(await rejection(downloadTemplate('github:acme/missing', '.'))).toContain('answered 404');
+    expect(await rejection(readTemplate('github:acme/missing', '.'))).toContain('answered 404');
     expect(request).toHaveBeenCalledTimes(1);
 });
 
@@ -129,9 +129,7 @@ test('a template address over plain http is refused before any request', async (
     using request = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('No request is expected.'));
 
     // eslint-disable-next-line unicorn/prefer-https -- reason: The test must pass an http address to prove the refusal.
-    expect(await rejection(downloadTemplate('http://example.com/house.template.toml', '.'))).toContain(
-        'https, not http',
-    );
+    expect(await rejection(readTemplate('http://example.com/house.template.toml', '.'))).toContain('https, not http');
     expect(request).not.toHaveBeenCalled();
 });
 
@@ -141,8 +139,8 @@ test('a GitHub token goes only to GitHub template addresses', async () => {
         .mockResolvedValueOnce(new Response(TEMPLATE));
     const environment = useEnvironment({ GITHUB_TOKEN: 'fixture-github-token' });
     try {
-        await downloadTemplate('github:acme/policies', '.');
-        await downloadTemplate('https://example.com/house.template.toml', '.');
+        await readTemplate('github:acme/policies', '.');
+        await readTemplate('https://example.com/house.template.toml', '.');
         expect(request.mock.calls[0]?.[1]?.headers).toStrictEqual({ Authorization: 'Bearer fixture-github-token' });
         expect(request.mock.calls[1]?.[1]?.headers).toStrictEqual({});
     } finally {

@@ -1,20 +1,20 @@
 import { test, spyOn, expect } from 'bun:test';
 import * as assets from '#cli/system/assets.ts';
-import { knownSettings } from '#cli/settings/view.ts';
 import { buildManifest } from '#tests/setup/manifest.ts';
-import { declarationFor } from '#cli/settings/inherit.ts';
+import { findDeclaration } from '#cli/settings/inherit.ts';
+import { buildKnownSettings } from '#cli/settings/known.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { TOOL_DECLARATION } from '#tests/config/manifests.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
+import { findSettingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
 import { toolDeclarationSchema } from '#cli/configurations/schema/tool.ts';
 import { SEMGREP_ASSETS, SEMGREP_TOOL_FILES, CONFIGURATION_TABLE } from '#tests/config/configurations.ts';
 
 test('setting names in shipped manifest text and rules exist', () => {
     const manifests = [...readManifests(createReadCache(process.cwd())).values()];
-    const known = knownSettings(manifests, 'all');
+    const known = buildKnownSettings(manifests, 'all');
     const roots = new Set([...known.declarations.keys()].map((key) => key.split('.', 1)[0]));
     const sources = [
         ...manifests.flatMap(({ dir, checks }) =>
@@ -35,8 +35,8 @@ test('setting names in shipped manifest text and rules exist', () => {
             .filter(
                 (key) =>
                     roots.has(key.split('.', 1)[0]) &&
-                    declarationFor(known, key) === undefined &&
-                    settingSchema(key) === undefined,
+                    findDeclaration(known, key) === undefined &&
+                    findSettingSchema(key) === undefined,
             )
             .map((key) => `${path}: ${key}`);
     });

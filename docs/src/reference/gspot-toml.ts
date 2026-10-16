@@ -1,13 +1,13 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { JSONSchema } from 'zod/v4/core';
 import { isRecord } from '#cli/system/values.ts';
-import { sortedToml } from '#cli/settings/file.ts';
+import { sortedToml } from '#cli/settings/write/text.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { cell, table, section, referencePage } from './markdown.ts';
 import { buildJsonSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { version } from '@gspothq/cli/package.json' with { type: 'json' };
 import type { ReferencePage, SettingVariant } from '../types/reference.ts';
-import { knownSettings, configurationSettings } from '#cli/settings/view.ts';
+import { buildKnownSettings, listConfigurationSettings } from '#cli/settings/known.ts';
 import { GSPOT_TOML_INTRO, REFERENCE_FOLDERS, SCHEMA_TYPE_LABELS } from '../config/reference.ts';
 
 function acceptedValue(node: JSONSchema.JSONSchema | boolean): string {
@@ -75,9 +75,9 @@ function schemaSections(schema: JSONSchema.JSONSchema): string {
 function settingVariants(manifests: Manifest[]): SettingVariant[] {
     const seen = new Map<string, SettingVariant[]>();
     const definitions = [
-        ...[...knownSettings([]).declarations.values()].map((setting) => ({ setting, owner: 'gspot' })),
+        ...[...buildKnownSettings([]).declarations.values()].map((setting) => ({ setting, owner: 'gspot' })),
         ...manifests.flatMap((manifest) =>
-            configurationSettings(manifest.configuration.name).map((setting) => ({
+            listConfigurationSettings(manifest.configuration.name).map((setting) => ({
                 setting,
                 owner: `[${manifest.configuration.name}](/reference/${REFERENCE_FOLDERS.configurations}/${manifest.configuration.name}/)`,
             })),

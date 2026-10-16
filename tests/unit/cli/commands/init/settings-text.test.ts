@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test';
 import { parse, stringify } from 'smol-toml';
 import { gitOutput } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { parseTomlText } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readRepository } from '#cli/repository/read.ts';
@@ -10,7 +11,7 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { EMPTY_EXISTING_TOOLS } from '#tests/config/tooling.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/xcode.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { emitSettings, parseTomlText } from '#cli/settings/file.ts';
+import { formatSettingsText } from '#cli/settings/write/text.ts';
 import { proposeCi, initSettingsText } from '#cli/commands/init/settings-text.ts';
 
 import {
@@ -72,7 +73,7 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
     const settings = parseSettings(text);
     expect(settings.configurations).toStrictEqual([...INIT_CONFIGURATIONS]);
     expect(settings.scope['apps/site']?.configurations).toStrictEqual(INIT_CONFIGURATIONS.slice(0, 12));
-    expect(emitSettings(text, parseTomlText(text, 'gspot.toml', 'settings'))).toBe(text);
+    expect(formatSettingsText(text, parseTomlText(text, 'gspot.toml', 'settings'))).toBe(text);
 });
 
 test('template settings stay beside the commit scopes init adds', async () => {
@@ -176,7 +177,7 @@ instruction_files = ["TEAM.md"]
     expect(text).toContain('# Rule owner\n[rules]');
     expect(parse(text)).toMatchObject({ rules: { instruction_files: ['TEAM.md'] } });
     expect(parseSettings(text).rules.enabled).toBe(true);
-    expect(emitSettings(text, parseTomlText(text, 'gspot.toml', 'settings'))).toBe(text);
+    expect(formatSettingsText(text, parseTomlText(text, 'gspot.toml', 'settings'))).toBe(text);
 });
 
 test.each([...SDK_DESTINATIONS])('init picks the Xcode destination for SDK $sdk', async ({ sdk, destination }) => {

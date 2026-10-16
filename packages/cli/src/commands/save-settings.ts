@@ -10,7 +10,7 @@ import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { SettingsEdit } from '#cli/types/settings/file.ts';
-import { editSettings, readSettingsEdit } from '#cli/settings/edit.ts';
+import { updateSettings, readSettingsEdit } from '#cli/settings/edit.ts';
 import type { SaveSettingsResult, SaveSettingsOptions } from '#cli/types/commands/save-settings.ts';
 
 /**
@@ -22,7 +22,7 @@ import type { SaveSettingsResult, SaveSettingsOptions } from '#cli/types/command
 async function saveSettings(root: string, options: SaveSettingsOptions): Promise<SaveSettingsResult> {
     const { input, change, summary } = options;
     using log = openWriter(root);
-    const result = editSettings(root, input, change);
+    const result = updateSettings(root, input, change);
     const session = await openSession(root, { settings: result.settings, text: result.text });
     const generated = emitAll(session);
     writeSettings(log, result.text, input.original);

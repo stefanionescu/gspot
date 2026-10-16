@@ -1,8 +1,9 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { parseTomlText } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
-import { emitSettings, parseTomlText } from '#cli/settings/file.ts';
+import { formatSettingsText } from '#cli/settings/write/text.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { UNTIL_DATE_CASES, UNSAFE_DIRECTORIES } from '#tests/config/settings/schema.ts';
 
@@ -14,9 +15,9 @@ for (const row of UNTIL_DATE_CASES)
         if (!row.valid) return;
         const settings = parseSettings(source);
         expect(settings.ignore[0]?.until?.toISOString()).toBe(row.date);
-        const output = emitSettings(source, written);
+        const output = formatSettingsText(source, written);
         expect(output).toContain(`until = ${row.date}`);
-        expect(emitSettings(output, parseTomlText(output, 'dates.toml', 'settings'))).toBe(output);
+        expect(formatSettingsText(output, parseTomlText(output, 'dates.toml', 'settings'))).toBe(output);
     });
 
 test.each([...UNSAFE_DIRECTORIES])('scope refuses the path %s', (path) => {
