@@ -6,11 +6,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
-import { copyRevision } from '#cli/execution/copy/revision.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
+import { copyRevision } from '#cli/checks/run/copy/revision.ts';
 import { WORKSPACE_SOURCE_FILES } from '#tests/config/execution.ts';
 import { mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
-import { checkCopyInputs, copyIntoScratch, projectCopyInputs } from '#cli/execution/copy/scratch.ts';
+import { checkCopyInputs, copyIntoScratch, projectCopyInputs } from '#cli/checks/run/copy/scratch.ts';
 
 test('a dry-run copy holds workspace dependencies and working bin links, and edits in it reach neither source', async () => {
     await using repository = await testdir();

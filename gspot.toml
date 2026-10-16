@@ -314,24 +314,19 @@ paths = ["packages/cli/src/apply/**"]
 may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install"]
 
 [[architecture.module]]
-name = "execution"
-paths = ["packages/cli/src/execution/**"]
-may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install", "apply", "checks"]
-
-[[architecture.module]]
 name = "checks"
 paths = ["packages/cli/src/checks/**"]
-may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install", "apply", "execution"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install", "apply"]
 
 [[architecture.module]]
 name = "commands"
 paths = ["packages/cli/src/commands/**"]
-may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install", "apply", "execution", "checks"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install", "apply", "checks"]
 
 [[architecture.module]]
 name = "main"
 paths = ["packages/cli/src/main.ts"]
-may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install", "apply", "execution", "checks", "commands"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install", "apply", "checks", "commands"]
 
 [[architecture.module]]
 name = "plugin"
@@ -341,7 +336,7 @@ may_import = ["plugin-config", "plugin-types"]
 [[architecture.module]]
 name = "scripts"
 paths = ["scripts/*.ts"]
-may_import = ["scripts-config", "scripts-types", "cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install", "apply", "execution", "checks", "commands", "plugin"]
+may_import = ["scripts-config", "scripts-types", "cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install", "apply", "checks", "commands", "plugin"]
 
 [[architecture.module]]
 name = "docs"
@@ -351,7 +346,7 @@ may_import = ["docs-config", "docs-types", "cli-config", "cli-types", "settings"
 [[architecture.module]]
 name = "tests"
 paths = ["tests/{unit,integration,e2e,setup}/**"]
-may_import = ["tests-config", "tests-types", "cli-config", "cli-types", "plugin-config", "plugin-types", "scripts-config", "scripts-types", "docs-config", "docs-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install", "apply", "execution", "checks", "commands", "main", "plugin", "scripts", "docs"]
+may_import = ["tests-config", "tests-types", "cli-config", "cli-types", "plugin-config", "plugin-types", "scripts-config", "scripts-types", "docs-config", "docs-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install", "apply", "checks", "commands", "main", "plugin", "scripts", "docs"]
 
 [dependencies]
 scanner = "@socketsecurity/bun-security-scanner"

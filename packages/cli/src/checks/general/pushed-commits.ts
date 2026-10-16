@@ -1,4 +1,4 @@
-import { emptyResult } from '#cli/execution/report.ts';
+import { emptyResult } from '#cli/checks/run/report.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';

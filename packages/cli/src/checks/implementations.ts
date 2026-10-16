@@ -9,7 +9,7 @@ import { siteBuild } from '#cli/checks/framework/site/build.ts';
 import { bashSafety } from '#cli/checks/language/bash/safety.ts';
 import { commitlintPushed } from '#cli/checks/general/commits.ts';
 import { allowedLicenses } from '#cli/checks/general/licenses.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { translationsMessages } from '#cli/checks/translations.ts';
 import { ansibleLint } from '#cli/checks/infrastructure/ansible.ts';
 import { shellcheck } from '#cli/checks/language/bash/shellcheck.ts';

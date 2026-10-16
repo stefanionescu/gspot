@@ -1,4 +1,5 @@
 // Classifies repository files, tags, and generated declarations.
+
 import { posix } from 'node:path';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';

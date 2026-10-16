@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
-import { copyRevision } from '#cli/execution/copy/revision.ts';
 import type { GitHookReport } from '#tests/types/processes.ts';
+import { copyRevision } from '#cli/checks/run/copy/revision.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
 import { readIndexEntries, listSubmodulePaths } from '#cli/repository/tracked.ts';
@@ -93,7 +93,7 @@ import {
 {
     // Run the hook with its actual module entry points and inherited Git environment.
     async function runGitHook(worktree: string, index: string, folder: string, report: string) {
-        const revision = pathToFileURL(await Bun.resolve('#cli/execution/copy/revision.ts', import.meta.dir)).href;
+        const revision = pathToFileURL(await Bun.resolve('#cli/checks/run/copy/revision.ts', import.meta.dir)).href;
         const owner = pathToFileURL(await Bun.resolve('#cli/system/git.ts', import.meta.dir)).href;
         const tool = pathToFileURL(await Bun.resolve('#cli/tools/run.ts', import.meta.dir)).href;
         return git(worktree, ['-c', `core.hooksPath=${join(folder, 'hook')}`, 'commit', '-qm', 'hook'], {

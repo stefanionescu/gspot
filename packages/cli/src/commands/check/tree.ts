@@ -1,7 +1,7 @@
 import { resolve, relative } from 'node:path';
-import { executeRun } from '#cli/execution/run.ts';
 import { hookStatus } from '#cli/install/hooks.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { executeRun } from '#cli/checks/run/run.ts';
 import { formatCodeList } from '#cli/system/text.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openSession } from '#cli/commands/session.ts';

@@ -1,8 +1,8 @@
 import { test, spyOn, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { join, toNamespacedPath } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/checks/run/run.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { fakeNpmTool } from '#tests/setup/fake-tool.ts';

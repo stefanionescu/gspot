@@ -3,9 +3,9 @@ import { GspotError } from '#cli/system/errors.ts';
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { checkTree } from '#cli/commands/check/tree.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
-import { copyRevision } from '#cli/execution/copy/revision.ts';
 import { selectPush } from '#cli/repository/revisions/push.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { copyRevision } from '#cli/checks/run/copy/revision.ts';
 import { type PushReport, type CheckOptions } from '#cli/types/commands/check.ts';
 import { type PushRevision, type PushSelection } from '#cli/types/repository/revisions.ts';
 

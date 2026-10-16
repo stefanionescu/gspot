@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { FAILED_RUN } from '#tests/config/execution.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { commandOutcome } from '#cli/execution/command/output.ts';
+import { commandOutcome } from '#cli/checks/run/command/output.ts';
 import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR } from '#tests/config/semgrep.ts';
 
 test('Semgrep rule findings and source parse errors keep positions and Unicode paths', async () => {

@@ -1,16 +1,16 @@
 // The findings and covered files a built-in check returned, with missing help supplied by its check.
 
-import { emptyResult } from '#cli/execution/report.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { emptyResult } from '#cli/checks/run/report.ts';
+import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { listWorkspaceDependencyFiles } from '#cli/tools/npm/packages.ts';
 
-import type {
-    Finding,
-    CheckInput,
-    CheckResult,
-    BuiltInCheck,
-    CheckOutcome,
-    RunnableCheck,
+import {
+    type Finding,
+    type CheckInput,
+    type CheckResult,
+    type BuiltInCheck,
+    type CheckOutcome,
+    type RunnableCheck,
 } from '#cli/types/execution/check.ts';
 
 /**

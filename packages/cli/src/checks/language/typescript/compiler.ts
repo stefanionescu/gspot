@@ -1,13 +1,13 @@
 import ts from 'typescript';
 import assert from 'node:assert/strict';
 import { findScope } from '#cli/repository/scopes.ts';
-import { emptyResult } from '#cli/execution/report.ts';
+import { emptyResult } from '#cli/checks/run/report.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { type CheckResult } from '#cli/types/execution/check.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { type ScopeSelection } from '#cli/types/settings/values.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { type Level, type Manifest } from '#cli/types/configurations.ts';

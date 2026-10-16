@@ -1,24 +1,24 @@
 import pLimit from 'p-limit';
 import { availableParallelism } from 'node:os';
 import { GspotError } from '#cli/system/errors.ts';
-import { applyFixers } from '#cli/execution/fixes.ts';
+import { applyFixers } from '#cli/checks/run/fixes.ts';
 import { readRepository } from '#cli/repository/read.ts';
-import { findTool } from '#cli/execution/command/tool.ts';
+import { findTool } from '#cli/checks/run/command/tool.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
-import { runBuiltInCheck } from '#cli/execution/built-in.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { runBuiltInCheck } from '#cli/checks/run/built-in.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import type { IgnoreEntry } from '#cli/types/settings/file.ts';
+import { type IgnoreEntry } from '#cli/types/settings/file.ts';
 import { listActiveIgnores } from '#cli/settings/scope-view.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { listFileDeclarations } from '#cli/repository/classify.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
+import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { DOCKER_TOOL } from '#cli/config/checks/infrastructure/docker.ts';
 import { RAN_STATUSES, FAILED_STATUSES } from '#cli/config/execution/run.ts';
 import { checkStaleGeneratorOutputs } from '#cli/checks/stale-generator-outputs.ts';
-import { emptyResult, reproduceLine, buildRunReport } from '#cli/execution/report.ts';
+import { emptyResult, reproduceLine, buildRunReport } from '#cli/checks/run/report.ts';
 
 import {
     type Finding,

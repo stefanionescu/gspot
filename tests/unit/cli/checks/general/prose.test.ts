@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/checks/run/run.ts';
 import { VALE_ALERT } from '#tests/config/prose.ts';
 import * as processes from '#cli/system/processes.ts';
 import { containing } from '#tests/setup/matchers.ts';

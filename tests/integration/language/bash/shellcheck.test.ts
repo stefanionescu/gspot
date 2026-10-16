@@ -12,7 +12,7 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { type RunReport } from '#cli/types/execution/check.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandbox.ts';
-import { commandOutcome } from '#cli/execution/command/output.ts';
+import { commandOutcome } from '#cli/checks/run/command/output.ts';
 import { BASH_SANDBOX, DIALECT_FIXES, DIALECT_SOURCES, SHELLCHECK_CASES } from '#tests/config/bash/tools.ts';
 
 test('ShellCheck reports dialect findings by shebang and an unchecked cd, and changes no file', async () => {

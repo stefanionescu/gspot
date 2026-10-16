@@ -1,20 +1,21 @@
 // Check Next.js options and generate its types before type checking.
+
 import ts from 'typescript';
 import { join } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { checkInput } from '#cli/execution/built-in.ts';
+import { checkInput } from '#cli/checks/run/built-in.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { listSourcePaths } from '#cli/repository/coverage.ts';
+import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 import { listTypescriptNodes } from '#cli/parsers/typescript.ts';
 import { listChecksById } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import type { ConfigurationCheck } from '#cli/types/configurations.ts';
+import { type ConfigurationCheck } from '#cli/types/configurations.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
+import { checkCopyInputs, copyIntoScratch } from '#cli/checks/run/copy/scratch.ts';
 import { runTsc, restoreCommandPaths } from '#cli/checks/language/typescript/compiler.ts';
 import { TSC_TOOL, TYPESCRIPT_TSC_CHECK } from '#cli/config/checks/language/typescript.ts';
 import { type Finding, type CheckInput, type CheckResult } from '#cli/types/execution/check.ts';

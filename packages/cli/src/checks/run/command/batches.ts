@@ -1,5 +1,5 @@
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import { substitute, perFileCommands } from '#cli/execution/command/placeholders.ts';
+import { substitute, perFileCommands } from '#cli/checks/run/command/placeholders.ts';
 import type { Substitutions, CommandInvocation } from '#cli/types/execution/command.ts';
 
 import {

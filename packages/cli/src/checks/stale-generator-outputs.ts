@@ -1,18 +1,18 @@
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
-import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { type GeneratedPath } from '#cli/types/configurations.ts';
-import { toolOutputDetail } from '#cli/execution/command/output.ts';
-import type { Substitutions } from '#cli/types/execution/command.ts';
-import { commandSubstitutions } from '#cli/execution/command/check.ts';
+import { toolOutputDetail } from '#cli/checks/run/command/output.ts';
+import { type Substitutions } from '#cli/types/execution/command.ts';
 import { readBytes, readCachedText } from '#cli/system/files/reads.ts';
+import { commandSubstitutions } from '#cli/checks/run/command/check.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
-import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
+import { checkCopyInputs, copyIntoScratch } from '#cli/checks/run/copy/scratch.ts';
 import { GENERATOR_SCAN_EXCLUSIONS } from '#cli/config/checks/stale-generated-files.ts';
-import { substitute, perFileCommands, substituteValue } from '#cli/execution/command/placeholders.ts';
+import { substitute, perFileCommands, substituteValue } from '#cli/checks/run/command/placeholders.ts';
 
 function missingOutputs(input: CheckInput, targets: GeneratedPath[], commandText: string): Finding[] {
     const entry = targets.find((target) => readCachedText(input.reads, target.path) === undefined);

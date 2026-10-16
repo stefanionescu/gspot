@@ -11,7 +11,7 @@ import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { SWIFT_PACKAGE } from '#tests/config/swift/package.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
-import { checkInput, runBuiltInCheck } from '#cli/execution/built-in.ts';
+import { checkInput, runBuiltInCheck } from '#cli/checks/run/built-in.ts';
 import { checkStaleGeneratorOutputs } from '#cli/checks/stale-generator-outputs.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 

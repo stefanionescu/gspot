@@ -4,8 +4,8 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { runCheckTool } from '#cli/execution/command/tool.ts';
-import { toolFindings } from '#cli/execution/command/output.ts';
+import { runCheckTool } from '#cli/checks/run/command/tool.ts';
+import { toolFindings } from '#cli/checks/run/command/output.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 
 import {

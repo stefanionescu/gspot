@@ -1,4 +1,5 @@
 // Write settings through the same validation and mutation.
+
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { parseTomlText } from '#cli/settings/file.ts';

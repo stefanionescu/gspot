@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/checks/run/run.ts';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { runCheckTool } from '#cli/execution/command/tool.ts';
-import { toolFindings } from '#cli/execution/command/output.ts';
+import { runCheckTool } from '#cli/checks/run/command/tool.ts';
+import { toolFindings } from '#cli/checks/run/command/output.ts';
 import { isInstalledToolPath } from '#cli/repository/classify.ts';
-import { substitute } from '#cli/execution/command/placeholders.ts';
-import { commandSubstitutions } from '#cli/execution/command/check.ts';
+import { substitute } from '#cli/checks/run/command/placeholders.ts';
+import { commandSubstitutions } from '#cli/checks/run/command/check.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { LINT_LINE, ANSIBLE_CFG, ANSIBLE_CONFIG_SUFFIX } from '#cli/config/checks/infrastructure/ansible.ts';
 

@@ -7,11 +7,11 @@ import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import type { PreparedCommand } from '#cli/types/execution/command.ts';
-import { findTool, runPlannedTool } from '#cli/execution/command/tool.ts';
+import { findTool, runPlannedTool } from '#cli/checks/run/command/tool.ts';
 import { FIX_PASSES, FIX_DIFF_CONTEXT } from '#cli/config/execution/run.ts';
-import { hasToolError, toolOutputDetail } from '#cli/execution/command/output.ts';
-import { copyIntoScratch, projectCopyInputs } from '#cli/execution/copy/scratch.ts';
-import { prepareCommand, prepareInScratch, commandEnvironment } from '#cli/execution/command/check.ts';
+import { hasToolError, toolOutputDetail } from '#cli/checks/run/command/output.ts';
+import { copyIntoScratch, projectCopyInputs } from '#cli/checks/run/copy/scratch.ts';
+import { prepareCommand, prepareInScratch, commandEnvironment } from '#cli/checks/run/command/check.ts';
 
 import {
     type FixReport,

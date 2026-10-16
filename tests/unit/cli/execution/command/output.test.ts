@@ -10,9 +10,9 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { TYPO, TYPO_REPORT } from '#tests/config/spelling.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { type CheckDeclaration } from '#cli/types/configurations.ts';
-import { hasToolError, commandOutcome, toolOutputDetail } from '#cli/execution/command/output.ts';
+import { hasToolError, commandOutcome, toolOutputDetail } from '#cli/checks/run/command/output.ts';
 
 import {
     REAL_PATH,

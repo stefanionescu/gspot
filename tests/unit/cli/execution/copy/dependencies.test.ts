@@ -5,7 +5,7 @@ import { gitOutput } from '#tests/setup/git.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
-import { copyRevision } from '#cli/execution/copy/revision.ts';
+import { copyRevision } from '#cli/checks/run/copy/revision.ts';
 import { lstat, mkdir, unlink, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 /** Stages dependency declarations and authored files for a revision copy. */

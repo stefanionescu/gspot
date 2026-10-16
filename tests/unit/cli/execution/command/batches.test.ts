@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { fileBatches } from '#cli/execution/command/batches.ts';
+import { fileBatches } from '#cli/checks/run/command/batches.ts';
 import { UNIX_COMMAND_LIMIT, WINDOWS_COMMAND_LIMIT } from '#cli/config/execution/command.ts';
 
 test('Windows batches leave room for quoted paths and the full executable path', () => {

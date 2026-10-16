@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { runGit } from '#cli/system/git.ts';
-import { emptyResult } from '#cli/execution/report.ts';
+import { emptyResult } from '#cli/checks/run/report.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { siblingCommand, runOverPushedCommits } from '#cli/checks/general/pushed-commits.ts';

@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
 import { commitAll } from '#tests/setup/git.ts';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/checks/run/run.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { runCheckSample } from '#tests/setup/fixes.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';

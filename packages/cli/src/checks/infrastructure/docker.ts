@@ -2,18 +2,18 @@ import { z } from 'zod';
 import { parse } from 'yaml';
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import { type SchemaShape } from '#cli/types/objects.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { runCommandGroups } from '#cli/execution/command/check.ts';
-import { toolOutputDetail } from '#cli/execution/command/output.ts';
+import { runCommandGroups } from '#cli/checks/run/command/check.ts';
+import { toolOutputDetail } from '#cli/checks/run/command/output.ts';
 import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { DOCKERIGNORE, DOCKERFILE_NAME } from '#cli/config/repository/inventory.ts';
 import { type Finding, type CheckInput, type CheckResult } from '#cli/types/execution/check.ts';
-import type { ComposeFiles, ComposeService, ComposeDocuments } from '#cli/types/checks/infrastructure.ts';
+import { type ComposeFiles, type ComposeService, type ComposeDocuments } from '#cli/types/checks/infrastructure.ts';
 
 import {
     TRIVY_YML,

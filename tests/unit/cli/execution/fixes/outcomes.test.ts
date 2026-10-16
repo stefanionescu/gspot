@@ -1,16 +1,16 @@
 import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { applyFixers } from '#cli/execution/fixes.ts';
+import { executeRun } from '#cli/checks/run/run.ts';
+import { applyFixers } from '#cli/checks/run/fixes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { textContaining } from '#tests/setup/matchers.ts';
 import { FIXER_OUTCOMES } from '#tests/config/execution.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { planFixer, buildFixerSettings } from '#tests/setup/fixer.ts';
 
 test.each([0, 3])('a declared crash pattern fails a fix that exits %s', async (code) => {

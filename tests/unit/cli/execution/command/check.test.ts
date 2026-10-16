@@ -3,8 +3,8 @@ import { stringify } from 'smol-toml';
 import { join, delimiter } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { planRun } from '#cli/planning/checks.ts';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/checks/run/run.ts';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
@@ -17,7 +17,7 @@ import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/config/settings/scopes.ts';
-import { runCheckCommand, commandEnvironment } from '#cli/execution/command/check.ts';
+import { runCheckCommand, commandEnvironment } from '#cli/checks/run/command/check.ts';
 
 // A checker that passes, and one that fails.
 const PASSING_SCRIPT = `#!${process.execPath}\nprocess.exitCode = 0;\n`;

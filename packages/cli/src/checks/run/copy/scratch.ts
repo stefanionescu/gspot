@@ -9,7 +9,7 @@ import type { CheckInput } from '#cli/types/execution/check.ts';
 import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { copyDependencies } from '#cli/execution/copy/dependencies.ts';
+import { copyDependencies } from '#cli/checks/run/copy/dependencies.ts';
 import { type Files, type ScratchFolder } from '#cli/types/system/files.ts';
 import { ENTRY_MODES, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { SCRATCH_EXTRAS, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/execution/copy.ts';

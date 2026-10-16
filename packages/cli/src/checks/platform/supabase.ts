@@ -9,14 +9,14 @@ import type { Parsed } from '#cli/types/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { walkSqlTree } from '#cli/parsers/sql/postgres.ts';
-import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { readCachedText, readCachedBytes } from '#cli/system/files/reads.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
-import { toolFindings, toolOutputDetail } from '#cli/execution/command/output.ts';
+import { toolFindings, toolOutputDetail } from '#cli/checks/run/command/output.ts';
 import type { DenoLintReport, SupabaseConfiguration } from '#cli/types/checks/platform.ts';
 
 import {

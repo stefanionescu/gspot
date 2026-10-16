@@ -10,7 +10,7 @@ import type { SchemaShape } from '#cli/types/objects.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { buildUvRunCommand } from '#cli/tools/python/project.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { DEPTRY_COMMAND, DEPTRY_EXCLUDE_FLAG } from '#cli/config/checks/language/python.ts';

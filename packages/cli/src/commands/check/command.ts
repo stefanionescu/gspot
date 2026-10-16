@@ -1,4 +1,5 @@
 // The check command's flags, its pre-push input, and the cancellation the termination signals cause.
+
 import { addAbortSignal } from 'node:stream';
 import { resolve, relative } from 'node:path';
 import { constants, accessSync } from 'node:fs';
@@ -13,7 +14,7 @@ import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
-import { copyRevision } from '#cli/execution/copy/revision.ts';
+import { copyRevision } from '#cli/checks/run/copy/revision.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { type CheckOptions } from '#cli/types/commands/check.ts';
 import { Option, type Command } from '@commander-js/extra-typings';

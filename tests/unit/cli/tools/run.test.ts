@@ -3,8 +3,8 @@ import { runTool } from '#cli/tools/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
+import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 
 test("a tool's output reaches its check with LF line endings when the tool prints CRLF", async () => {
     await using sandbox = await testdir();

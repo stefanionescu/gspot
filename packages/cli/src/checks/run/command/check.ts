@@ -1,7 +1,7 @@
 import { join, relative } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
-import { emptyResult } from '#cli/execution/report.ts';
-import { checkInput } from '#cli/execution/built-in.ts';
+import { emptyResult } from '#cli/checks/run/report.ts';
+import { checkInput } from '#cli/checks/run/built-in.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { RAN_STATUSES } from '#cli/config/execution/run.ts';
 import { coverageArguments } from '#cli/planning/checks.ts';
@@ -9,15 +9,15 @@ import { readCachedText } from '#cli/system/files/reads.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { checkCompanions } from '#cli/planning/needed-tools.ts';
 import type { ExecutionFailure } from '#cli/types/tools/run.ts';
-import { copyIntoScratch } from '#cli/execution/copy/scratch.ts';
+import { copyIntoScratch } from '#cli/checks/run/copy/scratch.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { batchedCommands } from '#cli/execution/command/batches.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { batchedCommands } from '#cli/checks/run/command/batches.ts';
 import type { Finding, CheckResult, CheckRunOptions } from '#cli/types/execution/check.ts';
-import { findTool, runPlannedTool, companionEnvironment } from '#cli/execution/command/tool.ts';
-import { finishResult, commandOutcome, recordInvocation } from '#cli/execution/command/output.ts';
+import { findTool, runPlannedTool, companionEnvironment } from '#cli/checks/run/command/tool.ts';
+import { finishResult, commandOutcome, recordInvocation } from '#cli/checks/run/command/output.ts';
 
 import {
     substitute,
@@ -25,7 +25,7 @@ import {
     perFileCommands,
     substituteValue,
     commandToolFiles,
-} from '#cli/execution/command/placeholders.ts';
+} from '#cli/checks/run/command/placeholders.ts';
 import type {
     CommandRun,
     CommandGroup,

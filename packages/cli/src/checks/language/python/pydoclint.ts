@@ -3,7 +3,7 @@ import { posix } from 'node:path';
 import { parse } from 'smol-toml';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
-import { runCommandGroups } from '#cli/execution/command/check.ts';
+import { runCommandGroups } from '#cli/checks/run/command/check.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { readText, readCachedBytes } from '#cli/system/files/reads.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';

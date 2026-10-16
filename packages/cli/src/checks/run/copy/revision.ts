@@ -9,9 +9,9 @@ import { splitSystemPath } from '#cli/system/files/names.ts';
 import { listPackageFiles } from '#cli/tools/npm/packages.ts';
 import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
-import { writeScratchFiles } from '#cli/execution/copy/scratch.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
+import { writeScratchFiles } from '#cli/checks/run/copy/scratch.ts';
 import { GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 import { runGit, readGitText, trimGitLine } from '#cli/system/git.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
@@ -22,7 +22,7 @@ import { statSync, chmodSync, lstatSync, mkdirSync, existsSync, realpathSync } f
 import { visitGitBlobs, listRevisionEntries } from '#cli/repository/revisions/tree-entries.ts';
 import { DOT_GSPOT, VALE_CONFIG, VALE_PACKAGE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
-import { ignoredPaths, copyDependencies, declarationDependencies } from '#cli/execution/copy/dependencies.ts';
+import { ignoredPaths, copyDependencies, declarationDependencies } from '#cli/checks/run/copy/dependencies.ts';
 
 import {
     GIT_SET_HEAD,

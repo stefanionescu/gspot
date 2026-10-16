@@ -1,4 +1,5 @@
 // Add written configuration choices through the settings transaction.
+
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { printResult } from '#cli/system/terminal.ts';

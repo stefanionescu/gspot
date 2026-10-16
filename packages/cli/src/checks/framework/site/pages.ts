@@ -4,14 +4,14 @@ import { join, isAbsolute } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { BYTES_PER_KB } from '#cli/config/units.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import { type SchemaShape } from '#cli/types/objects.ts';
 import { parseOutput } from '#cli/parsers/output/formats.ts';
-import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { fileBatches } from '#cli/execution/command/batches.ts';
+import { fileBatches } from '#cli/checks/run/command/batches.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { toolFilePath } from '#cli/execution/command/placeholders.ts';
+import { toolFilePath } from '#cli/checks/run/command/placeholders.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { filesUnder, requireBuild, deriveBuiltFilePath } from '#cli/checks/framework/site/build.ts';
 

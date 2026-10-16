@@ -4,11 +4,11 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { findQuotedEnd } from '#cli/parsers/comments.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { toolOutputDetail } from '#cli/execution/command/output.ts';
-import type { Mount, NginxMounts, DirectiveScan } from '#cli/types/checks/infrastructure.ts';
+import { toolOutputDetail } from '#cli/checks/run/command/output.ts';
 import { type Finding, type CheckInput, type CheckOutcome } from '#cli/types/execution/check.ts';
+import { type Mount, type NginxMounts, type DirectiveScan } from '#cli/types/checks/infrastructure.ts';
 
 import {
     NGINX_CONF,

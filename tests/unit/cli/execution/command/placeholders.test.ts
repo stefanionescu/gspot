@@ -3,8 +3,8 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { symlink } from 'node:fs/promises';
 import { planRun } from '#cli/planning/checks.ts';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/checks/run/run.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
@@ -12,11 +12,11 @@ import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
 import { type CommandPart } from '#cli/types/execution/command.ts';
 import { WORKSPACE_SCOPE_CASES } from '#tests/config/execution.ts';
-import { checkInput, runBuiltInCheck } from '#cli/execution/built-in.ts';
+import { checkInput, runBuiltInCheck } from '#cli/checks/run/built-in.ts';
 import { swiftlintConfigurationFiles } from '#cli/checks/language/swift/build.ts';
 import { checkStaleGeneratorOutputs } from '#cli/checks/stale-generator-outputs.ts';
-import { prepareCommand, commandEnvironment } from '#cli/execution/command/check.ts';
-import { substitute, scratchFiles, perFileCommands } from '#cli/execution/command/placeholders.ts';
+import { prepareCommand, commandEnvironment } from '#cli/checks/run/command/check.ts';
+import { substitute, scratchFiles, perFileCommands } from '#cli/checks/run/command/placeholders.ts';
 
 {
     test('a whole setting preserves empty and multiword command arguments', async () => {

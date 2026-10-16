@@ -3,7 +3,7 @@ import { findStaleFiles } from '#cli/apply/stale.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { checkInput, buildCheckResult } from '#cli/execution/built-in.ts';
+import { checkInput, buildCheckResult } from '#cli/checks/run/built-in.ts';
 import { GENERATED_FILE_HELP, GENERATED_FILE_MESSAGES } from '#cli/config/checks/general/gspot.ts';
 
 /**
