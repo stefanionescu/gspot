@@ -5,7 +5,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { installCompiler } from '#tests/setup/install.ts';
-import { installedModules } from '#tests/setup/modules.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildSandboxChanges } from '#tests/setup/builders.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
@@ -175,7 +174,10 @@ test.each([...OUTDIR_CASES])('$name', async ({ kind }) => {
         }),
         'app/value.ts': 'export const count = 1;\n',
     });
-    await symlink(kind === 'symlink' ? outside.path : installedModules, join(sandbox.path, 'node_modules'), 'dir');
+    // The linked case points node_modules outside; the absolute case installs only the compiler, so copies stay small.
+    await (kind === 'symlink'
+        ? symlink(outside.path, join(sandbox.path, 'node_modules'), 'dir')
+        : installCompiler(sandbox.path));
     commitAll(sandbox.path);
     await runGspotApply(sandbox.path);
     const checked = await checkTypes(sandbox.path);
