@@ -17,17 +17,18 @@ import {
     CHECKS_EXPRESS_INSTALLED_SANDBOX,
 } from '#tests/data/checks/express.ts';
 
-const installedSandbox = registerSharedSandbox(CHECKS_EXPRESS_INSTALLED_SANDBOX);
+// Systems without a semgrep build skip every test here, so they install nothing.
+const installedSandbox = hasToolBuild('semgrep') ? registerSharedSandbox(CHECKS_EXPRESS_INSTALLED_SANDBOX) : undefined;
 
 // The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))('the Express rules stay within inherited scopes', async () => {
-    const sandbox = { path: installedSandbox().root };
+    const sandbox = { path: installedSandbox!().root };
     const sourceFiles = {
         'gspot.toml': buildSettingsText(['javascript', 'security'], { tables: EXPRESS_SCOPE_SETTINGS }),
         ...EXPRESS_SCOPE_FILES,
     };
     await using _sourceChange = await updateSandbox(
-        installedSandbox(),
+        installedSandbox!(),
         buildSandboxChanges(CHECKS_EXPRESS_INSTALLED_SANDBOX.files, sourceFiles),
     );
     expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
@@ -55,14 +56,14 @@ test.skipIf(!hasToolBuild('semgrep'))('the Express rules stay within inherited s
 test.skipIf(!hasToolBuild('semgrep'))(
     'the Express pack reports SQL interpolation and raw response fields without misreporting positive cases',
     async () => {
-        const sandbox = { path: installedSandbox().root };
+        const sandbox = { path: installedSandbox!().root };
         const sourceFiles = {
             'gspot.toml': buildSettingsText(['express', 'security']),
             'package.json': '{"private": true, "dependencies": {"express": "5.2.1"}}\n',
             ...EXPRESS_SOURCES,
         };
         await using _sourceChange = await updateSandbox(
-            installedSandbox(),
+            installedSandbox!(),
             buildSandboxChanges(CHECKS_EXPRESS_INSTALLED_SANDBOX.files, sourceFiles),
         );
         expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });

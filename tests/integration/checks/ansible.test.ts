@@ -13,9 +13,9 @@ import { ANSIBLE_CASES, ANSIBLE_SANDBOX, ANSIBLE_PLAYBOOK, COMMAND_PLAYBOOK } fr
 // The pinned ansible-lint tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint checks each scope without ansible.cfg', async () => {
     const level = 'all' as const;
-    const sandbox = { path: installedSandbox().root };
+    const sandbox = { path: installedSandbox!().root };
     await using _sourceChange = await updateSandbox(
-        installedSandbox(),
+        installedSandbox!(),
         buildSandboxChanges(ANSIBLE_SANDBOX.files, {
             'gspot.toml': buildSettingsText(['ansible'], {
                 level,
@@ -57,9 +57,9 @@ configurations = ["ansible"]
 test.skipIf(!hasToolBuild('ansible-lint')).each([...LEVELS])(
     'ansible-lint uses the profile of level %s next to the root and scope ansible.cfg files',
     async (level) => {
-        const sandbox = { path: installedSandbox().root };
+        const sandbox = { path: installedSandbox!().root };
         const source = ANSIBLE_PLAYBOOK.replace('ansible.builtin.systemd:', 'systemd:');
-        await using _sourceChange = await updateSandbox(installedSandbox(), {
+        await using _sourceChange = await updateSandbox(installedSandbox!(), {
             check: '',
             files: {
                 'gspot.toml': buildSettingsText(['ansible'], {
@@ -99,14 +99,15 @@ configurations = ["ansible"]
     },
 );
 
-const installedSandbox = registerSharedSandbox(ANSIBLE_SANDBOX);
+// Systems without a ansible-lint build skip every test here, so they install nothing.
+const installedSandbox = hasToolBuild('ansible-lint') ? registerSharedSandbox(ANSIBLE_SANDBOX) : undefined;
 
 for (const entry of ANSIBLE_CASES) {
     // The pinned ansible-lint tool has no build for some operating systems.
     test.skipIf(!hasToolBuild('ansible-lint'))(
         `${entry.check} reports ${entry.expected.file} and passes after the fix`,
         async () => {
-            const result = await runCheckSample(installedSandbox(), entry, ANSIBLE_SANDBOX);
+            const result = await runCheckSample(installedSandbox!(), entry, ANSIBLE_SANDBOX);
             expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
         },
     );

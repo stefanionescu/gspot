@@ -13,13 +13,14 @@ import {
     CHECKS_FASTAPI_INSTALLED_SANDBOX,
 } from '#tests/data/checks/security/semgrep-rules.ts';
 
-const installedSandbox = registerSharedSandbox(CHECKS_FASTAPI_INSTALLED_SANDBOX);
+// Systems without a semgrep build skip every test here, so they install nothing.
+const installedSandbox = hasToolBuild('semgrep') ? registerSharedSandbox(CHECKS_FASTAPI_INSTALLED_SANDBOX) : undefined;
 
 // The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))(
     'the FastAPI pack reports exception responses and accepts a stable replacement',
     async () => {
-        const sandbox = { path: installedSandbox().root };
+        const sandbox = { path: installedSandbox!().root };
         const sourceFiles = {
             'gspot.toml': buildSettingsText(['fastapi', 'security']),
             'pyproject.toml': SEMGREP_PROJECT_FILES['pyproject.toml'],
@@ -27,7 +28,7 @@ test.skipIf(!hasToolBuild('semgrep'))(
             'neighbor.py':
                 'from fastapi import HTTPException\nraise HTTPException(status_code=404, detail="User not found")\n',
         };
-        await using _sourceChange = await updateSandbox(installedSandbox(), {
+        await using _sourceChange = await updateSandbox(installedSandbox!(), {
             check: '',
             files: sourceFiles,
             removed: Object.keys(CHECKS_FASTAPI_INSTALLED_SANDBOX.files).filter(

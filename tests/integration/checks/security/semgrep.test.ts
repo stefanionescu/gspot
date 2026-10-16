@@ -25,13 +25,14 @@ import {
     PLATFORM_ALL_SOURCE_FINDINGS,
 } from '#tests/data/checks/security/semgrep-rules.ts';
 
-const installedSandbox = registerSharedSandbox(SEMGREP_SANDBOX);
+// Systems without a semgrep build skip every test here, so they install nothing.
+const installedSandbox = hasToolBuild('semgrep') ? registerSharedSandbox(SEMGREP_SANDBOX) : undefined;
 
 // The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))(
     'Semgrep reports a Bash file it cannot parse as a finding at its position',
     async () => {
-        const sandbox = installedSandbox();
+        const sandbox = installedSandbox!();
         const sourceFiles = {
             'gspot.toml': buildSettingsText(['bash', 'security']),
             'scripts/café build.sh': 'if then\n',
@@ -58,7 +59,7 @@ test.skipIf(!hasToolBuild('semgrep'))(
 
 // The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the level', async () => {
-    const sandbox = installedSandbox();
+    const sandbox = installedSandbox!();
     const sourceFiles = {
         'gspot.toml': buildSettingsText(['bash', 'swift', 'security'], {
             level: 'recommended',
@@ -110,7 +111,7 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the level', async ()
 test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
     '%s security packs report raw inputs once, accept documented forms, and pass after fixes',
     async (level) => {
-        const sandbox = installedSandbox();
+        const sandbox = installedSandbox!();
         const sourceFiles = {
             'package.json': SEMGREP_PROJECT_FILES['package.json'],
             'tsconfig.json': SEMGREP_PROJECT_FILES['tsconfig.json'],
@@ -147,7 +148,7 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
 
 // The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))('repository security rules report findings and pass after fixes', async () => {
-    const sandbox = installedSandbox();
+    const sandbox = installedSandbox!();
     const sourceFiles = {
         'gspot.toml': buildSettingsText(['typescript', 'security'], {
             tables: '[tools.semgrep]\nrule_files = ["security/own.yml"]\n',
@@ -180,7 +181,7 @@ export const four = double(2);
 test.skipIf(!hasToolBuild('semgrep')).each([...NEXT_CONFIG_CASES])(
     'Semgrep checks next.config literals: $name',
     async ({ source, expected }) => {
-        const sandbox = installedSandbox();
+        const sandbox = installedSandbox!();
         const sourceFiles = {
             'gspot.toml': buildSettingsText(['nextjs']),
             'next.config.ts': source,
