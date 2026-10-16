@@ -3,7 +3,12 @@
 #MISE dir="{{config_root}}/packages/cli"
 set -euo pipefail
 
-bun build src/main.ts --outfile dist/gspot.js --target node --format esm --packages external --banner '#!/usr/bin/env node'
+# Git Bash on Windows rewrites a path inside an argument to a Windows program, such as a hashbang, so printf writes it.
+mkdir -p dist
+{
+    printf '%s\n' '#!/usr/bin/env node'
+    bun build src/main.ts --target node --format esm --packages external
+} >dist/gspot.js
 bun build src/checks/framework/site/linkinator-process.ts --outdir dist --target node --format esm --packages external
 
 mkdir -p grammars/licenses
