@@ -136,12 +136,27 @@ allowed_names = ["ARBITRARY_LOADS"]
 reason = "Apple names the key NSAllowsArbitraryLoads."
 
 [[naming.override]]
+paths = ["packages/cli/src/checks/general/dependencies/lockfiles.ts"]
+allowed_names = ["packageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
 paths = ["packages/cli/src/config/tools/npm.ts"]
 allowed_names = ["MISSING_PACKAGE_MANAGER_MESSAGE"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
+paths = ["packages/cli/src/generation/ci.ts"]
+allowed_names = ["packageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
 paths = ["packages/cli/src/generation/generate.ts"]
+allowed_names = ["packageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["packages/cli/src/generation/hooks.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
@@ -153,6 +168,11 @@ reason = "The repository Names table requires package manager for npm, pnpm, Yar
 [[naming.override]]
 paths = ["packages/cli/src/session.ts"]
 allowed_names = ["buildPackageManagerAccess", "getPackageManagerIdentity", "packageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["packages/cli/src/settings/known.ts"]
+allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
@@ -173,6 +193,16 @@ reason = "The repository Names table requires package manager for npm, pnpm, Yar
 [[naming.override]]
 paths = ["packages/cli/src/tools/npm/tool-project.ts"]
 allowed_names = ["packageManager", "packageManagerName"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["packages/cli/src/tools/python/project.ts"]
+allowed_names = ["packageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/generation/ci.ts"]
+allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
@@ -206,6 +236,11 @@ allowed_names = ["PACKAGE_MANAGER_DECLARATIONS", "PACKAGE_MANAGER_ROWS"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
+paths = ["tests/integration/tool-projects/npm.test.ts"]
+allowed_names = ["packageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
 paths = ["tests/setup/install.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
@@ -216,6 +251,26 @@ allowed_names = ["createPackageManagerSandbox", "package-manager-sandboxes", "pa
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
+paths = ["tests/types/packages.ts"]
+allowed_names = ["PackageManagerSandbox"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["tests/unit/cli/checks/python/conventions.test.ts"]
+allowed_names = ["packageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["tests/unit/cli/generated-files/ci.test.ts"]
+allowed_names = ["packageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
+paths = ["tests/unit/cli/generated-files/hooks.test.ts"]
+allowed_names = ["packageManager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
 paths = ["tests/unit/cli/generated-files/npm-tool-project.test.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
@@ -223,11 +278,6 @@ reason = "The repository Names table requires package manager for npm, pnpm, Yar
 [[naming.override]]
 paths = ["tests/unit/cli/tools/npm/package-manager.test.ts"]
 allowed_names = ["package-manager.test"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["tests/types/packages.ts"]
-allowed_names = ["PackageManagerSandbox"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [architecture.roles]

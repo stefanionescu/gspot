@@ -54,11 +54,12 @@ function buildCheckScript(command: string): string {
     ].join('\n');
 }
 
-// The selected package client shares the same mise invocation as Node and the published CLI.
+// The selected package manager shares the same mise invocation as Node and the published CLI.
 function buildGspotCommand(pipeline: Pipeline): string {
-    const client = pipeline.npmClient;
+    const { packageManager } = pipeline;
     const tools = [CI_NODE, `npm:${cliName}@${pipeline.version}`];
-    if (client !== undefined && client.name !== 'npm') tools.push(`${client.name}@${client.version}`);
+    if (packageManager !== undefined && packageManager.name !== 'npm')
+        tools.push(`${packageManager.name}@${packageManager.version}`);
     return `mise exec ${tools.map((tool) => quoteArgument(tool)).join(' ')} -- gspot`;
 }
 
@@ -139,7 +140,7 @@ function spaceWorkflowGroups(workflow: Document): void {
 /**
  * Generate check and applicable manual jobs for each machine through the same mise setup.
  *
- * @param pipeline the gspot version, selected npm client, machines, and manual checks and tools.
+ * @param pipeline the gspot version, selected package manager, machines, and manual checks and tools.
  *
  * @returns the GitHub workflow file.
  */
@@ -201,7 +202,7 @@ function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
 /**
  * Generate a GitLab include without changing the authored pipeline. Platform and Swift selections do not apply.
  *
- * @param pipeline the gspot version, selected npm client, and manual checks and tools.
+ * @param pipeline the gspot version, selected package manager, and manual checks and tools.
  *
  * @returns the GitLab include file.
  */

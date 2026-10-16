@@ -27,7 +27,7 @@ test('after init and install, apply has nothing to write', async () => {
     expect(init.code, init.stdout + init.stderr).toBe(0);
     await installToolProjects(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json']);
-    expect((JSON.parse(applied.stdout) as DryRunJson).drift).toStrictEqual([]);
+    expect((JSON.parse(applied.stdout) as DryRunJson).stale).toStrictEqual([]);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
 });
 

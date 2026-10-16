@@ -127,7 +127,7 @@ async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline>
         }),
     );
     const session = await openSession(sandbox.path);
-    const client = session.getPackageManager();
+    const packageManager = session.getPackageManager();
     const pipeline: Pipeline = {
         ...LINUX_PIPELINE,
         operatingSystems: [...LINUX_PIPELINE.operatingSystems],
@@ -135,7 +135,7 @@ async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline>
             ['docs/lychee-external', 'project/audit'].includes(check.name),
         ),
         manualTools: session.manifests.get('docs')!.tools.filter((tool) => tool.name === 'lychee'),
-        ...(client === undefined ? {} : { npmClient: client }),
+        ...(packageManager === undefined ? {} : { packageManager }),
     };
     return pipeline;
 }

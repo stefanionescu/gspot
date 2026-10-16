@@ -41,7 +41,7 @@ exit "$GSPOT_SETUP_EXIT"
 
 export const LINUX_PIPELINE = {
     version: '1.2.3',
-    npmClient: { name: 'npm', version: '11.10.1' },
+    packageManager: { name: 'npm', version: '11.10.1' },
     operatingSystems: ['linux'],
     hasSwift: false,
     manualChecks: ['docs/lychee-external'],

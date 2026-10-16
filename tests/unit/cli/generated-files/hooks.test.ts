@@ -33,16 +33,16 @@ test('a repository at the Git top level gets hooks that change no folder', async
 
 test.each(START_COMMANDS)(
     'each hook script uses the %s start command to run one check',
-    async (program, npmClient, prefix) => {
+    async (program, packageManager, prefix) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { "app's dir/gspot.toml": 'configurations = []\n' });
         readGitOutput(sandbox.path, ['init', '-q']);
         const root = join(sandbox.path, "app's dir");
-        if (npmClient !== undefined)
+        if (packageManager !== undefined)
             await Bun.write(
                 join(root, 'package.json'),
                 JSON.stringify({
-                    packageManager: npmClient,
+                    packageManager: packageManager,
                     devDependencies: { '@gspothq/cli': '1.2.3' },
                 }),
             );

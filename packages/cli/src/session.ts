@@ -134,7 +134,7 @@ async function buildScopeSelections(
                 const { name } = await getPackageManagerIdentity();
                 known.defaults.set('site.build_command', {
                     ...build,
-                    value: detectDefaults({ npmClient: name }).get('site.build_command'),
+                    value: detectDefaults({ packageManager: name }).get('site.build_command'),
                 });
             }
             const view = buildScopeView(known, effective, selected, scope.path);

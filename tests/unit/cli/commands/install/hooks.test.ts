@@ -94,7 +94,7 @@ test.each(['', 'app/'])(
         const preview = await runRegisteredCommand(root, ['apply', '--dry-run']);
         expect(preview).toMatchObject({
             exitCode: 0,
-            json: { drift: matchItems([{ path: '.gspot/hooks/pre-commit', kind: 'stray' }]) },
+            json: { stale: matchItems([{ path: '.gspot/hooks/pre-commit', kind: 'stray' }]) },
         });
         expect(await Bun.file(hook).text()).toBe(installed);
         const removed = await runRegisteredCommand(root, ['apply']);

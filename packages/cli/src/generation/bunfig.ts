@@ -32,7 +32,7 @@ export function buildBunfigEdits(repositoryRoot: string, scopes: ScopeSelection[
         )
         .map((selection) => ({ selection, prefix: joinScope(selection.scope.path, '') }))
         .filter(({ prefix }) =>
-            LOCKFILES.filter((entry) => entry.client === 'bun').some(
+            LOCKFILES.filter((entry) => entry.packageManager === 'bun').some(
                 ({ file: name }) => files.readStats(`${prefix}${name}`) !== undefined,
             ),
         );

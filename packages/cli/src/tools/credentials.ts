@@ -1,4 +1,4 @@
-// Check lockfiles for credentials and redact installer output.
+// Check lockfiles for credentials and redact package manager output.
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 
 import {

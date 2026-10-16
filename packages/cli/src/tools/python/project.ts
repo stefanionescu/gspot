@@ -46,9 +46,9 @@ import {
 
 // A temporary lockfile must not publish credentials supplied through repository index settings.
 function readPythonLockfile(work: string, credentials: string[], project: PythonToolProject): string {
-    const row = LOCKFILES.find(({ client }) => client === 'uv') as Extract<
+    const row = LOCKFILES.find(({ packageManager }) => packageManager === 'uv') as Extract<
         (typeof LOCKFILES)[number],
-        { client: 'uv' }
+        { packageManager: 'uv' }
     >;
     const lockfile = readFileSync(join(work, row.file), 'utf8');
     assertCredentialFreeLockfile(lockfile, credentials, new GspotError('installation', UV_LOCKFILE_CREDENTIAL_MESSAGE));

@@ -31,14 +31,14 @@ test('a hand edit of the ESLint config shows as a byte diff without running it',
     expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
     const preview = await runRegisteredCommand(sandbox.path, ['apply', '--dry-run']);
     expect(preview.exitCode, preview.text).toBe(0);
-    const changed = (preview.json as DryRunJson).drift.find(({ path: output }) => output === path);
+    const changed = (preview.json as DryRunJson).stale.find(({ path: output }) => output === path);
     expect(changed).toMatchObject({ kind: 'changed' });
     expect(changed?.diff).toContain(authored.trim());
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(authored);
     expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
     const unrecorded = await runRegisteredCommand(sandbox.path, ['apply', '--dry-run']);
     expect(unrecorded.exitCode, unrecorded.text).toBe(0);
-    expect((unrecorded.json as DryRunJson).drift.find((entry) => entry.path === path)).toStrictEqual(changed);
+    expect((unrecorded.json as DryRunJson).stale.find((entry) => entry.path === path)).toStrictEqual(changed);
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(authored);
     expect(await isOnDisk(join(sandbox.path, '.gspot/state/ownership.json'))).toBe(false);
 });
@@ -54,8 +54,8 @@ test("turned-off rules have the same stray paths in a dry run and in apply's rem
     await Bun.write(join(sandbox.path, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const { drift } = JSON.parse(preview.stdout) as DryRunJson;
-    const strays = drift
+    const { stale } = JSON.parse(preview.stdout) as DryRunJson;
+    const strays = stale
         .filter(({ kind }) => kind === 'stray')
         .map(({ path }) => path)
         .toSorted((first, second) => first.localeCompare(second));
@@ -97,7 +97,7 @@ test('apply --dry-run lists missing generated files and writes nothing', async (
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const result = JSON.parse(preview.stdout) as DryRunJson;
     expect(result.dryRun).toBe(true);
-    expect(result.drift).toContainEqual(matchFields({ path: '.gspot/config/shellcheckrc', kind: 'missing' }));
+    expect(result.stale).toContainEqual(matchFields({ path: '.gspot/config/shellcheckrc', kind: 'missing' }));
     expect(await readFile(join(folder.path, 'gspot.toml'), 'utf8')).toBe(settings);
     expect(await isOnDisk(join(folder.path, '.gspot'))).toBe(false);
     expect(await readTree(folder.path)).toStrictEqual(before);
@@ -136,8 +136,8 @@ test.each([false, true])(
         expect(structured.stderr).toBe('');
         const result = JSON.parse(structured.stdout) as DryRunJson;
         expect(result.pin).toStrictEqual({ from: isChanged ? '0.0.0' : version, to: version });
-        if (isChanged) expect(result.drift).toMatchObject([{ path: '.gspot/version', kind: 'changed' }]);
-        else expect(result.drift).toStrictEqual([]);
+        if (isChanged) expect(result.stale).toMatchObject([{ path: '.gspot/version', kind: 'changed' }]);
+        else expect(result.stale).toStrictEqual([]);
         expect(await readTree(folder.path)).toStrictEqual(before);
     },
 );
@@ -172,19 +172,19 @@ ${current}=======
     const before = await readTree(folder.path);
     const preview = await runGspot(folder.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const { drift } = JSON.parse(preview.stdout) as DryRunJson;
-    expect(drift).toContainEqual(
+    const { stale } = JSON.parse(preview.stdout) as DryRunJson;
+    expect(stale).toContainEqual(
         matchFields({
             path: '.gspot/config/shellcheckrc',
             kind: 'changed',
             diff: matchSubstring('-# Edited.'),
         }),
     );
-    expect(drift).toContainEqual(matchFields({ path: '.gspot/package.json', kind: 'changed' }));
-    expect(drift).toContainEqual(
+    expect(stale).toContainEqual(matchFields({ path: '.gspot/package.json', kind: 'changed' }));
+    expect(stale).toContainEqual(
         matchFields({ path: 'AGENTS.md', kind: 'changed', diff: matchSubstring('-Edited inside.') }),
     );
-    expect(drift).toContainEqual(matchFields({ path: '.gspot/config/markdownlint.jsonc', kind: 'stray' }));
-    expect(drift.some(({ path }) => path === 'README.md' || path === 'settings.json')).toBe(false);
+    expect(stale).toContainEqual(matchFields({ path: '.gspot/config/markdownlint.jsonc', kind: 'stray' }));
+    expect(stale.some(({ path }) => path === 'README.md' || path === 'settings.json')).toBe(false);
     expect(await readTree(folder.path)).toStrictEqual(before);
 });

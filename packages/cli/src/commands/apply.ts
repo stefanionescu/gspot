@@ -15,9 +15,9 @@ import { formatApplyReport } from '#cli/apply/save-settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/edit-settings.ts';
 
-function formatStaleFiles(drift: StaleFile[]): string {
-    const lines = [`${formatCount(drift.length, 'generated file')} need updating:`, ''];
-    for (const entry of drift) {
+function formatStaleFiles(staleFiles: StaleFile[]): string {
+    const lines = [`${formatCount(staleFiles.length, 'generated file')} need updating:`, ''];
+    for (const entry of staleFiles) {
         const differences = (entry.diff ?? '').split('\n').map((line) => `    ${line}`);
         lines.push(`  ${entry.path}  ${entry.kind}`);
         if ((entry.diff ?? '') !== '') lines.push(...differences);
@@ -28,14 +28,14 @@ function formatStaleFiles(drift: StaleFile[]): string {
 
 function planApply(session: Session): CommandResult {
     const generated = generate(session);
-    const drift = listStaleFiles(session, generated);
+    const staleFiles = listStaleFiles(session, generated);
     const summary =
-        drift.length === 0
+        staleFiles.length === 0
             ? `No change: the ${formatCount(generated.files.length, 'generated file')} are up to date.\n`
-            : formatStaleFiles(drift);
+            : formatStaleFiles(staleFiles);
     const text = summary + formatNotes(generated.notes);
     const pin = { from: readVersionPin(session.root), to: session.version };
-    const json: DryRunJson = { dryRun: true, pin, drift, notes: generated.notes };
+    const json: DryRunJson = { dryRun: true, pin, stale: staleFiles, notes: generated.notes };
     const version = pin.from === pin.to ? '' : `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n`;
     return { text: `${version}${text}`, json, exitCode: 0 };
 }

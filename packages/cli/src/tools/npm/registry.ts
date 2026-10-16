@@ -1,4 +1,4 @@
-// Read npm registry settings and write isolated installer settings.
+// Read npm registry settings and write isolated package manager settings.
 import which from 'which';
 import Config from '@npmcli/config';
 import { isRecord } from '#cli/system/values.ts';

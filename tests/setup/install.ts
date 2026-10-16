@@ -122,8 +122,8 @@ async function writeLockedInputs(root: string, suppliedLog?: Writer): Promise<Lo
     }
     await prepareLockfiles(buildInstallContext(session, log), generated.files);
     writeGeneratedFiles(session, generated, log);
-    const client = session.getPackageManager();
-    const inputs = client === undefined ? undefined : await readToolProjectFiles(root, client.name);
+    const packageManager = session.getPackageManager();
+    const inputs = packageManager === undefined ? undefined : await readToolProjectFiles(root, packageManager.name);
     const lockfilePath = join(root, '.gspot/uv.lock');
     return {
         session,

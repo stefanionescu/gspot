@@ -1,4 +1,4 @@
-// Creates npm client sandboxes and reads their generated project files.
+// Creates package manager sandboxes and reads their generated project files.
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { runGit } from '#tests/setup/git.ts';

@@ -8,7 +8,7 @@ export type ActionPin = { name: string; sha: string; version: string };
 
 export type Pipeline = {
     version: string;
-    npmClient?: PackageManager | undefined;
+    packageManager?: PackageManager | undefined;
     manualTools: ToolDeclaration[];
     setupCommand?: NonNullable<Settings['ci']>['setup_command'];
     operatingSystems: NonNullable<Settings['ci']>['operating_systems'];

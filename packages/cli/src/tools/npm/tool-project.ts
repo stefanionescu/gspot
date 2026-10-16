@@ -45,9 +45,8 @@ export function parseToolProject(text: string, packageManagerName: PackageManage
  */
 export function selectLockfileName(packageManager: PackageManager['name']): ToolProjectLockfileName {
     return (
-        LOCKFILES.filter((entry) => 'toolProject' in entry).find((entry) => entry.client === packageManager) as Extract<
-            Lockfile,
-            { toolProject: true }
-        >
+        LOCKFILES.filter((entry) => 'toolProject' in entry).find(
+            (entry) => entry.packageManager === packageManager,
+        ) as Extract<Lockfile, { toolProject: true }>
     ).file;
 }

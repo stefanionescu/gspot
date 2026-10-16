@@ -79,8 +79,8 @@ async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJ
         print('Dry run: nothing was written.\n');
         return { text: '', json: { root, plan, settings: settingsText, dryRun: true }, exitCode: 0 };
     }
-    const isGo = await askConfirmation({ yes: options.yes });
-    if (!isGo) return { text: 'Nothing written.\n', json: { root, plan, written: false }, exitCode: 0 };
+    const accepted = await askConfirmation({ yes: options.yes });
+    if (!accepted) return { text: 'Nothing written.\n', json: { root, plan, written: false }, exitCode: 0 };
     const written = writeInitFiles(root, prepared);
     written.push('Next: run gspot install to install the tools and turn on the Git hooks.');
     return {

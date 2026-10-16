@@ -154,7 +154,7 @@ function buildKnownSettings(selected: Manifest[], level: Level = 'recommended', 
 /**
  * Shares defaults derived from project inputs between init and a session.
  * @param inputs the npm client, SDK root, and workspace names when detected.
- * @param inputs.npmClient the detected package manager.
+ * @param inputs.packageManager the detected package manager.
  * @param inputs.sdkRoot the detected Xcode SDK.
  * @param inputs.scopes the workspace names.
  * @param inputs.openapi the detected OpenAPI filenames and candidate documents.
@@ -163,7 +163,7 @@ function buildKnownSettings(selected: Manifest[], level: Level = 'recommended', 
  * @returns computed setting defaults, with undefined when their project input does not exist.
  */
 function detectDefaults(inputs: {
-    npmClient?: string;
+    packageManager?: string;
     sdkRoot?: string;
     scopes?: string[];
     openapi?: { filenames: string[]; paths: string[] };
@@ -172,7 +172,10 @@ function detectDefaults(inputs: {
     const document = inputs.openapi?.paths.find((path) => matches?.(path) === true);
     return new Map<string, unknown>([
         ['openapi.document', document],
-        ['site.build_command', inputs.npmClient === undefined ? undefined : [inputs.npmClient, ...BUILD_SCRIPT]],
+        [
+            'site.build_command',
+            inputs.packageManager === undefined ? undefined : [inputs.packageManager, ...BUILD_SCRIPT],
+        ],
         ['swift.xcode_destination', XCODE_DESTINATIONS.get(inputs.sdkRoot)],
         [
             'tools.commitlint.scopes',

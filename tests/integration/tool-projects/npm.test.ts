@@ -22,11 +22,11 @@ import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/pr
 
 test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
     '%s from %s: apply keeps a stale lockfile and install repairs it',
-    async (installer, projectPath) => {
-        await using sandbox = await createPackageManagerSandbox(installer, projectPath);
+    async (packageManager, projectPath) => {
+        await using sandbox = await createPackageManagerSandbox(packageManager, projectPath);
         const { root, registry } = sandbox;
         await writeLockedInputs(root);
-        const { lockfilePath, lockfile } = await readToolProjectFiles(root, installer);
+        const { lockfilePath, lockfile } = await readToolProjectFiles(root, packageManager);
         expect(Buffer.from(lockfile).toString('utf8')).not.toContain(NPM_REGISTRY_TOKEN);
         for (let attempt = 0; attempt < 2; attempt++) {
             const applied = await spawnGspot(root, ['apply', '--json']);
@@ -34,16 +34,16 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
             expect(await readFile(lockfilePath)).toStrictEqual(Buffer.from(lockfile));
         }
         // Yarn 1 writes resolved package addresses into its lockfile; these must exclude the private registry.
-        if (installer === 'yarn') expect(Buffer.from(lockfile).toString('utf8')).not.toContain(registry.url);
+        if (packageManager === 'yarn') expect(Buffer.from(lockfile).toString('utf8')).not.toContain(registry.url);
         const stale = Buffer.from(lockfile).toString('utf8').replaceAll(prettierManifest.version, '0.0.0');
         await chmod(lockfilePath, 0o644);
         await writeFile(lockfilePath, stale);
         const staleApply = await spawnGspot(root, ['apply', '--json']);
         expect(staleApply.code, staleApply.stdout + staleApply.stderr).toBe(0);
         expect(await readFile(lockfilePath, 'utf8')).toBe(stale);
-        const drift = await spawnGspot(root, ['apply', '--dry-run', '--json']);
-        expect((JSON.parse(drift.stdout) as DryRunJson).drift).toContainEqual({
-            path: `.gspot/${selectLockfileName(installer)}`,
+        const preview = await spawnGspot(root, ['apply', '--dry-run', '--json']);
+        expect((JSON.parse(preview.stdout) as DryRunJson).stale).toContainEqual({
+            path: `.gspot/${selectLockfileName(packageManager)}`,
             kind: 'changed',
         });
         const installed = await spawnGspot(root, ['install', '--json']);
@@ -51,8 +51,8 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
         expect(JSON.parse(installed.stdout)).toMatchObject({ installed: true });
         expect(await readFile(lockfilePath, 'utf8')).not.toBe(stale);
         const repaired = await spawnGspot(root, ['apply', '--dry-run', '--json']);
-        expect((JSON.parse(repaired.stdout) as DryRunJson).drift).not.toContainEqual({
-            path: `.gspot/${selectLockfileName(installer)}`,
+        expect((JSON.parse(repaired.stdout) as DryRunJson).stale).not.toContainEqual({
+            path: `.gspot/${selectLockfileName(packageManager)}`,
             kind: 'changed',
         });
     },
@@ -60,18 +60,18 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
 
 test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
     '%s from %s keeps a conflicted lockfile through apply until the packageManager pin is fixed, and install repairs it',
-    async (installer, projectPath) => {
-        await using sandbox = await createPackageManagerSandbox(installer, projectPath);
+    async (packageManager, projectPath) => {
+        await using sandbox = await createPackageManagerSandbox(packageManager, projectPath);
         const { root, rootPackage } = sandbox;
         await writeLockedInputs(root);
-        const { manifest, lockfilePath, lockfile } = await readToolProjectFiles(root, installer);
+        const { manifest, lockfilePath, lockfile } = await readToolProjectFiles(root, packageManager);
         const stale = Buffer.from(lockfile).toString('utf8').replaceAll(prettierManifest.version, '0.0.0');
         await chmod(lockfilePath, 0o644);
         const conflict = `<<<<<<< edited\n${stale}\n=======\n${Buffer.from(lockfile).toString('utf8')}\n>>>>>>> generated\n`;
         await writeFile(lockfilePath, conflict);
         await writeFile(
             join(root, projectPath),
-            JSON.stringify({ ...JSON.parse(rootPackage), packageManager: `${installer}@99.0.0` }),
+            JSON.stringify({ ...JSON.parse(rootPackage), packageManager: `${packageManager}@99.0.0` }),
         );
         const refused = await spawnGspot(root, ['install', '--json']);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
@@ -82,7 +82,7 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
         const applied = await spawnGspot(root, ['apply', '--json']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const repaired = JSON.parse(applied.stdout) as ApplyReport;
-        expect(repaired.written).not.toContain(`.gspot/${selectLockfileName(installer)}`);
+        expect(repaired.written).not.toContain(`.gspot/${selectLockfileName(packageManager)}`);
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
@@ -122,8 +122,8 @@ async function assertCloneInstallation(project: PackageManagerSandbox, inputs: T
 
 test.each([...PACKAGE_MANAGER_ROWS])(
     '%s from %s preserves authored and locked inputs and restores edited tool files',
-    async (installer, projectPath) => {
-        await using sandbox = await createPackageManagerSandbox(installer, projectPath);
+    async (packageManager, projectPath) => {
+        await using sandbox = await createPackageManagerSandbox(packageManager, projectPath);
         const { root, rootPackage, yarnConfiguration } = sandbox;
         const { inputs } = await writeLockedInputs(root);
         const { manifest, lockfilePath, lockfile, mode } = inputs!;
@@ -165,8 +165,8 @@ test.each([...PACKAGE_MANAGER_ROWS])(
         expect(readyTools.map((name) => report.tools.find((tool) => tool.name === name)?.state)).toStrictEqual(
             readyTools.map(() => 'ok'),
         );
-        const drift = await spawnGspot(root, ['apply', '--dry-run', '--json']);
-        expect((JSON.parse(drift.stdout) as DryRunJson).drift).toStrictEqual([]);
+        const preview = await spawnGspot(root, ['apply', '--dry-run', '--json']);
+        expect((JSON.parse(preview.stdout) as DryRunJson).stale).toStrictEqual([]);
         const applied = await spawnGspot(root, ['apply', '--json']);
         const second = JSON.parse(applied.stdout) as ApplyReport;
         expect(second.written).toStrictEqual([]);
@@ -175,7 +175,7 @@ test.each([...PACKAGE_MANAGER_ROWS])(
     },
 );
 
-// Own the authenticated registry's requests and lifetime for its real npm client.
+// Own the authenticated registry's requests and lifetime for its real package manager.
 function createAuthenticatedRegistry(token: string) {
     const requests = { rejected: 0, authenticated: 0 };
     const server = Bun.serve({

@@ -23,7 +23,7 @@ describe('modules', () => {
     });
 });
 describe('pip-installs', () => {
-    test.each([...LOCKFILES.filter(({ client }) => ['uv', 'poetry', 'pdm'].includes(client))])(
+    test.each([...LOCKFILES.filter(({ packageManager }) => ['uv', 'poetry', 'pdm'].includes(packageManager))])(
         'pip-installs reports a requirements file only in a locked scope ($file) and passes once it is removed',
         async ({ file }) => {
             await using sandbox = await testdir();

@@ -44,7 +44,7 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
     generated.files.push(
         (settings.ci.provider === 'github' ? buildGithubWorkflow : buildGitlabWorkflow)({
             version,
-            npmClient: session.getPackageManager(),
+            packageManager: session.getPackageManager(),
             setupCommand: settings.ci.setup_command,
             operatingSystems: settings.ci.operating_systems,
             hasSwift: isConfigurationSelected(scopes, SWIFT_CONFIGURATION),

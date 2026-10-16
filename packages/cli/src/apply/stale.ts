@@ -79,10 +79,10 @@ function listStaleFileEdits(files: Files, generated: GenerationResult): StaleFil
 /**
  * Find changed, missing, or stray generated files. Include managed blocks and authored file edits.
  *
- * @param session the repository root and actual selected npm client.
+ * @param session the repository root and the selected package manager.
  * @param generated the generated files as generated now.
  *
- * @returns the drift entries in path order.
+ * @returns the stale files in path order.
  */
 export function listStaleFiles(
     session: Pick<Session, 'root' | 'requirePackageManager' | 'repository' | 'settingsFile'>,
@@ -104,7 +104,7 @@ export function listStaleFiles(
 /**
  * Every managed destination, including lockfiles owned by applicable tool projects.
  *
- * @param session the actual selected npm client.
+ * @param session the selected package manager.
  * @param generated the completed generated files.
  *
  * @returns the destination paths.

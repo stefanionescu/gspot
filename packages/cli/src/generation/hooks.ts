@@ -36,8 +36,8 @@ export async function selectRunner(repositoryRoot: string): Promise<StartRunner>
     const manifest = readPackageJson(repositoryRoot, 'package.json');
     const hasDependency =
         manifest?.dependencies?.[cliName] !== undefined || manifest?.devDependencies?.[cliName] !== undefined;
-    const client = hasDependency ? await selectPackageManager(repositoryRoot, []) : undefined;
-    const name = client === undefined ? 'mise' : client.name;
+    const packageManager = hasDependency ? await selectPackageManager(repositoryRoot, []) : undefined;
+    const name = packageManager === undefined ? 'mise' : packageManager.name;
     const runner = RUNNERS[name];
     return { name, ...runner, pin: runner.pin.replace('<package>', cliName) };
 }
