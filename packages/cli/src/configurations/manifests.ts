@@ -126,7 +126,7 @@ function linkManifestTools(manifests: ManifestDeclaration[]): Map<string, Manife
  * @param dir the configuration folder inside the assets, such as configurations/general/docs, which gives the configuration its name and group
  * @returns the manifest
  */
-export function parseManifest(text: string, dir: string): ManifestDeclaration {
+function parseManifest(text: string, dir: string): ManifestDeclaration {
     const parsed = parseToml(text);
     const toolFiles = parsed['tool_file'];
     const discoveredToolFiles = discoveredToolFilesAt(dir, toolFiles);
@@ -160,7 +160,7 @@ export function parseManifest(text: string, dir: string): ManifestDeclaration {
  * @param reads the optional run cache
  * @returns the manifests
  */
-export function configurationManifests(reads?: ReadCache): Map<string, Manifest> {
+function configurationManifests(reads?: ReadCache): Map<string, Manifest> {
     if (reads !== undefined) return memo(reads, MANIFESTS);
     const manifests = new Map<string, ManifestDeclaration>();
     const toolVersions = (z.record(z.string(), z.string().min(1)) satisfies z.ZodType<Record<string, string>>).parse(
@@ -187,7 +187,7 @@ export function configurationManifests(reads?: ReadCache): Map<string, Manifest>
  * @param reads the optional run cache
  * @returns the available check IDs
  */
-export function knownChecks(checks: readonly Pick<CheckDeclaration, 'name'>[], reads?: ReadCache): string[] {
+function knownChecks(checks: readonly Pick<CheckDeclaration, 'name'>[], reads?: ReadCache): string[] {
     const bundled = [...allChecks(configurationManifests(reads).values()).keys()];
     const authored = checks.map((check) => check.name);
     return [...new Set([...bundled, ...authored])];
@@ -198,7 +198,7 @@ export function knownChecks(checks: readonly Pick<CheckDeclaration, 'name'>[], r
  * @param reads the optional run cache
  * @returns the shipped naming choices
  */
-export function namingDefaults(reads?: ReadCache): NamingDefaults {
+function namingDefaults(reads?: ReadCache): NamingDefaults {
     if (reads !== undefined) return memo(reads, NAMING_DEFAULTS);
     return namingDefaultsSchema.parse(JSON.parse(readAsset(NAMING_DEFAULTS_FILE)));
 }
@@ -208,7 +208,7 @@ export function namingDefaults(reads?: ReadCache): NamingDefaults {
  * @param manifest the configuration
  * @returns each file with its path inside the rules folder
  */
-export function ruleFiles(manifest: Manifest): RuleSource[] {
+function ruleFiles(manifest: Manifest): RuleSource[] {
     const { group, name } = manifest.configuration;
     const sources = listAssets(`${manifest.dir}/${RULES_FOLDER}/`);
     return sources.map((source) => ({
@@ -223,7 +223,7 @@ export function ruleFiles(manifest: Manifest): RuleSource[] {
  * @param manifests the manifests to index
  * @returns the declared checks by ID
  */
-export function allChecks(manifests: Iterable<Manifest>): Map<string, ConfigurationCheck> {
+function allChecks(manifests: Iterable<Manifest>): Map<string, ConfigurationCheck> {
     const checks = new Map<string, ConfigurationCheck>();
     for (const manifest of manifests) {
         for (const check of manifest.checks) {
@@ -238,7 +238,7 @@ export function allChecks(manifests: Iterable<Manifest>): Map<string, Configurat
  * @param target the target path
  * @returns the file name under .gspot/config without its extensions
  */
-export function toolFileName(target: string): string {
+function toolFileName(target: string): string {
     const bare = target.startsWith(TOOL_FILE_PREFIX) ? target.slice(TOOL_FILE_PREFIX.length) : target;
     const dot = bare.indexOf('.');
     return dot === -1 ? bare : bare.slice(0, dot);
@@ -250,7 +250,7 @@ export function toolFileName(target: string): string {
  * @param errors the errors in plain English
  * @returns the error to throw
  */
-export function manifestError(configuration: string, errors: string[]): GspotError {
+function manifestError(configuration: string, errors: string[]): GspotError {
     return new GspotError(
         'manifest',
         [`The configuration manifest for \`${configuration}\` is not valid:`, ...errors].join('\n'),
@@ -262,7 +262,7 @@ export function manifestError(configuration: string, errors: string[]): GspotErr
  * @param manifests the parsed configuration declarations
  * @returns the canonical tools by name
  */
-export function declaredTools(manifests: Iterable<ManifestDeclaration>): Map<string, ToolDeclaration> {
+function declaredTools(manifests: Iterable<ManifestDeclaration>): Map<string, ToolDeclaration> {
     const tools = new Map<string, ToolDeclaration>();
     for (const manifest of manifests)
         for (const tool of manifest.tools.filter((entry) => typeof entry !== 'string')) {
@@ -273,3 +273,14 @@ export function declaredTools(manifests: Iterable<ManifestDeclaration>): Map<str
         }
     return tools;
 }
+
+export {
+    ruleFiles,
+    allChecks,
+    knownChecks,
+    toolFileName,
+    manifestError,
+    declaredTools,
+    namingDefaults,
+    configurationManifests,
+};

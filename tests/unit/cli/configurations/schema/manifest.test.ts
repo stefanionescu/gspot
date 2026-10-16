@@ -1,6 +1,5 @@
 import { test, expect } from 'bun:test';
 import { buildManifest } from '#tests/setup/manifest.ts';
-import { parseManifest } from '#cli/configurations/manifests.ts';
 import { FILE_PATH_REFERENCES } from '#tests/config/manifests.ts';
 
 test('a manifest without [detect] takes the matchers of [files]', () => {
@@ -19,11 +18,13 @@ test('a manifest without [detect] takes the matchers of [files]', () => {
 });
 
 test.each([...FILE_PATH_REFERENCES])('a file path setting reference "$path" is accepted: $accepted', ({ path }) => {
-    const manifest = parseManifest(
-        '[configuration]\ntitle = "Reader"\ndescription = "Select the authored source files."\n[files]\npaths = ' +
+    const manifest = buildManifest('reader', {
+        group: 'infrastructure',
+        tables: (
+            '[configuration]\ntitle = "Reader"\ndescription = "Select the authored source files."\n[files]\npaths = ' +
             JSON.stringify([path]) +
-            '\n',
-        'configurations/infrastructure/reader',
-    );
+            '\n'
+        ).replace(/^\s*\[configuration\][\s\S]*?(?=\n\[|$)/u, ''),
+    });
     expect(manifest.files.paths).toStrictEqual([path]);
 });

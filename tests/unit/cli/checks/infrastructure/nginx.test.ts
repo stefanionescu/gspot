@@ -12,59 +12,49 @@ import { checkFindings } from '#tests/setup/check-input.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { NGINX_CONFIGURATION, NGINX_DIRECTIVE_CASES } from '#tests/config/nginx.ts';
-import { testArguments, parseDirectives } from '#cli/checks/infrastructure/nginx.ts';
 
-test('testArguments mounts the file, a certificate and a key where the file opens them, and resolves the names it uses', () => {
-    const mounts = {
-        configs: [{ source: '/repo/nginx.conf', target: '/etc/nginx/nginx.conf' }],
-        certificate: '/work/certificate.pem',
-        key: '/work/key.pem',
-    };
-    expect(testArguments(NGINX_CONFIGURATION, mounts, 'nginx:1.29.3-alpine')).toStrictEqual([
-        'run',
-        '--rm',
-        '--add-host',
-        'api:127.0.0.1',
-        '--add-host',
-        'backend:127.0.0.1',
-        '-v',
-        '/repo/nginx.conf:/etc/nginx/nginx.conf:ro',
-        '-v',
-        '/work/certificate.pem:/etc/nginx/ssl/fullchain.pem:ro',
-        '-v',
-        '/work/key.pem:/etc/nginx/ssl/privkey.pem:ro',
-        'nginx:1.29.3-alpine',
-        'nginx',
-        '-T',
+test.each([
+    {
+        name: 'certificate paths and upstream hosts',
+        source: NGINX_CONFIGURATION,
+        hosts: ['api:127.0.0.1', 'backend:127.0.0.1'],
+        certificates: ['/etc/nginx/ssl/fullchain.pem', '/etc/nginx/ssl/privkey.pem'],
+    },
+    {
+        name: 'dynamic and local targets',
+        source: 'events {} http { server { server localhost; server unix:/tmp/socket; server ${upstream}; proxy_pass $url; unrelated api; ssl_certificate $cert; ssl_certificate_key /etc/nginx/key.pem; ssl_trusted_certificate /etc/nginx/cert.pem; ssl_certificate /etc/nginx/cert.pem; } }',
+        hosts: [],
+        certificates: ['/etc/nginx/key.pem', '/etc/nginx/cert.pem'],
+    },
+    { name: 'empty directives', source: '# Empty configuration.\n;{};', hosts: [], certificates: [] },
+    ...NGINX_DIRECTIVE_CASES.map(({ source }) => ({
+        name: source,
+        source,
+        hosts: source.includes('https://api:3000') ? ['api:127.0.0.1'] : [],
+        certificates: [],
+    })),
+])('nginx config-test mounts $name', async ({ source, hosts, certificates }) => {
+    await using sandbox = await testdir({ 'gspot.toml': settingsText(['nginx']), 'nginx.conf': source });
+    const session = await openSession(sandbox.path);
+    using _pins = mockPinnedExecutables([
+        toolDeclaration(session.manifests.values(), 'openssl'),
+        toolDeclaration(session.manifests.values(), 'docker'),
     ]);
-});
-
-test('dynamic and local nginx targets stay unresolved and repeated certificate mounts are deduplicated', () => {
-    const source =
-        'events {} http { server { server localhost; server unix:/tmp/socket; server ${upstream}; proxy_pass $url; unrelated api; ssl_certificate $cert; ssl_certificate_key /etc/nginx/key.pem; ssl_trusted_certificate /etc/nginx/cert.pem; ssl_certificate /etc/nginx/cert.pem; } }';
-    expect(
-        testArguments(source, { configs: [], key: '/work/key', certificate: '/work/cert' }, 'nginx:fixture'),
-    ).toStrictEqual([
-        'run',
-        '--rm',
-        '-v',
-        '/work/key:/etc/nginx/key.pem:ro',
-        '-v',
-        '/work/cert:/etc/nginx/cert.pem:ro',
-        'nginx:fixture',
-        'nginx',
-        '-T',
-    ]);
-});
-
-test('empty directive input adds no mount or host', () => {
-    expect(
-        testArguments(
-            '# Empty configuration.\n;{};',
-            { configs: [], key: '/work/key', certificate: '/work/cert' },
-            'nginx:fixture',
-        ),
-    ).toStrictEqual(['run', '--rm', 'nginx:fixture', 'nginx', '-T']);
+    using run = spyOn(processes, 'run').mockImplementation(async (command) => {
+        if (!command.includes('--rm')) return processResult();
+        expect(command.filter((_, index) => command[index - 1] === '--add-host')).toStrictEqual([...hosts]);
+        const volumes = command.filter((_, index) => command[index - 1] === '-v');
+        const configuration = volumes.find((volume) => volume.endsWith(':/etc/nginx/nginx.conf:ro'))!;
+        expect(await readFile(configuration.slice(0, -':/etc/nginx/nginx.conf:ro'.length), 'utf8')).toBe(source);
+        expect(volumes).toHaveLength(1 + certificates.length);
+        for (const target of certificates)
+            expect(volumes.some((volume) => volume.endsWith(`:${target}:ro`))).toBe(true);
+        expect(command.slice(-2)).toStrictEqual(['nginx', '-T']);
+        return processResult({ stdout: '# configuration file /etc/nginx/nginx.conf:\n' });
+    });
+    expect(await checkFindings(sandbox.path, 'nginx/config-test')).toStrictEqual([]);
+    expect(run).toHaveBeenCalledTimes(2);
+    expect(await readFile(join(sandbox.path, 'nginx.conf'), 'utf8')).toBe(source);
 });
 
 test.each(['stdout', 'stderr'])(
@@ -108,7 +98,3 @@ test.each(['stdout', 'stderr'])(
         expect(await readFile(join(sandbox.path, 'nginx.conf'), 'utf8')).toBe(NGINX_CONFIGURATION);
     },
 );
-
-test.each([...NGINX_DIRECTIVE_CASES])('nginx directives keep argument boundaries: $source', ({ source, expected }) => {
-    expect(parseDirectives(source).map((parts) => [...parts])).toStrictEqual(expected.map((parts) => [...parts]));
-});

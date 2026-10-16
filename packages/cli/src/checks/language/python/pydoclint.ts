@@ -88,7 +88,7 @@ const docstringStyleSchema = z.object({
  * @param convention the scope's Ruff docstring convention.
  * @returns arguments and the declared style, when one exists.
  */
-export function docstringConfiguration(text: string, convention?: unknown): DocstringConfiguration {
+function docstringConfiguration(text: string, convention?: unknown): DocstringConfiguration {
     const { tool } = docstringStyleSchema.parse(parse(text));
     const inherited = tool.ruff.lint.pydocstyle.convention ?? convention;
     const style = tool.pydoclint.style ?? (inherited === 'google' || inherited === 'numpy' ? inherited : undefined);

@@ -7,11 +7,10 @@ import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
+import { checkFindings } from '#tests/setup/check-input.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
-import { functionFolders } from '#cli/checks/platform/supabase.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
-import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 
 import {
     SECRET_KEY_READS,
@@ -33,10 +32,16 @@ test('Supabase config.toml and function folders are read per scope', async () =>
         'apps/api/edge/_shared/index.ts': 'export {};\n',
     });
     const session = await openSession(sandbox.path);
-    const root = buildCheckInput(session, 'supabase/deno-lint');
-    const nested = buildCheckInput(session, 'supabase/deno-lint', { scope: 'apps/api' });
-    expect(functionFolders(root)).toStrictEqual(['supabase/functions/root']);
-    expect(functionFolders(nested)).toStrictEqual(['apps/api/edge/hello']);
+    using _pins = mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'deno')]);
+    using run = spyOn(processes, 'run').mockResolvedValue(processResult({ stdout: '{"diagnostics":[],"errors":[]}' }));
+    for (const [scope, expected] of [
+        ['', 'supabase/functions/root'],
+        ['apps/api', 'apps/api/edge/hello'],
+    ]) {
+        expect(await checkFindings(session.root, 'supabase/deno-lint', { scope: scope! })).toStrictEqual([]);
+        expect(run.mock.calls.at(-1)?.[1].cwd).toBe(join(sandbox.path, scope!));
+        expect(run.mock.calls.at(-1)?.[0].at(-1)).toBe(join(sandbox.path, expected!));
+    }
 });
 
 test('storage analysis skips a malformed config.toml', async () => {

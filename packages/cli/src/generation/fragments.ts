@@ -122,6 +122,31 @@ function emittedFragments(
 }
 
 /**
+ * Separate imports from an emitted configuration fragment.
+ *
+ * @param text the source text.
+ *
+ * @returns the imports and remaining fragment body.
+ */
+function typescriptImports(text: string): TypescriptImports {
+    const source = ts.createSourceFile('fragment.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+    const imports: string[] = [];
+    const body: string[] = [];
+    let through = 0;
+    for (const statement of source.statements.filter((statement) => ts.isImportDeclaration(statement))) {
+        const start = Math.max(through, statement.getFullStart());
+        let end = ts.getTrailingCommentRanges(text, statement.end)?.at(-1)?.end ?? statement.end;
+        if (text[end] === '\r') end += 1;
+        if (text[end] === '\n') end += 1;
+        body.push(text.slice(through, start));
+        imports.push(text.slice(start, end).trim());
+        through = end;
+    }
+    body.push(text.slice(through));
+    return { imports, body: body.join('') };
+}
+
+/**
  * Build the imports, rule blocks, and selectors contributed by selected ESLint fragments.
  *
  * @param session the repository session.
@@ -187,29 +212,4 @@ export function fragmentInputs(
         }),
         fragmentSelectors: fragmentSelectorGroups(scopes, inputs.isAll, inputs.repositorySettings.structure.reexports),
     };
-}
-
-/**
- * Separate imports from an emitted configuration fragment.
- *
- * @param text the source text.
- *
- * @returns the imports and remaining fragment body.
- */
-export function typescriptImports(text: string): TypescriptImports {
-    const source = ts.createSourceFile('fragment.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
-    const imports: string[] = [];
-    const body: string[] = [];
-    let through = 0;
-    for (const statement of source.statements.filter((statement) => ts.isImportDeclaration(statement))) {
-        const start = Math.max(through, statement.getFullStart());
-        let end = ts.getTrailingCommentRanges(text, statement.end)?.at(-1)?.end ?? statement.end;
-        if (text[end] === '\r') end += 1;
-        if (text[end] === '\n') end += 1;
-        body.push(text.slice(through, start));
-        imports.push(text.slice(start, end).trim());
-        through = end;
-    }
-    body.push(text.slice(through));
-    return { imports, body: body.join('') };
 }

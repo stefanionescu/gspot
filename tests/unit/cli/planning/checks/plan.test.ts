@@ -11,11 +11,11 @@ import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
+import { buildManifest } from '#tests/setup/manifest.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { semgrep } from '#cli/checks/general/security.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
-import { parseManifest } from '#cli/configurations/manifests.ts';
 import { hasToolBuild } from '#tests/setup/operating-systems.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { ALWAYS_SELECTED } from '#tests/config/configurations.ts';
@@ -191,7 +191,13 @@ test.each([...LEVELS])('%s plans history checks once at the root and only for pu
     });
     gitOutput(sandbox.path, ['init']);
     const opened = await openSession(sandbox.path);
-    const manifest = { ...parseManifest(HISTORY_MANIFEST, 'configurations/general/sandbox'), tools: [] };
+    const manifest = {
+        ...buildManifest('sandbox', {
+            group: 'general',
+            tables: HISTORY_MANIFEST.replace(/^\s*\[configuration\][\s\S]*?(?=\n\[|$)/u, ''),
+        }),
+        tools: [],
+    };
     const session = {
         ...opened,
         scopes: opened.scopes.map((scope) => ({ ...scope, selected: [...scope.selected, manifest] })),

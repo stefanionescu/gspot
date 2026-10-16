@@ -1,17 +1,10 @@
 // Reads host information and constructs command environments.
+// Reads host information and constructs command environments.
 import { isCI } from 'std-env';
 import envPaths from 'env-paths';
-import { homedir } from 'node:os';
-import { join, isAbsolute } from 'node:path';
+import { isAbsolute } from 'node:path';
+import { CACHE_FOLDER_NAME } from '#cli/config/system/environment.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
-
-import {
-    MISE_FOLDER,
-    MISE_DATA_FOLDER,
-    XDG_DATA_VARIABLE,
-    CACHE_FOLDER_NAME,
-    MISE_DATA_VARIABLE,
-} from '#cli/config/system/environment.ts';
 
 /**
  * True when a person can answer a prompt: both standard streams use terminals and no continuous integration runner reports its presence.
@@ -19,17 +12,6 @@ import {
  */
 export function isInteractive(): boolean {
     return process.stdin.isTTY && process.stdout.isTTY && !isCI;
-}
-
-/**
- * The mise data directory selected by MISE_DATA_DIR, XDG_DATA_HOME, or the home-directory default.
- * @returns the data directory.
- */
-export function miseHome(): string {
-    const configured = process.env[MISE_DATA_VARIABLE];
-    if (configured !== undefined && configured !== '') return configured;
-    const xdg = process.env[XDG_DATA_VARIABLE];
-    return xdg === undefined || xdg === '' ? join(homedir(), MISE_DATA_FOLDER) : join(xdg, MISE_FOLDER);
 }
 
 /**

@@ -45,7 +45,7 @@ test('replacement records keep shared sections and refuse invalid items', () => 
                     invalid,
                 ),
             }),
-        ).toThrow('tool.0.replace');
+        ).toThrow('replace');
     }
 });
 

@@ -105,16 +105,6 @@ export function joinScope(scope: string, path: string): string {
 }
 
 /**
- * Resolve a repository path already owned by a scope relative to that scope.
- * @param scope the repository-relative scope.
- * @param path the repository-relative path in the scope.
- * @returns the scope-relative path.
- */
-export function relativeToScope(scope: string, path: string): string {
-    return scope === '' ? path : path.slice(scope.length + 1);
-}
-
-/**
  * The repository-relative path of a tool file generated for a scope.
  * @param scope the scope path, empty for the root.
  * @param toolFile the tool-file declaration.

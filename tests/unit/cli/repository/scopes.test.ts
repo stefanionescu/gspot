@@ -10,7 +10,7 @@ import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { NESTED_SCOPES_SETTINGS } from '#tests/config/settings/scopes.ts';
 import { PYTHON_WORKSPACE_FILES } from '#tests/config/python/tool-project.ts';
-import { joinScope, findScopes, projectFolder, relativeToScope, packageWorkspaces } from '#cli/repository/scopes.ts';
+import { joinScope, findScopes, projectFolder, packageWorkspaces } from '#cli/repository/scopes.ts';
 
 import {
     SCOPE_PATHS,
@@ -264,6 +264,5 @@ test.each([...SCOPE_PATHS])(
     '$scope joins $path and gives back its scope-relative path',
     ({ scope, path, repositoryPath }) => {
         expect(joinScope(scope, path)).toBe(repositoryPath);
-        expect(relativeToScope(scope, repositoryPath)).toBe(path);
     },
 );

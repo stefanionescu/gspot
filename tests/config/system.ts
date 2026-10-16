@@ -6,28 +6,6 @@ export const ASSET_READER_SCRIPT = `import { readAsset, listAssets } from './pac
 console.log(JSON.stringify({ text: readAsset('configurations/language/bash/manifest.toml'), files: listAssets('configurations') }));
 `;
 
-export const MISE_FOLDERS = [
-    {
-        name: 'an explicit mise directory overrides XDG',
-        mise: 'chosen-mise',
-        xdg: 'chosen-xdg',
-        expected: ['chosen-mise'],
-    },
-    { name: 'XDG selects its mise subdirectory', mise: undefined, xdg: 'chosen-xdg', expected: ['chosen-xdg', 'mise'] },
-    {
-        name: 'an empty mise override falls through to XDG',
-        mise: '',
-        xdg: 'chosen-xdg',
-        expected: ['chosen-xdg', 'mise'],
-    },
-    {
-        name: 'absent overrides select the home-directory default',
-        mise: undefined,
-        xdg: undefined,
-        expected: ['.local', 'share', 'mise'],
-    },
-] as const;
-
 // Authored marker cases cover every malformed delimiter layout in both supported file formats.
 export const BLOCK_FORMATS = [
     {

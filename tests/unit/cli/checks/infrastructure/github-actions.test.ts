@@ -1,35 +1,53 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { stat, chmod } from 'node:fs/promises';
+import { test, spyOn, expect } from 'bun:test';
 import { planRun } from '#cli/planning/checks.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { stat, chmod, readFile } from 'node:fs/promises';
 import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
+import { processResult } from '#tests/setup/processes.ts';
 import { fileMode } from '#cli/system/safe-folder/reads.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
-import { actionlintSource } from '#cli/checks/infrastructure/github-actions.ts';
 import { CALLED_WORKFLOW, ACTIONLINT_EXITS, CALLED_WORKFLOW_REFERENCES } from '#tests/config/github-actions.ts';
 
 // The workflow text actionlint reads: each self-repository marker of a reference becomes a local path at the same
 // offsets, and everything else stays as written.
 
-test.each(CALLED_WORKFLOW_REFERENCES)('the reference %s reaches actionlint as %s', (reference, expected) => {
-    const before = `on: workflow_dispatch\njobs:\n  caller:\n    uses: ${reference}\n`;
-    const prepared = actionlintSource(before);
-    expect(prepared).toBe(`on: workflow_dispatch\njobs:\n  caller:\n    uses: ${expected}\n`);
-    expect(prepared).toHaveLength(before.length);
-});
-
-test('an alias resolves to the anchored reference, which changes where it is written', () => {
-    const workflow = `on: workflow_dispatch\nenv:\n  WORKFLOW: &workflow $/${CALLED_WORKFLOW}\njobs:\n  caller:\n    uses: *workflow\n`;
-    expect(actionlintSource(workflow)).toBe(workflow.replace(`$/${CALLED_WORKFLOW}`, `./${CALLED_WORKFLOW}`));
-});
-
-test('text that is not a YAML mapping stays as written', () => {
-    expect(actionlintSource('uses: [$/unclosed\n')).toBe('uses: [$/unclosed\n');
+test.each([
+    ...CALLED_WORKFLOW_REFERENCES.map(([reference, expected]) => [
+        `on: workflow_dispatch\njobs:\n  caller:\n    uses: ${reference}\n`,
+        `on: workflow_dispatch\njobs:\n  caller:\n    uses: ${expected}\n`,
+    ]),
+    [
+        `on: workflow_dispatch\nenv:\n  WORKFLOW: &workflow $/${CALLED_WORKFLOW}\njobs:\n  caller:\n    uses: *workflow\n`,
+        `on: workflow_dispatch\nenv:\n  WORKFLOW: &workflow ./${CALLED_WORKFLOW}\njobs:\n  caller:\n    uses: *workflow\n`,
+    ],
+    ['uses: [$/unclosed\n', 'uses: [$/unclosed\n'],
+])('actionlint reads references without changing their offsets: %s', async (before, expected) => {
+    await using sandbox = await testdir({
+        'gspot.toml': settingsText(['github-actions']),
+        '.github/workflows/caller.yml': before,
+    });
+    const session = await openSession(sandbox.path);
+    using _pins = mockPinnedExecutables([
+        toolDeclaration(session.manifests.values(), 'actionlint'),
+        toolDeclaration(session.manifests.values(), 'shellcheck'),
+    ]);
+    using run = spyOn(processes, 'run').mockImplementation(async (_command, options) => {
+        const prepared = await readFile(join(options.cwd, '.github/workflows/caller.yml'), 'utf8');
+        expect(prepared).toBe(expected);
+        expect(prepared).toHaveLength(before.length);
+        return processResult();
+    });
+    const [planned] = planRun(session, { stage: 'commit', only: ['github-actions/actionlint'] });
+    const result = await BUILT_IN_CHECKS['github-actions/actionlint'].run(session, planned!);
+    expect(result.status, JSON.stringify(result)).toBe('passed');
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(await readFile(join(sandbox.path, '.github/workflows/caller.yml'), 'utf8')).toBe(before);
 });
 
 test.each([...ACTIONLINT_EXITS])(

@@ -10,7 +10,6 @@ import { openSession } from '#cli/commands/session.ts';
 import { installTools } from '#cli/install/install.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { InstallJson } from '#cli/types/install.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 import { preparePythonLockfile } from '#cli/tools/python/project.ts';
@@ -44,7 +43,7 @@ test.each([...PYTHON_PROJECTS])(
             MISE_TRUSTED_CONFIG_PATHS: repository.path,
         });
         expect(command.code, command.stdout + command.stderr).toBe(0);
-        const steps = (JSON.parse(command.stdout) as InstallJson).steps!;
+        const steps = (JSON.parse(command.stdout) as { steps: string[][] }).steps;
         expect(
             steps.map((step) => (step[0] === 'mise' ? step : ['uv', ...step.slice(1, step.indexOf('--project'))])),
         ).toStrictEqual(PYTHON_INSTALL_STEPS.map((step) => [...step]));

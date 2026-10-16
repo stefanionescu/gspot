@@ -1,14 +1,17 @@
 import { join } from 'node:path';
+import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, writeFile } from 'node:fs/promises';
+import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { buildManifest } from '#tests/setup/manifest.ts';
 import { SELECTOR_FILES } from '#tests/config/eslint/framework.ts';
-import { selectorGroups } from '#cli/generation/eslint/selectors.ts';
 import { createEslint, lintFindings } from '#tests/setup/generate.ts';
+import { SELECTOR_GROUP_CASES } from '#tests/config/eslint/selectors.ts';
+import { fragmentSelectorGroups } from '#cli/generation/eslint/selectors.ts';
 import { ESLINT_OVERRIDES_SETTINGS } from '#tests/config/eslint/overrides.ts';
-import { STORE, RAW_SQL, INJECTED, PROCEDURE } from '#tests/config/eslint/selectors.ts';
 
 test('an ignore of an ESLint rule applies after your rule options', async () => {
     await using directory = await testdir();
@@ -104,35 +107,20 @@ test.each([...LEVELS])(
     },
 );
 
-test('general selectors form one group for every code file, in first-mention order', () => {
-    expect(selectorGroups([STORE, PROCEDURE])).toStrictEqual([{ selectors: [STORE, PROCEDURE] }]);
-});
-
-test('an allowed path set gets its own group without the selector that allows it', () => {
-    const groups = selectorGroups([STORE, { ...RAW_SQL, except: ['db/migrations/**'] }]);
-    expect(groups).toStrictEqual([
-        { files: [['db/migrations/**']], selectors: [STORE] },
-        { ignores: ['db/migrations/**'], selectors: [STORE, RAW_SQL] },
-    ]);
-});
-
-test('a selector with files applies there together with the general ones', () => {
-    const controllers = ['**/*.controller.ts'];
-    const routers = ['**/routers/**/*.ts'];
-    const groups = selectorGroups([
-        STORE,
-        { ...INJECTED, files: controllers },
-        { ...PROCEDURE, files: routers },
-        { ...RAW_SQL, files: controllers },
-    ]);
-    expect(groups).toStrictEqual([
-        { files: [['**/*.controller.ts', '**/routers/**/*.ts']], selectors: [STORE, INJECTED, PROCEDURE, RAW_SQL] },
-        { files: [['**/*.controller.ts']], ignores: routers, selectors: [STORE, INJECTED, RAW_SQL] },
-        { files: [['**/routers/**/*.ts']], ignores: controllers, selectors: [STORE, PROCEDURE] },
-        { ignores: [...controllers, ...routers], selectors: [STORE] },
-    ]);
-});
-
-test('an empty allowed list adds no group', () => {
-    expect(selectorGroups([{ ...RAW_SQL, except: [] }])).toStrictEqual([{ selectors: [RAW_SQL] }]);
+test.each(SELECTOR_GROUP_CASES)('generated selector blocks: $name', async ({ selectors, expected }) => {
+    await using sandbox = await testdir({ 'gspot.toml': settingsText(['javascript'], { level: 'all' }) });
+    const session = await openSession(sandbox.path);
+    const declaration = buildManifest('synthetic', { tables: stringify({ eslint: { selectors } }) });
+    const groups = fragmentSelectorGroups(
+        [{ ...session.scopes[0]!, selected: [{ ...declaration, tools: [] }] }],
+        true,
+        'none',
+    );
+    const selected = new Set<string>(selectors.map((entry) => entry.selector));
+    expect(
+        groups.map(({ scope: _scope, ignoredScopes: _ignoredScopes, ...group }) => ({
+            ...group,
+            selectors: group.selectors.filter((entry) => selected.has(entry.selector)),
+        })),
+    ).toStrictEqual(expected);
 });

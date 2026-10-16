@@ -148,6 +148,28 @@ function stripBunRegistryUrls(content: string, env: Record<string, string>): str
 }
 
 /**
+ * Root lockfile dependencies.
+ *
+ * @param name the tool or setting name.
+ * @param content the lockfile text.
+ *
+ * @returns the dependencies recorded for the root project.
+ */
+function rootLockfileDependencies(name: Exclude<NpmClient['name'], 'yarn'>, content: string): DependencyMap {
+    if (name === 'npm' || name === 'bun') {
+        const root =
+            name === 'npm'
+                ? npmLockfileSchema.parse(JSON.parse(content)).packages['']
+                : bunLockfileSchema.parse(parseJsonc(content)).workspaces[''];
+        if (root?.devDependencies === undefined) return {};
+        return root.devDependencies;
+    }
+    const pinned = pnpmLockfileSchema.parse(parseYaml(content)).importers[PNPM_ROOT_IMPORTER]?.devDependencies;
+    if (pinned === undefined) return {};
+    return Object.fromEntries(Object.entries(pinned).map(([key, value]) => [key, value.specifier]));
+}
+
+/**
  * Whether a lockfile pins every generated dependency.
  * npm, Bun, and pnpm must have no additional root dependencies; Yarn may retain extra entries.
  *
@@ -167,28 +189,6 @@ export function lockfileMatches(name: NpmClient['name'], content: string, depend
     } catch {
         return false;
     }
-}
-
-/**
- * Root lockfile dependencies.
- *
- * @param name the tool or setting name.
- * @param content the lockfile text.
- *
- * @returns the dependencies recorded for the root project.
- */
-export function rootLockfileDependencies(name: Exclude<NpmClient['name'], 'yarn'>, content: string): DependencyMap {
-    if (name === 'npm' || name === 'bun') {
-        const root =
-            name === 'npm'
-                ? npmLockfileSchema.parse(JSON.parse(content)).packages['']
-                : bunLockfileSchema.parse(parseJsonc(content)).workspaces[''];
-        if (root?.devDependencies === undefined) return {};
-        return root.devDependencies;
-    }
-    const pinned = pnpmLockfileSchema.parse(parseYaml(content)).importers[PNPM_ROOT_IMPORTER]?.devDependencies;
-    if (pinned === undefined) return {};
-    return Object.fromEntries(Object.entries(pinned).map(([key, value]) => [key, value.specifier]));
 }
 
 /**

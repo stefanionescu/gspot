@@ -53,7 +53,7 @@ function replaceReference(text: string, reference: Scalar): string {
  * @param text a workflow or action file.
  * @returns the text with each self-repository marker of a reference turned into a local path, at the same offsets.
  */
-export function actionlintSource(text: string): string {
+function actionlintSource(text: string): string {
     const document = parseDocument(text, { keepSourceTokens: true });
     if (document.errors.length > 0 || !isMap(document.contents)) return text;
     let prepared = text;

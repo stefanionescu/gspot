@@ -12,7 +12,7 @@ import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { SWIFT_PACKAGE } from '#tests/config/swift/package.ts';
 import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { rejection, containing, textContaining } from '#tests/setup/matchers.ts';
-import { buildPlan, openBuildCache } from '#cli/checks/language/swift/build-folder.ts';
+import { buildPlan, prepareBuild } from '#cli/checks/language/swift/build-folder.ts';
 import { checkFindings, buildCheckInput, swiftBuildInput, isolateCompilerCache } from '#tests/setup/check-input.ts';
 
 test('a failed Swift build without source diagnostics returns execution exit 2 and recovers', async () => {
@@ -149,7 +149,9 @@ test('a failed Swift source preparation releases its build claim before a later 
     expect(run).not.toHaveBeenCalled();
     expect(await pathExists(join(plan.folder, 'build.lock'))).toBe(false);
     {
-        using next = openBuildCache(plan.folder);
+        await Bun.write(join(sandbox.path, 'Main.swift'), 'let value = 1\n');
+        const prepared = prepareBuild(input, plan.folder);
+        using next = prepared.files;
         expect(next.read('build.lock')).toBeDefined();
     }
     expect(await pathExists(join(plan.folder, 'build.lock'))).toBe(false);

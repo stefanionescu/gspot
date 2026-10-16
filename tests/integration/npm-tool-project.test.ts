@@ -8,7 +8,6 @@ import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { installTools } from '#cli/install/install.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { InstallJson } from '#cli/types/install.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 import { toolProjectLockfile } from '#cli/parsers/tool-project.ts';
@@ -49,7 +48,7 @@ test.each(NPM_CLIENT_ROWS.filter(([, path]) => path === 'package.json'))(
         });
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        expect(JSON.parse(installed.stdout) as InstallJson).toMatchObject({ installed: true });
+        expect(JSON.parse(installed.stdout)).toMatchObject({ installed: true });
         expect(await readFile(lockfilePath, 'utf8')).not.toBe(stale);
         const repaired = await openSession(root);
         expect(findStaleFiles(repaired, emitAll(repaired))).not.toContainEqual({
@@ -90,7 +89,7 @@ test.each(NPM_CLIENT_ROWS.filter(([, path]) => path === 'package.json'))(
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        expect(JSON.parse(installed.stdout) as InstallJson).toMatchObject({ installed: true });
+        expect(JSON.parse(installed.stdout)).toMatchObject({ installed: true });
         expect(repaired.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
         expect(await readFile(lockfilePath, 'utf8')).not.toContain('<<<<<<<');
     },

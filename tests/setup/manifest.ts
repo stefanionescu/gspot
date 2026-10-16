@@ -1,5 +1,7 @@
 // Parses the configuration declarations needed by a test.
-import { parseManifest } from '#cli/configurations/manifests.ts';
+import { parse } from 'smol-toml';
+import { compact } from '#cli/objects.ts';
+import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
 import type { ManifestDeclaration } from '#cli/types/configurations.ts';
 
 /**
@@ -13,8 +15,19 @@ export function buildManifest(
     name: string,
     project: { requires?: string[]; tables?: string; group?: ManifestDeclaration['configuration']['group'] } = {},
 ): ManifestDeclaration {
-    return parseManifest(
-        `[configuration]\ntitle = "${name}"\nrequires = ${JSON.stringify(project.requires ?? [])}\ndescription = "A configuration for the tests, long enough."\n${project.tables ?? ''}`,
-        `configurations/${project.group ?? 'language'}/${name}`,
-    );
+    const declared = manifestSchema.parse({
+        ...parse(project.tables ?? ''),
+        configuration: {
+            name,
+            title: name,
+            group: project.group ?? 'language',
+            requires: project.requires ?? [],
+            description: 'A configuration for the tests, long enough.',
+        },
+    });
+    return {
+        ...declared,
+        checks: declared.checks.map((check) => compact({ ...check, name: `${name}/${check.name}` })),
+        dir: `configurations/${project.group ?? 'language'}/${name}`,
+    };
 }

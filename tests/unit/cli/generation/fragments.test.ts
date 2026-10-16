@@ -1,10 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { typescriptImports } from '#cli/generation/fragments.ts';
+import { FRAGMENT_SCOPE_CASES } from '#tests/config/eslint/fragments.ts';
 import { createEslint, readEslintConfiguration } from '#tests/setup/generate.ts';
-import { FRAGMENT_SCOPE_CASES, IMPORT_FRAGMENT_SOURCE } from '#tests/config/eslint/fragments.ts';
 
 test.each([...FRAGMENT_SCOPE_CASES])('$configuration fragment appears once in each selected scope', async (row) => {
     await using sandbox = await testdir();
@@ -35,14 +36,17 @@ test.each([...FRAGMENT_SCOPE_CASES])('$configuration fragment appears once in ea
     }
 });
 
-test('fragment imports keep comments, side effects, and type and named imports', () => {
-    const parsed = typescriptImports(IMPORT_FRAGMENT_SOURCE);
-    expect(parsed.imports).toStrictEqual([
-        "// Keep this side-effect explanation.\nimport 'native-side-effect'; // Native trailing explanation.",
-        "import type { NativeType } from 'native-types';",
-        "import { type OtherType, nativeValue as renamed } from 'native-names';",
-    ]);
-    expect(parsed.body).toBe(
-        `const text = "import shadow from 'a string';";\n// import shadow from 'a comment';\n[{ files: ['**/*.js'], rules: { native: 'error' } }],\n`,
+test('generated TypeScript fragments keep their imports before their rule blocks', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': settingsText(['javascript', 'typescript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}',
+        'source.ts': 'export const value = 1;\n',
+    });
+    const output = emitAll(await openSession(sandbox.path));
+    const content = output.files.find((file) => file.path.endsWith('/eslint.config.mjs'))!.content;
+    expect(content.match(/import tseslint from 'typescript-eslint';/gu)).toHaveLength(1);
+    expect(content).toContain("import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';");
+    expect(content.indexOf("import tseslint from 'typescript-eslint';")).toBeLessThan(
+        content.indexOf('tseslint.plugin'),
     );
 });

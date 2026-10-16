@@ -96,34 +96,14 @@ const swiftCoverageSchema = z.object({
 } satisfies SchemaShape<{
     data: { files: { filename: string; summary: { lines: { count: number; covered: number } } }[] }[];
 }>);
-/**
- * One finding for each skipped test without a reason argument or unavailable declaration without an explanation.
- * @param input the check input.
- * @returns the findings.
- */
-export async function swiftTestsSkipReasons(input: CheckInput): Promise<Finding[]> {
-    const files = input.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
-    const findings: Finding[] = [];
-    await visitParsedSources({ ...input, files }, (source) => {
-        for (const node of disabledNodes(source.rootNode, source.text.split('\n')))
-            findings.push(
-                findingAt(
-                    input,
-                    { file: source.path, line: node.startPosition.row + 1 },
-                    'disabled',
-                    'Explain why this test is disabled in its reason argument or availability annotation.',
-                ),
-            );
-    });
-    return findings;
-}
+
 /**
  * The targets under their limit.
  * @param report what xccov printed.
  * @param settings the common limit and target overrides of the settings.
  * @returns one line of text for each target under its limit, or missing from the report.
  */
-export function coverageShortfalls(
+function coverageShortfalls(
     report: CoverageReport,
     settings: Pick<TableSettings<'coverage'>, 'lines' | 'target'>,
 ): string[] {
@@ -148,6 +128,28 @@ export function coverageShortfalls(
             ? []
             : [`${limit.name} covers ${String(covered)}% of its lines, under the limit of ${String(limit.lines)}%.`];
     });
+}
+
+/**
+ * One finding for each skipped test without a reason argument or unavailable declaration without an explanation.
+ * @param input the check input.
+ * @returns the findings.
+ */
+export async function swiftTestsSkipReasons(input: CheckInput): Promise<Finding[]> {
+    const files = input.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
+    const findings: Finding[] = [];
+    await visitParsedSources({ ...input, files }, (source) => {
+        for (const node of disabledNodes(source.rootNode, source.text.split('\n')))
+            findings.push(
+                findingAt(
+                    input,
+                    { file: source.path, line: node.startPosition.row + 1 },
+                    'disabled',
+                    'Explain why this test is disabled in its reason argument or availability annotation.',
+                ),
+            );
+    });
+    return findings;
 }
 /**
  * Runs the tests with coverage and compares each named target with its limit. Uses the common line limit and explicit target overrides.

@@ -3,12 +3,13 @@ import { test, spyOn, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
+import { rejection } from '#tests/setup/matchers.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { fakeNpmTool } from '#tests/setup/fake-tool.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
-import { svelteFindings } from '#cli/checks/framework/svelte.ts';
+import { svelteCheck } from '#cli/checks/framework/svelte.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 import { SVELTE_PROJECTS, SVELTE_CHECK_OUTPUT } from '#tests/config/svelte.ts';
 
@@ -71,8 +72,10 @@ test('svelte-check errors and warnings become findings at one-based positions wi
         'apps/web/src/Count.svelte': '<p>Count</p>',
     });
     const session = await openSession(sandbox.path);
+    await fakeNpmTool(sandbox.path, 'svelte-check');
+    using _run = spyOn(processes, 'run').mockResolvedValue(processResult({ code: 1, stdout: SVELTE_CHECK_OUTPUT }));
     const input = buildCheckInput(session, 'svelte/svelte-check');
-    expect(svelteFindings(input, SVELTE_CHECK_OUTPUT)).toStrictEqual([
+    expect(await svelteCheck(input)).toStrictEqual([
         {
             check: 'svelte/svelte-check',
             file: 'src/Count.svelte',
@@ -92,25 +95,33 @@ test('svelte-check errors and warnings become findings at one-based positions wi
             fixable: false,
         },
     ]);
-    expect(
-        svelteFindings(buildCheckInput(session, 'svelte/svelte-check', { scope: 'apps/web' }), SVELTE_CHECK_OUTPUT)[0]
-            ?.file,
-    ).toBe('apps/web/src/Count.svelte');
+    const nested = await svelteCheck(buildCheckInput(session, 'svelte/svelte-check', { scope: 'apps/web' }));
+    expect(nested[0]?.file).toBe('apps/web/src/Count.svelte');
 });
 
 // svelte-check prints Windows paths with backslashes, which a finding never carries.
 test('a Windows file name becomes a forward-slash path', async () => {
     await using sandbox = await testdir({ 'gspot.toml': settingsText(['svelte']) });
     const input = buildCheckInput(await openSession(sandbox.path), 'svelte/svelte-check');
-    expect(
-        svelteFindings(input, SVELTE_CHECK_OUTPUT.replace('src/Count.svelte', String.raw`src\\Count.svelte`))[0]?.file,
-    ).toBe('src/Count.svelte');
+    await fakeNpmTool(sandbox.path, 'svelte-check');
+    using _run = spyOn(processes, 'run').mockResolvedValue(
+        processResult({
+            code: 1,
+            stdout: SVELTE_CHECK_OUTPUT.replace('src/Count.svelte', String.raw`src\\Count.svelte`),
+        }),
+    );
+    const findings = await svelteCheck(input);
+    expect(findings[0]?.file).toBe('src/Count.svelte');
 });
 
 test('a svelte-check failure line is an error, not a clean result', async () => {
     await using sandbox = await testdir({ 'gspot.toml': settingsText(['svelte']) });
     const input = buildCheckInput(await openSession(sandbox.path), 'svelte/svelte-check');
-    expect(() => svelteFindings(input, '1758823456790 FAILURE "Failed to locate tsconfig or jsconfig"')).toThrow(
+    await fakeNpmTool(sandbox.path, 'svelte-check');
+    using _run = spyOn(processes, 'run').mockResolvedValue(
+        processResult({ code: 1, stdout: '1758823456790 FAILURE "Failed to locate tsconfig or jsconfig"' }),
+    );
+    expect(await rejection(svelteCheck(input))).toBe(
         'The svelte-check run failed: Failed to locate tsconfig or jsconfig',
     );
 });

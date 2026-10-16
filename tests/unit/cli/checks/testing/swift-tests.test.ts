@@ -8,10 +8,10 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import * as environment from '#cli/system/environment.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
-import { buildFolder } from '#cli/checks/language/swift/build-folder.ts';
+import { buildPlan } from '#cli/checks/language/swift/build-folder.ts';
+import { parseSwiftCoverage } from '#cli/checks/testing/swift-tests.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { checkFindings, isolateCompilerCache } from '#tests/setup/check-input.ts';
-import { coverageShortfalls, parseSwiftCoverage } from '#cli/checks/testing/swift-tests.ts';
+import { checkFindings, buildCheckInput, isolateCompilerCache } from '#tests/setup/check-input.ts';
 
 import {
     XCTEST_SETTINGS,
@@ -23,46 +23,89 @@ import {
 
 const SHEBANG = `#!${process.execPath}\n`;
 
-test('the coverage check compares each named target with its limit', () => {
-    const report = { targets: [{ name: 'App.app', lineCoverage: 0.617 }] };
-    expect(
-        coverageShortfalls(report, {
-            lines: 0,
-            target: [{ name: 'App', lines: 61, reason: 'Required target coverage.' }],
-        }),
-    ).toStrictEqual([]);
-    expect(
-        coverageShortfalls(report, {
-            lines: 0,
-            target: [{ name: 'App', lines: 62, reason: 'Required target coverage.' }],
-        }),
-    ).toStrictEqual(['App covers 61% of its lines, under the limit of 62%.']);
-    expect(
-        coverageShortfalls(report, {
-            lines: 0,
-            target: [{ name: 'Widget', lines: 10, reason: 'Required target coverage.' }],
-        }),
-    ).toStrictEqual(['The coverage report has no target named Widget.']);
-});
+test.each([
+    {
+        report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
+        lines: 0,
+        target: [{ name: 'App', lines: 61, reason: 'Required target coverage.' }],
+        expected: [],
+    },
+    {
+        report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
+        lines: 0,
+        target: [{ name: 'App', lines: 62, reason: 'Required target coverage.' }],
+        expected: ['App covers 61% of its lines, under the limit of 62%.'],
+    },
+    {
+        report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
+        lines: 0,
+        target: [{ name: 'Widget', lines: 10, reason: 'Required target coverage.' }],
+        expected: ['The coverage report has no target named Widget.'],
+    },
+    {
+        report: {
+            targets: [
+                { name: 'App', lineCoverage: 0.6 },
+                { name: 'Library', lineCoverage: 0.75 },
+            ],
+        },
+        lines: 70,
+        target: [],
+        expected: ['App covers 60% of its lines, under the limit of 70%.'],
+    },
+    {
+        report: {
+            targets: [
+                { name: 'App', lineCoverage: 0.6 },
+                { name: 'Library', lineCoverage: 0.75 },
+            ],
+        },
+        lines: 70,
+        target: [{ name: 'App', lines: 60, reason: 'Required target coverage.' }],
+        expected: [],
+    },
+    {
+        report: {
+            targets: [
+                { name: 'App', lineCoverage: 0.6 },
+                { name: 'Library', lineCoverage: 0.75 },
+            ],
+        },
+        lines: 0,
+        target: [],
+        expected: [],
+    },
+])(
+    'the coverage check applies shared and named target limits: $expected',
+    async ({ report, lines, target, expected }) => {
+        using _system = spyOn(environment, 'currentOperatingSystem').mockReturnValue('macos');
+        await using sandbox = await testdir();
+        await using _cache = await isolateCompilerCache();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': settingsText(['swift-tests', 'xcode'], {
+                tables: `[xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\n[coverage]\nlines = ${String(lines)}\ntarget = ${JSON.stringify(target).replaceAll(':', ' = ')}\n`,
+            }),
+            'ExampleTests.swift': 'import XCTest\n',
+            'Example.xcodeproj/project.pbxproj': '',
+        });
+        await fakeTool(sandbox.path, 'node_modules/.bin/xcodebuild', SHEBANG);
+        await fakeTool(
+            sandbox.path,
+            'node_modules/.bin/xcrun',
+            `${SHEBANG}console.log(${JSON.stringify(JSON.stringify(report))});\n`,
+        );
+        const result = await executeRun(
+            await openSession(sandbox.path),
+            buildRunOptions({ stage: 'push', only: ['swift-tests/coverage'] }),
+        );
+        expect(
+            result.report.checks[0]?.findings.map((finding) => finding.message),
+            JSON.stringify(result.report),
+        ).toStrictEqual([...expected]);
+        expect(result.report.exitCode).toBe(expected.length === 0 ? 0 : 1);
+    },
+);
 
-test('the shared coverage limit applies to every source target without overriding a named limit', () => {
-    const report = {
-        targets: [
-            { name: 'App', lineCoverage: 0.6 },
-            { name: 'Library', lineCoverage: 0.75 },
-        ],
-    };
-    expect(coverageShortfalls(report, { lines: 70, target: [] })).toStrictEqual([
-        'App covers 60% of its lines, under the limit of 70%.',
-    ]);
-    expect(
-        coverageShortfalls(report, {
-            lines: 70,
-            target: [{ name: 'App', lines: 60, reason: 'Required target coverage.' }],
-        }),
-    ).toStrictEqual([]);
-    expect(coverageShortfalls(report, { lines: 0, target: [] })).toStrictEqual([]);
-});
 {
     const XCTEST_EXECUTION_OPTIONS = buildRunOptions({ stage: 'push', only: ['swift-tests/coverage'] });
 
@@ -88,12 +131,15 @@ test('the shared coverage limit applies to every source target without overridin
             expect(outcome.report.checks[0]!.status).toBe(status);
             if (note !== undefined) expect(outcome.report.checks[0]!.note).toContain(note);
             expect(await pathExists(join(sandbox.path, 'viewed.txt'))).toBe(false);
-            const viewed = join(buildFolder(sandbox.path), 'swift/root/coverage/source/viewed.txt');
+            await writeFile(join(sandbox.path, 'gspot.toml'), XCTEST_SETTINGS);
+            const viewed = join(
+                buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift-tests/coverage'), 'coverage').folder,
+                'source/viewed.txt',
+            );
             // The build folder keeps the coverage view after the run produces it.
             expect((await pathExists(viewed)) ? await readFile(viewed, 'utf8') : undefined).toBe(
                 produced ? 'viewed' : undefined,
             );
-            await writeFile(join(sandbox.path, 'gspot.toml'), XCTEST_SETTINGS);
             await writeFile(join(sandbox.path, 'node_modules/.bin/xcodebuild.js'), `${SHEBANG}\n`);
             await writeFile(
                 join(sandbox.path, 'node_modules/.bin/xcrun.js'),
@@ -112,7 +158,6 @@ test('the shared coverage limit applies to every source target without overridin
         await using sandbox = await testdir();
         await using outside = await testdir();
         await using _cache = await isolateCompilerCache();
-        const cache = join(buildFolder(sandbox.path), 'swift/root/coverage');
         await createFileTree(sandbox.path, {
             'gspot.toml': XCTEST_SETTINGS,
             'ExampleTests.swift': 'import XCTest\n',
@@ -128,6 +173,10 @@ test('the shared coverage limit applies to every source target without overridin
             'node_modules/.bin/xcrun',
             `${SHEBANG}console.log(JSON.stringify({targets:[{name:'Example',lineCoverage:1}]}));\n`,
         );
+        const cache = buildPlan(
+            buildCheckInput(await openSession(sandbox.path), 'swift-tests/coverage'),
+            'coverage',
+        ).folder;
         await writeFile(join(outside.path, 'authored.txt'), 'preserved');
         await mkdir(cache, { recursive: true });
         const bundle = join(cache, 'coverage.xcresult');
@@ -176,22 +225,6 @@ test('Swift package coverage measures actual custom target paths and applies eve
             { name: 'API', lineCoverage: 2 / 3 },
         ],
     });
-    expect(coverageShortfalls(report, { lines: 70, target: [] })).toStrictEqual([
-        'Core covers 50% of its lines, under the limit of 70%.',
-        'API covers 66% of its lines, under the limit of 70%.',
-    ]);
-    expect(
-        coverageShortfalls(report, {
-            lines: 70,
-            target: [{ name: 'API', lines: 66, reason: 'Required target coverage.' }],
-        }),
-    ).toStrictEqual(['Core covers 50% of its lines, under the limit of 70%.']);
-    expect(
-        coverageShortfalls(report, {
-            lines: 50,
-            target: [{ name: 'API', lines: 66, reason: 'Required target coverage.' }],
-        }),
-    ).toStrictEqual([]);
     const omitted = JSON.stringify({
         data: [{ files: files.filter(({ filename }) => !filename.endsWith('API.swift')) }],
     });

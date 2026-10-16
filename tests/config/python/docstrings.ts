@@ -1,5 +1,5 @@
 /** The setting applies only after native pydoclint style and the scoped Ruff convention. */
-export const DOCSTRING_STYLES = [
+const DOCSTRING_STYLES = [
     {
         name: 'uses the Google setting without project configuration',
         project: '',
@@ -35,7 +35,7 @@ skip-checking-raises = true
 ] as const;
 
 /** Unconfigured Google and NumPy docstrings must use the style of each source file. */
-export const DOCSTRING_MODULES = {
+const DOCSTRING_MODULES = {
     'google.py': `def double(value: int) -> int:
     """Double a number.
 
@@ -67,7 +67,7 @@ def double(value: int) -> int:
 `,
 } as const;
 
-export const GOOGLE_DOCSTRING_MODULE = `def double(value: int) -> int:
+const GOOGLE_DOCSTRING_MODULE = `def double(value: int) -> int:
     """Double it.
 
     Args:
@@ -76,7 +76,7 @@ export const GOOGLE_DOCSTRING_MODULE = `def double(value: int) -> int:
     return value * 2
 `;
 
-export const NUMPY_DOCSTRING_MODULE = `def double(value: int) -> int:
+const NUMPY_DOCSTRING_MODULE = `def double(value: int) -> int:
     """Double it.
 
     Parameters
@@ -87,7 +87,7 @@ export const NUMPY_DOCSTRING_MODULE = `def double(value: int) -> int:
     return value * 2
 `;
 
-export const DEFAULT_PYDOCLINT_COMMAND = [
+const DEFAULT_PYDOCLINT_COMMAND = [
     'pydoclint',
     '--allow-init-docstring',
     'true',
@@ -100,3 +100,26 @@ export const DEFAULT_PYDOCLINT_COMMAND = [
     '--check-yield-types',
     'false',
 ] as const;
+
+const PYDOCLINT_PROJECT_CASES = [
+    ...DOCSTRING_STYLES.map((row) => ({ ...row, command: DEFAULT_PYDOCLINT_COMMAND })),
+    ...['', '[tool.ruff]\nline-length = 88\n', '[tool.ruff.lint.pydocstyle]\nconvention = "pep257"\n'].map(
+        (project) => ({
+            name: 'keeps the default style without a supported convention',
+            project,
+            setting: undefined,
+            expected: 'numpy',
+            command: DEFAULT_PYDOCLINT_COMMAND,
+        }),
+    ),
+    {
+        name: 'preserves explicit signature type options',
+        project:
+            '[tool.pydoclint]\narg-type-hints-in-docstring = true\ncheck_return_types = false\ncheck-yield-types = true\n',
+        setting: undefined,
+        expected: 'numpy',
+        command: ['pydoclint', '--allow-init-docstring', 'true', '--quiet', '{files}'],
+    },
+];
+
+export { DOCSTRING_MODULES, NUMPY_DOCSTRING_MODULE, GOOGLE_DOCSTRING_MODULE, PYDOCLINT_PROJECT_CASES };

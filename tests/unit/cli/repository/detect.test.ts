@@ -6,12 +6,13 @@ import { unlink, writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { readRepository } from '#cli/repository/read.ts';
+import { buildManifest } from '#tests/setup/manifest.ts';
 import { createReadCache } from '#cli/system/file-reads.ts';
 import { runtimeDetectionRows } from '#tests/setup/sandbox.ts';
 import { buildTrackedFile } from '#tests/setup/tracked-file.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
-import { parseManifest, configurationManifests } from '#cli/configurations/manifests.ts';
 
 import {
     SWIFT_TEST_CASES,
@@ -107,10 +108,13 @@ test.each(runtimeDetectionRows())('$name decides runtime detection within its pr
         reads: createReadCache(sandbox.path),
     });
     const packageManifests = await readDependencyFiles(sandbox.path, repository.files);
-    const manifest = parseManifest(
-        `[configuration]\ntitle = "Runtime"\ndescription = "Detects the runtime declared by this project."\n[detect]\nruntimes = ["${entry.runtime}"]\n`,
-        'configurations/general/runtime',
-    );
+    const manifest = buildManifest('runtime', {
+        group: 'general',
+        tables: `[configuration]\ntitle = "Runtime"\ndescription = "Detects the runtime declared by this project."\n[detect]\nruntimes = ["${entry.runtime}"]\n`.replace(
+            /^\s*\[configuration\][\s\S]*?(?=\n\[|$)/u,
+            '',
+        ),
+    });
     const detected = detectConfigurations(
         sandbox.path,
         repository.files,
@@ -199,10 +203,13 @@ test('content detection skips a deleted file and refuses an invalid pattern', as
         ),
     ).toBe(false);
     expect(() =>
-        parseManifest(
-            '[configuration]\ntitle = "Content"\ndescription = "Detects declared content."\n[detect.content]\n"prisma/schema.prisma" = "["\n',
-            'configurations/database/content',
-        ),
+        buildManifest('content', {
+            group: 'database',
+            tables: '[configuration]\ntitle = "Content"\ndescription = "Detects declared content."\n[detect.content]\n"prisma/schema.prisma" = "["\n'.replace(
+                /^\s*\[configuration\][\s\S]*?(?=\n\[|$)/u,
+                '',
+            ),
+        }),
     ).toThrow('valid Unicode regular expression');
 });
 

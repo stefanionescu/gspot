@@ -9,7 +9,7 @@ import { runCheckSample } from '#tests/setup/fixes.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandbox.ts';
-import { checkedFindings } from '#cli/execution/command/output.ts';
+import { commandOutcome } from '#cli/execution/command/output.ts';
 import { XCODE_CASES, XCODE_SANDBOX } from '#tests/config/xcode.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/operating-systems.ts';
 
@@ -43,19 +43,19 @@ test.skipIf(!hasToolBuild('plutil'))(
                 const mixed = await runCommand(['plutil', '-lint', 'bad.plist', path], { cwd: sandbox.path });
                 expect(mixed.code).toBe(1);
                 expect(mixed.stdout + mixed.stderr).toContain('Encountered unexpected EOF');
-                expect(() => checkedFindings(planned!, mixed, paths)).toThrow(reason);
+                expect(commandOutcome(planned!, mixed, paths).note).toContain(reason);
             }
         } finally {
             await chmod(join(sandbox.path, 'private.plist'), 0o600);
         }
         const failed = await runCommand(['plutil', '-lint', 'bad.plist'], { cwd: sandbox.path });
         expect(failed.code).toBe(1);
-        expect(checkedFindings(planned!, failed, paths)).toContainEqual(containing({ file: 'bad.plist' }));
+        expect(commandOutcome(planned!, failed, paths).findings).toContainEqual(containing({ file: 'bad.plist' }));
         await Bun.write(join(sandbox.path, 'bad.plist'), '<plist><dict/></plist>\n');
         const corrected = await runCommand(['plutil', '-lint', 'bad.plist', 'private.plist'], {
             cwd: sandbox.path,
         });
         expect(corrected.code).toBe(0);
-        expect(checkedFindings(planned!, corrected, paths)).toStrictEqual([]);
+        expect(commandOutcome(planned!, corrected, paths).findings).toStrictEqual([]);
     },
 );

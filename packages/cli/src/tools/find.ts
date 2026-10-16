@@ -263,7 +263,7 @@ function inspectExecutable(
  *
  * @returns the installed executable directories selected by mise.
  */
-export function readMiseBinPaths(
+function readMiseBinPaths(
     root: string,
     toolNames: string[],
     timeoutSeconds: number,
@@ -293,7 +293,7 @@ export function readMiseBinPaths(
  *
  * @returns the actionable installation note.
  */
-export function unavailableNote(tool: ToolDeclaration, inspection: ToolInspection): string {
+function unavailableNote(tool: ToolDeclaration, inspection: ToolInspection): string {
     const hint = inspection.hint ?? installHint(tool);
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
     return inspection.state === 'outdated'
@@ -310,11 +310,7 @@ export function unavailableNote(tool: ToolDeclaration, inspection: ToolInspectio
  *
  * @returns the paths that exist.
  */
-export function locateCandidates(
-    root: string,
-    name: string,
-    options: LocateOptions & { timeoutSeconds: number },
-): string[] {
+function locateCandidates(root: string, name: string, options: LocateOptions & { timeoutSeconds: number }): string[] {
     const found = locateRepositoryCandidates(root, name, options);
     if (isAbsolute(name) || options.toolProjectKind !== undefined) return found;
     const programs = (options.miseBinPaths ?? [])
@@ -335,7 +331,7 @@ export function locateCandidates(
  *
  * @returns the tool path, version, and availability.
  */
-export function inspectTool(context: ToolSearch, tool: ToolDeclaration): ToolInspection {
+function inspectTool(context: ToolSearch, tool: ToolDeclaration): ToolInspection {
     const { root, inspections } = context;
     const cwd = context.cwd ?? root;
     const key = JSON.stringify([root, cwd, tool]);
@@ -363,7 +359,7 @@ export function inspectTool(context: ToolSearch, tool: ToolDeclaration): ToolIns
  *
  * @returns whether inspection found a usable executable.
  */
-export function isToolAvailable(inspection: ToolInspection): inspection is AvailableToolInspection {
+function isToolAvailable(inspection: ToolInspection): inspection is AvailableToolInspection {
     return new Set<string>(AVAILABLE_TOOL_STATES).has(inspection.state) && inspection.path !== undefined;
 }
 
@@ -375,9 +371,11 @@ export function isToolAvailable(inspection: ToolInspection): inspection is Avail
  *
  * @returns the executable path or its unavailable status and diagnostic.
  */
-export function toolAvailability(tool: ToolDeclaration, inspection: ToolInspection): ToolAvailability {
+function toolAvailability(tool: ToolDeclaration, inspection: ToolInspection): ToolAvailability {
     if (isToolAvailable(inspection)) return { path: inspection.path };
     if (inspection.state === 'error')
         return { status: 'error', note: inspection.note ?? `${tool.name} version inspection failed.` };
     return { status: 'missing', note: unavailableNote(tool, inspection) };
 }
+
+export { inspectTool, unavailableNote, isToolAvailable, readMiseBinPaths, locateCandidates, toolAvailability };

@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/errors.ts';
 import { writeFile } from 'node:fs/promises';
 import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -12,7 +11,7 @@ import { TYPO, TYPO_REPORT } from '#tests/config/spelling.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { type CheckDeclaration } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { hasToolError, checkedFindings, toolOutputDetail } from '#cli/execution/command/output.ts';
+import { hasToolError, commandOutcome, toolOutputDetail } from '#cli/execution/command/output.ts';
 
 import {
     REAL_PATH,
@@ -90,15 +89,17 @@ import {
             tool: { name: 'tool', installers: {}, kind: 'program' as const },
         };
         const paths = { cwd: sandbox.path, root: sandbox.path };
-        expect(() => checkedFindings(planned, { ...FAILED_RUN, stdout: FALSE_PATH }, paths)).toThrow(
+        expect(commandOutcome(planned, { ...FAILED_RUN, stdout: FALSE_PATH }, paths).note).toContain(
             'tool broke: exit 1',
         );
-        expect(() => checkedFindings(planned, FAILED_RUN, paths)).toThrow('tool broke: exit 1');
-        expect(checkedFindings(planned, { ...FAILED_RUN, stdout: FALSE_PATH + REAL_PATH }, paths)).toStrictEqual([
+        expect(commandOutcome(planned, FAILED_RUN, paths).note).toContain('tool broke: exit 1');
+        expect(
+            commandOutcome(planned, { ...FAILED_RUN, stdout: FALSE_PATH + REAL_PATH }, paths).findings,
+        ).toStrictEqual([
             { check: LOCATED_CHECK.name, file: '2026-09-19T02', message: 'FATAL', help: '', fixable: false },
             { check: LOCATED_CHECK.name, file: 'source.txt', message: 'located defect', help: '', fixable: false },
         ]);
-        expect(checkedFindings(planned, { ...FAILED_RUN, code: 0 }, paths)).toStrictEqual([]);
+        expect(commandOutcome(planned, { ...FAILED_RUN, code: 0 }, paths).findings).toStrictEqual([]);
         expect(await Bun.file(join(sandbox.path, 'source.txt')).text()).toBe('source');
     });
 
@@ -111,7 +112,9 @@ import {
                 check: { ...check, command: [...check.command] },
                 manifest: configurationManifests().get('files')!,
             };
-            expect(checkedFindings(planned, FAILED_RUN, { cwd: sandbox.path, root: sandbox.path })).toStrictEqual([]);
+            expect(
+                commandOutcome(planned, FAILED_RUN, { cwd: sandbox.path, root: sandbox.path }).findings,
+            ).toStrictEqual([]);
         },
     );
 
@@ -126,21 +129,22 @@ import {
         const planned = plans[0]!;
         const stdout = JSON.stringify(TYPO_REPORT);
         const result = { stdout, stderr: '', code: 2, missing: false, duration: 1 };
-        expect(checkedFindings(planned, result, { cwd: sandbox.path, root: sandbox.path })).toMatchObject([
+        expect(commandOutcome(planned, result, { cwd: sandbox.path, root: sandbox.path }).findings).toMatchObject([
             { file: 'sample.txt' },
         ]);
-        expect(() =>
-            checkedFindings(
+        expect(
+            commandOutcome(
                 planned,
                 { ...result, code: 78, stderr: 'Invalid native configuration.' },
                 { cwd: sandbox.path, root: sandbox.path },
-            ),
-        ).toThrow(GspotError);
-        expect(() =>
-            checkedFindings(planned, { ...result, stdout: '' }, { cwd: sandbox.path, root: sandbox.path }),
-        ).toThrow(GspotError);
+            ).note,
+        ).toBeDefined();
         expect(
-            checkedFindings(planned, { ...result, stdout: '', code: 0 }, { cwd: sandbox.path, root: sandbox.path }),
+            commandOutcome(planned, { ...result, stdout: '' }, { cwd: sandbox.path, root: sandbox.path }).note,
+        ).toBeDefined();
+        expect(
+            commandOutcome(planned, { ...result, stdout: '', code: 0 }, { cwd: sandbox.path, root: sandbox.path })
+                .findings,
         ).toStrictEqual([]);
     });
 
@@ -162,23 +166,23 @@ import {
             },
         ]);
         const result = { stdout, stderr: '', code: 1, missing: false, duration: 1 };
-        expect(checkedFindings(planned, result, { cwd: sandbox.path, root: sandbox.path })).toMatchObject([
+        expect(commandOutcome(planned, result, { cwd: sandbox.path, root: sandbox.path }).findings).toMatchObject([
             { file: path, rule: 'no-unused-vars', line: 1, column: 7 },
         ]);
-        expect(() =>
-            checkedFindings(
+        expect(
+            commandOutcome(
                 planned,
                 { ...result, code: 2, stderr: 'ConfigError: invalid configuration' },
                 { cwd: sandbox.path, root: sandbox.path },
-            ),
-        ).toThrow(GspotError);
-        expect(() =>
-            checkedFindings(
+            ).note,
+        ).toBeDefined();
+        expect(
+            commandOutcome(
                 planned,
                 { ...result, stdout: '', code: 2, stderr: 'Oops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin' },
                 { cwd: sandbox.path, root: sandbox.path },
-            ),
-        ).toThrow('ERR_MODULE_NOT_FOUND: plugin');
+            ).note,
+        ).toContain('ERR_MODULE_NOT_FOUND: plugin');
     });
 }
 {
@@ -273,12 +277,14 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
         const paths = { root: sandbox.path, cwd: sandbox.path };
         const expected = [{ check: 'notes/regex', file: 'notes/reported.txt', line: 1, message: 'A defect.' }];
         expect(planned.manifest).toBeUndefined();
-        expect(() => checkedFindings(planned, result, paths)).toThrow(GspotError);
-        expect(() => checkedFindings(configured, result, paths)).toThrow(GspotError);
+        expect(commandOutcome(planned, result, paths).note).toBeDefined();
+        expect(commandOutcome(configured, result, paths).note).toBeDefined();
         await Bun.write(join(sandbox.path, 'notes/reported.txt'), source);
-        expect(checkedFindings(planned, result, paths)).toMatchObject(expected);
-        expect(checkedFindings(configured, result, paths)).toMatchObject(expected);
-        expect(checkedFindings(planned, result, paths)).toStrictEqual(checkedFindings(configured, result, paths));
+        expect(commandOutcome(planned, result, paths).findings).toMatchObject(expected);
+        expect(commandOutcome(configured, result, paths).findings).toMatchObject(expected);
+        expect(commandOutcome(planned, result, paths).findings).toStrictEqual(
+            commandOutcome(configured, result, paths).findings,
+        );
         expect(await Bun.file(join(sandbox.path, 'notes/selected.txt')).text()).toBe(source);
         expect(await Bun.file(join(sandbox.path, 'notes/reported.txt')).text()).toBe(source);
     });

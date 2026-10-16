@@ -8,34 +8,42 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { PYPROJECT } from '#tests/config/python/project.ts';
+import { pydoclint } from '#cli/checks/language/python/pydoclint.ts';
 import { virtualEnvironmentExecutable } from '#cli/system/executables.ts';
-import { pydoclint, docstringConfiguration } from '#cli/checks/language/python/pydoclint.ts';
 
 import {
-    DOCSTRING_STYLES,
     NUMPY_DOCSTRING_MODULE,
+    PYDOCLINT_PROJECT_CASES,
     GOOGLE_DOCSTRING_MODULE,
-    DEFAULT_PYDOCLINT_COMMAND,
 } from '#tests/config/python/docstrings.ts';
 
-test.each([...DOCSTRING_STYLES])('the docstring convention $name', ({ project, setting, expected }) => {
-    expect(docstringConfiguration(project, setting).style).toBe(expected);
-});
-
-test.each(['', '[tool.ruff]\nline-length = 88\n', '[tool.ruff.lint.pydocstyle]\nconvention = "pep257"\n'])(
-    "no Ruff docstring convention, or an unsupported one, leaves pydoclint's default style: %j",
-    (text) => {
-        expect(docstringConfiguration(text).style).toBeUndefined();
-    },
-);
-
-test('pydoclint turns off repeated signature types only when the project has not set those options', () => {
-    expect(docstringConfiguration('').command).toStrictEqual([...DEFAULT_PYDOCLINT_COMMAND]);
-    expect(
-        docstringConfiguration(
-            '[tool.pydoclint]\narg-type-hints-in-docstring = true\ncheck_return_types = false\ncheck-yield-types = true\n',
-        ).command,
-    ).toStrictEqual(['pydoclint', '--allow-init-docstring', 'true', '--quiet', '{files}']);
+test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting, expected, command }) => {
+    await using sandbox = await testdir();
+    const executable = virtualEnvironmentExecutable('.gspot/.venv', 'pydoclint');
+    await createFileTree(sandbox.path, {
+        'gspot.toml': settingsText(['python'], {
+            tables: setting === undefined ? '' : `[tools.ruff]\ndocstring_convention = "${setting}"\n`,
+        }),
+        'pyproject.toml': project,
+        'source.py': 'value = 1\n',
+        [executable]: '',
+    });
+    await chmod(join(sandbox.path, executable), 0o755);
+    const session = await openSession(sandbox.path);
+    const [planned] = planRun(session, { stage: 'all', only: ['python/pydoclint'] });
+    using _version = spyOn(processes, 'runBlocking').mockReturnValue(
+        processResult({
+            stdout: `pydoclint, version ${session.manifests.get('python')!.tools.find((tool) => tool.name === 'pydoclint')!.version!}\n`,
+        }),
+    );
+    using run = spyOn(processes, 'run').mockResolvedValue(processResult());
+    const result = await pydoclint(session, planned!);
+    expect(result.status).toBe('passed');
+    expect(run.mock.calls[0]?.[0].slice(1)).toStrictEqual([
+        ...command.slice(1).map((part) => (part === '{files}' ? 'source.py' : part)),
+        '--style',
+        expected,
+    ]);
 });
 
 test('pydoclint keeps earlier style findings when a later style batch fails', async () => {

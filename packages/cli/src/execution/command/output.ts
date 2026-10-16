@@ -125,6 +125,23 @@ function isToolBroken(check: CheckDeclaration, result: SpawnResult, parsed: Find
 }
 
 /**
+ * Parse findings while rejecting crashes and withholding secret-scanner diagnostics.
+ *
+ * @param planned the selected check.
+ * @param result captured output.
+ * @param paths the working directory and repository root.
+ *
+ * @returns structured findings.
+ */
+function checkedFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): Finding[] {
+    const { check } = planned;
+    const broken = hasToolError(check, planned.tool, result);
+    const parsed = parsedFindings(check, result, paths, broken);
+    if (broken || isToolBroken(check, result, parsed, paths)) outputFailure(planned, result);
+    return parsed;
+}
+
+/**
  * Collect the status and findings.
  *
  * @param base the initial result.
@@ -162,7 +179,7 @@ export function finishResult(
  *
  * @returns findings or a refusal note.
  */
-export function commandOutcome(planned: PlannedCheck, result: SpawnResult, paths: OutputPaths): ParsedFindings {
+export function commandOutcome(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): ParsedFindings {
     try {
         return { findings: checkedFindings(planned, result, paths) };
     } catch (error) {
@@ -195,23 +212,6 @@ export function recordInvocation(
     if (scope.scope.path !== '' && state.cwd !== state.root) prefixScope(parsed, scope.scope.path);
     state.findings.push(...parsed);
     markFailure(check, tool, result, parsed, state);
-}
-
-/**
- * Parse findings while rejecting crashes and withholding secret-scanner diagnostics.
- *
- * @param planned the selected check.
- * @param result captured output.
- * @param paths the working directory and repository root.
- *
- * @returns structured findings.
- */
-export function checkedFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): Finding[] {
-    const { check } = planned;
-    const broken = hasToolError(check, planned.tool, result);
-    const parsed = parsedFindings(check, result, paths, broken);
-    if (broken || isToolBroken(check, result, parsed, paths)) outputFailure(planned, result);
-    return parsed;
 }
 
 /**

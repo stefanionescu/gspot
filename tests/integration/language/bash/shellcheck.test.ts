@@ -12,7 +12,7 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { type RunReport } from '#cli/types/execution/check.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandbox.ts';
-import { checkedFindings } from '#cli/execution/command/output.ts';
+import { commandOutcome } from '#cli/execution/command/output.ts';
 import { BASH_SANDBOX, DIALECT_FIXES, DIALECT_SOURCES, SHELLCHECK_CASES } from '#tests/config/bash/tools.ts';
 
 test('ShellCheck reports dialect findings by shebang and an unchecked cd, and changes no file', async () => {
@@ -80,16 +80,16 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     const broken = runCommandBlocking([...command, 'missing.sh'], { cwd: sandbox.path });
     expect(broken.code, broken.stderr).toBe(2);
     expect(broken.stdout).toContain('SC2086');
-    expect(() => checkedFindings(planned, broken, paths)).toThrow('missing.sh');
+    expect(commandOutcome(planned, broken, paths).note).toContain('missing.sh');
     const failed = runCommandBlocking(command, { cwd: sandbox.path });
     expect(failed.code).toBe(1);
-    expect(checkedFindings(planned, failed, paths)).toContainEqual(
+    expect(commandOutcome(planned, failed, paths).findings).toContainEqual(
         containing({ file: 'sample.sh', line: 2, rule: 'SC2086' }),
     );
     await Bun.write(join(sandbox.path, 'sample.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "${1:-}"\n');
     const corrected = runCommandBlocking(command, { cwd: sandbox.path });
     expect(corrected.code).toBe(0);
-    expect(checkedFindings(planned, corrected, paths)).toStrictEqual([]);
+    expect(commandOutcome(planned, corrected, paths).findings).toStrictEqual([]);
 });
 
 const installedSandbox = shareInstalledSandbox(BASH_SANDBOX);

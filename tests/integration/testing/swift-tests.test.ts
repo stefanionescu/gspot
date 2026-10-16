@@ -9,9 +9,10 @@ import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { TEST_TARGET_PBXPROJ } from '#tests/config/xcode.ts';
+import { buildCheckInput } from '#tests/setup/check-input.ts';
 import { type RunReport } from '#cli/types/execution/check.ts';
 import { rm, stat, chmod, unlink, readFile } from 'node:fs/promises';
-import { buildFolder } from '#cli/checks/language/swift/build-folder.ts';
+import { buildPlan } from '#cli/checks/language/swift/build-folder.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/operating-systems.ts';
 import { containing, containingAll, textContaining } from '#tests/setup/matchers.ts';
 
@@ -75,7 +76,10 @@ lines = 100
                 TEST_TARGET_PBXPROJ,
             );
         } finally {
-            await rm(buildFolder(sandbox.path), { recursive: true, force: true });
+            await rm(
+                buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift-tests/coverage'), 'coverage').folder,
+                { recursive: true, force: true },
+            );
         }
     },
 );

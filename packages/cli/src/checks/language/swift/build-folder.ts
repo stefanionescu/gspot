@@ -71,6 +71,33 @@ function pruneSources(folder: string, files: SafeFolder, wantedFiles: Map<string
 }
 
 /**
+ * The private build cache for the repository's real path.
+ * @param root the repository root.
+ * @returns the cache folder for this repository.
+ */
+function buildFolder(root: string): string {
+    const identity = contentDigest(realpathSync(root));
+    return join(cacheDirectory(), identity);
+}
+
+/**
+ * Prepare and claim one build folder without following existing output links.
+ * @param folder the build folder.
+ * @returns the locked root, which the caller disposes.
+ */
+function openBuildCache(folder: string): SafeFolder {
+    const home = cacheDirectory();
+    mkdirSync(home, { recursive: true, mode: PRIVATE_DIRECTORY });
+    using parentFiles = openSafeFolder(home);
+    parentFiles.mkdir(toPosix(relative(home, folder)), PRIVATE_DIRECTORY);
+    using resources = new DisposableStack();
+    const files = resources.use(openSafeFolder(folder, 'system'));
+    files.claim(BUILD_LOCK);
+    resources.move();
+    return files;
+}
+
+/**
  * Locate a separate build folder for one project and tool.
  * @param input the repository root and project scope.
  * @param purpose the tool whose outputs stay separate.
@@ -127,33 +154,6 @@ export function buildPlan(
         CODE_SIGNING_OFF,
     ];
     return { folder, log, argv };
-}
-
-/**
- * The private build cache for the repository's real path.
- * @param root the repository root.
- * @returns the cache folder for this repository.
- */
-export function buildFolder(root: string): string {
-    const identity = contentDigest(realpathSync(root));
-    return join(cacheDirectory(), identity);
-}
-
-/**
- * Prepare and claim one build folder without following existing output links.
- * @param folder the build folder.
- * @returns the locked root, which the caller disposes.
- */
-export function openBuildCache(folder: string): SafeFolder {
-    const home = cacheDirectory();
-    mkdirSync(home, { recursive: true, mode: PRIVATE_DIRECTORY });
-    using parentFiles = openSafeFolder(home);
-    parentFiles.mkdir(toPosix(relative(home, folder)), PRIVATE_DIRECTORY);
-    using resources = new DisposableStack();
-    const files = resources.use(openSafeFolder(folder, 'system'));
-    files.claim(BUILD_LOCK);
-    resources.move();
-    return files;
 }
 
 /**

@@ -24,13 +24,6 @@ export type ValeInstallation = {
     cancelSignal?: AbortSignal | undefined;
 };
 
-export type InstallJson = {
-    installed?: boolean;
-    steps?: readonly (readonly string[])[];
-    error?: 'installation';
-    message?: string;
-};
-
 /** Inputs and attempted commands for writing selected package-manager projects. */
 export type ToolProjectInputs = {
     session: Session;

@@ -108,7 +108,7 @@ const denoLintReportSchema = z.object({
  * @param input the check input.
  * @returns the folder paths, repository-relative.
  */
-export function functionFolders(input: CheckInput): string[] {
+function functionFolders(input: CheckInput): string[] {
     const base = input.selection.view.options('supabase').functions_folder;
     const folders = input.files
         .map((file) => file.path)

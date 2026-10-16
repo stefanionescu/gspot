@@ -15,8 +15,8 @@ import { useOperatingSystem } from '#tests/setup/operating-systems.ts';
 import { configurationTableSchemas } from '#cli/settings/schema/tables.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { buildCheckInput, isolateCompilerCache } from '#tests/setup/check-input.ts';
-import { buildPlan, buildFolder, openBuildCache } from '#cli/checks/language/swift/build-folder.ts';
 import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/swift/projects.ts';
+import { buildPlan, prepareBuild, scopeBuildFolder } from '#cli/checks/language/swift/build-folder.ts';
 
 test.each(['default', 'platform=macOS'])(
     'Xcode build plans keep destination %s for every build purpose',
@@ -81,7 +81,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
         expect(executed.report.checks).toContainEqual(
             containing({ check, status: 'skipped', findings: [], note: textContaining('xcode.project') }),
         );
-        expect(await pathExists(buildFolder(sandbox.path))).toBe(false);
+        expect(await pathExists(scopeBuildFolder(input, purpose))).toBe(false);
         await createFileTree(sandbox.path, {
             'Package.swift': '// swift-tools-version: 6.0\nimport PackageDescription\n',
         });
@@ -97,17 +97,21 @@ test('build cache rejects external output links and concurrent writers', async (
     await using sandbox = await testdir();
     await using outside = await testdir();
     await using _cache = await isolateCompilerCache();
-    const folder = join(buildFolder(sandbox.path), 'swift', 'compile');
+    await createFileTree(sandbox.path, { 'gspot.toml': settingsText(['swift']), 'Package.swift': SWIFT_PACKAGE });
+    const input = buildCheckInput(await openSession(sandbox.path), 'swift/build');
+    const folder = buildPlan(input).folder;
     {
-        using owner = openBuildCache(folder);
+        const prepared = prepareBuild(input, folder);
+        using owner = prepared.files;
         expect(owner.read('build.lock')).toBeDefined();
-        expect(() => openBuildCache(folder)).toThrow('Another gspot command');
+        expect(() => prepareBuild(input, folder)).toThrow('Another gspot command');
     }
     const authored = join(outside.path, 'authored');
     await writeFile(authored, 'preserved');
     await symlink(outside.path, join(folder, 'package'));
     {
-        using owner = openBuildCache(folder);
+        const prepared = prepareBuild(input, folder);
+        using owner = prepared.files;
         expect(() => owner.read('package/authored')).toThrow();
         expect(() => {
             owner.write('package/authored', { bytes: Buffer.from('changed'), mode: 0o600 }, undefined);
@@ -118,7 +122,8 @@ test('build cache rejects external output links and concurrent writers', async (
     await rm(join(folder, 'package'));
     await mkdir(join(folder, 'package'));
     {
-        using corrected = openBuildCache(folder);
+        const prepared = prepareBuild(input, folder);
+        using corrected = prepared.files;
         expect(corrected.read('build.lock')).toBeDefined();
     }
     expect(await pathExists(join(folder, 'build.lock'))).toBe(false);
@@ -128,8 +133,12 @@ test('build state lives in the gspot cache, stable for one repository and distin
     await using first = await testdir();
     await using second = await testdir();
     await using _cache = await isolateCompilerCache();
-    const folder = buildFolder(first.path);
-    expect(folder).toBe(buildFolder(first.path));
-    expect(folder).not.toBe(buildFolder(second.path));
+    for (const root of [first.path, second.path])
+        await createFileTree(root, { 'gspot.toml': settingsText(['swift']), 'Package.swift': SWIFT_PACKAGE });
+    const firstInput = buildCheckInput(await openSession(first.path), 'swift/build');
+    const secondInput = buildCheckInput(await openSession(second.path), 'swift/build');
+    const folder = buildPlan(firstInput).folder;
+    expect(folder).toBe(buildPlan(firstInput).folder);
+    expect(folder).not.toBe(buildPlan(secondInput).folder);
     expect(folder.startsWith(cacheDirectory() + sep)).toBe(true);
 });

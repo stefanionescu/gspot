@@ -43,7 +43,7 @@ const diagnosticSchema = z.object({
  * @param stdout what svelte-check printed.
  * @returns one finding for each error and warning.
  */
-export function svelteFindings(input: CheckInput, stdout: string): Finding[] {
+function svelteFindings(input: CheckInput, stdout: string): Finding[] {
     const lines = stdout.split('\n');
     const failure = lines
         .map((line) => FAILURE_LINE.exec(line)?.groups?.['message'])

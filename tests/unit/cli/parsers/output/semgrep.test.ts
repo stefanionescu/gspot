@@ -1,8 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/errors.ts';
 import { FAILED_RUN } from '#tests/config/execution.ts';
-import { checkedFindings } from '#cli/execution/command/output.ts';
+import { commandOutcome } from '#cli/execution/command/output.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR } from '#tests/config/semgrep.ts';
 
@@ -12,11 +11,11 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
     const check = manifest.checks.find((check) => check.name === 'security/semgrep')!;
     const stdout = JSON.stringify({ results: [SEMGREP_MATCH], errors: [SEMGREP_PARSE_ERROR] });
     expect(
-        checkedFindings(
+        commandOutcome(
             { check, manifest },
             { ...FAILED_RUN, code: 3, stdout },
             { cwd: sandbox.path, root: sandbox.path },
-        ),
+        ).findings,
     ).toStrictEqual([
         {
             check: 'security/semgrep',
@@ -55,18 +54,18 @@ test('Semgrep scanner, rule, unpositioned and malformed reports are errors', asy
         JSON.stringify({ results: [{ ...SEMGREP_MATCH, start: { line: 0, col: 1 } }], errors: [] }),
     ];
     for (const stdout of outputs)
-        expect(() =>
-            checkedFindings(
+        expect(
+            commandOutcome(
                 { check, manifest },
                 { ...FAILED_RUN, code: 3, stdout },
                 { cwd: sandbox.path, root: sandbox.path },
-            ),
-        ).toThrow(GspotError);
+            ).note,
+        ).toBeDefined();
     expect(
-        checkedFindings(
+        commandOutcome(
             { check, manifest },
             { ...FAILED_RUN, code: 0, stdout: '{"results":[],"errors":[]}' },
             { cwd: sandbox.path, root: sandbox.path },
-        ),
+        ).findings,
     ).toStrictEqual([]);
 });

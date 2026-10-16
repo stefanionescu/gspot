@@ -3,8 +3,8 @@ import { join, win32 } from 'node:path';
 import { GspotError } from '#cli/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { isLinux } from '#tests/setup/operating-systems.ts';
+import { commandOutcome } from '#cli/execution/command/output.ts';
 import { EDITORCONFIG_REPORT } from '#tests/config/formatting.ts';
-import { checkedFindings } from '#cli/execution/command/output.ts';
 import { BASE_CHECK, FAILED_RUN } from '#tests/config/execution.ts';
 import { type CheckDeclaration } from '#cli/types/configurations.ts';
 import { parseOutput, outputSchema } from '#cli/parsers/output/formats.ts';
@@ -59,11 +59,11 @@ test.each([
     expect(findings).toHaveLength(1);
     expect(findings[0]).toMatchObject({ file: 'scripts/café build.sh', line: 1, column: 6, rule: 'SC2086' });
     expect(
-        checkedFindings(
+        commandOutcome(
             { check, manifest: configurationManifests().get('bash')! },
             { ...FAILED_RUN, stderr: output },
             { cwd: sandbox.path, root: sandbox.path },
-        ),
+        ).findings,
     ).toStrictEqual(findings);
 });
 

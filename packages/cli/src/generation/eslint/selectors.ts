@@ -30,6 +30,51 @@ function distinctLists(lists: string[][]): string[][] {
 }
 
 /**
+ * Groups the selectors the selected fragments add so each file set gets one no-restricted-syntax rule.
+ *
+ * A selector without files applies to every code file. Exclude a selector with an allowed setting from the group for
+ * the paths that setting names. File and allowed-path intersections produce exclusive blocks,
+ * each retaining every selector that applies there in first-mention order.
+ *
+ * @param selectors the selectors of the selected fragments, with the paths their allowed settings hold.
+ *
+ * @returns the groups, where an absent files list means every code file.
+ */
+function selectorGroups(selectors: SelectorPaths[]): SelectorGroup[] {
+    const boundaries = distinctLists(
+        selectors.flatMap((entry) => [entry.files ?? [], entry.except ?? []]).filter((paths) => paths.length > 0),
+    );
+    let groups: { files: string[][]; ignores: string[]; matched: string[][] }[] = [
+        { files: [], ignores: [], matched: [] },
+    ];
+    for (const paths of boundaries)
+        groups = groups.flatMap((group) => [
+            {
+                files:
+                    group.files.length === 0
+                        ? paths.map((path) => [path])
+                        : group.files.flatMap((parts) => paths.map((path) => [...parts, path])),
+                ignores: group.ignores,
+                matched: [...group.matched, paths],
+            },
+            { ...group, ignores: [...group.ignores, ...paths] },
+        ]);
+    return groups.map((group) => ({
+        ...(group.files.length === 0 ? {} : { files: group.files }),
+        ...(group.ignores.length === 0 ? {} : { ignores: group.ignores }),
+        selectors: selectors
+            .filter(
+                (entry) =>
+                    (entry.files === undefined ||
+                        group.matched.some((paths) => isDeepStrictEqual(paths, entry.files))) &&
+                    (entry.except === undefined ||
+                        !group.matched.some((paths) => isDeepStrictEqual(paths, entry.except))),
+            )
+            .map((entry) => ({ selector: entry.selector, message: entry.message })),
+    }));
+}
+
+/**
  * Resolve the actual selectors contributed by selected fragments within each project scope.
  *
  * @param scopes every selected project scope.
@@ -97,49 +142,4 @@ export function fragmentSelectorGroups(
             ignoredScopes: nestedScopes(scopePaths, scope.scope.path),
         }));
     });
-}
-
-/**
- * Groups the selectors the selected fragments add so each file set gets one no-restricted-syntax rule.
- *
- * A selector without files applies to every code file. Exclude a selector with an allowed setting from the group for
- * the paths that setting names. File and allowed-path intersections produce exclusive blocks,
- * each retaining every selector that applies there in first-mention order.
- *
- * @param selectors the selectors of the selected fragments, with the paths their allowed settings hold.
- *
- * @returns the groups, where an absent files list means every code file.
- */
-export function selectorGroups(selectors: SelectorPaths[]): SelectorGroup[] {
-    const boundaries = distinctLists(
-        selectors.flatMap((entry) => [entry.files ?? [], entry.except ?? []]).filter((paths) => paths.length > 0),
-    );
-    let groups: { files: string[][]; ignores: string[]; matched: string[][] }[] = [
-        { files: [], ignores: [], matched: [] },
-    ];
-    for (const paths of boundaries)
-        groups = groups.flatMap((group) => [
-            {
-                files:
-                    group.files.length === 0
-                        ? paths.map((path) => [path])
-                        : group.files.flatMap((parts) => paths.map((path) => [...parts, path])),
-                ignores: group.ignores,
-                matched: [...group.matched, paths],
-            },
-            { ...group, ignores: [...group.ignores, ...paths] },
-        ]);
-    return groups.map((group) => ({
-        ...(group.files.length === 0 ? {} : { files: group.files }),
-        ...(group.ignores.length === 0 ? {} : { ignores: group.ignores }),
-        selectors: selectors
-            .filter(
-                (entry) =>
-                    (entry.files === undefined ||
-                        group.matched.some((paths) => isDeepStrictEqual(paths, entry.files))) &&
-                    (entry.except === undefined ||
-                        !group.matched.some((paths) => isDeepStrictEqual(paths, entry.except))),
-            )
-            .map((entry) => ({ selector: entry.selector, message: entry.message })),
-    }));
 }

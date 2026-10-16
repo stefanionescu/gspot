@@ -5,7 +5,7 @@ import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
-import { readPushBase, readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
+import { pushedCommits, readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
 test('reports an unborn index and its unstaged edits', async () => {
     await using sandbox = await testdir();
@@ -62,27 +62,25 @@ test('push comparison tells a missing upstream from an upstream whose commit is 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     commitAll(sandbox.path);
-    const first = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
-    expect(await readPushBase(sandbox.path)).toBe(first);
+    expect(await pushedCommits(sandbox.path, undefined)).toStrictEqual([]);
     await Bun.write(join(sandbox.path, 'source.ts'), 'export const changed = true;\n');
     gitOutput(sandbox.path, ['add', '.']);
     gitOutput(sandbox.path, ['commit', '-qm', 'Second']);
-    const second = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     gitOutput(sandbox.path, ['branch', 'upstream']);
     gitOutput(sandbox.path, ['branch', '--set-upstream-to=upstream']);
-    expect(await readPushBase(sandbox.path)).toBe(second);
+    expect(await pushedCommits(sandbox.path, undefined)).toStrictEqual([]);
     gitOutput(sandbox.path, ['update-ref', '-d', 'refs/heads/upstream']);
-    expect(await rejection(readPushBase(sandbox.path))).toContain('Git merge-base failed');
+    expect(await rejection(pushedCommits(sandbox.path, undefined))).toContain('Git merge-base failed');
 });
 
 test('push comparison reports an unborn or broken HEAD instead of inventing a base', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     gitOutput(sandbox.path, ['init']);
-    expect(await rejection(readPushBase(sandbox.path))).toContain('Git rev-parse failed');
+    expect(await pushedCommits(sandbox.path, undefined)).toStrictEqual([]);
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, '.git/HEAD'), 'broken head');
-    expect(await rejection(readPushBase(sandbox.path))).toContain('Git rev-parse failed');
+    expect(await rejection(pushedCommits(sandbox.path, undefined))).toContain('Cannot read committed Git history');
 });
 
 test('a new branch compares with the remote default without losing unpushed commits', async () => {
@@ -95,7 +93,9 @@ test('a new branch compares with the remote default without losing unpushed comm
     gitOutput(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
     gitOutput(sandbox.path, ['checkout', '-qb', 'topic']);
     gitOutput(sandbox.path, ['commit', '--allow-empty', '-qm', 'Unpublished']);
-    expect(await readPushBase(sandbox.path)).toBe(published);
+    expect(await pushedCommits(sandbox.path, undefined)).toStrictEqual([
+        gitOutput(sandbox.path, ['rev-parse', 'HEAD']),
+    ]);
     const { reference, commits } = await readChangedPaths(sandbox.path, '');
     expect(reference).toBe('refs/remotes/origin/main');
     // The comparison returns the commit identifier of the unpublished commit after the remote default.

@@ -168,6 +168,83 @@ function tokenize(text: string): string[] {
 }
 
 /**
+ * Docker arguments that run nginx -t over one tool file.
+ * @param text the tool file text.
+ * @param mounts the host paths: the tool file, certificate, and key.
+ * @param mounts.configs the captured tool files and container paths.
+ * @param mounts.certificate the throwaway certificate.
+ * @param mounts.key the throwaway key.
+ * @param image the nginx image.
+ * @returns the argv after docker.
+ */
+function testArguments(text: string, mounts: NginxMounts, image: string): string[] {
+    const parsed = parseDirectives(text);
+    const hosts = new Set(
+        parsed.flatMap(([name, value]) => {
+            if (value === undefined || value.includes('$')) return [];
+            const host = HOST_PATTERNS.get(name)?.exec(value)?.[1];
+            return host === undefined || LOCAL_NAMES.has(host) ? [] : [host];
+        }),
+    );
+    const certificates = new Map(
+        Object.entries(CERTIFICATE_DIRECTIVES).map(([directive, kind]) => [directive, mounts[kind]]),
+    );
+    const volumes = [
+        ...mounts.configs.map(({ source, target }) => `${source}:${target}${READ_ONLY_MOUNT}`),
+        ...parsed.flatMap(([name, path]) => {
+            if (path === undefined || path.includes('$')) return [];
+            const source = certificates.get(name);
+            return source === undefined ? [] : [`${source}:${posix.resolve(NGINX_FOLDER, path)}${READ_ONLY_MOUNT}`];
+        }),
+    ];
+    return [
+        ...DOCKER_RUN_ARGUMENTS,
+        ...[...hosts].flatMap((host) => [ADD_HOST_FLAG, `${host}:${LOOPBACK_ADDRESS}`]),
+        ...[...new Set(volumes)].flatMap((volume) => [VOLUME_FLAG, volume]),
+        image,
+        ...NGINX_TEST_COMMAND,
+    ];
+}
+
+/**
+ * Read directive arguments without changing quoted whitespace or treating comments as configuration.
+ * @param text the nginx configuration text.
+ * @returns each directive as its name followed by its arguments.
+ */
+function parseDirectives(text: string): [string, ...string[]][] {
+    const found: [string, ...string[]][] = [];
+    let directive: string[] = [];
+    for (const token of tokenize(text)) {
+        if (token.startsWith('#')) continue;
+        switch (token) {
+            case '}': {
+                directive = [];
+                break;
+            }
+            case ';':
+            case '{': {
+                const [name, ...args] = directive;
+                if (name !== undefined) found.push([name, ...args]);
+                directive = [];
+                break;
+            }
+            default: {
+                directive.push(
+                    token
+                        .replace(QUOTED_ARGUMENT, '$2')
+                        .replaceAll(
+                            ESCAPED_CHARACTER,
+                            (_, escaped: string) =>
+                                Object.entries(NGINX_ESCAPES).find(([name]) => name === escaped)?.[1] ?? escaped,
+                        ),
+                );
+            }
+        }
+    }
+    return found;
+}
+
+/**
  * Tests every tracked nginx.conf with the server's own parser.
  * @param input the check input.
  * @returns one finding for each file nginx refuses.
@@ -204,81 +281,4 @@ export async function nginxConfigTest(input: CheckInput): Promise<CheckOutcome> 
         for (const file of outcome.files) checked.add(file);
     }
     return { findings, files: [...checked] };
-}
-
-/**
- * Docker arguments that run nginx -t over one tool file.
- * @param text the tool file text.
- * @param mounts the host paths: the tool file, certificate, and key.
- * @param mounts.configs the captured tool files and container paths.
- * @param mounts.certificate the throwaway certificate.
- * @param mounts.key the throwaway key.
- * @param image the nginx image.
- * @returns the argv after docker.
- */
-export function testArguments(text: string, mounts: NginxMounts, image: string): string[] {
-    const parsed = parseDirectives(text);
-    const hosts = new Set(
-        parsed.flatMap(([name, value]) => {
-            if (value === undefined || value.includes('$')) return [];
-            const host = HOST_PATTERNS.get(name)?.exec(value)?.[1];
-            return host === undefined || LOCAL_NAMES.has(host) ? [] : [host];
-        }),
-    );
-    const certificates = new Map(
-        Object.entries(CERTIFICATE_DIRECTIVES).map(([directive, kind]) => [directive, mounts[kind]]),
-    );
-    const volumes = [
-        ...mounts.configs.map(({ source, target }) => `${source}:${target}${READ_ONLY_MOUNT}`),
-        ...parsed.flatMap(([name, path]) => {
-            if (path === undefined || path.includes('$')) return [];
-            const source = certificates.get(name);
-            return source === undefined ? [] : [`${source}:${posix.resolve(NGINX_FOLDER, path)}${READ_ONLY_MOUNT}`];
-        }),
-    ];
-    return [
-        ...DOCKER_RUN_ARGUMENTS,
-        ...[...hosts].flatMap((host) => [ADD_HOST_FLAG, `${host}:${LOOPBACK_ADDRESS}`]),
-        ...[...new Set(volumes)].flatMap((volume) => [VOLUME_FLAG, volume]),
-        image,
-        ...NGINX_TEST_COMMAND,
-    ];
-}
-
-/**
- * Read directive arguments without changing quoted whitespace or treating comments as configuration.
- * @param text the nginx configuration text.
- * @returns each directive as its name followed by its arguments.
- */
-export function parseDirectives(text: string): [string, ...string[]][] {
-    const found: [string, ...string[]][] = [];
-    let directive: string[] = [];
-    for (const token of tokenize(text)) {
-        if (token.startsWith('#')) continue;
-        switch (token) {
-            case '}': {
-                directive = [];
-                break;
-            }
-            case ';':
-            case '{': {
-                const [name, ...args] = directive;
-                if (name !== undefined) found.push([name, ...args]);
-                directive = [];
-                break;
-            }
-            default: {
-                directive.push(
-                    token
-                        .replace(QUOTED_ARGUMENT, '$2')
-                        .replaceAll(
-                            ESCAPED_CHARACTER,
-                            (_, escaped: string) =>
-                                Object.entries(NGINX_ESCAPES).find(([name]) => name === escaped)?.[1] ?? escaped,
-                        ),
-                );
-            }
-        }
-    }
-    return found;
 }

@@ -6,9 +6,10 @@ import { declarationFor } from '#cli/settings/inherit.ts';
 import { TOOL_DECLARATION } from '#tests/config/manifests.ts';
 import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
+import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { toolDeclarationSchema } from '#cli/configurations/schema/tool.ts';
 import { SEMGREP_ASSETS, CONFIGURATION_TABLE } from '#tests/config/configurations.ts';
-import { parseManifest, configurationManifests } from '#cli/configurations/manifests.ts';
 
 test('setting names in shipped manifest text and rules exist', () => {
     const manifests = [...configurationManifests().values()];
@@ -89,12 +90,7 @@ test('the folder gives a configuration its name and group', () => {
     const { configuration } = buildManifest('example', { group: 'infrastructure' });
     expect([configuration.name, configuration.group]).toStrictEqual(['example', 'infrastructure']);
     expect(buildManifest('example', { group: 'testing' }).configuration.group).toBe('testing');
-    expect(() =>
-        parseManifest(
-            '[configuration]\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n',
-            'configurations/tool/example',
-        ),
-    ).toThrow('configuration.group');
+    expect(() => manifestSchema.parse({ configuration: { ...configuration, group: 'tool' } })).toThrow('group');
 });
 
 test('a tool rule page needs the {rule} placeholder, and its crash pattern must be a regular expression', () => {
@@ -132,11 +128,18 @@ test('a companion tool file needs a tool or check that reads it', () => {
 
 test('Semgrep rule packs in the configuration folder become tool files read by the security configuration', () => {
     using _assets = spyOn(assets, 'listAssets').mockImplementation((prefix) =>
-        SEMGREP_ASSETS.filter((path) => path.startsWith(prefix)),
+        prefix === 'configurations/'
+            ? ['configurations/language/example/manifest.toml']
+            : SEMGREP_ASSETS.filter((path) => path.startsWith(prefix)),
     );
-    const manifest = buildManifest('example', {
-        tables: '[[tool_file]]\nsource = "other.yml"\ntarget = ".gspot/config/other.yml"\npointer = { path = "other.yml" }\n',
-    });
+    const readAsset = assets.readAsset;
+    using _sources = spyOn(assets, 'readAsset').mockImplementation((path) =>
+        path === 'configurations/language/example/manifest.toml'
+            ? CONFIGURATION_TABLE +
+              '\n[[tool_file]]\nsource = "other.yml"\ntarget = ".gspot/config/other.yml"\npointer = { path = "other.yml" }\n'
+            : readAsset(path),
+    );
+    const manifest = configurationManifests().get('example')!;
     expect(manifest.toolFiles.map(({ source, target }) => [source, target])).toStrictEqual([
         ['other.yml', '.gspot/config/other.yml'],
         ['semgrep/first.yml', '.gspot/config/semgrep/first.yml'],
