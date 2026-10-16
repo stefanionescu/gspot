@@ -1,8 +1,8 @@
 import { GspotError } from '#cli/errors.ts';
-import { applyPlans } from '#cli/ownership/writer.ts';
+import { writePlans } from '#cli/ownership/writer.ts';
+import type { Writer } from '#cli/types/ownership.ts';
 import { startRunner } from '#cli/generation/hooks.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
-import type { OwnershipLog } from '#cli/types/ownership.ts';
 import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { VERSION_PIN_FILE } from '#cli/config/system/locations.ts';
@@ -28,16 +28,15 @@ export function readVersionPin(root: string): string | undefined {
  *
  * @param log the command's locked ownership log.
  */
-export function writeVersionPin(log: OwnershipLog): void {
+export function writeVersionPin(log: Writer): void {
     const plan = planReplacement(log, {
         path: VERSION_PIN_FILE,
         next: { bytes: Buffer.from(`${packageManifest.version}\n`), mode: OWNER_WRITABLE_FILE },
-        kind: 'pin',
         canReplace: true,
     });
     if (plan.status === 'preserved')
         throw new Error(`${VERSION_PIN_FILE} was edited by hand. Delete it, then run gspot apply.`);
-    applyPlans(log, [plan]);
+    writePlans(log, [plan]);
 }
 
 /**

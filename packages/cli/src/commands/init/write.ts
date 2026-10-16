@@ -1,17 +1,17 @@
 import { colors } from '#cli/terminal/print.ts';
 import { expectedPaths } from '#cli/apply/stale.ts';
 import { writeSettings } from '#cli/settings/file.ts';
+import { type Writer } from '#cli/types/ownership.ts';
 import { planDeletion } from '#cli/ownership/plans.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
-import { type OwnershipLog } from '#cli/types/ownership.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { type InitPrepared } from '#cli/types/commands/init.ts';
 import { type FileCopy } from '#cli/types/system/safe-folder.ts';
-import { applyPlans, openWriter } from '#cli/ownership/writer.ts';
+import { writePlans, openWriter } from '#cli/ownership/writer.ts';
 
 // Deletes replaced files only when their bytes still match the plan.
 function deleteReplacedFiles(
-    log: OwnershipLog,
+    log: Writer,
     removed: InitPrepared['deleted'],
     read: ReadonlyMap<string, FileCopy | undefined>,
 ): string[] {
@@ -23,12 +23,12 @@ function deleteReplacedFiles(
             kept.push(entry.path);
             continue;
         }
-        const plan = planDeletion(log, entry.path, expected);
+        const plan = planDeletion(entry.path, expected);
         plans.push(plan);
         const status = plan.status;
         if (status === 'preserved') kept.push(entry.path);
     }
-    applyPlans(
+    writePlans(
         log,
         plans.filter((plan) => plan.status !== 'preserved'),
     );

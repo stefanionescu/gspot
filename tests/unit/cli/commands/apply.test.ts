@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
+import { commitAll, gitOutput } from '#tests/setup/git.ts';
 import { prepareCommand } from '#tests/setup/processes.ts';
 import { readTree, pathExists } from '#tests/setup/files.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
@@ -14,7 +14,7 @@ import { containing, textContaining } from '#tests/setup/matchers.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import type { DryRunJson } from '#cli/types/commands/save-settings.ts';
 
-test('init deletes a replaced file, and apply exits 2 and keeps later edits and files gspot did not write', async () => {
+test('init deletes a replaced file and apply regenerates owned files without changing settings', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, { '.shellcheckrc': 'disable=SC2086\n', 'entry.sh': 'echo example\n' });
     commitAll(directory.path);
@@ -32,10 +32,9 @@ test('init deletes a replaced file, and apply exits 2 and keeps later edits and 
     await writeFile(generated, edited);
     await writeFile(join(directory.path, '.gspot/authored.txt'), 'Preserve this file.\n');
     const applied = await runGspot(directory.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(2);
-    expect(applied.stderr).toContain('.gspot/config/shellcheckrc');
-    expect(await readFile(generated, 'utf8')).toBe(edited);
-    expect(await readFile(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('Preserve this file.\n');
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    expect(await readFile(generated, 'utf8')).not.toContain('# Authored after installation.');
+    expect(await pathExists(join(directory.path, '.gspot/authored.txt'))).toBe(false);
     expect(await readFile(settingsPath, 'utf8')).toBe(settings);
 });
 
@@ -154,7 +153,7 @@ test.each([
     expect(await readFile(join(directory.path, '.gspot/state/writer.lock'), 'utf8')).toBe(lock);
 });
 
-test('apply --json prints one error object when it refuses an edited generated file', async () => {
+test('apply --json prints one error object when an unowned file blocks generation', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': settingsText(['bash']),
@@ -162,9 +161,9 @@ test('apply --json prints one error object when it refuses an edited generated f
     });
     const applied = await runGspot(directory.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const generated = join(directory.path, '.gspot/config/shellcheckrc');
+    const generated = join(directory.path, '.editorconfig');
     await chmod(generated, 0o644);
-    await writeFile(generated, `${await readFile(generated, 'utf8')}# Edited.\n`);
+    await writeFile(generated, 'root = true\n');
     await writeFile(
         join(directory.path, 'gspot.toml'),
         settingsText(['bash'], { tables: '[limits]\nfile_lines = 100\n' }),
@@ -173,7 +172,7 @@ test('apply --json prints one error object when it refuses an edited generated f
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     const failure = JSON.parse(refused.stdout) as CommandFailureJson;
     expect(Object.keys(failure)).toStrictEqual(['error', 'message']);
-    expect(failure.message).toContain('shellcheckrc');
+    expect(failure.message).toContain('.editorconfig');
 });
 
 test('apply --dry-run reports a changed file, a stray, a conflict, and an edited block, and writes nothing', async () => {
@@ -215,7 +214,7 @@ ${current}=======
             diff: textContaining('-# Edited.'),
         }),
     );
-    expect(drift).toContainEqual(containing({ path: '.gspot/package.json', kind: 'conflict' }));
+    expect(drift).toContainEqual(containing({ path: '.gspot/package.json', kind: 'changed' }));
     expect(drift).toContainEqual(
         containing({ path: 'AGENTS.md', kind: 'changed', diff: textContaining('-Edited inside.') }),
     );
@@ -239,4 +238,20 @@ test('a malformed reason reports a settings error and apply preserves the author
     expect(applied.stdout + applied.stderr).toContain(diagnostic);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(source);
     expect(await pathExists(join(sandbox.path, '.gspot'))).toBe(false);
+});
+
+test('removing rules from a fresh clone removes the managed AGENTS.md block', async () => {
+    await using sandbox = await testdir();
+    const source = join(sandbox.path, 'source');
+    const checkout = join(sandbox.path, 'checkout');
+    const authored = '# Your instructions\n';
+    await createFileTree(source, { 'gspot.toml': settingsText([], { rules: true }), 'AGENTS.md': authored });
+    commitAll(source);
+    expect(await runGspot(source, ['apply'])).toHaveProperty('code', 0);
+    commitAll(source);
+    gitOutput(sandbox.path, ['clone', '--quiet', source, checkout]);
+    expect(await runGspot(checkout, ['apply'])).toHaveProperty('code', 0);
+    await writeFile(join(checkout, 'gspot.toml'), settingsText([]));
+    expect(await runGspot(checkout, ['apply'])).toHaveProperty('code', 0);
+    expect(await readFile(join(checkout, 'AGENTS.md'), 'utf8')).toBe(authored);
 });

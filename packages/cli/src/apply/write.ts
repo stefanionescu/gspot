@@ -1,16 +1,14 @@
+import { expectedPaths } from '#cli/apply/stale.ts';
+import type { Writer } from '#cli/types/ownership.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { CONFLICT_MARKERS } from '#cli/config/apply.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
 import { staleLockfiles } from '#cli/tools/lockfiles.ts';
 import { writeVersionPin } from '#cli/apply/version-pin.ts';
-import type { OwnershipLog } from '#cli/types/ownership.ts';
-import { isStray, expectedPaths } from '#cli/apply/stale.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
-import type { FileCopy } from '#cli/types/system/safe-folder.ts';
 import type { ApplyReport, WriteRequest } from '#cli/types/apply.ts';
-import { applyPlans, notOverwrittenError } from '#cli/ownership/writer.ts';
+import { writePlans, notOverwrittenError } from '#cli/ownership/writer.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
-import { planBlock, planManagedKeys, planReplacement, planRestoration } from '#cli/ownership/plans.ts';
+import { planBlock, planRemoval, listStrayPaths, planManagedKeys, planReplacement } from '#cli/ownership/plans.ts';
 
 import {
     VALE_CONFIG,
@@ -21,36 +19,34 @@ import {
 } from '#cli/config/system/locations.ts';
 
 // An installation no selected configuration needs any more goes whole, and so do the Vale packages once nothing checks prose.
-function pruneToolFolders(log: OwnershipLog, retained: WriteRequest['retained']): void {
+function pruneToolFolders(log: Writer, retained: WriteRequest['retained']): void {
     for (const [kind, keep] of [
         ['npm', retained.packages],
         ['python', retained.python],
         ['vale', retained.prose],
     ] as const) {
-        if (keep || log.state.installed?.includes(kind) !== true) continue;
+        if (keep) continue;
         log.files.removeTree(INSTALLED_TOOL_FOLDERS[kind]);
-        log.state.installed = log.state.installed.filter((entry) => entry !== kind);
-        log.save();
     }
 }
 
 /**
  * Writes generated files and removes recorded files no configuration needs. Plans precede writes.
  *
- * @param log the locked ownership log.
+ * @param session the current settings and file inventory.
+ * @param log the locked file writer.
  * @param request generated files, pruning settings, and reviewed originals.
  */
-function writeGenerated(log: OwnershipLog, request: WriteRequest): void {
-    const { generated, expectedPaths: expected, report, retained, reviewedOriginals, conflictedOutputs } = request;
+function writeGenerated(session: Session, log: Writer, request: WriteRequest): void {
+    const { generated, expectedPaths: expected, report, retained, reviewedOriginals } = request;
     const toolFiles = generated.fileEdits.map((output) => {
-        const plan = planManagedKeys(log, output.path, output.changes, true);
+        const plan = planManagedKeys(log, output.path, output.changes);
         return reviewedOriginals?.has(output.path) === true
             ? { ...plan, before: reviewedOriginals.get(output.path) }
             : plan;
     });
-    const authorized = new Map([...(conflictedOutputs ?? []), ...(reviewedOriginals ?? [])]);
+    const authorized = new Map(reviewedOriginals);
     const replacements = generated.files.map((file) => {
-        const kind = file.kind === 'lock' || file.kind === 'hook' ? file.kind : 'tool_file';
         // Replace reviewed originals and files with merge conflict markers.
         const read = file.kind === 'lock' ? file.read : authorized.get(file.path);
         const replacement = {
@@ -60,7 +56,6 @@ function writeGenerated(log: OwnershipLog, request: WriteRequest): void {
         const plan = planReplacement(log, {
             path: file.path,
             next: replacement,
-            kind,
             canReplace: read !== undefined,
             expected: read,
         });
@@ -69,14 +64,12 @@ function writeGenerated(log: OwnershipLog, request: WriteRequest): void {
     const blocks = generated.blocks.map((block) => planBlock(log, block.path, block.block, block.style));
     const generatedPlans = [...replacements, ...blocks, ...toolFiles];
     // Pruning restores only recorded files no selected owner needs.
-    const pruning = log.state.files
-        .filter((entry) => isStray(entry, expected))
-        .map((entry) => planRestoration(log, entry.path));
+    const pruning = listStrayPaths(session, expected).map((path) => planRemoval(log, path));
     const plans = [...generatedPlans, ...pruning];
     const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
     if (reviewedOriginals !== undefined && conflicts.length > 0)
         throw notOverwrittenError(conflicts, 'run gspot apply');
-    applyPlans(
+    writePlans(
         log,
         plans.filter((plan) => plan.status !== 'preserved'),
     );
@@ -92,17 +85,6 @@ function writeGenerated(log: OwnershipLog, request: WriteRequest): void {
     if (conflicts.length > 0) throw notOverwrittenError(conflicts, 'run gspot apply');
 }
 
-// Apply rewrites generated files that a merge left with conflict markers.
-function conflictedOutputs(log: OwnershipLog, generated: Generated): Map<string, FileCopy> {
-    const conflicted = new Map<string, FileCopy>();
-    for (const file of generated.files) {
-        const current = log.files.read(file.path);
-        if (current !== undefined && CONFLICT_MARKERS.test(current.bytes.toString('utf8')))
-            conflicted.set(file.path, current);
-    }
-    return conflicted;
-}
-
 /**
  * Apply generated plans through the repository's ownership log.
  *
@@ -116,7 +98,7 @@ function conflictedOutputs(log: OwnershipLog, generated: Generated): Map<string,
 export function writeGeneratedFiles(
     session: Session,
     generated: Generated,
-    log: OwnershipLog,
+    log: Writer,
     options?: Pick<WriteRequest, 'reviewedOriginals'>,
 ): ApplyReport {
     // Generation requires a valid settings. Refuse errors before writing proposed files.
@@ -132,7 +114,7 @@ export function writeGeneratedFiles(
         notes: [...generated.notes],
     };
     const paths = expectedPaths(session, generated);
-    writeGenerated(log, {
+    writeGenerated(session, log, {
         generated,
         expectedPaths: paths,
         report,
@@ -142,7 +124,6 @@ export function writeGeneratedFiles(
             python: paths.has(PYTHON_TOOL_PROJECT_FILE),
         },
         reviewedOriginals,
-        conflictedOutputs: conflictedOutputs(log, generated),
     });
     const dependenciesChanged = generated.files.some(
         (file) =>
@@ -151,6 +132,10 @@ export function writeGeneratedFiles(
     );
     const hasDrift = staleLockfiles(session, generated.files).some((lockfile) => lockfile.kind !== undefined);
     if (dependenciesChanged || hasDrift) report.notes.push('Tool dependencies need installation. Run: gspot install');
+    if (generated.fileEdits.length > 0)
+        report.notes.push(
+            'Keys that gspot no longer manages stay in your files. Review shared tool files after removing a configuration.',
+        );
     writeVersionPin(log);
     return report;
 }

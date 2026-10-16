@@ -2,12 +2,12 @@ import { decodeUtf8 } from '#cli/text.ts';
 import { isRecord } from '#cli/objects.ts';
 import { GspotError } from '#cli/errors.ts';
 import { isDeepStrictEqual } from 'node:util';
-import { applyPlans } from '#cli/ownership/writer.ts';
+import { writePlans } from '#cli/ownership/writer.ts';
+import type { Writer } from '#cli/types/ownership.ts';
 import { keptComments } from '#cli/settings/comments.ts';
 import { layOutSettings } from '#cli/settings/layout.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import { tomlSyntax } from '#cli/parsers/toml/comments.ts';
-import type { OwnershipLog } from '#cli/types/ownership.ts';
 import { dropDefaults } from '#cli/settings/drop-defaults.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
@@ -188,15 +188,14 @@ function decodeSettingsText(bytes: Buffer): string {
  * @param text the settings text to write
  * @param original the captured file bytes and mode
  */
-function writeSettings(log: OwnershipLog, text: string, original: FileCopy | undefined): void {
+function writeSettings(log: Writer, text: string, original: FileCopy | undefined): void {
     const next = { bytes: Buffer.from(text), mode: original?.mode ?? OWNER_WRITABLE_FILE };
     if (isDeepStrictEqual(next, original)) return;
-    applyPlans(log, [
+    writePlans(log, [
         {
             ...planReplacement(log, {
                 path: SETTINGS_FILE,
                 next,
-                kind: 'settings',
                 canReplace: true,
                 expected: original,
             }),

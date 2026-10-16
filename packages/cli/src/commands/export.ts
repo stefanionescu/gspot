@@ -1,12 +1,12 @@
 import { isRecord } from '#cli/objects.ts';
 import { GspotError } from '#cli/errors.ts';
 import { toPosix } from '#cli/system/paths.ts';
+import { isOwned } from '#cli/ownership/plans.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { printResult } from '#cli/terminal/print.ts';
 import { findRoot } from '#cli/repository/find-root.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { readOwnershipLog } from '#cli/ownership/writer.ts';
 import { realPath } from '#cli/system/safe-folder/reads.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
@@ -44,8 +44,8 @@ export async function exportCommand(options: ExportOptions): Promise<CommandResu
     using destination = openSafeFolder(parent);
     const name = basename(file);
     const path = toPosix(relative(root, resolve(parent, name)));
-    const ownership = readOwnershipLog(root);
-    if (path === SETTINGS_FILE || ownership.files.some((entry) => entry.path === path))
+    using disk = openSafeFolder(root);
+    if (path === SETTINGS_FILE || isOwned(path, disk))
         throw new GspotError('template', `gspot writes ${path} itself. Choose another file name.`);
     const index = await readIndexEntries(root);
     const tracked = new Set(index.map((entry) => entry.path));

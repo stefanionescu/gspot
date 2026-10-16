@@ -3,7 +3,6 @@ import { test, expect } from 'bun:test';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
-import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -25,7 +24,6 @@ test.each([...VALE_INSTALL_FAILURES])(
             '.gspot/vale/Google/terms.yml': 'previous bytes\n',
             'guide.md': 'Authored text.\n',
         });
-        using log = openWriter(sandbox.path);
         const session = await openSession(sandbox.path);
         const tool = toolDeclaration(session.manifests.values(), 'vale');
         const executable = join(sandbox.path, 'node_modules/.bin', executableNames('vale')[0]!);
@@ -47,8 +45,6 @@ test.each([...VALE_INSTALL_FAILURES])(
         const steps: (readonly string[])[] = [];
         expect(installValePackages(request, steps)).resolves.toBe('installed Vale packages in .gspot/vale');
         expect(steps).toStrictEqual([[executable, '--config', textContaining('vale-'), 'sync']]);
-        log.state.installed = ['vale'];
-        log.save();
         expect(await readFile(join(sandbox.path, '.gspot/vale/Google/terms.yml'), 'utf8')).toBe('corrected bytes\n');
         expect(hasValePackages(sandbox.path, 'all')).toBe(true);
     },
@@ -63,9 +59,6 @@ test.each([...LEVELS])(
         expect(hasValePackages(sandbox.path, level)).toBe(level === 'recommended');
         for (const folder of VALE_PACKAGE_FOLDERS)
             await createFileTree(sandbox.path, { [`.gspot/vale/${folder}/.keep`]: '' });
-        using log = openWriter(sandbox.path);
-        log.state.installed = ['vale'];
-        log.save();
         expect(hasValePackages(sandbox.path, level)).toBe(true);
     },
 );
@@ -77,9 +70,6 @@ test.each([...VALE_PACKAGE_FOLDERS])(
         await createFileTree(sandbox.path, { '.gspot/config/vale.ini': 'Packages = \n' });
         for (const folder of VALE_PACKAGE_FOLDERS.filter((folder) => folder !== missing))
             await createFileTree(sandbox.path, { [`.gspot/vale/${folder}/.keep`]: '' });
-        using log = openWriter(sandbox.path);
-        log.state.installed = ['vale'];
-        log.save();
         expect(hasValePackages(sandbox.path, 'all')).toBe(false);
     },
 );

@@ -20,8 +20,6 @@ export type ToolProjectFiles = {
     lockfilePath: string;
     lockfile: Uint8Array;
     mode: number;
-    ownershipPath: string;
-    ownership: Uint8Array;
 };
 
 /** Project bytes captured before a locked tool installation. */

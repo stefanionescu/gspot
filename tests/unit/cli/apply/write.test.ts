@@ -15,7 +15,7 @@ import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
 import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
-import { applyPlans, openWriter } from '#cli/ownership/writer.ts';
+import { writePlans, openWriter } from '#cli/ownership/writer.ts';
 import { EXTERNAL_INPUT_CASES } from '#tests/config/generated-files.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { COMMITLINT_PACKAGE, COMMITLINT_PROJECT } from '#tests/config/commitlint.ts';
@@ -48,11 +48,10 @@ import { STYLELINT_FILES, STYLELINT_PACKAGE_JSON } from '#tests/config/stylelint
         {
             using log = openWriter(sandbox.path);
 
-            applyPlans(log, [
+            writePlans(log, [
                 planReplacement(log, {
                     path: '.gspot/obsolete/old.txt',
                     next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
-                    kind: 'tool_file',
                 }),
             ]);
         }
@@ -97,7 +96,7 @@ import { STYLELINT_FILES, STYLELINT_PACKAGE_JSON } from '#tests/config/stylelint
         },
     );
 
-    test('apply checks the folders of files it no longer needs before it writes anything', async () => {
+    test('apply removes an obsolete directory link without following it', async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
             'project/gspot.toml': settingsText([]),
@@ -107,21 +106,17 @@ import { STYLELINT_FILES, STYLELINT_PACKAGE_JSON } from '#tests/config/stylelint
         {
             using log = openWriter(root);
 
-            applyPlans(log, [
+            writePlans(log, [
                 planReplacement(log, {
                     path: '.gspot/obsolete/old.txt',
                     next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
-                    kind: 'tool_file',
                 }),
             ]);
         }
         await rm(join(root, '.gspot/obsolete'), { recursive: true });
         await symlink('../../outside', join(root, '.gspot/obsolete'));
-        expect(await rejection(applyCommand({ cwd: root, isDryRun: false }))).toContain(
-            'A parent of .gspot/obsolete/old.txt is a link or is not a directory.',
-        );
-        expect(await pathExists(join(root, '.gitattributes'))).toBe(false);
-        expect(await pathExists(join(root, '.gspot/version'))).toBe(false);
+        expect(await applyCommand({ cwd: root, isDryRun: false })).toHaveProperty('exitCode', 0);
+        expect(await pathExists(join(root, '.gspot/obsolete'))).toBe(false);
         expect(await readFile(join(directory.path, 'outside/old.txt'), 'utf8')).toBe('outside bytes\n');
     });
 }
@@ -158,8 +153,8 @@ import { STYLELINT_FILES, STYLELINT_PACKAGE_JSON } from '#tests/config/stylelint
 }
 
 test.each([...TOOL_FOLDERS])(
-    'writing generated files deletes the $kind tool folder and its record when no configuration needs it',
-    async ({ kind, folder }) => {
+    'writing generated files deletes the $kind tool folder when no configuration needs it',
+    async ({ folder }) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
             'gspot.toml': settingsText([]),
@@ -167,11 +162,8 @@ test.each([...TOOL_FOLDERS])(
         });
         const session = await openSession(directory.path);
         using log = openWriter(directory.path);
-        log.state.installed = [kind];
-        log.save();
         writeGeneratedFiles(session, { files: [], blocks: [], fileEdits: [], notes: [] }, log);
         expect(await pathExists(join(directory.path, folder))).toBe(false);
-        expect(log.state.installed).not.toContain(kind);
     },
 );
 
@@ -217,45 +209,39 @@ test.each([
             },
         ],
     },
-])(
-    'a package.json field follows its configuration and is restored when the configuration leaves: $tool',
-    async (row) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            ...row.project,
-            'gspot.toml': settingsText(row.configurations, { level: 'all', tables: row.tables }),
-        });
-        if (row.hasGit) commitAll(sandbox.path);
-        let session = await openSession(sandbox.path);
-        const generated = emitAll(session);
-        expect(generated.fileEdits).toStrictEqual(
-            row.changes.map((file) => ({
-                ...file,
-                changes: file.changes.map((change) => ({ ...change, path: [...change.path] })),
-            })),
-        );
-        {
-            using log = openWriter(sandbox.path);
-            writeGeneratedFiles(session, generated, log);
-            expect(log.entryFor('app/package.json')?.keys?.format).toBe('json');
-        }
-        const authored = new Map<string, string>(Object.entries(row.project));
-        for (const path of row.unchanged)
-            expect(authored.get(path)).toBe(await readFile(join(sandbox.path, path), 'utf8'));
-        const installed = await readFile(join(sandbox.path, 'app/package.json'), 'utf8');
-        await writeFile(join(sandbox.path, 'app/package.json'), installed.replace('native-project', 'edited-project'));
-        await writeFile(join(sandbox.path, 'gspot.toml'), settingsText([], { level: row.leaveLevel }));
-        session = await openSession(sandbox.path);
-        expect(emitAll(session).fileEdits).toStrictEqual([]);
-        {
-            using log = openWriter(sandbox.path);
-            writeGeneratedFiles(session, emitAll(session), log);
-            expect(log.entryFor('package.json')).toBeUndefined();
-            expect(log.entryFor('app/package.json')).toBeUndefined();
-        }
-        expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(row.original);
-        expect(await readFile(join(sandbox.path, 'app/package.json'), 'utf8')).toBe(
-            row.original.replace('native-project', 'edited-project'),
-        );
-    },
-);
+])('a package.json field stays when its configuration leaves: $tool', async (row) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        ...row.project,
+        'gspot.toml': settingsText(row.configurations, { level: 'all', tables: row.tables }),
+    });
+    if (row.hasGit) commitAll(sandbox.path);
+    let session = await openSession(sandbox.path);
+    const generated = emitAll(session);
+    expect(generated.fileEdits).toStrictEqual(
+        row.changes.map((file) => ({
+            ...file,
+            changes: file.changes.map((change) => ({ ...change, path: [...change.path] })),
+        })),
+    );
+    {
+        using log = openWriter(sandbox.path);
+        writeGeneratedFiles(session, generated, log);
+    }
+    const authored = new Map<string, string>(Object.entries(row.project));
+    for (const path of row.unchanged) expect(authored.get(path)).toBe(await readFile(join(sandbox.path, path), 'utf8'));
+    const installed = await readFile(join(sandbox.path, 'app/package.json'), 'utf8');
+    await writeFile(join(sandbox.path, 'app/package.json'), installed.replace('native-project', 'edited-project'));
+    await writeFile(join(sandbox.path, 'gspot.toml'), settingsText([], { level: row.leaveLevel }));
+    session = await openSession(sandbox.path);
+    expect(emitAll(session).fileEdits).toStrictEqual([]);
+    {
+        using log = openWriter(sandbox.path);
+        writeGeneratedFiles(session, emitAll(session), log);
+    }
+    const root = JSON.parse(await readFile(join(sandbox.path, 'package.json'), 'utf8')) as Record<string, unknown>;
+    expect(root[row.tool]).toBeDefined();
+    expect(await readFile(join(sandbox.path, 'app/package.json'), 'utf8')).toBe(
+        installed.replace('native-project', 'edited-project'),
+    );
+});

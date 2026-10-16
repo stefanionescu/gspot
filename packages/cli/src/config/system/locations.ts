@@ -27,7 +27,7 @@ export const DOT_GSPOT = '.gspot';
 
 export const VERSION_PIN_FILE = '.gspot/version';
 
-/** The gspot state: the ownership log and locks, never committed. */
+/** The locks and temporary run state, never committed. */
 export const STATE_DIRECTORY = '.gspot/state';
 
 /** The folder of the hook scripts gspot writes, which core.hooksPath names. */

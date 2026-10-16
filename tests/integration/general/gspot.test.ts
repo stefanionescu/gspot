@@ -56,7 +56,7 @@ test('gspot/generated-files reports an edited file and one with merge conflict m
     expect(conflicted.checks[0]?.findings).toMatchObject([
         {
             file: SHELLCHECK_RC,
-            rule: 'conflict',
+            rule: 'changed',
             message: textContaining('merge conflict markers'),
             help: 'Run gspot apply to write the file again, then gspot install to install what it records.',
         },

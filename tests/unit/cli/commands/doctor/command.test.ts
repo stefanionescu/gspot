@@ -1,7 +1,6 @@
 import semver from 'semver';
 import executables from 'which';
 import { test, spyOn, expect } from 'bun:test';
-import { gitOutput } from '#tests/setup/git.ts';
 import { readTree } from '#tests/setup/files.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -10,6 +9,7 @@ import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { gitOutput, commitAll } from '#tests/setup/git.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
@@ -23,24 +23,22 @@ import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { collectPins, toolDeclaration, toolProjectPackage } from '#cli/configurations/tool-pins.ts';
 import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/system/locations.ts';
 
-test('doctor lists files in .gspot/ that gspot did not write, and apply leaves them', async () => {
+test('doctor reports no unowned gspot files in a fresh clone', async () => {
     await using sandbox = await testdir();
-    const original = '{"authored": true}\n';
-    await createFileTree(sandbox.path, {
-        'gspot.toml': settingsText([]),
-        '.gspot/authored.json': original,
-    });
+    const source = join(sandbox.path, 'source');
+    const checkout = join(sandbox.path, 'checkout');
+    await createFileTree(source, { 'gspot.toml': settingsText([]) });
+    gitOutput(source, ['init', '-q']);
     {
-        using log = openWriter(sandbox.path);
-        const session = await openSession(sandbox.path);
-        writeGeneratedFiles(session, emitAll(session), log);
+        using writer = openWriter(source);
+        const session = await openSession(source);
+        writeGeneratedFiles(session, emitAll(session), writer);
     }
-    const result = await doctorCommand(sandbox.path);
-    expect(result.json).toMatchObject({
-        suggestions: { unowned: [containing({ path: '.gspot/authored.json' })] },
-    });
-    expect(result.text).toContain('.gspot/authored.json');
-    expect(await readFile(join(sandbox.path, '.gspot/authored.json'), 'utf8')).toBe(original);
+    commitAll(source);
+    gitOutput(sandbox.path, ['clone', '--quiet', source, checkout]);
+    const result = await doctorCommand(checkout);
+    expect(result.json).toMatchObject({ suggestions: { unowned: [] } });
+    expect(result.text).not.toContain('configuration not owned');
 });
 
 test('doctor reports Python and submodules and does not treat tool projects as source', async () => {

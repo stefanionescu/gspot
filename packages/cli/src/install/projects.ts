@@ -1,12 +1,12 @@
 import which from 'which';
 import { runTool } from '#cli/tools/run.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
-import { applyPlans } from '#cli/ownership/writer.ts';
+import { writePlans } from '#cli/ownership/writer.ts';
+import type { Writer } from '#cli/types/ownership.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import { prepareLockfiles } from '#cli/tools/lockfiles.ts';
-import type { OwnershipLog } from '#cli/types/ownership.ts';
 import { TOOL_PROJECT_INPUTS } from '#cli/config/install.ts';
 import type { ToolProjectInputs } from '#cli/types/install.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
@@ -31,7 +31,7 @@ import { installNpmTools, assertNpmClientVersion } from '#cli/tools/npm/project.
  */
 export async function installToolProjects(
     session: Session,
-    log: OwnershipLog,
+    log: Writer,
     generated: Generated,
     tools: ToolDeclaration[],
     mise: string | null,
@@ -46,7 +46,7 @@ export async function installToolProjects(
             ? generated.files.filter((file) => file.path !== PYTHON_TOOL_PROJECT_FILE)
             : generated.files;
     await prepareLockfiles(session, lockfileInputs, log.files, steps);
-    applyPlans(
+    writePlans(
         log,
         lockfileInputs
             .filter((file) => file.kind === 'lock')
@@ -54,7 +54,6 @@ export async function installToolProjects(
                 planReplacement(log, {
                     path: file.path,
                     next: { bytes: Buffer.from(file.content), mode: OWNER_WRITABLE_FILE },
-                    kind: 'lock',
                     canReplace: file.read !== undefined,
                     expected: file.read,
                 }),
@@ -92,13 +91,12 @@ export async function writeToolProjectInputs(request: ToolProjectInputs): Promis
         assertNpmClientVersion(client, version);
     }
     const projects = files.filter((file) => new Set<string>(TOOL_PROJECT_INPUTS).has(file.path));
-    applyPlans(
+    writePlans(
         log,
         projects.map((file) =>
             planReplacement(log, {
                 path: file.path,
                 next: { bytes: Buffer.from(file.content), mode: OWNER_WRITABLE_FILE },
-                kind: 'tool_file',
             }),
         ),
     );

@@ -5,14 +5,12 @@ import { test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { identify } from '#cli/ownership/writer.ts';
 import { buildInitOptions } from '#tests/setup/init.ts';
 import * as environment from '#cli/system/environment.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { rm, stat, readFile, writeFile } from 'node:fs/promises';
-import { ownershipStateSchema } from '#cli/ownership/log-schema.ts';
+import { rejection, textContaining } from '#tests/setup/matchers.ts';
 import { INVALID_CSS, STYLELINT_PACKAGE_JSON } from '#tests/config/stylelint.ts';
-import { rejection, containing, textContaining } from '#tests/setup/matchers.ts';
 
 test.each([
     [
@@ -41,7 +39,7 @@ test.each([
         }),
     );
     expect(await rejection(initCommand({ ...options, yes: false }))).toBe(
-        '.shellcheckrc changed after gspot read it. Run the command again.',
+        '.shellcheckrc changed before removal. Run the command again.',
     );
     if (kind === 'changes')
         expect(await readFile(join(sandbox.path, '.shellcheckrc'), 'utf8')).toBe('disable=SC2034\n');
@@ -67,8 +65,13 @@ test('a failed init keeps the previous version pin', async () => {
 test('init keeps the old tool file when the generated one cannot be written', async () => {
     await using sandbox = await testdir();
     const authored = '[default.extend-words]\nAuthored = "Authored"\n';
-    const conflict = '# Maintained independently.\n';
-    await createFileTree(sandbox.path, { 'typos.toml': authored, '.gspot/config/typos.toml': conflict });
+    await createFileTree(sandbox.path, { 'typos.toml': authored });
+    const rename = fs.renameSync;
+    using _publication = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
+        if (String(target) === join(sandbox.path, '.gspot/config/typos.toml'))
+            throw new Error('Generated write denied');
+        rename(source, target);
+    });
     expect(
         await rejection(
             initCommand(
@@ -77,9 +80,9 @@ test('init keeps the old tool file when the generated one cannot be written', as
                 }),
             ),
         ),
-    ).toContain('These files were not overwritten by gspot: .gspot/config/typos.toml.');
+    ).toContain('Generated write denied');
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
-    expect(await readFile(join(sandbox.path, '.gspot/config/typos.toml'), 'utf8')).toBe(conflict);
+    expect(await pathExists(join(sandbox.path, '.gspot/config/typos.toml'))).toBe(false);
 });
 
 test('init refuses to write a shared package.json field edited after the plan', async () => {
@@ -114,15 +117,6 @@ test('init refuses to write a shared package.json field edited after the plan', 
     const after = await stat(join(sandbox.path, 'package.json'));
     expect(after.mode & 0o777).toBe(before.mode & 0o777);
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(preview.json.settings!);
-    const journal = ownershipStateSchema.parse(
-        JSON.parse(await Bun.file(join(sandbox.path, '.gspot/state/ownership.json')).text()),
-    );
-    expect(journal.pending).toContainEqual(
-        containing({
-            path: 'package.json',
-            before: identify({ bytes: Buffer.from(STYLELINT_PACKAGE_JSON), mode: before.mode & 0o777 }),
-        }),
-    );
     expect(await pathExists(join(sandbox.path, '.gspot/version'))).toBe(false);
 });
 
@@ -155,12 +149,6 @@ test('init does not overwrite a shared file created after the plan', async () =>
     const after = await stat(join(sandbox.path, 'bunfig.toml'));
     expect(after.mode & 0o777).toBe(mode & 0o777);
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(preview.json.settings!);
-    const journal = ownershipStateSchema.parse(
-        JSON.parse(await Bun.file(join(sandbox.path, '.gspot/state/ownership.json')).text()),
-    );
-    const pending = journal.pending?.find((entry) => entry.path === 'bunfig.toml');
-    expect(pending).toBeDefined();
-    expect(pending).not.toHaveProperty('before');
     expect(await pathExists(join(sandbox.path, '.gspot/version'))).toBe(false);
 });
 

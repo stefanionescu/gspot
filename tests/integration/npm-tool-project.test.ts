@@ -65,10 +65,7 @@ test.each(NPM_CLIENT_ROWS.filter(([, path]) => path === 'package.json'))(
         await using sandbox = await createNpmClientSandbox(installer, projectPath);
         const { root, rootPackage } = sandbox;
         await writeLockedInputs(root);
-        const { manifest, lockfilePath, lockfile, ownershipPath, ownership } = await readToolProjectFiles(
-            root,
-            installer,
-        );
+        const { manifest, lockfilePath, lockfile } = await readToolProjectFiles(root, installer);
         const stale = Buffer.from(lockfile).toString('utf8').replaceAll(prettierManifest.version, '0.0.0');
         await chmod(lockfilePath, 0o644);
         const conflict = `<<<<<<< edited\n${stale}\n=======\n${Buffer.from(lockfile).toString('utf8')}\n>>>>>>> generated\n`;
@@ -82,7 +79,6 @@ test.each(NPM_CLIENT_ROWS.filter(([, path]) => path === 'package.json'))(
         expect(refused.stdout).toContain('Install that package manager version first');
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
         expect(await readFile(join(root, '.gspot/package.json'))).toStrictEqual(Buffer.from(manifest));
-        expect(await readFile(ownershipPath)).toStrictEqual(Buffer.from(ownership));
         await writeFile(join(root, projectPath), rootPackage);
         let repaired: ReturnType<typeof writeGeneratedFiles>;
         {

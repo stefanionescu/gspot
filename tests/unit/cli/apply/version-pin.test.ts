@@ -6,8 +6,8 @@ import { rejection } from '#tests/setup/matchers.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
-import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash/tools.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { readVersionPin, writeVersionPin, assertVersionPin } from '#cli/apply/version-pin.ts';
@@ -53,7 +53,7 @@ import { readVersionPin, writeVersionPin, assertVersionPin } from '#cli/apply/ve
         expect(refused).rejects.toMatchObject({ code: 'pin' });
     });
 
-    test('a different saved version makes check, doctor and apply refuse until the pin file is deleted', async () => {
+    test('a different saved version blocks check while apply updates the pin', async () => {
         await using sandbox = await testdir({ 'gspot.toml': settingsText(['bash']), 'script.sh': CLEAN_BASH_SCRIPT });
         const prepared = await runGspot(sandbox.path, ['apply', '--json']);
         expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
@@ -64,10 +64,6 @@ import { readVersionPin, writeVersionPin, assertVersionPin } from '#cli/apply/ve
         expect(check.stdout).toContain('gspot apply');
         const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
         expect(doctor.code, doctor.stdout + doctor.stderr).toBe(1);
-        const refused = await runGspot(sandbox.path, ['apply', '--json']);
-        expect(refused.code).toBe(2);
-        expect(refused.stdout).toContain('Delete it, then run gspot apply.');
-        await unlink(join(sandbox.path, '.gspot/version'));
         const applied = await runGspot(sandbox.path, ['apply', '--json']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         expect(readVersionPin(sandbox.path)).toBe(RUNNING_VERSION);

@@ -1,6 +1,6 @@
+import type { Writer } from '#cli/types/ownership.ts';
 import type { Session } from '#cli/types/planning.ts';
 import type { ToolSearch } from '#cli/types/tools/find.ts';
-import type { OwnershipLog } from '#cli/types/ownership.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
@@ -34,7 +34,7 @@ export type InstallJson = {
 /** Inputs and attempted commands for writing selected package-manager projects. */
 export type ToolProjectInputs = {
     session: Session;
-    log: OwnershipLog;
+    log: Writer;
     files: GeneratedFile[];
     steps: (readonly string[])[];
 };

@@ -5,7 +5,6 @@ import { startRunner } from '#cli/generation/hooks.ts';
 import { classifyFile } from '#cli/repository/kind.ts';
 import { toolTimeoutSeconds } from '#cli/tools/run.ts';
 import { readRepository } from '#cli/repository/read.ts';
-import { readOwnershipLog } from '#cli/ownership/writer.ts';
 import { createReadCache } from '#cli/system/file-reads.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
@@ -132,12 +131,9 @@ export async function openSession(
     const session: Session = {
         // Checks use applied targets; content generation here parses unrelated scopes.
         generatedPaths: () =>
-            (generatedPaths ??= new Set([
-                ...readOwnershipLog(root)
-                    .files.filter(({ kind }) => kind === 'tool_file' || kind === 'hook')
-                    .map(({ path }) => path),
-                ...repository.files.filter(({ kind }) => kind === 'generated').map(({ path }) => path),
-            ])),
+            (generatedPaths ??= new Set(
+                repository.files.filter(({ kind }) => kind === 'generated').map(({ path }) => path),
+            )),
         uvPath:
             locateCandidates(installedRoot, UV_TOOL, { searchFolders: [], miseBinPaths, timeoutSeconds })[0] ?? UV_TOOL,
         neededToolManifests: [],

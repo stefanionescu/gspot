@@ -2,8 +2,6 @@ import { quoteArgument } from '#cli/text.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { readPrefix } from '#cli/system/file-reads.ts';
-import { DOT_GSPOT } from '#cli/config/system/locations.ts';
-import { readOwnershipLog } from '#cli/ownership/writer.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
@@ -137,17 +135,6 @@ function unownedToolFiles(session: Session, tooling: Tooling, tools: Set<string>
         );
 }
 
-function unrecordedFiles(session: Session): SuggestionRow[] {
-    const recorded = new Set(readOwnershipLog(session.root).files.map((entry) => entry.path));
-    return session.repository.files
-        .filter((file) => file.path.startsWith(`${DOT_GSPOT}/`) && !recorded.has(file.path))
-        .map((file) => ({
-            path: file.path,
-            note: 'gspot did not write this file and will not change it',
-            command: 'review the file, then move it into your own files or delete it',
-        }));
-}
-
 /**
  * Setup suggestions for a repository session.
  * @param session the session
@@ -162,7 +149,7 @@ export function listSuggestions(session: Session): Suggestions {
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
         ...configurationSuggestions(session),
-        unowned: [...unownedToolFiles(session, tooling, tools, generated), ...unrecordedFiles(session)],
+        unowned: unownedToolFiles(session, tooling, tools, generated),
         written: [
             ...readLintJobs(
                 session.root,

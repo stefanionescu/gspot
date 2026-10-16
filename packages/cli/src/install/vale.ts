@@ -2,7 +2,6 @@ import { GspotError } from '#cli/errors.ts';
 import { runTool } from '#cli/tools/run.ts';
 import { toPosix } from '#cli/system/paths.ts';
 import { join, dirname, resolve } from 'node:path';
-import { readOwnershipLog } from '#cli/ownership/writer.ts';
 import type { ValeInstallation } from '#cli/types/install.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
@@ -25,10 +24,9 @@ export function hasValePackages(root: string, level: Settings['level']): boolean
     using files = openSafeFolder(root);
     if (files.read(VALE_CONFIG) === undefined) return false;
     if (level === 'recommended') return true;
-    const available = VALE_PACKAGE_FOLDERS.every(
+    return VALE_PACKAGE_FOLDERS.every(
         (name) => files.stat(`${VALE_PACKAGE_DIRECTORY}/${name}`)?.isDirectory() === true,
     );
-    return available && readOwnershipLog(root).installed?.includes('vale') === true;
 }
 
 /**

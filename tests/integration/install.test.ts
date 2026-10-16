@@ -37,7 +37,7 @@ test.each(['missing', 'stale'] as const)(
         await using sandbox = await createNpmClientSandbox('npm', 'package.json');
         const installed = await installCommand(sandbox.root);
         expect(installed.exitCode, installed.text).toBe(0);
-        const { lockfilePath, lockfile, ownershipPath, ownership } = await readToolProjectFiles(sandbox.root, 'npm');
+        const { lockfilePath, lockfile } = await readToolProjectFiles(sandbox.root, 'npm');
         if (state === 'missing') await unlink(lockfilePath);
         else {
             await chmod(lockfilePath, 0o644);
@@ -47,7 +47,6 @@ test.each(['missing', 'stale'] as const)(
             );
         }
         await expectRefusedInstall(sandbox.root, sandbox.tools, 'Run: gspot install', sandbox.registry);
-        expect(await readFile(ownershipPath)).toStrictEqual(Buffer.from(ownership));
     },
 );
 

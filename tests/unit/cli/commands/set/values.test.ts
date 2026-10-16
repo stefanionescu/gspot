@@ -39,9 +39,9 @@ enabled = false
     });
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const generated = join(sandbox.path, '.gspot/config/shellcheckrc');
+    const generated = join(sandbox.path, '.editorconfig');
     await chmod(generated, 0o644);
-    await writeFile(generated, `${await readFile(generated, 'utf8')}# Edited.\n`);
+    await writeFile(generated, 'root = true\n');
     const stopped = await runGspot(sandbox.path, argv);
     expect(stopped.code, stopped.stdout + stopped.stderr).toBe(2);
     expect(stopped.stdout).toBe('');

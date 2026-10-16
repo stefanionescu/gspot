@@ -3,16 +3,15 @@ import { GspotError } from '#cli/errors.ts';
 import { rootView } from '#cli/settings/view.ts';
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { installHooks } from '#cli/install/hooks.ts';
+import type { Writer } from '#cli/types/ownership.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { toolTimeoutSeconds } from '#cli/tools/run.ts';
 import { installMiseTools } from '#cli/install/mise.ts';
 import { installValePackages } from '#cli/install/vale.ts';
-import type { OwnershipLog } from '#cli/types/ownership.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
 import type { InstallationResult } from '#cli/types/install.ts';
 import { collectPins, toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { installToolProjects, writeToolProjectInputs } from '#cli/install/projects.ts';
-import { TOOL_FOLDER_KINDS, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
 
 function isInstallationFailure(error: unknown): error is GspotError {
     return error instanceof GspotError && (error.code === 'tool' || error.code === 'installation');
@@ -27,11 +26,7 @@ function isInstallationFailure(error: unknown): error is GspotError {
  *
  * @returns commands run, the installation summary, and exit code.
  */
-export async function installTools(
-    session: Session,
-    log: OwnershipLog,
-    generated: Generated,
-): Promise<InstallationResult> {
+export async function installTools(session: Session, log: Writer, generated: Generated): Promise<InstallationResult> {
     const manifests = session.neededToolManifests;
     const steps: (readonly string[])[] = [];
     const notes: string[] = [];
@@ -67,10 +62,6 @@ export async function installTools(
             ),
             programNote,
         );
-        log.state.installed = TOOL_FOLDER_KINDS.filter(
-            (kind) => log.files.stat(INSTALLED_TOOL_FOLDERS[kind])?.isDirectory() === true,
-        );
-        log.save();
         return { note: notes.filter(Boolean).join('; '), exitCode: 0, steps };
     } catch (error) {
         if (!isInstallationFailure(error)) throw error;

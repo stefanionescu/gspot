@@ -3,6 +3,7 @@ import { posix } from 'node:path';
 import { runGitBlocking } from '#cli/system/git.ts';
 import { classifyFile } from '#cli/repository/kind.ts';
 import { swiftSourceTags } from '#cli/parsers/swift.ts';
+import { blockSpan } from '#cli/system/managed-blocks.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
@@ -139,17 +140,20 @@ export function readGeneratedPatterns(root: string, paths: string[], reads?: Rea
         ...new Set(
             paths
                 .filter((path) => posix.basename(path) === GITATTRIBUTES_FILE)
-                .flatMap((path) =>
-                    attributeRules(readSource(root, path, reads).toString('utf8'), posix.dirname(path))
+                .flatMap((path) => {
+                    const text = readSource(root, path, reads).toString('utf8');
+                    const span = blockSpan(text, { path, style: 'hash' });
+                    const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
+                    return attributeRules(authored, posix.dirname(path))
                         .filter((rule) =>
                             Object.entries(attributesFor(rule.attributes, {})).some(
                                 ([name, value]) =>
                                     (name === GENERATED_ATTRIBUTE || name === VENDORED_ATTRIBUTE) &&
-                                    new Set<string | undefined>(SET_VALUES).has(value),
+                                    new Set<string>(SET_VALUES).has(value),
                             ),
                         )
-                        .map((rule) => rule.pattern),
-                ),
+                        .map((rule) => rule.pattern);
+                }),
         ),
     ];
 }

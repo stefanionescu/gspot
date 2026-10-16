@@ -3,14 +3,13 @@ import { test, expect } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { findStaleFiles } from '#cli/apply/stale.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
-import { readOwnershipLog } from '#cli/ownership/writer.ts';
-import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
+import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { type DryRunJson } from '#cli/types/commands/save-settings.ts';
-import { isStray, expectedPaths, findStaleFiles } from '#cli/apply/stale.ts';
 
 test('a hand edit of the ESLint config shows as a byte diff without running it', async () => {
     await using sandbox = await testdir();
@@ -26,7 +25,6 @@ test('a hand edit of the ESLint config shows as a byte diff without running it',
     const authored = 'throw new Error("The preview executed authored configuration.");\n';
     await chmod(join(sandbox.path, path), 0o644);
     await writeFile(join(sandbox.path, path), authored);
-    const before = await readFile(join(sandbox.path, '.gspot/state/ownership.json'));
     expect(await pathExists(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(preview.exitCode, preview.text).toBe(0);
@@ -34,9 +32,7 @@ test('a hand edit of the ESLint config shows as a byte diff without running it',
     expect(changed).toMatchObject({ kind: 'changed' });
     expect(changed?.diff).toContain(authored.trim());
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(authored);
-    expect(await readFile(join(sandbox.path, '.gspot/state/ownership.json'))).toStrictEqual(before);
     expect(await pathExists(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
-    await unlink(join(sandbox.path, '.gspot/state/ownership.json'));
     const unrecorded = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(unrecorded.exitCode, unrecorded.text).toBe(0);
     expect((unrecorded.json as DryRunJson).drift.find((entry) => entry.path === path)).toStrictEqual(changed);
@@ -49,15 +45,14 @@ test('a hand edit of the ESLint config shows as a byte diff without running it',
         const settings = settingsText([], { rules: true, tables: '[rules]\nenabled = true\n' });
         await createFileTree(sandbox.path, { 'gspot.toml': settings });
         expect(await applyCommand({ cwd: sandbox.path, isDryRun: false })).toHaveProperty('exitCode', 0);
-        const owned = readOwnershipLog(sandbox.path).files.filter((entry) => entry.path.startsWith('.gspot/rules/'));
+        const initial = await openSession(sandbox.path);
+        const owned = initial.repository.files.filter((entry) => entry.path.startsWith('.gspot/rules/'));
         expect(owned.length).toBeGreaterThan(0);
         await Bun.write(join(sandbox.path, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
         const session = await openSession(sandbox.path);
         const generated = emitAll(session);
-        const expected = expectedPaths(session, generated);
         const strays = findStaleFiles(session, generated).filter((entry) => entry.kind === 'stray');
         for (const entry of owned) {
-            expect(isStray(entry, expected)).toBe(true);
             expect(strays).toContainEqual({ path: entry.path, kind: 'stray' });
             expect(await pathExists(join(sandbox.path, entry.path))).toBe(true);
         }
@@ -84,14 +79,6 @@ test('a clone with changed settings and matching generated files needs no owners
     gitOutput(sandbox.path, ['clone', '--quiet', source, checkout]);
     expect(await pathExists(join(checkout, '.gspot/state/ownership.json'))).toBe(false);
     const session = await openSession(checkout);
-    const path = '.gspot/config/shellcheckrc';
     const generated = emitAll(session);
-    expect(
-        findStaleFiles(session, {
-            ...generated,
-            blocks: [],
-            fileEdits: [],
-            files: generated.files.filter((file) => file.path === path),
-        }),
-    ).toStrictEqual([]);
+    expect(findStaleFiles(session, generated).filter((entry) => entry.kind === 'changed')).toStrictEqual([]);
 });

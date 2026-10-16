@@ -9,6 +9,7 @@ import { parse, stringify } from 'smol-toml';
 import { emitAll } from '#cli/generation/files.ts';
 import { rejection } from '#tests/setup/matchers.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
+import type { Writer } from '#cli/types/ownership.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
@@ -16,7 +17,6 @@ import type { SchemaShape } from '#cli/types/objects.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { prepareLockfiles } from '#cli/tools/lockfiles.ts';
 import { installNpmTools } from '#cli/tools/npm/project.ts';
-import type { OwnershipLog } from '#cli/types/ownership.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import type { SandboxSettings } from '#tests/types/sandbox.ts';
 import { installPythonTools } from '#cli/tools/python/project.ts';
@@ -247,7 +247,7 @@ export async function expectRefusedInstall(
 }
 
 /** Resolve and write the selected project inputs before exercising locked installation. */
-export async function writeLockedInputs(root: string, suppliedLog?: OwnershipLog): Promise<LockedInputs> {
+export async function writeLockedInputs(root: string, suppliedLog?: Writer): Promise<LockedInputs> {
     using resources = new DisposableStack();
     const log = suppliedLog ?? resources.use(openWriter(root));
     const session = await openSession(root);
@@ -287,7 +287,6 @@ export async function installCompiler(root: string, folder = join(root, 'node_mo
 /** Captures the generated manifest, lockfile, and ownership bytes before an installation journey. */
 export async function readToolProjectFiles(root: string, installer: NpmClient['name']): Promise<ToolProjectFiles> {
     const lockfilePath = join(root, '.gspot', toolProjectLockfile(installer));
-    const ownershipPath = join(root, '.gspot/state/ownership.json');
     await using lockfile = await open(lockfilePath, 'r');
     const attributes = await lockfile.stat();
     return {
@@ -295,7 +294,5 @@ export async function readToolProjectFiles(root: string, installer: NpmClient['n
         lockfilePath,
         lockfile: await lockfile.readFile(),
         mode: attributes.mode,
-        ownershipPath,
-        ownership: await readFile(ownershipPath),
     };
 }
