@@ -8,28 +8,30 @@ import {
     HTML_VALIDATE_EXTENDS,
 } from '#cli/config/generation/html.ts';
 
-/**
- * Build html validate file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the HTML Validate rules for the chosen level and template files.
- */
-function buildHtmlValidateFile(context: ToolFileContext): string {
-    const { rulesOff } = context.selection.view;
-    const { level, targetPath } = context;
-
-    const isAll = level === 'all';
-    const isBuilt = targetPath.endsWith('html-validate-built.json');
-    const rules: Record<string, unknown> = { ...HTML_RULES, ...(isBuilt ? HTML_BUILT_OVERRIDES : {}) };
-    for (const rule of [
-        ...(isAll ? [] : HTML_ALL_RULES),
-        ...rulesOff(isBuilt ? 'site/html-validate' : 'html/html-validate'),
-    ])
+// The HTML Validate rules for the level, with the rules that the check's ignores turn off.
+function writeHtmlValidateFile(context: ToolFileContext, check: string, overrides: Record<string, unknown>): string {
+    const rules: Record<string, unknown> = { ...HTML_RULES, ...overrides };
+    for (const rule of [...(context.level === 'all' ? [] : HTML_ALL_RULES), ...context.selection.view.rulesOff(check)])
         rules[rule] = 'off';
-    const document = {
-        extends: HTML_VALIDATE_EXTENDS,
-        rules,
-    };
-    return JSON.stringify(document, null, JSON_INDENT) + '\n';
+    return JSON.stringify({ extends: HTML_VALIDATE_EXTENDS, rules }, null, JSON_INDENT) + '\n';
 }
 
-export { buildHtmlValidateFile };
+/**
+ * Write the HTML Validate rules for the HTML files in the repository.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the rules of html/html-validate.
+ */
+function buildSourceHtmlFile(context: ToolFileContext): string {
+    return writeHtmlValidateFile(context, 'html/html-validate', {});
+}
+
+/**
+ * Write the HTML Validate rules for the pages a site build writes, which allow the markup that build tools add.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the rules of site/html-validate.
+ */
+function buildBuiltHtmlFile(context: ToolFileContext): string {
+    return writeHtmlValidateFile(context, 'site/html-validate', HTML_BUILT_OVERRIDES);
+}
+
+export { buildBuiltHtmlFile, buildSourceHtmlFile };

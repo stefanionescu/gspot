@@ -152,7 +152,7 @@ function buildWholeFiles(session: Session, declarations: ToolFileSelection[], st
     }
 }
 
-// A pointer fragment can replace the generic pointer for the same scope and declared target.
+// A pointer-only declaration replaces the generic pointer for the same scope and declared target.
 function collectPointerOnlyPaths(declarations: ToolFileSelection[], selected: ToolFileSelection): Set<string> {
     return new Set(
         declarations
@@ -179,9 +179,13 @@ function writePointers(
     const { toolFile, owner } = selected;
     if (toolFile.fragment) return;
     const target = getSelectedTarget(selected, state) ?? toolFile.target;
-    const fragments = collectPointerOnlyPaths(declarations, selected);
+    const pointerOnlyPaths = collectPointerOnlyPaths(declarations, selected);
     for (const pointer of buildPointerFiles(owner, toolFile, target)) {
-        if (toolFile.source === undefined || toolFile.pointer?.folders !== undefined || !fragments.has(pointer.path))
+        if (
+            toolFile.source === undefined ||
+            toolFile.pointer?.folders !== undefined ||
+            !pointerOnlyPaths.has(pointer.path)
+        )
             state.files.set(pointer.path, pointer);
     }
 }

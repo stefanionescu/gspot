@@ -20,11 +20,11 @@ import { buildShellcheckFile } from '#cli/generation/tool-files/shellcheck.ts';
 import { buildSwiftformatFile } from '#cli/generation/tool-files/swiftformat.ts';
 import { buildEditorconfigFile } from '#cli/generation/tool-files/editorconfig.ts';
 import { buildMarkdownlintFile } from '#cli/generation/tool-files/markdownlint.ts';
-import { buildHtmlValidateFile } from '#cli/generation/tool-files/html-validate.ts';
 import { buildSemgrepignore, buildPrettierignore } from '#cli/generation/ignore-files.ts';
 import { buildRuffFile, buildBasedpyrightFile } from '#cli/generation/tool-files/python.ts';
 import { ESLINT_RUNTIME_FILE, ESLINT_RUNTIME_TARGET } from '#cli/config/generation/eslint.ts';
 import { TOOL_FILE_REFERENCE, SEMGREP_RULE_PACK_FOLDER } from '#cli/config/generation/files.ts';
+import { buildBuiltHtmlFile, buildSourceHtmlFile } from '#cli/generation/tool-files/html-validate.ts';
 
 import {
     type GeneratedFile,
@@ -77,7 +77,7 @@ const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
     '.gspot/config/yamllint.yml': buildYamllintFile,
     '.gspot/config/osv-scanner.toml': buildOsvScannerFile,
     '.gspot/config/purgecss.config.mjs': buildPurgecssFile,
-    '.gspot/config/html-validate-built.json': buildHtmlValidateFile,
+    '.gspot/config/html-validate-built.json': buildBuiltHtmlFile,
     '.semgrepignore': buildSemgrepignore,
     '.prettierignore': buildPrettierignore,
     '.editorconfig': buildEditorconfigFile,
@@ -95,7 +95,7 @@ const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
     '.gspot/config/basedpyrightconfig.json': buildBasedpyrightFile,
     '.gspot/config/ruff.toml': buildRuffFile,
     '.gspot/config/stylelint.json': buildStylelintFile,
-    '.gspot/config/html-validate-source.json': buildHtmlValidateFile,
+    '.gspot/config/html-validate-source.json': buildSourceHtmlFile,
     '.gspot/config/periphery.yml': buildPeripheryFile,
     '.gspot/config/swiftformat': buildSwiftformatFile,
     '.gspot/config/swiftlint.yml': buildSwiftlintFile,
