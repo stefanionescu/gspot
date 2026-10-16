@@ -1,5 +1,5 @@
 import { escapeGlob } from '#cli/repository/matchers.ts';
-import { presetSource } from '#cli/generation/eslint/serialize.ts';
+import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 import { NESTJS_ALL_LEVEL_RULES, NESTJS_INJECTABLE_FILTER_PATHS } from '#cli/config/generation/eslint-fragments.ts';
 
@@ -15,7 +15,7 @@ import { NESTJS_ALL_LEVEL_RULES, NESTJS_INJECTABLE_FILTER_PATHS } from '#cli/con
  *
  * @returns the ESLint fragment source.
  */
-export function nestjsFragment({
+export function buildNestjsFragment({
     eslintModule,
     eslintFiles,
     eslintPresets,
@@ -45,7 +45,7 @@ export function nestjsFragment({
         ),
     );
     const sources = selected
-        .map((preset) => `...${presetSource('nestjsTyped', preset.source)}.map((block) => block.rules)`)
+        .map((preset) => `...${serializePresetAccess('nestjsTyped', preset.source)}.map((block) => block.rules)`)
         .join(', ');
     const prefix = scope === '' ? '' : `${escapeGlob(scope)}/`;
     output.push(

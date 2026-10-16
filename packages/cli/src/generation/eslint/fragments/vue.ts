@@ -1,6 +1,7 @@
-import { presetBlock } from '#cli/generation/eslint/presets.ts';
+import { pickPresetFields } from '#cli/generation/eslint/presets.ts';
 import { VUE_RULES } from '#cli/config/generation/eslint-fragments.ts';
-import { presetSource, eslintErrorRules } from '#cli/generation/eslint/serialize.ts';
+import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
+import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
 import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 
 /**
@@ -13,7 +14,7 @@ import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generatio
  *
  * @returns the ESLint fragment source.
  */
-export function vueFragment({
+export function buildVueFragment({
     eslintPresets,
     eslintModule,
     configurations,
@@ -28,12 +29,12 @@ export function vueFragment({
             '\n',
             eslintModule.block(
                 {
-                    ...presetBlock(block),
-                    ...(block.rules === undefined ? {} : { rules: eslintErrorRules(block.rules) }),
+                    ...pickPresetFields(block),
+                    ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
                 },
-                `...${presetSource('vuePlugin', presets.recommended.source)}[${String(index)}]`,
+                `...${serializePresetAccess('vuePlugin', presets.recommended.source)}[${String(index)}]`,
                 {
-                    expression: `${presetSource('vuePlugin', presets.recommended.source)}[${String(index)}].rules`,
+                    expression: `${serializePresetAccess('vuePlugin', presets.recommended.source)}[${String(index)}].rules`,
                     rules: block.rules,
                 },
             ),
@@ -44,10 +45,10 @@ export function vueFragment({
         output.push(
             '\n',
             eslintModule.block(
-                { ...presetBlock(block), files: ['**/*.vue'] },
-                `...${presetSource('vueAccessibility', presets.accessibility.source)}[${String(index)}]`,
+                { ...pickPresetFields(block), files: ['**/*.vue'] },
+                `...${serializePresetAccess('vueAccessibility', presets.accessibility.source)}[${String(index)}]`,
                 {
-                    expression: `${presetSource('vueAccessibility', presets.accessibility.source)}[${String(index)}].rules`,
+                    expression: `${serializePresetAccess('vueAccessibility', presets.accessibility.source)}[${String(index)}].rules`,
                     rules: block.rules,
                 },
             ),

@@ -1,31 +1,39 @@
-// The parts of the ESLint configuration that the settings and the emitted scope decide.
 import { basename } from 'node:path/posix';
 import type { Session } from '#cli/types/planning.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
-import { eslintModule } from '#cli/generation/eslint/serialize.ts';
 import { generatedIgnores } from '#cli/generation/ignore-files.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { readScopeAliases } from '#cli/generation/eslint/aliases.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
-import { boundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
-import { escapeGlob, buildPathMatcher } from '#cli/repository/matchers.ts';
+import { createBlockWriter } from '#cli/generation/eslint/block-writer.ts';
+import { buildBoundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
 import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
-import { scriptPaths, runtimeBlocks } from '#cli/generation/eslint/runtimes.ts';
-import { filePatterns, nodePatterns, sourcePattern } from '#cli/generation/eslint/files.ts';
-import { trivialRuleBlocks, environmentRuleBlocks } from '#cli/generation/eslint/structure.ts';
-import { ruleOptions, ignoreBlocks, importStyleBlocks, manifestRuleBlocks } from '#cli/generation/eslint/blocks.ts';
+import { buildFilePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
+import { listScriptPaths, buildRuntimeBlocks } from '#cli/generation/eslint/runtimes.ts';
 
+import {
+    buildImportStyleBlocks,
+    buildScopeImportBlocks,
+    buildImportBoundariesRule,
+} from '#cli/generation/eslint/imports.ts';
 import type {
-    EslintBlock,
+    EslintParts,
     EslintPresets,
     EslintContext,
     EslintRuleLevels,
-    EslintConfiguration,
     EslintFragmentInputs,
 } from '#cli/types/generation/eslint.ts';
+import {
+    buildRuleOptions,
+    buildIgnoreBlocks,
+    buildRulesOffBlocks,
+    buildTrivialRuleBlocks,
+    buildEnvironmentRuleBlocks,
+} from '#cli/generation/eslint/lint-rules.ts';
 import {
     CODE_LANGUAGES,
     TEST_RULE_NAMES,
@@ -35,34 +43,10 @@ import {
     IMPORT_LAYOUT_RULES,
     ESLINT_SETTINGS_TABLE,
     IMPORT_BOUNDARIES_RULE,
-    ESLINT_BOUNDARY_FOLDERS,
 } from '#cli/config/generation/eslint.ts';
 
-// Root and nested rules share the same boundary folders and their project's aliases.
-function importBoundariesRule(scopes: ScopeSelection[], aliases: Record<string, string>) {
-    const scopePaths = scopes.map((entry) => escapeGlob(entry.scope.path)).filter((path) => path !== '');
-    return ['error', { folders: [...ESLINT_BOUNDARY_FOLDERS, ...scopePaths], aliases }];
-}
-
-// Each nested scope resolves its import boundaries against its own aliases.
-function scopeBlocks(context: EslintContext): EslintBlock[] {
-    const { root, reads, scopes, nodeFiles } = context;
-    return scopes
-        .filter((entry) => entry.scope.path !== '')
-        .map((entry) => {
-            const path = entry.scope.path;
-            const aliases = readScopeAliases(root, path, reads);
-            return {
-                files: [`${escapeGlob(path)}/${sourcePattern(...CODE_LANGUAGES)}`, ...nodePatterns(nodeFiles, path)],
-                rules: {
-                    [IMPORT_BOUNDARIES_RULE]: importBoundariesRule(scopes, aliases),
-                },
-            };
-        });
-}
-
 // ESLint options and the separate reason you give for them.
-function extraBlock(context: EslintContext): EslintConfiguration['extra'] {
+function buildExtraBlock(context: EslintContext): EslintParts['extra'] {
     const { settings, selection } = context;
     const entries = selection.view.extra('eslint');
     if (entries === undefined || Object.keys(entries).length === 0) return undefined;
@@ -80,7 +64,7 @@ function extraBlock(context: EslintContext): EslintConfiguration['extra'] {
  *
  * @returns the values, ready to serialize into the configuration.
  */
-function calculateConfiguration(context: EslintContext, projects: string[]): EslintConfiguration {
+function calculateConfiguration(context: EslintContext, projects: string[]): EslintParts {
     const { root, reads, scopes, selection, nodeFiles, settings } = context;
     const { view } = selection;
     const tool = view.options(ESLINT_SETTINGS_TABLE);
@@ -89,10 +73,10 @@ function calculateConfiguration(context: EslintContext, projects: string[]): Esl
         projects,
         nodeFiles,
         testFiles: view.test_files,
-        scriptFiles: scriptPaths(context),
+        scriptFiles: listScriptPaths(context),
         restrictedImports: tool.restricted_imports,
         allLevelRules: {
-            [IMPORT_BOUNDARIES_RULE]: importBoundariesRule(context.scopes, aliases),
+            [IMPORT_BOUNDARIES_RULE]: buildImportBoundariesRule(context.scopes, aliases),
             [EXPORTS_LAST_RULE]: 'error',
             ...IMPORT_LAYOUT_RULES,
             ...(settings.structure.reexports === 'none'
@@ -109,12 +93,12 @@ function calculateConfiguration(context: EslintContext, projects: string[]): Esl
                       ],
                   }),
         },
-        importStyleBlocks: importStyleBlocks(scopes, nodeFiles),
-        runtimes: runtimeBlocks(scopes),
-        boundaryBlocks: boundaryBlocks(context),
-        scopeBlocks: scopeBlocks(context),
+        importStyleBlocks: buildImportStyleBlocks(scopes, nodeFiles),
+        runtimes: buildRuntimeBlocks(scopes),
+        boundaryBlocks: buildBoundaryBlocks(context),
+        scopeBlocks: buildScopeImportBlocks(context),
         ignoredPaths: context.generatedPatterns,
-        extra: extraBlock(context),
+        extra: buildExtraBlock(context),
     };
 }
 
@@ -130,21 +114,21 @@ function calculateConfiguration(context: EslintContext, projects: string[]): Esl
 function moduleInputs(session: Session, selection: ScopeSelection, pluginLevels: EslintRuleLevels) {
     const { root, reads, scopes, settingsFile, repository } = session;
     const { settings } = settingsFile;
-    const options = ruleOptions(settings);
+    const options = buildRuleOptions(settings);
     const allRules = new Set([
         ...[...session.manifests.values()].flatMap((manifest) => [...manifest.eslint.all_level_rules]),
         ...Object.entries(pluginLevels).flatMap(([name, level]) => (level === 'all' ? [`gspot/${name}`] : [])),
     ]);
     const presets = new Map<string, EslintPresets>();
-    const recognized = buildPathMatcher([sourcePattern(...CODE_LANGUAGES)]);
+    const recognized = buildPathMatcher([buildSourcePattern(...CODE_LANGUAGES)]);
     const nodeFiles = repository.files
         .filter((file) => !recognized(file.path) && file.kind === 'source' && file.tags.includes(NODE_SHEBANG_TAG))
         .map((file) => file.path);
-    const eslintFiles = filePatterns({
+    const eslintFiles = buildFilePatterns({
         components: [],
         nodeFiles,
         tests: selection.view.test_files,
-        scripts: scriptPaths({ selection }),
+        scripts: listScriptPaths({ selection }),
     });
     const context = {
         root,
@@ -155,7 +139,7 @@ function moduleInputs(session: Session, selection: ScopeSelection, pluginLevels:
         nodeFiles,
         generatedPatterns: generatedIgnores(session),
     };
-    let configuration: EslintConfiguration | undefined;
+    let configuration: EslintParts | undefined;
     return {
         ruleOptions: options,
         eslint: () =>
@@ -164,13 +148,13 @@ function moduleInputs(session: Session, selection: ScopeSelection, pluginLevels:
                 repository.files.filter((file) => basename(file.path) === TSCONFIG_FILE).map((file) => file.path),
             )),
         settingsBlocks: () => [
-            ...environmentRuleBlocks(context),
-            ...trivialRuleBlocks(context),
-            ...manifestRuleBlocks(scopes),
-            ...ignoreBlocks(settings),
+            ...buildEnvironmentRuleBlocks(context),
+            ...buildTrivialRuleBlocks(context),
+            ...buildRulesOffBlocks(scopes),
+            ...buildIgnoreBlocks(settings),
         ],
         eslintAllRules: allRules,
-        eslintModule: eslintModule({
+        eslintModule: createBlockWriter({
             allRules,
             isAll: settings.level === 'all',
             codeFiles: eslintFiles.code,
@@ -197,7 +181,7 @@ function moduleInputs(session: Session, selection: ScopeSelection, pluginLevels:
  *
  * @returns the typed values used by ESLint fragment builders.
  */
-export function eslintInputs(
+export function buildEslintContext(
     session: Session,
     selection: ScopeSelection,
     pluginLevels: EslintRuleLevels,

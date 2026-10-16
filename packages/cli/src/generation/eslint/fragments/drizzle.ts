@@ -11,7 +11,7 @@ import type { EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
  *
  * @returns the ESLint fragment source.
  */
-export function drizzleFragment({
+export function buildDrizzleFragment({
     eslintModule,
     eslintFiles,
     settings,

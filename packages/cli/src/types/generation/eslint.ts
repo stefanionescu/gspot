@@ -81,7 +81,7 @@ export type EslintContext = {
 };
 
 /** The parts of the ESLint configuration that the settings and the emitted scope decide. */
-export type EslintConfiguration = {
+export type EslintParts = {
     projects: string[];
     nodeFiles: string[];
     testFiles: string[];
@@ -175,7 +175,7 @@ export type EslintPresets = Record<
 /** Inputs and printers shared by the ESLint fragment builders. */
 export type EslintFragmentInputs = {
     ruleOptions: EslintRuleOptions[];
-    eslint: () => EslintConfiguration;
+    eslint: () => EslintParts;
     eslintModule: EslintModule;
     eslintFiles: EslintFiles;
     eslintFragmentBlocks: EslintSettingsBlock[];
@@ -218,3 +218,5 @@ export type StylelintComponent = {
     ignorePseudoClasses: readonly string[];
     functions?: readonly string[];
 };
+
+export type EslintImportBoundaryRule = ['error', { folders: string[]; aliases: Record<string, string> }];

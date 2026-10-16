@@ -2,14 +2,14 @@
 import { z } from 'zod';
 import { readAsset } from '#cli/system/assets.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { eslintInputs } from '#cli/generation/eslint/inputs.ts';
-import { collectFragments } from '#cli/generation/fragments.ts';
-import { appliedBlocks } from '#cli/generation/eslint/blocks.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
+import { buildEslintContext } from '#cli/generation/eslint/context.ts';
 import { ESLINT_RULE_LEVELS_FILE } from '#cli/config/generation/eslint.ts';
+import { buildSelectedBlocks } from '#cli/generation/eslint/lint-rules.ts';
+import { collectFragments } from '#cli/generation/eslint/fragments/build.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { codeBlocks, fileBlocks, eslintPlugins } from '#cli/generation/eslint/defaults.ts';
-import { emitBlocks, eslintImports, selectorDefinitions } from '#cli/generation/eslint/serialize.ts';
+import { serializeBlocks, serializeImports, serializeRuntimeSelectors } from '#cli/generation/eslint/print.ts';
+import { selectPlugins, buildBlocksAfterFragments, buildBlocksBeforeFragments } from '#cli/generation/eslint/base.ts';
 
 /**
  * Write ESLint settings for every selected scope.
@@ -20,13 +20,13 @@ import { emitBlocks, eslintImports, selectorDefinitions } from '#cli/generation/
  *
  * @returns the generated configuration text.
  */
-export function eslintConfiguration({ session, selection }: ToolFileContext): string {
+export function buildEslintFile({ session, selection }: ToolFileContext): string {
     const pluginLevels = (
         z.record(z.string(), z.enum(LEVELS).or(z.literal('none'))) satisfies z.ZodType<
             Record<string, (typeof LEVELS)[number] | 'none'>
         >
     ).parse(JSON.parse(readAsset(ESLINT_RULE_LEVELS_FILE)));
-    const base = eslintInputs(session, selection, pluginLevels);
+    const base = buildEslintContext(session, selection, pluginLevels);
     const javascript = session.manifests.get('javascript') as Manifest;
     const target = javascript.toolFiles.find(
         (file) => file.target.endsWith('/eslint.config.mjs') && !file.fragment,
@@ -36,30 +36,30 @@ export function eslintConfiguration({ session, selection }: ToolFileContext): st
         collectFragments(session, session.scopes, selection, target, base);
     base.eslintFiles = eslintFiles;
     const config = eslint();
-    const plugins = eslintPlugins(base);
+    const plugins = selectPlugins(base);
     const output: string[] = [
-        eslintImports(plugins, fragmentImports),
-        selectorDefinitions(config.runtimes),
+        serializeImports(plugins, fragmentImports),
+        serializeRuntimeSelectors(config.runtimes),
         'export default [\n    { ignores: ',
         json(config.ignoredPaths),
         ' },\n',
-        emitBlocks(eslintModule, codeBlocks(base, selection.view, pluginLevels, plugins)),
+        serializeBlocks(eslintModule, buildBlocksBeforeFragments(base, selection.view, pluginLevels, plugins)),
     ];
     eslintModule.blocks.push(...eslintFragmentBlocks);
     output.push(
         '\n',
         fragmentParts.join('\n'),
         '\n',
-        emitBlocks(eslintModule, fileBlocks(base, selection.view, fragmentSelectors)),
+        serializeBlocks(eslintModule, buildBlocksAfterFragments(base, selection.view, fragmentSelectors)),
     );
 
     if (config.extra !== undefined) {
         output.push('\n    ', json(config.extra.entries), ',\n');
     }
     output.push(
-        emitBlocks(
+        serializeBlocks(
             eslintModule,
-            appliedBlocks(base).map((block) => [block]),
+            buildSelectedBlocks(base).map((block) => [block]),
         ),
         '\n];\n',
     );

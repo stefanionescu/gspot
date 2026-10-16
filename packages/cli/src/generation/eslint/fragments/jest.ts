@@ -11,7 +11,7 @@ import { JEST_GLOBAL_PACKAGE } from '#cli/config/generation/eslint-fragments.ts'
  *
  * @returns the ESLint fragment source.
  */
-export function jestFragment({
+export function buildJestFragment({
     eslintModule,
     eslintFiles,
     testRuleNames,

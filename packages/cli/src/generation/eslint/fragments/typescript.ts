@@ -1,4 +1,4 @@
-import { presetSource } from '#cli/generation/eslint/serialize.ts';
+import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES_OFF } from '#cli/config/generation/eslint-fragments.ts';
 
@@ -14,7 +14,7 @@ import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES_OFF } from '#cli/config/generat
  *
  * @returns the ESLint fragment source.
  */
-export function typescriptFragment({
+export function buildTypescriptFragment({
     eslintPresets,
     eslintModule,
     eslintFiles,
@@ -30,9 +30,9 @@ export function typescriptFragment({
             '\n',
             eslintModule.block(
                 { ...block, files: parser ? eslintFiles.typescriptSource : eslintFiles.typescript },
-                `...${presetSource('tseslint', presets.strict.source)}[${String(index)}]`,
+                `...${serializePresetAccess('tseslint', presets.strict.source)}[${String(index)}]`,
                 {
-                    expression: `${presetSource('tseslint', presets.strict.source)}[${String(index)}].rules`,
+                    expression: `${serializePresetAccess('tseslint', presets.strict.source)}[${String(index)}].rules`,
                     rules: block.rules,
                 },
             ),

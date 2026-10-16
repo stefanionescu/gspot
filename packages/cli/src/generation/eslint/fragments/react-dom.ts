@@ -1,4 +1,4 @@
-import { presetSource } from '#cli/generation/eslint/serialize.ts';
+import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { JSX_CODE_FILES } from '#cli/config/generation/eslint-fragments.ts';
 import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 
@@ -12,7 +12,7 @@ import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generatio
  *
  * @returns the ESLint fragment source.
  */
-export function reactDomFragment({
+export function buildReactDomFragment({
     eslintPresets,
     eslintModule,
     configurations,
@@ -29,7 +29,7 @@ export function reactDomFragment({
                 },
                 "plugins: { 'jsx-a11y': accessibility }",
                 {
-                    expression: `${presetSource('accessibility', preset.source)}.rules`,
+                    expression: `${serializePresetAccess('accessibility', preset.source)}.rules`,
                     rules: preset.blocks[0].rules,
                 },
             ),

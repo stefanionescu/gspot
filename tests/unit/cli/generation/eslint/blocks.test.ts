@@ -10,7 +10,7 @@ import { buildManifest } from '#tests/setup/manifest.ts';
 import { SELECTOR_FILES } from '#tests/config/eslint/framework.ts';
 import { createEslint, lintFindings } from '#tests/setup/generate.ts';
 import { SELECTOR_GROUP_CASES } from '#tests/config/eslint/selectors.ts';
-import { fragmentSelectorGroups } from '#cli/generation/eslint/selectors.ts';
+import { groupFragmentSelectors } from '#cli/generation/eslint/selectors.ts';
 import { ESLINT_OVERRIDES_SETTINGS } from '#tests/config/eslint/overrides.ts';
 
 test('an ignore of an ESLint rule applies after your rule options', async () => {
@@ -111,7 +111,7 @@ test.each(SELECTOR_GROUP_CASES)('generated selector blocks: $name', async ({ sel
     await using sandbox = await testdir({ 'gspot.toml': settingsText(['javascript'], { level: 'all' }) });
     const session = await openSession(sandbox.path);
     const declaration = buildManifest('synthetic', { tables: stringify({ eslint: { selectors } }) });
-    const groups = fragmentSelectorGroups(
+    const groups = groupFragmentSelectors(
         [{ ...session.scopes[0]!, selected: [{ ...declaration, tools: [] }] }],
         true,
         'none',

@@ -1,4 +1,5 @@
-import { presetSource, eslintErrorRules } from '#cli/generation/eslint/serialize.ts';
+import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
+import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
 import { TESTING_LIBRARY_DEFAULT_PRESET } from '#cli/config/generation/eslint-fragments.ts';
 import type { EslintPresets, FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 
@@ -13,7 +14,7 @@ import type { EslintPresets, FragmentPresets, EslintFragmentInputs } from '#cli/
  *
  * @returns the ESLint fragment source.
  */
-export function testingLibraryFragment({
+export function buildTestingLibraryFragment({
     eslintPresets,
     eslintModule,
     eslintFiles,
@@ -34,11 +35,11 @@ export function testingLibraryFragment({
                 eslintModule.block(
                     {
                         files: eslintFiles.tests,
-                        ...(block.rules === undefined ? {} : { rules: eslintErrorRules(block.rules) }),
+                        ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
                     },
                     "plugins: { 'testing-library': testingLibrary }",
                     {
-                        expression: `${presetSource('testingLibrary', preset.source)}.rules`,
+                        expression: `${serializePresetAccess('testingLibrary', preset.source)}.rules`,
                         rules: block.rules,
                     },
                 ),

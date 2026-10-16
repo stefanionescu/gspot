@@ -12,7 +12,7 @@ import { ZUSTAND_STORE_CREATORS } from '#cli/config/generation/eslint-fragments.
  *
  * @returns the ESLint fragment source.
  */
-export function zustandFragment({
+export function buildZustandFragment({
     eslintModule,
     eslintFiles,
     roles,

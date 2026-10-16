@@ -1,6 +1,6 @@
 import { joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
-import { nodePatterns, sourcePattern } from '#cli/generation/eslint/files.ts';
+import { buildNodePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
 
 import type {
     EslintBlock,
@@ -21,7 +21,7 @@ import {
 } from '#cli/config/generation/eslint.ts';
 
 // Your module edges precede the fixed test and server-value restrictions.
-function dependencyPolicies({
+function buildDependencyPolicies({
     modules,
     enforceTests,
     tests,
@@ -63,7 +63,7 @@ function dependencyPolicies({
 }
 
 // Test files take precedence over module categories. elements cover unknown endpoints.
-function boundarySettings({
+function buildBoundarySettings({
     modules,
     enforceTests,
     tests,
@@ -97,7 +97,7 @@ function boundarySettings({
  *
  * @returns one classification block and its ordered dependency policies.
  */
-export function boundaryBlocks(context: EslintContext): EslintBlock[] {
+export function buildBoundaryBlocks(context: EslintContext): EslintBlock[] {
     const { settings, scopes, nodeFiles } = context;
     const modules = scopes
         .filter(({ scope }) => scope.path === '')
@@ -118,14 +118,14 @@ export function boundaryBlocks(context: EslintContext): EslintBlock[] {
     const input = { modules, tests, enforceTests, trpcPaths };
     return [
         {
-            files: [sourcePattern(...CODE_LANGUAGES), ...nodePatterns(nodeFiles, '')],
-            settings: boundarySettings(input),
+            files: [buildSourcePattern(...CODE_LANGUAGES), ...buildNodePatterns(nodeFiles, '')],
+            settings: buildBoundarySettings(input),
             rules: {
                 'boundaries/dependencies': [
                     'error',
                     {
                         default: modules.length > 0 ? 'disallow' : 'allow',
-                        policies: dependencyPolicies(input),
+                        policies: buildDependencyPolicies(input),
                         checkInternals: trpcPaths.length > 0 || enforceTests,
                     },
                 ],

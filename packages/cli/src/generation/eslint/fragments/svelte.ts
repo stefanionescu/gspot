@@ -1,5 +1,6 @@
-import { presetBlock } from '#cli/generation/eslint/presets.ts';
-import { presetSource, eslintErrorRules } from '#cli/generation/eslint/serialize.ts';
+import { pickPresetFields } from '#cli/generation/eslint/presets.ts';
+import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
+import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
 import { SVELTE_FILES, SVELTE_RULES } from '#cli/config/generation/eslint-fragments.ts';
 import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 
@@ -13,7 +14,7 @@ import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generatio
  *
  * @returns the ESLint fragment source.
  */
-export function svelteFragment({
+export function buildSvelteFragment({
     eslintPresets,
     eslintModule,
     configurations,
@@ -28,12 +29,12 @@ export function svelteFragment({
             '\n',
             eslintModule.block(
                 {
-                    ...presetBlock(block),
-                    ...(block.rules === undefined ? {} : { rules: eslintErrorRules(block.rules) }),
+                    ...pickPresetFields(block),
+                    ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
                 },
-                `...${presetSource('sveltePlugin', presets.recommended.source)}[${String(index)}]`,
+                `...${serializePresetAccess('sveltePlugin', presets.recommended.source)}[${String(index)}]`,
                 {
-                    expression: `${presetSource('sveltePlugin', presets.recommended.source)}[${String(index)}].rules`,
+                    expression: `${serializePresetAccess('sveltePlugin', presets.recommended.source)}[${String(index)}].rules`,
                     rules: block.rules,
                 },
             ),

@@ -2,34 +2,37 @@
 import ts from 'typescript';
 import type { Session } from '#cli/types/planning.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
-import { filePatterns } from '#cli/generation/eslint/files.ts';
-import { eslintModule } from '#cli/generation/eslint/serialize.ts';
+import { buildFilePatterns } from '#cli/generation/eslint/files.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { vueFragment } from '#cli/generation/eslint/fragments/vue.ts';
-import { zodFragment } from '#cli/generation/eslint/fragments/zod.ts';
-import { expoFragment } from '#cli/generation/eslint/fragments/expo.ts';
-import { jestFragment } from '#cli/generation/eslint/fragments/jest.ts';
 import { isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { astroFragment } from '#cli/generation/eslint/fragments/astro.ts';
-import { reactFragment } from '#cli/generation/eslint/fragments/react.ts';
-import { nestjsFragment } from '#cli/generation/eslint/fragments/nestjs.ts';
-import { nextjsFragment } from '#cli/generation/eslint/fragments/nextjs.ts';
-import { svelteFragment } from '#cli/generation/eslint/fragments/svelte.ts';
-import { vitestFragment } from '#cli/generation/eslint/fragments/vitest.ts';
+import { createBlockWriter } from '#cli/generation/eslint/block-writer.ts';
+import { buildVueFragment } from '#cli/generation/eslint/fragments/vue.ts';
 import type { EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
-import { fragmentSelectorGroups } from '#cli/generation/eslint/selectors.ts';
+import { buildJestFragment } from '#cli/generation/eslint/fragments/jest.ts';
+import { groupFragmentSelectors } from '#cli/generation/eslint/selectors.ts';
 import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
-import { drizzleFragment } from '#cli/generation/eslint/fragments/drizzle.ts';
-import { expressFragment } from '#cli/generation/eslint/fragments/express.ts';
-import { zustandFragment } from '#cli/generation/eslint/fragments/zustand.ts';
-import { reactDomFragment } from '#cli/generation/eslint/fragments/react-dom.ts';
+import { buildAstroFragment } from '#cli/generation/eslint/fragments/astro.ts';
+import { buildReactFragment } from '#cli/generation/eslint/fragments/react.ts';
+import { buildNestjsFragment } from '#cli/generation/eslint/fragments/nestjs.ts';
+import { buildNextjsFragment } from '#cli/generation/eslint/fragments/nextjs.ts';
+import { buildSvelteFragment } from '#cli/generation/eslint/fragments/svelte.ts';
+import { buildVitestFragment } from '#cli/generation/eslint/fragments/vitest.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { typescriptFragment } from '#cli/generation/eslint/fragments/typescript.ts';
+import { buildDrizzleFragment } from '#cli/generation/eslint/fragments/drizzle.ts';
+import { buildZustandFragment } from '#cli/generation/eslint/fragments/zustand.ts';
+import { buildReactDomFragment } from '#cli/generation/eslint/fragments/react-dom.ts';
 import type { Fragment, TypescriptImports } from '#cli/types/generation/fragments.ts';
-import { reactNativeFragment } from '#cli/generation/eslint/fragments/react-native.ts';
-import { translationsFragment } from '#cli/generation/eslint/fragments/translations.ts';
-import { tanstackQueryFragment } from '#cli/generation/eslint/fragments/tanstack-query.ts';
-import { testingLibraryFragment } from '#cli/generation/eslint/fragments/testing-library.ts';
+import { buildTypescriptFragment } from '#cli/generation/eslint/fragments/typescript.ts';
+import { buildTanstackQueryFragment } from '#cli/generation/eslint/fragments/tanstack-query.ts';
+import { buildTestingLibraryFragment } from '#cli/generation/eslint/fragments/testing-library.ts';
+
+import {
+    zodFragment,
+    expoFragment,
+    expressFragment,
+    reactNativeFragment,
+    translationsFragment,
+} from '#cli/generation/eslint/fragments/plugin-lint-rules.ts';
 
 // The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target
 // written once asks every scope.
@@ -46,24 +49,24 @@ function listFragmentConfigurations(
 function buildFragment(manifest: Manifest, inputs: EslintFragmentInputs): string {
     const builder = (
         {
-            astro: astroFragment,
-            vue: vueFragment,
-            svelte: svelteFragment,
+            astro: buildAstroFragment,
+            vue: buildVueFragment,
+            svelte: buildSvelteFragment,
             expo: expoFragment,
-            nextjs: nextjsFragment,
-            typescript: typescriptFragment,
-            zustand: zustandFragment,
-            'testing-library': testingLibraryFragment,
-            jest: jestFragment,
-            vitest: vitestFragment,
-            react: reactFragment,
-            'react-dom': reactDomFragment,
+            nextjs: buildNextjsFragment,
+            typescript: buildTypescriptFragment,
+            zustand: buildZustandFragment,
+            'testing-library': buildTestingLibraryFragment,
+            jest: buildJestFragment,
+            vitest: buildVitestFragment,
+            react: buildReactFragment,
+            'react-dom': buildReactDomFragment,
             'react-native': reactNativeFragment,
-            nestjs: nestjsFragment,
+            nestjs: buildNestjsFragment,
             express: expressFragment,
-            drizzle: drizzleFragment,
+            drizzle: buildDrizzleFragment,
             zod: zodFragment,
-            'tanstack-query': tanstackQueryFragment,
+            'tanstack-query': buildTanstackQueryFragment,
             translations: translationsFragment,
         } as Record<string, (inputs: EslintFragmentInputs) => string>
     )[manifest.configuration.name];
@@ -88,7 +91,7 @@ function buildSelectedFragments(
             const selectedFiles = inputs
                 .files('')
                 .filter((path) => isInScope(path, scope) && children.every((child) => !isInScope(path, child)));
-            const module = eslintModule({
+            const module = createBlockWriter({
                 allRules: inputs.eslintAllRules,
                 isAll: inputs.isAll,
                 codeFiles: inputs.eslintFiles.code,
@@ -162,7 +165,7 @@ export function collectFragments(
 ): {
     fragmentParts: string[];
     fragmentImports: string;
-    fragmentSelectors: ReturnType<typeof fragmentSelectorGroups>;
+    fragmentSelectors: ReturnType<typeof groupFragmentSelectors>;
     eslintFragmentBlocks: EslintFragmentInputs['eslintFragmentBlocks'];
     eslintModule: EslintFragmentInputs['eslintModule'];
     eslintFiles: EslintFragmentInputs['eslintFiles'];
@@ -173,7 +176,7 @@ export function collectFragments(
             .map((toolFile) => ({ manifest, toolFile })),
     );
     const config = inputs.eslint();
-    const eslintFiles = filePatterns({
+    const eslintFiles = buildFilePatterns({
         components: fragments.map(({ manifest }) => manifest),
         tests: config.testFiles,
         scripts: config.scriptFiles,
@@ -194,12 +197,12 @@ export function collectFragments(
         fragmentImports: [...new Set(imports.filter((line) => line.trim() !== ''))].join('\n'),
         eslintFiles,
         eslintFragmentBlocks,
-        eslintModule: eslintModule({
+        eslintModule: createBlockWriter({
             allRules: inputs.eslintAllRules,
             isAll: inputs.isAll,
             codeFiles: eslintFiles.code,
             ruleOptions: inputs.ruleOptions,
         }),
-        fragmentSelectors: fragmentSelectorGroups(scopes, inputs.isAll, inputs.repositorySettings.structure.reexports),
+        fragmentSelectors: groupFragmentSelectors(scopes, inputs.isAll, inputs.repositorySettings.structure.reexports),
     };
 }

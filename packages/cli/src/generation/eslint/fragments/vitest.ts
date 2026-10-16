@@ -1,4 +1,4 @@
-import { presetSource } from '#cli/generation/eslint/serialize.ts';
+import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 
 /**
@@ -12,7 +12,7 @@ import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generatio
  *
  * @returns the ESLint fragment source.
  */
-export function vitestFragment({
+export function buildVitestFragment({
     eslintPresets,
     eslintModule,
     eslintFiles,
@@ -31,7 +31,7 @@ export function vitestFragment({
                 },
             },
             'plugins: { vitest }',
-            { expression: `${presetSource('vitest', preset.source)}.rules`, rules: preset.blocks[0].rules },
+            { expression: `${serializePresetAccess('vitest', preset.source)}.rules`, rules: preset.blocks[0].rules },
         ),
         ',\n',
     );

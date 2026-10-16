@@ -12,9 +12,9 @@ import type { EslintFiles, EslintFileInputs, EslintSettingsBlock } from '#cli/ty
  *
  * @returns code patterns and intersections that exclude non-code files.
  */
-export function filePatterns(input: EslintFileInputs): EslintFiles {
+export function buildFilePatterns(input: EslintFileInputs): EslintFiles {
     const { tests, scripts, nodeFiles } = input;
-    const source = sourcePattern(...CODE_LANGUAGES);
+    const source = buildSourcePattern(...CODE_LANGUAGES);
     const matchesSource = buildPathMatcher([source]);
     const selected = input.components.flatMap(({ configuration, tools }) =>
         tools
@@ -24,13 +24,13 @@ export function filePatterns(input: EslintFileInputs): EslintFiles {
     );
     const components = selected.map(({ pattern }) => pattern);
     const covered = buildPathMatcher([source, ...components]);
-    const node = nodePatterns(
+    const node = buildNodePatterns(
         nodeFiles.filter((path) => !covered(path)),
         '',
     );
     const code = [source, ...components, ...node];
-    const typescript = sourcePattern('typescript');
-    const javascript = sourcePattern('javascript');
+    const typescript = buildSourcePattern('typescript');
+    const javascript = buildSourcePattern('javascript');
     return {
         code,
         typescriptSource: [typescript],
@@ -55,7 +55,7 @@ export function filePatterns(input: EslintFileInputs): EslintFiles {
  *
  * @returns the repository-relative file pattern.
  */
-export function sourcePattern(...languages: string[]): string {
+export function buildSourcePattern(...languages: string[]): string {
     return `**/*.{${listTaggedExtensions(...languages)
         .map((extension) => extension.slice(1))
         .join(',')}}`;
@@ -69,7 +69,7 @@ export function sourcePattern(...languages: string[]): string {
  *
  * @returns literal file patterns that cannot select neighboring filenames.
  */
-export function nodePatterns(paths: string[], scope: string): string[] {
+export function buildNodePatterns(paths: string[], scope: string): string[] {
     return paths.filter((path) => isInScope(path, scope)).map((path) => escapeGlob(path));
 }
 
@@ -80,7 +80,7 @@ export function nodePatterns(paths: string[], scope: string): string[] {
  *
  * @returns expanded globs with their inclusion polarity.
  */
-export function globSelectors(patterns: string[]): PathExpressions {
+export function splitGlobSelectors(patterns: string[]): PathExpressions {
     const expanded = includeFolderContents(patterns);
     return {
         includes: expanded.filter((pattern) => !pattern.startsWith('!')),
@@ -97,7 +97,7 @@ export function globSelectors(patterns: string[]): PathExpressions {
  *
  * @returns the intersections of code, project, and authored path selectors.
  */
-export function scopeFiles(
+export function buildScopeFiles(
     files: NonNullable<EslintSettingsBlock['files']>,
     scope: string,
     paths: (string | string[])[],

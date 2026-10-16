@@ -1,4 +1,5 @@
-import { presetSource, eslintErrorRules } from '#cli/generation/eslint/serialize.ts';
+import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
+import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
 import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 
 /**
@@ -11,7 +12,7 @@ import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generatio
  *
  * @returns the ESLint fragment source.
  */
-export function tanstackQueryFragment({
+export function buildTanstackQueryFragment({
     eslintModule,
     eslintFiles,
     eslintPresets,
@@ -22,9 +23,12 @@ export function tanstackQueryFragment({
         output.push(
             '\n',
             eslintModule.block(
-                { files: eslintFiles.code, ...(rules === undefined ? {} : { rules: eslintErrorRules(rules) }) },
+                { files: eslintFiles.code, ...(rules === undefined ? {} : { rules: convertWarningsToErrors(rules) }) },
                 "plugins: { '@tanstack/query': tanstackQuery }",
-                { expression: `${presetSource('tanstackQuery', preset.source)}[${String(index)}].rules`, rules },
+                {
+                    expression: `${serializePresetAccess('tanstackQuery', preset.source)}[${String(index)}].rules`,
+                    rules,
+                },
             ),
             ',\n',
         );

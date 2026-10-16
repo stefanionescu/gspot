@@ -9,7 +9,7 @@ import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import { ENVIRONMENT_SELECTOR, ESLINT_SETTINGS_TABLE, ALIAS_IMPORT_SELECTORS } from '#cli/config/generation/eslint.ts';
 
 // The paths a loosening setting allows: every entry's paths, in the order written.
-function distinctLists(lists: string[][]): string[][] {
+function filterDistinctLists(lists: string[][]): string[][] {
     const seen = new Set<string>();
     return lists.filter((list) => {
         const key = JSON.stringify(list);
@@ -30,8 +30,8 @@ function distinctLists(lists: string[][]): string[][] {
  *
  * @returns the groups, where an absent files list means every code file.
  */
-function selectorGroups(selectors: SelectorPaths[]): SelectorGroup[] {
-    const boundaries = distinctLists(
+function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
+    const boundaries = filterDistinctLists(
         selectors.flatMap((entry) => [entry.files ?? [], entry.except ?? []]).filter((paths) => paths.length > 0),
     );
     let groups: { files: string[][]; ignores: string[]; matched: string[][] }[] = [
@@ -73,7 +73,7 @@ function selectorGroups(selectors: SelectorPaths[]): SelectorGroup[] {
  *
  * @returns selector groups with their owning scope and excluded child projects.
  */
-export function fragmentSelectorGroups(
+export function groupFragmentSelectors(
     scopes: ScopeSelection[],
     isAll: boolean,
     reexports: Settings['structure']['reexports'],
@@ -114,7 +114,7 @@ export function fragmentSelectorGroups(
                 ...ALIAS_IMPORT_SELECTORS[styles === 'extensionless' ? 'never' : 'always'],
                 except: [],
             });
-        return selectorGroups(applied).map((group) => ({
+        return groupSelectors(applied).map((group) => ({
             ...group,
             scope: scope.scope.path,
             ignoredScopes: listNestedScopes(scopePaths, scope.scope.path),

@@ -4,6 +4,7 @@ import { buildPointerFiles } from '#cli/generation/pointers.ts';
 import { buildKnipFile } from '#cli/generation/tool-files/knip.ts';
 import { buildJscpdFile } from '#cli/generation/tool-files/jscpd.ts';
 import { buildTyposFile } from '#cli/generation/tool-files/typos.ts';
+import { buildEslintFile } from '#cli/generation/eslint/tool-file.ts';
 import { buildPrettierignore } from '#cli/generation/ignore-files.ts';
 import { buildJsconfig } from '#cli/generation/tool-files/jsconfig.ts';
 import { buildSquawkFile } from '#cli/generation/tool-files/squawk.ts';
@@ -14,7 +15,6 @@ import { buildSqlfluffFile } from '#cli/generation/tool-files/sqlfluff.ts';
 import { buildYamllintFile } from '#cli/generation/tool-files/yamllint.ts';
 import { buildStylelintFile } from '#cli/generation/tool-files/stylelint.ts';
 import { buildSwiftlintFile } from '#cli/generation/tool-files/swiftlint.ts';
-import { eslintConfiguration } from '#cli/generation/eslint/configuration.ts';
 import { buildCommitlintFile } from '#cli/generation/tool-files/commitlint.ts';
 import { buildShellcheckFile } from '#cli/generation/tool-files/shellcheck.ts';
 import { buildSwiftformatFile } from '#cli/generation/tool-files/swiftformat.ts';
@@ -92,7 +92,7 @@ const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
     '.gspot/config/swiftlint.yml': buildSwiftlintFile,
     '.gspot/config/knip.json': buildKnipFile,
     '.gspot/config/sqlfluff.cfg': buildSqlfluffFile,
-    '.gspot/config/eslint.config.mjs': eslintConfiguration,
+    '.gspot/config/eslint.config.mjs': buildEslintFile,
     '.gspot/config/jsconfig.json': buildJsconfig,
     '.gspot/config/prettier.json': buildPrettierFile,
     [SEMGREP_RULE_PACK_FOLDER]: buildSemgrepFile,

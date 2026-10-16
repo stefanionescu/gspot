@@ -1,27 +1,23 @@
 import { isDeepStrictEqual } from 'node:util';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { escapeGlob } from '#cli/repository/matchers.ts';
-import { scopeFiles } from '#cli/generation/eslint/files.ts';
 import { ESLINT_BASE_IMPORTS } from '#cli/config/generation/eslint.ts';
 
 import type {
+    EslintParts,
     EslintModule,
     EslintPlugins,
     EslintRuleSource,
-    EslintModuleInput,
     EslintFileSelector,
-    EslintConfiguration,
     EslintSettingsBlock,
 } from '#cli/types/generation/eslint.ts';
 
-function selectorSource(selector: EslintFileSelector): string {
+function serializeSelector(selector: EslintFileSelector): string {
     if (typeof selector === 'string') return JSON.stringify(selector);
     if ('component' in selector)
         return `componentMatches(${selector.component}Parser, ${JSON.stringify(selector.component)}, tseslint.parser)`;
     return `runtimeMatches(${String(selector.runtime.index)})`;
 }
 
-function presetRuleSource(rules: EslintSettingsBlock['rules'], preset: EslintRuleSource): string[] {
+function serializePresetRules(rules: EslintSettingsBlock['rules'], preset: EslintRuleSource): string[] {
     const entries = rules === undefined ? [] : Object.entries(rules);
     const changed = Object.fromEntries(
         entries.filter(([name, value]) => !isDeepStrictEqual(value, preset.rules?.[name])),
@@ -49,94 +45,16 @@ function serializeBlock(block: EslintSettingsBlock, runtime = '', preset?: Eslin
     };
     const parts = runtime === '' ? [] : [runtime];
     parts.push(...Object.entries(content).map(([name, value]) => `${JSON.stringify(name)}: ${JSON.stringify(value)}`));
-    if (preset !== undefined) parts.push(...presetRuleSource(rules, preset));
+    if (preset !== undefined) parts.push(...serializePresetRules(rules, preset));
     if (files !== undefined) {
         const expressions = files.map((entry) => {
-            if (!Array.isArray(entry)) return selectorSource(entry);
-            const sources = entry.map((selector) => selectorSource(selector)).join(', ');
+            if (!Array.isArray(entry)) return serializeSelector(entry);
+            const sources = entry.map((selector) => serializeSelector(selector)).join(', ');
             return `[${sources}]`;
         });
         parts.push(`files: [${expressions.join(', ')}]`);
     }
     return `{${parts.join(', ')}}`;
-}
-
-/**
- * Write ESLint blocks for the selected level and project scope.
- *
- * @param input the level, generated file selectors, your own options, and optional fragment scope.
- *
- * @returns the emitted blocks and their rule options in the same order.
- */
-export function eslintModule(input: EslintModuleInput): EslintModule {
-    const { allRules, isAll, codeFiles, ruleOptions, scope } = input;
-    const blocks: EslintSettingsBlock[] = [];
-    return {
-        blocks,
-        block: (payload, runtime, preset) => {
-            const rules: Record<string, unknown> = Object.fromEntries(
-                (payload.rules === undefined ? [] : Object.entries(payload.rules)).map(([name, value]) => [
-                    name,
-                    !isAll && allRules.has(name) ? 'off' : value,
-                ]),
-            );
-            const nested =
-                scope === undefined
-                    ? {}
-                    : {
-                          files: (payload.files ?? codeFiles).map((entry) => [
-                              ...(Array.isArray(entry) ? entry : [entry]),
-                              joinScope(escapeGlob(scope.path), '**/*'),
-                          ]),
-                          ignores: [...(payload.ignores ?? []), ...scope.excluded],
-                      };
-            const block = { ...payload, ...nested, rules };
-            const configured = ruleOptions.flatMap((options): EslintSettingsBlock[] => {
-                const entries = Object.entries(block.rules).flatMap(([name, value]): [string, unknown][] => {
-                    const chosen = options.rules[name];
-                    const severity: unknown = Array.isArray(value) ? value[0] : value;
-                    return chosen === undefined || severity === 'off' || severity === 0
-                        ? []
-                        : [[name, [severity, ...chosen]]];
-                });
-                if (entries.length === 0) return [];
-                const selectedRules: Record<string, unknown> = Object.fromEntries<unknown>(entries);
-                return [
-                    {
-                        ...block,
-                        files: scopeFiles(block.files ?? codeFiles, options.scope, options.includes),
-                        ignores: [...(block.ignores ?? []), ...options.excludes],
-                        rules: selectedRules,
-                    },
-                ];
-            });
-            const emitted = [block, ...configured];
-            blocks.push(...emitted);
-            return emitted
-                .map((entry, index) => {
-                    const source = serializeBlock(entry, index === 0 ? runtime : '', index === 0 ? preset : undefined);
-                    return scope === undefined ? source : `stripRuntimeGlobals(${source})`;
-                })
-                .join(',\n');
-        },
-    };
-}
-
-/**
- * Preserve every preset option while promoting enabled warnings to errors.
- *
- * @param rules the actual rules from a pinned preset.
- *
- * @returns error settings, with disabled rules retained.
- */
-export function eslintErrorRules(rules: Record<string, unknown>): Record<string, unknown> {
-    return Object.fromEntries(
-        Object.entries(rules).map(([rule, entry]) => {
-            const entries: unknown[] = Array.isArray(entry) ? entry : [entry];
-            const [level, ...options] = entries;
-            return [rule, level === 'off' || level === 0 ? 'off' : ['error', ...options]];
-        }),
-    );
 }
 
 /**
@@ -146,7 +64,7 @@ export function eslintErrorRules(rules: Record<string, unknown>): Record<string,
  *
  * @returns the serialized selector definitions.
  */
-export function selectorDefinitions(runtimes: EslintConfiguration['runtimes']): string {
+export function serializeRuntimeSelectors(runtimes: EslintParts['runtimes']): string {
     const output: string[] = [
         "\n// The root has no closing separator because TypeScript's project service resolves from its containing folder.\nconst root = fileURLToPath(new URL('../..', import.meta.url)).replace(/[\\\\/]$/u, '');\nconst RUNTIME_GLOBAL_NAMES = new Set(Object.keys({ ...globals.node, ...globals.browser, ...globals.worker, ...globals.serviceworker, ...globals['react-native'] }));\n// Keep compiler and test globals from framework presets; runtime APIs have their own file selectors.\nfunction stripRuntimeGlobals(block) {\n    const names = block.languageOptions?.globals;\n    if (names === undefined) return block;\n    return { ...block, languageOptions: { ...block.languageOptions, globals: Object.fromEntries(Object.entries(names).filter(([name]) => !RUNTIME_GLOBAL_NAMES.has(name))) } };\n}\nconst runtimeDeclarations = ",
 
@@ -160,12 +78,12 @@ export function selectorDefinitions(runtimes: EslintConfiguration['runtimes']): 
 /**
  * Serialize access to the manifest's actual preset export.
  *
- * @param variable the runtime settings binding.
+ * @param variable the runtime settings importName.
  * @param source the source paths and dependency trees.
  *
  * @returns the import expression for the declared preset.
  */
-export function presetSource(variable: string, source: string): string {
+export function serializePresetAccess(variable: string, source: string): string {
     return (
         variable +
         (source === ''
@@ -185,10 +103,10 @@ export function presetSource(variable: string, source: string): string {
  *
  * @returns the imports used by the generated configuration.
  */
-export function eslintImports(plugins: EslintPlugins, fragments: string): string {
+export function serializeImports(plugins: EslintPlugins, fragments: string): string {
     return (
         [...ESLINT_BASE_IMPORTS, ...Object.values(plugins)]
-            .map(([binding, source]) => `import ${binding} from ${JSON.stringify(source)};`)
+            .map(([importName, source]) => `import ${importName} from ${JSON.stringify(source)};`)
             .join('\n') +
         '\n' +
         fragments +
@@ -204,6 +122,7 @@ export function eslintImports(plugins: EslintPlugins, fragments: string): string
  *
  * @returns the serialized ESLint blocks.
  */
-export function emitBlocks(module: EslintModule, blocks: Parameters<EslintModule['block']>[]): string {
+export function serializeBlocks(module: EslintModule, blocks: Parameters<EslintModule['block']>[]): string {
     return blocks.map((block) => '\n    ' + module.block(...block) + ',\n').join('');
 }
+export { serializeBlock };

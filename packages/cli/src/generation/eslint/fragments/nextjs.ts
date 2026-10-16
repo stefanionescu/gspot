@@ -1,4 +1,4 @@
-import { presetSource } from '#cli/generation/eslint/serialize.ts';
+import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 
 import {
@@ -21,7 +21,7 @@ import {
  *
  * @returns the ESLint fragment source.
  */
-export function nextjsFragment({
+export function buildNextjsFragment({
     eslintPresets,
     eslintModule,
     eslintFiles,
@@ -51,7 +51,7 @@ export function nextjsFragment({
             },
             `plugins: { '@next/next': nextPlugin }, settings: { next: { rootDir: root + '/' + ${json(scope)} } }`,
             {
-                expression: `{ ...${presetSource('nextPlugin', presets.recommended.source)}.rules, ...${presetSource('reactRefresh', presets.refresh.source)}.rules }`,
+                expression: `{ ...${serializePresetAccess('nextPlugin', presets.recommended.source)}.rules, ...${serializePresetAccess('reactRefresh', presets.refresh.source)}.rules }`,
                 rules: { ...presets.recommended.blocks[0].rules, ...presets.refresh.blocks[0].rules },
             },
         ),

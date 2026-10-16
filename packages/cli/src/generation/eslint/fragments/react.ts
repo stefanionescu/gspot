@@ -1,4 +1,5 @@
-import { presetSource, eslintErrorRules } from '#cli/generation/eslint/serialize.ts';
+import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
+import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
 import { REACT_RULES, JSX_CODE_FILES } from '#cli/config/generation/eslint-fragments.ts';
 import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 
@@ -11,7 +12,7 @@ import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generatio
  *
  * @returns the ESLint fragment source.
  */
-export function reactFragment({
+export function buildReactFragment({
     eslintPresets,
     eslintModule,
 }: Pick<EslintFragmentInputs, 'eslintPresets' | 'eslintModule'>): string {
@@ -29,14 +30,14 @@ export function reactFragment({
                     ...presets.jsx.blocks[0].rules,
                     ...(presets.hooks.blocks[0].rules === undefined
                         ? {}
-                        : eslintErrorRules(presets.hooks.blocks[0].rules)),
+                        : convertWarningsToErrors(presets.hooks.blocks[0].rules)),
                     ...presets.refresh.blocks[0].rules,
                     ...REACT_RULES,
                 },
             },
-            `plugins: { 'react-hooks': reactHooks, react, 'react-refresh': reactRefresh }, languageOptions: ${presetSource('react', presets.recommended.source)}.languageOptions, settings: { react: { version: 'detect' } }`,
+            `plugins: { 'react-hooks': reactHooks, react, 'react-refresh': reactRefresh }, languageOptions: ${serializePresetAccess('react', presets.recommended.source)}.languageOptions, settings: { react: { version: 'detect' } }`,
             {
-                expression: `{ ...${presetSource('react', presets.recommended.source)}.rules, ...${presetSource('react', presets.jsx.source)}.rules, ...${presetSource('reactHooks', presets.hooks.source)}.rules, ...${presetSource('reactRefresh', presets.refresh.source)}.rules }`,
+                expression: `{ ...${serializePresetAccess('react', presets.recommended.source)}.rules, ...${serializePresetAccess('react', presets.jsx.source)}.rules, ...${serializePresetAccess('reactHooks', presets.hooks.source)}.rules, ...${serializePresetAccess('reactRefresh', presets.refresh.source)}.rules }`,
                 rules: {
                     ...presets.recommended.blocks[0].rules,
                     ...presets.jsx.blocks[0].rules,
