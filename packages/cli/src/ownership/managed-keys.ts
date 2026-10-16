@@ -3,7 +3,6 @@ import { isDeepStrictEqual } from 'node:util';
 import { normalizeTables } from '#cli/objects.ts';
 import { openJsonFile } from '#cli/parsers/json.ts';
 import { openTomlFile } from '#cli/parsers/toml/document.ts';
-import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import type { FileCopy } from '#cli/types/system/safe-folder.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
@@ -47,17 +46,14 @@ function openKeysDocument(path: string, current: FileCopy | undefined): Editable
 /**
  * Inspect managed keys through the same parser used by ownership plans.
  *
- * @param root the repository root.
  * @param output the file gspot writes managed keys into.
  * @param output.path the file path.
  * @param output.changes the keys and the values they must hold.
  *
- * @returns whether the file exists and holds every installed value.
+ * @param current the existing file copy.
+ * @returns whether the file holds every installed value.
  */
-function hasManagedKeys(root: string, output: FileEdit): boolean {
-    using files = openSafeFolder(root);
-    const current = files.read(output.path);
-    if (current === undefined) return false;
+function hasManagedKeys(output: FileEdit, current: FileCopy): boolean {
     const document = openKeysDocument(output.path, current);
     return output.changes.every((field) => isDeepStrictEqual(document.value(field.path), normalizeTables(field.value)));
 }

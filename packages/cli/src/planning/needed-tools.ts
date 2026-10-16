@@ -1,12 +1,12 @@
 import { basename } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { settingsSkip } from '#cli/planning/skips.ts';
 import { coveredBy } from '#cli/repository/select.ts';
 import { coverageArguments } from '#cli/planning/checks.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { isInGspotFolder } from '#cli/repository/selectors.ts';
 import { PIP_LICENSES_COMMAND } from '#cli/config/tools/python.ts';
 import { PRETTIER_TOOL } from '#cli/config/generation/formatting.ts';
+import { settingsSkip, isSettingEmpty } from '#cli/planning/skips.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
@@ -32,9 +32,7 @@ function isToolSelected(scope: ScopeSelection, conditions: ToolDeclaration['when
         conditions.some((condition) => {
             if (condition.level !== undefined && condition.level !== scope.view.settings['level']) return false;
             if (condition.setting === undefined) return true;
-            const value = scope.view.settings[condition.setting];
-            if (typeof value === 'object' && value !== null) return Object.values(value).flat().length > 0;
-            return value !== undefined && value !== false && value !== '';
+            return !isSettingEmpty(scope.view.settings[condition.setting]);
         })
     );
 }

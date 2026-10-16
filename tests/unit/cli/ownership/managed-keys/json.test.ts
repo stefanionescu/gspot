@@ -18,7 +18,7 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
     {
         using log = openWriter(sandbox.path);
         writePlans(log, [planManagedKeys(log, path, changes)]);
-        expect(hasManagedKeys(sandbox.path, { path, changes })).toBe(true);
+        expect(hasManagedKeys({ path, changes }, log.files.read(path)!)).toBe(true);
         const installed = log.files.read(path)!.bytes.toString('utf8');
         expect(installed).toBe(
             original.replace('{"rules":{"property-no-unknown":null}}', '{"extends":"./.stylelintrc.json"}'),
@@ -29,7 +29,7 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
     {
         using log = openWriter(sandbox.path);
         writePlans(log, [planManagedKeys(log, path, [{ path: ['stylelint'], value: { extends: './next.json' } }])]);
-        expect(hasManagedKeys(sandbox.path, { path, changes })).toBe(false);
+        expect(hasManagedKeys({ path, changes }, log.files.read(path)!)).toBe(false);
         writePlans(log, [planRemoval(log, path)]);
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(
             original
@@ -51,10 +51,10 @@ test('JSONC key edits keep comments, containers and array order after keys stop 
         { path: ['kept', 'owned'], value: false },
     ];
     writePlans(log, [planManagedKeys(log, 'tool.jsonc', fields)]);
-    expect(hasManagedKeys(sandbox.path, { path: 'tool.jsonc', changes: fields })).toBe(true);
+    expect(hasManagedKeys({ path: 'tool.jsonc', changes: fields }, log.files.read('tool.jsonc')!)).toBe(true);
     expect(log.files.read('tool.jsonc')!.bytes.toString('utf8')).toContain('// Keep this comment.\n');
     writePlans(log, [planManagedKeys(log, 'tool.jsonc', [])]);
-    expect(hasManagedKeys(sandbox.path, { path: 'tool.jsonc', changes: fields })).toBe(true);
+    expect(hasManagedKeys({ path: 'tool.jsonc', changes: fields }, log.files.read('tool.jsonc')!)).toBe(true);
 });
 
 test.each(['', '[]', 'false', '{"stylelint":', '{ /* comment */ "stylelint": {} }'])(

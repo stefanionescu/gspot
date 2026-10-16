@@ -44,10 +44,7 @@ function ignoreSkip(scope: ScopeSelection, check: CheckDeclaration): SettingsSki
 function waitingSetting(scope: ScopeSelection, check: CheckDeclaration): string | undefined {
     const setting = check.when?.setting;
     if (setting === undefined) return undefined;
-    const value = scope.view.settings[setting];
-    const isEmpty =
-        value === undefined || value === false || value === '' || (Array.isArray(value) && value.length === 0);
-    return isEmpty ? setting : undefined;
+    return isSettingEmpty(scope.view.settings[setting]) ? setting : undefined;
 }
 
 // Native ignore syntax belongs to the check's authored or generated ignore file.
@@ -59,9 +56,19 @@ function toolIgnore(session: Session, check: PlannedCheck): ToolIgnore | undefin
     return { file, matches: matcher.ignores.bind(matcher) };
 }
 
-// The skip the platform imposes: the check IDs other platforms, or its tool has no build for this host.
 /**
- * System skip.
+ * Check for an inactive setting, including a table with empty lists.
+ * @param value the resolved setting.
+ * @returns whether the setting leaves its consumer inactive.
+ */
+export function isSettingEmpty(value: unknown): boolean {
+    if (typeof value === 'object' && value !== null) return Object.values(value).flat().length === 0;
+    const empty: unknown[] = [undefined, false, ''];
+    return empty.includes(value);
+}
+
+/**
+ * Skip checks for other operating systems or tools with no build for this host.
  *
  * @param check the declared check.
  * @param tool the declared tool and its installation pin.

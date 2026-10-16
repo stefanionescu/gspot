@@ -10,6 +10,7 @@ import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
 import { parseToolProject } from '#cli/parsers/tool-project.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
 import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
+import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 
 import {
@@ -25,8 +26,7 @@ function patch(path: string, before: string, after: string, beforeName: string):
     });
 }
 
-function staleWholeFiles(root: string, generated: Generated): StaleFile[] {
-    using files = openSafeFolder(root);
+function staleWholeFiles(files: SafeFolder, generated: Generated): StaleFile[] {
     return generated.files.flatMap((file): StaleFile[] => {
         const current = files.read(file.path);
         if (current === undefined) return [{ path: file.path, kind: 'missing' }];
@@ -44,9 +44,8 @@ function staleWholeFiles(root: string, generated: Generated): StaleFile[] {
     });
 }
 
-function staleBlocks(root: string, generated: Generated): StaleFile[] {
+function staleBlocks(files: SafeFolder, generated: Generated): StaleFile[] {
     const entries: StaleFile[] = [];
-    using files = openSafeFolder(root);
     for (const block of generated.blocks) {
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
         const current = currentBlock(text, { path: block.path, style: block.style });
@@ -63,11 +62,12 @@ function staleBlocks(root: string, generated: Generated): StaleFile[] {
 }
 
 // Classify merged files with no remaining managed fields as missing or changed.
-function staleKeys(root: string, generated: Generated): StaleFile[] {
-    using files = openSafeFolder(root);
-    return [...generated.fileEdits]
-        .filter((output) => !hasManagedKeys(root, output))
-        .map((output) => ({ path: output.path, kind: files.read(output.path) === undefined ? 'missing' : 'changed' }));
+function staleKeys(files: SafeFolder, generated: Generated): StaleFile[] {
+    return generated.fileEdits.flatMap((output): StaleFile[] => {
+        const current = files.read(output.path);
+        if (current === undefined) return [{ path: output.path, kind: 'missing' }];
+        return hasManagedKeys(output, current) ? [] : [{ path: output.path, kind: 'changed' }];
+    });
 }
 
 /**
@@ -82,15 +82,15 @@ export function findStaleFiles(
     session: Pick<Session, 'root' | 'npmClient' | 'repository' | 'settingsFile'>,
     generated: Generated,
 ): StaleFile[] {
-    const { root } = session;
+    using files = openSafeFolder(session.root);
     const known = expectedPaths(session, generated);
     const lockfiles = staleLockfiles(session, generated.files);
     const strays = listStrayPaths(session, known).map((path): StaleFile => ({ path, kind: 'stray' }));
     return [
         ...lockfiles.flatMap(({ path, kind }) => (kind === undefined ? [] : [{ path, kind }])),
-        ...staleWholeFiles(root, generated),
-        ...staleBlocks(root, generated),
-        ...staleKeys(root, generated),
+        ...staleWholeFiles(files, generated),
+        ...staleBlocks(files, generated),
+        ...staleKeys(files, generated),
         ...strays,
     ].toSorted((a, b) => a.path.localeCompare(b.path));
 }
