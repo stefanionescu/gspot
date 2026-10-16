@@ -2,23 +2,23 @@ import ts from 'typescript';
 import assert from 'node:assert/strict';
 import { findScope } from '#cli/repository/scopes.ts';
 import { emptyResult } from '#cli/execution/report.ts';
-import { coveredInputs } from '#cli/planning/checks.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { type CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
-import type { Level, Manifest } from '#cli/types/configurations.ts';
+import { type ScopeSelection } from '#cli/types/settings/values.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
+import { type Level, type Manifest } from '#cli/types/configurations.ts';
 import { type TsconfigInput } from '#cli/types/generation/typescript.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
-import type { TypeScriptReferenceCopy } from '#cli/types/checks/language.ts';
-import type { TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
+import { type TypeScriptReferenceCopy } from '#cli/types/checks/language.ts';
 import { DOT_GSPOT, TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
+import { type TypeScriptProject, type TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 
 import {
     COMPILER_OPTIONS,
@@ -109,7 +109,7 @@ function referenceTsconfig(
  * @param scratch the owned metadata directory.
  * @param name the metadata basename.
  */
-export function appendBuildMetadata(
+function appendBuildMetadata(
     command: string[],
     options: ts.CompilerOptions | undefined,
     scratch: string,
@@ -126,7 +126,7 @@ export function appendBuildMetadata(
  * @param root the source root.
  * @returns the result with source command paths.
  */
-export function restoreCommandPaths(result: CheckResult, scratch: string, root: string): CheckResult {
+function restoreCommandPaths(result: CheckResult, scratch: string, root: string): CheckResult {
     if (result.command === undefined) return result;
     return {
         ...result,
@@ -143,7 +143,7 @@ export function restoreCommandPaths(result: CheckResult, scratch: string, root: 
  * @param required the compiler flags for one scope.
  * @returns whether another scope already checks this project with these flags.
  */
-export function projectChecked(
+function projectChecked(
     reads: ReadCache,
     check: string,
     path: string,
@@ -167,22 +167,16 @@ export function projectChecked(
  * @param session the source or scratch copy session.
  * @param planned the compiler declaration for one scope.
  * @param metadataRoot the caller-owned metadata lifetime.
+ * @param project the selected compiler project, when present.
  * @returns compiler diagnostics and execution status.
  */
-export async function runTsc(session: Session, planned: PlannedCheck, metadataRoot: string): Promise<CheckResult> {
-    const project = readTsconfigProject(
-        session.root,
-        planned.scope.scope.path,
-        coveredInputs(session, planned)
-            .filter((file) => file.tags.includes('typescript'))
-            .map((file) => file.path),
-        session.reads,
-    );
-    const required = Object.fromEntries(
-        Object.entries(
-            selectRequiredTsconfigOptions(session.settingsFile.settings.level, planned.scope.selected),
-        ).filter(([name]) => !planned.scope.view.rulesOff(TYPESCRIPT_TSCONFIG_CHECK).includes(name)),
-    );
+async function runTsc(
+    session: Session,
+    planned: PlannedCheck,
+    metadataRoot: string,
+    project: TypeScriptProject | undefined,
+): Promise<CheckResult> {
+    const required = checkedTsconfigOptions(session.settingsFile.settings.level, planned.scope);
     const target = project === undefined ? join(session.root, planned.scope.scope.path, TSCONFIG_FILE) : project.path;
     if (projectChecked(session.reads, planned.check.name, target, planned.scope.scope.path, required))
         return { ...emptyResult(planned), status: 'skipped', note: 'An ancestor compiler check covers this project.' };
@@ -191,16 +185,7 @@ export async function runTsc(session: Session, planned: PlannedCheck, metadataRo
         command.push(...TSC_BUILD_COMMAND, project.path);
     } else {
         const generatedPath = join(metadataRoot, TOOL_FILE_DIRECTORY, planned.scope.scope.path, TSCONFIG_FILE);
-        writeTsconfig({
-            root: session.root,
-            typeRootsFolder: session.installedRoot,
-            reads: session.reads,
-            target: convertToPosixPath(relative(session.root, generatedPath)),
-            scope: planned.scope.scope.path,
-            files: session.repository.files,
-            scopeEntries: session.repository.scopes,
-            options: required,
-        });
+        writeScopeTsconfig(session, planned.scope, generatedPath);
         command.push(...TSC_PROJECT_COMMAND, generatedPath);
         appendBuildMetadata(command, project?.config.options, metadataRoot, TSCONFIG_TSBUILDINFO);
     }
@@ -213,7 +198,7 @@ export async function runTsc(session: Session, planned: PlannedCheck, metadataRo
  * @param input the source project and relative runtime target.
  * @returns the absolute runtime configuration path.
  */
-export function writeTsconfig(input: TsconfigInput): string {
+function writeTsconfig(input: TsconfigInput): string {
     const target = join(input.root, input.target);
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, JSON.stringify(buildTsconfig(input)));
@@ -225,7 +210,7 @@ export function writeTsconfig(input: TsconfigInput): string {
  * @param input the captured reference graph and its owned copy.
  * @returns after replacing only the copied compiler configurations.
  */
-export function writeReferenceProjects(input: TypeScriptReferenceCopy): void {
+function writeReferenceProjects(input: TypeScriptReferenceCopy): void {
     const { root, scratchRoot, projects, reads } = input;
     const configurations = new Map([
         ...projects,
@@ -251,7 +236,7 @@ export function writeReferenceProjects(input: TypeScriptReferenceCopy): void {
  *
  * @returns the compiler configuration.
  */
-export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
+function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
     const { root, typeRootsFolder, reads, target, scope, files, scopeEntries, options } = input;
     const authored = readTsconfigProject(
         root,
@@ -315,9 +300,60 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
  *
  * @returns the required compiler options.
  */
-export function selectRequiredTsconfigOptions(level: Level, selected: Manifest[]): Record<string, boolean> {
+function selectRequiredTsconfigOptions(level: Level, selected: Manifest[]): Record<string, boolean> {
     const options: Record<string, boolean> = { ...(level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS) };
     if (selected.some((manifest) => manifest.configuration.name === NESTJS_CONFIGURATION))
         Object.assign(options, NESTJS_COMPILER_OPTIONS);
     return options;
 }
+
+/**
+ * Apply the scope's explicit rule exclusions to the compiler defaults.
+ * @param level the configured check level.
+ * @param selection the effective scope configuration.
+ * @returns the enabled compiler flags.
+ */
+function checkedTsconfigOptions(level: Level, selection: ScopeSelection): Record<string, boolean> {
+    return Object.fromEntries(
+        Object.entries(selectRequiredTsconfigOptions(level, selection.selected)).filter(
+            ([name]) => !selection.view.rulesOff(TYPESCRIPT_TSCONFIG_CHECK).includes(name),
+        ),
+    );
+}
+
+/**
+ * Write a scope project while preserving its authored compiler configuration.
+ * @param session the repository session and captured reads.
+ * @param scope the compiler scope.
+ * @param target the generated compiler configuration path.
+ * @returns the absolute generated configuration path.
+ */
+function writeScopeTsconfig(
+    session: Pick<Session, 'root' | 'installedRoot' | 'reads' | 'settingsFile'> & {
+        repository: Pick<Session['repository'], 'files' | 'scopes'>;
+    },
+    scope: ScopeSelection,
+    target: string,
+): string {
+    return writeTsconfig({
+        root: session.root,
+        typeRootsFolder: session.installedRoot,
+        reads: session.reads,
+        target: convertToPosixPath(relative(session.root, target)),
+        scope: scope.scope.path,
+        files: session.repository.files,
+        scopeEntries: session.repository.scopes,
+        options: checkedTsconfigOptions(session.settingsFile.settings.level, scope),
+    });
+}
+
+export {
+    runTsc,
+    buildTsconfig,
+    projectChecked,
+    writeScopeTsconfig,
+    appendBuildMetadata,
+    restoreCommandPaths,
+    writeReferenceProjects,
+    selectRequiredTsconfigOptions,
+};

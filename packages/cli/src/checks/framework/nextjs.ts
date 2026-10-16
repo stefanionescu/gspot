@@ -6,6 +6,7 @@ import { checkInput } from '#cli/execution/built-in.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
 import { listTypescriptNodes } from '#cli/parsers/typescript.ts';
 import { listChecksById } from '#cli/configurations/manifests.ts';
@@ -142,6 +143,12 @@ export async function nextjsTsc(session: Session, planned: PlannedCheck): Promis
             tool: getToolDeclaration(session.manifests.values(), TSC_TOOL, compiler.configuration),
         },
         root,
+        readTsconfigProject(
+            root,
+            planned.scope.scope.path,
+            planned.files.filter((file) => file.tags.includes('typescript')).map((file) => file.path),
+            scratchSession.reads,
+        ),
     );
     result.duration = performance.now() - started;
     return restoreCommandPaths(result, root, session.root);

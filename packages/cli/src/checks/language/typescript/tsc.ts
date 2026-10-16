@@ -78,6 +78,10 @@ function scopeCompilerProject(
     };
 }
 
+function selectReferenceProject(project: ReturnType<typeof readTsconfigProject>) {
+    return (project?.config.projectReferences ?? []).length > 0 ? project : undefined;
+}
+
 /**
  * Checks ordinary projects and every project named by a solution configuration.
  * @param session the repository session.
@@ -93,7 +97,7 @@ export async function tsc(session: Session, planned: PlannedCheck): Promise<Chec
             .map((file) => file.path),
         session.reads,
     );
-    const references = (project?.config.projectReferences ?? []).length > 0 ? project : undefined;
+    const references = selectReferenceProject(project);
     const prerequisites =
         references === undefined
             ? []
@@ -118,7 +122,14 @@ export async function tsc(session: Session, planned: PlannedCheck): Promise<Chec
     }
     const scratchSession =
         references === undefined ? session : { ...session, root: source.path, reads: createReadCache(source.path) };
-    const result = await runTsc(scratchSession, planned, source.path);
+    const result = await runTsc(
+        scratchSession,
+        planned,
+        source.path,
+        references === undefined || project === undefined
+            ? project
+            : { ...project, path: join(source.path, relative(session.root, project.path)) },
+    );
     return restoreCommandPaths(result, source.path, session.root);
 }
 

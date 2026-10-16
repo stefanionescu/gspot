@@ -1,16 +1,16 @@
 import { z } from 'zod';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { normalizeOutputPath } from '#cli/system/paths.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { toolFindings } from '#cli/execution/command/output.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
-import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
-import { TSCONFIG_FILE, TYPESCRIPT_TSCONFIG_CHECK } from '#cli/config/parsers/tsconfig.ts';
-import { writeTsconfig, selectRequiredTsconfigOptions } from '#cli/checks/language/typescript/compiler.ts';
+import { writeScopeTsconfig } from '#cli/checks/language/typescript/compiler.ts';
 
 import {
     FAILURE_LINE,
@@ -75,21 +75,17 @@ function svelteFindings(input: CheckInput, stdout: string): Finding[] {
 export async function svelteCheck(input: CheckInput): Promise<Finding[]> {
     using runtime = createScratchFolder();
     const target = join(runtime.path, TOOL_FILE_DIRECTORY, input.selection.scope.path, TSCONFIG_FILE);
-    const options = Object.fromEntries(
-        Object.entries(
-            selectRequiredTsconfigOptions(input.settingsFile.settings.level, input.selection.selected),
-        ).filter(([name]) => !input.selection.view.rulesOff(TYPESCRIPT_TSCONFIG_CHECK).includes(name)),
+    const config = writeScopeTsconfig(
+        {
+            root: input.root,
+            installedRoot: input.installedRoot,
+            reads: input.reads,
+            repository: { files: input.repositoryFiles, scopes: input.scopeEntries },
+            settingsFile: input.settingsFile,
+        },
+        input.selection,
+        target,
     );
-    const config = writeTsconfig({
-        root: input.root,
-        typeRootsFolder: input.installedRoot,
-        reads: input.reads,
-        target: convertToPosixPath(relative(input.root, target)),
-        scope: input.selection.scope.path,
-        files: input.repositoryFiles,
-        scopeEntries: input.scopeEntries,
-        options,
-    });
     const command = [...SVELTE_CHECK_COMMAND, SVELTE_TSCONFIG_FLAG, config];
     const result = await runCheckTool(input, command, { cwd: join(input.root, input.selection.scope.path) });
     const findings = svelteFindings(input, result.stdout);
