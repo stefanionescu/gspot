@@ -54,12 +54,14 @@ export function buildReferenceCollection(): Loader {
                     id,
                     data: { ...page.data, tableOfContents: SECTION_HEADING.test(body) ? undefined : false },
                 });
+                const filePath = `${PAGES_FOLDER}/${id}.md`;
                 entries.push({
                     id,
-                    filePath: `${PAGES_FOLDER}/${id}.md`,
+                    filePath,
                     data: metadata,
                     body,
-                    rendered: await context.renderMarkdown(body),
+                    // Starlight adds heading links only to Markdown with a path inside the docs collection.
+                    rendered: await context.renderMarkdown(body, { fileURL: new URL(filePath, context.config.root) }),
                     digest: context.generateDigest(JSON.stringify(page)),
                 });
             }
