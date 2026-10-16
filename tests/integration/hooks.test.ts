@@ -4,9 +4,9 @@ import { test, expect } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitSetting } from '#cli/system/git.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
@@ -106,7 +106,7 @@ test.each(['', 'app/'])('install points core.hooksPath at %s.gspot/hooks', async
     gitOutput(sandbox.path, ['init', '-q']);
     const root = join(sandbox.path, prefix);
     {
-        using log = openOwnershipLog(root);
+        using log = openWriter(root);
         const session = await openSession(root);
         writeGeneratedFiles(session, emitAll(session), log);
     }
@@ -141,7 +141,7 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
     await installRuntimes(main);
     commitAll(main);
     {
-        using log = openOwnershipLog(main);
+        using log = openWriter(main);
         await openSession(main).then((session) => writeGeneratedFiles(session, emitAll(session), log));
     }
     await using registry = await createInstallationRegistry(main, runCommand);
@@ -189,7 +189,7 @@ command = ${JSON.stringify([process.execPath, '-e', INDEX_COMMAND])}
     await installRuntimes(sandbox.path);
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
     {
-        using log = openOwnershipLog(project);
+        using log = openWriter(project);
         const session = await openSession(project);
         writeGeneratedFiles(session, emitAll(session), log);
     }

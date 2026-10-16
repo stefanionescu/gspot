@@ -6,10 +6,10 @@ import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { git, gitOutput } from '#tests/setup/git.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { rm, stat, readFile } from 'node:fs/promises';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { currentBlock } from '#cli/system/managed-blocks.ts';
 
@@ -103,7 +103,7 @@ test('switching the level and back writes the same files and the AGENTS.md level
         const session = await openSession(sandbox.path);
         const output = emitAll(session);
         const config = output.files.find((file) => file.path.endsWith('/eslint.config.mjs'))!;
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         writeGeneratedFiles(session, output, log);
         const block = output.blocks.find((block) => block.path === 'AGENTS.md')!.block;
         expect(block).toContain(`Level: \`${level}\``);
@@ -123,7 +123,7 @@ test.each([true, false])(
             ...(authored ? { '.gitignore': original } : {}),
         });
         {
-            using log = openOwnershipLog(repository.path);
+            using log = openWriter(repository.path);
             const session = await openSession(repository.path);
             writeGeneratedFiles(session, emitAll(session), log);
         }
@@ -135,7 +135,7 @@ test.each([true, false])(
         const initialized = await run(['git', 'init', '--quiet'], { cwd: repository.path });
         expect(initialized.code, initialized.stderr).toBe(0);
         {
-            using log = openOwnershipLog(repository.path);
+            using log = openWriter(repository.path);
             const session = await openSession(repository.path);
             writeGeneratedFiles(session, emitAll(session), log);
         }
@@ -143,7 +143,7 @@ test.each([true, false])(
         expect(installed.startsWith(original)).toBe(authored);
         expect(installed).toContain('.gspot/state/');
         {
-            using log = openOwnershipLog(repository.path);
+            using log = openWriter(repository.path);
             const session = await openSession(repository.path);
             writeGeneratedFiles(session, emitAll(session), log);
         }

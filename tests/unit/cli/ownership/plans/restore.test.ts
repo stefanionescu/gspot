@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { fileMode } from '#cli/system/safe-folder/reads.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
-import { applyPlans, openOwnershipLog } from '#cli/ownership/log.ts';
+import { applyPlans, openWriter } from '#cli/ownership/writer.ts';
 import { OWNERSHIP_REFUSAL, ADOPTED_FILE_CASES } from '#tests/config/generated-files.ts';
 import { planBlock, planManagedKeys, planReplacement, planRestoration } from '#cli/ownership/plans.ts';
 import { stat, chmod, lstat, unlink, readdir, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
@@ -17,7 +17,7 @@ import { stat, chmod, lstat, unlink, readdir, symlink, readFile, readlink, write
             'AGENTS.md': 'Authored instructions.\n',
             'bunfig.toml': '[install]\nexact = true\n',
         });
-        using log = openOwnershipLog(directory.path);
+        using log = openWriter(directory.path);
         applyPlans(log, [
             planBlock(log, 'AGENTS.md', 'instructions', 'markdown'),
             planManagedKeys(log, 'bunfig.toml', [{ path: ['install', 'minimumReleaseAge'], value: 604_800 }], true),
@@ -46,7 +46,7 @@ import { stat, chmod, lstat, unlink, readdir, symlink, readFile, readlink, write
         await using directory = await testdir();
         await createFileTree(directory.path, { '.gspot/authored.txt': 'keep\n' });
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
             applyPlans(log, [
                 planReplacement(log, {
                     path: 'config.txt',
@@ -64,7 +64,7 @@ import { stat, chmod, lstat, unlink, readdir, symlink, readFile, readlink, write
             ]);
         }
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
             applyPlans(log, [planRestoration(log, 'config.txt')]);
             expect(log.files.read('config.txt')).toBeUndefined();
             expect(await readFile(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('keep\n');
@@ -87,7 +87,7 @@ import { stat, chmod, lstat, unlink, readdir, symlink, readFile, readlink, write
         await symlink('../tool/original.sh', absolute);
         const next = { bytes: Buffer.from('../tool/bin.sh'), mode: 0o777, isLink: true as const };
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
             expect(() => {
                 applyPlans(log, [planReplacement(log, { path, next, kind: 'tool_file' })]);
             }).toThrow(`These files were not overwritten by gspot: ${path}${OWNERSHIP_REFUSAL}`);
@@ -102,7 +102,7 @@ import { stat, chmod, lstat, unlink, readdir, symlink, readFile, readlink, write
             );
         }
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
             applyPlans(log, [planRestoration(log, path)]);
             expect(await lstat(absolute).catch((error: unknown) => error)).toMatchObject({ code: 'ENOENT' });
             const originalMetadata = await stat(join(directory.path, 'vendor/tools/tool/original.sh'));
@@ -124,7 +124,7 @@ import { stat, chmod, lstat, unlink, readdir, symlink, readFile, readlink, write
     const regularReplacement = async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, { target: 'authored target' });
-        const log = openOwnershipLog(directory.path);
+        const log = openWriter(directory.path);
         const next = { bytes: Buffer.from('target'), mode: 0o777, isLink: true as const };
         try {
             applyPlans(log, [planReplacement(log, { path: 'tool', next, kind: 'tool_file' })]);
@@ -165,7 +165,7 @@ import { stat, chmod, lstat, unlink, readdir, symlink, readFile, readlink, write
         await using directory = await testdir();
         await createFileTree(directory.path, { 'guides/kept.md': 'authored\n' });
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
 
             applyPlans(log, [
                 planReplacement(log, {
@@ -187,7 +187,7 @@ import { stat, chmod, lstat, unlink, readdir, symlink, readFile, readlink, write
             await using directory = await testdir();
             await createFileTree(directory.path, { [path]: '{"v":1}\n' });
             {
-                using log = openOwnershipLog(directory.path);
+                using log = openWriter(directory.path);
 
                 const mode = log.files.read(path)!.mode;
                 applyPlans(log, [

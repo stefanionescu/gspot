@@ -8,10 +8,10 @@ import { join, delimiter } from 'node:path';
 import { parse, stringify } from 'smol-toml';
 import { emitAll } from '#cli/generation/files.ts';
 import { rejection } from '#tests/setup/matchers.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { prepareLockfiles } from '#cli/tools/lockfiles.ts';
@@ -235,7 +235,7 @@ export async function expectRefusedInstall(
     diagnostic: string,
     registry: { readonly requests: number },
 ): Promise<void> {
-    using owner = openOwnershipLog(root);
+    using owner = openWriter(root);
     const session = await openSession(root);
     const requests = registry.requests;
     const installation =
@@ -249,7 +249,7 @@ export async function expectRefusedInstall(
 /** Resolve and write the selected project inputs before exercising locked installation. */
 export async function writeLockedInputs(root: string, suppliedLog?: OwnershipLog): Promise<LockedInputs> {
     using resources = new DisposableStack();
-    const log = suppliedLog ?? resources.use(openOwnershipLog(root));
+    const log = suppliedLog ?? resources.use(openWriter(root));
     const session = await openSession(root);
     const generated = emitAll(session);
     writeGeneratedFiles(session, generated, log);

@@ -7,7 +7,7 @@ import { stat, readFile, writeFile } from 'node:fs/promises';
 import { type SpawnResult } from '#cli/types/system/processes.ts';
 import { INTERRUPTION_EXIT_CODE } from '#tests/config/execution.ts';
 import { planReplacement, planRestoration } from '#cli/ownership/plans.ts';
-import { applyPlans, openOwnershipLog, readOwnershipLog } from '#cli/ownership/log.ts';
+import { applyPlans, openWriter, readOwnershipLog } from '#cli/ownership/writer.ts';
 
 /** An owned child stops here before recovery observes its interrupted operation. */
 
@@ -31,7 +31,7 @@ import { applyPlans, openOwnershipLog, readOwnershipLog } from '#cli/ownership/l
             );
             expect(await readFile(join(directory.path, 'last.txt'), 'utf8')).toBe('authored last.txt\n');
             {
-                using log = openOwnershipLog(directory.path);
+                using log = openWriter(directory.path);
 
                 expect(readOwnershipLog(directory.path).pending).toBeUndefined();
                 expect(
@@ -61,7 +61,7 @@ import { applyPlans, openOwnershipLog, readOwnershipLog } from '#cli/ownership/l
             await using directory = await testdir();
             const paths = ['first.txt', 'middle.txt', 'last.txt'];
             {
-                using initial = openOwnershipLog(directory.path);
+                using initial = openWriter(directory.path);
 
                 applyPlans(
                     initial,
@@ -81,7 +81,7 @@ import { applyPlans, openOwnershipLog, readOwnershipLog } from '#cli/ownership/l
             );
             expect(child.code, child.stdout + child.stderr).toBe(INTERRUPTION_EXIT_CODE);
             {
-                using log = openOwnershipLog(directory.path);
+                using log = openWriter(directory.path);
 
                 expect(log.files.read('first.txt')).toBeUndefined();
                 expect(
@@ -99,7 +99,7 @@ import { applyPlans, openOwnershipLog, readOwnershipLog } from '#cli/ownership/l
     );
 }
 {
-    const implementation = join(CLI_SOURCE, 'ownership/log.ts');
+    const implementation = join(CLI_SOURCE, 'ownership/writer.ts');
 
     const boundary = join(CLI_SOURCE, 'system/safe-folder/open.ts');
 
@@ -113,7 +113,7 @@ import { applyPlans, openOwnershipLog, readOwnershipLog } from '#cli/ownership/l
         );
         expect(stopped.code, stopped.stderr).toBe(INTERRUPTION_EXIT_CODE);
         await writeFile(join(directory.path, 'config.txt'), 'developer edit\n');
-        expect(() => openOwnershipLog(directory.path)).toThrow(
+        expect(() => openWriter(directory.path)).toThrow(
             'A previous gspot run stopped while writing config.txt, and the file changed since then.',
         );
         expect(await readFile(join(directory.path, 'config.txt'), 'utf8')).toBe('developer edit\n');
@@ -143,10 +143,10 @@ mock.module(${JSON.stringify(boundary)}, () => ({
         }};
     }
 }));
-const { openOwnershipLog } = await import(${JSON.stringify(implementation)});
+const { openWriter } = await import(${JSON.stringify(implementation)});
 const {planReplacement}=await import(${JSON.stringify(join(CLI_SOURCE, 'ownership/plans.ts'))});
-const {applyPlans}=await import(${JSON.stringify(join(CLI_SOURCE, 'ownership/log.ts'))});
-const log = openOwnershipLog(${JSON.stringify(directory.path)});
+const {applyPlans}=await import(${JSON.stringify(join(CLI_SOURCE, 'ownership/writer.ts'))});
+const log = openWriter(${JSON.stringify(directory.path)});
 try {
     applyPlans(log, ['first.bin', 'second.bin'].map(path => planReplacement(log,{path, next: { bytes: Buffer.from(${JSON.stringify([...replacement])}), mode: 0o444 }, kind: 'tool_file', canReplace: true})));
 } catch (error) {
@@ -163,7 +163,7 @@ try {
         }
         expect(readOwnershipLog(directory.path).files).toStrictEqual([]);
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
 
             const plans = Object.entries(batch).map(([path, bytes]) =>
                 planReplacement(log, {
@@ -209,9 +209,9 @@ mock.module(${JSON.stringify(boundary)}, () => ({ ...boundary, openSafeFolder(ro
         if (path === ${JSON.stringify(path)} && ${JSON.stringify(point)} === 'after') process.exit(${String(INTERRUPTION_EXIT_CODE)});
     }};
 }}));
-const { openOwnershipLog, applyPlans } = await import(${JSON.stringify(join(CLI_SOURCE, 'ownership/log.ts'))});
+const { openWriter, applyPlans } = await import(${JSON.stringify(join(CLI_SOURCE, 'ownership/writer.ts'))});
 const { planReplacement, planRestoration } = await import(${JSON.stringify(join(CLI_SOURCE, 'ownership/plans.ts'))});
-using log = openOwnershipLog(process.cwd());
+using log = openWriter(process.cwd());
 ${call}
 `;
     return await runCommand([process.execPath, '-e', program], { cwd });

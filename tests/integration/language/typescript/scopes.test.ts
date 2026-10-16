@@ -3,11 +3,11 @@ import { test, expect } from 'bun:test';
 import { stat } from 'node:fs/promises';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -40,7 +40,7 @@ test.each([...LEVELS])(
             '.gspot/node_modules/@types/private/index.d.ts': privateTypes,
         });
         const session = await openSession(sandbox.path);
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         writeGeneratedFiles(session, emitAll(session), log);
         const broken = await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
@@ -87,7 +87,7 @@ test('typescript/tsc runs a covering parent tsconfig once for nested scopes', as
     });
     await installCompiler(sandbox.path);
     const session = await openSession(sandbox.path);
-    using log = openOwnershipLog(sandbox.path);
+    using log = openWriter(sandbox.path);
     writeGeneratedFiles(session, emitAll(session), log);
     const command = ['check', '--only', 'typescript/tsconfig', 'typescript/tsc', '--json'];
     const original = await spawnGspot(sandbox.path, command);

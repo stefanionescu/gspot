@@ -9,8 +9,8 @@ import { planReplacement } from '#cli/ownership/plans.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { pathExists, zipArchive } from '#tests/setup/files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandbox.ts';
+import { applyPlans, openWriter } from '#cli/ownership/writer.ts';
 import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
-import { applyPlans, openOwnershipLog } from '#cli/ownership/log.ts';
 import { createInstallationRegistry } from '#tests/setup/install.ts';
 import { VALE_PACKAGES, VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import { PROSE_SANDBOX, GOOGLE_TERMS_FILE, VALE_PACKAGE_FILES } from '#tests/config/prose.ts';
@@ -67,7 +67,7 @@ test('Vale package install deletes a package gspot no longer ships', async () =>
     try {
         const packages = VALE_PACKAGES.map((name) => `http://127.0.0.1:${String(server.port)}/${name}.zip`).join(', ');
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
 
             applyPlans(log, [
                 planReplacement(log, {
@@ -117,7 +117,7 @@ test('Vale package install replaces an edited package and keeps your files', asy
     try {
         const packages = VALE_PACKAGES.map((name) => `http://127.0.0.1:${String(server.port)}/${name}.zip`).join(', ');
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
 
             applyPlans(log, [
                 planReplacement(log, {

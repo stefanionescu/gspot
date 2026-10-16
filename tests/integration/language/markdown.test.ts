@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/checks.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { applyChanges } from '#tests/setup/files.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { sandboxPath } from '#tests/setup/install.ts';
 import { containing } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
@@ -11,7 +12,6 @@ import { runCheckSample } from '#tests/setup/fixes.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { parseOutput } from '#cli/parsers/output/formats.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
@@ -240,7 +240,7 @@ test('markdownlint JSON keeps file name delimiters, positions, and fixability', 
     const session = await openSession(root);
     const generated = emitAll(session);
     {
-        using log = openOwnershipLog(root);
+        using log = openWriter(root);
         writeGeneratedFiles(session, generated, log);
     }
     const environment = { PATH: sandboxPath() };

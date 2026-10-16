@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fakeCommand } from '#tests/setup/processes.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
 import { installPythonTools, preparePythonLockfile } from '#cli/tools/python/project.ts';
 import { UV_TOML, PYTHON_TOOL_PROJECT, PYTHON_TOOL_LOCKFILE } from '#tests/config/python/tool-project.ts';
@@ -27,7 +27,7 @@ test.each(['venv', 'sync'])('a failed uv %s can be repaired and hides index pass
             stderr: 'interpreter unavailable',
         });
     });
-    using log = openOwnershipLog(repository.path);
+    using log = openWriter(repository.path);
     const diagnosticError: unknown = await installPythonTools(
         repository.path,
         log.files,
@@ -61,7 +61,7 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
         await writeFile(join(options.cwd, 'uv.lock'), `${PYTHON_TOOL_LOCKFILE}\n# test+password\n`);
         return { code: 0, missing: false, duration: 0, stdout: '', stderr: '' };
     });
-    using log = openOwnershipLog(repository.path);
+    using log = openWriter(repository.path);
     const diagnosticError: unknown = await preparePythonLockfile(
         { path: '.gspot/pyproject.toml', content: PYTHON_TOOL_PROJECT, kind: 'tool_file' },
         { read: (path) => (path === '.gspot/uv.lock' ? undefined : log.files.read(path)) },

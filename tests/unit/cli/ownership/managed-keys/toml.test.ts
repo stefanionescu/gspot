@@ -7,9 +7,9 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { applyBlock } from '#cli/system/managed-blocks.ts';
 import { fileMode } from '#cli/system/safe-folder/reads.ts';
+import { applyPlans, openWriter } from '#cli/ownership/writer.ts';
 import { TWO_WEEKS_SECONDS } from '#tests/config/dependencies.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { applyPlans, openOwnershipLog } from '#cli/ownership/log.ts';
 import { OWNERSHIP_REFUSAL } from '#tests/config/generated-files.ts';
 import { planBlock, planManagedKeys, planRestoration } from '#cli/ownership/plans.ts';
 
@@ -18,7 +18,7 @@ import { planBlock, planManagedKeys, planRestoration } from '#cli/ownership/plan
         await using directory = await testdir();
         await createFileTree(directory.path, { 'broken.toml': '[tasks\n' });
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
 
             const changes = [{ path: ['tasks', 'gspot:check', 'run'], value: 'gspot check' }];
             expect(() => planManagedKeys(log, 'broken.toml', changes, true)).toThrow('broken.toml');
@@ -38,7 +38,7 @@ import { planBlock, planManagedKeys, planRestoration } from '#cli/ownership/plan
         await using sandbox = await testdir();
         const path = `config.${format}`;
         await createFileTree(sandbox.path, { [path]: format === 'json' ? '{}\n' : 'authored = true\n' });
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         applyPlans(log, [planManagedKeys(log, path, [{ path: ['owned'], value: true }], true)]);
         const authored = Buffer.from([0xff]);
         await writeFile(join(sandbox.path, path), authored);
@@ -56,7 +56,7 @@ import { planBlock, planManagedKeys, planRestoration } from '#cli/ownership/plan
         const original = '# Keep this comment.\nextends = "./authored.json"\n[compilerOptions]\nstrict = false\n';
         await createFileTree(directory.path, { 'compiler.toml': original });
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
             applyPlans(log, [
                 planManagedKeys(log, 'compiler.toml', [{ path: ['extends'], value: './.gspot/first.json' }], true),
             ]);
@@ -71,7 +71,7 @@ import { planBlock, planManagedKeys, planRestoration } from '#cli/ownership/plan
             );
         }
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
             applyPlans(log, [planRestoration(log, 'compiler.toml')]);
             expect(log.files.read('compiler.toml')!.bytes.toString('utf8')).toBe(
                 original.replace('strict = false', 'strict = true'),
@@ -84,7 +84,7 @@ import { planBlock, planManagedKeys, planRestoration } from '#cli/ownership/plan
         const original = 'private = true\noptional = true\n[scripts]\nprepare = "build-app"\ncheck = "gspot check"\n';
         await createFileTree(directory.path, { 'package.toml': original });
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
 
             applyPlans(log, [
                 planManagedKeys(
@@ -122,7 +122,7 @@ import { planBlock, planManagedKeys, planRestoration } from '#cli/ownership/plan
         await createFileTree(directory.path, { 'package.toml': content });
         await chmod(join(directory.path, 'package.toml'), 0o640);
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
 
             applyPlans(log, [
                 planManagedKeys(log, 'package.toml', [{ path: ['scripts', 'check'], value: 'gspot check' }], true),
@@ -143,7 +143,7 @@ import { planBlock, planManagedKeys, planRestoration } from '#cli/ownership/plan
         const configuration = 'authored = true\n[scripts]\ncheck = "gspot check"\n';
         await createFileTree(directory.path, { 'AGENTS.md': instructions, 'package.toml': configuration });
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
 
             applyPlans(log, [
                 planBlock(log, 'AGENTS.md', 'existing instructions', 'markdown'),
@@ -170,7 +170,7 @@ import { planBlock, planManagedKeys, planRestoration } from '#cli/ownership/plan
         await using directory = await testdir();
         const path = 'config.toml';
         await createFileTree(directory.path, { [path]: source });
-        const log = openOwnershipLog(directory.path);
+        const log = openWriter(directory.path);
         const fields = [
             { path: ['created', 'nested', 'first'], value: 1 },
             { path: ['created', 'nested', 'second'], value: 2 },
@@ -224,7 +224,7 @@ import { planBlock, planManagedKeys, planRestoration } from '#cli/ownership/plan
         });
         const session = await openSession(repository.path);
         const generated = emitAll(session).fileEdits.find((entry) => entry.path === 'bunfig.toml')!;
-        const log = openOwnershipLog(repository.path);
+        const log = openWriter(repository.path);
         applyPlans(log, [planManagedKeys(log, generated.path, generated.changes, true)]);
         const installed = await readFile(join(repository.path, 'bunfig.toml'), 'utf8');
         expect(Bun.TOML.parse(installed)).toStrictEqual({

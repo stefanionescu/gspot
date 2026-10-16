@@ -5,8 +5,8 @@ import { join, relative } from 'node:path';
 import { toPosix } from '#cli/system/paths.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
@@ -68,7 +68,7 @@ const eslintConfigurationSchema = z.object({
 async function createEslint(root: string, options: ESLint.Options = {}): Promise<ESLint> {
     await linkInstalledModules(join(root, 'node_modules'));
     const session = await openSession(root);
-    using log = openOwnershipLog(root);
+    using log = openWriter(root);
     const generated = emitAll(session);
     writeGeneratedFiles(session, generated, log);
     return new ESLint({ ...options, cwd: root, overrideConfigFile: join(root, '.gspot/config/eslint.config.mjs') });

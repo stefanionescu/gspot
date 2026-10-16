@@ -5,10 +5,10 @@ import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { toolsPath } from '#tests/setup/install.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { fileMode } from '#cli/system/safe-folder/reads.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -28,7 +28,7 @@ test('javascript/tsc at level all also checks your build and dist folders', asyn
     });
     const environment = { PATH: toolsPath() };
     const session = await openSession(sandbox.path);
-    using log = openOwnershipLog(sandbox.path);
+    using log = openWriter(sandbox.path);
     writeGeneratedFiles(session, emitAll(session), log);
     const command = ['check', '--only', 'javascript/tsc', '--json'];
     const broken = await spawnGspot(sandbox.path, command, environment);
@@ -64,7 +64,7 @@ export const total = accepted;
         const session = await openSession(sandbox.path);
         const emitted = emitAll(session);
         const generated = emitted.files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         writeGeneratedFiles(session, emitted, log);
         await chmod(join(sandbox.path, generated.path), 0o444);
         const command = ['check', '--only', 'javascript/tsc', '--json'];
@@ -98,7 +98,7 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
     expect(outputs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         ...SCOPE_JSCONFIG_PATHS,
     ]);
-    using log = openOwnershipLog(sandbox.path);
+    using log = openWriter(sandbox.path);
     writeGeneratedFiles(session, emitted, log);
     const command = ['check', '--only', 'javascript/tsc', '--json'];
     const env = { PATH: toolsPath() };
@@ -145,7 +145,7 @@ path = "apps/web"
     });
     const session = await openSession(sandbox.path);
     const emitted = emitAll(session);
-    using ownership = openOwnershipLog(sandbox.path);
+    using ownership = openWriter(sandbox.path);
     writeGeneratedFiles(session, emitted, ownership);
     const environment = { PATH: toolsPath() };
     const command = ['check', '--only', 'javascript/tsc', '--json', '--', 'apps/web/src/main.js'];

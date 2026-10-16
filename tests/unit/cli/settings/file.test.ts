@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { COMMENTED_SETTINGS } from '#tests/config/samples/settings.ts';
 import { link, stat, symlink, readFile, writeFile } from 'node:fs/promises';
 import { setKey, editSettings, readSettingsEdit } from '#cli/settings/edit.ts';
@@ -38,7 +38,7 @@ test('an edit planned from old bytes is refused, and a new plan is written', asy
         setKey(written, 'level', 'all');
     });
     await writeFile(path, `${written}# Concurrent edit.\n`);
-    using log = openOwnershipLog(sandbox.path);
+    using log = openWriter(sandbox.path);
     expect(() => {
         writeSettings(log, result.text, input.original);
     }).toThrow();
@@ -64,7 +64,7 @@ test('writing an unchanged file does not touch it', async () => {
     await writeFile(path, written);
     const input = readSettingsEdit(sandbox.path);
     const before = await stat(path);
-    using log = openOwnershipLog(sandbox.path);
+    using log = openWriter(sandbox.path);
     writeSettings(log, input.text, input.original);
     expect(await stat(path)).toMatchObject({ ino: before.ino, mtimeMs: before.mtimeMs, mode: before.mode });
 });

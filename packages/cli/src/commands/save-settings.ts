@@ -1,11 +1,11 @@
 import { GspotError } from '#cli/errors.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { noteLines } from '#cli/terminal/print.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { openSession } from '#cli/commands/session.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { findRoot } from '#cli/repository/find-root.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
@@ -21,7 +21,7 @@ import type { SaveSettingsResult, SaveSettingsOptions } from '#cli/types/command
  */
 async function saveSettings(root: string, options: SaveSettingsOptions): Promise<SaveSettingsResult> {
     const { input, change, summary } = options;
-    using log = openOwnershipLog(root);
+    using log = openWriter(root);
     const result = editSettings(root, input, change);
     const session = await openSession(root, { settings: result.settings, text: result.text });
     const generated = emitAll(session);

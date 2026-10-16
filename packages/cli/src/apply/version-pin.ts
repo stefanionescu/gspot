@@ -1,5 +1,5 @@
 import { GspotError } from '#cli/errors.ts';
-import { applyPlans } from '#cli/ownership/log.ts';
+import { applyPlans } from '#cli/ownership/writer.ts';
 import { startRunner } from '#cli/generation/hooks.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import type { OwnershipLog } from '#cli/types/ownership.ts';

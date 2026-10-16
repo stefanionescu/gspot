@@ -5,11 +5,11 @@ import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { rejection } from '#tests/setup/matchers.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { installTools } from '#cli/install/install.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import type { InstallJson } from '#cli/types/install.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
@@ -81,7 +81,7 @@ test.each([...PYTHON_PROJECTS])(
         expect(await pathExists(join(clone, '.gspot/state/ownership.json'))).toBe(false);
         for (let attempt = 0; attempt < 2; attempt++) {
             {
-                using log = openOwnershipLog(clone);
+                using log = openWriter(clone);
                 const session = await openSession(clone);
                 const installed = await installTools(session, log, emitAll(session));
                 expect(installed.exitCode, installed.note).toBe(0);
@@ -125,7 +125,7 @@ test('conflicted Python lockfiles survive offline apply and are repaired by inst
         throw new Error('The Python project has no locked inputs.');
     const { rootConfiguration } = prepared;
     {
-        using log = openOwnershipLog(repository.path);
+        using log = openWriter(repository.path);
         const session = await openSession(repository.path);
         const installed = await installTools(session, log, emitAll(session));
         expect(installed.exitCode, installed.note).toBe(0);
@@ -136,7 +136,7 @@ test('conflicted Python lockfiles survive offline apply and are repaired by inst
     const repaired = await spawnGspot(repository.path, ['apply']);
     expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
     {
-        using log = openOwnershipLog(repository.path);
+        using log = openWriter(repository.path);
         const session = await openSession(repository.path);
         const installed = await installTools(session, log, emitAll(session));
         expect(installed.exitCode, installed.note).toBe(0);
@@ -164,7 +164,7 @@ test('a uv that copies index credentials into the lockfile is refused and the in
     );
     let refused: string;
     {
-        using log = openOwnershipLog(root);
+        using log = openWriter(root);
         const session = await openSession(root);
         const manifest = emitAll(session).files.find((file) => file.path === '.gspot/pyproject.toml')!;
         refused = await rejection(

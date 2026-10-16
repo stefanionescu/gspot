@@ -1,10 +1,10 @@
 import { emitAll } from '#cli/generation/files.ts';
 import { findStaleFiles } from '#cli/apply/stale.ts';
 import { type StaleFile } from '#cli/types/apply.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { findRoot } from '#cli/repository/find-root.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { readVersionPin } from '#cli/apply/version-pin.ts';
@@ -72,7 +72,7 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
         const result = planApply(session);
         return { ...result, text: `${result.text}Dry run: nothing was written.\n` };
     }
-    using log = openOwnershipLog(root);
+    using log = openWriter(root);
     const report = writeGeneratedFiles(session, emitAll(session), log);
     return { text: reportText(report), json: report, exitCode: 0 };
 }

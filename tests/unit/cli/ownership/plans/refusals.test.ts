@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { fileMode } from '#cli/system/safe-folder/reads.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { OWNERSHIP_REFUSAL } from '#tests/config/generated-files.ts';
-import { identify, applyPlans, openOwnershipLog } from '#cli/ownership/log.ts';
+import { identify, applyPlans, openWriter } from '#cli/ownership/writer.ts';
 import { chmod, lstat, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 import { planBlock, planDeletion, planManagedKeys, planReplacement, planRestoration } from '#cli/ownership/plans.ts';
 
@@ -16,7 +16,7 @@ import { planBlock, planDeletion, planManagedKeys, planReplacement, planRestorat
         await symlink('../outside', join(project, 'tool'));
         const target = await readlink(join(project, 'tool'));
         {
-            using log = openOwnershipLog(project);
+            using log = openWriter(project);
 
             const attributes = await lstat(join(project, 'tool'));
             const mode = attributes.mode & 0o7777;
@@ -47,7 +47,7 @@ import { planBlock, planDeletion, planManagedKeys, planReplacement, planRestorat
         const original = 'extends = "./authored.json"\nstrict = true\n';
         await createFileTree(directory.path, { 'config.toml': original });
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
 
             const plan = planManagedKeys(log, 'config.toml', [{ path: ['extends'], value: './managed.json' }], true);
             expect(await readFile(join(directory.path, 'config.toml'), 'utf8')).toBe(original);
@@ -69,7 +69,7 @@ import { planBlock, planDeletion, planManagedKeys, planReplacement, planRestorat
             await createFileTree(directory.path, { 'config.txt': 'authored\n' });
             await chmod(join(directory.path, 'config.txt'), 0o640);
             {
-                using log = openOwnershipLog(directory.path);
+                using log = openWriter(directory.path);
 
                 const plan =
                     kind === 'replacement'
@@ -102,7 +102,7 @@ import { planBlock, planDeletion, planManagedKeys, planReplacement, planRestorat
         await using directory = await testdir();
         await createFileTree(directory.path, { 'first.txt': 'original first', 'last.txt': 'original last' });
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
 
             const plans = ['first.txt', 'last.txt'].map((path) =>
                 planReplacement(log, {
@@ -126,7 +126,7 @@ import { planBlock, planDeletion, planManagedKeys, planReplacement, planRestorat
         await using directory = await testdir();
         await createFileTree(directory.path, { 'owned.txt': 'original', 'authored.txt': 'keep authored' });
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
 
             applyPlans(log, [
                 planReplacement(log, {
@@ -159,7 +159,7 @@ import { planBlock, planDeletion, planManagedKeys, planReplacement, planRestorat
         const path = 'config.txt';
         const next = { bytes: Buffer.from('installed\n'), mode: fileMode({ mode: 0o644 }) };
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
             applyPlans(log, [planReplacement(log, { path, next, kind: 'tool_file' })]);
             await writeFile(join(directory.path, path), 'reviewed\n');
             const reviewed = log.files.read(path)!;
@@ -179,7 +179,7 @@ import { planBlock, planDeletion, planManagedKeys, planReplacement, planRestorat
             expect(log.entryFor(path)?.written).toStrictEqual(identify(reviewed));
             expect(planReplacement(log, request).entry).toBeUndefined();
         }
-        using reopened = openOwnershipLog(directory.path);
+        using reopened = openWriter(directory.path);
         expect(reopened.entryFor(path)?.written).toStrictEqual(identify(reopened.files.read(path)!));
     });
 
@@ -196,7 +196,7 @@ import { planBlock, planDeletion, planManagedKeys, planReplacement, planRestorat
                 const path = join(directory.path, 'authored.json');
                 await writeFile(path, '{"semi":false}\n', { mode: 0o640 });
                 {
-                    using log = openOwnershipLog(directory.path);
+                    using log = openWriter(directory.path);
 
                     const read = log.files.read('authored.json')!;
                     await change(path);
@@ -220,7 +220,7 @@ import { planBlock, planDeletion, planManagedKeys, planReplacement, planRestorat
                     await chmod(path, read.mode);
                 }
                 {
-                    using log = openOwnershipLog(directory.path);
+                    using log = openWriter(directory.path);
                     const refreshed = log.files.read('authored.json')!;
                     applyPlans(log, [planDeletion(log, 'authored.json', refreshed)]);
                     expect(log.files.read('authored.json')).toBeUndefined();

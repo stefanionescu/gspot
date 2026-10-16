@@ -4,11 +4,11 @@ import { commitAll } from '#tests/setup/git.ts';
 import { INIT_FILES } from '#tests/config/init.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { NPM_CLIENT_ROWS } from '#tests/config/npm.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
 import { installNpmTools } from '#cli/tools/npm/project.ts';
@@ -87,7 +87,7 @@ test('a failed program download of an npm wrapper keeps the lockfile and install
             return original(argv, options, output);
         }),
     );
-    using owner = openOwnershipLog(root);
+    using owner = openWriter(root);
     const session = await openSession(root);
     expect(await rejection(installNpmTools(session, owner.files, tools, []))).toContain(
         'Native wrapper download failed',

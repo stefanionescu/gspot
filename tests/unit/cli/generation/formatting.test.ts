@@ -7,10 +7,10 @@ import { test, expect, describe } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { scopeView, knownSettings } from '#cli/settings/view.ts';
@@ -71,7 +71,7 @@ test('a YAML indent override gives EditorConfig and Prettier the same width', as
     });
     const session = await openSession(directory.path);
     const generated = emitAll(session);
-    using log = openOwnershipLog(directory.path);
+    using log = openWriter(directory.path);
     writeGeneratedFiles(session, generated, log);
     const path = join(directory.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
@@ -100,7 +100,7 @@ test('Prettier overrides agree in the tool file, the root pointer and editor loo
         'package.json': '{"private":true}\n',
         ...Object.fromEntries(PRETTIER_OPTIONS_BY_FILE.map(({ file }) => [file, 'const greeting="hello";'])),
     });
-    using log = openOwnershipLog(root);
+    using log = openWriter(root);
     const session = await openSession(root);
     writeGeneratedFiles(session, emitAll(session), log);
     for (const { file, ...expected } of PRETTIER_OPTIONS_BY_FILE) {

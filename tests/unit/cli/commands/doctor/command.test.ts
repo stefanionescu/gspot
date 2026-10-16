@@ -5,10 +5,10 @@ import { gitOutput } from '#tests/setup/git.ts';
 import { readTree } from '#tests/setup/files.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
@@ -31,7 +31,7 @@ test('doctor lists files in .gspot/ that gspot did not write, and apply leaves t
         '.gspot/authored.json': original,
     });
     {
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         const session = await openSession(sandbox.path);
         writeGeneratedFiles(session, emitAll(session), log);
     }
@@ -85,7 +85,7 @@ test('doctor suggests the command that adds the configuration of a new Python fi
         'entry.sh': 'echo\n',
     });
     {
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         const session = await openSession(sandbox.path);
         writeGeneratedFiles(session, emitAll(session), log);
     }

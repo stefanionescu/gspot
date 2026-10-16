@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash/tools.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
@@ -36,7 +36,7 @@ import { readVersionPin, writeVersionPin, assertVersionPin } from '#cli/apply/ve
         await using sandbox = await testdir();
         expect(readVersionPin(sandbox.path)).toBeUndefined();
         {
-            using log = openOwnershipLog(sandbox.path);
+            using log = openWriter(sandbox.path);
             writeVersionPin(log);
         }
         expect(readVersionPin(sandbox.path)).toBe(RUNNING_VERSION);

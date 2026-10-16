@@ -2,7 +2,7 @@ import { decodeUtf8 } from '#cli/text.ts';
 import { isRecord } from '#cli/objects.ts';
 import { GspotError } from '#cli/errors.ts';
 import { isDeepStrictEqual } from 'node:util';
-import { applyPlans } from '#cli/ownership/log.ts';
+import { applyPlans } from '#cli/ownership/writer.ts';
 import { keptComments } from '#cli/settings/comments.ts';
 import { layOutSettings } from '#cli/settings/layout.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';

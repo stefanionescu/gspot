@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { TEST_TARGET_PBXPROJ } from '#tests/config/xcode.ts';
 import { type RunReport } from '#cli/types/execution/check.ts';
@@ -106,7 +106,7 @@ configurations = ["swift-tests"]
         const emitted = emitAll(session);
         const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
-        using log = openOwnershipLog(root);
+        using log = openWriter(root);
         writeGeneratedFiles(session, emitted, log);
 
         await Bun.write(join(root, `${prefix}Sources/Value.swift`), PARSER_SOURCE);
@@ -153,7 +153,7 @@ configurations = ["swift-tests"]
         const emitted = emitAll(session);
         const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
-        using log = openOwnershipLog(root);
+        using log = openWriter(root);
         writeGeneratedFiles(session, emitted, log);
 
         const nestedPath = join(root, `${prefix}AppTests/.swiftlint.yml`);
@@ -197,7 +197,7 @@ configurations = ["swift-tests"]
         const emitted = emitAll(session);
         const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
-        using log = openOwnershipLog(root);
+        using log = openWriter(root);
         writeGeneratedFiles(session, emitted, log);
 
         await Bun.write(
@@ -236,7 +236,7 @@ configurations = ["swift-tests"]
         const emitted = emitAll(session);
         const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
-        using log = openOwnershipLog(root);
+        using log = openWriter(root);
         writeGeneratedFiles(session, emitted, log);
 
         const path = join(root, `${prefix}.swiftlint.yml`);
@@ -266,7 +266,7 @@ configurations = ["swift-tests"]
         const emitted = emitAll(session);
         const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.filter(({ path }) => path === `${scope}/.swiftlint.yml`)).toHaveLength(1);
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         writeGeneratedFiles(session, emitted, log);
         const native = await runCommand(
             ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],

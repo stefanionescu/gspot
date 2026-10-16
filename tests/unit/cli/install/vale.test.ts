@@ -3,11 +3,11 @@ import { test, expect } from 'bun:test';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
 import { executableNames } from '#cli/system/executables.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
@@ -25,7 +25,7 @@ test.each([...VALE_INSTALL_FAILURES])(
             '.gspot/vale/Google/terms.yml': 'previous bytes\n',
             'guide.md': 'Authored text.\n',
         });
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         const session = await openSession(sandbox.path);
         const tool = toolDeclaration(session.manifests.values(), 'vale');
         const executable = join(sandbox.path, 'node_modules/.bin', executableNames('vale')[0]!);
@@ -63,7 +63,7 @@ test.each([...LEVELS])(
         expect(hasValePackages(sandbox.path, level)).toBe(level === 'recommended');
         for (const folder of VALE_PACKAGE_FOLDERS)
             await createFileTree(sandbox.path, { [`.gspot/vale/${folder}/.keep`]: '' });
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         log.state.installed = ['vale'];
         log.save();
         expect(hasValePackages(sandbox.path, level)).toBe(true);
@@ -77,7 +77,7 @@ test.each([...VALE_PACKAGE_FOLDERS])(
         await createFileTree(sandbox.path, { '.gspot/config/vale.ini': 'Packages = \n' });
         for (const folder of VALE_PACKAGE_FOLDERS.filter((folder) => folder !== missing))
             await createFileTree(sandbox.path, { [`.gspot/vale/${folder}/.keep`]: '' });
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         log.state.installed = ['vale'];
         log.save();
         expect(hasValePackages(sandbox.path, 'all')).toBe(false);

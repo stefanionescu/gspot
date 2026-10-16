@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { applyBlock } from '#cli/system/managed-blocks.ts';
-import { applyPlans, openOwnershipLog } from '#cli/ownership/log.ts';
+import { applyPlans, openWriter } from '#cli/ownership/writer.ts';
 import { planBlock, planRestoration } from '#cli/ownership/plans.ts';
 import { OWNERSHIP_REFUSAL } from '#tests/config/generated-files.ts';
 
@@ -11,7 +11,7 @@ import { OWNERSHIP_REFUSAL } from '#tests/config/generated-files.ts';
     test('an edited or repeated managed block is kept and not overwritten', async () => {
         await using directory = await testdir();
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
 
             applyPlans(log, [planBlock(log, 'AGENTS.md', 'installed instructions', 'markdown')]);
             const edited = log.files
@@ -42,7 +42,7 @@ import { OWNERSHIP_REFUSAL } from '#tests/config/generated-files.ts';
         const prefix = 'Additional instructions.\n';
         const suffix = '\nLater authored instructions.\n';
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
             applyPlans(log, [planBlock(log, 'AGENTS.md', 'first instructions', 'markdown')]);
             const installed = log.files.read('AGENTS.md')!.bytes.toString('utf8');
             expect(installed.startsWith(original)).toBe(true);
@@ -55,7 +55,7 @@ import { OWNERSHIP_REFUSAL } from '#tests/config/generated-files.ts';
             );
         }
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
             applyPlans(log, [planRestoration(log, 'AGENTS.md')]);
             expect(log.files.read('AGENTS.md')!.bytes.toString('utf8')).toBe(prefix + original + suffix);
         }
@@ -65,7 +65,7 @@ import { OWNERSHIP_REFUSAL } from '#tests/config/generated-files.ts';
         await using directory = await testdir();
         await createFileTree(directory.path, { 'AGENTS.md': '' });
         {
-            using log = openOwnershipLog(directory.path);
+            using log = openWriter(directory.path);
 
             applyPlans(log, [planBlock(log, 'AGENTS.md', 'instructions', 'markdown')]);
             applyPlans(log, [planRestoration(log, 'AGENTS.md')]);

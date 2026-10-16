@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { fileMode } from '#cli/system/safe-folder/reads.ts';
 import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
+import { applyPlans, openWriter } from '#cli/ownership/writer.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/stylelint.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { applyPlans, openOwnershipLog } from '#cli/ownership/log.ts';
 import { OWNERSHIP_REFUSAL } from '#tests/config/generated-files.ts';
 import { planManagedKeys, planRestoration } from '#cli/ownership/plans.ts';
 
@@ -17,7 +17,7 @@ test('managed JSON keys survive reopening, updates and removal and keep other by
     await chmod(join(sandbox.path, path), 0o640);
     const changes = [{ path: ['stylelint'], value: { extends: './.stylelintrc.json' } }];
     {
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         applyPlans(log, [planManagedKeys(log, path, changes, true)]);
         expect(log.entryFor(path)?.keys?.format).toBe('json');
         expect(hasManagedKeys(sandbox.path, { path, changes })).toBe(true);
@@ -29,7 +29,7 @@ test('managed JSON keys survive reopening, updates and removal and keep other by
         await writeFile(join(sandbox.path, path), installed.replace('native-project', 'edited-project'));
     }
     {
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         applyPlans(log, [planManagedKeys(log, path, [{ path: ['stylelint'], value: { extends: './next.json' } }])]);
         expect(hasManagedKeys(sandbox.path, { path, changes })).toBe(false);
         applyPlans(log, [planRestoration(log, path)]);
@@ -44,7 +44,7 @@ test('managed JSON keys survive reopening, updates and removal and keep other by
 test('an edited managed JSON key and its record stay as they are on update and give-back', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'package.json': STYLELINT_PACKAGE_JSON });
-    using log = openOwnershipLog(sandbox.path);
+    using log = openWriter(sandbox.path);
     applyPlans(log, [
         planManagedKeys(log, 'package.json', [{ path: ['stylelint'], value: { extends: './managed.json' } }], true),
     ]);
@@ -68,7 +68,7 @@ test('JSONC key edits keep comments, your containers and array order, and remove
     await using sandbox = await testdir();
     const original = '// Keep this comment.\n{ "kept": {}, "entries": [0, false, ""], }\n';
     await createFileTree(sandbox.path, { 'tool.jsonc': original });
-    using log = openOwnershipLog(sandbox.path);
+    using log = openWriter(sandbox.path);
     const fields = [
         { path: ['created', 'nested', 'owned'], value: 0 },
         { path: ['kept', 'owned'], value: false },
@@ -85,7 +85,7 @@ test.each(['', '[]', 'false', '{"stylelint":', '{ /* comment */ "stylelint": {} 
     async (source) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'package.json': source });
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         const records = structuredClone(log.state);
         expect(() =>
             planManagedKeys(log, 'package.json', [{ path: ['stylelint'], value: { extends: './managed.json' } }], true),

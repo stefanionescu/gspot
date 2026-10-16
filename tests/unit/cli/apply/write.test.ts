@@ -15,7 +15,7 @@ import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
 import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
-import { applyPlans, openOwnershipLog } from '#cli/ownership/log.ts';
+import { applyPlans, openWriter } from '#cli/ownership/writer.ts';
 import { EXTERNAL_INPUT_CASES } from '#tests/config/generated-files.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { COMMITLINT_PACKAGE, COMMITLINT_PROJECT } from '#tests/config/commitlint.ts';
@@ -30,7 +30,7 @@ import { STYLELINT_FILES, STYLELINT_PACKAGE_JSON } from '#tests/config/stylelint
         const edited = `level = "all"\n${initial}`;
         await Bun.write(join(sandbox.path, 'gspot.toml'), edited);
         {
-            using log = openOwnershipLog(session.root);
+            using log = openWriter(session.root);
             expect(() => writeGeneratedFiles(session, emitAll(session), log)).toThrow(
                 'The gspot.toml file changed while gspot was running. Run the command again.',
             );
@@ -46,7 +46,7 @@ import { STYLELINT_FILES, STYLELINT_PACKAGE_JSON } from '#tests/config/stylelint
             'gspot.toml': settingsText([], { rules: true, tables: '[rules]\nenabled = true\n' }),
         });
         {
-            using log = openOwnershipLog(sandbox.path);
+            using log = openWriter(sandbox.path);
 
             applyPlans(log, [
                 planReplacement(log, {
@@ -105,7 +105,7 @@ import { STYLELINT_FILES, STYLELINT_PACKAGE_JSON } from '#tests/config/stylelint
         });
         const root = join(directory.path, 'project');
         {
-            using log = openOwnershipLog(root);
+            using log = openWriter(root);
 
             applyPlans(log, [
                 planReplacement(log, {
@@ -166,7 +166,7 @@ test.each([...TOOL_FOLDERS])(
             [`${folder}/tool/index.js`]: 'export {};\n',
         });
         const session = await openSession(directory.path);
-        using log = openOwnershipLog(directory.path);
+        using log = openWriter(directory.path);
         log.state.installed = [kind];
         log.save();
         writeGeneratedFiles(session, { files: [], blocks: [], fileEdits: [], notes: [] }, log);
@@ -235,7 +235,7 @@ test.each([
             })),
         );
         {
-            using log = openOwnershipLog(sandbox.path);
+            using log = openWriter(sandbox.path);
             writeGeneratedFiles(session, generated, log);
             expect(log.entryFor('app/package.json')?.keys?.format).toBe('json');
         }
@@ -248,7 +248,7 @@ test.each([
         session = await openSession(sandbox.path);
         expect(emitAll(session).fileEdits).toStrictEqual([]);
         {
-            using log = openOwnershipLog(sandbox.path);
+            using log = openWriter(sandbox.path);
             writeGeneratedFiles(session, emitAll(session), log);
             expect(log.entryFor('package.json')).toBeUndefined();
             expect(log.entryFor('app/package.json')).toBeUndefined();

@@ -4,11 +4,11 @@ import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { containingAll } from '#tests/setup/matchers.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -69,7 +69,7 @@ reason = "Test assertions deliberately verify the behavior."
         '.gspot/config/app/ruff.toml',
         '.gspot/config/ruff.toml',
     ]);
-    using log = openOwnershipLog(sandbox.path);
+    using log = openWriter(sandbox.path);
     writeGeneratedFiles(session, emitted, log);
     const app = parse(configs.find(({ path }) => path === '.gspot/config/app/ruff.toml')!.content);
     expect(app).toMatchObject({ lint: { select: containingAll(['PT001']) } });

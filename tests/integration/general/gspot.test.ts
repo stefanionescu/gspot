@@ -3,12 +3,12 @@ import { test, expect } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
 import { SHELLCHECK_RC } from '#tests/config/bash/tools.ts';
@@ -69,7 +69,7 @@ test('gspot/generated-files reports an edited file and one with merge conflict m
 
 /** Write the generated files through their ownership log. */
 async function writeOwnedFiles(root: string): Promise<void> {
-    using log = openOwnershipLog(root);
+    using log = openWriter(root);
     const session = await openSession(root);
     writeGeneratedFiles(session, emitAll(session), log);
 }

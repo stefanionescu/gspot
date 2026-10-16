@@ -6,10 +6,10 @@ import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitSetting } from '#cli/system/git.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { hookContext } from '#tests/setup/repository.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { installCommand } from '#cli/commands/install.ts';
@@ -41,7 +41,7 @@ test.each([...HOOK_REPOSITORIES])(
             authoredPaths.map(async (path) => ({ path, content: await Bun.file(join(sandbox.path, path)).text() })),
         );
         {
-            using log = openOwnershipLog(sandbox.path);
+            using log = openWriter(sandbox.path);
             const session = await openSession(sandbox.path);
             writeGeneratedFiles(session, emitAll(session), log);
         }

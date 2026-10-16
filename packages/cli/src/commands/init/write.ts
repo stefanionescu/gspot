@@ -7,7 +7,7 @@ import { type OwnershipLog } from '#cli/types/ownership.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { type InitPrepared } from '#cli/types/commands/init.ts';
 import { type FileCopy } from '#cli/types/system/safe-folder.ts';
-import { applyPlans, openOwnershipLog } from '#cli/ownership/log.ts';
+import { applyPlans, openWriter } from '#cli/ownership/writer.ts';
 
 // Deletes replaced files only when their bytes still match the plan.
 function deleteReplacedFiles(
@@ -42,7 +42,7 @@ function deleteReplacedFiles(
  * @returns the lines to print
  */
 export function writeInitFiles(root: string, prepared: InitPrepared): string[] {
-    using log = openOwnershipLog(root);
+    using log = openWriter(root);
     const { session, generated } = prepared;
     writeSettings(log, prepared.settingsText, prepared.read.get(SETTINGS_FILE));
     const destinations = expectedPaths(session, generated);

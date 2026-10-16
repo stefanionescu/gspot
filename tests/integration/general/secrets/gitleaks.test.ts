@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { toolsPath } from '#tests/setup/install.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
@@ -31,7 +31,7 @@ test('the staged scan skips a folder without Git and checks staged changes once 
         'src/config.js': `const token = "${API_TOKEN}";\n`,
     });
     {
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         const session = await openSession(sandbox.path);
         writeGeneratedFiles(session, emitAll(session), log);
     }

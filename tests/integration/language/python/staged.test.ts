@@ -3,11 +3,11 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { emitAll } from '#cli/generation/files.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { containing } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { installTools } from '#cli/install/install.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
 import { createPythonSandbox } from '#tests/setup/python.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -18,7 +18,7 @@ test('a staged Python finding is reported by Ruff from the installed environment
         indexFile: 'pyproject.toml',
     });
     {
-        using log = openOwnershipLog(prepared.root);
+        using log = openWriter(prepared.root);
         const session = await openSession(prepared.root);
         const installed = await installTools(session, log, emitAll(session));
         expect(installed.exitCode, installed.note).toBe(0);

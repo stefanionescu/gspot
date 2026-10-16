@@ -171,7 +171,7 @@ export function isRecorded(file: FileCopy | undefined, expected: Identity | unde
  *
  * @returns the context, which the command disposes.
  */
-export function openOwnershipLog(root: string): OwnershipLog {
+export function openWriter(root: string): OwnershipLog {
     using resources = new DisposableStack();
     const files = resources.use(openSafeFolder(root));
     files.claim(WRITER_LOCK_FILE);

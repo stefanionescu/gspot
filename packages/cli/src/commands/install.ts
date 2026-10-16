@@ -1,10 +1,10 @@
 import { emitAll } from '#cli/generation/files.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { printResult } from '#cli/terminal/print.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { installTools } from '#cli/install/install.ts';
 import { findRoot } from '#cli/repository/find-root.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
@@ -20,7 +20,7 @@ export async function installCommand(cwd: string): Promise<CommandResult> {
     await assertVersionPin(root);
     const session = await openSession(root, readSettings(root));
     const generated = emitAll(session);
-    using log = openOwnershipLog(root);
+    using log = openWriter(root);
     const { note, exitCode, steps } = await installTools(session, log, generated);
     return {
         text: `${note === '' ? 'Nothing to install.' : note}\n`,

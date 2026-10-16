@@ -2,7 +2,7 @@ import { GspotError } from '#cli/errors.ts';
 import { runTool } from '#cli/tools/run.ts';
 import { toPosix } from '#cli/system/paths.ts';
 import { join, dirname, resolve } from 'node:path';
-import { readOwnershipLog } from '#cli/ownership/log.ts';
+import { readOwnershipLog } from '#cli/ownership/writer.ts';
 import type { ValeInstallation } from '#cli/types/install.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';

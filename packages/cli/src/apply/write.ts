@@ -8,7 +8,7 @@ import { isStray, expectedPaths } from '#cli/apply/stale.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
 import type { FileCopy } from '#cli/types/system/safe-folder.ts';
 import type { ApplyReport, WriteRequest } from '#cli/types/apply.ts';
-import { applyPlans, notOverwrittenError } from '#cli/ownership/log.ts';
+import { applyPlans, notOverwrittenError } from '#cli/ownership/writer.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { planBlock, planManagedKeys, planReplacement, planRestoration } from '#cli/ownership/plans.ts';
 

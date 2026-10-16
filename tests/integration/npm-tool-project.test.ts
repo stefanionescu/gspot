@@ -4,10 +4,10 @@ import { inspectTool } from '#cli/tools/find.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { findStaleFiles } from '#cli/apply/stale.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { installTools } from '#cli/install/install.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import type { InstallJson } from '#cli/types/install.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
@@ -86,7 +86,7 @@ test.each(NPM_CLIENT_ROWS.filter(([, path]) => path === 'package.json'))(
         await writeFile(join(root, projectPath), rootPackage);
         let repaired: ReturnType<typeof writeGeneratedFiles>;
         {
-            using log = openOwnershipLog(root);
+            using log = openWriter(root);
             const session = await openSession(root);
             repaired = writeGeneratedFiles(session, emitAll(session), log);
         }
@@ -116,7 +116,7 @@ async function expectCloneInstallation(
     expect(await pathExists(join(clone, '.gspot/node_modules'))).toBe(false);
     expect(await pathExists(join(clone, '.gspot/state/ownership.json'))).toBe(false);
     for (let attempt = 0; attempt < 2; attempt++) {
-        using cloneLog = openOwnershipLog(clone);
+        using cloneLog = openWriter(clone);
         const { session } = await writeLockedInputs(clone, cloneLog);
         const cloneInstall = await installTools(session, cloneLog, emitAll(session));
         expect(cloneInstall.exitCode, cloneInstall.note).toBe(0);
@@ -137,7 +137,7 @@ test.each([...NPM_CLIENT_ROWS])(
     async (installer, projectPath) => {
         await using sandbox = await createNpmClientSandbox(installer, projectPath);
         const { root, rootPackage, yarnConfiguration, tools } = sandbox;
-        using log = openOwnershipLog(root);
+        using log = openWriter(root);
         const { session, inputs } = await writeLockedInputs(root, log);
         const { manifest, lockfilePath, lockfile, mode } = inputs!;
         const installed = await installTools(session, log, emitAll(session));

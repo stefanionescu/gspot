@@ -1,7 +1,7 @@
 import which from 'which';
 import { runTool } from '#cli/tools/run.ts';
-import { applyPlans } from '#cli/ownership/log.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
+import { applyPlans } from '#cli/ownership/writer.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';

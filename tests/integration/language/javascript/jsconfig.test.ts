@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openOwnershipLog } from '#cli/ownership/log.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
@@ -25,7 +25,7 @@ test("javascript/tsc uses gspot's own TypeScript when the project has none", asy
     });
     await installToolProjects(sandbox.path);
     const session = await openSession(sandbox.path);
-    using log = openOwnershipLog(sandbox.path);
+    using log = openWriter(sandbox.path);
     writeGeneratedFiles(session, emitAll(session), log);
     const broken = await spawnGspot(sandbox.path, ['check', '--only', 'javascript/tsc', '--json']);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
@@ -72,7 +72,7 @@ for (const entry of JSCONFIG_CASES)
                 JAVASCRIPT_PROJECT_FILES['.gspot/node_modules/@types/private/index.d.ts'],
         });
         const session = await openSession(sandbox.path);
-        using log = openOwnershipLog(sandbox.path);
+        using log = openWriter(sandbox.path);
         writeGeneratedFiles(session, emitAll(session), log);
         const command = ['check', '--only', 'javascript/tsc', '--json'];
         const broken = await spawnGspot(sandbox.path, command);
