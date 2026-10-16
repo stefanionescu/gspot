@@ -9,7 +9,7 @@ import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
 import { architectureSchema } from '#cli/settings/schema/architecture.ts';
 import { type Settings, type SettingsFile } from '#cli/types/settings/values.ts';
-import { type WrittenScope, type ParsedSettings } from '#cli/types/settings/file.ts';
+import { type TomlTable, type ParsedSettings } from '#cli/types/settings/file.ts';
 import { SCOPE_EMPTY_RECORDS, COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/values.ts';
 
 import {
@@ -35,13 +35,7 @@ function parseSettings(text: string, root?: string, reads = createReadCache(root
             'settings',
             result.error.issues.flatMap((issue) => formatSettingsIssue(SETTINGS_FILE, issue)).join('\n'),
         );
-    const settings = buildSettings(result.data);
-    settings.written = written;
-    const scopes = written['scope'] as WrittenScope[] | undefined;
-    for (const entry of scopes ?? []) {
-        const scope = settings.scopeTables[trimTrailingSlashes(entry.path)] as Settings['scopeTables'][string];
-        scope.written = entry;
-    }
+    const settings = buildSettings(result.data, written);
     const unknown = unknownConfigurationErrors(settings, reads);
     if (unknown.length > 0) throwErrors(unknown);
     const errors = collectErrors(settings, root, reads);
@@ -61,8 +55,11 @@ function readSettings(root: string, reads = createReadCache(root)): SettingsFile
     return { settings, text };
 }
 
-function normalizeScopeTables(written: NonNullable<ParsedSettings['scope']>[number]): Settings['scopeTables'][string] {
-    const { architecture, tools, naming, coverage, docs, licenses, site, ...table } = written;
+function normalizeScopeTables(
+    parsed: NonNullable<ParsedSettings['scope']>[number],
+    written: TomlTable,
+): Settings['scopeTables'][string] {
+    const { architecture, tools, naming, coverage, docs, licenses, site, ...table } = parsed;
     const normalized = Object.fromEntries(
         SCOPE_EMPTY_RECORDS.flatMap(([name, field]) => {
             const value = { naming, coverage, docs, licenses, site }[name];
@@ -127,25 +124,30 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
 
 /**
  * Build the settings values from the parsed document.
- * @param written the validated document
+ * @param parsed the validated document
+ * @param written the raw authored table
  * @returns the settings
  */
-function buildSettings(written: ParsedSettings): Settings {
-    const { command_check: commandChecks, ...document } = written;
+function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
+    const { command_check: commandChecks, ...document } = parsed;
     const tables = stripUndefined({
-        rules: written.rules,
-        hooks: written.hooks,
-        ci: written.ci,
+        rules: parsed.rules,
+        hooks: parsed.hooks,
+        ci: parsed.ci,
     });
-    const scopes = (written.scope ?? []).map((scope) => [scope.path, scope] as const);
+    const writtenScopes = (written['scope'] ?? []) as TomlTable[];
+    const scopes = (parsed.scope ?? []).map((scope) => [scope.path, scope] as const);
     const scopeTables = Object.fromEntries(
-        scopes.map(([path, scope]) => [trimTrailingSlashes(path), normalizeScopeTables(scope)]),
+        scopes.map(([path, scope], index) => [
+            trimTrailingSlashes(path),
+            normalizeScopeTables(scope, writtenScopes[index] as TomlTable),
+        ]),
     );
     return {
         ...stripUndefined(document),
-        written: written,
-        level: settingsSchema.shape.level.parse(written.level),
-        configurations: written.configurations,
+        written,
+        level: parsed.level,
+        configurations: parsed.configurations,
         scope: Object.fromEntries(
             scopes.map(([path, scope]) => [
                 trimTrailingSlashes(path),
@@ -155,18 +157,18 @@ function buildSettings(written: ParsedSettings): Settings {
                 },
             ]),
         ),
-        removed_configurations: settingsSchema.shape.removed_configurations.parse(written.removed_configurations),
-        limits: written.limits ?? limitsSchema.parse({}),
-        naming: written.naming ?? namingSchema.parse({}),
-        architecture: normalizeArchitecture(written.architecture),
+        removed_configurations: parsed.removed_configurations,
+        limits: parsed.limits ?? limitsSchema.parse({}),
+        naming: parsed.naming ?? namingSchema.parse({}),
+        architecture: normalizeArchitecture(parsed.architecture),
         structure: {
-            reexports: settingsSchema.shape.structure.unwrap().shape.reexports.parse(written.structure?.reexports),
+            reexports: settingsSchema.shape.structure.unwrap().shape.reexports.parse(parsed.structure?.reexports),
         },
-        format: stripUndefined({ ...written.format }),
-        allowed_words: settingsSchema.shape.allowed_words.parse(written.allowed_words),
-        tools: stripUndefined({ ...written.tools }),
-        test_files: settingsSchema.shape.test_files.parse(written.test_files),
-        ignore: (written.ignore ?? []).map((entry) => stripUndefined(entry)),
+        format: stripUndefined({ ...parsed.format }),
+        allowed_words: parsed.allowed_words,
+        tools: stripUndefined({ ...parsed.tools }),
+        test_files: parsed.test_files,
+        ignore: (parsed.ignore ?? []).map((entry) => stripUndefined(entry)),
         check: normalizeCommandChecks(commandChecks),
 
         ...tables,
