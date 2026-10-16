@@ -4,13 +4,14 @@ import { pathExists } from '#tests/setup/files.ts';
 import { chmod, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
-import { openFiles } from '#cli/system/files/open.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { prepareCommand } from '#tests/setup/processes.ts';
 import { installNpmTools } from '#cli/tools/npm/project.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
+import { buildInstallContext } from '#tests/setup/install.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
 import { selectPackageManager, readPackageManagerVersion } from '#cli/tools/npm/package-manager.ts';
 import { VERSION_SOURCES, NON_EXACT_PNPM_VERSIONS, NPM_CLIENT_DECLARATIONS } from '#tests/config/npm.ts';
@@ -59,7 +60,7 @@ test.each([...VERSION_SOURCES])(
         await createFileTree(repository.path, { '.gspot/package.json': original, '.gspot/bun.lock': lockfile });
         await createFileTree(repository.path, { 'gspot.toml': settingsText([]) });
         const session = await openSession(repository.path);
-        using owner = openFiles(repository.path);
+        using owner = openWriter(repository.path);
         const identity = await selectPackageManager(repository.path, []);
         const installer = readPackageManagerVersion(
             repository.path,
@@ -76,7 +77,7 @@ test.each([...VERSION_SOURCES])(
             observed = run(argv, prepared.options);
             return observed;
         });
-        const failure = await installNpmTools(session, owner, [], []).catch((error: unknown) => error);
+        const failure = await installNpmTools(buildInstallContext(session, owner)).catch((error: unknown) => error);
         expect(boundary).toHaveBeenCalledTimes(1);
         const version = await observed;
         expect(version?.code, version?.stderr).toBe(0);

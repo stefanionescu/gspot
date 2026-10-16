@@ -10,9 +10,9 @@ import { toolProjectPackage } from '#cli/configurations/tool-pins.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
 import { DOT_GSPOT, NODE_MODULES_DIRECTORY } from '#cli/config/system/locations.ts';
-import { MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/find.ts';
 import { locateCandidates, locateRepositoryCandidates } from '#cli/tools/locate.ts';
-import { installedPackage, findInstalledDependency } from '#cli/tools/npm/packages.ts';
+import { readToolProjectPackage, findInstalledDependency } from '#cli/tools/npm/packages.ts';
+import { MISE_PROGRAM, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/find.ts';
 import type { Inspected, ToolSearch, ToolInspection, AvailableToolInspection } from '#cli/types/tools/find.ts';
 
 /**
@@ -23,8 +23,9 @@ import type { Inspected, ToolSearch, ToolInspection, AvailableToolInspection } f
  * @returns the hint.
  */
 function installHint(tool: ToolDeclaration): string {
-    if (toolProjectPackage(tool) !== undefined || tool.system !== true) {
-        if (toolProjectPackage(tool) !== undefined || which.sync('mise', { nothrow: true }) !== null)
+    const installation = toolProjectPackage(tool);
+    if (installation !== undefined || tool.system !== true) {
+        if (installation !== undefined || which.sync(MISE_PROGRAM, { nothrow: true }) !== null)
             return 'Run: gspot install';
         return `Install mise (${MISE_INSTALL_URL}), or install ${tool.name} ${tool.version ?? ''} yourself.`;
     }
@@ -64,6 +65,7 @@ function inspectLibraryCommand(
     const program = command[0] as string;
     const args = command.slice(1);
     const [path] = locateCandidates(root, program, {
+        search: 'mise',
         timeoutSeconds: context.timeoutSeconds,
         searchFolders: [cwd, root],
         installedRoot: context.installedRoot,
@@ -98,7 +100,7 @@ function inspectLibrary(
     const installed =
         tool.system === true
             ? findInstalledDependency(root, join(relative(root, cwd), PACKAGE_JSON), name)
-            : { ...installedPackage(files, root, join(root, path)), path };
+            : { ...readToolProjectPackage(files, root, join(root, path)), path };
     if (installed?.version === undefined) return buildMissingInspection(tool, hint, want);
     return buildLibraryInspection(inputs, installed.path, installed.version, want);
 }
@@ -141,6 +143,7 @@ function inspectProjectExecutable(
     });
     if (project !== undefined) return inspectExecutablePath({ ...inputs, path: project }, want);
     const [toolProjectPath] = locateCandidates(root, tool.name, {
+        search: 'mise',
         timeoutSeconds: context.timeoutSeconds,
         searchFolders: [cwd, root],
         toolProjectKind: installation.kind,
@@ -160,14 +163,17 @@ function inspectExecutable(
     const project = inspectProjectExecutable(context, inputs, want);
     if (project !== undefined) return project;
     const isExternal = tool.system === true;
-    const searchFolders = isExternal ? [cwd, root] : [join(root, DOT_GSPOT), cwd, root];
-    const installation = toolProjectPackage(tool);
-    const kind = installation?.kind;
+    const search = isExternal
+        ? { search: 'mise' as const, searchFolders: [cwd, root] }
+        : {
+              search: 'path' as const,
+              searchFolders: [join(root, DOT_GSPOT), cwd, root],
+              miseBinPaths: context.miseBinPaths,
+              toolProjectKind: toolProjectPackage(tool)?.kind,
+          };
     const [path] = locateCandidates(root, tool.name, {
         timeoutSeconds: context.timeoutSeconds,
-        searchFolders,
-        miseBinPaths: tool.system === true ? undefined : (context.miseBinPaths ?? []),
-        toolProjectKind: tool.system === true ? undefined : kind,
+        ...search,
         installedRoot: context.installedRoot,
     });
     if (path === undefined) return buildMissingInspection(tool, inputs.hint, want);
@@ -227,7 +233,7 @@ function inspectTool(context: ToolSearch, tool: ToolDeclaration): ToolInspection
  * @returns whether inspection found a usable executable.
  */
 function isToolAvailable(inspection: ToolInspection): inspection is AvailableToolInspection {
-    return new Set<string>(AVAILABLE_TOOL_STATES).has(inspection.state) && inspection.path !== undefined;
+    return AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined;
 }
 
 /**

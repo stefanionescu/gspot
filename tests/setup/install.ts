@@ -10,13 +10,16 @@ import { emitAll } from '#cli/generation/files.ts';
 import { rejection } from '#tests/setup/matchers.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import type { Writer } from '#cli/types/ownership.ts';
+import type { Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { installNpmTools } from '#cli/tools/npm/project.ts';
+import type { InstallContext } from '#cli/types/install.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
+import { collectPins } from '#cli/configurations/tool-pins.ts';
 import type { SandboxSettings } from '#tests/types/sandbox.ts';
 import { installPythonTools } from '#cli/tools/python/project.ts';
 import { prepareLockfiles } from '#cli/tools/project-lockfiles.ts';
@@ -238,8 +241,8 @@ export async function expectRefusedInstall(
     const requests = registry.requests;
     const installation =
         owner.files.read('.gspot/package.json') === undefined
-            ? installPythonTools(root, owner.files, 'uv', session.timeoutSeconds, [])
-            : installNpmTools(session, owner.files, tools, []);
+            ? installPythonTools(buildInstallContext(session, owner), 'uv')
+            : installNpmTools({ ...buildInstallContext(session, owner), tools: [...tools] });
     expect(await rejection(installation)).toContain(diagnostic);
     expect(registry.requests).toBe(requests);
 }
@@ -255,7 +258,7 @@ export async function writeLockedInputs(root: string, suppliedLog?: Writer): Pro
         const trusted = await runCommand(['mise', 'trust', '.gspot/mise.toml'], { cwd: root });
         if (trusted.code !== 0) throw new Error(`Sandbox tool trust failed: ${trusted.stdout}${trusted.stderr}`);
     }
-    await prepareLockfiles(session, generated.files, log.files, []);
+    await prepareLockfiles(buildInstallContext(session, log), generated.files);
     writeGeneratedFiles(session, generated, log);
     const client = session.getPackageManager();
     const inputs = client === undefined ? undefined : await readToolProjectFiles(root, client.name);
@@ -292,5 +295,22 @@ export async function readToolProjectFiles(root: string, installer: PackageManag
         lockfilePath,
         lockfile: await lockfile.readFile(),
         mode: attributes.mode,
+    };
+}
+
+/**
+ * Build the install state from an open sandbox session and its repository writer.
+ * @param session the open sandbox session.
+ * @param writer the locked sandbox writer.
+ * @returns generated inputs, selected tools, and an empty install command log.
+ */
+export function buildInstallContext(session: Session, writer: Writer): InstallContext {
+    return {
+        session,
+        writer,
+        generated: emitAll(session),
+        tools: collectPins(session.neededToolManifests),
+        mise: null,
+        steps: [],
     };
 }

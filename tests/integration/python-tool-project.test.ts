@@ -1,6 +1,6 @@
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
+import { test, spyOn, expect } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
@@ -17,8 +17,8 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { preparePythonLockfile } from '#cli/tools/python/project.ts';
 import { chmod, readFile, realpath, writeFile } from 'node:fs/promises';
 import { createPythonIndex, createPythonSandbox } from '#tests/setup/python.ts';
-import { writeLockedInputs, expectRefusedInstall } from '#tests/setup/install.ts';
 import { PYTHON_PROJECTS, PYTHON_INSTALL_STEPS } from '#tests/config/python/tool-project.ts';
+import { writeLockedInputs, buildInstallContext, expectRefusedInstall } from '#tests/setup/install.ts';
 
 test.each([...PYTHON_PROJECTS])(
     'Python tool project install keeps your own and generated files with %s',
@@ -162,18 +162,12 @@ test('a uv that copies index credentials into the lockfile is refused and the in
         using log = openWriter(root);
         const session = await openSession(root);
         const manifest = emitAll(session).files.find((file) => file.path === '.gspot/pyproject.toml')!;
-        refused = await rejection(
-            preparePythonLockfile(
-                manifest,
-                { read: (path) => (path === '.gspot/uv.lock' ? undefined : log.files.read(path)) },
-                {
-                    root,
-                    uvPath: join(bin, isWindows ? 'uv.cmd' : 'uv'),
-                    timeoutSeconds: session.timeoutSeconds,
-                },
-                [],
-            ),
+        session.uvPath = join(bin, isWindows ? 'uv.cmd' : 'uv');
+        const read = log.files.read.bind(log.files);
+        using _read = spyOn(log.files, 'read').mockImplementation((path) =>
+            path === '.gspot/uv.lock' ? undefined : read(path),
         );
+        refused = await rejection(preparePythonLockfile(buildInstallContext(session, log), manifest));
     }
     expect(refused).toContain('includes repository index credentials');
     expect(await readFile(lockfilePath)).toStrictEqual(lockfile);

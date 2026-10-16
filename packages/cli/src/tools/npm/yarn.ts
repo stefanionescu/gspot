@@ -7,6 +7,8 @@ import { GspotError } from '#cli/system/errors.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import type { InstallContext } from '#cli/types/install.ts';
+import { YARN_SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { addEnvironmentReference } from '#cli/tools/npm/registry.ts';
 
 import {
@@ -29,7 +31,7 @@ const yarnSettingSchema = z.json();
 // Convert connection settings recursively while retaining secrets for redaction.
 function convertToReference(value: unknown, key: string, env: Record<string, string>, secrets: string[]): unknown {
     if (typeof value === 'string') {
-        if (new Set<string>(YARN_SECRET_KEYS).has(key)) secrets.push(value);
+        if (YARN_SECRET_KEYS.has(key)) secrets.push(value);
         return addEnvironmentReference(env, YARN_SETTING_VARIABLE_PREFIX, value);
     }
     if (Array.isArray(value)) return value.map((entry) => convertToReference(entry, key, env, secrets));
@@ -61,22 +63,19 @@ function buildEnvironmentSettings(env: Record<string, string>, secrets: string[]
 /**
  * Write the scratch .yarnrc.yml with connection settings replaced by environment references, and add those variables to env.
  *
- * @param root the repository root.
+ * @param context the install session and command log.
  * @param work the directory the isolated project runs in.
  * @param env the environment the install runs with, which receives the settings.
- * @param timeoutSeconds the tool timeout in seconds.
- * @param steps the commands attempted during installation.
  *
  * @returns the credential values the lockfile must not contain.
  */
-export async function writeYarnSettings(
-    root: string,
+async function writeYarnSettings(
+    context: InstallContext,
     work: string,
     env: Record<string, string>,
-    timeoutSeconds: number,
-    steps: (readonly string[])[],
 ): Promise<string[]> {
-    const settings = yarnConnectionSettingsSchema.parse(parse(readFileSync(join(work, '.yarnrc.yml'), 'utf8')));
+    const { root, timeoutSeconds } = context.session;
+    const settings = yarnConnectionSettingsSchema.parse(parse(readFileSync(join(work, YARN_SETTINGS_FILE), 'utf8')));
     const secrets: string[] = [];
     const registry = env[`${NPM_SETTING_PREFIX}registry`];
     if (registry !== undefined) {
@@ -85,7 +84,7 @@ export async function writeYarnSettings(
         if (url.protocol === 'http:') settings['unsafeHttpWhitelist'] = [url.hostname];
     }
     Object.assign(settings, buildEnvironmentSettings(env, secrets));
-    steps.push(YARN_CONFIG_LIST);
+    context.steps.push(YARN_CONFIG_LIST);
     const listed = await runTool(YARN_CONFIG_LIST, { cwd: root, env, timeoutSeconds });
     if (listed.code !== 0)
         throw new GspotError(
@@ -99,7 +98,7 @@ export async function writeYarnSettings(
         .filter((entry) => YARN_CONNECTION_KEYS.has(entry.key));
     for (const entry of entries) {
         const command = [...YARN_CONFIG_GET, entry.key, '--json', '--no-redacted'];
-        steps.push(command);
+        context.steps.push(command);
         const read = await runTool(command, {
             cwd: root,
             timeoutSeconds,
@@ -116,3 +115,5 @@ export async function writeYarnSettings(
     writeFileSync(join(work, YARN_INSTALL_SETTINGS_FILE), stringify(settings), { mode: PRIVATE_FILE });
     return secrets.filter((value) => value.length > 0);
 }
+
+export { writeYarnSettings };

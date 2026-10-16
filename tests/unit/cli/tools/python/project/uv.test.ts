@@ -1,17 +1,20 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fakeCommand } from '#tests/setup/processes.ts';
-import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
+import { settingsText } from '#tests/setup/settings.ts';
+import { buildInstallContext } from '#tests/setup/install.ts';
 import { installPythonTools, preparePythonLockfile } from '#cli/tools/python/project.ts';
 import { UV_TOML, PYTHON_TOOL_PROJECT, PYTHON_TOOL_LOCKFILE } from '#tests/config/python/tool-project.ts';
 
 test.each(['venv', 'sync'])('a failed uv %s can be repaired and hides index passwords', async (step) => {
     await using repository = await testdir();
     await createFileTree(repository.path, {
+        'gspot.toml': settingsText([]),
         '.gspot/pyproject.toml': PYTHON_TOOL_PROJECT,
         '.gspot/uv.lock': PYTHON_TOOL_LOCKFILE,
         'uv.toml': UV_TOML,
@@ -29,11 +32,8 @@ test.each(['venv', 'sync'])('a failed uv %s can be repaired and hides index pass
     });
     using log = openWriter(repository.path);
     const diagnosticError: unknown = await installPythonTools(
-        repository.path,
-        log.files,
+        buildInstallContext(await openSession(repository.path), log),
         'unavailable-uv',
-        rootSettingSchemas.tool_timeout_seconds.parse(undefined),
-        [],
     ).catch((error: unknown) => error);
     expect(diagnosticError).toMatchObject({ name: 'GspotError', code: 'installation' });
     const diagnostic = diagnosticError instanceof Error ? diagnosticError.message : String(diagnosticError);
@@ -52,6 +52,7 @@ test.each(['venv', 'sync'])('a failed uv %s can be repaired and hides index pass
 test('a successful uv run refuses a password in its new lockfile and keeps the tool project files', async () => {
     await using repository = await testdir();
     await createFileTree(repository.path, {
+        'gspot.toml': settingsText([]),
         '.gspot/pyproject.toml': PYTHON_TOOL_PROJECT,
         '.gspot/uv.lock': PYTHON_TOOL_LOCKFILE,
         'uv.toml': UV_TOML,
@@ -61,16 +62,17 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
         return { code: 0, missing: false, duration: 0, stdout: '', stderr: '' };
     });
     using log = openWriter(repository.path);
-    const diagnosticError: unknown = await preparePythonLockfile(
-        { path: '.gspot/pyproject.toml', content: PYTHON_TOOL_PROJECT, kind: 'tool_file' },
-        { read: (path) => (path === '.gspot/uv.lock' ? undefined : log.files.read(path)) },
-        {
-            timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
-            root: repository.path,
-            uvPath: 'synthetic-uv',
-        },
-        [],
-    ).catch((error: unknown) => error);
+    const session = await openSession(repository.path);
+    session.uvPath = 'synthetic-uv';
+    const read = log.files.read.bind(log.files);
+    using _read = spyOn(log.files, 'read').mockImplementation((path) =>
+        path === '.gspot/uv.lock' ? undefined : read(path),
+    );
+    const diagnosticError: unknown = await preparePythonLockfile(buildInstallContext(session, log), {
+        path: '.gspot/pyproject.toml',
+        content: PYTHON_TOOL_PROJECT,
+        kind: 'tool_file',
+    }).catch((error: unknown) => error);
     expect(diagnosticError).toMatchObject({ name: 'GspotError', code: 'installation' });
     expect(diagnosticError instanceof Error ? diagnosticError.message : '').toBe(
         'The uv lockfile includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install',

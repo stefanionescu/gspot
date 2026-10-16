@@ -38,7 +38,7 @@ function parsePackageManagerField(value: string): PackageManagerDeclaration {
 }
 
 // Read the package manager from repository declarations and lockfiles.
-async function detectPackageManager(root: string, candidates: string[]) {
+async function detectPackageManager(root: string, candidates: string[]): Promise<PackageManagerDeclaration> {
     for (const path of candidates) {
         const manifest = readPackageJson(root, path);
         const declared = manifest === undefined ? undefined : readPackageManagerDeclaration(manifest);
@@ -50,18 +50,15 @@ async function detectPackageManager(root: string, candidates: string[]) {
     return { name: NPM_PROGRAM, version: undefined };
 }
 
-const npmClientIdentitySchema = z.strictObject({
-    name: z.enum(NPM_CLIENTS),
-    version: exactVersionSchema.optional(),
-} satisfies SchemaShape<PackageManagerDeclaration>);
-
-const packageManagerSchema = npmClientIdentitySchema.required() satisfies z.ZodType<PackageManager>;
-
 /** Authored manager names before installation validates their requested version. */
 const packageManagerDeclarationSchema = z.strictObject({
     name: z.enum(NPM_CLIENTS),
     version: z.string().optional(),
-} satisfies SchemaShape<PackageManagerDeclaration>);
+} satisfies SchemaShape<PackageManagerDeclaration>) satisfies z.ZodType<PackageManagerDeclaration>;
+
+const packageManagerSchema = packageManagerDeclarationSchema.extend({
+    version: exactVersionSchema,
+}) satisfies z.ZodType<PackageManager>;
 
 /**
  * Identify the Yarn major version that uses Berry configuration and installation arguments.
@@ -109,9 +106,9 @@ async function selectPackageManager(root: string, trackedPaths: string[]): Promi
                 'installation',
                 `The tool project needs an exact ${name} version, such as ${name}@1.2.3, and package.json declares ${version}. Write an exact packageManager version.`,
             );
-        return packageManagerSchema.parse({ name, version });
+        return { name, version };
     }
-    return npmClientIdentitySchema.parse({ name });
+    return { name };
 }
 
 /**

@@ -6,20 +6,21 @@ import type { Files } from '#cli/types/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
-import { installedPackage } from '#cli/tools/npm/packages.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { TOOL_ENV, NO_VERSION, VERSION_FLAG } from '#cli/config/tools/run.ts';
 import type { ToolInspection, ParsedToolVersion } from '#cli/types/tools/find.ts';
+import { readHostPackage, readToolProjectPackage } from '#cli/tools/npm/packages.ts';
 
 // The version the first package.json above a folder declares for the named package, searching upward.
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
-        const manifest = join(folder, 'package.json');
+        const manifest = join(folder, PACKAGE_JSON);
         if (files !== undefined && !isInGspotFolder(convertToPosixPath(relative(root, manifest)))) return undefined;
-        const parsed = installedPackage(files, root, manifest);
+        const parsed = files === undefined ? readHostPackage(manifest) : readToolProjectPackage(files, root, manifest);
         if (parsed?.name === name) return parsed.version;
     }
     return undefined;
@@ -119,7 +120,6 @@ export function readToolVersion(
     return parseVersionOutput(tool, result, installedVersion);
 }
 
-// The accepted floor applies equally to host tools and pinned tool-project tools.
 /**
  * Compare a version with its accepted floor.
  *
@@ -139,7 +139,7 @@ export function isBelowFloor(found: string | undefined, floor: string | undefine
  *
  * @param tool the declared tool and its installation pin.
  * @param result the completed process result.
- * @param installedVersion the installed package path.
+ * @param installedVersion the version the installed package declares.
  *
  * @returns the parsed version or its inspection failure.
  */

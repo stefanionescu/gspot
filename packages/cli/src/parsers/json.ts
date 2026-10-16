@@ -78,7 +78,7 @@ export function parseJsonc(text: string): unknown {
     const value: unknown = parse(text, errors, JSONC_OPTIONS);
     const error = errors[0];
     if (error !== undefined)
-        throw new Error(
+        throw new SyntaxError(
             `Invalid JSON configuration at offset ${String(error.offset)}: ${printParseErrorCode(error.error)}.`,
         );
     return value;

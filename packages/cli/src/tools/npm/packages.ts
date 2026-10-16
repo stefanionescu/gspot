@@ -133,26 +133,39 @@ function listPackageFiles(root: string, packageJsonPaths: string[]): string[] {
 }
 
 /**
- * Read package metadata from a tool project installation or a host installation.
- * @param files the tool project installation boundary, or undefined for a host installation.
- * @param root the repository root owning the tool-project boundary.
- * @param manifest the absolute package.json path.
- * @returns the validated package fields, or undefined when the file does not exist.
+ * Read and validate a host package.json without the tool-project boundary.
+ * @param path the absolute package.json path.
+ * @returns the package metadata, or undefined when the file does not exist.
  */
-function installedPackage(files: Files | undefined, root: string, manifest: string): PackageJson | undefined {
+function readHostPackage(path: string): PackageJson | undefined {
+    let text: string;
     try {
-        let text: string | undefined;
-        if (files === undefined) text = readFileSync(manifest, 'utf8');
-        else {
-            const folder = files.realPath(convertToPosixPath(relative(root, dirname(manifest))));
-            const path = convertToPosixPath(relative(root, join(folder, basename(manifest))));
-            text = readText(root, path);
-        }
-        return text === undefined ? undefined : parseJsonFile(manifest, text, packageJsonSchema);
+        text = readFileSync(path, 'utf8');
     } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
         throw error;
     }
+    return parseJsonFile(path, text, packageJsonSchema);
+}
+
+/**
+ * Read and validate installed metadata through the tool-project boundary.
+ * @param files the confined tool-project files.
+ * @param root the repository root.
+ * @param path the absolute package.json path.
+ * @returns the package metadata, or undefined when the file does not exist.
+ */
+function readToolProjectPackage(files: Files, root: string, path: string): PackageJson | undefined {
+    let target: string;
+    try {
+        target = files.realPath(convertToPosixPath(relative(root, path)));
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        throw error;
+    }
+    const local = convertToPosixPath(relative(root, target));
+    const text = readText(root, local);
+    return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
 }
 
 /**
@@ -171,13 +184,14 @@ function findInstalledDependency(root: string, manifest: string, name: string): 
         if (error instanceof Error && 'code' in error && error.code === 'MODULE_NOT_FOUND') return undefined;
         throw error;
     }
-    return { path, version: installedPackage(undefined, root, path)?.version };
+    return { path, version: readHostPackage(path)?.version };
 }
 
 export {
+    readHostPackage,
     listPackageFiles,
-    installedPackage,
     listWorkspaceFolders,
+    readToolProjectPackage,
     findInstalledDependency,
     listWorkspaceDependencyFiles,
 };

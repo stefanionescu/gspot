@@ -26,7 +26,6 @@ function listSearchFolders(root: string, options: LocateOptions): string[] {
     const { searchFolders, toolProjectKind, installedRoot = root } = options;
     if (toolProjectKind === 'npm') return [join(installedRoot, DOT_GSPOT, NPM_BIN_FOLDER)];
     if (toolProjectKind === 'python') return [buildVenvBinPath(join(installedRoot, PYTHON_ENVIRONMENT_DIRECTORY))];
-    // A copy's tool projects run from the original working tree.
     return [...new Set(searchFolders)].flatMap((folder) => [
         join(basename(folder) === DOT_GSPOT ? join(installedRoot, relative(root, folder)) : folder, NPM_BIN_FOLDER),
         buildVenvBinPath(join(installedRoot, relative(root, folder), PYTHON_ENVIRONMENT_FOLDER)),
@@ -104,7 +103,7 @@ export function readMiseBinPaths(
 ): string[] {
     if (
         toolNames.length === 0 ||
-        which.sync('mise', { nothrow: true }) === null ||
+        which.sync(MISE_PROGRAM, { nothrow: true }) === null ||
         statSync(join(root, DOT_GSPOT), { throwIfNoEntry: false }) === undefined
     )
         return [];
@@ -130,7 +129,7 @@ export function readMiseBinPaths(
 export function locateCandidates(
     root: string,
     name: string,
-    options: LocateOptions & { timeoutSeconds: number },
+    options: LocateOptions & { timeoutSeconds: number; search: 'mise' | 'path' },
 ): string[] {
     const found = locateRepositoryCandidates(root, name, options);
     if (isAbsolute(name) || options.toolProjectKind !== undefined) return found;
@@ -138,7 +137,7 @@ export function locateCandidates(
         .flatMap((folder) => listExecutableNames(name).map((file) => join(folder, file)))
         .filter((path) => statSync(path, { throwIfNoEntry: false }) !== undefined);
     const paths =
-        options.miseBinPaths === undefined
+        options.search === 'mise'
             ? listMiseCandidates(options.installedRoot ?? root, name, options.timeoutSeconds)
             : (which.sync(name, { nothrow: true, all: true }) ?? []);
     return [...programs, ...found, ...paths];

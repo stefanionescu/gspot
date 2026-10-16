@@ -130,6 +130,7 @@ test.each([0, 1])('mise finds the program in the original repository with exit c
         return options?.all === true ? [path] : path;
     }) as typeof executables.sync);
     const candidates = locateCandidates(join(sandbox.path, 'copy'), 'tsc', {
+        search: 'mise',
         timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         searchFolders: [join(sandbox.path, 'copy')],
         installedRoot: join(sandbox.path, 'work'),

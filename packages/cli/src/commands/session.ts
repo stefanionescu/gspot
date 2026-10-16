@@ -122,21 +122,21 @@ export async function openSession(
     const settings = { ...settingsFile.settings };
     const repository = await readSessionRepository(root, settings, settingsFile.text, manifests, reads);
     const packageManifests = repository.dependencyFiles;
-    const [scopes, selectInstaller] = await scopeSelections(settings, repository, manifests, reads);
+    const [scopes, getPackageManagerIdentity] = await scopeSelections(settings, repository, manifests, reads);
     const timeoutSeconds = getToolTimeoutSeconds(rootView(scopes));
     let packageManagerIdentity: PackageManagerDeclaration | undefined = undefined;
     let packageManagerState: PackageManager | undefined;
     let generatedPaths: ReadonlySet<string> | undefined;
     const toolNames = misePins(scopes.flatMap((selection) => selection.selected)).map((pin) => pin.name);
     const miseBinPaths = readMiseBinPaths(installedRoot, [...new Set(toolNames)], timeoutSeconds, []);
+    const searchOptions = { search: 'path' as const, searchFolders: [], miseBinPaths, timeoutSeconds };
     const session: Session = {
         // Checks use applied targets; content generation here parses unrelated scopes.
         generatedPaths: () =>
             (generatedPaths ??= new Set(
                 repository.files.filter(({ kind }) => kind === 'generated').map(({ path }) => path),
             )),
-        uvPath:
-            locateCandidates(installedRoot, UV_TOOL, { searchFolders: [], miseBinPaths, timeoutSeconds })[0] ?? UV_TOOL,
+        uvPath: locateCandidates(installedRoot, UV_TOOL, searchOptions)[0] ?? UV_TOOL,
         neededToolManifests: [],
         configuredChecks: [],
         resources: new DisposableStack(),
@@ -166,7 +166,7 @@ export async function openSession(
     };
     session.configuredChecks = configuredSystemChecks(session);
     session.neededToolManifests = neededToolManifests(session, session.configuredChecks);
-    packageManagerIdentity =
-        Object.keys(toolProjectPins(session.neededToolManifests).npm).length > 0 ? await selectInstaller() : undefined;
+    if (Object.keys(toolProjectPins(session.neededToolManifests).npm).length > 0)
+        packageManagerIdentity = await getPackageManagerIdentity();
     return session;
 }

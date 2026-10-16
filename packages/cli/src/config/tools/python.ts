@@ -31,3 +31,6 @@ export const PIP_LICENSES_COMMAND = [
     '--from=mixed',
     '--python',
 ] as const;
+
+export const UV_LOCKFILE_CREDENTIAL_MESSAGE =
+    'The uv lockfile includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install';

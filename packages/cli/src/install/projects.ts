@@ -18,16 +18,15 @@ import { PYTHON_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
  * @returns the npm and Python installation notes.
  */
 export async function installToolProjects(context: InstallContext): Promise<string[]> {
-    const { session, writer: log, generated, tools, mise, steps } = context;
+    const { session, writer: log, generated, mise } = context;
     const manifests = session.neededToolManifests;
-    const timeoutSeconds = session.timeoutSeconds;
     const notes: string[] = [];
     const uvPath = mise !== null || which.sync(UV_TOOL, { nothrow: true }) !== null ? session.uvPath : undefined;
     const lockfileInputs =
         uvPath === undefined
             ? generated.files.filter((file) => file.path !== PYTHON_TOOL_PROJECT_FILE)
             : generated.files;
-    await prepareLockfiles(session, lockfileInputs, log.files, steps);
+    await prepareLockfiles(context, lockfileInputs);
     writePlans(
         log,
         lockfileInputs
@@ -42,10 +41,10 @@ export async function installToolProjects(context: InstallContext): Promise<stri
             ),
     );
     if (session.getPackageManager() !== undefined) {
-        notes.push(await installNpmTools(session, log.files, tools, steps));
+        notes.push(await installNpmTools(context));
     }
     if (uvPath !== undefined && toolProjectPins(manifests).python.length > 0) {
-        notes.push(await installPythonTools(session.root, log.files, uvPath, timeoutSeconds, steps));
+        notes.push(await installPythonTools(context, uvPath));
     }
     return notes;
 }

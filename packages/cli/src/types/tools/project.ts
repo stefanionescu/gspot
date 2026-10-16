@@ -9,13 +9,10 @@ import type { ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
 
 /** One package-manager operation with its repository routing and process limits. */
 export type PackageManagerCommand = {
-    root: string;
     work: string;
     packageManager: PackageManager;
     arguments: string[];
     failure: string;
-    timeoutSeconds: number;
-    steps: (readonly string[])[];
 };
 
 /** One uv operation with its private index configuration and diagnostic credentials. */
@@ -24,8 +21,6 @@ export type UvExecution = {
     args: readonly string[];
     executable: string;
     credentials: string[];
-    timeoutSeconds: number;
-    steps: (readonly string[])[];
     configFile?: string;
 };
 
@@ -38,12 +33,6 @@ export type PackageCommandResult = {
 /** Native package operations for a declared manager major. */
 export type PackageManagerArguments = { lockfile: string[]; install: string[] };
 
-/** Repository identity and the uv executable used during lockfile preparation. */
-export type PythonPreparation = {
-    root: string;
-    uvPath: string;
-    timeoutSeconds: number;
-};
 /** The validated uv lockfile of the Python tool project. */
 export type PythonToolLockfile = {
     version: 1;
@@ -88,6 +77,3 @@ export type NpmProjectFile = {
     private: true;
     devDependencies: Record<string, string> & { '@next/eslint-plugin-next'?: string | undefined };
 };
-
-/** Repository state needed to prepare a locked npm tool project. */
-export type NpmPreparation = { root: string; timeoutSeconds: number; requirePackageManager: () => PackageManager };

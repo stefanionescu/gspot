@@ -1,7 +1,4 @@
-// Shapes read from dependency lockfiles before their values reach consumers.
-// Matching and registry portability for npm tool-project lockfiles.
-// Shapes read from dependency lockfiles before their values reach consumers.
-// Matching and registry portability for npm tool-project lockfiles.
+// Matches dependency pins and removes registry URLs from npm tool-project lockfiles.
 import { z } from 'zod';
 import semver from 'semver';
 import { writeFileSync } from 'node:fs';
@@ -22,15 +19,15 @@ import type { DependencyMap, PackageManager } from '#cli/types/parsers/dependenc
 import { INTEGRITY, NPM_SETTING_PREFIX, YARN_DESCRIPTOR_SEPARATOR } from '#cli/config/tools/npm.ts';
 
 const devDependenciesSchema = z.object({
-    devDependencies: z.record(z.string(), z.string()).optional(),
-} satisfies SchemaShape<{ devDependencies?: Record<string, string> | undefined }>);
+    devDependencies: z.record(z.string(), z.string()).default({}),
+} satisfies SchemaShape<{ devDependencies: Record<string, string> }>);
 
 const npmLockfileSchema = z.object({ packages: z.record(z.string(), devDependenciesSchema) } satisfies SchemaShape<{
-    packages: Record<string, { devDependencies?: Record<string, string> | undefined }>;
+    packages: Record<string, { devDependencies: Record<string, string> }>;
 }>);
 
 const bunLockfileSchema = z.object({ workspaces: z.record(z.string(), devDependenciesSchema) } satisfies SchemaShape<{
-    workspaces: Record<string, { devDependencies?: Record<string, string> | undefined }>;
+    workspaces: Record<string, { devDependencies: Record<string, string> }>;
 }>);
 
 const pnpmLockfileSchema = z.object({
@@ -39,11 +36,11 @@ const pnpmLockfileSchema = z.object({
         z.object({
             devDependencies: z
                 .record(z.string(), z.object({ specifier: z.string() } satisfies SchemaShape<{ specifier: string }>))
-                .optional(),
-        } satisfies SchemaShape<{ devDependencies?: Record<string, { specifier: string }> | undefined }>),
+                .default({}),
+        } satisfies SchemaShape<{ devDependencies: Record<string, { specifier: string }> }>),
     ),
 } satisfies SchemaShape<{
-    importers: Record<string, { devDependencies?: Record<string, { specifier: string }> | undefined }>;
+    importers: Record<string, { devDependencies: Record<string, { specifier: string }> }>;
 }>);
 
 const yarnLockfileSchema = z.record(
@@ -160,18 +157,34 @@ function stripBunRegistryUrls(content: string, env: Record<string, string>): str
  *
  * @returns the dependencies recorded for the root project.
  */
-function parseRootDependencies(name: Exclude<PackageManager['name'], 'yarn'>, content: string): DependencyMap {
-    if (name === 'npm' || name === 'bun') {
-        const root =
-            name === 'npm'
-                ? npmLockfileSchema.parse(JSON.parse(content)).packages['']
-                : bunLockfileSchema.parse(parseJsonc(content)).workspaces[''];
-        if (root?.devDependencies === undefined) return {};
-        return root.devDependencies;
+function parseRootDependencies(
+    name: Exclude<PackageManager['name'], 'yarn'>,
+    content: string,
+): DependencyMap | undefined {
+    let parsed;
+    switch (name) {
+        case 'npm': {
+            parsed = npmLockfileSchema.safeParse(JSON.parse(content));
+            break;
+        }
+        case 'bun': {
+            parsed = bunLockfileSchema.safeParse(parseJsonc(content));
+            break;
+        }
+        default: {
+            parsed = pnpmLockfileSchema.safeParse(parseYaml(content));
+            break;
+        }
     }
-    const pinned = pnpmLockfileSchema.parse(parseYaml(content)).importers[PNPM_ROOT_IMPORTER]?.devDependencies;
-    if (pinned === undefined) return {};
-    return Object.fromEntries(Object.entries(pinned).map(([key, value]) => [key, value.specifier]));
+    if (!parsed.success) return undefined;
+    if ('importers' in parsed.data) {
+        const root = parsed.data.importers[PNPM_ROOT_IMPORTER];
+        if (root === undefined) return {};
+        return Object.fromEntries(Object.entries(root.devDependencies).map(([key, value]) => [key, value.specifier]));
+    }
+    const roots = 'packages' in parsed.data ? parsed.data.packages : parsed.data.workspaces;
+    const root = roots[''];
+    return root === undefined ? {} : root.devDependencies;
 }
 
 /**
@@ -190,9 +203,16 @@ export function isLockfileCurrent(name: PackageManager['name'], content: string,
             const parsed = yarnLockfileSchema.safeParse(parseSyml(content));
             return parsed.success && isYarnLockfileCurrent(parsed.data, dependencies);
         }
-        return isDeepStrictEqual(parseRootDependencies(name, content), dependencies);
-    } catch {
-        return false;
+        const parsed = parseRootDependencies(name, content);
+        return parsed !== undefined && isDeepStrictEqual(parsed, dependencies);
+    } catch (error) {
+        if (
+            error instanceof Error &&
+            (['SyntaxError', 'YAMLParseError', 'YAMLException'].includes(error.name) ||
+                error.message.startsWith('Expected an indexed object, got '))
+        )
+            return false;
+        throw error;
     }
 }
 

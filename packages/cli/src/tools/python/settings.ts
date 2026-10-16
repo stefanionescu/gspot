@@ -68,20 +68,18 @@ export function parsePythonSettings(root: string, sources: PythonSettingsSources
             .array(z.string())
             .parse(selected['find-links'])
             .map((value) => normalizeIndexLocation(root, value));
-    if (selected['index'] !== undefined)
-        selected['index'] = z
-            .array(uvIndexSchema)
-            .parse(selected['index'])
-            .map((index) => ({
-                ...index,
-                url: normalizeIndexLocation(root, index.url),
-            }));
+    const indexes =
+        selected['index'] === undefined
+            ? []
+            : z
+                  .array(uvIndexSchema)
+                  .parse(selected['index'])
+                  .map((index) => ({ ...index, url: normalizeIndexLocation(root, index.url) }));
+    if (selected['index'] !== undefined) selected['index'] = indexes;
     const credentials = Object.entries(selected).flatMap(([key, value]) => {
         const entries: unknown[] = Array.isArray(value) ? value : [value];
         const settingEntries =
-            key === 'index'
-                ? entries.map((entry) => uvIndexSchema.parse(entry).url)
-                : entries.filter((entry) => typeof entry === 'string');
+            key === 'index' ? indexes.map((index) => index.url) : entries.filter((entry) => typeof entry === 'string');
         return settingEntries.filter((value) => HTTP_URL.test(value)).flatMap((value) => extractUrlPasswords(value));
     });
     return { settings: selected, credentials };

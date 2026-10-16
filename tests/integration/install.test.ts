@@ -16,7 +16,14 @@ import { createNpmClientSandbox } from '#tests/setup/npm-clients.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import type { DryRunJson } from '#cli/types/commands/save-settings.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
-import { toolsPath, installToolProjects, readToolProjectFiles, expectRefusedInstall } from '#tests/setup/install.ts';
+
+import {
+    toolsPath,
+    buildInstallContext,
+    installToolProjects,
+    readToolProjectFiles,
+    expectRefusedInstall,
+} from '#tests/setup/install.ts';
 
 test('after init and install, apply has nothing to write', async () => {
     await using sandbox = await testdir();
@@ -88,7 +95,7 @@ test('a failed program download of an npm wrapper keeps the lockfile and install
     );
     using owner = openWriter(root);
     const session = await openSession(root);
-    expect(await rejection(installNpmTools(session, owner.files, tools, []))).toContain(
+    expect(await rejection(installNpmTools({ ...buildInstallContext(session, owner), tools }))).toContain(
         'Native wrapper download failed',
     );
     expect(await readFile(lockfilePath)).toStrictEqual(Buffer.from(lockfile));

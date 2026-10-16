@@ -1,3 +1,4 @@
+export const DOT_GSPOT = '.gspot';
 export const TOOL_FILE_DIRECTORY = '.gspot/config';
 
 export const SETTINGS_FILE = 'gspot.toml';
@@ -20,10 +21,10 @@ export const PYTHON_ENVIRONMENT_DIRECTORY = '.gspot/.venv';
 
 export const NPM_TOOL_PROJECT_FILE = '.gspot/package.json';
 
-export const YARN_SETTINGS = '.gspot/.yarnrc.yml';
+export const YARN_SETTINGS_FILE = '.yarnrc.yml';
+export const YARN_SETTINGS = `${DOT_GSPOT}/${YARN_SETTINGS_FILE}`;
 
 /** The folder gspot writes for a repository; every path below sits inside it. */
-export const DOT_GSPOT = '.gspot';
 
 export const VERSION_PIN_FILE = '.gspot/version';
 

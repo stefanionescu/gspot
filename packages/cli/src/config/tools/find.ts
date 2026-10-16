@@ -7,4 +7,4 @@ export const MISE_WHICH = 'which';
 
 export const NPM_BIN_FOLDER = 'node_modules/.bin';
 export const MISE_BIN_PATHS_ARGUMENTS = ['mise', 'bin-paths'] as const;
-export const AVAILABLE_TOOL_STATES = ['ok', 'system', 'newer'] as const;
+export const AVAILABLE_TOOL_STATES: ReadonlySet<string> = new Set(['ok', 'system', 'newer']);

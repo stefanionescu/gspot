@@ -88,6 +88,7 @@ export async function installMiseTools(context: InstallContext): Promise<string>
     );
     session.uvPath =
         locateCandidates(session.root, UV_TOOL, {
+            search: 'path',
             searchFolders: [],
             miseBinPaths: session.miseBinPaths,
             timeoutSeconds,

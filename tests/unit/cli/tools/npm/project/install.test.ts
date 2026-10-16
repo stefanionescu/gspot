@@ -4,13 +4,14 @@ import { runTool } from '#cli/tools/run.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
-import { openFiles } from '#cli/system/files/open.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { INSTALL_FAILURES } from '#tests/config/npm.ts';
 import { fakeCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
+import { buildInstallContext } from '#tests/setup/install.ts';
 import { readRegistryEnvironment } from '#cli/tools/npm/registry.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/parsers/dependency-files.ts';
@@ -101,7 +102,7 @@ test.each([...INSTALL_FAILURES])(
         });
         await createFileTree(repository.path, { 'gspot.toml': settingsText([]) });
         const session = await openSession(repository.path);
-        using owner = openFiles(repository.path);
+        using owner = openWriter(repository.path);
         using resources = new DisposableStack();
         resources.use(
             fakeCommand('bun', (command) =>
@@ -119,13 +120,11 @@ test.each([...INSTALL_FAILURES])(
         );
         const diagnosticError = await (
             frozen
-                ? installNpmTools(session, owner, [], [])
+                ? installNpmTools(buildInstallContext(session, owner))
                 : prepareNpmLockfile(
+                      buildInstallContext(session, owner),
                       { path: '.gspot/package.json', content: manifest, kind: 'tool_file' },
-                      owner,
-                      session,
                       undefined,
-                      [],
                   )
         ).catch((error: unknown) => error);
         expect(diagnosticError).toMatchObject({ name: 'GspotError', code: 'installation' });
@@ -165,7 +164,7 @@ test.each([false, true])(
         });
         await createFileTree(repository.path, { 'gspot.toml': settingsText([]) });
         const session = await openSession(repository.path);
-        using owner = openFiles(repository.path);
+        using owner = openWriter(repository.path);
         using boundary = fakeCommand('bun', async (command, options) => {
             if (!frozen && command[1] !== '--version')
                 await writeFile(join(options.cwd, 'bun.lock'), credentialLockfile);
@@ -179,11 +178,9 @@ test.each([false, true])(
         });
         const diagnostic = await rejection(
             prepareNpmLockfile(
+                buildInstallContext(session, owner),
                 { path: '.gspot/package.json', content: manifest, kind: 'tool_file' },
-                owner,
-                session,
                 undefined,
-                [],
             ),
         );
         expect(diagnostic).toBe(
@@ -219,25 +216,21 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
         PATH: join(sandbox.path, 'missing-bin'),
         MISE_DATA_DIR: join(sandbox.path, 'missing-mise'),
     });
-    using owner = openFiles(sandbox.path);
+    using owner = openWriter(sandbox.path);
     const diagnostic = await rejection(
         prepareNpmLockfile(
+            buildInstallContext(session, owner),
             { path: '.gspot/package.json', content: manifest, kind: 'tool_file' },
-            owner,
-            session,
             undefined,
-            [],
         ),
     );
     expect(diagnostic).toBe('node is required by the npm tool project. Install it before it creates its lockfile.');
     expect(await pathExists(join(sandbox.path, '.gspot/package.json'))).toBe(false);
     await createFileTree(sandbox.path, { ['.gspot/package.json']: manifest, '.gspot/bun.lock': lockfile });
     const cached = await prepareNpmLockfile(
+        buildInstallContext(session, owner),
         { path: '.gspot/package.json', content: manifest, kind: 'tool_file' },
-        owner,
-        session,
         undefined,
-        [],
     );
     expect(cached.content).toBe(lockfile);
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('kept\n');

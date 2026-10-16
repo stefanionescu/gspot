@@ -40,10 +40,11 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
     });
     try {
         await config.load();
-    } catch {
+    } catch (error) {
         throw new GspotError(
             'installation',
             'Cannot read the registry settings. Check the package manager configuration.',
+            { cause: error },
         );
     }
     let valid: boolean;
@@ -77,9 +78,8 @@ export function addEnvironmentReference(env: Record<string, string>, prefix: str
     return `\${${name}}`;
 }
 
-// Retain raw, decoded, and URL-encoded secrets for lockfile validation and diagnostic redaction.
 /**
- * Select credentials for refusal checks and diagnostic redaction.
+ * Retain raw, decoded, and URL-encoded secrets for lockfile validation and diagnostic redaction.
  *
  * @param env the environment for the tool process.
  *
@@ -102,9 +102,8 @@ export function extractRegistryCredentials(env: Record<string, string>): string[
     return [...credentials, ...encoded, ...passwords];
 }
 
-// Package managers read environment references so the temporary .npmrc contains no credentials.
 /**
- * Write npm connection settings through environment references.
+ * Write npm connection settings through environment references, so the temporary .npmrc contains no credentials.
  *
  * @param work the private user configuration directory.
  * @param env the environment for the tool process.

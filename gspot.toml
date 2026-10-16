@@ -185,7 +185,7 @@ reason = "The repository Names table requires package manager for npm, pnpm, Yar
 
 [[naming.override]]
 paths = ["packages/cli/src/types/tools/project.ts"]
-allowed_names = ["PackageManagerArguments", "PackageManagerCommand", "packageManager", "requirePackageManager"]
+allowed_names = ["PackageManagerArguments", "PackageManagerCommand", "packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
