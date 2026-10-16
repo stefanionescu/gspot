@@ -4,7 +4,6 @@ import { systemSkip } from '#cli/planning/skips.ts';
 import { name as cliName } from '../../package.json';
 import { TOOL_BUILDS } from '#cli/config/configurations.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
-import type { MisePin } from '#cli/types/configurations.ts';
 import { hashCommentHeader } from '#cli/generation/headers.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
@@ -65,9 +64,12 @@ function supportedManual(pipeline: Pipeline, platform: Pipeline['operatingSystem
         (planned) => systemSkip(planned.check, planned.tool, { platform, arch }) === undefined,
     );
     const required = new Set(checks.flatMap((check) => requiredToolNames(check)));
-    const tools = pipeline.manualTools
-        .filter((tool) => required.has(tool.name) && missingBuild(tool, platform, arch) === undefined)
-        .map((tool) => (pinOf(tool) as MisePin).name);
+    const tools = pipeline.manualTools.flatMap((tool) => {
+        const pin = pinOf(tool);
+        return pin !== undefined && required.has(tool.name) && missingBuild(tool, platform, arch) === undefined
+            ? [pin.name]
+            : [];
+    });
     return {
         checks: [...new Set(checks.map((planned) => planned.check.name))].toSorted((first, second) =>
             first.localeCompare(second),

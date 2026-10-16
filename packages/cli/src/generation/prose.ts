@@ -270,7 +270,7 @@ export function possessivesStyle({ names }: { names: string[] }): string {
  * @returns the sorted accepted vocabulary.
  */
 export function acceptedWordsToolFile({ prose }: { prose: ProseInputs }): string {
-    return [...new Set(prose.words)].toSorted((left, right) => left.localeCompare(right)).join('\n') + '\n';
+    return prose.words.toSorted((left, right) => left.localeCompare(right)).join('\n') + '\n';
 }
 /**
  * Compute the selected prose packages, vocabulary, and file formats.

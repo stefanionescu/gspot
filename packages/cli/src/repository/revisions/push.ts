@@ -59,12 +59,8 @@ async function peelCommits(
     });
     if (responses.length !== hashes.length) throw new GspotError('git', 'Git did not resolve every pushed object.');
     return new Map(
-        responses.flatMap((line, index): [string, string | undefined][] => {
-            const [hash, type] = line.split(' ');
-            const requested = hashes[index];
-            if (requested === undefined) throw new GspotError('git', 'Git returned an unrequested object.');
-            if (hash === undefined || type === undefined)
-                throw new GspotError('git', `Cannot find pushed object ${requested}. Fetch the remote again.`);
+        hashes.flatMap((requested, index): [string, string | undefined][] => {
+            const [hash, type] = (responses[index] as string).split(' ') as [string, string];
             return type === 'missing' ? [] : [[requested, type === 'commit' ? hash : undefined]];
         }),
     );

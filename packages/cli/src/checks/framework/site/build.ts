@@ -60,7 +60,6 @@ function cachedBuild(input: CheckInput): Promise<SiteBuild> {
  * @returns the relative paths.
  */
 export function filesUnder(folder: string): string[] {
-    if (statSync(folder, { throwIfNoEntry: false }) === undefined) return [];
     const root = realpathSync.native(folder);
     return [...listFolderFiles(root)]
         .flatMap((entry) => {

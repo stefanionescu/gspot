@@ -30,7 +30,7 @@ beforeAll(async () => {
             'gspot.toml': settingsText(['docs'], {
                 tables: '[[command_check]]\nname = "project/audit"\npaths = ["**/*"]\nstage = "manual"\ncommand = ["echo", "sample"]\n',
             }),
-            'source.js': 'export const value = 1;\n',
+            'README.md': '# Example\n',
             'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
         }),
     );

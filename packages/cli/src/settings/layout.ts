@@ -3,23 +3,14 @@ import { isRecord, isRecordArray } from '#cli/objects.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { TomlTable, LayoutSection } from '#cli/types/settings/file.ts';
-import type { TomlValue, TomlComments, TomlKeyValue } from '#cli/types/parsers/toml.ts';
 import { TOML_HEADER_FORMAT, TOML_ASSIGNMENT_FORMAT } from '#cli/config/settings/file.ts';
-
-import {
-    isValue,
-    tomlRange,
-    isKeyValue,
-    isInlineArray,
-    isInlineTable,
-    emitTomlComments,
-} from '#cli/parsers/toml/comments.ts';
+import type { TomlBlock, TomlValue, TomlComments, TomlKeyValue, TomlCommentNode } from '#cli/types/parsers/toml.ts';
+import { tomlRange, isKeyValue, isInlineArray, isInlineTable, emitTomlComments } from '#cli/parsers/toml/comments.ts';
 
 function tomlAssignment(key: string, value: unknown, dotted = false): { text: string; pair: TomlKeyValue } {
     const assignment = stringify({ [key]: value }, TOML_ASSIGNMENT_FORMAT);
     const text = dotted ? assignment.replace(JSON.stringify(key), key) : assignment;
-    const pair = parseDocument(text).cst.find(isKeyValue);
-    if (pair === undefined) throw new Error('The writer omitted an assignment value.');
+    const pair = parseDocument(text).cst.find(isKeyValue) as TomlKeyValue;
     return { text, pair };
 }
 
@@ -30,8 +21,7 @@ function tomlHeader(path: KeyPath, array: boolean): string {
     const text = stringify(value, TOML_HEADER_FORMAT);
     const section = parseDocument(text).cst.find(
         (node) => 'items' in node && JSON.stringify(node.key.item.value) === JSON.stringify(keys),
-    );
-    if (section === undefined || !('items' in section)) throw new Error('The writer omitted a table header.');
+    ) as Exclude<TomlBlock, TomlKeyValue | TomlCommentNode>;
     const header = text.slice(...tomlRange(section.key));
     return array ? `[${header}]` : header;
 }
@@ -39,7 +29,6 @@ function tomlHeader(path: KeyPath, array: boolean): string {
 function encodeValue(node: TomlValue, text: string, path: KeyPath, comments: TomlComments, indent: string): string {
     if (isInlineArray(node)) {
         const items = node.items.map(({ item }, index) => {
-            if (!isValue(item)) throw new Error('The writer emitted a non-value array item.');
             const keys = [...path, index];
             const notes = [...comments.values()]
                 .filter(({ path: note }) => path.toReversed()[1] === 'rules' && keys.every((key, i) => note[i] === key))
@@ -53,7 +42,7 @@ function encodeValue(node: TomlValue, text: string, path: KeyPath, comments: Tom
                     comments,
                     'header',
                     keys,
-                    [...notes, encodeValue(item, text, keys, comments, indent)].join('\n'),
+                    [...notes, encodeValue(item as TomlValue, text, keys, comments, indent)].join('\n'),
                 ),
             );
         });

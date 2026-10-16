@@ -114,9 +114,8 @@ function projectEvidence(detect: Manifest['detect'], tree: ScopeContents): Detec
 function dependencyEvidence(detect: Manifest['detect'], tree: ScopeContents): DetectionEvidence | undefined {
     for (const pattern of detect.dependencies) {
         const matches = pathMatcher([pattern]);
-        const dependency = [...tree.dependencies.keys()].find((name) => matches(name));
-        if (dependency !== undefined)
-            return { evidence: `${dependency} in ${tree.dependencies.get(dependency) ?? ''}` };
+        const dependency = [...tree.dependencies].find(([name]) => matches(name));
+        if (dependency !== undefined) return { evidence: `${dependency[0]} in ${dependency[1]}` };
     }
     return undefined;
 }
@@ -127,9 +126,11 @@ function shebangEvidence(detect: Manifest['detect'], tree: ScopeContents): Detec
 }
 
 function runtimeEvidence(detect: Manifest['detect'], tree: ScopeContents): DetectionEvidence | undefined {
-    const runtime = detect.runtimes.find((name) => tree.runtimes.has(name));
-    const evidence = runtime === undefined ? undefined : tree.runtimes.get(runtime);
-    return evidence === undefined ? undefined : { evidence };
+    for (const name of detect.runtimes) {
+        const evidence = tree.runtimes.get(name);
+        if (evidence !== undefined) return { evidence };
+    }
+    return undefined;
 }
 
 function pathEvidence(detect: Manifest['detect'], tree: ScopeContents): DetectionEvidence | undefined {

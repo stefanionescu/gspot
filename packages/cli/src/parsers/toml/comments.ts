@@ -1,7 +1,6 @@
 // Retains TOML comments at their syntax entries.
 import { valueAt } from '#cli/objects.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
-import { VALUE_KINDS } from '#cli/config/parsers/toml.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 
 import type {
@@ -92,7 +91,7 @@ function isComment(node: { type: unknown }): node is TomlCommentNode {
  * @param value parsed values.
  * @returns syntax entries and source-ordered comments.
  */
-export function tomlSyntax(source: string, value: Record<string, unknown>): TomlSyntax {
+function tomlSyntax(source: string, value: Record<string, unknown>): TomlSyntax {
     const document = parseDocument(source);
     const comments: TomlSyntax['comments'] = [];
     const positions = { value, counts: new Map<string, number>(), active: new Map<string, number>() };
@@ -136,7 +135,7 @@ export function tomlSyntax(source: string, value: Record<string, unknown>): Toml
  * @param text the entry text.
  * @returns syntax with exact source-ordered leading comments.
  */
-export function emitTomlComments(comments: TomlComments, kind: string, path: KeyPath, text: string): string {
+function emitTomlComments(comments: TomlComments, kind: string, path: KeyPath, text: string): string {
     const id = JSON.stringify([kind, ...path]);
     const block = comments.get(id);
     if (block === undefined) return text;
@@ -161,7 +160,7 @@ export function emitTomlComments(comments: TomlComments, kind: string, path: Key
  * @param syntax indexed syntax.
  * @returns comments with their original anchors and stable path identities.
  */
-export function tomlCommentAnchors(syntax: TomlSyntax): TomlAnchoredComment[] {
+function tomlCommentAnchors(syntax: TomlSyntax): TomlAnchoredComment[] {
     return syntax.comments.map((comment) => {
         const anchor = tomlCommentAnchor(syntax, comment);
         const identity = anchor === undefined ? 'free' : JSON.stringify([anchor.kind, ...anchor.path]);
@@ -170,22 +169,12 @@ export function tomlCommentAnchors(syntax: TomlSyntax): TomlAnchoredComment[] {
 }
 
 /**
- * Identify TOML values among concrete syntax nodes.
- * @param node the syntax node.
- * @param node.type the TOML node kind.
- * @returns whether the node represents a TOML value.
- */
-export function isValue(node: { type: unknown }): node is TomlValue {
-    return VALUE_KINDS.has(String(node.type));
-}
-
-/**
  * Identify a key assignment.
  * @param node the syntax node.
  * @param node.type the TOML node kind.
  * @returns whether the node assigns a key.
  */
-export function isKeyValue(node: { type: unknown }): node is TomlKeyValue {
+function isKeyValue(node: { type: unknown }): node is TomlKeyValue {
     return String(node.type) === 'KeyValue';
 }
 
@@ -195,7 +184,7 @@ export function isKeyValue(node: { type: unknown }): node is TomlKeyValue {
  * @param node.type the TOML node kind.
  * @returns whether the node denotes an inline table.
  */
-export function isInlineTable(node: { type: unknown }): node is InlineTable {
+function isInlineTable(node: { type: unknown }): node is InlineTable {
     return String(node.type) === 'InlineTable';
 }
 
@@ -205,7 +194,7 @@ export function isInlineTable(node: { type: unknown }): node is InlineTable {
  * @param node.type the TOML node kind.
  * @returns whether the node denotes an inline array.
  */
-export function isInlineArray(node: { type: unknown }): node is InlineArray {
+function isInlineArray(node: { type: unknown }): node is InlineArray {
     return String(node.type) === 'InlineArray';
 }
 
@@ -214,7 +203,7 @@ export function isInlineArray(node: { type: unknown }): node is InlineArray {
  * @param node parsed syntax.
  * @returns the token's source extent.
  */
-export function tomlRange(node: SourceRange): readonly [number, number] {
+function tomlRange(node: SourceRange): readonly [number, number] {
     if (node.range === undefined) throw new Error('The TOML parser omitted a source range.');
     return node.range;
 }
@@ -227,7 +216,7 @@ export function tomlRange(node: SourceRange): readonly [number, number] {
  * @param comment the original comment.
  * @param placement whether it belongs to an entry or stands alone.
  */
-export function addTomlComment(
+function addTomlComment(
     comments: TomlComments,
     kind: string,
     path: KeyPath | undefined,
@@ -244,3 +233,14 @@ export function addTomlComment(
     });
     comments.set(id, block);
 }
+
+export {
+    tomlRange,
+    tomlSyntax,
+    isKeyValue,
+    isInlineTable,
+    isInlineArray,
+    addTomlComment,
+    emitTomlComments,
+    tomlCommentAnchors,
+};

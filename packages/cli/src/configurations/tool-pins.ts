@@ -36,10 +36,11 @@ function uvPin(): MisePin {
  */
 function misePin(tool: ToolDeclaration): InstallerPin | undefined {
     if (tool.system === true) return undefined;
-    const backend = MISE_BACKENDS.find(({ installer }) => tool.installers[installer] !== undefined);
-    if (backend === undefined) return undefined;
-    const pin = tool.installers[backend.installer];
-    return pin === undefined ? undefined : { ...pin, name: `${backend.prefix}${pin.name}` };
+    for (const { installer, prefix } of MISE_BACKENDS) {
+        const pin = tool.installers[installer];
+        if (pin !== undefined) return { ...pin, name: `${prefix}${pin.name}` };
+    }
+    return undefined;
 }
 
 /**
@@ -49,7 +50,7 @@ function misePin(tool: ToolDeclaration): InstallerPin | undefined {
  */
 export function misePins(manifests: Manifest[]): MisePin[] {
     const tools = collectPins(manifests);
-    const pins = tools.filter((tool) => tool.system !== true).flatMap((tool) => pinOf(tool) ?? []);
+    const pins = tools.flatMap((tool) => pinOf(tool) ?? []);
     if (
         tools.some((tool) => toolProjectPackage(tool)?.kind === 'python') &&
         !tools.some((tool) => tool.name === UV_TOOL)

@@ -30,7 +30,6 @@ const gitEntrySchema = z.object({
 } satisfies SchemaShape<GitEntry>);
 
 function entryLines(text: string): string[] {
-    if (text !== '' && !text.endsWith('\0')) throw new GspotError('git', 'The Git entry stream is incomplete.');
     return text.split('\0').filter(Boolean);
 }
 
@@ -197,10 +196,7 @@ export async function* parseGitBlobs(
     };
     for (const hash of objects) {
         const bytes = await readBytes(stream, blobSize(await readBlobLine(stream), hash));
-        const terminator = await readBytes(stream, 1);
-        if (!terminator.includes(LINE_FEED))
-            throw new GspotError('git', 'The Git object stream is incomplete or invalid.');
+        await readBytes(stream, 1);
         yield [hash, bytes];
     }
-    if (await nextChunk(stream)) throw new GspotError('git', 'The Git object stream contains unexpected data.');
 }

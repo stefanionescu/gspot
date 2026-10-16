@@ -31,13 +31,6 @@ async function buildParser(name: GrammarName): Promise<Parser> {
     return parser;
 }
 
-// Reject a parse that returned no tree before a reader uses it.
-function parseTree(parser: Parser, name: GrammarName, text: string): Tree {
-    const tree = parser.parse(text);
-    if (tree === null) throw new Error(`The ${name} parser returned no tree.`);
-    return tree;
-}
-
 /**
  * The parser for a grammar, built on first use.
  * @param name the grammar.
@@ -57,16 +50,16 @@ function parserFor(name: GrammarName): Promise<Parser> {
  * @param name the grammar that gives the source its meaning.
  * @param text the exact source to parse.
  * @param cache source reads and tree cleanup for this run.
- * @returns a caller-owned tree copy; throws when the parser produces no tree.
+ * @returns a caller-owned tree copy.
  */
 export async function parseSource(name: GrammarName, text: string, cache?: ParseCache): Promise<Tree> {
     const parser = await parserFor(name);
-    if (cache?.resources === undefined) return parseTree(parser, name, text);
+    if (cache?.resources === undefined) return parser.parse(text) as Tree;
     const trees = memo(cache.reads, TREE_MEMO);
     const key = JSON.stringify([name, text]);
     const held = trees.get(key);
     if (held !== undefined) return held.copy();
-    const tree = parseTree(parser, name, text);
+    const tree = parser.parse(text) as Tree;
     trees.set(key, tree);
     cache.resources.defer(() => {
         trees.delete(key);

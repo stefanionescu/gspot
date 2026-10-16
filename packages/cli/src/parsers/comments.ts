@@ -7,6 +7,7 @@ import { extensionOf } from '#cli/system/paths.ts';
 import { blankOut, positionAt } from '#cli/text.ts';
 import { sqlTokens } from '#cli/parsers/sql/lexer.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
+import type { SourcePosition } from '#cli/types/text.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { GrammarName } from '#cli/types/parsers/tree-sitter.ts';
 import { tomlRange, tomlSyntax } from '#cli/parsers/toml/comments.ts';
@@ -117,11 +118,9 @@ function markdownHtml(text: string): string {
     const pieces: string[] = [];
     let offset = 0;
     visit(fromMarkdown(text), 'html', (node) => {
-        const start = node.position?.start.offset;
-        const end = node.position?.end.offset;
-        if (start === undefined || end === undefined) throw new Error('The Markdown parser omitted source positions.');
-        pieces.push(masked.slice(offset, start), text.slice(start, end));
-        offset = end;
+        const { start, end } = node.position as SourcePosition;
+        pieces.push(masked.slice(offset, start.offset), text.slice(start.offset, end.offset));
+        offset = end.offset;
     });
     pieces.push(masked.slice(offset));
     return pieces.join('');

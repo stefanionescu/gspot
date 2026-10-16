@@ -68,16 +68,14 @@ function assertLinkDestination(
 // Check the same parent directories before a read or a prepared write.
 function checkParents(bounds: SafeFolderState, path: string, statParent: (path: string) => Stats): string {
     const parts = bounds.partsOf(path);
-    const leaf = parts.pop();
-    if (leaf === undefined) throw new Error('A path inside the root cannot be empty.');
     let directory = bounds.root;
-    for (const part of parts) {
+    for (const part of parts.slice(0, -1)) {
         directory = join(directory, part);
         const stat = statParent(directory);
         if (!stat.isDirectory() || stat.isSymbolicLink())
             throw new Error(`A parent of ${path} is a link or is not a directory. Choose a directory without links.`);
     }
-    return join(directory, leaf);
+    return join(bounds.root, ...parts);
 }
 
 /**

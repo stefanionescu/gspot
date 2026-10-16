@@ -106,9 +106,7 @@ export async function readPushBase(root: string, cancelSignal?: AbortSignal): Pr
     const compared = await readDefaultRef(root, cancelSignal);
     if (compared !== '') return readMergeBase(root, compared, cancelSignal);
     const roots = await gitLines(root, [...ROOT_COMMITS_ARGV], { cancelSignal });
-    const first = roots.at(-1);
-    if (first === undefined) throw new Error('Git did not return a root commit for HEAD.');
-    return first;
+    return roots.at(-1) as string;
 }
 
 /**

@@ -31,15 +31,14 @@ import {
     LINKINATOR_PROGRAM,
 } from '#cli/config/checks/framework/site.ts';
 
-function sitemapUrls(build: { folder: string }): string[] {
-    const files = new Set(filesUnder(build.folder));
+function sitemapUrls(folder: string, files: ReadonlySet<string>): string[] {
     const visited = new Set<string>();
     const urls = new Set<string>();
     // eslint-disable-next-line sonarjs/cognitive-complexity -- reason: The sitemap reader handles routes and URL normalization together; splitting it duplicates the same page context.
     const read = (file: string): void => {
         if (visited.has(file)) return;
         visited.add(file);
-        for (const match of readSource(build.folder, file).toString('utf8').matchAll(SITEMAP_LOCATION)) {
+        for (const match of readSource(folder, file).toString('utf8').matchAll(SITEMAP_LOCATION)) {
             const url = match.groups?.['url'];
             if (url === undefined) continue;
             if (new URL(url).pathname.endsWith('.xml')) {
@@ -112,7 +111,7 @@ const purgecssReportSchema = z.array(
 export async function linkinator(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
     const pages = new Set(filesUnder(build.folder));
-    const location = sitemapUrls(build)[0];
+    const location = sitemapUrls(build.folder, pages)[0];
     const paths = [...pages].filter((path) => path.endsWith(HTML_EXTENSION));
     const result = await runCheckTool(
         input,
@@ -265,8 +264,9 @@ export async function siteSize(input: CheckInput): Promise<Finding[]> {
 export async function sitemap(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
     const files = new Set(filesUnder(build.folder));
-    if (![...files].some((file) => SITEMAP_FILE.test(file))) return [];
-    const urls = sitemapUrls(build);
+    const sitemapFile = [...files].find((file) => SITEMAP_FILE.test(file));
+    if (sitemapFile === undefined) return [];
+    const urls = sitemapUrls(build.folder, files);
     const listed = new Set(urls.flatMap((url) => pageOf(url)));
     const isLeftOut = pathMatcher(input.selection.view.options('site').allowed_unlisted_pages);
     const missing = urls
@@ -275,11 +275,7 @@ export async function sitemap(input: CheckInput): Promise<Finding[]> {
             findingAt(
                 input,
                 {
-                    file: repositoryPath(
-                        input,
-                        build,
-                        join(build.folder, [...files].find((file) => SITEMAP_FILE.test(file)) ?? 'sitemap.xml'),
-                    ),
+                    file: repositoryPath(input, build, join(build.folder, sitemapFile)),
                     line: 1,
                 },
                 'missing-page',

@@ -7,14 +7,13 @@ import { unknownConfigurationMessage } from '#cli/configurations/unknown-names.t
 // Selection: the configurations named plus every configuration they require, dependencies first, in order of first mention.
 function visit(walk: SelectionWalk, configurationName: string): void {
     if (walk.seen.has(configurationName)) return;
+    walk.seen.add(configurationName);
     const manifest = walk.manifests.get(configurationName);
     if (!manifest) {
         const known = walk.manifests.keys().toArray();
         walk.errors.push(unknownConfigurationMessage(configurationName, known));
-        walk.seen.add(configurationName);
         return;
     }
-    walk.seen.add(configurationName);
     for (const required of manifest.configuration.requires) visit(walk, required);
     walk.order.push(manifest);
 }
@@ -28,8 +27,7 @@ function visit(walk: SelectionWalk, configurationName: string): void {
 export function selectConfigurations(configurationNames: string[], manifests: Map<string, Manifest>): Manifest[] {
     const walk: SelectionWalk = { manifests, errors: [], order: [], seen: new Set() };
     for (const configurationName of configurationNames) visit(walk, configurationName);
-    const { errors } = walk;
-    if (errors.length > 0) throw new GspotError('arguments', [...new Set(errors)].join('\n'));
+    if (walk.errors.length > 0) throw new GspotError('arguments', walk.errors.join('\n'));
     return walk.order;
 }
 

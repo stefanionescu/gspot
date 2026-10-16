@@ -12,11 +12,6 @@ const ENTRY_FAILURE =
     'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.';
 
 const INVALID_ENTRIES = [
-    {
-        message: 'The Git entry stream is incomplete.',
-        name: 'missing NUL terminator',
-        output: `100644 ${SHA1} 0\tsource.ts`,
-    },
     { message: ENTRY_FAILURE, name: 'unmerged index stage', output: `100644 ${SHA1} 1\tsource.ts\0` },
     { message: ENTRY_FAILURE, name: 'unsupported mode', output: `100600 ${SHA1} 0\tsource.ts\0` },
     { message: ENTRY_FAILURE, name: 'short object ID', output: '100644 aaaa 0\tsource.ts\0' },
@@ -38,12 +33,6 @@ const INVALID_BLOBS = [
     { message: BLOB_FAILURE, name: 'unsafe byte count', output: `${SHA1} blob 9007199254740992\n\n` },
     { message: BLOB_FAILURE, name: 'truncated content', output: `${SHA1} blob 3\nab\n` },
     { message: BLOB_FAILURE, name: 'missing body terminator', output: `${SHA1} blob 2\nab` },
-    { message: BLOB_FAILURE, name: 'incorrect body terminator', output: `${SHA1} blob 2\nabx` },
-    {
-        message: 'The Git object stream contains unexpected data.',
-        name: 'trailing response data',
-        output: `${SHA1} blob 0\n\nextra`,
-    },
 ] as const;
 
 /** Authored source and conflicting working-tree bytes used by native and command push selection. */

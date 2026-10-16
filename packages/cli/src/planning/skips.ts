@@ -123,9 +123,7 @@ export function skipFor(check: PlannedCheck, { session, options, platform, proje
     if (selected !== undefined) return selected;
     const condition = conditionSkip(check, hasGit, projects);
     if (condition !== undefined) return condition;
-    const byPlatform = options.includeUnsupported === true ? undefined : systemSkip(check.check, check.tool, host);
-    if (byPlatform !== undefined) return byPlatform;
-    return undefined;
+    return options.includeUnsupported === true ? undefined : systemSkip(check.check, check.tool, host);
 }
 
 /**

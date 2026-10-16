@@ -1,4 +1,5 @@
 // Runs Git commands with repository environment isolation.
+// Runs Git commands with repository environment isolation.
 import { resolve } from 'node:path';
 import { GspotError } from '#cli/errors.ts';
 import { TRAILING_NEWLINE } from '#cli/config/text.ts';
@@ -28,7 +29,6 @@ import {
     GIT_TOP_LEVEL_ARGV,
     GIT_VARIABLE_PREFIX,
     NOT_REPOSITORY_CODE,
-    GIT_ENVIRONMENT_NAME,
     GIT_PREFIX_ARGUMENTS,
     GIT_WORK_TREE_VARIABLE,
     NOT_REPOSITORY_MESSAGE,
@@ -39,10 +39,7 @@ import {
 
 // Git output defines the protocol boundary, including variable names from the installed Git version.
 function parseLocalEnvironment(text: string): string[] {
-    const local = text.replace(TRAILING_NEWLINE, '').split('\n');
-    if (!local.includes(GIT_DIR_VARIABLE) || local.some((name) => !GIT_ENVIRONMENT_NAME.test(name)))
-        throw new GspotError('git', 'Git did not report valid local environment variable names.');
-    return local;
+    return text.replace(TRAILING_NEWLINE, '').split('\n');
 }
 
 // The hook's original working directory owns relative paths and Git's implicit worktree root.
@@ -60,11 +57,10 @@ function sourceGitEnvironment(
     const source = runBlocking(['git', ...GIT_SOURCE_ARGV], { cwd: origin, env: { ...env, ...overrides } });
     if (source.code !== 0) return { failure: source };
     const line = source.stdout.indexOf('\n');
-    const bare = source.stdout.slice(0, line);
-    if (bare !== 'true' && bare !== 'false') throw new GspotError('git', 'Git did not report a valid repository kind.');
+    const isBare = source.stdout.slice(0, line) === 'true';
     const directory = gitLine(source.stdout.slice(line + 1));
     if (
-        bare === 'false' &&
+        !isBare &&
         environmentVariable(inherited, GIT_DIR_VARIABLE) !== undefined &&
         environmentVariable(inherited, GIT_WORK_TREE_VARIABLE) === undefined
     ) {

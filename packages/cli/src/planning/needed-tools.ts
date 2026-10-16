@@ -163,35 +163,40 @@ export function licenseProjects(
     settings: Settings,
     check: CheckDeclaration,
 ): LicenseProject[] {
-    return files.flatMap((file) => {
-        if (isInGspotFolder(file.path)) return [];
-        const scope = scopeOf(
-            file.path,
-            scopes.map((selection) => selection.scope),
-        );
-        const selection = scopes.find((entry) => entry.scope.path === scope.path);
-        if (selection === undefined) throw new Error(`No selection covers the scope ${scope.path}.`);
-        if (
-            !selection.selected.some(
-                (manifest) =>
-                    manifest.configuration.name === LICENSES_CONFIGURATION &&
-                    coveredBy(
-                        check.files ?? manifest.files,
-                        selection.selected,
-                        [file],
-                        selection.scope.path,
-                        selection.view.test_files,
-                        selection.view.settings,
-                    ).length > 0,
-            )
-        )
-            return [];
-        const options = selection.view.options('licenses');
-        const configuration = { allowed: options.allowed, allowed_package: options.allowed_package };
-        return configuration.allowed.length === 0 && configuration.allowed_package.length === 0
-            ? []
-            : [{ manifest: file.path, selection, configuration, skip: settingsSkip(settings, selection, check) }];
-    });
+    const entries = scopes.map((selection) => selection.scope);
+    return scopes.flatMap((selection) =>
+        files
+            .filter((file) => !isInGspotFolder(file.path) && scopeOf(file.path, entries).path === selection.scope.path)
+            .flatMap((file) => {
+                if (
+                    !selection.selected.some(
+                        (manifest) =>
+                            manifest.configuration.name === LICENSES_CONFIGURATION &&
+                            coveredBy(
+                                check.files ?? manifest.files,
+                                selection.selected,
+                                [file],
+                                selection.scope.path,
+                                selection.view.test_files,
+                                selection.view.settings,
+                            ).length > 0,
+                    )
+                )
+                    return [];
+                const options = selection.view.options('licenses');
+                const configuration = { allowed: options.allowed, allowed_package: options.allowed_package };
+                return configuration.allowed.length === 0 && configuration.allowed_package.length === 0
+                    ? []
+                    : [
+                          {
+                              manifest: file.path,
+                              selection,
+                              configuration,
+                              skip: settingsSkip(settings, selection, check),
+                          },
+                      ];
+            }),
+    );
 }
 
 /**

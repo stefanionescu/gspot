@@ -158,7 +158,7 @@ function watchProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
     };
     const removeExitListener = onExit(stopTree);
     const timer =
-        options.timeoutMs === undefined || options.timeoutMs === 0
+        options.timeoutMs === undefined
             ? undefined
             : setTimeout(() => {
                   if (termination.stopped) return;

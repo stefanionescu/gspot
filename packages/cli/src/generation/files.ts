@@ -13,12 +13,12 @@ import { blockSpan } from '#cli/system/managed-blocks.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { emitToolFiles } from '#cli/generation/tool-files.ts';
 import { managedBlock, selectRuleFiles } from '#cli/rules.ts';
+import { collectPins } from '#cli/configurations/tool-pins.ts';
 import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
 import { packageRedirects } from '#cli/generation/redirects.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/generation/ci.ts';
-import { pinOf, collectPins } from '#cli/configurations/tool-pins.ts';
 import { assertWritablePath } from '#cli/system/safe-folder/names.ts';
 import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
@@ -51,9 +51,7 @@ function emitWorkflow(session: Session, generated: Generated): void {
             operatingSystems: settings.ci.operating_systems,
             hasSwift: isConfigurationSelected(scopes, SWIFT_CONFIGURATION),
             manualChecks: manual,
-            manualTools: collectPins(session.neededToolManifests).filter(
-                (tool) => tool.system !== true && required.has(tool.name) && pinOf(tool) !== undefined,
-            ),
+            manualTools: collectPins(session.neededToolManifests).filter((tool) => required.has(tool.name)),
         }),
     );
 }
@@ -96,13 +94,16 @@ function emitBlocks(session: Session, manifests: Manifest[], rules: RuleFile[], 
     const text = readText(repository.root, GITATTRIBUTES_FILE, reads) ?? '';
     const span = blockSpan(text, { path: GITATTRIBUTES_FILE, style: 'hash' });
     const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
-    if (repository.hasGit) generated.blocks.push({ path: GITIGNORE_FILE, block: gitignoreBlock(), style: 'hash' });
-    if (repository.hasGit)
-        generated.blocks.push({
-            path: GITATTRIBUTES_FILE,
-            block: attributesBlock(generated.files, authored),
-            style: 'hash',
-        });
+    if (repository.hasGit) {
+        generated.blocks.push(
+            { path: GITIGNORE_FILE, block: gitignoreBlock(), style: 'hash' },
+            {
+                path: GITATTRIBUTES_FILE,
+                block: attributesBlock(generated.files, authored),
+                style: 'hash',
+            },
+        );
+    }
     if (!settings.rules.enabled) return;
     const block = managedBlock({
         generatedPaths: [...generated.files, ...generated.fileEdits]

@@ -2,6 +2,7 @@
 import { posix } from 'node:path';
 import { readAsset } from '#cli/system/assets.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
+import type { SourcePosition } from '#cli/types/text.ts';
 import { isExcluded } from '#cli/settings/errors/values.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
 import { ruleFiles } from '#cli/configurations/manifests.ts';
@@ -81,8 +82,7 @@ function ruleSections(text: string): RuleSection[] {
     const nodes = fromMarkdown(text).children;
     const headings = nodes.flatMap((node, index) => {
         if (node.type !== 'heading') return [];
-        const start = node.position?.start.offset;
-        if (start === undefined) throw new Error('A parsed rule heading has no source position.');
+        const start = (node.position as SourcePosition).start.offset;
         const marker = nodes[index + 1];
         return [{ start, depth: node.depth, all: marker?.type === 'html' && marker.value.trim() === ALL_LEVEL_MARKER }];
     });
