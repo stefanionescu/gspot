@@ -5,6 +5,7 @@ import { FULL_PERCENTAGE } from '#cli/config/units.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { type Files } from '#cli/types/system/files.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, posix, resolve, relative } from 'node:path';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { type CoverageReport } from '#cli/types/checks/testing.ts';
@@ -41,7 +42,7 @@ async function measurePackageCoverage(
     const described = await runCheckTool(input, SWIFT_DESCRIBE_COMMAND, { cwd });
     if (described.code !== 0)
         throw new Error(formatOutputTail(described, 'Swift could not describe its package targets'));
-    const coverage = files.read(relative(plan.folder, reported.stdout.trim()));
+    const coverage = files.read(convertToPosixPath(relative(plan.folder, reported.stdout.trim())));
     const text = coverage === undefined ? undefined : decodeUtf8(coverage.bytes);
     if (text === undefined) throw new Error('Swift produced no UTF-8 coverage report at its reported path.');
     return parseSwiftCoverage(text, described.stdout, cwd);

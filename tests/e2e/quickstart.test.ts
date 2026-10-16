@@ -50,7 +50,7 @@ test.each(
         ...QUICKSTART_COMMANDS,
     ]) {
         const result = await runCommand([...command], { cwd: root, env: environment });
-        expect(result.code, result.stdout + result.stderr).toBe(code);
+        expect(result.code, `${command.join(' ')}\n${result.stdout}${result.stderr}`).toBe(code);
     }
     const source = join(root, row.sourcePath);
     const original = await readFile(source);

@@ -3,6 +3,7 @@ import { spyOn, type Mock } from 'bun:test';
 import { quoteArgument } from '#cli/system/text.ts';
 import { join, dirname, basename } from 'node:path';
 import * as processes from '#cli/system/processes.ts';
+import { listExecutableNames } from '#cli/system/paths.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { EXECUTABLE_MODE } from '#tests/data/test-setup.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
@@ -49,7 +50,7 @@ export function fakePinnedExecutables(tools: ToolDeclaration[]): DisposableStack
         spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The process API requires an executable as the first command item.
             const executable = command[0]!;
-            const pin = tools.find((tool) => tool.name === basename(executable));
+            const pin = tools.find((tool) => listExecutableNames(tool.name).includes(basename(executable)));
             if (pin === undefined) return runBlocking(command, options);
             const version = pin.version ?? pin.min_version;
             if (version === undefined) throw new Error(`The test has no declared version for ${executable}.`);
