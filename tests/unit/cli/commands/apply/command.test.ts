@@ -99,7 +99,7 @@ test('a malformed reason reports a settings error and apply preserves the author
     });
     await createFileTree(sandbox.path, { 'gspot.toml': source });
     const message = 'gspot.toml: limits.file_lines.reason: Invalid input: expected string, received number';
-    const checked = await runGspot(sandbox.path, ['check', '--only', 'gspot/settings', '--json']);
+    const checked = await runGspot(sandbox.path, ['check', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(2);
     expect(JSON.parse(checked.stdout)).toStrictEqual({ error: 'settings', message: message });
     const applied = await runGspot(sandbox.path, ['apply']);

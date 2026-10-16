@@ -5,6 +5,7 @@ import { commitAll } from '#tests/setup/git.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildSandboxPath } from '#tests/setup/install.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
@@ -96,7 +97,10 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
     expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
     const outputs = await Promise.all(
         [...new Bun.Glob('.gspot/config/**/jsconfig.json').scanSync({ cwd: sandbox.path, dot: true })].map(
-            async (path) => ({ path, content: await Bun.file(join(sandbox.path, path)).text() }),
+            async (path) => ({
+                path: convertToPosixPath(path),
+                content: await Bun.file(join(sandbox.path, path)).text(),
+            }),
         ),
     );
     expect(outputs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([

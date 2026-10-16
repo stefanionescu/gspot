@@ -6,12 +6,12 @@ import { matchItems } from '#tests/setup/matchers.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxChanges } from '#tests/setup/builders.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { runSandboxStep, buildSandboxPath } from '#tests/setup/install.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { convertToPosixPath, buildVenvExecutablePath } from '#cli/system/paths.ts';
 
 import {
     RUFF_SANDBOX,
@@ -67,7 +67,7 @@ reason = "Test assertions deliberately verify the behavior."
     const configs = await Promise.all(
         [...new Bun.Glob('.gspot/config/**/ruff.toml').scanSync({ cwd: sandbox.path, dot: true })].map(
             async (path) => ({
-                path,
+                path: convertToPosixPath(path),
                 content: await Bun.file(join(sandbox.path, path)).text(),
             }),
         ),
