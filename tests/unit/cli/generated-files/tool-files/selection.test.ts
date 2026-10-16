@@ -91,7 +91,7 @@ test('Go and Rust sources get only the formatter files and tools they use', asyn
         },
     ]).npm;
     expect(Object.keys(packages).toSorted((a, b) => a.localeCompare(b))).toStrictEqual(
-        [...Object.keys(expected), 'editorconfig-checker'].toSorted((first, second) => first.localeCompare(second)),
+        Object.keys(expected).toSorted((first, second) => first.localeCompare(second)),
     );
 });
 test.each([...LEVELS])("every configuration's tool files parse at level %s", async (level) => {
