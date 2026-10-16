@@ -14,3 +14,5 @@ export const DRIZZLE_DRIVERS = [
 export const RULE_CONFIGURATIONS = ['typescript', 'css', 'vitest', 'swift', 'bash', 'drizzle', 'openapi'] as const;
 
 export const DOC_EXAMPLE_PATHS = ['README.md', 'packages/cli/README.md', 'docs/src/content/docs'] as const;
+
+export const NPM_BADGE_PATH = 'docs/assets/readme/badges/npm.svg';

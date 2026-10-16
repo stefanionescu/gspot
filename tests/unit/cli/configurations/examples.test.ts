@@ -4,9 +4,10 @@ import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import example from '#docs/src/config/example.json';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { DOC_EXAMPLE_PATHS } from '#tests/data/rules.ts';
 import { stat, readdir, readFile } from 'node:fs/promises';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { NPM_BADGE_PATH, DOC_EXAMPLE_PATHS } from '#tests/data/rules.ts';
 
 /** List the authored Markdown sources checked by both documentation example tests. */
 async function documentationFiles(): Promise<string[]> {
@@ -93,4 +94,11 @@ test('each gspot command shown in the documentation accepts its arguments with -
         if (result.code !== 0) violations.push(`${command}: ${result.stderr}`);
     }
     expect(violations).toStrictEqual([]);
+});
+
+test('the README npm badge shows the version of the CLI package', async () => {
+    const badge = await readFile(NPM_BADGE_PATH, 'utf8');
+    const { version } = packageManifest;
+    expect([...badge.matchAll(/npm: ([^<"]+)/gu)].map((match) => match[1])).toStrictEqual([version, version]);
+    expect(badge).toContain(`>${version}</text>`);
 });
