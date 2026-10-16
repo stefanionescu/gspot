@@ -23,8 +23,7 @@ import {
 import {
     RULES_FOLDER,
     MANIFEST_FILE,
-    SEMGREP_FOLDER,
-    SEMGREP_TOOL_FILE,
+    TOOL_FILES_FOLDER,
     TOOL_VERSIONS_FILE,
     NAMING_DEFAULTS_FILE,
     CONFIGURATIONS_FOLDER,
@@ -35,28 +34,16 @@ const MANIFESTS = { create: readBundledManifests };
 
 const NAMING_DEFAULTS = { create: readBundledNamingDefaults };
 
-// Discovery adds plain Semgrep and Vale assets while retaining invalid declarations for schema errors.
-function discoveredToolFilesAt(dir: string, toolFiles: unknown): unknown {
-    const declaredSources = new Set(
-        Array.isArray(toolFiles) ? toolFiles.flatMap((entry) => (isRecord(entry) ? [entry['source']] : [])) : [],
-    );
-    const rules = listAssets(`${dir}/${SEMGREP_FOLDER}`)
-        .filter((path) => path.endsWith('.yml') && !declaredSources.has(posix.relative(dir, path)))
-        .map((path) => ({
-            source: posix.relative(dir, path),
-            target: TOOL_FILE_PREFIX + posix.relative(dir, path),
-            ...SEMGREP_TOOL_FILE,
-        }));
-    const valeFiles = listAssets(`${dir}/vale/`).map((path) => ({
-        source: posix.relative(dir, path),
-        target: TOOL_FILE_PREFIX + 'vale/' + posix.relative(dir + '/vale', path),
-        tool: 'vale',
-    }));
-    const discovered = [...rules, ...valeFiles];
-    if (toolFiles === undefined) return discovered;
-    if (!Array.isArray(toolFiles)) return toolFiles;
-    const declarations: unknown[] = toolFiles;
-    return [...declarations, ...discovered];
+// Every tool-files asset has one canonical output; metadata adds consumers and generation settings.
+function readToolFileDeclarations(dir: string, toolFiles: unknown): unknown {
+    if (toolFiles !== undefined && !Array.isArray(toolFiles)) return toolFiles;
+    const declarations: unknown[] = toolFiles === undefined ? [] : toolFiles;
+    const declaredTargets = new Set(declarations.flatMap((entry) => (isRecord(entry) ? [entry['target']] : [])));
+    const folder = `${dir}/${TOOL_FILES_FOLDER}/`;
+    const copied = listAssets(folder)
+        .map((path) => ({ target: TOOL_FILE_PREFIX + posix.relative(folder, path) }))
+        .filter(({ target }) => !declaredTargets.has(target));
+    return [...declarations, ...copied];
 }
 
 // The shared build supplies versions once for declarations and their installers.
@@ -103,7 +90,7 @@ function linkManifestTools(manifests: ManifestDeclaration[]): Map<string, Manife
 function parseManifest(text: string, dir: string): ManifestDeclaration {
     const parsed = parseToml(text);
     const toolFiles = parsed['tool_file'];
-    const discoveredToolFiles = discoveredToolFilesAt(dir, toolFiles);
+    const discoveredToolFiles = readToolFileDeclarations(dir, toolFiles);
     const result = manifestSchema.safeParse({
         ...parsed,
         tool_file: discoveredToolFiles,

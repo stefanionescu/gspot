@@ -1,42 +1,42 @@
 [configuration]
-title = "Swift Tests"
-requires = ["swift", "coverage"]
 description = "Swift test files under XCTest and Swift Testing. A disabled test says why, and coverage holds a floor."
+requires = ["swift", "coverage"]
+title = "Swift Tests"
 
 [detect]
-tags = ["swift-test", "swift-test-target"]
 paths = ["**/*.xctestplan"]
+tags = ["swift-test", "swift-test-target"]
 
 [files]
-paths = ["**/*Tests/**/*.swift"]
 filenames = ["*.xctestplan"]
+paths = ["**/*Tests/**/*.swift"]
 
 [[tool_file]]
+fragment = true
+per_scope = true
+pointer = { path = ".swiftlint.yml", directories = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n" }
 target = ".gspot/config/swiftlint.yml"
 tool = "swiftlint"
-per_scope = true
-fragment = true
-pointer = { path = ".swiftlint.yml", directories = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n" }
 
 [[check]]
-name = "skip-reasons"
 example = "In a Swift test, `throw XCTSkip()` reports a missing reason. Restore the test, or supply a nonempty reason such as `throw XCTSkip(\"Requires the hardware test device\")`. The check requires a reason; it does not validate when the test will be enabled."
-level = "recommended"
-stage = "commit"
 files = { tags = ["swift-test"] }
+help = "Say why the test is off and what turns it back on, or delete the test."
+level = "recommended"
+name = "skip-reasons"
+stage = "commit"
 summary = "Checks that skip calls and disabled traits name a nonempty reason, and unavailable tests carry an explanation."
 why = "A test turned off with no reason stays off, because nobody knows when it is safe to turn on."
-help = "Say why the test is off and what turns it back on, or delete the test."
 
 [[check]]
-name = "coverage"
 example = "A Swift target reports 85% line coverage against a 90% floor. Add a test that exercises its uncovered lines, then rerun the target."
+files = { extensions = [".swift"] }
+help = "Add tests for the target, or lower its floor with a reason."
 level = "recommended"
-stage = "push"
-runs = "scope"
+name = "coverage"
 needs = ["build"]
 operating_systems = ["macos", "linux"]
-files = { extensions = [".swift"] }
+runs = "scope"
+stage = "push"
 summary = "Measures Xcode projects and Swift packages, holding each source target against coverage.lines and its coverage.target floor."
 why = "A target-specific coverage floor exposes Swift code that its test target has not exercised."
-help = "Add tests for the target, or lower its floor with a reason."

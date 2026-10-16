@@ -1,25 +1,20 @@
 // Bun builds both npm packages and prepares the grammar files they ship.
+// Bun builds both npm packages and prepares the grammar files they ship.
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
-import { isDeepStrictEqual } from 'node:util';
 import { assertManifests } from './manifests.ts';
-import { JSON_INDENT } from './config/rule-lists.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import plugin from '../packages/eslint-plugin/src/plugin.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { GRAMMARS_FOLDER } from '#cli/config/system/assets.ts';
-import { readPresets } from '#cli/generation/eslint/presets.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { TOOL_VERSIONS_FILE } from '#cli/config/configurations.ts';
-import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { buildJsonSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { ESLINT_RULE_LEVELS_FILE } from '#cli/config/generation/eslint.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { rm, mkdir, chmod, copyFile, readFile, writeFile } from 'node:fs/promises';
-import ruleNames from '../packages/cli/configurations/language/javascript/eslint-rule-names.json' with { type: 'json' };
 
 import {
     LICENSES_FOLDER,
@@ -32,6 +27,7 @@ import {
 } from './config/grammars.ts';
 import {
     CLI_BANNER,
+    JSON_INDENT,
     DIST_FOLDER,
     LICENSE_FILE,
     CLI_EXECUTABLE,
@@ -60,40 +56,6 @@ async function downloadPinnedFile(path: string, url: string, checksum: string): 
     if (createHash(CHECKSUM_ALGORITHM).update(bytes).digest('hex') !== checksum)
         throw new Error(`Grammar checksum mismatch: ${url}.`);
     await writeFile(path, bytes);
-}
-
-/**
- * Reject presets whose package, pin, or preset source does not match the shipped manifests.
- * @param manifests every shipped configuration
- */
-function validateEslintPresets(manifests: Map<string, Manifest>): void {
-    const versions = listToolProjectPins([...manifests.values()]).npm;
-    if (ruleNames.version !== versions['eslint'])
-        throw new Error(
-            `Run mise run update:rule-lists to update the core rule names: the rule list must use eslint@${String(versions['eslint'])}.`,
-        );
-    for (const manifest of [...manifests.values()].filter((entry) => Object.keys(entry.eslint.presets).length > 0)) {
-        const configuration = manifest.configuration.name;
-        const sources = manifest.eslint.presets;
-        const presets = readPresets(manifest);
-        if (!isDeepStrictEqual(new Set(Object.keys(presets)), new Set(Object.keys(sources))))
-            throw new Error(
-                `Run mise run update:rule-lists to update the ${configuration} ESLint presets: the source exports changed.`,
-            );
-        const invalid = Object.entries(sources).find(([name, { package: packageName, source }]) => {
-            const preset = presets[name];
-            return !isDeepStrictEqual(
-                { package: preset?.package, source: preset?.source, version: preset?.version },
-                { package: packageName, source, version: versions[packageName] },
-            );
-        });
-        if (invalid !== undefined) {
-            const [name, { package: packageName }] = invalid;
-            throw new Error(
-                `Run mise run update:rule-lists to update ${configuration}/${name}: its ESLint preset must use ${packageName}@${String(versions[packageName])}.`,
-            );
-        }
-    }
 }
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -134,7 +96,6 @@ await writeFile(
 );
 const manifests = readManifests(createReadCache(root));
 assertManifests(manifests);
-validateEslintPresets(manifests);
 const cliBuild = await Bun.build({
     entrypoints: [join(cliFolder, cliEntry)],
     outdir: cliDistribution,

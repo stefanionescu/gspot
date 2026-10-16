@@ -1,84 +1,52 @@
 allowed_words = ["Markdown", "lychee"]
 [configuration]
-title = "Markdown"
 description = "Markdown files: markdownlint, Prettier, and fenced code blocks that must parse."
+title = "Markdown"
 
 [files]
 extensions = [".md", ".mdx"]
 
 [[tool]]
+mise = "npm:markdownlint-cli2"
 name = "markdownlint-cli2"
+npm = "markdownlint-cli2"
+replace = [".markdownlint-cli2.jsonc", ".markdownlint-cli2.yaml", ".markdownlint-cli2.cjs", ".markdownlint-cli2.mjs", ".markdownlint.json", ".markdownlint.jsonc", ".markdownlint.yaml", ".markdownlint.yml"]
 rule_url = "https://github.com/DavidAnson/markdownlint/blob/main/doc/{rule}.md"
 suppression = { marker = "\\bmarkdownlint-disable(?:-line|-next-line|-file)?\\b", reason = " -- (?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*(?:--!?>)?$" }
 version = "0.23.3"
-npm = "markdownlint-cli2"
-mise = "npm:markdownlint-cli2"
 version_command = ["--help"]
 version_exit_code = 2
 version_pattern = "markdownlint-cli2 v(\\d+\\.\\d+\\.\\d+)"
-[[tool.replace]]
-file = ".markdownlint-cli2.jsonc"
-shared = false
-
-[[tool.replace]]
-file = ".markdownlint-cli2.yaml"
-shared = false
-
-[[tool.replace]]
-file = ".markdownlint-cli2.cjs"
-shared = false
-
-[[tool.replace]]
-file = ".markdownlint-cli2.mjs"
-shared = false
-
-[[tool.replace]]
-file = ".markdownlint.json"
-shared = false
-
-[[tool.replace]]
-file = ".markdownlint.jsonc"
-shared = false
-
-[[tool.replace]]
-file = ".markdownlint.yaml"
-shared = false
-
-[[tool.replace]]
-file = ".markdownlint.yml"
-shared = false
-
 [[tool_file]]
+per_scope = true
 target = ".gspot/config/markdownlint.jsonc"
 tool = "markdownlint-cli2"
-per_scope = true
 
 [[tool_file]]
-source = "markdownlint-cli2.mjs"
-target = ".gspot/config/markdownlint-cli2.mjs"
-tool = "markdownlint-cli2"
 per_scope = true
 pointer = { path = ".markdownlint-cli2.mjs", body = "export { default } from {target_module};", when = { configuration = "javascript" } }
+target = ".gspot/config/markdownlint-cli2.mjs"
+tool = "markdownlint-cli2"
 
 [[check]]
-name = "markdownlint"
-example = "A heading that jumps from level one to level three reports MD001. Change the later heading to level two."
-run_in_copy = true
-level = "recommended"
-stage = "commit"
 command = ["markdownlint-cli2", "--no-globs", "--config", "{tool_file:markdownlint-cli2}", "{files}"]
-fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{tool_file:markdownlint-cli2}", "{files}"]
+example = "A heading that jumps from level one to level three reports MD001. Change the later heading to level two."
 exit_codes = [1]
+fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{tool_file:markdownlint-cli2}", "{files}"]
+help = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."
+level = "recommended"
+name = "markdownlint"
 output = { format = "markdownlint" }
+run_in_copy = true
+stage = "commit"
 summary = "Checks every Markdown file against markdownlint with the shipped rule set."
 why = "Markdown that lints the same everywhere renders the same everywhere."
-help = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."
 
 [[check]]
-name = "fences"
 example = "A code fence labeled `bash` containing `if then` reports invalid syntax. Correct the example to valid Bash. Use a text fence only when the block represents text rather than executable code."
+help = "Fix the code in the block, or tag the block text when it is not code."
 level = "recommended"
+name = "fences"
 stage = "commit"
 summary = "Checks JSON, JSONC, TOML, YAML, Bash, JavaScript, JSX, TypeScript, TSX, and Python code fences in Markdown (.md) files for syntax errors."
 why = "A code block that does not parse is documentation that lies about the code."
-help = "Fix the code in the block, or tag the block text when it is not code."

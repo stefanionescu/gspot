@@ -3,7 +3,7 @@ export const INVALID_VERSION_FLOORS = [['future']] as const;
 export const REPLACE_DECLARATION = `[[tool]]
 name = "example"
 version = "1.0.0"
-[[tool.replace]]
+[[tool.replace_key]]
 file = "package.json"
 `;
 

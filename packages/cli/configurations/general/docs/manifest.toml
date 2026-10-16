@@ -1,70 +1,63 @@
 [configuration]
-title = "Docs"
 always_selected = true
 description = "Documentation integrity: links and anchors, banned headings, stale paths, the README of every scope, and its shape."
+title = "Docs"
 
 [files]
 extensions = [".md", ".mdx"]
 filenames = ["CLAUDE.md", "AGENTS.md", "README.md"]
 
 [[tool]]
-name = "lychee"
-version = "0.24.2"
-mise = "lychee"
 brew = "lychee"
 cargo = "lychee"
 github = { name = "lycheeverse/lychee", version = "lychee-v0.24.2" }
-[[tool.replace]]
-file = "lychee.toml"
-shared = false
-
-[[tool.replace]]
-file = ".lycheeignore"
-shared = false
-
+mise = "lychee"
+name = "lychee"
+replace = ["lychee.toml", ".lycheeignore"]
+version = "0.24.2"
 [[tool_file]]
+per_scope = true
 target = ".gspot/config/lychee.toml"
 tool = "lychee"
-per_scope = true
 
 [[check]]
-name = "lychee"
-example = "The Markdown link `[Setup](missing.md)` reports a missing local target when `missing.md` does not exist. Point it at the actual setup guide or add the intended document."
-level = "recommended"
-stage = "commit"
 command = ["lychee", "--config", "{tool_file:lychee}", "--offline", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
+example = "The Markdown link `[Setup](missing.md)` reports a missing local target when `missing.md` does not exist. Point it at the actual setup guide or add the intended document."
+help = "Point the link at the file or heading that exists, or delete it."
+level = "recommended"
+name = "lychee"
 output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
+stage = "commit"
 summary = "Checks that local documentation links reach existing files and valid anchor or text fragments."
 why = "A dead link inside the repository is a promise the docs broke without anyone noticing."
-help = "Point the link at the file or heading that exists, or delete it."
 
 [[check]]
-name = "lychee-external"
-example = "A documentation link returning HTTP 404 reports a broken external destination. Replace it with a verified current URL or remove the obsolete link, then rerun with network access."
-level = "recommended"
-stage = "manual"
-needs = ["network"]
 command = ["lychee", "--config", "{tool_file:lychee}", "--root-dir", "{root}", "--scheme", "http", "--scheme", "https", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
+example = "A documentation link returning HTTP 404 reports a broken external destination. Replace it with a verified current URL or remove the obsolete link, then rerun with network access."
+help = "Update or remove the link, or exclude the URL pattern with a reason under docs.allowed_urls."
+level = "recommended"
+name = "lychee-external"
+needs = ["network"]
 output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
+stage = "manual"
 summary = "Checks every external link over the network."
 why = "An external link rots on its own schedule; this run says which ones did."
-help = "Update or remove the link, or exclude the URL pattern with a reason under docs.allowed_urls."
 
 [[check]]
-name = "missing-paths"
 example = "A documented repository path that no longer exists reports a stale reference. Update the path and any associated command to the current owner, then verify the procedure from its stated working directory."
-runs = "once"
+help = "Fix the path or the task name. Give an example code block a title= attribute."
 level = "recommended"
+name = "missing-paths"
+runs = "once"
 stage = "commit"
 summary = "Checks that documented paths name tracked files and mise, npm, pnpm, yarn, and bun run commands name tasks or scripts in their project."
 why = "A path in the docs that nothing tracks sends the reader to a file that is gone."
-help = "Fix the path or the task name. Give an example code block a title= attribute."
 
 [[check]]
-name = "required-files"
 example = "A configured scope without `README.md` reports the missing README. Add one that explains its purpose and setup. The repository root also needs a license when license presence is required."
+help = "Write the README; the docs rule files say what goes in it."
 level = "all"
+name = "required-files"
 stage = "commit"
 summary = "Checks that every scope has a README.md and the root has a LICENSE."
 why = "A scope with no README is a door with no sign."
-help = "Write the README; the docs rule files say what goes in it."

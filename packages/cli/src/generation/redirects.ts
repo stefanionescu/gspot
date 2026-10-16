@@ -10,7 +10,7 @@ import { isInScope, listNestedScopes, buildScopeTarget } from '#cli/repository/s
 import type { GeneratedFile, PackageRedirectInputs } from '#cli/types/generation/files.ts';
 
 function redirectTargets({ selection, manifest, tool, consumed, paths, scopePaths }: PackageRedirectInputs) {
-    return (tool.replace ?? [])
+    return (tool.replace_key ?? [])
         .filter((replacement) => replacement.redirect === true)
         .flatMap((replacement) =>
             manifest.toolFiles

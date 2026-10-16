@@ -27,8 +27,6 @@ export const TYPOS_EXCLUDED_FILES = [
     '.gspot/config/vale/',
 ] as const;
 
-export const STYLELINT_RULES_SOURCE = 'resolveConfig.rules';
-
 export const HADOLINT_RECOMMENDED_OFF = [
     'DL3001',
     'DL3003',
@@ -228,4 +226,4 @@ export const ALWAYS_SKIPPED_TAGS = ['experimental'] as const;
 export { COMMITLINT_ERROR_SEVERITY };
 
 export const SEMGREP_ENV_PATTERNS_INDEX = 3;
-export const SEMGREP_CONFIGURATION_COMPONENT = -3;
+export const SEMGREP_CONFIGURATION_COMPONENT = -4;

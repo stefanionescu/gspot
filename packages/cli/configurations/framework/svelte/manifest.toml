@@ -1,10 +1,10 @@
 
 
 [configuration]
-title = "Svelte"
+description = "ESLint checks Svelte markup and scripts. DOM manipulation and event-dispatcher typing rules run at level all; HTML injection checks run at both levels."
 requires = ["javascript"]
 suggests = ["typescript", "css"]
-description = "ESLint checks Svelte markup and scripts. DOM manipulation and event-dispatcher typing rules run at level all; HTML injection checks run at both levels."
+title = "Svelte"
 
 [detect]
 dependencies = ["svelte"]
@@ -15,31 +15,31 @@ extensions = [".svelte"]
 filenames = ["svelte.config.js", "svelte.config.ts"]
 
 [[tool]]
-name = "eslint-plugin-svelte"
-rule_prefix = "svelte"
 kind = "library"
-version = "3.23.0"
+name = "eslint-plugin-svelte"
 npm = "eslint-plugin-svelte"
+rule_prefix = "svelte"
+version = "3.23.0"
 
 [tool.eslint]
 extensions = [".svelte"]
 
 [[tool]]
-name = "svelte-eslint-parser"
 kind = "library"
-version = "1.8.1"
+name = "svelte-eslint-parser"
 npm = "svelte-eslint-parser"
+version = "1.8.1"
 
 [[tool]]
 name = "svelte-check"
-version = "4.7.6"
 npm = "svelte-check"
+version = "4.7.6"
 
 [[tool]]
-name = "prettier-plugin-svelte"
 kind = "library"
-version = "4.1.1"
+name = "prettier-plugin-svelte"
 npm = "prettier-plugin-svelte"
+version = "4.1.1"
 
 [tool.prettier]
 entry = "plugin.js"
@@ -52,16 +52,16 @@ files = "*.svelte"
 embeddedLanguageFormatting = "auto"
 
 [[check]]
-name = "svelte-check"
-tool = "svelte-check"
 example = "A component containing `<img src={source} />` reports `a11y_missing_attribute`. Give the image a text alternative, such as `<img src={source} alt={caption} />`."
-level = "recommended"
-stage = "push"
-runs = "scope"
-instead_of = "typescript/tsc"
-summary = "Runs svelte-check over the scope: the warnings of the Svelte compiler, its accessibility warnings, and the types of every component and TypeScript file."
-why = "The TypeScript compiler cannot read a component file, and the Svelte compiler warns about markup that no browser reports."
 help = "Read the warning or error svelte-check prints for the file and fix it there; a warning fails the check as an error does."
+instead_of = "typescript/tsc"
+level = "recommended"
+name = "svelte-check"
+runs = "scope"
+stage = "push"
+summary = "Runs svelte-check over the scope: the warnings of the Svelte compiler, its accessibility warnings, and the types of every component and TypeScript file."
+tool = "svelte-check"
+why = "The TypeScript compiler cannot read a component file, and the Svelte compiler warns about markup that no browser reports."
 
 [check.files]
 extensions = [".svelte"]
@@ -77,7 +77,7 @@ source = "configs.recommended"
 "tools.eslint.import_extension" = "extensionless"
 
 [[tool_file]]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
 fragment = true
 required_tools = ["eslint-plugin-svelte", "svelte-eslint-parser"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"

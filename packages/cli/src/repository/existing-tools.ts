@@ -1,5 +1,7 @@
 // Finds existing lint commands, hooks, and tool files.
 // Finds existing lint commands, hooks, and tool files.
+// Finds existing lint commands, hooks, and tool files.
+// Finds existing lint commands, hooks, and tool files.
 import { z } from 'zod';
 import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
@@ -16,7 +18,6 @@ import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listNpmToolNames } from '#cli/configurations/tools.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
-import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { join, extname, dirname, basename, relative } from 'node:path';
@@ -148,29 +149,32 @@ function findReplacedToolFiles(
     root: string,
     inventory: Set<string>,
     tool: string,
-    replace: NonNullable<ToolDeclaration['replace']>[number],
+    replacement: Pick<FoundToolFile, 'path' | 'shared' | 'key' | 'table'>,
 ): FoundToolFile[] {
-    const matches = buildPathMatcher([replace.file, `**/${replace.file}`]);
+    const matches = buildPathMatcher([replacement.path, `**/${replacement.path}`]);
     const candidates = new Set(inventory);
     if (
-        !picomatch.scan(replace.file).isGlob &&
-        !candidates.has(replace.file) &&
-        readText(root, replace.file) !== undefined
+        !picomatch.scan(replacement.path).isGlob &&
+        !candidates.has(replacement.path) &&
+        readText(root, replacement.path) !== undefined
     )
-        candidates.add(replace.file);
+        candidates.add(replacement.path);
     return [...candidates]
         .filter((candidate) => matches(candidate))
         .filter((path) => {
             const source = readText(root, path);
             if (source === undefined) return false;
-            return (replace.table === undefined && replace.key === undefined) || hasToolSection(source, path, replace);
+            return (
+                (replacement.table === undefined && replacement.key === undefined) ||
+                hasToolSection(source, path, replacement)
+            );
         })
         .map((path) => ({
             tool,
             path,
-            shared: replace.shared,
-            ...(replace.table === undefined ? {} : { table: replace.table }),
-            ...(replace.key === undefined ? {} : { key: replace.key }),
+            shared: replacement.shared,
+            ...(replacement.table === undefined ? {} : { table: replacement.table }),
+            ...(replacement.key === undefined ? {} : { key: replacement.key }),
         }));
 }
 
@@ -188,11 +192,7 @@ function parseSharedFile(text: string, extension: string, path: string): unknown
  * @param selector the key or table that the tool owns.
  * @returns whether that section exists.
  */
-function hasToolSection(
-    text: string,
-    path: string,
-    selector: Pick<NonNullable<ToolDeclaration['replace']>[number], 'key' | 'table'>,
-): boolean {
+function hasToolSection(text: string, path: string, selector: Pick<FoundToolFile, 'key' | 'table'>): boolean {
     const extension = extname(path);
     if (selector.table !== undefined && INI_EXTENSIONS.has(extension)) return hasIniSection(text, selector.table);
     const parts = selector.key === undefined ? (selector.table as string).split('.') : [selector.key];
@@ -295,7 +295,10 @@ export function readExistingTools(
     );
     const configurations = [...manifests.values()].flatMap((manifest) =>
         manifest.tools.flatMap((tool) =>
-            (tool.replace ?? []).flatMap((replace) => findReplacedToolFiles(root, inventory, tool.name, replace)),
+            [
+                ...(tool.replace ?? []).map((path) => ({ path, shared: false })),
+                ...(tool.replace_key ?? []).map(({ file, ...selector }) => ({ path: file, shared: true, ...selector })),
+            ].flatMap((replacement) => findReplacedToolFiles(root, inventory, tool.name, replacement)),
         ),
     );
     return {

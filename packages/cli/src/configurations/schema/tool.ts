@@ -55,8 +55,7 @@ const replacementSchema = z.strictObject({
     file: z.string().min(1),
     table: z.string().min(1).optional(),
     key: z.string().min(1).optional(),
-    shared: z.boolean().default(false),
-} satisfies SchemaShape<{ file: string; table?: string | undefined; key?: string | undefined; shared: boolean }>);
+} satisfies SchemaShape<{ file: string; table?: string | undefined; key?: string | undefined }>);
 
 const toolSchema = z
     .strictObject({
@@ -130,7 +129,8 @@ const toolSchema = z
             .union([toolConditionSchema, z.array(toolConditionSchema).min(1)])
             .transform((conditions) => (Array.isArray(conditions) ? conditions : [conditions]))
             .optional(),
-        replace: z
+        replace: z.array(z.string().min(1)).optional(),
+        replace_key: z
             .array(
                 z
                     .discriminatedUnion('redirect', [
@@ -143,18 +143,10 @@ const toolSchema = z
                             redirect: z.literal(true),
                         } satisfies SchemaShape<{ file: 'package.json'; key: string; redirect: true }>),
                     ])
-                    .superRefine((row, context) => {
-                        if (row.key !== undefined && row.table !== undefined)
-                            context.addIssue({
-                                code: 'custom',
-                                message: 'A replace row selects either a key or a table.',
-                            });
-                        if ((row.key !== undefined || row.table !== undefined) && !row.shared)
-                            context.addIssue({
-                                code: 'custom',
-                                message: 'A selected key or table must preserve its shared file.',
-                            });
-                    }),
+                    .refine(
+                        (row) => (row.key === undefined) !== (row.table === undefined),
+                        'A replace_key record selects one key or table.',
+                    ),
             )
             .optional(),
         ...installerFields,

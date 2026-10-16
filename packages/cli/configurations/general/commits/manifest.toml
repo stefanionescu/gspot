@@ -1,110 +1,45 @@
 [configuration]
-title = "Commits"
 always_selected = true
-when = { git = true }
 description = "Checks commit messages for a conventional type, an optional project scope, a first line of 72 characters or fewer, and a wrapped body."
+title = "Commits"
+when = { git = true }
 
 [files]
 paths = ["**"]
 
 [[tool]]
-name = "commitlint"
-version = "21.2.2"
-npm = "@commitlint/cli"
 mise = "npm:@commitlint/cli"
-[[tool.replace]]
-file = ".commitlintrc"
-shared = false
-
-[[tool.replace]]
-file = ".commitlintrc.json"
-shared = false
-
-[[tool.replace]]
-file = ".commitlintrc.yml"
-shared = false
-
-[[tool.replace]]
-file = ".commitlintrc.yaml"
-shared = false
-
-[[tool.replace]]
-file = ".commitlintrc.js"
-shared = false
-
-[[tool.replace]]
-file = ".commitlintrc.cjs"
-shared = false
-
-[[tool.replace]]
-file = ".commitlintrc.mjs"
-shared = false
-
-[[tool.replace]]
-file = ".commitlintrc.ts"
-shared = false
-
-[[tool.replace]]
-file = ".commitlintrc.cts"
-shared = false
-
-[[tool.replace]]
-file = ".commitlintrc.mts"
-shared = false
-
-[[tool.replace]]
-file = "commitlint.config.js"
-shared = false
-
-[[tool.replace]]
-file = "commitlint.config.cjs"
-shared = false
-
-[[tool.replace]]
-file = "commitlint.config.mjs"
-shared = false
-
-[[tool.replace]]
-file = "commitlint.config.ts"
-shared = false
-
-[[tool.replace]]
-file = "commitlint.config.cts"
-shared = false
-
-[[tool.replace]]
-file = "commitlint.config.mts"
-shared = false
-
-[[tool.replace]]
+name = "commitlint"
+npm = "@commitlint/cli"
+replace = [".commitlintrc", ".commitlintrc.json", ".commitlintrc.yml", ".commitlintrc.yaml", ".commitlintrc.js", ".commitlintrc.cjs", ".commitlintrc.mjs", ".commitlintrc.ts", ".commitlintrc.cts", ".commitlintrc.mts", "commitlint.config.js", "commitlint.config.cjs", "commitlint.config.mjs", "commitlint.config.ts", "commitlint.config.cts", "commitlint.config.mts"]
+version = "21.2.2"
+[[tool.replace_key]]
 file = "package.json"
 key = "commitlint"
 redirect = true
-shared = true
-
 [[tool_file]]
 target = ".gspot/config/commitlint.config.cjs"
 tool = "commitlint"
 
 [[check]]
-name = "commitlint"
-example = "The proposed message `changed stuff` lacks the configured conventional-commit structure. A message such as `fix(cli): report missing configuration` supplies a type, scope, and subject. Use a type and scope accepted by the repository policy."
-level = "all"
-stage = "message"
 command = ["commitlint", "--config", "{tool_file:commitlint}", "--edit", "{message_file}"]
+example = "The proposed message `changed stuff` lacks the configured conventional-commit structure. A message such as `fix(cli): report missing configuration` supplies a type, scope, and subject. Use a type and scope accepted by the repository policy."
+help = "Write `<type>`: `<subject>` or `<type>`(`<scope>`): `<subject>`, with an accepted type and optional scope. Keep the whole first line at 72 characters or fewer. Change accepted types with gspot set tools.commitlint.types."
+level = "all"
+name = "commitlint"
 output = { format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$" }
+stage = "message"
 summary = "Checks the commit message being written: a conventional type, an optional known scope, a first line of 72 characters or fewer, and a wrapped body."
 why = "A history of typed, scoped subjects is what release notes, blame and bisect are read from; a free-form message hides the change."
-help = "Write `<type>`: `<subject>` or `<type>`(`<scope>`): `<subject>`, with an accepted type and optional scope. Keep the whole first line at 72 characters or fewer. Change accepted types with gspot set tools.commitlint.types."
 
 [[check]]
-name = "commitlint-pushed"
 example = "A new commit with message `changed stuff` causes the checked range to fail its message rules. Reword that commit to an accepted message such as `fix(cli): report missing configuration`. Rewriting commits changes their IDs; coordinate before rewriting shared history."
-level = "all"
-stage = "push"
-runs = "history"
-tool = "commitlint"
-output = { format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$" }
-summary = "Checks the message of every commit the push sends. Run by hand, it checks every commit from the upstream merge base to HEAD."
-why = "A message written past the hook (--no-verify, a rebase, a merge) still reaches the shared branch unless the push checks it."
 help = "Reword the commits that fail with git rebase -i, or change the rule with gspot set tools.commitlint.rules."
+level = "all"
+name = "commitlint-pushed"
+output = { format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$" }
+runs = "history"
+stage = "push"
+summary = "Checks the message of every commit the push sends. Run by hand, it checks every commit from the upstream merge base to HEAD."
+tool = "commitlint"
+why = "A message written past the hook (--no-verify, a rebase, a merge) still reaches the shared branch unless the push checks it."

@@ -1,25 +1,25 @@
 allowed_words = ["Zod"]
 
 [configuration]
-title = "Zod"
-requires = ["javascript"]
 description = "Zod schemas: ESLint rules reject unsafe schema APIs and recommend replacements for deprecated APIs."
+requires = ["javascript"]
+title = "Zod"
 
 [detect]
 dependencies = ["zod"]
 
 [[tool]]
-name = "eslint-plugin-zod"
-rule_prefix = "zod"
 kind = "library"
-version = "4.12.0"
+name = "eslint-plugin-zod"
 npm = "eslint-plugin-zod"
+rule_prefix = "zod"
+version = "4.12.0"
 
 [eslint]
 all_level_rules = ["zod/no-any-schema", "zod/no-native-enum", "zod/prefer-meta-last", "zod/prefer-strict-object"]
 
 [[tool_file]]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
 fragment = true
 required_tools = ["eslint-plugin-zod"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"

@@ -1,33 +1,30 @@
 [configuration]
-title = "Licenses"
 description = "Every installed dependency reports a license from the allowed list, or has an allowed-package record whose reason names its license."
+title = "Licenses"
 
 [files]
 filenames = ["package.json", "pyproject.toml"]
 
 [[tool]]
-name = "license-checker-rseidelsohn"
-version = "5.0.1"
-npm = "license-checker-rseidelsohn"
-version_exit_code = 1
 mise = "npm:license-checker-rseidelsohn"
-[[tool.replace]]
-file = ".license-checker.json"
-shared = false
-
+name = "license-checker-rseidelsohn"
+npm = "license-checker-rseidelsohn"
+replace = [".license-checker.json"]
+version = "5.0.1"
+version_exit_code = 1
 [[tool]]
-name = "pip-licenses"
-version = "5.5.5"
-pypi = "pip-licenses"
 mise = "pipx:pip-licenses"
+name = "pip-licenses"
+pypi = "pip-licenses"
+version = "5.5.5"
 
 [[check]]
-name = "allowed"
 example = "An installed package whose reported license is outside licenses.allowed reports a finding for that exact package version. Replace it with an acceptable dependency, or write a [[licenses.allowed_package]] record with name, version, and a reason naming the license. A record for another version does not apply."
-level = "recommended"
-stage = "push"
-runs = "once"
 files = { filenames = ["package.json", "pyproject.toml"] }
+help = "Replace the package, or write a [[licenses.allowed_package]] record by hand with its name, exact version, and a reason naming the license."
+level = "recommended"
+name = "allowed"
+runs = "once"
+stage = "push"
 summary = "Compares the license every installed npm or Python package reports with the allowed list and the allowed-package records."
 why = "A license the project cannot accept arrives silently with a transitive dependency."
-help = "Replace the package, or write a [[licenses.allowed_package]] record by hand with its name, exact version, and a reason naming the license."

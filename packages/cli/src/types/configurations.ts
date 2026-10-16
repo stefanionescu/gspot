@@ -216,15 +216,10 @@ export type ToolDeclaration = {
     eslint?: { extensions: string[] };
     requires?: string[];
     when?: Optional<Pick<ConditionFields, 'setting' | 'level'>>[];
-    replace?: (
-        | {
-              file: string;
-              shared: boolean;
-              table?: string | undefined;
-              key?: string | undefined;
-              redirect?: false | undefined;
-          }
-        | { shared: boolean; file: 'package.json'; key: string; redirect: true; table?: string | undefined }
+    replace?: string[];
+    replace_key?: (
+        | { file: string; table?: string | undefined; key?: string | undefined; redirect?: false | undefined }
+        | { file: 'package.json'; key: string; redirect: true; table?: string | undefined }
     )[];
 };
 
@@ -261,7 +256,7 @@ export type CheckInput = Omit<
 };
 /** Tool-file consumers and omitted defaults before consumers resolve their source. */
 export type ToolFileInput = Pick<ToolFileDeclaration, 'target'> &
-    Optional<Omit<ToolFileDeclaration, 'target' | 'tool' | 'check'>> & {
+    Optional<Omit<ToolFileDeclaration, 'target' | 'tool' | 'check' | 'source'>> & {
         tool?: string | string[] | undefined;
         check?: string | string[] | undefined;
     };
@@ -298,29 +293,11 @@ export type ManifestInput = Optional<
     ruff?: Optional<ParsedManifest['ruff']> | undefined;
 };
 /** Native installer declarations before each installer receives a canonical name. */
-export type ToolInput = Omit<ToolFields, 'kind' | 'prettier' | 'when' | 'replace'> & {
+export type ToolInput = Omit<ToolFields, 'kind' | 'prettier' | 'when'> & {
     kind?: ToolFields['kind'] | undefined;
     prettier?:
         | (Pick<NonNullable<ToolFields['prettier']>, 'entry'> &
               Optional<Omit<NonNullable<ToolFields['prettier']>, 'entry'>>)
         | undefined;
     when?: NonNullable<ToolFields['when']>[number] | ToolFields['when'];
-    replace?:
-        | (
-              | {
-                    file: string;
-                    table?: string | undefined;
-                    key?: string | undefined;
-                    shared?: boolean | undefined;
-                    redirect?: false | undefined;
-                }
-              | {
-                    file: 'package.json';
-                    key: string;
-                    redirect: true;
-                    table?: string | undefined;
-                    shared?: boolean | undefined;
-                }
-          )[]
-        | undefined;
 };

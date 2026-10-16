@@ -1,17 +1,23 @@
 [configuration]
-title = "Express"
+description = "An Express service: the Semgrep rules for request handling, an OpenAPI document that lints and matches its source."
 requires = ["javascript"]
 suggests = ["openapi"]
-description = "An Express service: the Semgrep rules for request handling, an OpenAPI document that lints and matches its source."
+title = "Express"
 
 [detect]
 dependencies = ["express"]
 
 [[eslint.selectors]]
-selector = "CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]"
 message = "A message a client reads names no identifier; put the value in its own field."
+selector = "CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]"
 
 [[tool_file]]
+fragment = true
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
-fragment = true
+
+[[tool_file]]
+per_scope = true
+target = ".gspot/config/semgrep/express.yml"
+tool = "semgrep"
+when = { configuration = "security" }

@@ -1,8 +1,8 @@
 [configuration]
-title = "React Native"
+description = "React Native components, styles, and native APIs. Lists use stable keys and virtualized rendering, touch targets use Pressable, and AsyncStorage stores no credentials."
 requires = ["react"]
 suggests = ["typescript"]
-description = "React Native components, styles, and native APIs. Lists use stable keys and virtualized rendering, touch targets use Pressable, and AsyncStorage stores no credentials."
+title = "React Native"
 
 [detect]
 dependencies = ["react-native"]
@@ -11,36 +11,36 @@ dependencies = ["react-native"]
 filenames = ["app.json", "app.config.js", "app.config.ts", "metro.config.js", "eas.json"]
 
 [[tool]]
-name = "@react-native/eslint-plugin"
-rule_prefix = "@react-native"
 kind = "library"
-version = "0.87.1"
+name = "@react-native/eslint-plugin"
 npm = "@react-native/eslint-plugin"
+rule_prefix = "@react-native"
+version = "0.87.1"
 
 [[tool]]
-name = "eslint-plugin-react-native"
-rule_prefix = "react-native"
 kind = "library"
-version = "5.0.0"
+name = "eslint-plugin-react-native"
 npm = "eslint-plugin-react-native"
+rule_prefix = "react-native"
+version = "5.0.0"
 
 [eslint]
 all_level_rules = ["react-native/no-color-literals", "react-native/no-inline-styles", "react-native/split-platform-components"]
 
 [[eslint.selectors]]
-selector = "ImportDeclaration[source.value='react-native'] > ImportSpecifier[imported.name=/^Touchable(Opacity|Highlight|WithoutFeedback|NativeFeedback)$/]"
 message = "Use Pressable. The Touchable components are kept for old code and get no new behavior."
+selector = "ImportDeclaration[source.value='react-native'] > ImportSpecifier[imported.name=/^Touchable(Opacity|Highlight|WithoutFeedback|NativeFeedback)$/]"
 
 [[eslint.selectors]]
-selector = "JSXElement[openingElement.name.name='ScrollView'] > JSXExpressionContainer > CallExpression[callee.property.name='map']"
 message = "A ScrollView renders every row at once. Render a list that grows through FlatList."
+selector = "JSXElement[openingElement.name.name='ScrollView'] > JSXExpressionContainer > CallExpression[callee.property.name='map']"
 
 [[eslint.selectors]]
-selector = "CallExpression[callee.object.name='AsyncStorage'][callee.property.name='setItem'] > Literal:first-child[value=/token|secret|password|credential/i]"
 message = "AsyncStorage is plain text on the device. Keep a secret in the secure store of the platform."
+selector = "CallExpression[callee.object.name='AsyncStorage'][callee.property.name='setItem'] > Literal:first-child[value=/token|secret|password|credential/i]"
 
 [[tool_file]]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
 fragment = true
 required_tools = ["@react-native/eslint-plugin", "eslint-plugin-react-native"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"

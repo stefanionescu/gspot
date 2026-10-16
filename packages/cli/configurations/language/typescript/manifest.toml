@@ -4,10 +4,10 @@ allowed_words = ["TypeScript"]
 prefixes = ["tsconfig"]
 
 [configuration]
-title = "TypeScript"
+description = "The strict compiler, ESLint with typescript-eslint and the gspot structural rules over every TypeScript file, and knip for dead code."
 requires = ["javascript"]
 suggests = []
-description = "The strict compiler, ESLint with typescript-eslint and the gspot structural rules over every TypeScript file, and knip for dead code."
+title = "TypeScript"
 
 [detect]
 extensions = [".ts", ".tsx", ".mts", ".cts"]
@@ -18,41 +18,41 @@ extensions = [".ts", ".tsx", ".mts", ".cts", ".d.ts"]
 filenames = ["tsconfig.json", "tsconfig.*.json"]
 
 [[tool]]
+kind = "library"
 name = "typescript-eslint"
+npm = "typescript-eslint"
 requires = ["tsc"]
 rule_prefix = "@typescript-eslint"
 rule_url = "https://typescript-eslint.io/rules/{rule}"
-kind = "library"
 version = "8.70.0"
-npm = "typescript-eslint"
 
 [tool.eslint]
 extensions = [".ts", ".tsx", ".mts", ".cts"]
 
 [[check]]
-name = "tsc"
-example = "The TypeScript declaration `const count: number = \"one\";` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
-level = "recommended"
-stage = "push"
-runs = "scope"
 cwd = "scope"
-tool = "tsc"
-summary = "Checks that every TypeScript file type-checks with the strict compiler options."
-why = "A file that does not type-check can crash at run time in a way the editor already knew about."
+example = "The TypeScript declaration `const count: number = \"one\";` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
 help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
+level = "recommended"
+name = "tsc"
+runs = "scope"
+stage = "push"
+summary = "Checks that every TypeScript file type-checks with the strict compiler options."
+tool = "tsc"
+why = "A file that does not type-check can crash at run time in a way the editor already knew about."
 
 [check.output]
 format = "regex"
 pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"
 
 [[check]]
-name = "tsconfig"
 example = "Your TypeScript configuration setting `strict` to `false` reports the required compiler option. Enable `strict` and fix the type errors it reports."
+help = "Enable the reported compiler option in your TypeScript configuration."
 level = "recommended"
+name = "tsconfig"
 stage = "commit"
 summary = "Requires strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes, noImplicitOverride, and noFallthroughCasesInSwitch in every tsconfig you write. Level all also requires noImplicitReturns and noPropertyAccessFromIndexSignature."
 why = "One tsconfig that drops strict lets untyped code back in for that whole scope."
-help = "Enable the reported compiler option in your TypeScript configuration."
 
 [eslint]
 all_level_rules = ["@typescript-eslint/ban-ts-comment", "@typescript-eslint/consistent-type-definitions", "@typescript-eslint/consistent-type-exports", "@typescript-eslint/consistent-type-imports", "@typescript-eslint/explicit-module-boundary-types", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-extraneous-class", "@typescript-eslint/no-magic-numbers", "@typescript-eslint/no-mixed-enums", "@typescript-eslint/no-namespace", "@typescript-eslint/no-non-null-assertion", "@typescript-eslint/no-require-imports", "@typescript-eslint/no-this-alias", "@typescript-eslint/no-unnecessary-type-parameters", "@typescript-eslint/prefer-readonly", "@typescript-eslint/prefer-reduce-type-parameter", "@typescript-eslint/prefer-return-this-type", "@typescript-eslint/strict-boolean-expressions", "@typescript-eslint/triple-slash-reference", "@typescript-eslint/unified-signatures"]
@@ -66,7 +66,7 @@ package = "typescript-eslint"
 source = "configs.disableTypeChecked"
 
 [[tool_file]]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
 fragment = true
 required_tools = ["typescript-eslint"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"

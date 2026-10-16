@@ -3,48 +3,22 @@ import { buildManifest } from '#tests/setup/manifest.ts';
 import { REPLACE_DECLARATION } from '#tests/config/manifests.ts';
 import { toolDeclarationSchema } from '#cli/configurations/schema/tool.ts';
 
-test.each([
-    {
-        name: 'a key without shared ownership',
-        selection: 'key = "eslintConfig"',
-        message: 'A selected key or table must preserve its shared file.',
-    },
-    {
-        name: 'a table without shared ownership',
-        selection: 'table = "tool.ruff"',
-        message: 'A selected key or table must preserve its shared file.',
-    },
-    {
-        name: 'both a key and a table',
-        selection: 'key = "eslintConfig"\ntable = "tool.ruff"\nshared = true',
-        message: 'A replace row selects either a key or a table.',
-    },
-])('a replace row refuses $name', ({ selection, message: diagnostic }) => {
+test('a replace_key record refuses both a key and a table', () => {
     expect(() =>
-        buildManifest('example', {
-            tables: REPLACE_DECLARATION + selection,
-        }),
-    ).toThrow(diagnostic);
+        buildManifest('example', { tables: REPLACE_DECLARATION + 'key = "eslintConfig"\ntable = "tool.ruff"\n' }),
+    ).toThrow('A replace_key record selects one key or table.');
 });
 
-test('replacement records keep shared sections and refuse invalid items', () => {
+test('replacement lists keep owned files and shared sections and refuse invalid items', () => {
     const tables =
-        '[[tool]]\nname = "native"\nversion = "1.0.0"\nreplace = [{ file = ".native" }, { file = "native.json" }, { file = "package.json", key = "native", shared = true }]\n';
+        '[[tool]]\nname = "native"\nversion = "1.0.0"\nreplace = [".native", "native.json"]\n[[tool.replace_key]]\nfile = "package.json"\nkey = "native"\n';
     const declaration = buildManifest('native', { tables }).tools[0]!;
     if (typeof declaration === 'string') throw new Error('The fixture must declare native.');
-    expect(declaration.replace).toStrictEqual([
-        { file: '.native', shared: false },
-        { file: 'native.json', shared: false },
-        { file: 'package.json', key: 'native', shared: true },
-    ]);
-    for (const invalid of ['".native"', '[{ file = "" }]', '[{ file = 7 }]']) {
+    expect(declaration.replace).toStrictEqual(['.native', 'native.json']);
+    expect(declaration.replace_key).toStrictEqual([{ file: 'package.json', key: 'native' }]);
+    for (const invalid of ['".native"', '[""]', '[7]']) {
         expect(() =>
-            buildManifest('native', {
-                tables: tables.replace(
-                    '[{ file = ".native" }, { file = "native.json" }, { file = "package.json", key = "native", shared = true }]',
-                    invalid,
-                ),
-            }),
+            buildManifest('native', { tables: tables.replace('[".native", "native.json"]', invalid) }),
         ).toThrow('replace');
     }
 });

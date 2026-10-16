@@ -1,44 +1,44 @@
 allowed_words = ["gspot"]
 [configuration]
-title = "gspot"
 always_selected = true
 description = "Checks gspot.toml and generated files, checks suppression reasons with gspot/suppressions, and requires Node.js as a system tool."
+title = "gspot"
 
 [[tool]]
-name = "node"
+brew = "node@24"
 install_hint = "Install Node.js 24.2.0 or newer. On macOS, run brew install node@24. On Windows, run winget install OpenJS.NodeJS.LTS."
 min_version = "24.2.0"
-version_command = ["--version"]
+name = "node"
 system = true
-brew = "node@24"
+version_command = ["--version"]
 winget = "OpenJS.NodeJS.LTS"
 
 [[check]]
-name = "generated-files"
 example = "A file under `.gspot/config/` edited by hand differs from what gspot writes from gspot.toml and reports drift. Change the settings in gspot.toml and run gspot apply, or move the edited file aside so apply writes it again."
+help = "Change the settings in gspot.toml, then run gspot apply. After a merge, run gspot apply and then gspot install."
 level = "recommended"
-stage = "commit"
+name = "generated-files"
 runs = "once"
+stage = "commit"
 summary = "Compares every generated file with what gspot writes from the settings: a changed, missing, or stray file, or one with merge conflict markers, is a finding."
 why = "A generated file that no longer matches the settings runs a tool with settings nobody chose."
-help = "Change the settings in gspot.toml, then run gspot apply. After a merge, run gspot apply and then gspot install."
 
 [[check]]
-name = "unused-entries"
 example = "An `[[ignore]]` entry for `bash/shellcheck` with `paths = [\"nowhere/**\"]` reports `unmatched-pattern` when that path matches no selected file. Remove the obsolete entry or correct its path to the actual exception, preserving its reason."
+help = "Remove the entry or correct its path."
 level = "recommended"
-stage = "commit"
+name = "unused-entries"
 runs = "once"
+stage = "commit"
 summary = "Checks settings path patterns against tracked files."
 why = "An ignore or declaration that matches nothing misleads the next reader."
-help = "Remove the entry or correct its path."
 
 [[check]]
-name = "suppressions"
 example = "An `eslint-disable-next-line` comment without a reason reports an unexplained suppression. Fix the underlying finding and remove the suppression, or append a specific `-- reason: ...` explanation of the required exception."
+help = "Use the tool's suppression syntax to write a meaningful reason, or fix the finding and remove the suppression."
 level = "recommended"
-stage = "commit"
+name = "suppressions"
 runs = "once"
+stage = "commit"
 summary = "Checks suppression reasons; Semgrep and Vale directives are refused outright."
 why = "A suppression with no reason hides a finding nobody reviewed."
-help = "Use the tool's suppression syntax to write a meaningful reason, or fix the finding and remove the suppression."

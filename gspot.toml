@@ -108,7 +108,7 @@ allowed_names = ["Data", "DetectorName", "Git", "SourceMetadata", "Verified", "f
 reason = "These tool report properties retain the exact TruffleHog, Semgrep, markdownlint and typos JSON field names."
 
 [[naming.override]]
-paths = ["tests/unit/cli/generation/tool-file-sources/v8r.test.ts", "packages/cli/configurations/language/markdown/markdownlint-cli2.mjs"]
+paths = ["tests/unit/cli/generation/tool-file-sources/v8r.test.ts", "packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs"]
 allow_digits = true
 reason = "These files retain the official v8r and markdownlint-cli2 tool names."
 
@@ -397,7 +397,7 @@ import_extension = "ts"
 
 [tools.knip]
 ignore_dependencies = { value = ["@fontsource-variable/geist", "@fontsource-variable/geist-mono", "tree-sitter-bash", "tree-sitter-css", "tree-sitter-html", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript"], reason = "The build imports these packages through CSS or copies their grammar files by path." }
-entry = ["tests/setup/prepare-run.ts", "scripts/build.ts", "tests/setup/integration.ts", "packages/cli/src/checks/framework/site/linkinator-program.ts", "packages/cli/configurations/language/markdown/markdownlint-cli2.mjs"]
+entry = ["tests/setup/prepare-run.ts", "scripts/build.ts", "tests/setup/integration.ts", "packages/cli/src/checks/framework/site/linkinator-program.ts", "packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs"]
 
 [tools.typos]
 extra = { value = { type = { license_names = { extend-glob = ["gspot.toml"], extend-words = { axe = "axe" } }, zod_types = { extend-glob = ["objects.ts"], extend-words = { optin = "optin" } } } }, reason = "Typos splits the published axe-core license name; Zod names its optional input marker optin." }
@@ -460,7 +460,7 @@ reason = "The declaration build uses the root workspace TypeScript dependency, s
 
 [[ignore]]
 check = "prose/vale"
-paths = ["packages/cli/configurations/general/prose/vale/styles/LICENSES.md"]
+paths = ["packages/cli/configurations/general/prose/tool-files/vale/styles/LICENSES.md"]
 reason = "The upstream license notices must keep their exact text."
 
 [[ignore]]
@@ -502,6 +502,16 @@ reason = "This literal supplies a deliberate misspelling to the spelling checks 
 check = "structure/lone-files"
 paths = ["docs/src/components/starlight/SiteTitle.astro", "docs/src/pages/index.astro", "tests/config/samples/settings.ts", "tests/integration/database/postgres.test.ts", "tests/unit/cli/checks/testing/swift-tests.test.ts", "tests/unit/cli/parsers/sql/postgres.test.ts", "tests/unit/cli/parsers/toml/document.test.ts"]
 reason = "The final placement keeps each test beside its source topic and keeps Astro components and routes in their framework folders."
+
+[[ignore]]
+check = "structure/lone-files"
+paths = ["packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs"]
+reason = "Shipped tool files stay in their configuration tool-files folder. This Markdown wrapper remains until its planned removal."
+
+[[ignore]]
+check = "structure/lone-files"
+paths = ["scripts/types/manifests.ts"]
+reason = "Repository types stay in their package types folder. This manifest type remains until the build scripts are removed."
 
 [[ignore]]
 check = "structure/shared-prefixes"

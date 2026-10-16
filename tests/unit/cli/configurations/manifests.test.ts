@@ -10,7 +10,7 @@ import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
 import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
 import { toolDeclarationSchema } from '#cli/configurations/schema/tool.ts';
-import { SEMGREP_ASSETS, CONFIGURATION_TABLE } from '#tests/config/configurations.ts';
+import { SEMGREP_ASSETS, SEMGREP_TOOL_FILES, CONFIGURATION_TABLE } from '#tests/config/configurations.ts';
 
 test('setting names in shipped manifest text and rules exist', () => {
     const manifests = [...readManifests(createReadCache(process.cwd())).values()];
@@ -127,7 +127,7 @@ test('a companion tool file needs a tool or check that reads it', () => {
     ).toThrow('Companion tools require a consuming tool or check.');
 });
 
-test('Semgrep rule packs in the configuration folder become tool files read by the security configuration', () => {
+test('tool-files assets are discovered and their metadata selects their consumers', () => {
     using _assets = spyOn(assets, 'listAssets').mockImplementation((prefix) =>
         prefix === 'configurations/'
             ? ['configurations/language/example/manifest.toml']
@@ -136,17 +136,17 @@ test('Semgrep rule packs in the configuration folder become tool files read by t
     const readAsset = assets.readAsset;
     using _sources = spyOn(assets, 'readAsset').mockImplementation((path) =>
         path === 'configurations/language/example/manifest.toml'
-            ? CONFIGURATION_TABLE +
-              '\n[[tool_file]]\nsource = "other.yml"\ntarget = ".gspot/config/other.yml"\npointer = { path = "other.yml" }\n'
+            ? CONFIGURATION_TABLE + SEMGREP_TOOL_FILES
             : readAsset(path),
     );
     const manifest = readManifests(createReadCache(process.cwd())).get('example')!;
     expect(manifest.toolFiles.map(({ source, target }) => [source, target])).toStrictEqual([
-        ['other.yml', '.gspot/config/other.yml'],
-        ['semgrep/first.yml', '.gspot/config/semgrep/first.yml'],
-        ['semgrep/second.yml', '.gspot/config/semgrep/second.yml'],
+        ['tool-files/other.yml', '.gspot/config/other.yml'],
+        ['tool-files/semgrep/first.yml', '.gspot/config/semgrep/first.yml'],
+        ['tool-files/semgrep/second.yml', '.gspot/config/semgrep/second.yml'],
+        ['tool-files/semgrep/not-a-pack.txt', '.gspot/config/semgrep/not-a-pack.txt'],
     ]);
-    expect(manifest.toolFiles.slice(1)).toMatchObject([
+    expect(manifest.toolFiles.slice(1, 3)).toMatchObject([
         { tool: ['semgrep'], per_scope: true, when: { configuration: 'security' } },
         { tool: ['semgrep'], per_scope: true, when: { configuration: 'security' } },
     ]);

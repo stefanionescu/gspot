@@ -1,46 +1,35 @@
 [configuration]
-title = "Spelling"
 always_selected = true
 description = "typos over every text file, with the words this repository allows and the reason for each."
+title = "Spelling"
 
 [files]
 paths = ["**"]
 
 [[tool]]
-name = "typos"
-version = "1.43.5"
-mise = "typos"
 brew = "typos-cli"
 cargo = "typos-cli"
-winget = "crate-ci.typos"
-scoop = "typos"
 github = { name = "crate-ci/typos", version = "v1.43.5" }
-[[tool.replace]]
-file = "typos.toml"
-shared = false
-
-[[tool.replace]]
-file = ".typos.toml"
-shared = false
-
-[[tool.replace]]
-file = "_typos.toml"
-shared = false
-
+mise = "typos"
+name = "typos"
+replace = ["typos.toml", ".typos.toml", "_typos.toml"]
+scoop = "typos"
+version = "1.43.5"
+winget = "crate-ci.typos"
 [[tool_file]]
+per_scope = true
 target = ".gspot/config/typos.toml"
 tool = "typos"
-per_scope = true
 
 [[check]]
-name = "typos"
-example = "A misspelled word in selected text reports a spelling finding. Correct it and rerun. Filename findings require a manual rename and reference updates."
-level = "recommended"
-stage = "commit"
 command = ["typos", "--isolated", "--config", "{tool_file:typos}", "--force-exclude", "--format", "json", "--color", "never", "{files}"]
-fix = ["typos", "--isolated", "--config", "{tool_file:typos}", "--force-exclude", "--no-check-filenames", "--write-changes", "--color", "never", "{files}"]
+example = "A misspelled word in selected text reports a spelling finding. Correct it and rerun. Filename findings require a manual rename and reference updates."
 exit_codes = [2]
+fix = ["typos", "--isolated", "--config", "{tool_file:typos}", "--force-exclude", "--no-check-filenames", "--write-changes", "--color", "never", "{files}"]
+help = "Fix the spelling, or write the real name and its reason in the root allowed_words setting."
+level = "recommended"
+name = "typos"
 output = { format = "typos" }
+stage = "commit"
 summary = "Finds misspelled words in code, comments, and documentation."
 why = "A typo in an identifier spreads to every caller; in prose it costs the reader a second look."
-help = "Fix the spelling, or write the real name and its reason in the root allowed_words setting."

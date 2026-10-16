@@ -1,9 +1,9 @@
 allowed_words = ["Supabase"]
 [configuration]
-title = "Supabase"
+description = "A Supabase project: edge functions under Deno. Every storage bucket has a policy, and privileged keys stay in their allowed files."
 requires = ["postgres", "javascript"]
 suggests = ["typescript"]
-description = "A Supabase project: edge functions under Deno. Every storage bucket has a policy, and privileged keys stay in their allowed files."
+title = "Supabase"
 
 [detect]
 paths = ["**/supabase/config.toml"]
@@ -13,80 +13,86 @@ project_files = ["supabase/config.toml"]
 paths = ["supabase/config.toml", "supabase/functions/**", "supabase/seed.sql"]
 
 [[tool]]
-name = "deno"
-version = "2.6.6"
-min_version = "2.0.0"
-mise = "deno"
 brew = "deno"
 github = { name = "denoland/deno", version = "v2.6.6" }
+min_version = "2.0.0"
+mise = "deno"
+name = "deno"
 scoop = "deno"
+version = "2.6.6"
 
 [[tool]]
-name = "supabase"
-system = true
-version_command = ["--version"]
+brew = "supabase/tap/supabase"
 min_version = "2.0.0"
 mise = "supabase"
-brew = "supabase/tap/supabase"
+name = "supabase"
 npm = "supabase"
 scoop = "supabase"
+system = true
+version_command = ["--version"]
 
 [[check]]
-name = "storage-policies"
 example = "A declared storage bucket with no matching policy on `storage.objects` reports missing access policy. Add a migration defining the intended access policy for that bucket and rerun."
+help = "Add a policy on storage.objects for the bucket in a migration."
 level = "recommended"
-stage = "commit"
+name = "storage-policies"
 runs = "scope"
+stage = "commit"
 summary = "Checks that every storage bucket in the project file has a policy on storage.objects that names it."
 why = "A bucket with no policy is closed to everyone or, when it is public, open to everyone, and neither is a decision anybody wrote down."
-help = "Add a policy on storage.objects for the bucket in a migration."
 
 [[check]]
-name = "service-role-key"
 example = "A client source reading a Supabase secret or service-role key reports an administrative-key boundary finding. Move privileged operations and the key read to a server-only path, exposing only the required server operation to the client."
+help = "Move code to edge functions or tests, or run gspot ignore supabase/service-role-key with a reason."
 level = "recommended"
-stage = "commit"
+name = "service-role-key"
 runs = "scope"
+stage = "commit"
 summary = "Checks that secret and service role keys are named only in edge functions and test files."
 why = "Secret and service role keys bypass row level security, so a client bundle that holds either exposes privileged database access."
-help = "Move code to edge functions or tests, or run gspot ignore supabase/service-role-key with a reason."
 
 [[check]]
-name = "deno-lint"
 example = "An Edge Function declaring `var greeting = \"hello\";` reports `no-var`. Use `const greeting = \"hello\";` when the value does not change, then rerun with the pinned Deno tool available."
-level = "recommended"
-stage = "commit"
-runs = "scope"
-tool = "deno"
-summary = "Runs deno lint over every edge function, with the function's own deno.json."
-why = "Edge functions run under Deno, and its linter knows the runtime the Node rules do not."
 help = "Change the code the way the rule says; deno lint --rules explains each one."
-
-[[check]]
-name = "deno-check"
-example = "An Edge Function assigning a string to a number-typed variable reports a Deno type error. Correct the value or type to match the intended contract, then rerun."
 level = "recommended"
-stage = "push"
+name = "deno-lint"
 runs = "scope"
+stage = "commit"
+summary = "Runs deno lint over every edge function, with the function's own deno.json."
 tool = "deno"
-summary = "Type checks the entry file of every edge function with deno check."
-why = "The project compiler does not resolve the import map of a function, so only Deno sees its types."
-help = "Fix the first error Deno prints; later ones are often the same mistake."
+why = "Edge functions run under Deno, and its linter knows the runtime the Node rules do not."
 
 [[check]]
-name = "stale-types"
-command = ["supabase", "gen", "types", "typescript", "--local", "{each:--schema:supabase.schemas}"]
-generator_outputs = [{ stdout = "{setting:supabase.types_file}" }]
-example = "A database types file that differs from the configured local Supabase schema reports drift. With the local database ready, regenerate using `supabase gen types typescript --local`, write the output to the configured file, and rerun."
+example = "An Edge Function assigning a string to a number-typed variable reports a Deno type error. Correct the value or type to match the intended contract, then rerun."
+help = "Fix the first error Deno prints; later ones are often the same mistake."
 level = "recommended"
-stage = "push"
+name = "deno-check"
 runs = "scope"
-tool = "supabase"
-needs = ["docker"]
-summary = "Compares supabase.types_file with the types the CLI writes from the local database."
-why = "Stale types let code compile against a column the database dropped."
+stage = "push"
+summary = "Type checks the entry file of every edge function with deno check."
+tool = "deno"
+why = "The project compiler does not resolve the import map of a function, so only Deno sees its types."
+
+[[check]]
+command = ["supabase", "gen", "types", "typescript", "--local", "{each:--schema:supabase.schemas}"]
+example = "A database types file that differs from the configured local Supabase schema reports drift. With the local database ready, regenerate using `supabase gen types typescript --local`, write the output to the configured file, and rerun."
+generator_outputs = [{ stdout = "{setting:supabase.types_file}" }]
 help = "Run supabase gen types typescript --local and write the output to the file."
+level = "recommended"
+name = "stale-types"
+needs = ["docker"]
+runs = "scope"
+stage = "push"
+summary = "Compares supabase.types_file with the types the CLI writes from the local database."
+tool = "supabase"
+why = "Stale types let code compile against a column the database dropped."
 
 [defaults]
 "postgres.client_schemas" = ["public"]
 "tools.squawk.assume_in_transaction" = true
+
+[[tool_file]]
+per_scope = true
+target = ".gspot/config/semgrep/supabase.yml"
+tool = "semgrep"
+when = { configuration = "security" }

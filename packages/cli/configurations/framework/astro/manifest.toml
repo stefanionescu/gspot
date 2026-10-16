@@ -1,10 +1,10 @@
 
 
 [configuration]
-title = "Astro"
+description = "Astro components: ESLint reads the frontmatter, the markup, and the scripts together with the recommended and accessibility rules of the Astro plugin as errors, and astro check reports type errors in every component."
 requires = ["javascript"]
 suggests = ["typescript", "css"]
-description = "Astro components: ESLint reads the frontmatter, the markup, and the scripts together with the recommended and accessibility rules of the Astro plugin as errors, and astro check reports type errors in every component."
+title = "Astro"
 
 [detect]
 dependencies = ["astro"]
@@ -15,11 +15,11 @@ extensions = [".astro"]
 filenames = ["astro.config.mjs", "astro.config.ts"]
 
 [[tool]]
-name = "eslint-plugin-astro"
-rule_prefix = "astro"
 kind = "library"
-version = "1.7.0"
+name = "eslint-plugin-astro"
 npm = "eslint-plugin-astro"
+rule_prefix = "astro"
+version = "1.7.0"
 
 [tool.eslint]
 extensions = [".astro"]
@@ -29,15 +29,15 @@ name = "eslint-plugin-jsx-a11y"
 
 [[tool]]
 name = "astro-check"
-version = "0.9.10"
 npm = "@astrojs/check"
+version = "0.9.10"
 version_command = ["astro", "check", "--version"]
 
 [[tool]]
-name = "prettier-plugin-astro"
 kind = "library"
-version = "1.0.1"
+name = "prettier-plugin-astro"
 npm = "prettier-plugin-astro"
+version = "1.0.1"
 
 [tool.prettier]
 entry = "dist/index.js"
@@ -50,17 +50,17 @@ files = "*.astro"
 parser = "astro"
 
 [[check]]
-name = "astro-check"
-example = "A component whose frontmatter holds `const count: number = 'three';` reports `ts(2322)`. Give the value the declared type, such as `const count: number = 3;`."
-level = "recommended"
-stage = "push"
-runs = "scope"
-cwd = "scope"
 command = ["astro-check", "astro", "check", "--minimumSeverity", "warning", "--minimumFailingSeverity", "warning"]
+cwd = "scope"
+example = "A component whose frontmatter holds `const count: number = 'three';` reports `ts(2322)`. Give the value the declared type, such as `const count: number = 3;`."
 exit_codes = [1]
+help = "Read the first error astro check prints and fix that component; later errors are often the same mistake."
+level = "recommended"
+name = "astro-check"
+runs = "scope"
+stage = "push"
 summary = "Runs astro check over the scope: the type errors and warnings of every Astro component."
 why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Astro checker reads it."
-help = "Read the first error astro check prints and fix that component; later errors are often the same mistake."
 
 [check.files]
 extensions = [".astro"]
@@ -81,15 +81,15 @@ package = "eslint-plugin-astro"
 source = "configs.flat/jsx-a11y-recommended"
 
 [[eslint.rules_off]]
-rules = ["gspot/no-trivial-files"]
 files = ["**/*.astro", "**/*.astro/*.ts", "**/*.astro/*.js"]
 reason = "A component is markup, never a file that only forwards: a script that only imports a module is how Astro bundles client code, and Astro reads the props of a component from the Props type in its own frontmatter."
+rules = ["gspot/no-trivial-files"]
 
 [defaults]
 "tools.eslint.import_extension" = "extensionless"
 
 [[tool_file]]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
 fragment = true
 required_tools = ["eslint-plugin-astro", "eslint-plugin-jsx-a11y"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"

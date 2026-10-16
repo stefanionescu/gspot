@@ -1,14 +1,14 @@
 allowed_words = ["tRPC"]
 
 [configuration]
-title = "tRPC"
-requires = ["javascript"]
 description = "tRPC routers: every procedure validates its input, and client code imports the declared server module as a type only. Name your server module `server` in `[[architecture.module]]`."
+requires = ["javascript"]
+title = "tRPC"
 
 [detect]
 dependencies = ["@trpc/server"]
 
 [[eslint.selectors]]
-selector = "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))"
 message = "Give the procedure an input schema before its resolver, even when the input is nothing."
 role = "routers"
+selector = "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))"

@@ -1,7 +1,7 @@
 [configuration]
-title = "Expo"
-requires = ["react-native"]
 description = "Expo applications: rules for public environment variables and DOM exports, plus Expo Doctor's project and SDK compatibility checks. React Native supplies the native component and style rules."
+requires = ["react-native"]
+title = "Expo"
 
 [detect]
 dependencies = ["expo"]
@@ -10,34 +10,34 @@ dependencies = ["expo"]
 filenames = ["app.json", "app.config.js", "app.config.ts", "eas.json"]
 
 [[tool]]
-name = "eslint-plugin-expo"
-rule_prefix = "expo"
 kind = "library"
-version = "1.1.0"
+name = "eslint-plugin-expo"
 npm = "eslint-plugin-expo"
+rule_prefix = "expo"
+version = "1.1.0"
 
 [[tool]]
 name = "expo-doctor"
-version = "1.20.4"
 npm = "expo-doctor"
+version = "1.20.4"
 
 [[check]]
-name = "doctor"
-tool = "expo-doctor"
 example = "An Expo project whose installed `react-native` differs from the version its Expo SDK expects reports a failed Doctor check. Install the expected version with `npx expo install --check` and rerun."
-level = "recommended"
-stage = "push"
-runs = "scope"
-needs = ["network"]
-summary = "Runs Expo Doctor in the selected Expo scope and reports each failed check with its issues."
-why = "A native package on the wrong version for the Expo SDK builds and then crashes on the device."
 help = "Read the issues and advice Expo Doctor prints for the failed check, then run npx expo install --check."
+level = "recommended"
+name = "doctor"
+needs = ["network"]
+runs = "scope"
+stage = "push"
+summary = "Runs Expo Doctor in the selected Expo scope and reports each failed check with its issues."
+tool = "expo-doctor"
+why = "A native package on the wrong version for the Expo SDK builds and then crashes on the device."
 
 [eslint]
 all_level_rules = ["expo/prefer-box-shadow"]
 
 [[tool_file]]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
 fragment = true
 required_tools = ["eslint-plugin-expo"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"

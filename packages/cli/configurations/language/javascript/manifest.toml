@@ -5,187 +5,134 @@ ignored_folders = ["node_modules", "bower_components"]
 prefixes = ["jsconfig", "eslint", "playwright"]
 
 [configuration]
-title = "JavaScript"
-suggests = []
 description = "ESLint with the shipped rule set over every JavaScript file, type checking through JSDoc, and knip for dead code."
+suggests = []
+title = "JavaScript"
 
 [detect]
-project_files = ["package.json"]
 extensions = [".js", ".jsx", ".mjs", ".cjs"]
+project_files = ["package.json"]
 shebangs = ["node"]
 
 [files]
+eslint_plugins = true
 extensions = [".js", ".jsx", ".mjs", ".cjs"]
 tags = ["shebang:node"]
-eslint_plugins = true
 
 [[tool]]
-name = "eslint"
-rule_url = "https://eslint.org/docs/latest/rules/{rule}"
 crash_pattern = "^(?:Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:)"
 diagnostic_header_pattern = "^(?:Oops!|ESLint: )"
-version = "9.39.5"
+name = "eslint"
 npm = "eslint"
-[[tool.replace]]
-file = "eslint.config.js"
-shared = false
-
-[[tool.replace]]
-file = "eslint.config.mjs"
-shared = false
-
-[[tool.replace]]
-file = "eslint.config.cjs"
-shared = false
-
-[[tool.replace]]
-file = "eslint.config.ts"
-shared = false
-
-[[tool.replace]]
-file = "eslint.config.mts"
-shared = false
-
-[[tool.replace]]
-file = "eslint.config.cts"
-shared = false
-
-[[tool.replace]]
-file = ".eslintrc"
-shared = false
-
-[[tool.replace]]
-file = ".eslintrc.js"
-shared = false
-
-[[tool.replace]]
-file = ".eslintrc.cjs"
-shared = false
-
-[[tool.replace]]
-file = ".eslintrc.json"
-shared = false
-
-[[tool.replace]]
-file = ".eslintrc.yml"
-shared = false
-
-[[tool.replace]]
-file = ".eslintrc.yaml"
-shared = false
-
-[[tool.replace]]
-file = ".eslintignore"
-shared = false
-
+replace = ["eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", "eslint.config.ts", "eslint.config.mts", "eslint.config.cts", ".eslintrc", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.json", ".eslintrc.yml", ".eslintrc.yaml", ".eslintignore"]
+rule_url = "https://eslint.org/docs/latest/rules/{rule}"
+version = "9.39.5"
 [[tool.refused_options]]
-paths = ["rules", "overrides", "extends"]
 message = "ESLint rule selection comes from level recommended or all. Use tools.eslint.rules and tools.eslint.override for native options, or gspot ignore javascript/eslint --rule <rule> --reason <why> to accept a finding."
+paths = ["rules", "overrides", "extends"]
 
 [tool.suppression]
 marker = "^(?:/\\*\\s*eslint-disable(?:-next-line|-line)?|//\\s*eslint-disable-(?:next-)?line)(?=\\s|$)"
 reason = " -- (?<reason>\\S.*)"
 
-[[tool.replace]]
+[[tool.replace_key]]
 file = "package.json"
 key = "eslintConfig"
-shared = true
-
 [[tool]]
+kind = "library"
 name = "@eslint/js"
-kind = "library"
-version = "9.39.5"
 npm = "@eslint/js"
+version = "9.39.5"
 
 [[tool]]
-name = "@gspothq/eslint-plugin"
-rule_prefix = "gspot"
 kind = "library"
+name = "@gspothq/eslint-plugin"
 npm = "@gspothq/eslint-plugin"
+rule_prefix = "gspot"
 rule_url = "https://generativespotting.com/reference/eslint-plugin/{rule}/"
 
 [[tool]]
-name = "eslint-plugin-sonarjs"
-rule_prefix = "sonarjs"
 kind = "library"
-version = "4.2.0"
+name = "eslint-plugin-sonarjs"
 npm = "eslint-plugin-sonarjs"
+rule_prefix = "sonarjs"
+version = "4.2.0"
 
 [[tool]]
+kind = "library"
 name = "eslint-plugin-unicorn"
+npm = "eslint-plugin-unicorn"
 rule_prefix = "unicorn"
 rule_url = "https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/{rule}.md"
-kind = "library"
 version = "65.0.1"
-npm = "eslint-plugin-unicorn"
 
 [[tool]]
+kind = "library"
 name = "eslint-plugin-security"
-rule_prefix = "security"
-kind = "library"
-version = "4.0.1"
 npm = "eslint-plugin-security"
+rule_prefix = "security"
+version = "4.0.1"
 
 [[tool]]
+kind = "library"
 name = "eslint-plugin-barrel-files"
-rule_prefix = "barrel-files"
-kind = "library"
-version = "3.0.1"
 npm = "eslint-plugin-barrel-files"
+rule_prefix = "barrel-files"
+version = "3.0.1"
 
 [[tool]]
-name = "eslint-plugin-perfectionist"
-rule_prefix = "perfectionist"
 kind = "library"
+name = "eslint-plugin-perfectionist"
 npm = "eslint-plugin-perfectionist"
+rule_prefix = "perfectionist"
 version = "5.12.1"
 
 [[tool]]
+kind = "library"
 name = "eslint-plugin-n"
-rule_prefix = "n"
-kind = "library"
-version = "18.3.0"
 npm = "eslint-plugin-n"
+rule_prefix = "n"
+version = "18.3.0"
 
 [[tool]]
+kind = "library"
 name = "eslint-plugin-jsdoc"
-rule_prefix = "jsdoc"
-kind = "library"
-version = "64.3.9"
 npm = "eslint-plugin-jsdoc"
+rule_prefix = "jsdoc"
+version = "64.3.9"
 
 [[tool]]
+kind = "library"
 name = "eslint-plugin-regexp"
-rule_prefix = "regexp"
-kind = "library"
-version = "3.3.0"
 npm = "eslint-plugin-regexp"
+rule_prefix = "regexp"
+version = "3.3.0"
 
 [[tool]]
+kind = "library"
 name = "eslint-plugin-import-x"
-rule_prefix = "import-x"
-kind = "library"
-version = "4.17.1"
 npm = "eslint-plugin-import-x"
+rule_prefix = "import-x"
+version = "4.17.1"
 
 [[tool]]
+kind = "library"
 name = "picomatch"
-kind = "library"
-version = "4.0.7"
 npm = "picomatch"
+version = "4.0.7"
 
 [[tool]]
+kind = "library"
 name = "eslint-import-resolver-typescript"
-kind = "library"
-version = "4.4.5"
 npm = "eslint-import-resolver-typescript"
+version = "4.4.5"
 
 [[tool]]
-name = "eslint-plugin-boundaries"
-rule_prefix = "boundaries"
 kind = "library"
-version = "7.2.0"
+name = "eslint-plugin-boundaries"
 npm = "eslint-plugin-boundaries"
+rule_prefix = "boundaries"
+version = "7.2.0"
 
 [[tool.when]]
 setting = "architecture.module"
@@ -194,66 +141,35 @@ setting = "architecture.module"
 level = "all"
 
 [[tool]]
+kind = "library"
 name = "eslint-plugin-package-json"
-rule_prefix = "package-json"
-kind = "library"
-version = "1.8.0"
 npm = "eslint-plugin-package-json"
+rule_prefix = "package-json"
+version = "1.8.0"
 
 [[tool]]
+kind = "library"
 name = "eslint-config-prettier"
-kind = "library"
-version = "10.1.8"
 npm = "eslint-config-prettier"
+version = "10.1.8"
 
 [[tool]]
-name = "globals"
 kind = "library"
-version = "17.12.0"
+name = "globals"
 npm = "globals"
+version = "17.12.0"
 
 [[tool]]
 name = "knip"
-version = "6.35.1"
 npm = "knip"
-[[tool.replace]]
-file = "knip.json"
-shared = false
-
-[[tool.replace]]
-file = "knip.jsonc"
-shared = false
-
-[[tool.replace]]
-file = ".knip.json"
-shared = false
-
-[[tool.replace]]
-file = ".knip.jsonc"
-shared = false
-
-[[tool.replace]]
-file = "knip.ts"
-shared = false
-
-[[tool.replace]]
-file = "knip.js"
-shared = false
-
-[[tool.replace]]
-file = "knip.config.js"
-shared = false
-
-[[tool.replace]]
-file = "knip.config.ts"
-shared = false
-
+replace = ["knip.json", "knip.jsonc", ".knip.json", ".knip.jsonc", "knip.ts", "knip.js", "knip.config.js", "knip.config.ts"]
+version = "6.35.1"
 [[tool]]
-name = "tsc"
 install_hint = "Run: npm install --save-dev typescript"
+name = "tsc"
+npm = "typescript"
 system = true
 version = "5.9.3"
-npm = "typescript"
 version_command = ["--version"]
 
 [tool.suppression]
@@ -261,66 +177,66 @@ marker = "@ts-(?:ignore|expect-error|nocheck)\\b"
 reason = "@ts-(?:ignore|expect-error|nocheck):?\\s+(?<reason>\\S.*)"
 
 [[tool_file]]
-target = ".gspot/config/eslint.config.mjs"
 required_tools = ["@eslint/js", "@gspothq/eslint-plugin", "eslint-plugin-sonarjs", "eslint-plugin-unicorn", "eslint-plugin-security", "eslint-plugin-barrel-files", "eslint-plugin-perfectionist", "eslint-plugin-n", "eslint-plugin-jsdoc", "eslint-plugin-regexp", "eslint-plugin-import-x", "eslint-import-resolver-typescript", "eslint-plugin-boundaries", "eslint-plugin-package-json", "eslint-config-prettier", "globals", "picomatch"]
+target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 
 [tool_file.pointer]
-path = "eslint.config.mjs"
 body = "export { default } from {target_module};"
+path = "eslint.config.mjs"
 
 [[tool_file]]
-target = ".gspot/config/jsconfig.json"
-tool = "tsc"
 check = "javascript/tsc"
 per_scope = true
+target = ".gspot/config/jsconfig.json"
+tool = "tsc"
 
 [[tool_file]]
 target = ".gspot/config/knip.json"
 tool = "knip"
 
 [[check]]
-name = "eslint"
-tool = ["eslint", "node"]
-example = "The declaration `const unused = 1;` reports no-unused-vars. Delete the variable."
-level = "recommended"
-stage = "commit"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{tool_file:eslint}", "--format", "json", "{files}"]
-fix = ["eslint", "--fix", "--config", "{tool_file:eslint}", "{files}"]
+example = "The declaration `const unused = 1;` reports no-unused-vars. Delete the variable."
 exit_codes = [1]
-summary = "Runs the shipped ESLint rules on JavaScript, TypeScript, component files, and package.json."
-why = "ESLint catches mistakes and dead code the runtime accepts: unused code, unsafe patterns, functions that only forward."
+fix = ["eslint", "--fix", "--config", "{tool_file:eslint}", "{files}"]
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> links the rule documentation."
+level = "recommended"
+name = "eslint"
+stage = "commit"
+summary = "Runs the shipped ESLint rules on JavaScript, TypeScript, component files, and package.json."
+tool = ["eslint", "node"]
+why = "ESLint catches mistakes and dead code the runtime accepts: unused code, unsafe patterns, functions that only forward."
 
 [check.files]
+eslint_plugins = true
 extensions = [".js", ".jsx", ".mjs", ".cjs"]
 filenames = ["package.json"]
 tags = ["shebang:node"]
-eslint_plugins = true
 
 [check.output]
-format = "json"
 children = "messages"
+format = "json"
 
 [check.output.fields]
-file = "filePath"
-line = "line"
 column = "column"
-rule = "ruleId"
-message = "message"
+file = "filePath"
 fixable = "fix"
+line = "line"
+message = "message"
+rule = "ruleId"
 
 [[check]]
-name = "tsc"
-example = "With JavaScript type checking enabled, passing a number to a JSDoc parameter declared as `string` reports a type error. Pass the intended string value or correct the documented parameter contract."
-level = "recommended"
-stage = "push"
-runs = "scope"
 cwd = "scope"
-tool = "tsc"
-summary = "Type-checks plain JavaScript through its JSDoc comments."
-why = "A JavaScript file with a wrong call crashes at run time; the checker sees it first when the types are written down."
+example = "With JavaScript type checking enabled, passing a number to a JSDoc parameter declared as `string` reports a type error. Pass the intended string value or correct the documented parameter contract."
 help = "Add or fix the JSDoc type that the error names."
+level = "recommended"
+name = "tsc"
+runs = "scope"
+stage = "push"
+summary = "Type-checks plain JavaScript through its JSDoc comments."
+tool = "tsc"
+why = "A JavaScript file with a wrong call crashes at run time; the checker sees it first when the types are written down."
 
 [check.files]
 extensions = [".js", ".mjs", ".cjs", ".jsx"]
@@ -330,33 +246,33 @@ format = "regex"
 pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"
 
 [[check]]
-name = "knip"
-example = "An exported declaration that no selected entry point uses reports an unused export. Remove the export or declaration and update consumers. If the file is dynamically loaded, add its entry point in tools.knip.entry."
-level = "recommended"
-stage = "push"
-runs = "scope"
 command = ["knip", "--config", "{tool_file:knip}", "--no-progress", "--reporter", "json", "{workspace:--workspace}"]
 cwd = "root"
+example = "An exported declaration that no selected entry point uses reports an unused export. Remove the export or declaration and update consumers. If the file is dynamically loaded, add its entry point in tools.knip.entry."
+help = "Delete what knip names, or add a knip entry point in tools.knip.entry if the file is loaded in a way knip cannot see."
+level = "recommended"
+name = "knip"
+runs = "scope"
+stage = "push"
 summary = "Finds files, exports, and dependencies nothing uses."
 why = "Dead code is read, maintained, and shipped for nobody."
-help = "Delete what knip names, or add a knip entry point in tools.knip.entry if the file is loaded in a way knip cannot see."
 
 [check.output]
 format = "knip"
 
 [[naming.override]]
-paths = ["**"]
-languages = ["typescript", "javascript"]
 categories = ["functions", "methods"]
 ignored_prefix = "^handle(?=[A-Z])"
+languages = ["typescript", "javascript"]
+paths = ["**"]
 reason = "A handler starts with handle and then names the event."
 
 [rules."PLAYWRIGHT.md"]
 dependencies = ["@playwright/test", "playwright"]
 
 [rules."NODE.md"]
-runtimes = ["node"]
 absent_dependencies = ["react-native", "expo"]
+runtimes = ["node"]
 
 [rules."DENO.md"]
 runtimes = ["deno"]
@@ -389,3 +305,9 @@ source = "configs.recommended"
 [eslint.presets.prettier]
 package = "eslint-config-prettier"
 source = ""
+
+[[tool_file]]
+per_scope = true
+target = ".gspot/config/semgrep/javascript.yml"
+tool = "semgrep"
+when = { configuration = "security" }

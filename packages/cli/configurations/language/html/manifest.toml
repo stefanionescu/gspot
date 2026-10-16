@@ -1,49 +1,38 @@
 allowed_words = ["HTML"]
 [configuration]
-title = "HTML"
 description = "HTML files: html-validate for structure and accessibility, and no inline script or handler."
+title = "HTML"
 
 [files]
 extensions = [".html", ".htm"]
 
 [[tool]]
 name = "html-validate"
+npm = "html-validate"
+replace = [".htmlvalidate.json", ".htmlvalidate.js", ".htmlvalidate.cjs"]
 suppression = { marker = "^<!--\\s*\\[?html-validate-disable(?:-next|-block)?(?=\\s|\\]|$)", reason = "(?: -- |: )(?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*\\]?\\s*(?:--!?>)?$" }
 version = "11.6.1"
-npm = "html-validate"
-[[tool.replace]]
-file = ".htmlvalidate.json"
-shared = false
-
-[[tool.replace]]
-file = ".htmlvalidate.js"
-shared = false
-
-[[tool.replace]]
-file = ".htmlvalidate.cjs"
-shared = false
-
 [[tool_file]]
+check = "html/validate"
 target = ".gspot/config/html-validate-source.json"
 tool = "html-validate"
-check = "html/validate"
 
 [[check]]
-name = "validate"
-example = "An `<img src=\"logo.png\">` element without alternative text reports an accessibility finding under the configured rules. Add meaningful `alt` text, or an empty `alt` value for a decorative image."
-level = "recommended"
-stage = "commit"
 command = ["html-validate", "--config", "{tool_file:html-validate-source}", "--formatter", "json", "{files}"]
+example = "An `<img src=\"logo.png\">` element without alternative text reports an accessibility finding under the configured rules. Add meaningful `alt` text, or an empty `alt` value for a decorative image."
+help = "Change the markup the way the rule page says. Turn one rule off with gspot ignore html/validate --rule `<name>` --reason \"`<why>`\"."
+level = "recommended"
+name = "validate"
 output = { format = "json", children = "messages", fields = { file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message" } }
+stage = "commit"
 summary = "Validates every HTML file: elements where they may sit, required attributes, text alternatives, and one style for void elements."
 why = "A browser repairs broken markup in its own way, and a screen reader reads what the repair left."
-help = "Change the markup the way the rule page says. Turn one rule off with gspot ignore html/validate --rule `<name>` --reason \"`<why>`\"."
 
 [[check]]
-name = "scripts"
 example = "A button using an inline `onclick` attribute reports embedded executable code. Remove the attribute and attach the event listener from a separate script file."
+help = "Move the script into a file, and attach the handler from that file. Structured data of type application/ld+json stays inline."
 level = "all"
+name = "scripts"
 stage = "commit"
 summary = "Refuses executable inline script, event handler attributes, and executable script or data URLs in HTML files."
 why = "A content security policy that allows inline script allows an injected one too, so the policy only holds when the pages hold none."
-help = "Move the script into a file, and attach the handler from that file. Structured data of type application/ld+json stays inline."

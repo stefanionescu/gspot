@@ -1,128 +1,110 @@
 allowed_words = ["JSON", "TOML", "YAML"]
 [configuration]
-title = "JSON, YAML, TOML, and XML files"
 always_selected = true
 description = "Checks JSON, YAML, TOML, XML, and related formats. Its tool files configure the tools that read these files."
+title = "JSON, YAML, TOML, and XML files"
 
 [files]
 extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".xml"]
 
 [[tool]]
-name = "taplo"
-version = "0.10.0"
-min_version = "0.9.0"
-mise = "taplo"
 brew = "taplo"
 cargo = "taplo-cli"
+min_version = "0.9.0"
+mise = "taplo"
+name = "taplo"
+replace = ["taplo.toml", ".taplo.toml"]
+version = "0.10.0"
 # No npm pin: the npm build of Taplo checks no file on Windows, so every platform takes the native release.
 github = { name = "tamasfe/taplo", version = "0.10.0" }
-[[tool.replace]]
-file = "taplo.toml"
-shared = false
-
-[[tool.replace]]
-file = ".taplo.toml"
-shared = false
-
 [[tool]]
-name = "yamllint"
-version = "1.38.0"
-mise = "pipx:yamllint"
-pypi = "yamllint"
 brew = "yamllint"
-[[tool.replace]]
-file = ".yamllint"
-shared = false
-
-[[tool.replace]]
-file = ".yamllint.yml"
-shared = false
-
-[[tool.replace]]
-file = ".yamllint.yaml"
-shared = false
-
+mise = "pipx:yamllint"
+name = "yamllint"
+pypi = "yamllint"
+replace = [".yamllint", ".yamllint.yml", ".yamllint.yaml"]
+version = "1.38.0"
 [[tool]]
+mise = "npm:v8r"
 name = "v8r"
+npm = "v8r"
 requires = ["ajv"]
 version = "6.1.0"
-mise = "npm:v8r"
-npm = "v8r"
 
 # v8r imports this optional peer when it loads ajv-draft-04. Tool projects must install it.
 
 [[tool]]
-name = "ajv"
 kind = "library"
-version = "8.20.0"
+name = "ajv"
 npm = "ajv"
+version = "8.20.0"
 
 [[tool]]
+apt = "libxml2-utils"
+brew = "libxml2"
 name = "xmllint"
 system = true
-brew = "libxml2"
-apt = "libxml2-utils"
 
 [[tool_file]]
 target = ".gspot/config/taplo.toml"
 tool = "taplo"
 
 [[tool_file]]
+per_scope = true
 target = ".gspot/config/yamllint.yml"
 tool = "yamllint"
-per_scope = true
 
 [[tool_file]]
 target = ".gspot/config/v8r.yml"
 tool = "v8r"
 
 [[check]]
-name = "taplo-format"
-example = "The TOML assignment `enabled=true` differs from the configured formatter output. Run the formatter to obtain `enabled = true` and rerun."
-level = "recommended"
-stage = "commit"
 command = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
-fix = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "{files}"]
+example = "The TOML assignment `enabled=true` differs from the configured formatter output. Run the formatter to obtain `enabled = true` and rerun."
 files = { extensions = [".toml"] }
+fix = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "{files}"]
+help = "Run gspot check --fix."
+level = "recommended"
+name = "taplo-format"
 output = { format = "regex", pattern = "^(?:\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)|--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path=\"(?<file>[^\"]+)\")$", message = "The file does not parse as TOML, or it is not in the format of the configured TOML settings.", fixable = "^(?:--- a/|ERROR taplo:format_files)" }
+stage = "commit"
 summary = "Checks that every TOML file parses and is formatted the way taplo formats it with the shared settings."
 why = "One formatter keeps a diff about the values, not the spacing."
-help = "Run gspot check --fix."
 
 [[check]]
-name = "yamllint"
-example = "Two `enabled` keys in the same YAML mapping report a duplicate-key finding. Keep the one intended value and remove the duplicate."
-level = "recommended"
-stage = "commit"
 command = ["yamllint", "-c", "{tool_file:yamllint}", "-f", "parsable", "-s", "{files}"]
+example = "Two `enabled` keys in the same YAML mapping report a duplicate-key finding. Keep the one intended value and remove the duplicate."
 files = { extensions = [".yaml", ".yml"] }
+help = "Fix the line yamllint names, or set the rule's options with gspot set tools.yamllint.rules."
+level = "recommended"
+name = "yamllint"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): \\[(?:error|warning)\\] (?<message>.*?)(?: \\((?<rule>[a-z-]+)\\))?$" }
+stage = "commit"
 summary = "Parses every YAML file and checks its indentation, keys, and values with yamllint."
 why = "A YAML file that parses to the wrong shape fails silently: a duplicated key wins, a stray tab changes the nesting."
-help = "Fix the line yamllint names, or set the rule's options with gspot set tools.yamllint.rules."
 
 [[check]]
-name = "v8r"
-example = "A governed JSON file with a string where its selected schema requires a boolean reports a schema mismatch. Replace the value with the intended boolean and rerun against the same schema."
-level = "recommended"
-stage = "push"
-needs = ["network"]
 command = ["v8r", "--output-format", "text", "{files}"]
 env = { V8R_CONFIG_FILE = "{tool_file:v8r}" }
+example = "A governed JSON file with a string where its selected schema requires a boolean reports a schema mismatch. Replace the value with the intended boolean and rerun against the same schema."
 files = { extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"] }
+help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schema."
+level = "recommended"
+name = "v8r"
+needs = ["network"]
 output = { format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$" }
+stage = "push"
 summary = "Validates every tool file that has a known schema against it: package.json, tsconfig.json, mise, workflows and the rest of the SchemaStore catalog."
 why = "A key the schema refuses is a setting that never applies, and nobody finds out until the behavior it was meant to change does not change."
-help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schema."
 
 [[check]]
-name = "xmllint"
-example = "The XML text `<settings><enabled>true</settings>` has mismatched tags. Close the child element as `<enabled>true</enabled>` before closing `settings`."
-level = "recommended"
-stage = "commit"
 command = ["xmllint", "--noout", "{files}"]
+example = "The XML text `<settings><enabled>true</settings>` has mismatched tags. Close the child element as `<enabled>true</enabled>` before closing `settings`."
 files = { extensions = [".xml", ".storyboard", ".xib"] }
+help = "Fix the line xmllint names."
+level = "recommended"
+name = "xmllint"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$" }
+stage = "commit"
 summary = "Parses every XML file with xmllint."
 why = "Malformed XML is refused by the reader at the worst moment."
-help = "Fix the line xmllint names."

@@ -1,55 +1,52 @@
 allowed_words = ["Semgrep"]
 [configuration]
-title = "Security"
 always_selected = true
 description = "Static analysis for security patterns with Semgrep over every file a selected language claims."
+title = "Security"
 
 [files]
-languages = true
 extensions = [".plist"]
+languages = true
 
 [[tool]]
-name = "semgrep"
-version_command = ["--disable-version-check", "--version"]
-suppression = { marker = "\\bnosemgrep\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }
-version = "1.178.0"
-min_version = "1.100.0"
-pypi = "semgrep"
-mise = "pipx:semgrep"
 brew = "semgrep"
 builds = ["macos", "linux"]
-[[tool.replace]]
-file = ".semgrepignore"
-shared = false
-
+min_version = "1.100.0"
+mise = "pipx:semgrep"
+name = "semgrep"
+pypi = "semgrep"
+replace = [".semgrepignore"]
+suppression = { marker = "\\bnosemgrep\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }
+version = "1.178.0"
+version_command = ["--disable-version-check", "--version"]
 [[tool_file]]
+per_scope = true
 target = ".semgrepignore"
 tool = "semgrep"
-per_scope = true
 
 [[check]]
-name = "semgrep"
-example = "Code matching a selected local Semgrep rule reports that rule ID and source location. For a rule banning dynamic evaluation, replace `eval(userInput)` with explicit parsing and permitted operations, then rerun the same rule set."
-level = "recommended"
-stage = "push"
-exit_codes = [1, 3]
 command = ["semgrep", "scan", "--strict", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--json", "{files}"]
+example = "Code matching a selected local Semgrep rule reports that rule ID and source location. For a rule banning dynamic evaluation, replace `eval(userInput)` with explicit parsing and permitted operations, then rerun the same rule set."
+exit_codes = [1, 3]
+help = "Change the code the way the message says. Turn one rule off for a path with gspot ignore security/semgrep --rule `<id>` --paths `<glob>` --reason \"`<why>`\"."
+level = "recommended"
+name = "semgrep"
 output = { format = "semgrep" }
+stage = "push"
 summary = "Runs the Semgrep rule packs of the selected configurations, and the repository's own rules, over the changed files."
 why = "An injection or a logged secret reads like ordinary code, and a pattern rule finds it before a reviewer has to."
-help = "Change the code the way the message says. Turn one rule off for a path with gspot ignore security/semgrep --rule `<id>` --paths `<glob>` --reason \"`<why>`\"."
 
 [[check]]
-name = "semgrep-registry"
-example = "Code matching a configured Semgrep registry rule reports its upstream rule ID. Correct the operation identified by that rule and rerun with network access. The configured rule set determines which patterns are findings."
-level = "recommended"
-stage = "manual"
-exit_codes = [1, 3]
-needs = ["network"]
-when = { setting = "tools.semgrep.registry_packs" }
 command = ["semgrep", "scan", "--strict", "{each:--config:tools.semgrep.registry_packs}", "--error", "--metrics", "off", "--disable-version-check", "--quiet", "--json", "{files}"]
-tool = "semgrep"
-output = { format = "semgrep" }
-summary = "Runs the public Semgrep registry packs named in tools.semgrep.registry_packs, which the registry serves over the network."
-why = "The registry packs cover the common vulnerability classes, and their license keeps them out of this package."
+example = "Code matching a configured Semgrep registry rule reports its upstream rule ID. Correct the operation identified by that rule and rerun with network access. The configured rule set determines which patterns are findings."
+exit_codes = [1, 3]
 help = "Change the code the way the message says, or turn the rule off for a path with gspot ignore security/semgrep-registry --rule `<id>` --reason \"`<why>`\"."
+level = "recommended"
+name = "semgrep-registry"
+needs = ["network"]
+output = { format = "semgrep" }
+stage = "manual"
+summary = "Runs the public Semgrep registry packs named in tools.semgrep.registry_packs, which the registry serves over the network."
+tool = "semgrep"
+when = { setting = "tools.semgrep.registry_packs" }
+why = "The registry packs cover the common vulnerability classes, and their license keeps them out of this package."

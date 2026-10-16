@@ -3,9 +3,9 @@ allowed_words = ["Swift", "SwiftLint", "SwiftFormat", "Periphery"]
 ignored_folders = [".build", "DerivedData", "Pods"]
 
 [configuration]
-title = "Swift"
-suggests = []
 description = "Swift sources: SwiftLint with stable rules selected by level and analyzer rules, SwiftFormat, a build, and Periphery for dead code."
+suggests = []
+title = "Swift"
 
 [detect]
 extensions = [".swift"]
@@ -16,147 +16,136 @@ extensions = [".swift"]
 filenames = ["Package.swift", "Package.resolved"]
 
 [[tool]]
-name = "swiftlint"
-rule_url = "https://realm.github.io/SwiftLint/{rule}.html"
-suppression = { marker = "\\bswiftlint:disable\\b", reason = " - (?<reason>\\S.*)" }
+brew = "swiftlint"
 builds = ["macos", "linux"]
-version = "0.63.2"
+github = { name = "realm/SwiftLint", version = "0.63.2" }
 min_version = "0.57.0"
 mise = "swiftlint"
-brew = "swiftlint"
-github = { name = "realm/SwiftLint", version = "0.63.2" }
+name = "swiftlint"
+replace = [".swiftlint.yml", ".swiftlint.yaml"]
+rule_url = "https://realm.github.io/SwiftLint/{rule}.html"
+suppression = { marker = "\\bswiftlint:disable\\b", reason = " - (?<reason>\\S.*)" }
+version = "0.63.2"
 version_command = ["version"]
-[[tool.replace]]
-file = ".swiftlint.yml"
-shared = false
-
-[[tool.replace]]
-file = ".swiftlint.yaml"
-shared = false
-
 [[tool]]
-name = "swiftformat"
-suppression = { marker = "\\bswiftformat:disable\\b", reason = " - (?<reason>\\S.*)" }
 builds = ["macos", "linux"]
-version = "0.61.1"
 min_version = "0.54.0"
+name = "swiftformat"
+replace = [".swiftformat"]
+suppression = { marker = "\\bswiftformat:disable\\b", reason = " - (?<reason>\\S.*)" }
+version = "0.61.1"
 # The GitHub release ships an app bundle beside the executable, which mise skips.
-mise = { name = "swiftformat", version = "0.61.1", options = { no_app = true, rename_exe = "swiftformat" } }
 brew = "swiftformat"
 github = { name = "nicklockwood/SwiftFormat", version = "0.61.1" }
-[[tool.replace]]
-file = ".swiftformat"
-shared = false
-
+mise = { name = "swiftformat", version = "0.61.1", options = { no_app = true, rename_exe = "swiftformat" } }
 [[tool]]
-name = "periphery"
-suppression = { marker = "\\bperiphery:ignore\\b", reason = " - (?<reason>\\S.*)" }
+brew = "periphery"
 builds = ["macos"]
-version = "3.6.0"
+github = { name = "peripheryapp/periphery", version = "3.6.0" }
 min_version = "3.0.0"
 mise = "periphery"
-brew = "periphery"
-github = { name = "peripheryapp/periphery", version = "3.6.0" }
+name = "periphery"
+replace = [".periphery.yml", ".periphery.yaml"]
+suppression = { marker = "\\bperiphery:ignore\\b", reason = " - (?<reason>\\S.*)" }
+version = "3.6.0"
 version_command = ["version"]
-[[tool.replace]]
-file = ".periphery.yml"
-shared = false
-
-[[tool.replace]]
-file = ".periphery.yaml"
-shared = false
-
 [[tool]]
 name = "swift"
 system = true
 
 [[tool]]
-name = "xcodebuild"
 install_hint = "install Xcode from the App Store"
+name = "xcodebuild"
 system = true
 
 [[tool_file]]
-target = ".gspot/config/swiftlint.yml"
-tool = "swiftlint"
 per_scope = true
 pointer = { path = ".swiftlint.yml", body = "parent_config: {target_json}\n" }
+target = ".gspot/config/swiftlint.yml"
+tool = "swiftlint"
 
 [[tool_file]]
+per_scope = true
 target = ".gspot/config/swiftformat"
 tool = "swiftformat"
-per_scope = true
 
 [[tool_file]]
+per_scope = true
 target = ".gspot/config/periphery.yml"
 tool = "periphery"
-per_scope = true
 
 [[check]]
-name = "swiftlint"
-example = "The forced cast `value as! NSString` reports `force_cast`. Use a conditional cast and handle the failed conversion, or change the input contract so no cast is required."
-level = "recommended"
-stage = "commit"
-tool = "swiftlint"
 command = ["swiftlint", "lint", "--strict", "--quiet", "--no-cache", "--reporter", "json", "{files}"]
-fix = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
 cwd = "scope"
+example = "The forced cast `value as! NSString` reports `force_cast`. Use a conditional cast and handle the failed conversion, or change the input contract so no cast is required."
 files = { extensions = [".swift"] }
-output = { format = "json", fields = { file = "file", line = "line", column = "character", rule = "rule_id", message = "reason" } }
-summary = "Lints Swift files with the scoped and nested SwiftLint configurations, treating warnings as errors."
-why = "Forced casts and tries can crash, and a strong delegate can retain its owner. Find these before committing."
+fix = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
 help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore swift/swiftlint --rule `<id>` --reason \"`<why>`\"."
+level = "recommended"
+name = "swiftlint"
+output = { format = "json", fields = { file = "file", line = "line", column = "character", rule = "rule_id", message = "reason" } }
+stage = "commit"
+summary = "Lints Swift files with the scoped and nested SwiftLint configurations, treating warnings as errors."
+tool = "swiftlint"
+why = "Forced casts and tries can crash, and a strong delegate can retain its owner. Find these before committing."
 
 [[check]]
-name = "swiftformat"
-example = "A declaration beginning `func   greeting` reports `consecutiveSpaces`. Run the configured formatter to obtain `func greeting`, inspect the diff, and rerun."
-level = "recommended"
-stage = "commit"
 command = ["swiftformat", "--lint", "--config", "{tool_file:swiftformat}", "{files}"]
+example = "A declaration beginning `func   greeting` reports `consecutiveSpaces`. Run the configured formatter to obtain `func greeting`, inspect the diff, and rerun."
 exit_codes = [1]
-fix = ["swiftformat", "--quiet", "--config", "{tool_file:swiftformat}", "{files}"]
 files = { extensions = [".swift"] }
+fix = ["swiftformat", "--quiet", "--config", "{tool_file:swiftformat}", "{files}"]
+help = "Run gspot check --fix."
+level = "recommended"
+name = "swiftformat"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?:error|warning): \\((?<rule>\\w+)\\) (?<message>.*)$" }
+stage = "commit"
 summary = "Checks the layout of every Swift file against the shipped SwiftFormat rules."
 why = "One layout everywhere keeps a diff about the change and not about where a brace went."
-help = "Run gspot check --fix."
 
 [[check]]
-name = "build"
 example = "A Swift assignment of a string to an `Int` variable fails compilation. Correct the value or declared type and rerun with the required compiler and project settings available."
+help = "Fix the first compiler error; later ones are often the same mistake."
 level = "recommended"
-stage = "push"
-runs = "scope"
+name = "build"
 needs = ["build"]
 operating_systems = ["macos", "linux"]
+runs = "scope"
+stage = "push"
 summary = "Builds the package or Xcode scheme incrementally to report compiler errors."
 why = "Swift has no type check without a build, so the build is the type check."
-help = "Fix the first compiler error; later ones are often the same mistake."
 
 [[check]]
-name = "swiftlint-analyze"
 example = "An import unused by the compiled Swift sources reports an analyzer finding. Remove the import and rerun the build-backed analysis. A missing build log does not establish a clean result."
+help = "Remove what the rule names. Keep an import the analyzer misjudges under tools.swiftlint.always_keep_imports."
 level = "recommended"
-stage = "manual"
-runs = "scope"
+name = "swiftlint-analyze"
 needs = ["build"]
 operating_systems = ["macos"]
-tool = "swiftlint"
+runs = "scope"
+stage = "manual"
 summary = "Runs the SwiftLint analyzer rules over the compiler log of the build: unused imports and captured variables."
+tool = "swiftlint"
 why = "These rules need the compiler's view of the code, which a file-by-file lint does not have."
-help = "Remove what the rule names. Keep an import the analyzer misjudges under tools.swiftlint.always_keep_imports."
 
 [[check]]
-name = "periphery"
 example = "A declaration with no references in the selected compiled project reports unused code. Delete the unused declaration and rebuild before rerunning. Runtime-only references require a specific documented exception."
-level = "recommended"
-stage = "push"
-runs = "scope"
-needs = ["build"]
-tool = "periphery"
-summary = "Scans the built project for declarations nothing uses."
-why = "Dead code is read, maintained, and migrated by people who cannot tell it is dead."
 help = "Delete the declaration, or mark it with a periphery:ignore comment that says who uses it."
+level = "recommended"
+name = "periphery"
+needs = ["build"]
+runs = "scope"
+stage = "push"
+summary = "Scans the built project for declarations nothing uses."
+tool = "periphery"
+why = "Dead code is read, maintained, and migrated by people who cannot tell it is dead."
 
 [rules]
 "SWIFTUI.md" = { tags = ["swift-import:SwiftUI"] }
 "UIKIT.md" = { tags = ["swift-import:UIKit"] }
+
+[[tool_file]]
+per_scope = true
+target = ".gspot/config/semgrep/swift.yml"
+tool = "semgrep"
+when = { configuration = "security" }

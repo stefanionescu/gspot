@@ -1,58 +1,45 @@
 allowed_words = ["SQL"]
 [configuration]
-title = "SQL"
-suggests = []
 description = "SQLFluff checks layout and style in the project dialect. At all, SQL checks line comments and file length."
+suggests = []
+title = "SQL"
 
 [files]
 extensions = [".sql", ".pgsql", ".psql"]
 
 [[tool]]
-name = "sqlfluff"
+brew = "sqlfluff"
 crash_pattern = '^Traceback \(most recent call last\):$'
+min_version = "3.0.0"
+mise = "pipx:sqlfluff"
+name = "sqlfluff"
+pypi = "sqlfluff"
+replace = [".sqlfluff", ".sqlfluffignore"]
 suppression = { marker = "\\bnoqa\\b", reason = "--[^\\n]*?-- ?(?<reason>\\S.*)" }
 version = "4.3.0"
-min_version = "3.0.0"
-pypi = "sqlfluff"
-mise = "pipx:sqlfluff"
-brew = "sqlfluff"
-[[tool.replace]]
-file = ".sqlfluff"
-shared = false
-
-[[tool.replace]]
-file = ".sqlfluffignore"
-shared = false
-
-[[tool.replace]]
+[[tool.replace_key]]
 file = "pyproject.toml"
 table = "tool.sqlfluff"
-shared = true
-
-[[tool.replace]]
+[[tool.replace_key]]
 file = "setup.cfg"
 table = "sqlfluff"
-shared = true
-
-[[tool.replace]]
+[[tool.replace_key]]
 file = "tox.ini"
 table = "sqlfluff"
-shared = true
-
 [[tool_file]]
+per_scope = true
 target = ".gspot/config/sqlfluff.cfg"
 tool = "sqlfluff"
-per_scope = true
 
 [[check]]
-name = "sqlfluff"
-example = "The query `select id from user_accounts;` reports CP01 under the configured uppercase keyword policy. Format it as `SELECT id FROM user_accounts;` and rerun using the project dialect."
-level = "recommended"
-stage = "commit"
 command = ["sqlfluff", "lint", "--config", "{tool_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]
+example = "The query `select id from user_accounts;` reports CP01 under the configured uppercase keyword policy. Format it as `SELECT id FROM user_accounts;` and rerun using the project dialect."
 exit_codes = [1]
 fix = ["sqlfluff", "fix", "--config", "{tool_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
+help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule `<code>` --reason \"`<why>`\"."
+level = "recommended"
+name = "sqlfluff"
 output = { format = "json", children = "violations", fields = { file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description" } }
+stage = "commit"
 summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database configuration names."
 why = "SQL that reads one way in every file lets a reviewer look at what the statement does."
-help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule `<code>` --reason \"`<why>`\"."

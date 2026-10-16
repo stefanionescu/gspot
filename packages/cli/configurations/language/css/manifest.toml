@@ -1,7 +1,7 @@
 allowed_words = ["CSS"]
 [configuration]
-title = "CSS"
 description = "CSS files and the style blocks of Vue and Svelte components: Stylelint with the standard rules, Prettier for layout, and CSS module classes that are both defined and used. SCSS receives formatting only."
+title = "CSS"
 
 [detect]
 extensions = [".css", ".vue", ".svelte"]
@@ -11,87 +11,46 @@ extensions = [".css"]
 
 [[tool]]
 name = "stylelint"
+npm = "stylelint"
+replace = [".stylelintrc", ".stylelintrc.json", ".stylelintrc.js", ".stylelintrc.cjs", ".stylelintrc.mjs", ".stylelintrc.yml", ".stylelintrc.yaml", "stylelint.config.js", "stylelint.config.cjs", "stylelint.config.mjs"]
 suppression = { marker = "^(?:/\\*|//)\\s*stylelint-disable(?:-next-line|-line)?(?=\\s|$)", reason = " -- (?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*(?:\\*/)?$" }
 version = "16.23.1"
-npm = "stylelint"
-[[tool.replace]]
-file = ".stylelintrc"
-shared = false
-
-[[tool.replace]]
-file = ".stylelintrc.json"
-shared = false
-
-[[tool.replace]]
-file = ".stylelintrc.js"
-shared = false
-
-[[tool.replace]]
-file = ".stylelintrc.cjs"
-shared = false
-
-[[tool.replace]]
-file = ".stylelintrc.mjs"
-shared = false
-
-[[tool.replace]]
-file = ".stylelintrc.yml"
-shared = false
-
-[[tool.replace]]
-file = ".stylelintrc.yaml"
-shared = false
-
-[[tool.replace]]
-file = "stylelint.config.js"
-shared = false
-
-[[tool.replace]]
-file = "stylelint.config.cjs"
-shared = false
-
-[[tool.replace]]
-file = "stylelint.config.mjs"
-shared = false
-
-[[tool.replace]]
+[[tool.replace_key]]
 file = "package.json"
 key = "stylelint"
 redirect = true
-shared = true
-
 [[tool]]
+kind = "library"
 name = "stylelint-config-standard"
-kind = "library"
-version = "39.0.0"
 npm = "stylelint-config-standard"
+version = "39.0.0"
 
 [[tool]]
-name = "postcss-html"
 kind = "library"
-version = "2.0.0"
+name = "postcss-html"
 npm = "postcss-html"
+version = "2.0.0"
 
 [[tool_file]]
-target = ".gspot/config/stylelint.json"
-tool = "stylelint"
 per_scope = true
 pointer = { path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\"\n}\n" }
+target = ".gspot/config/stylelint.json"
+tool = "stylelint"
 
 [[check]]
-name = "stylelint"
-tool = ["stylelint", "stylelint-config-standard"]
-example = "The declaration `color: #ggg` uses an invalid hexadecimal color and reports a Stylelint finding. Replace it with a valid intended color such as `#abc`."
-level = "recommended"
-stage = "commit"
 command = ["stylelint", "--config", "{tool_file:stylelint}", "--config-basedir", "{root}/.gspot", "--formatter", "unix", "--allow-empty-input", "{files}"]
-fix = ["stylelint", "--config", "{tool_file:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
+example = "The declaration `color: #ggg` uses an invalid hexadecimal color and reports a Stylelint finding. Replace it with a valid intended color such as `#abc`."
 exit_codes = [2]
 files = { extensions = [".css", ".vue", ".svelte"] }
-output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$" }
-summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
-why = "A browser skips a declaration it cannot read without a word, so a typo in a property ships as a missing style."
+fix = ["stylelint", "--config", "{tool_file:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
 help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore css/stylelint --rule `<name>` --reason \"`<why>`\"."
+level = "recommended"
+name = "stylelint"
+output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$" }
+stage = "commit"
+summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
+tool = ["stylelint", "stylelint-config-standard"]
+why = "A browser skips a declaration it cannot read without a word, so a typo in a property ships as a missing style."
 
 [rules]
 "TAILWIND.md" = { dependencies = ["tailwindcss"] }

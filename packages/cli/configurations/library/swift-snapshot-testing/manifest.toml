@@ -1,11 +1,11 @@
 [configuration]
-title = "Swift Snapshot Testing"
-requires = ["swift"]
 description = "SnapshotTesting comparisons keep recording disabled and retain references only while their test source exists."
+requires = ["swift"]
+title = "Swift Snapshot Testing"
 
 [detect]
 dependencies = ["swift-snapshot-testing"]
 
 [files]
-paths = ["**/*.swift", "**/__Snapshots__/**"]
 kinds = ["source", "binary"]
+paths = ["**/*.swift", "**/__Snapshots__/**"]

@@ -1,52 +1,52 @@
 allowed_words = ["React"]
 
 [configuration]
-title = "React"
+description = "React components: the recommended React and hooks rules as errors, component files that keep their state on a reload."
 requires = ["javascript"]
 suggests = ["typescript", "css", "react-dom"]
-description = "React components: the recommended React and hooks rules as errors, component files that keep their state on a reload."
+title = "React"
 
 [detect]
 dependencies = ["react"]
 
 [[tool]]
+kind = "library"
 name = "eslint-plugin-react-hooks"
-rule_prefix = "react-hooks"
-kind = "library"
-version = "7.1.1"
 npm = "eslint-plugin-react-hooks"
+rule_prefix = "react-hooks"
+version = "7.1.1"
 
 [[tool]]
+kind = "library"
 name = "eslint-plugin-react"
-rule_prefix = "react"
-kind = "library"
-version = "7.37.5"
 npm = "eslint-plugin-react"
+rule_prefix = "react"
+version = "7.37.5"
 
 [[tool]]
-name = "eslint-plugin-react-refresh"
-rule_prefix = "react-refresh"
 kind = "library"
-version = "0.5.7"
+name = "eslint-plugin-react-refresh"
 npm = "eslint-plugin-react-refresh"
+rule_prefix = "react-refresh"
+version = "0.5.7"
 
 [[naming.override]]
-paths = ["**/*.tsx", "**/*.jsx"]
-categories = ["files"]
 cases = ["pascal", "kebab"]
+categories = ["files"]
+paths = ["**/*.tsx", "**/*.jsx"]
 reason = "A component file takes the component's name."
 
 [[naming.override]]
-paths = ["**/*.tsx", "**/*.jsx"]
-categories = ["functions"]
 cases = ["pascal", "camel"]
+categories = ["functions"]
+paths = ["**/*.tsx", "**/*.jsx"]
 reason = "A function that returns JSX is a component and takes a capital."
 
 [[naming.override]]
-paths = ["**"]
-languages = ["typescript", "javascript"]
-categories = ["functions", "methods", "variables"]
 allowed_names = ["useSyncExternalStore", "getSnapshot", "getServerSnapshot"]
+categories = ["functions", "methods", "variables"]
+languages = ["typescript", "javascript"]
+paths = ["**"]
 reason = "React defines these subscription and snapshot callback names."
 
 [eslint]
@@ -69,15 +69,15 @@ package = "eslint-plugin-react-refresh"
 source = "configs.recommended"
 
 [[eslint.rules_off]]
-rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
 files = ["**/*.tsx", "**/*.jsx"]
 reason = "React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks for."
+rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
 
 [defaults]
 "tools.eslint.import_extension" = "extensionless"
 
 [[tool_file]]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
 fragment = true
 required_tools = ["eslint-plugin-react-hooks", "eslint-plugin-react", "eslint-plugin-react-refresh"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"

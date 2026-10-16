@@ -26,10 +26,6 @@ description = "Install both packed npm packages in a new project and test them t
 depends = ["build"]
 run = ["bun tests/setup/prepare-run.ts e2e", '''bun test --parallel --timeout {{ exec(command="bun --eval \"import { TEST_TIMEOUT_MS } from './tests/config/processes.ts'; console.log(TEST_TIMEOUT_MS)\"") }} --preload ./tests/setup/preload.ts --preload ./tests/setup/integration.ts tests/e2e''']
 
-[tasks."update:rule-lists"]
-description = "Copy the rule lists of the pinned linter packages into packages/cli/configurations. Run after changing a linter version."
-run = "bun scripts/update-rule-lists.ts"
-
 [tasks."build:docs"]
 description = "Build the docs site."
 depends = ["build"]

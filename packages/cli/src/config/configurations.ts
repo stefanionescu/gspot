@@ -95,15 +95,13 @@ export const TOOL_KINDS = ['program', 'library'] as const;
 /** Versions the shared build derives from package manifests. */
 export const TOOL_VERSIONS_FILE = 'dist/tool-versions.json';
 
-export const SEMGREP_FOLDER = 'semgrep/';
-export const SEMGREP_TOOL_FILE = {
-    tool: 'semgrep',
-    per_scope: true,
-    when: { configuration: 'security' },
-} as const;
 export const PYTHON_CONFIGURATION = 'python';
 export const NAME_PATTERN = /^[a-z0-9-]+$/u;
 export const TOOL_BUILDS = OPERATING_SYSTEMS.flatMap(
     (system) => [system.name, `${system.name}-x64`, `${system.name}-arm64`] as const,
 );
 export const EXTENSION_PATTERN = /^\.[a-z0-9]+$/u;
+
+export const TOOL_FILES_FOLDER = 'tool-files';
+
+export const JAVASCRIPT_CONFIGURATION_FOLDER = 'configurations/language/javascript';

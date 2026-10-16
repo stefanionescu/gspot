@@ -1,118 +1,115 @@
 [configuration]
-title = "Static Site"
+description = "A site built to a folder and served as files: its build, links, weight, and sitemap."
 requires = ["html"]
 suggests = ["css", "javascript"]
-description = "A site built to a folder and served as files: its build, links, weight, and sitemap."
+title = "Static Site"
 
 [detect]
 paths = ["site.webmanifest", "sitemap.xml"]
 
 [files]
-filenames = ["site.webmanifest", "sitemap.xml", "robots.txt"]
 extensions = [".svg"]
+filenames = ["site.webmanifest", "sitemap.xml", "robots.txt"]
 
 [[tool]]
 name = "linkinator"
-version = "8.1.0"
 npm = "linkinator"
-[[tool.replace]]
-file = "linkinator.config.json"
-shared = false
-
+replace = ["linkinator.config.json"]
+version = "8.1.0"
 [[tool]]
 name = "purgecss"
-version = "7.0.2"
 npm = "purgecss"
+version = "7.0.2"
 
 [[tool_file]]
-target = ".gspot/config/html-validate-built.json"
-per_scope = true
-tool = "html-validate"
 check = "site/html-validate"
+per_scope = true
+target = ".gspot/config/html-validate-built.json"
+tool = "html-validate"
 
 [[tool_file]]
-target = ".gspot/config/purgecss.config.mjs"
-per_scope = true
-tool = "purgecss"
 check = "site/purgecss"
+per_scope = true
+target = ".gspot/config/purgecss.config.mjs"
+tool = "purgecss"
 
 [[check]]
-name = "build"
 example = "If the configured site build imports a missing template, the build check reports the command failure. Correct the template import or restore the template, then rerun the same configured build."
+help = "Run the build command by hand and fix what it prints. Name the command under site.build_command."
 level = "recommended"
-stage = "push"
-runs = "scope"
+name = "build"
 needs = ["build"]
+runs = "scope"
+stage = "push"
 summary = "Runs the site build command and fails when it fails or writes no build folder."
 why = "Other site checks read the built files, so a failed build hides their findings."
-help = "Run the build command by hand and fix what it prints. Name the command under site.build_command."
 
 [[check]]
-name = "html-validate"
-tool = "html-validate"
 example = "A template emitting `<img src=\"logo.png\">` without alternative text can produce an accessibility finding in the built HTML. Add meaningful `alt` text in the template, or `alt=\"\"` for a decorative image, and rebuild."
-level = "recommended"
-stage = "push"
-runs = "scope"
-needs = ["build"]
-summary = "Validates every built page with html-validate."
-why = "Templates can each be valid and still join into a page with two main elements or a missing label."
 help = "Fix the template or the content that writes the markup the rule names."
+level = "recommended"
+name = "html-validate"
+needs = ["build"]
+runs = "scope"
+stage = "push"
+summary = "Validates every built page with html-validate."
+tool = "html-validate"
+why = "Templates can each be valid and still join into a page with two main elements or a missing label."
 
 [[check]]
-name = "purgecss"
-tool = "purgecss"
 example = "A built stylesheet containing `.unused-banner` that no scanned HTML or script uses reports an unused selector. Delete the unused rule. For a class added at runtime, declare the actual class in the configured safelist with a reason."
-level = "recommended"
-stage = "push"
-runs = "scope"
-needs = ["build"]
-summary = "Finds selectors of the built stylesheets that no built page or script uses."
-why = "A selector nobody uses is downloaded by every visitor and read by every maintainer."
 help = "Delete the rule, or list a name a script adds at run time under tools.purgecss.safelist with a reason."
+level = "recommended"
+name = "purgecss"
+needs = ["build"]
+runs = "scope"
+stage = "push"
+summary = "Finds selectors of the built stylesheets that no built page or script uses."
+tool = "purgecss"
+why = "A selector nobody uses is downloaded by every visitor and read by every maintainer."
 
 [[check]]
-name = "linkinator"
-tool = "linkinator"
 example = "A built page linking to `/missing/` reports a missing destination when no such page exists. Point the source link at an existing page or add the intended page, then rebuild."
-level = "recommended"
-stage = "push"
-runs = "scope"
-needs = ["build"]
-summary = "Serves the built site and follows every link between its pages, stylesheets, and fragments."
-why = "A broken internal link is a dead end a visitor finds before the author does."
 help = "Fix the link, or the page it points at."
+level = "recommended"
+name = "linkinator"
+needs = ["build"]
+runs = "scope"
+stage = "push"
+summary = "Serves the built site and follows every link between its pages, stylesheets, and fragments."
+tool = "linkinator"
+why = "A broken internal link is a dead end a visitor finds before the author does."
 
 [[check]]
-name = "size"
 example = "A built page larger than its configured byte ceiling reports its measured size. Remove unused assets or reduce the page payload, rebuild, and rerun to verify it fits the ceiling."
-level = "recommended"
-when = { setting = "site.size_limit" }
-stage = "push"
-runs = "scope"
-needs = ["build"]
-summary = "Sums the compressed weight of the built paths each ceiling in site.size_limit names."
-why = "Weight arrives a kilobyte at a time, and only a ceiling notices."
 help = "Remove what the page does not need, or raise the ceiling with a reason."
+level = "recommended"
+name = "size"
+needs = ["build"]
+runs = "scope"
+stage = "push"
+summary = "Sums the compressed weight of the built paths each ceiling in site.size_limit names."
+when = { setting = "site.size_limit" }
+why = "Weight arrives a kilobyte at a time, and only a ceiling notices."
 
 [[check]]
-name = "sitemap"
 example = "A sitemap entry for `/removed/` with no corresponding built page reports a stale entry. Remove that entry from the sitemap source and rebuild. Add missing public pages to the sitemap instead of excluding them without a reason."
+help = "Add the page to the sitemap, remove the dead entry, or leave a page out under site.allowed_unlisted_pages."
 level = "recommended"
-stage = "push"
-runs = "scope"
+name = "sitemap"
 needs = ["build"]
+runs = "scope"
+stage = "push"
 summary = "Compares the sitemap with the built pages: every listed route is a page, and every page is listed."
 why = "A page outside the sitemap is found late by search engines, and a listed page that does not exist costs trust with them."
-help = "Add the page to the sitemap, remove the dead entry, or leave a page out under site.allowed_unlisted_pages."
 
 [[check]]
-name = "unused-assets"
 example = "An image in the build folder that no built page or stylesheet references reports an unused asset. Remove it from the source asset set and rebuild."
-level = "all"
-stage = "push"
-runs = "scope"
 files = { paths = ["**/*"], kinds = ["source", "binary"] }
+help = "Delete the file."
+level = "all"
+name = "unused-assets"
+runs = "scope"
+stage = "push"
 summary = "Finds files under an assets folder that no page, stylesheet, or script names."
 why = "An asset nobody references ships with every deploy and is kept by everyone who fears deleting it."
-help = "Delete the file."

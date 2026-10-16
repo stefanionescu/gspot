@@ -1,5 +1,6 @@
+export const ESLINT_RULE_NAMES_FILE = 'eslint-rule-names.json';
+export const ESLINT_RUNTIME_NAMES_FILE = 'eslint-runtime-names.json';
 export const ESLINT_PRESETS_FILE = 'eslint-presets.json';
-export const BUILTIN_RULES_SOURCE = 'builtinRules';
 
 /** Mise task files use the script runtime and process rules. */
 export const MISE_SCRIPT_PATH = '.mise/tasks/**';

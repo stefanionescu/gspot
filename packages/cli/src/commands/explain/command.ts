@@ -1,4 +1,5 @@
 // Explain a check, rule, configuration, setting, or file path.
+import { readAsset } from '#cli/system/assets.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
@@ -12,7 +13,6 @@ import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
@@ -27,8 +27,10 @@ import { coveredInputs, configuredChecks } from '#cli/planning/checks.ts';
 import { formatUnknownConfiguration } from '#cli/configurations/select.ts';
 import { knownSettings, configurationSettings } from '#cli/settings/view.ts';
 import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
+import { JAVASCRIPT_CONFIGURATION_FOLDER } from '#cli/config/configurations.ts';
+import { ruleNamesFileSchema } from '#cli/generation/tool-file-sources/stylelint.ts';
+import { ESLINT_TOOL, ESLINT_RULE_NAMES_FILE } from '#cli/config/generation/eslint.ts';
 import { settingValue, declarationFor, settingCandidates } from '#cli/settings/inherit.ts';
-import eslintRuleNames from '../../../configurations/language/javascript/eslint-rule-names.json';
 import { listCheckIds, listRuleFiles, readManifests, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 
 import {
@@ -189,7 +191,9 @@ function explainSlashed(
 function explainNamed(session: Session | undefined, subject: string, reads: ReadCache): Explanation | undefined {
     const named = explainSetting(session, subject) ?? explainConfiguration(subject, reads);
     if (named !== undefined) return named;
-    if (!eslintRuleNames.rules.includes(subject)) return undefined;
+    const ruleNamesPath = `${JAVASCRIPT_CONFIGURATION_FOLDER}/${ESLINT_RULE_NAMES_FILE}`;
+    const names = ruleNamesFileSchema.parse(JSON.parse(readAsset(ruleNamesPath)));
+    if (!names.rules.includes(subject)) return undefined;
     return explainLintRule(ESLINT_TOOL, subject, reads);
 }
 

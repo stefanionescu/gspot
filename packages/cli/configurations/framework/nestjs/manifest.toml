@@ -2,10 +2,10 @@
 kinds = ["controller", "service", "module", "guard", "pipe", "filter", "interceptor", "middleware", "decorator", "gateway", "resolver", "repository", "entity", "dto", "strategy", "provider"]
 
 [configuration]
-title = "NestJS"
+description = "A NestJS service: the compiler options decorators need, the NestJS plugin rules for providers, routes, and DTOs, and no circular modules."
 requires = ["typescript"]
 suggests = []
-description = "A NestJS service: the compiler options decorators need, the NestJS plugin rules for providers, routes, and DTOs, and no circular modules."
+title = "NestJS"
 
 [detect]
 dependencies = ["@nestjs/core"]
@@ -15,11 +15,11 @@ filenames = ["nest-cli.json"]
 filenames = ["nest-cli.json"]
 
 [[tool]]
-name = "@darraghor/eslint-plugin-nestjs-typed"
-rule_prefix = "@darraghor/nestjs-typed"
 kind = "library"
-version = "7.5.5"
+name = "@darraghor/eslint-plugin-nestjs-typed"
 npm = "@darraghor/eslint-plugin-nestjs-typed"
+rule_prefix = "@darraghor/nestjs-typed"
+version = "7.5.5"
 
 [eslint]
 all_level_rules = ["@darraghor/nestjs-typed/api-operation-summary-description-capitalized"]
@@ -33,20 +33,20 @@ package = "@darraghor/eslint-plugin-nestjs-typed"
 source = "configs.flatNoSwagger"
 
 [[eslint.rules_off]]
-rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
 files = ["**/*.module.ts"]
 reason = "A Nest module is an empty decorated class that registers providers and controllers, which is the shape Nest asks for."
+rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
 
 [[eslint.selectors]]
-selector = "CallExpression[callee.name='forwardRef']"
 message = "forwardRef papers over two modules that import each other. Move what both need into a third module."
+selector = "CallExpression[callee.name='forwardRef']"
 
 [[eslint.selectors]]
-selector = "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))"
 message = "Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }."
+selector = "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))"
 
 [[tool_file]]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
 fragment = true
 required_tools = ["@darraghor/eslint-plugin-nestjs-typed"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"

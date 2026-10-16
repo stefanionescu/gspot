@@ -1,33 +1,33 @@
 [configuration]
-title = "Ansible"
 description = "Ansible playbooks, roles, and collections checked by ansible-lint."
+title = "Ansible"
 
 [files]
 paths = ["**/ansible.cfg", "**/galaxy.yml", "**/requirements.yml", "**/roles/*/tasks/main.yml"]
 
 [[tool]]
-name = "ansible-lint"
-version = "26.8.0"
-min_version = "24.0.0"
-pypi = "ansible-lint"
-mise = "pipx:ansible-lint"
 brew = "ansible-lint"
 builds = ["macos", "linux"]
+min_version = "24.0.0"
+mise = "pipx:ansible-lint"
+name = "ansible-lint"
+pypi = "ansible-lint"
+version = "26.8.0"
 
 [[tool_file]]
+per_scope = true
 target = ".gspot/config/ansible-lint.yml"
 tool = "ansible-lint"
-per_scope = true
 
 [[check]]
-name = "ansible-lint"
-example = "A task using `ansible.builtin.command: systemctl restart nginx` reports `command-instead-of-module`. Use `ansible.builtin.systemd` with `name: nginx` and `state: restarted` to express the intended service operation."
-level = "recommended"
-stage = "commit"
-runs = "scope"
-tool = "ansible-lint"
 command = ["ansible-lint", "-c", "{tool_file:ansible-lint}", "--offline", "--nocolor", "-f", "pep8", "--profile", "{level:moderate:production}"]
+example = "A task using `ansible.builtin.command: systemctl restart nginx` reports `command-instead-of-module`. Use `ansible.builtin.systemd` with `name: nginx` and `state: restarted` to express the intended service operation."
 files = { extensions = [".yml", ".yaml", ".cfg", ".j2"] }
-summary = "Runs the moderate ansible-lint profile at recommended and production at all, beside each ansible.cfg or at the selected scope root."
-why = "A playbook runs as root on production hosts, and a task that is not idempotent changes them on every run."
 help = "Change the task the way the rule says. Turn one rule off with gspot ignore ansible/ansible-lint --rule `<id>` --reason \"`<why>`\"."
+level = "recommended"
+name = "ansible-lint"
+runs = "scope"
+stage = "commit"
+summary = "Runs the moderate ansible-lint profile at recommended and production at all, beside each ansible.cfg or at the selected scope root."
+tool = "ansible-lint"
+why = "A playbook runs as root on production hosts, and a task that is not idempotent changes them on every run."

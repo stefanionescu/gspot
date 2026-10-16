@@ -1,15 +1,15 @@
 [configuration]
-title = "React Hook Form"
-requires = ["javascript"]
 description = "React Hook Form: a form validates through a resolver, and a registered field is not also controlled."
+requires = ["javascript"]
+title = "React Hook Form"
 
 [detect]
 dependencies = ["react-hook-form"]
 
 [[eslint.selectors]]
-selector = "CallExpression[callee.name='useForm']:not(:has(Property[key.name='resolver']))"
 message = "Give useForm a resolver, so the schema that types the form also validates it."
+selector = "CallExpression[callee.name='useForm']:not(:has(Property[key.name='resolver']))"
 
 [[eslint.selectors]]
-selector = "JSXOpeningElement:has(JSXSpreadAttribute CallExpression[callee.name=register]):has(JSXAttribute[name.name=value]):not(:has([name.name=type]>[value=/^(checkbox|radio)$/]))"
 message = "Drop value or use Controller."
+selector = "JSXOpeningElement:has(JSXSpreadAttribute CallExpression[callee.name=register]):has(JSXAttribute[name.name=value]):not(:has([name.name=type]>[value=/^(checkbox|radio)$/]))"

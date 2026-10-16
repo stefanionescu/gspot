@@ -2,151 +2,69 @@ allowed_words = ["Prettier"]
 
 [configuration]
 always_selected = true
-title = "Format"
 description = "One [format] block every formatter reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint."
+title = "Format"
 
 [files]
 extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".json", ".jsonc", ".json5", ".md", ".mdx", ".css", ".scss", ".html", ".yml", ".yaml", ".vue", ".graphql"]
 prettier_plugins = true
 
 [[tool]]
-name = "prettier"
 crash_pattern = "\\[error\\] (?:No parser|Cannot find|Invalid)"
-version = "3.8.1"
+name = "prettier"
 npm = "prettier"
-[[tool.replace]]
-file = ".prettierrc"
-shared = false
-
-[[tool.replace]]
-file = ".prettierrc.json"
-shared = false
-
-[[tool.replace]]
-file = ".prettierrc.yml"
-shared = false
-
-[[tool.replace]]
-file = ".prettierrc.yaml"
-shared = false
-
-[[tool.replace]]
-file = ".prettierrc.json5"
-shared = false
-
-[[tool.replace]]
-file = ".prettierrc.js"
-shared = false
-
-[[tool.replace]]
-file = "prettier.config.js"
-shared = false
-
-[[tool.replace]]
-file = ".prettierrc.ts"
-shared = false
-
-[[tool.replace]]
-file = "prettier.config.ts"
-shared = false
-
-[[tool.replace]]
-file = ".prettierrc.mjs"
-shared = false
-
-[[tool.replace]]
-file = "prettier.config.mjs"
-shared = false
-
-[[tool.replace]]
-file = ".prettierrc.mts"
-shared = false
-
-[[tool.replace]]
-file = "prettier.config.mts"
-shared = false
-
-[[tool.replace]]
-file = ".prettierrc.cjs"
-shared = false
-
-[[tool.replace]]
-file = "prettier.config.cjs"
-shared = false
-
-[[tool.replace]]
-file = ".prettierrc.cts"
-shared = false
-
-[[tool.replace]]
-file = "prettier.config.cts"
-shared = false
-
-[[tool.replace]]
-file = ".prettierrc.toml"
-shared = false
-
-[[tool.replace]]
-file = ".prettierignore"
-shared = false
-
-[[tool.replace]]
+replace = [".prettierrc", ".prettierrc.json", ".prettierrc.yml", ".prettierrc.yaml", ".prettierrc.json5", ".prettierrc.js", "prettier.config.js", ".prettierrc.ts", "prettier.config.ts", ".prettierrc.mjs", "prettier.config.mjs", ".prettierrc.mts", "prettier.config.mts", ".prettierrc.cjs", "prettier.config.cjs", ".prettierrc.cts", "prettier.config.cts", ".prettierrc.toml", ".prettierignore"]
+version = "3.8.1"
+[[tool.replace_key]]
 file = "package.json"
 key = "prettier"
-shared = true
-
-[[tool.replace]]
+[[tool.replace_key]]
 file = "package.yaml"
 key = "prettier"
-shared = true
-
 [[tool]]
-name = "editorconfig-checker"
-version = "3.4.0"
-env = { EC_VERSION = "v3.4.0" }
-npm = { name = "editorconfig-checker", version = "7.0.0" }
-mise = { name = "npm:editorconfig-checker", version = "7.0.0" }
 brew = "editorconfig-checker"
+env = { EC_VERSION = "v3.4.0" }
 github = { name = "editorconfig-checker/editorconfig-checker", version = "v3.4.0" }
-[[tool.replace]]
-file = ".editorconfig"
-shared = false
-
+mise = { name = "npm:editorconfig-checker", version = "7.0.0" }
+name = "editorconfig-checker"
+npm = { name = "editorconfig-checker", version = "7.0.0" }
+replace = [".editorconfig"]
+version = "3.4.0"
 [[tool_file]]
 target = ".editorconfig"
 tool = ["editorconfig-checker", "prettier"]
 
 [[tool_file]]
+pointer = { path = "prettier.config.mjs", when = { configuration = "javascript" } }
 target = ".gspot/config/prettier.json"
 tool = "prettier"
-pointer = { path = "prettier.config.mjs", when = { configuration = "javascript" } }
 
 [[tool_file]]
 target = ".prettierignore"
 tool = "prettier"
 
 [[check]]
-name = "prettier"
-example = "A selected JavaScript file containing `const value={enabled:true};` differs from the configured Prettier output. Run the formatter and retain its spacing and wrapping changes before rerunning."
-level = "recommended"
-stage = "commit"
 command = ["prettier", "--check", "--config", "{tool_file:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
+example = "A selected JavaScript file containing `const value={enabled:true};` differs from the configured Prettier output. Run the formatter and retain its spacing and wrapping changes before rerunning."
 exit_codes = [1]
 fix = ["prettier", "--write", "--config", "{tool_file:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
+help = "Run gspot check --fix to format every file, or prettier --write on one file."
+level = "recommended"
+name = "prettier"
 output = { format = "regex", pattern = "^\\[warn\\] (?<file>[^\\s].*[^\\s.])$", message = "This file is not formatted the way Prettier formats it." }
+stage = "commit"
 summary = "Checks that every file Prettier formats is already formatted that way."
 why = "Formatting by hand differs by editor; one formatter keeps diffs about the change and not the spacing."
-help = "Run gspot check --fix to format every file, or prettier --write on one file."
 
 [[check]]
-name = "editorconfig-checker"
-example = "A file containing CRLF line endings when `.editorconfig` requires LF reports a line-ending finding. Save it with LF endings and rerun. Use the exact configured indentation and final-newline settings as well."
-level = "recommended"
-stage = "commit"
 command = ["editorconfig-checker", "-no-color", "-disable-indentation", "{files}"]
-tool = "editorconfig-checker"
+example = "A file containing CRLF line endings when `.editorconfig` requires LF reports a line-ending finding. Save it with LF endings and rerun. Use the exact configured indentation and final-newline settings as well."
 files = { paths = ["**"] }
-output = { format = "grouped", file_pattern = "^(?<file>.+):$", pattern = "^\\s+(?:(?<line>\\d+)(?:-\\d+)?: )?(?<message>\\S.*)$" }
-summary = "Checks line endings, final newlines and trailing whitespace in every file against .editorconfig."
-why = "These rules cover the files no formatter touches, so a stray tab or missing newline never lands in a diff. Indentation is the formatters' job and is not checked here."
 help = "Fix the line the checker names; most editors apply .editorconfig on save."
+level = "recommended"
+name = "editorconfig-checker"
+output = { format = "grouped", file_pattern = "^(?<file>.+):$", pattern = "^\\s+(?:(?<line>\\d+)(?:-\\d+)?: )?(?<message>\\S.*)$" }
+stage = "commit"
+summary = "Checks line endings, final newlines and trailing whitespace in every file against .editorconfig."
+tool = "editorconfig-checker"
+why = "These rules cover the files no formatter touches, so a stray tab or missing newline never lands in a diff. Indentation is the formatters' job and is not checked here."

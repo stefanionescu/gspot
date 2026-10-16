@@ -1,39 +1,39 @@
 allowed_words = ["Drizzle"]
 
 [configuration]
-title = "Drizzle"
-requires = ["javascript"]
 description = "Drizzle: no update or delete without a where, raw SQL only where the settings allow it, and migrations that match the schema."
+requires = ["javascript"]
+title = "Drizzle"
 
 [detect]
 dependencies = ["drizzle-orm"]
 
 [[tool]]
-name = "eslint-plugin-drizzle"
-rule_prefix = "drizzle"
 kind = "library"
-version = "0.2.3"
+name = "eslint-plugin-drizzle"
 npm = "eslint-plugin-drizzle"
+rule_prefix = "drizzle"
+version = "0.2.3"
 
 [[tool]]
-name = "drizzle-kit"
 install_hint = "Run: npm install --save-dev drizzle-kit"
+min_version = "0.21.0"
+name = "drizzle-kit"
+npm = "drizzle-kit"
 system = true
 version_command = ["--version"]
-min_version = "0.21.0"
-npm = "drizzle-kit"
 
 [[check]]
-name = "stale-migrations"
 command = ["drizzle-kit", "generate"]
 example = "Changing a Drizzle schema without generating its migration reports drift. Run `drizzle-kit generate` with the project configuration, inspect the new migration, and retain it before rerunning."
-level = "recommended"
-stage = "push"
-runs = "scope"
-tool = "drizzle-kit"
-summary = "Asks drizzle-kit to write migrations, and fails when it writes one."
-why = "A schema change with no migration works on the machine that pushed the schema and nowhere else."
 help = "Run drizzle-kit generate and commit the migration."
+level = "recommended"
+name = "stale-migrations"
+runs = "scope"
+stage = "push"
+summary = "Asks drizzle-kit to write migrations, and fails when it writes one."
+tool = "drizzle-kit"
+why = "A schema change with no migration works on the machine that pushed the schema and nowhere else."
 
 [[check.generator_outputs]]
 pattern = "**/*"
@@ -45,11 +45,11 @@ paths = ["drizzle.config.ts", "drizzle.config.js", "drizzle.config.mts", "drizzl
 dependencies = ["pg", "postgres"]
 
 [[eslint.selectors]]
-selector = "TaggedTemplateExpression[tag.name='sql']"
 message = "Raw SQL skips the types of the schema. Use the query builder, or accept this finding with a rule-specific ignore."
+selector = "TaggedTemplateExpression[tag.name='sql']"
 
 [[tool_file]]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
 fragment = true
 required_tools = ["eslint-plugin-drizzle"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"

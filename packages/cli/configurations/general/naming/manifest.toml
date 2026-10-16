@@ -1,35 +1,35 @@
 [configuration]
-title = "Naming"
 always_selected = true
 description = "The naming engine: banned terms, case rules, length and word ceilings over every identifier, file, and folder."
+title = "Naming"
 
 [files]
 languages = true
 
 [[check]]
-name = "identifiers"
 example = "`export const userHelper = 1;` reports the banned term `helper`. Rename it after what it holds, such as `userCount`."
+help = "Rename after what the thing is or does. Write the exact names under allowed_names in a [[naming.override]] record with a reason, or adjust a ceiling with gspot set naming.`<language>`.max_words."
 level = "all"
+name = "identifiers"
 stage = "commit"
 summary = "Checks every identifier against the naming settings: banned terms, case, length, and word count."
 why = "Names such as `enhancedHandler`, `ensureConfigIfNeeded`, and `utils` do not explain the value or behavior a reader needs to understand."
-help = "Rename after what the thing is or does. Write the exact names under allowed_names in a [[naming.override]] record with a reason, or adjust a ceiling with gspot set naming.`<language>`.max_words."
 
 [[check]]
-name = "paths"
 example = "`utils/format.js` reports `utils`. Move it into the folder of the feature it serves, such as `invoices/format.js`."
+help = "Rename the file or folder, or add a path rule under [[naming.override]] with a reason."
 level = "all"
+name = "paths"
 stage = "commit"
 summary = "Checks every file stem and folder name against the language's case rules and the banned terms."
 why = "A file named `enhanced-utils.ts` is a home for code nobody placed; the case rule keeps imports predictable."
-help = "Rename the file or folder, or add a path rule under [[naming.override]] with a reason."
 
 [[check]]
-name = "settings"
 example = "A naming allowance for an identifier that no selected source contains reports an unmatched settings entry. Remove the obsolete allowance or correct it to the exact required identifier and scope."
+help = "Remove the entry that matches nothing, or fix its name or path."
 level = "all"
-stage = "commit"
+name = "settings"
 runs = "once"
+stage = "commit"
 summary = "Reports allowed names that no selected source uses."
 why = "An allowed name that nothing uses hides an obsolete exception."
-help = "Remove the entry that matches nothing, or fix its name or path."

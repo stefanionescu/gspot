@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { posix } from 'node:path';
 import { RULE_FILE_PATTERN } from '#cli/config/rules.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import type { EslintPresets } from '#cli/types/generation/eslint.ts';
 import { toolDeclarationSchema } from '#cli/configurations/schema/tool.ts';
 import { namingOverrideSchema } from '#cli/configurations/schema/naming.ts';
@@ -12,6 +13,7 @@ import {
     CHECK_RUNS,
     CHECK_NEEDS,
     NAME_PATTERN,
+    TOOL_FILES_FOLDER,
     CHECK_WORKING_DIRECTORIES,
 } from '#cli/config/configurations.ts';
 import {
@@ -73,7 +75,6 @@ const consumerNamesSchema = z
 
 const toolFileSchema = z
     .strictObject({
-        source: z.string().optional(),
         level: levelSchema.optional(),
         target: z.string(),
         // Emit the target when an applicable check in its scope consumes any named tool.
@@ -85,22 +86,24 @@ const toolFileSchema = z
         fragment: z.boolean().default(false),
         per_scope: z.boolean().default(false),
         when: conditionSchema.pick({ configuration: true }).optional(),
-    } satisfies SchemaShape<
-        Omit<ToolFileDeclaration, 'source' | 'fragment'> & { source?: string | undefined; fragment: boolean },
-        ToolFileInput
-    >)
+    } satisfies SchemaShape<Omit<ToolFileDeclaration, 'source' | 'fragment'> & { fragment: boolean }, ToolFileInput>)
     .refine(
         (toolFile) => toolFile.required_tools.length === 0 || toolFile.tool.length > 0 || toolFile.check.length > 0,
         'Companion tools require a consuming tool or check.',
     )
-    // A non-fragment tool file reads the source named after its target file, unless it names another.
+    // Copied files use the same relative path beneath tool-files and the generated configuration folder.
     .transform((toolFile) =>
         toolFile.fragment
             ? { ...toolFile, fragment: true as const }
             : {
                   ...toolFile,
                   fragment: false as const,
-                  source: toolFile.source ?? posix.basename(toolFile.target),
+                  source: posix.join(
+                      TOOL_FILES_FOLDER,
+                      toolFile.target.startsWith(TOOL_FILE_PREFIX)
+                          ? toolFile.target.slice(TOOL_FILE_PREFIX.length)
+                          : posix.basename(toolFile.target),
+                  ),
               },
     ) satisfies z.ZodType<ToolFileDeclaration, ToolFileInput>;
 

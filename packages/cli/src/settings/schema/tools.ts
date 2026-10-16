@@ -1,13 +1,15 @@
 import { z } from 'zod';
+import { readAsset } from '#cli/system/assets.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { JsonValue } from '#cli/types/parsers/json.ts';
 import type { TableSettings } from '#cli/types/settings/tables.ts';
 import { RECORD_DESCRIPTIONS } from '#cli/config/settings/defaults.ts';
+import { ESLINT_RUNTIME_NAMES_FILE } from '#cli/config/generation/eslint.ts';
 import type { ToolTable, StylelintOptions } from '#cli/types/settings/file.ts';
+import { JAVASCRIPT_CONFIGURATION_FOLDER } from '#cli/config/configurations.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tool-tables.ts';
 import { YAMLLINT_RULES, COMMITLINT_RULES } from '#cli/config/generation/tool-file-sources.ts';
-import ESLINT_RUNTIMES from '../../../configurations/language/javascript/eslint-runtime-names.json' with { type: 'json' };
 
 import {
     reasonValue,
@@ -32,6 +34,10 @@ import {
     EXTRA_OPTIONS_DESCRIPTION,
     MARKDOWNLINT_OPTIONS_HELP,
 } from '#cli/config/settings/schema.ts';
+
+const ESLINT_RUNTIMES = z
+    .object({ rules: z.array(z.string()) } satisfies SchemaShape<{ rules: string[] }>)
+    .parse(JSON.parse(readAsset(`${JAVASCRIPT_CONFIGURATION_FOLDER}/${ESLINT_RUNTIME_NAMES_FILE}`))).rules;
 
 const extraTable = z.record(z.string(), z.unknown()).describe(EXTRA_OPTIONS_DESCRIPTION) satisfies z.ZodType<ToolTable>;
 
