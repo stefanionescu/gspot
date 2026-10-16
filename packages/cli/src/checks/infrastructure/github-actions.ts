@@ -87,7 +87,7 @@ export async function actionlint(session: Session, planned: PlannedCheck): Promi
         return runCheckCommand(session, planned, { command: planned.check.command as string[] });
     using workspace = await copyIntoScratch({
         root: session.root,
-        paths: session.repository.files.map((file) => file.path),
+        paths: session.repository.files.filter((file) => file.path.startsWith('.github/')).map((file) => file.path),
         dependencies: [],
     });
     // Actionlint discovers local reusable workflows only inside a Git project.
