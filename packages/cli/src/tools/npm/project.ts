@@ -6,25 +6,20 @@ import { runTool } from '#cli/tools/run.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
-import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
-import { listExecutableNames } from '#cli/system/paths.ts';
 import { writeYarnSettings } from '#cli/tools/npm/yarn.ts';
 import type { InstallContext } from '#cli/types/install.ts';
-import { readContainedPath } from '#cli/system/files/reads.ts';
+import { rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
 import { REINSTALL_HINT } from '#cli/config/tools/credentials.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
 import { buildLockfileResult } from '#cli/tools/project-lockfiles.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
-import { parseVersionOutput, classifyToolVersion } from '#cli/tools/versions.ts';
 import { isLockfileCurrent, stripRegistryUrls } from '#cli/tools/npm/lockfiles.ts';
 import { parseToolProject, selectLockfileName } from '#cli/tools/npm/tool-project.ts';
-import { rmSync, existsSync, realpathSync, readFileSync, writeFileSync } from 'node:fs';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/tools/credentials.ts';
 import { writeNpmrc, readRegistryEnvironment, extractRegistryCredentials } from '#cli/tools/npm/registry.ts';
 
@@ -86,59 +81,6 @@ async function createNpmLockfile(
             `${packageManager.name} produced a mismatched tool lockfile. Existing files were preserved.`,
         );
     return lockfile;
-}
-
-// An npm wrapper can declare a package version different from its executable version.
-function isVersionCheckNeeded(tool: ToolDeclaration, dependencies: Record<string, string>): boolean {
-    const npm = tool.installers['npm'];
-    if (tool.kind === 'library' || npm?.version === undefined || tool.version === undefined) return false;
-    return npm.version !== tool.version && dependencies[npm.name] === npm.version;
-}
-
-async function assertNpmToolVersion(
-    context: InstallContext,
-    work: string,
-    executable: string,
-    tool: ToolDeclaration,
-): Promise<void> {
-    const { steps } = context;
-    const { timeoutSeconds } = context.session;
-    const command = [executable, ...(tool.version_command ?? [VERSION_FLAG])];
-    steps.push(command);
-    const result = await runTool(command, {
-        cancelSignal: context.cancelSignal,
-        cwd: work,
-        timeoutSeconds,
-        ...(tool.env === undefined ? {} : { env: tool.env }),
-    });
-    context.cancelSignal?.throwIfAborted();
-    const read = parseVersionOutput(tool, result);
-    if (!('version' in read)) throw new GspotError('installation', read.note);
-    const want = tool.version ?? read.version;
-    const floor = tool.min_version ?? want;
-    if (classifyToolVersion(read.version, want, floor) === 'outdated')
-        throw new GspotError(
-            'installation',
-            `${tool.name} reported ${read.version}, below ${floor}. Tool installation is incomplete. Run: gspot install`,
-        );
-}
-
-// An npm wrapper such as editorconfig-checker downloads its program the first time it runs. Run it here, so
-// the download happens during install, and check the version it reports.
-async function prepareNpmTools(
-    context: InstallContext,
-    work: string,
-    dependencies: Record<string, string>,
-): Promise<void> {
-    const root = realpathSync(work);
-    // Select the first Windows wrapper that exists: an npm command file or a Bun executable.
-    for (const tool of context.tools) {
-        if (!isVersionCheckNeeded(tool, dependencies)) continue;
-        const name =
-            listExecutableNames(tool.name).find((candidate) => existsSync(join(work, NPM_BIN_FOLDER, candidate))) ??
-            tool.name;
-        await assertNpmToolVersion(context, work, readContainedPath(root, `${NPM_BIN_FOLDER}/${name}`), tool);
-    }
 }
 
 /**
@@ -310,7 +252,6 @@ async function installNpmTools(context: InstallContext): Promise<string> {
         arguments: selectPackageManagerArguments(packageManager).install,
         failure: 'installation failed',
     });
-    await prepareNpmTools(context, work, project.dependencies);
     return `installed ${formatCount(Object.keys(project.dependencies).length, 'npm tool')} in .gspot/node_modules (${packageManager.name} ${packageManager.version})`;
 }
 

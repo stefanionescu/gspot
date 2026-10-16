@@ -159,19 +159,13 @@ const AUTHORED_VERSION_CASES = [
     } as const,
 ] as const;
 
-const NPM_LAUNCHER_PROJECT = '{"private":true,"devDependencies":{"wrapper":"2.0.0"}}';
-const NPM_LAUNCHER_LOCKFILE =
-    '{"lockfileVersion":3,"packages":{"":{"devDependencies":{"wrapper":"2.0.0"}},"node_modules/wrapper":{"version":"2.0.0"}}}';
-
 export {
     YARN_CLIENTS,
     INSTALL_FAILURES,
     ROOT_DEPENDENCIES,
     TOOL_REQUIREMENTS,
     NEXT_INSTALLATIONS,
-    NPM_LAUNCHER_PROJECT,
     PACKAGE_MANAGER_ROWS,
-    NPM_LAUNCHER_LOCKFILE,
     AUTHORED_VERSION_CASES,
     NON_EXACT_PNPM_VERSIONS,
     CLEAR_DEPENDENCIES_SCRIPT,

@@ -1,30 +1,21 @@
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { fakeCommand } from '#tests/setup/fakes.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
-import * as processes from '#cli/system/processes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { buildProcessResult } from '#tests/setup/builders.ts';
-import { fakeTool, fakeCommand } from '#tests/setup/fakes.ts';
 import { buildInstallContext } from '#tests/setup/install.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
-import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { readRegistryEnvironment } from '#cli/tools/npm/registry.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/parsers/dependency-files.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/tools/npm/project.ts';
-
-import {
-    INSTALL_FAILURES,
-    TOOL_REQUIREMENTS,
-    NPM_LAUNCHER_PROJECT,
-    NPM_LAUNCHER_LOCKFILE,
-} from '#tests/data/tools/npm-tool-project.ts';
+import { INSTALL_FAILURES, TOOL_REQUIREMENTS } from '#tests/data/tools/npm-tool-project.ts';
 
 /** Give each npm preparation the same generated project declaration. */
 function buildNpmToolFile(content: string): GeneratedFile {
@@ -195,34 +186,4 @@ test.each([
     await createFileTree(repository.path, { '.npmrc': source, 'package.json': '{"private":true}\n' });
     expect(await captureRejection(readRegistryEnvironment(repository.path))).toBe(message);
     expect(await readFile(join(repository.path, '.npmrc'), 'utf8')).toBe(source);
-});
-
-test('a failed program download of an npm wrapper keeps the lockfile and installs nothing', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText([]),
-        'package.json': '{"private":true,"packageManager":"npm@11.19.0"}',
-        '.gspot/package.json': NPM_LAUNCHER_PROJECT,
-        '.gspot/package-lock.json': NPM_LAUNCHER_LOCKFILE,
-    });
-    const root = sandbox.path;
-    using _boundary = spyOn(processes, 'spawnProcess').mockImplementation(async (commandArguments, options) => {
-        if (commandArguments[0] === 'npm') {
-            if (commandArguments.includes('--version')) return buildProcessResult({ stdout: '11.19.0' });
-            await fakeTool(options.cwd, 'node_modules/.bin/wrapper', 'process.exitCode = 7;');
-            return buildProcessResult();
-        }
-        return buildProcessResult({ code: 7, stderr: 'Native wrapper download failed' });
-    });
-    using owner = openWriter(root);
-    const session = await openSession(root);
-    const tool: ToolDeclaration = {
-        name: 'wrapper',
-        kind: 'program',
-        version: '1.0.0',
-        installers: { npm: { name: 'wrapper', version: '2.0.0' } },
-    };
-    expect(
-        await captureRejection(installNpmTools({ ...buildInstallContext(session, owner), tools: [tool] })),
-    ).toContain('Native wrapper download failed');
-    expect(await Bun.file(join(root, '.gspot/package-lock.json')).text()).toBe(NPM_LAUNCHER_LOCKFILE);
 });

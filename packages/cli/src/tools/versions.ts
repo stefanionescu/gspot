@@ -160,4 +160,4 @@ function parseVersionOutput(tool: ToolDeclaration, result: SpawnResult, installe
     return { version };
 }
 
-export { readToolVersion, parseVersionOutput, classifyToolVersion };
+export { readToolVersion, classifyToolVersion };

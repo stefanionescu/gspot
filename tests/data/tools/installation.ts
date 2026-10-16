@@ -6,14 +6,6 @@ export const TOOL_FOLDERS = [
     { kind: 'vale', folder: '.gspot/vale' },
 ] as const;
 
-export const VERSION_RESPONSE = {
-    code: 0,
-    stdout: 'tool 4.4.2\n',
-    stderr: '',
-    missing: false,
-    duration: 0,
-} as const;
-
 export const REGISTRY_PASSWORDS = [
     ['https://example.com/simple', []],
     ['https://alex@example.com/simple', []],

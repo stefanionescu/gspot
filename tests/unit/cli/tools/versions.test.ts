@@ -6,7 +6,6 @@ import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
-import { parseVersionOutput } from '#cli/tools/versions.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
@@ -14,20 +13,8 @@ import { readManifests } from '#cli/configurations/manifests.ts';
 import { fakeTool, fakeNpmPackage } from '#tests/setup/fakes.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { type ToolDeclaration } from '#cli/types/configurations.ts';
+import { VERSION_OUTPUTS } from '#tests/data/tools/installation.ts';
 import { buildProgramPin, inspectionContext } from '#tests/setup/builders.ts';
-import { VERSION_OUTPUTS, VERSION_RESPONSE } from '#tests/data/tools/installation.ts';
-
-test('when the npm package version differs from the pin, the version comes from the command output', () => {
-    const tool = {
-        ...buildProgramPin('wrapper', '4.4.2', 'package'),
-        installers: { npm: { name: 'package', version: '7.0.0' } },
-    };
-    expect(parseVersionOutput(tool, VERSION_RESPONSE, '7.0.0')).toStrictEqual({ version: '4.4.2' });
-    expect(parseVersionOutput(tool, { ...VERSION_RESPONSE, stdout: 'no version' })).toStrictEqual({
-        state: 'error',
-        note: 'wrapper did not report a valid version: no version',
-    });
-});
 
 test('an npm tool is the version its package holds, whatever it prints', async () => {
     await using sandbox = await testdir();

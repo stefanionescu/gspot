@@ -23,11 +23,9 @@ file = "package.yaml"
 key = "prettier"
 [[tool]]
 brew = "editorconfig-checker"
-env = { EC_VERSION = "v3.4.0" }
 github = { name = "editorconfig-checker/editorconfig-checker", version = "v3.4.0" }
-mise = { name = "npm:editorconfig-checker", version = "7.0.0" }
+mise = { name = "github:editorconfig-checker/editorconfig-checker", version = "3.4.0", options = { rename_exe = "editorconfig-checker" } }
 name = "editorconfig-checker"
-npm = { name = "editorconfig-checker", version = "7.0.0" }
 replace = [".editorconfig"]
 version = "3.4.0"
 [[tool_file]]
