@@ -12,6 +12,7 @@ import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
@@ -101,7 +102,7 @@ test('Go and Rust sources get only the formatter files and tools they use', asyn
     expect(paths).toContain('.gspot/config/taplo.toml');
     for (const path of ['.gspot/config/prettier.json', '.prettierignore']) expect(paths).not.toContain(path);
     const packages = listToolProjectPins(session.neededToolManifests).npm;
-    const manifests = readManifests();
+    const manifests = readManifests(createReadCache(process.cwd()));
     const fileManifest = manifests.get('files')!;
     const expected = listToolProjectPins([
         {
@@ -147,7 +148,7 @@ function parseModule(text: string, path: string): void {
     if (errors.length > 0) throw new Error(`${path}: ${errors.join('; ')}`);
 }
 
-const configurations = [...readManifests().values()]
+const configurations = [...readManifests(createReadCache(process.cwd())).values()]
     .filter((manifest) => manifest.toolFiles.some((config) => !config.fragment))
     .map((manifest) => manifest.configuration.name);
 

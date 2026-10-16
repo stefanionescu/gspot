@@ -7,6 +7,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { containing } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { TYPO, TYPO_REPORT } from '#tests/config/spelling.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
@@ -85,7 +86,7 @@ import {
         // Any manifest turns on the real-file check.
         const planned = {
             check: { ...LOCATED_CHECK, command: [...LOCATED_CHECK.command] },
-            manifest: readManifests().get('files')!,
+            manifest: readManifests(createReadCache(process.cwd())).get('files')!,
             tool: { name: 'tool', installers: {}, kind: 'program' as const },
         };
         const paths = { cwd: sandbox.path, root: sandbox.path };
@@ -110,7 +111,7 @@ import {
             // Any manifest turns on the real-file check.
             const planned = {
                 check: { ...check, command: [...check.command] },
-                manifest: readManifests().get('files')!,
+                manifest: readManifests(createReadCache(process.cwd())).get('files')!,
             };
             expect(
                 commandOutcome(planned, FAILED_RUN, { cwd: sandbox.path, root: sandbox.path }).findings,
@@ -273,7 +274,7 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
         });
         const session = await openSession(sandbox.path);
         const planned = planRun(session, { stage: 'all', only: ['notes/regex'] })[0]!;
-        const configured = { ...planned, manifest: readManifests().get('files')! };
+        const configured = { ...planned, manifest: readManifests(createReadCache(process.cwd())).get('files')! };
         const result = { code: 1, stdout: 'notes/reported.txt:1:A defect.', stderr: '', missing: false, duration: 1 };
         const paths = { root: sandbox.path, cwd: sandbox.path };
         const expected = [{ check: 'notes/regex', file: 'notes/reported.txt', line: 1, message: 'A defect.' }];

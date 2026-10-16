@@ -71,7 +71,7 @@ async function runUv(
     if (result.missing)
         throw new GspotError(
             'tool',
-            formatUnavailableNote(getToolDeclaration(readManifests().values(), UV_TOOL), {
+            formatUnavailableNote(getToolDeclaration(readManifests(context.session.reads).values(), UV_TOOL), {
                 name: UV_TOOL,
                 state: 'missing',
             }),

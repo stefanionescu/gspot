@@ -7,6 +7,7 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { StylelintModule } from './types/rule-lists.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { EslintPresets } from '#cli/types/generation/eslint.ts';
@@ -130,7 +131,7 @@ function installedPackageIdentity(entry: string, packageName: string): { name: s
 }
 
 const testsFolder = fileURLToPath(new URL(`../${TESTS_FOLDER}/`, import.meta.url));
-const manifests = readManifests();
+const manifests = readManifests(createReadCache(process.cwd()));
 const versions = listToolProjectPins([...manifests.values()]).npm;
 const testsPackagePath = join(testsFolder, PACKAGE_JSON_FILE);
 const testsPackage = z

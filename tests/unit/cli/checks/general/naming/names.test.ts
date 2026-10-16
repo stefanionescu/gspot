@@ -11,10 +11,10 @@ import type { Identifier, NamingSettings } from '#cli/types/checks/general.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 import { splitParts, readNamingSettings } from '#cli/checks/general/naming/settings.ts';
 
-const check = listChecksById(readManifests().values()).get('naming/identifiers')!.check;
+const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get('naming/identifiers')!.check;
 
 test('a number word such as base64 counts as one word; repeated, extra, banned and digit words are still reported', () => {
-    const selected = selectConfigurations(['naming'], readManifests());
+    const selected = selectConfigurations(['naming'], readManifests(createReadCache(process.cwd())));
     const known = knownSettings(selected);
     const settings = parseSettings(settingsText(['naming'], { rules: true }));
     const view = scopeView(known, settings, selected, '');
@@ -114,7 +114,7 @@ const namingSettings: NamingSettings = {
     isRepeatAllowed: false,
 };
 
-const owned = listChecksById(readManifests().values()).get('naming/identifiers')!;
+const owned = listChecksById(readManifests(createReadCache(process.cwd())).values()).get('naming/identifiers')!;
 
 const plain = { check: owned.check, settings: namingSettings, isTestFile: false };
 

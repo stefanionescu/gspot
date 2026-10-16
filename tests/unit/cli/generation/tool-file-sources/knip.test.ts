@@ -9,6 +9,7 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { containingAll } from '#tests/setup/matchers.ts';
 import { parseOutput } from '#cli/parsers/output/formats.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import type { KnipToolFile } from '#tests/types/tool-files.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
@@ -24,7 +25,7 @@ import {
     KNIP_DEPENDENCY_PACKAGE,
 } from '#tests/config/knip.ts';
 
-const check = readManifests()
+const check = readManifests(createReadCache(process.cwd()))
     .get('javascript')!
     .checks.find(({ name }) => name === 'javascript/knip')!;
 

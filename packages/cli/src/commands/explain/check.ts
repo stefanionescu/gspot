@@ -2,6 +2,7 @@
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { stripUndefined } from '#cli/system/values.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { configurationSettings } from '#cli/settings/view.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/configurations.ts';
@@ -124,10 +125,15 @@ function describeCheck(
  * Explains a check by name: a shipped check, or a [[command_check]] entry of the settings.
  * @param session the session, or undefined outside a repository
  * @param checkName the check
+ * @param reads the run cache.
  * @returns the explanation, or undefined when no check has the name
  */
-export function explainCheck(session: Session | undefined, checkName: string): Explanation | undefined {
-    const manifests = readManifests(session?.reads);
+export function explainCheck(
+    session: Session | undefined,
+    checkName: string,
+    reads: ReadCache,
+): Explanation | undefined {
+    const manifests = readManifests(reads);
     const declared = session?.settingsFile.settings.check[checkName];
     const found: Found | undefined =
         listChecksById(manifests.values()).get(checkName) ??
@@ -164,10 +170,11 @@ export function explainCheck(session: Session | undefined, checkName: string): E
  * Explains one rule of a tool: its declared documentation page, and how to turn it off or change its options.
  * @param tool the tool
  * @param rule the rule
+ * @param reads the run cache.
  * @returns the explanation, or undefined when no check runs the tool
  */
-export function explainLintRule(tool: string, rule: string): Explanation | undefined {
-    const manifests = readManifests();
+export function explainLintRule(tool: string, rule: string, reads: ReadCache): Explanation | undefined {
+    const manifests = readManifests(reads);
     const qualified = `${tool}/${rule}`;
     const plugin = getRulePlugin(qualified.slice(0, qualified.lastIndexOf('/')), manifests);
     const ruleTool = plugin === undefined ? tool : ESLINT_TOOL;

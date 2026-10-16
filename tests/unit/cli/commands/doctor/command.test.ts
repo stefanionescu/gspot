@@ -11,6 +11,7 @@ import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { gitOutput, commitAll } from '#tests/setup/git.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
@@ -97,7 +98,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
     'doctor exit code follows the library state %s: an outdated tool exits 1',
     async (state) => {
         await using sandbox = await testdir();
-        const pin = getToolDeclaration(readManifests().values(), 'eslint-plugin-zod');
+        const pin = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), 'eslint-plugin-zod');
         const floor = semver.parse(pin.min_version ?? pin.version!)!;
         let older = `${String(floor.major - 1)}.0.0`;
         if (floor.minor > 0) older = `${String(floor.major)}.${String(floor.minor - 1)}.0`;

@@ -6,6 +6,7 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { knownSettings } from '#cli/settings/view.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { settingValue, declarationFor } from '#cli/settings/inherit.ts';
@@ -64,11 +65,14 @@ removed_configurations = ["site"]
     );
 });
 
-const selected = selectConfigurations(['structure', 'bash', 'naming', 'format', 'prose'], readManifests());
+const selected = selectConfigurations(
+    ['structure', 'bash', 'naming', 'format', 'prose'],
+    readManifests(createReadCache(process.cwd())),
+);
 
 const baseKnown = knownSettings(selected);
 
-const sql = readManifests().get('sql')!;
+const sql = readManifests(createReadCache(process.cwd())).get('sql')!;
 const known = knownSettings([
     sql,
     {
@@ -123,7 +127,7 @@ test('a scope value settles the scopes below it, and a sibling scope still repor
 });
 
 test("a written false overrides a configuration's true default", () => {
-    const known = knownSettings(selectConfigurations(['supabase'], readManifests()));
+    const known = knownSettings(selectConfigurations(['supabase'], readManifests(createReadCache(process.cwd()))));
     const source = settingsText(['supabase'], { rules: true });
     const settings = parseSettings(source);
     expect(settingValue(known, settings, 'tools.squawk.assume_in_transaction')).toMatchObject({
@@ -138,7 +142,7 @@ test("a written false overrides a configuration's true default", () => {
 });
 
 test('an inherited default names the configuration that declares it', () => {
-    const known = knownSettings(selectConfigurations(['supabase'], readManifests()));
+    const known = knownSettings(selectConfigurations(['supabase'], readManifests(createReadCache(process.cwd()))));
     const settings = parseSettings(settingsText(['supabase'], { rules: true }));
     expect(validateAgainstKnownSettings(known, settings, new Map(), knownSettings([]))).toStrictEqual([]);
     expect(settingValue(known, settings, 'tools.sqlfluff.dialect')).toMatchObject({
@@ -155,7 +159,9 @@ test('a per-language key maps to its base setting', () => {
 });
 
 test('limits that no check reads are refused', () => {
-    const known = knownSettings(selectConfigurations(['structure', 'sql', 'bash'], readManifests()));
+    const known = knownSettings(
+        selectConfigurations(['structure', 'sql', 'bash'], readManifests(createReadCache(process.cwd()))),
+    );
     expect(declarationFor(known, 'limits.sql.function_lines')).toBeUndefined();
     expect(declarationFor(known, 'limits.bash.cyclomatic_complexity')).toBeUndefined();
     expect(declarationFor(known, 'limits.sql.function_parameters')).toBeUndefined();
@@ -197,7 +203,7 @@ test('lists add up across tables without repeats', () => {
 });
 
 test('list defaults add up across configurations before root and scope additions', () => {
-    const naming = readManifests().get('naming')!;
+    const naming = readManifests(createReadCache(process.cwd())).get('naming')!;
     const manifests = [naming];
     for (const [index, terms] of [['dispatcher'], ['dispatcher', 'orchestrator']].entries()) {
         manifests.push({
@@ -225,7 +231,7 @@ test('list defaults add up across configurations before root and scope additions
 });
 
 test("a scope's rules keep other rules and replace the whole options of the same rule", () => {
-    const known = knownSettings(selectConfigurations(['css'], readManifests()));
+    const known = knownSettings(selectConfigurations(['css'], readManifests(createReadCache(process.cwd()))));
     const settings = parseSettings(
         settingsText(['css'], {
             rules: true,

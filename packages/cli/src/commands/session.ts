@@ -16,6 +16,7 @@ import { configuredSystemChecks } from '#cli/planning/checks.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { neededToolManifests } from '#cli/planning/needed-tools.ts';
 import { type Repository } from '#cli/types/repository/inventory.ts';
+import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { locateCandidates, readMiseBinPaths } from '#cli/tools/locate.ts';
 import { MISSING_PACKAGE_MANAGER_MESSAGE } from '#cli/config/tools/npm.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
@@ -106,17 +107,18 @@ async function readSessionRepository(
 /**
  * Open a repository session. Refuse invalid settings or configuration choices.
  * @param rootPath the repository root
- * @param settingsFile the settings as read, read here by default
+ * @param input the settings as read, read here by default
  * @param options the repository whose installed tools run against this source tree
  * @param options.installedRoot the working repository with the installed tools
  * @returns the session
  */
 export async function openSession(
     rootPath: string,
-    settingsFile = readSettings(rootPath),
+    input?: SettingsFile,
     { installedRoot = rootPath }: { installedRoot?: string } = {},
 ): Promise<Session> {
     const reads = createReadCache(rootPath);
+    const settingsFile = input ?? readSettings(rootPath, reads);
     const root = reads.root;
     const manifests = readManifests(reads);
     const settings = { ...settingsFile.settings };
@@ -127,7 +129,7 @@ export async function openSession(
     let packageManagerIdentity: PackageManagerDeclaration | undefined = undefined;
     let packageManagerState: PackageManager | undefined;
     let generatedPaths: ReadonlySet<string> | undefined;
-    const toolNames = listMisePins(scopes.flatMap((selection) => selection.selected)).map((pin) => pin.name);
+    const toolNames = listMisePins(listSelectedManifests(scopes), reads).map((pin) => pin.name);
     const miseBinPaths = readMiseBinPaths(installedRoot, [...new Set(toolNames)], timeoutSeconds, []);
     const searchOptions = { search: 'path' as const, searchFolders: [], miseBinPaths, timeoutSeconds };
     const session: Session = {

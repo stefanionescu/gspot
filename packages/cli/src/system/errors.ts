@@ -1,4 +1,5 @@
 // Defines coded errors for command failures.
+import type { z } from 'zod';
 import type { ErrorCode } from '#cli/types/errors.ts';
 
 // An error with a failure code so callers can branch.
@@ -18,4 +19,22 @@ export class GspotError extends Error {
         this.name = 'GspotError';
         this.code = code;
     }
+}
+
+/**
+ * Format a Zod issue and its union branches as field paths and messages.
+ * @param issue the validation issue.
+ * @returns the diagnostic lines with each nested field's full path.
+ */
+export function formatZodIssue(issue: z.core.$ZodIssue): string[] {
+    const path = issue.path.map(String).join('.');
+    const line = path === '' ? issue.message : `${path}: ${issue.message}`;
+    return issue.code === 'invalid_union'
+        ? [
+              line,
+              ...issue.errors.flatMap((branch) =>
+                  branch.flatMap((nested) => formatZodIssue({ ...nested, path: [...issue.path, ...nested.path] })),
+              ),
+          ]
+        : [line];
 }

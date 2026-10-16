@@ -1,15 +1,16 @@
 import type { z } from 'zod';
 import { isRecord } from '#cli/system/values.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { everyTable } from '#cli/settings/inherit.ts';
 import { knownSettings } from '#cli/settings/view.ts';
 import { buildSettings } from '#cli/settings/normalize.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { reasonErrors } from '#cli/settings/errors/reasons.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
+import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
@@ -22,19 +23,23 @@ import { RECORD_FIELDS, SETTINGS_REFERENCE_URL } from '#cli/config/settings/file
 import { listCheckIds, readManifests, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import { pathErrors, extraOptionErrors, disabledRuleErrors } from '#cli/settings/errors/values.ts';
 
-function nestedIssueLines(path: string, prefix: z.core.$ZodIssue['path'], issues: z.core.$ZodIssue[]): string[] {
-    return issues.flatMap((issue) => issueLines(path, { ...issue, path: [...prefix, ...issue.path] }));
+function formatNestedSettingsIssues(
+    path: string,
+    prefix: z.core.$ZodIssue['path'],
+    issues: z.core.$ZodIssue[],
+): string[] {
+    return issues.flatMap((issue) => formatSettingsIssue(path, { ...issue, path: [...prefix, ...issue.path] }));
 }
 
-function issueLines(path: string, issue: z.core.$ZodIssue): string[] {
+function formatSettingsIssue(path: string, issue: z.core.$ZodIssue): string[] {
     const branches = issue.code === 'invalid_union' ? issue.errors : [];
     const envelope = branches.find((errors) =>
         errors.some((child) => child.path[0] === 'value' || child.path[0] === 'reason'),
     );
-    if (envelope !== undefined) return nestedIssueLines(path, issue.path, envelope);
-    if (issue.code === 'invalid_key') return nestedIssueLines(path, issue.path, issue.issues);
+    if (envelope !== undefined) return formatNestedSettingsIssues(path, issue.path, envelope);
+    if (issue.code === 'invalid_key') return formatNestedSettingsIssues(path, issue.path, issue.issues);
     const segments = issue.path.filter((part): part is KeyPath[number] => typeof part !== 'symbol');
-    if (issue.code !== 'unrecognized_keys') return [errorText({ path: segments, message: issue.message }, path)];
+    if (issue.code !== 'unrecognized_keys') return formatZodIssue(issue).map((line) => `${path}: ${line}`);
     const [record, scopeIndex, ...scopeFields] = segments;
     let where = segments.length === 0 ? 'the top level' : `[${segments.map(String).join('.')}]`;
     if (record === 'scope') {
@@ -55,7 +60,7 @@ function throwErrors(errors: SettingsError[]): never {
 }
 
 // Commands and check execution validate the same settings.
-function collectErrors(settings: Settings, root: string | undefined, reads?: ReadCache): SettingsError[] {
+function collectErrors(settings: Settings, root: string | undefined, reads: ReadCache): SettingsError[] {
     return [
         ...reasonErrors(settings),
         ...(Array.isArray(settings.written['command_check']) ? settings.written['command_check'] : []).flatMap(
@@ -80,7 +85,7 @@ function collectErrors(settings: Settings, root: string | undefined, reads?: Rea
                       },
                   ];
         }),
-        ...disabledRuleErrors(settings),
+        ...disabledRuleErrors(settings, reads),
         ...(root === undefined ? [] : pathErrors(root, settings)),
         ...settingErrors(settings, reads),
     ];
@@ -92,7 +97,7 @@ function collectErrors(settings: Settings, root: string | undefined, reads?: Rea
  * @param reads the read cache for this run.
  * @returns one error per unknown name.
  */
-function unknownConfigurationErrors(settings: Settings, reads?: ReadCache): SettingsError[] {
+function unknownConfigurationErrors(settings: Settings, reads: ReadCache): SettingsError[] {
     const manifests = readManifests(reads);
     const declarations: ConfigurationDeclaration[] = [
         ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
@@ -112,7 +117,7 @@ function unknownConfigurationErrors(settings: Settings, reads?: ReadCache): Sett
  * @param reads the read cache for this run.
  * @returns the errors, each at the value that raised it.
  */
-function settingErrors(settings: Settings, reads?: ReadCache): SettingsError[] {
+function settingErrors(settings: Settings, reads: ReadCache): SettingsError[] {
     const manifests = readManifests(reads);
     const errors: SettingsError[] = [];
     const tools = listDistinctTools([...manifests.values()]);
@@ -157,13 +162,13 @@ function errorText(error: SettingsError, file?: string): string {
  * @param reads the read cache for this run.
  * @returns the normalized settings.
  */
-export function parseSettings(text: string, root?: string, reads?: ReadCache): Settings {
+export function parseSettings(text: string, root?: string, reads = createReadCache(root ?? process.cwd())): Settings {
     const written = parseTomlText(text, SETTINGS_FILE, 'settings');
     const result = settingsSchema.safeParse(written);
     if (!result.success)
         throw new GspotError(
             'settings',
-            result.error.issues.flatMap((issue) => issueLines(SETTINGS_FILE, issue)).join('\n'),
+            result.error.issues.flatMap((issue) => formatSettingsIssue(SETTINGS_FILE, issue)).join('\n'),
         );
     const settings = buildSettings(result.data);
     settings.written = written;
@@ -185,7 +190,7 @@ export function parseSettings(text: string, root?: string, reads?: ReadCache): S
  * @param reads the read cache for this run.
  * @returns the settings and the file's text.
  */
-export function readSettings(root: string, reads?: ReadCache): SettingsFile {
+export function readSettings(root: string, reads = createReadCache(root)): SettingsFile {
     const { text } = readSettingsFile(root);
     const settings = parseSettings(text, root, reads);
     return { settings, text };

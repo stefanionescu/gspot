@@ -10,6 +10,7 @@ import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { buildProgramPin } from '#tests/setup/pins.ts';
 import { locateCandidates } from '#cli/tools/locate.ts';
 import { installCompiler } from '#tests/setup/install.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
@@ -30,7 +31,7 @@ test("inspectTool finds the project compiler, and the original repository's comp
     const snapshot = join(sandbox.path, 'snapshot');
     await installCompiler(work, join(work, '.gspot/node_modules'));
     await installCompiler(work);
-    const compiler = getToolDeclaration(readManifests().values(), 'tsc');
+    const compiler = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), 'tsc');
     const projectPath = join(work, 'node_modules/typescript/package.json');
     const project = packageJsonSchema.parse(parseJsonFile(projectPath, await readFile(projectPath, 'utf8')));
     expect(
@@ -107,7 +108,7 @@ test('a program on PATH wins over an unrelated mise shim', async () => {
             timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
             inspections: new Map(),
         },
-        getToolDeclaration(readManifests().values(), 'tsc'),
+        getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), 'tsc'),
     );
     expect(inspection.state).toBe('system');
     expect(inspection.path).toBe(active);
@@ -240,7 +241,7 @@ test('a system tsc is found in node_modules and the tool project tsc is ignored'
             timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
             inspections: new Map(),
         },
-        getToolDeclaration(readManifests().values(), 'tsc'),
+        getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), 'tsc'),
     );
     expect(inspection).toMatchObject({
         state: 'system',

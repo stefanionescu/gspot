@@ -1,6 +1,7 @@
 import { NODE_TOOL } from '#cli/config/tools/npm.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { stripUndefined } from '#cli/system/values.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 import { MISE_BACKENDS, PYTHON_CONFIGURATION } from '#cli/config/configurations.ts';
 import { readManifests, buildManifestError } from '#cli/configurations/manifests.ts';
@@ -16,22 +17,8 @@ import {
 } from '#cli/types/configurations.ts';
 
 /**
- * The pinned uv installer used for Python tools.
- * @returns the declared uv mise pin
- */
-function uvPin(): MisePin {
-    const tool = readManifests()
-        .get(PYTHON_CONFIGURATION)
-        ?.tools.find((entry) => entry.name === UV_TOOL);
-    const pin = tool === undefined ? undefined : findMisePin(tool);
-    if (pin === undefined)
-        throw buildManifestError(PYTHON_CONFIGURATION, ['tool uv requires a pinned mise installer version.']);
-    return pin;
-}
-
-/**
  * The mise package and version, using the backend the manifest names.
- * @param tool the pin.
+ * @param tool the tool declaration.
  * @returns the installer pin with its backend prefix, or undefined for a host tool.
  */
 function findMiseInstaller(tool: ToolDeclaration): InstallerPin | undefined {
@@ -46,22 +33,30 @@ function findMiseInstaller(tool: ToolDeclaration): InstallerPin | undefined {
 /**
  * Select tools that mise installs. Omit tools in npm and Python tool projects.
  * @param manifests the selected manifests.
+ * @param reads the run cache.
  * @returns pins installed by mise.
  */
-export function listMisePins(manifests: Manifest[]): MisePin[] {
+export function listMisePins(manifests: Manifest[], reads: ReadCache): MisePin[] {
     const tools = listDistinctTools(manifests);
     const pins = tools.flatMap((tool) => findMisePin(tool) ?? []);
     if (
         tools.some((tool) => findToolProjectPackage(tool)?.kind === 'python') &&
         !tools.some((tool) => tool.name === UV_TOOL)
-    )
-        pins.push(uvPin());
+    ) {
+        const tool = readManifests(reads)
+            .get(PYTHON_CONFIGURATION)
+            ?.tools.find((entry) => entry.name === UV_TOOL);
+        const pin = tool === undefined ? undefined : findMisePin(tool);
+        if (pin === undefined)
+            throw buildManifestError(PYTHON_CONFIGURATION, ['tool uv requires a pinned mise installer version.']);
+        pins.push(pin);
+    }
     return pins;
 }
 
 /**
  * The pin mise installs for one tool: its version, its platforms, and its backend options.
- * @param tool the pin.
+ * @param tool the tool declaration.
  * @returns the mise pin, or undefined when mise does not install the tool.
  */
 export function findMisePin(tool: ToolDeclaration): MisePin | undefined {
@@ -95,15 +90,15 @@ export function listToolProjectPins(manifests: Manifest[]): ToolProjectPins {
 /**
  * Every distinct tool pin across the selection, sorted by name.
  * @param manifests the selected manifests.
- * @returns the pins.
+ * @returns the distinct tool declarations.
  */
 export function listDistinctTools(manifests: Manifest[]): ToolDeclaration[] {
-    const pins = new Map<string, ToolDeclaration>();
+    const tools = new Map<string, ToolDeclaration>();
     for (const manifest of manifests)
         for (const tool of manifest.tools) {
-            if (!pins.has(tool.name)) pins.set(tool.name, tool);
+            if (!tools.has(tool.name)) tools.set(tool.name, tool);
         }
-    return pins
+    return tools
         .values()
         .toArray()
         .toSorted((a, b) => a.name.localeCompare(b.name));
@@ -172,7 +167,7 @@ export function listNpmToolNames(manifests: Iterable<Manifest>): Set<string> {
 
 /**
  * The build a tool lacks on a host, such as Windows or arm64 Linux, or undefined when the tool ships for it.
- * @param tool the tool pin
+ * @param tool the tool declaration
  * @param platform the host platform name: macos, linux, or windows
  * @param arch the host architecture: x64 or arm64
  * @returns the words for the missing build, or undefined

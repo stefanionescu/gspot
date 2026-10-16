@@ -5,7 +5,9 @@ import { printResult } from '#cli/system/terminal.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { reasonError } from '#cli/settings/errors/reasons.ts';
 import { type Settings } from '#cli/types/settings/values.ts';
@@ -14,8 +16,8 @@ import { saveSettings, startSettingsEdit } from '#cli/commands/save-settings.ts'
 import { mergeIgnore, emitSettings, parseExpiryDate } from '#cli/settings/file.ts';
 import { listCheckIds, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 
-function assertKnownCheck(checkName: string, settings: Settings): void {
-    const known = listCheckIds(Object.values(settings.check));
+function assertKnownCheck(checkName: string, settings: Settings, reads: ReadCache): void {
+    const known = listCheckIds(Object.values(settings.check), reads);
     if (known.includes(checkName)) return;
     throw new GspotError('arguments', formatUnknownCheck(checkName, known));
 }
@@ -34,8 +36,9 @@ function buildReasonHint(options: IgnoreOptions): string {
  */
 async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     const { root, input } = await startSettingsEdit(options.cwd);
-    const settings = parseSettings(input.text, root);
-    assertKnownCheck(options.check, settings);
+    const reads = createReadCache(root);
+    const settings = parseSettings(input.text, root, reads);
+    assertKnownCheck(options.check, settings, reads);
     const diagnostic = reasonError(`gspot ignore ${options.check}`, options.reason, buildReasonHint(options));
     if (diagnostic !== undefined) throw new GspotError('settings', diagnostic);
     const list = (input.table['ignore'] as TomlTable[] | undefined) ?? [];

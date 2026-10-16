@@ -9,7 +9,9 @@ import { type Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -40,8 +42,8 @@ function formatList(label: string, items: string[]): string[] {
     return items.length === 0 ? [] : [`${label}: ${items.join(', ')}`];
 }
 
-function explainConfiguration(configurationName: string): Explanation | undefined {
-    const manifest = readManifests().get(configurationName);
+function explainConfiguration(configurationName: string, reads: ReadCache): Explanation | undefined {
+    const manifest = readManifests(reads).get(configurationName);
     if (manifest === undefined) return undefined;
     const row: ConfigurationExplanation = {
         name: manifest.configuration.name,
@@ -152,22 +154,22 @@ function explainSetting(session: Session | undefined, key: string): Explanation 
     };
 }
 
-function buildUnknownSubjectDiagnostic(session: Session | undefined, subject: string): string {
+function buildUnknownSubjectDiagnostic(session: Session | undefined, subject: string, reads: ReadCache): string {
     if (subject.includes('/'))
         return formatUnknownCheck(
             subject,
-            listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.check)),
+            listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.check), reads),
         );
     if (subject.includes('.'))
         return unknownSettingError(
             knownSettings(
                 session?.scopes.flatMap((scope) => scope.selected) ?? [],
                 session?.settingsFile.settings.level,
-                session?.reads,
+                reads,
             ),
             subject,
         );
-    return formatUnknownConfiguration(subject, readManifests().keys().toArray());
+    return formatUnknownConfiguration(subject, readManifests(reads).keys().toArray());
 }
 
 // A check retains its meaning; a tracked path precedes a rule with the same first folder.
@@ -175,19 +177,20 @@ function explainSlashed(
     session: Session | undefined,
     subject: string,
     file: Explanation | undefined,
+    reads: ReadCache,
 ): Explanation | undefined {
-    const check = explainCheck(session, subject);
+    const check = explainCheck(session, subject, reads);
     if (check !== undefined) return check;
     if (file !== undefined) return file;
     const slash = subject.indexOf('/');
-    return explainLintRule(subject.slice(0, slash), subject.slice(slash + 1));
+    return explainLintRule(subject.slice(0, slash), subject.slice(slash + 1), reads);
 }
 
-function explainNamed(session: Session | undefined, subject: string): Explanation | undefined {
-    const named = explainSetting(session, subject) ?? explainConfiguration(subject);
+function explainNamed(session: Session | undefined, subject: string, reads: ReadCache): Explanation | undefined {
+    const named = explainSetting(session, subject) ?? explainConfiguration(subject, reads);
     if (named !== undefined) return named;
     if (!eslintRuleNames.rules.includes(subject)) return undefined;
-    return explainLintRule(ESLINT_TOOL, subject);
+    return explainLintRule(ESLINT_TOOL, subject, reads);
 }
 
 function uncheckedNote(file: TrackedFile): string | undefined {
@@ -280,19 +283,20 @@ function formatPathReport(report: PathExplanation): string {
  * Explains whatever the argument names, or returns the near matches.
  * @param session the session, or undefined outside a repository.
  * @param subject a check ID, a tool/rule pair, a configuration name, a setting key, or a file path.
+ * @param reads the cache shared by every lookup in this explanation.
  * @returns the requested explanation
  * @throws GspotError when no subject or file matches, with the closest known names
  */
-function explain(session: Session | undefined, subject: string): Explanation {
+function explain(session: Session | undefined, subject: string, reads: ReadCache): Explanation {
     const file = explainPath(session, subject);
     if (file !== undefined && subject.startsWith('./')) return file;
     let explanation: Explanation | undefined;
-    if (subject.includes('/')) explanation = explainSlashed(session, subject, file);
+    if (subject.includes('/')) explanation = explainSlashed(session, subject, file, reads);
     else if (subject.includes('.')) explanation = explainSetting(session, subject);
-    else explanation = explainNamed(session, subject);
+    else explanation = explainNamed(session, subject, reads);
     if (explanation !== undefined) return explanation;
     if (file !== undefined) return file;
-    throw new GspotError('arguments', buildUnknownSubjectDiagnostic(session, subject));
+    throw new GspotError('arguments', buildUnknownSubjectDiagnostic(session, subject, reads));
 }
 
 /**
@@ -309,7 +313,7 @@ function registerExplain(program: Command): void {
             const root = findRoot(process.cwd());
             await assertVersionPin(root);
             const session = readText(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
-            const result = explain(session, subject);
+            const result = explain(session, subject, session?.reads ?? createReadCache(root));
             printResult({
                 text: result.text,
                 json: { ...result.data, kind: result.kind, subject: result.subject },

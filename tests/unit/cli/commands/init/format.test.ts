@@ -17,7 +17,7 @@ test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', a
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const draft: SettingsDraft = {
         configurations: ['format'],
@@ -26,7 +26,7 @@ test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', a
         ci: 'none',
         rules: false,
     };
-    const manifests = readManifests();
+    const manifests = readManifests(createReadCache(process.cwd()));
     const formats = readFormatTables(
         draft,
         repository,
@@ -51,7 +51,7 @@ test.each([...SCOPE_FORMAT_CASES])(
         const repository = await readRepository(createReadCache(sandbox.path), {
             declarations: [],
             scopeEntries: [],
-            manifests: readManifests(),
+            manifests: readManifests(createReadCache(process.cwd())),
         });
         const draft: SettingsDraft = {
             configurations: ['format'],
@@ -67,7 +67,7 @@ test.each([...SCOPE_FORMAT_CASES])(
 
             ...(template ? { template: parseTemplate(template, 'team.template.toml') } : {}),
         };
-        const manifests = readManifests();
+        const manifests = readManifests(createReadCache(process.cwd()));
         const formats = readFormatTables(
             draft,
             repository,

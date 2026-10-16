@@ -11,6 +11,7 @@ import { settingValue } from '#cli/settings/inherit.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTree, pathExists } from '#tests/setup/files.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { readManifests } from '#cli/configurations/manifests.ts';
@@ -68,7 +69,7 @@ test.each([...EXTRA_OPTION_SCOPES])(
         const written = await runGspot(sandbox.path, [...argv, '--reason', TAPLO_REASON]);
         expect(written.code, written.stdout + written.stderr).toBe(0);
         const { settings } = readSettings(sandbox.path);
-        const selected = selectForScope(settings, scope, readManifests());
+        const selected = selectForScope(settings, scope, readManifests(createReadCache(process.cwd())));
         expect(settingValue(knownSettings(selected), settings, key, scope)).toMatchObject({
             value: TAPLO_OPTIONS,
             reason: TAPLO_REASON,

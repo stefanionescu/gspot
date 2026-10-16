@@ -8,6 +8,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { selectForScope } from '#cli/repository/coverage.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { setKey, findScopeTable } from '#cli/settings/edit.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { scopeView, knownSettings } from '#cli/settings/view.ts';
@@ -133,7 +134,7 @@ test('an until date ends at the end of that day in UTC, and the expired ignore s
             },
         ] as const;
         const settings = parseSettings(emitSettings('', { configurations: [], ignore: entries }));
-        const selected = selectForScope(settings, '', readManifests());
+        const selected = selectForScope(settings, '', readManifests(createReadCache(process.cwd())));
         const view = scopeView(knownSettings(selected), settings, selected, '');
         expect(view.ignoresFor('dependencies/osv')).toStrictEqual([
             { ...entries[3], paths: [] },

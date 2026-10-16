@@ -48,7 +48,7 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const text = initSettingsText(
         {
@@ -65,7 +65,7 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
             rules: true,
         },
         repository,
-        readManifests(),
+        readManifests(createReadCache(process.cwd())),
         new Map(),
     );
     expect(text).toContain('configurations = ["typescript",');
@@ -80,7 +80,7 @@ test('template settings stay beside the commit scopes init adds', async () => {
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const text = initSettingsText(
         {
@@ -99,7 +99,7 @@ test('template settings stay beside the commit scopes init adds', async () => {
             rules: false,
         },
         repository,
-        readManifests(),
+        readManifests(createReadCache(process.cwd())),
         new Map(),
     );
     expect(parse(text)).toMatchObject({
@@ -113,7 +113,7 @@ test('initialization honors disabled integrations and preserves template format 
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const text = initSettingsText(
         {
@@ -133,7 +133,7 @@ test('initialization honors disabled integrations and preserves template format 
             rules: false,
         },
         repository,
-        readManifests(),
+        readManifests(createReadCache(process.cwd())),
         new Map(),
     );
     const document = parse(text);
@@ -150,7 +150,7 @@ test('a template keeps its comments and gspot.toml records which template it cop
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const template = parseTemplate(
         `# Rule owner
@@ -169,7 +169,7 @@ instruction_files = ["TEAM.md"]
             rules: true,
         },
         repository,
-        readManifests(),
+        readManifests(createReadCache(process.cwd())),
         new Map(),
     );
     expect(text).toContain(`# Copied from template team.template.toml, sha256 ${template.digest}.`);
@@ -185,12 +185,12 @@ test.each([...SDK_DESTINATIONS])('init picks the Xcode destination for SDK $sdk'
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const text = initSettingsText(
         { configurations: ['swift', 'xcode'], scopes: [], hooks: false, ci: 'none', rules: false },
         repository,
-        readManifests(),
+        readManifests(createReadCache(process.cwd())),
         new Map(),
     );
     const session = await openSession(sandbox.path, {
@@ -212,7 +212,7 @@ test.each([...TEMPLATE_SWIFT_CHOICES])(
         const repository = await readRepository(createReadCache(sandbox.path), {
             declarations: [],
             scopeEntries: [],
-            manifests: readManifests(),
+            manifests: readManifests(createReadCache(process.cwd())),
         });
         const text = initSettingsText(
             {
@@ -225,7 +225,7 @@ test.each([...TEMPLATE_SWIFT_CHOICES])(
                 template: parseTemplate(stringify({ xcode }), 'swift.template.toml'),
             },
             repository,
-            readManifests(),
+            readManifests(createReadCache(process.cwd())),
             new Map(),
         );
         const session = await openSession(sandbox.path, {

@@ -3,6 +3,7 @@ import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { runCommand } from '#tests/setup/processes.ts';
 import { listMisePins } from '#cli/configurations/tools.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
@@ -73,7 +74,10 @@ test.each(
  * @returns after linking every supported pin.
  */
 async function linkQuickstartTools(root: string, environment: Record<string, string>): Promise<void> {
-    for (const pin of listMisePins([...readManifests().values()]).filter((pin) => hasToolBuild(pin.name))) {
+    for (const pin of listMisePins(
+        [...readManifests(createReadCache(process.cwd())).values()],
+        createReadCache(process.cwd()),
+    ).filter((pin) => hasToolBuild(pin.name))) {
         const requirement = `${pin.name}@${pin.version}`;
 
         const installed = await runCommand(

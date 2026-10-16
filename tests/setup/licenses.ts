@@ -4,6 +4,7 @@ import { join, relative } from 'node:path';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 
@@ -21,7 +22,7 @@ export async function prepareLicenseSandbox(
     root: string,
     plan: string | (typeof ALLOWED_PACKAGE_SCOPE_CASES)[number] = LICENSE_SETTINGS,
 ): Promise<void> {
-    const version = getToolDeclaration(readManifests().values(), 'pip-licenses').version;
+    const version = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), 'pip-licenses').version;
     if (version === undefined) throw new Error('The pip-licenses test requires a pinned version.');
     let settings = typeof plan === 'string' ? plan : LICENSE_SETTINGS;
     let files: Record<string, string> = {

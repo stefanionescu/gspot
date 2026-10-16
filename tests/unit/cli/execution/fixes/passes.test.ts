@@ -8,6 +8,7 @@ import { containing } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { type RunOptions } from '#cli/types/execution/check.ts';
 import { DECLARATION_FILES } from '#tests/config/repository.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
@@ -41,7 +42,7 @@ test.each([...FIX_LINTER_CASES])(
     'after --fix, the $configuration check status matches what the linter still reports',
     async (entry) => {
         await using sandbox = await testdir();
-        const check = readManifests()
+        const check = readManifests(createReadCache(process.cwd()))
             .get(entry.configuration)!
             .checks.find((check) => check.name === `${entry.configuration}/${entry.tool}`)!;
         const executable = join(

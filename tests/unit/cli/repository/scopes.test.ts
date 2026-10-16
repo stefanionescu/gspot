@@ -62,7 +62,7 @@ test.each([...WORKSPACE_DECLARATIONS])(
         const repository = await readRepository(createReadCache(sandbox.path), {
             declarations: [],
             scopeEntries: [],
-            manifests: readManifests(),
+            manifests: readManifests(createReadCache(process.cwd())),
         });
         expect(listWorkspaceFolders(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
             'packages/api',
@@ -71,7 +71,7 @@ test.each([...WORKSPACE_DECLARATIONS])(
         const scopes = findScopes(
             repository.files,
             await readDependencyFiles(createReadCache(sandbox.path), repository.files),
-            readManifests().values(),
+            readManifests(createReadCache(process.cwd())).values(),
         );
         expect(scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
     },
@@ -141,14 +141,14 @@ test('broad workspace patterns skip .gspot/.venv and its outside interpreter lin
     const repository = await readRepository(createReadCache(root), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     expect(listWorkspaceFolders(root)).toStrictEqual(['packages/app']);
     expect(
         findScopes(
             repository.files,
             await readDependencyFiles(createReadCache(root), repository.files),
-            readManifests().values(),
+            readManifests(createReadCache(process.cwd())).values(),
         ).map((scope) => scope.path),
     ).toStrictEqual(['packages/app']);
 });
@@ -180,10 +180,14 @@ test('every folder that holds a project file is a scope, the root and lint-only 
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const packageManifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
-    const found = findScopes(repository.files, packageManifests, readManifests().values());
+    const found = findScopes(
+        repository.files,
+        packageManifests,
+        readManifests(createReadCache(process.cwd())).values(),
+    );
     expect(found.map((scope) => [scope.path, scope.source])).toStrictEqual([
         ['api', 'project'],
         ['apps/web', 'project'],
@@ -207,7 +211,7 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     expect(listWorkspaceFolders(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'packages/custom',
@@ -219,7 +223,7 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
         findScopes(
             repository.files,
             await readDependencyFiles(createReadCache(sandbox.path), repository.files),
-            readManifests().values(),
+            readManifests(createReadCache(process.cwd())).values(),
         ).map((scope) => scope.path),
     ).toStrictEqual(['packages/custom', 'packages/process']);
     await writeFile(
@@ -229,13 +233,13 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
     const corrected = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     expect(
         findScopes(
             corrected.files,
             await readDependencyFiles(createReadCache(sandbox.path), corrected.files),
-            readManifests().values(),
+            readManifests(createReadCache(process.cwd())).values(),
         ).map((scope) => scope.path),
     ).toStrictEqual(['packages/custom', 'packages/next', 'packages/process']);
 });
@@ -246,12 +250,14 @@ test('Python scopes use the dependency files read with the repository', async ()
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const packageManifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     await writeFile(join(sandbox.path, 'pyproject.toml'), '[invalid');
     expect(
-        findScopes(repository.files, packageManifests, readManifests().values()).map((scope) => scope.path),
+        findScopes(repository.files, packageManifests, readManifests(createReadCache(process.cwd())).values()).map(
+            (scope) => scope.path,
+        ),
     ).toStrictEqual(['api']);
 });
 

@@ -11,6 +11,7 @@ import { checkTree } from '#cli/commands/check/tree.ts';
 import { progress } from '#cli/commands/check/report.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import { copyRevision } from '#cli/execution/copy/revision.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
@@ -172,7 +173,7 @@ export function registerCheck(program: Command) {
         .addOption(new Option('--message-file <path>', COMMAND_HELP.check.options['--message-file <path>']))
         .option('--verbose', COMMAND_HELP.check.options['--verbose'])
         .action(async (paths, flags) => {
-            const messageCheck = [...readManifests().values()]
+            const messageCheck = [...readManifests(createReadCache(process.cwd())).values()]
                 .flatMap(({ checks }) => checks)
                 .find((check) => check.stage === 'message' && flags.only?.includes(check.name) === true);
             const hasMessage = flags.messageFile !== undefined;

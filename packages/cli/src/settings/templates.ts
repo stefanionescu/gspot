@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { isRecord } from '#cli/system/values.ts';
 import { hashContent } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { templateSchema } from '#cli/settings/schema/templates.ts';
@@ -87,7 +88,7 @@ export function parseTemplate(text: string, source: string): Template {
           });
     const named = written['configurations'];
     const declarations = Array.isArray(named) ? named.map((name) => ({ name: String(name) })) : [];
-    const unknown = listUnknownConfigurations(declarations, readManifests()).map(
+    const unknown = listUnknownConfigurations(declarations, readManifests(createReadCache(process.cwd()))).map(
         ({ message: diagnostic }) => diagnostic,
     );
     const errors = [...shape, ...unknown];

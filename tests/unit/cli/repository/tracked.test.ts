@@ -31,7 +31,7 @@ test.each([
     const repository = await readRepository(createReadCache(root), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
     await unlink(join(root, name));
@@ -41,7 +41,7 @@ test.each([
     const corrected = await readRepository(createReadCache(root), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     expect(corrected.files.find((file) => file.path === 'linked.ts')?.tags).toContain('symlink');
 });
@@ -74,7 +74,7 @@ test('a dangling tracked link is listed without reading its target', async () =>
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     expect(repository.files).toHaveLength(1);
     expect(repository.files[0]?.tags).toContain('symlink');

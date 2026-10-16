@@ -19,7 +19,7 @@ test('Python dependency file reads keep their dependencies and report invalid te
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const packageManifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     expect(packageManifests.find((entry) => entry.path === 'api/pyproject.toml')?.dependencies).toStrictEqual({
@@ -36,7 +36,7 @@ test('a dependency file that disappears after the repository read is an error', 
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     await rm(join(sandbox.path, path));
     expect(readDependencyFiles(createReadCache(sandbox.path), repository.files)).rejects.toThrow(path);
@@ -53,7 +53,7 @@ test('package.json reads keep your own fields and tell a missing file from inval
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     await writeFile(join(sandbox.path, 'package.json'), '{');
     expect(() => readPackageJson(sandbox.path, 'package.json')).toThrow('package.json is not valid JSON.');
@@ -70,7 +70,7 @@ test('declared framework dependencies follow the nearest npm project', async () 
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const manifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     for (const { scope, dependencies } of PROJECT_DEPENDENCY_SCOPES) {

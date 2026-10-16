@@ -1,4 +1,5 @@
 // Finds existing lint commands, hooks, and tool files.
+// Finds existing lint commands, hooks, and tool files.
 import { z } from 'zod';
 import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
@@ -8,7 +9,7 @@ import { isRecord } from '#cli/system/values.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -279,7 +280,7 @@ export function readExistingTools(
     root: string,
     files: TrackedFile[],
     packageManifests: DependencyFile[],
-    reads?: ReadCache,
+    reads = createReadCache(root),
 ): ExistingTools {
     const paths = new Set(files.map((file) => file.path));
     const manifests = readManifests(reads);

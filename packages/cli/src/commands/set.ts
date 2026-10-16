@@ -9,6 +9,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { RECORD_FIELDS } from '#cli/config/settings/file.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
@@ -53,8 +54,8 @@ function parseItem(text: string): unknown {
     return isStructured ? parseStructured(text) : text;
 }
 
-function buildSettingError(settings: Settings, known: KnownSettings, key: string): GspotError {
-    const manifests = readManifests();
+function buildSettingError(settings: Settings, known: KnownSettings, key: string, reads: ReadCache): GspotError {
+    const manifests = readManifests(reads);
     const selectedScope = Object.keys(settings.scope).find(
         (scope) =>
             declarationFor(knownSettings(selectForScope(settings, scope, manifests), settings.level), key) !==
@@ -169,7 +170,7 @@ async function setCommand(options: SetOptions): Promise<CommandResult> {
     const known = (session.scopes.find((selection) => selection.scope.path === (options.scope ?? '')) as ScopeSelection)
         .known;
     const match = declarationFor(known, options.key);
-    if (!match) throw buildSettingError(settings, known, options.key);
+    if (!match) throw buildSettingError(settings, known, options.key, session.reads);
     const shown = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
     return await changeSetting(root, input, settings, known, options, match.declaration, shown);
 }

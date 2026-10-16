@@ -12,6 +12,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
@@ -87,7 +88,7 @@ test('a missing OpenAPI document is reported before generation', async () => {
 });
 
 async function mockWrangler(root: string): Promise<DisposableStack> {
-    const pin = getToolDeclaration(readManifests().values(), 'wrangler');
+    const pin = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), 'wrangler');
     const path = join(root, 'node_modules', '.bin', pin.name);
     await Bun.write(path, '');
     await chmod(path, EXECUTABLE_FILE);

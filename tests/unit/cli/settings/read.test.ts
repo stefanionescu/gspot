@@ -69,9 +69,9 @@ test.each([
     })),
 ])('an error names the key path of $name, and the fix clears it', ({ text, where, correction, messages }) => {
     const found = settingsErrors(text);
-    expect(found).toHaveLength(where.length);
-    for (const [index, path] of where.entries()) {
-        expect(found[index]).toStartWith(`gspot.toml: ${path}`);
+    expect(found.every((line) => where.some((path) => line.startsWith(`gspot.toml: ${path}`)))).toBe(true);
+    for (const path of where) {
+        expect(found.some((line) => line.startsWith(`gspot.toml: ${path}`))).toBe(true);
     }
     for (const message of messages) expect(found[0]).toContain(message);
     expect(settingsErrors(text.replace(correction[0], correction[1]))).toStrictEqual([]);

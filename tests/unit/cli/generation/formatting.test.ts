@@ -13,6 +13,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
@@ -132,7 +133,7 @@ const settings = parseSettings(
     }),
 );
 
-const selected = selectConfigurations(settings.configurations, readManifests());
+const selected = selectConfigurations(settings.configurations, readManifests(createReadCache(process.cwd())));
 
 const { format } = scopeView(knownSettings(selected, settings.level), settings, selected, '');
 

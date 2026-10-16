@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { knownSettings } from '#cli/settings/view.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash/tools.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { TAPLO_REASON, TAPLO_OPTIONS } from '#tests/config/set.ts';
@@ -15,7 +16,7 @@ import { REASON_VALUES, EXPLAIN_SETTINGS } from '#tests/config/explain.ts';
 import { containing, containingAll, textContaining } from '#tests/setup/matchers.ts';
 
 test("explain shows each scope's default and current naming limit", async () => {
-    const settings = knownSettings(selectConfigurations(['naming'], readManifests()));
+    const settings = knownSettings(selectConfigurations(['naming'], readManifests(createReadCache(process.cwd()))));
     const swift = Number(settings.defaults.get('naming.swift.max_characters')?.value);
     const sql = Number(settings.defaults.get('naming.sql.max_words')?.value);
     await using sandbox = await testdir();

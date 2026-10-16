@@ -7,6 +7,7 @@ import { docsLoader } from '@astrojs/starlight/loaders';
 import { pluginReferencePages } from './eslint-plugin.ts';
 import type { ReferencePage } from '../types/reference.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { cell, table, section, referencePage } from './markdown.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
@@ -33,7 +34,7 @@ function configurationSections(manifests: Manifest[]): string {
 function referencePages(): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>();
     for (const [path, page] of commandPages()) pages.set(path, page);
-    const manifests = readManifests()
+    const manifests = readManifests(createReadCache(process.cwd()))
         .values()
         .toArray()
         .toSorted((a, b) => a.configuration.name.localeCompare(b.configuration.name));
@@ -50,7 +51,7 @@ function referencePages(): Map<string, ReferencePage> {
             `${REFERENCE_FOLDERS.configurations}/${manifest.configuration.name}.md`,
             configurationPage(manifest, manifests),
         );
-    const checks = listChecksById(readManifests().values());
+    const checks = listChecksById(readManifests(createReadCache(process.cwd())).values());
     const checkRows = [...checks.values()]
         .toSorted((a, b) => a.check.name.localeCompare(b.check.name))
         .map(({ check, configuration }) => [

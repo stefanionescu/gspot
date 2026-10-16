@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import { GspotError } from '#cli/system/errors.ts';
 import type { RuleSource } from '#cli/types/rules.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { readAsset, listAssets } from '#cli/system/assets.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
+import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import { type NamingDefaults } from '#cli/types/checks/general.ts';
 import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
 import { formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
@@ -30,22 +30,10 @@ import {
     CONFIGURATIONS_FOLDER,
 } from '#cli/config/configurations.ts';
 
-function issueLines(issue: z.core.$ZodIssue): string[] {
-    const line = `${issue.path.map(String).join('.')}: ${issue.message}`;
-    return issue.code === 'invalid_union'
-        ? [
-              line,
-              ...issue.errors.flatMap((branch) =>
-                  branch.flatMap((nested) => issueLines({ ...nested, path: [...issue.path, ...nested.path] })),
-              ),
-          ]
-        : [line];
-}
-
 // Producer identities retain bundled declarations only for the supplied run cache.
-const MANIFESTS = { create: readManifests };
+const MANIFESTS = { create: readBundledManifests };
 
-const NAMING_DEFAULTS = { create: readNamingDefaults };
+const NAMING_DEFAULTS = { create: readBundledNamingDefaults };
 
 // Discovery adds plain Semgrep and Vale assets while retaining invalid declarations for schema errors.
 function discoveredToolFilesAt(dir: string, toolFiles: unknown): unknown {
@@ -127,7 +115,7 @@ function parseManifest(text: string, dir: string): ManifestDeclaration {
     });
     if (!result.success)
         throw buildManifestError(posix.basename(dir), [
-            ...new Set(result.error.issues.flatMap((issue) => issueLines(issue))),
+            ...new Set(result.error.issues.flatMap((issue) => formatZodIssue(issue))),
         ]);
     const declared = result.data;
     // A check's ID joins the configuration name and its own name.
@@ -140,13 +128,8 @@ function parseManifest(text: string, dir: string): ManifestDeclaration {
     };
 }
 
-/**
- * Every configuration manifest by configuration name, retained only for the supplied run.
- * @param reads the optional run cache
- * @returns the manifests
- */
-function readManifests(reads?: ReadCache): Map<string, Manifest> {
-    if (reads !== undefined) return getCachedValue(reads, MANIFESTS);
+// Parse shipped declarations only for the first manifest read in one run.
+function readBundledManifests(): Map<string, Manifest> {
     const manifests = new Map<string, ManifestDeclaration>();
     const toolVersions = (z.record(z.string(), z.string().min(1)) satisfies z.ZodType<Record<string, string>>).parse(
         JSON.parse(readAsset(TOOL_VERSIONS_FILE)),
@@ -166,13 +149,26 @@ function readManifests(reads?: ReadCache): Map<string, Manifest> {
     );
 }
 
+function readBundledNamingDefaults(): NamingDefaults {
+    return namingDefaultsSchema.parse(JSON.parse(readAsset(NAMING_DEFAULTS_FILE)));
+}
+
+/**
+ * Every configuration manifest by configuration name, retained only for the supplied run.
+ * @param reads the run cache
+ * @returns the manifests
+ */
+function readManifests(reads: ReadCache): Map<string, Manifest> {
+    return getCachedValue(reads, MANIFESTS);
+}
+
 /**
  * Lists built-in check IDs alongside the repository's command check IDs.
  * @param checks the command checks declared by this repository
- * @param reads the optional run cache
+ * @param reads the run cache
  * @returns the available check IDs
  */
-function listCheckIds(checks: readonly Pick<CheckDeclaration, 'name'>[], reads?: ReadCache): string[] {
+function listCheckIds(checks: readonly Pick<CheckDeclaration, 'name'>[], reads: ReadCache): string[] {
     const bundled = [...listChecksById(readManifests(reads).values()).keys()];
     const authored = checks.map((check) => check.name);
     return [...new Set([...bundled, ...authored])];
@@ -180,12 +176,11 @@ function listCheckIds(checks: readonly Pick<CheckDeclaration, 'name'>[], reads?:
 
 /**
  * Reads bundled naming settings, retaining them for the supplied run.
- * @param reads the optional run cache
+ * @param reads the run cache
  * @returns the shipped naming choices
  */
-function readNamingDefaults(reads?: ReadCache): NamingDefaults {
-    if (reads !== undefined) return getCachedValue(reads, NAMING_DEFAULTS);
-    return namingDefaultsSchema.parse(JSON.parse(readAsset(NAMING_DEFAULTS_FILE)));
+function readNamingDefaults(reads: ReadCache): NamingDefaults {
+    return getCachedValue(reads, NAMING_DEFAULTS);
 }
 
 /**

@@ -3,6 +3,7 @@ import { quoteArgument } from '#cli/system/text.ts';
 import { join, dirname, basename } from 'node:path';
 import { EXECUTABLE_MODE } from '#tests/config/files.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
@@ -28,7 +29,7 @@ export async function fakeTool(root: string, name: string, script: string): Prom
 
 /** Write the selected npm tool's pinned package metadata and version executable. */
 export async function fakeNpmTool(root: string, tool: string): Promise<ToolDeclaration> {
-    const declaration = getToolDeclaration(readManifests().values(), tool);
+    const declaration = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), tool);
     const installer = declaration.installers['npm'];
     if (installer === undefined) throw new Error(`The tool ${tool} has no npm installer.`);
     const installed = join(root, '.gspot/node_modules', installer.name);

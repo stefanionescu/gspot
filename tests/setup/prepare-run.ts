@@ -8,6 +8,7 @@ import { CLI_MAIN } from '#tests/setup/run-gspot.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { hasToolBuild } from '#tests/setup/operating-systems.ts';
 import type { PreparedSuite } from '#tests/types/preparation.ts';
@@ -64,11 +65,11 @@ try {
 /** Install the program pins once for integration and end-to-end suites. */
 async function installPinnedTools(folder: string, cancelSignal: AbortSignal): Promise<string[]> {
     const config = join(folder, PINNED_TOOLS_FILE);
-    const manifests = [...readManifests().values()];
+    const manifests = [...readManifests(createReadCache(process.cwd())).values()];
     const names = listDistinctTools(manifests)
         .filter((tool) => tool.system !== true && hasToolBuild(tool.name))
         .flatMap((tool) => findMisePin(tool)?.name ?? []);
-    await writeFile(config, miseFile(manifests).content);
+    await writeFile(config, miseFile(manifests, createReadCache(process.cwd())).content);
     for (const argv of [
         [...MISE_TRUST, config],
         [...MISE_INSTALL, ...names],

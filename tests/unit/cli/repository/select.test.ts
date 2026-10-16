@@ -2,6 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildTrackedFile } from '#tests/setup/tracked-file.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
@@ -17,7 +18,7 @@ import {
     PROJECT_SELECTIONS,
 } from '#tests/config/select.ts';
 
-const manifests = readManifests();
+const manifests = readManifests(createReadCache(process.cwd()));
 
 test('files are covered by extension, file name at any depth, tag and glob', () => {
     const bash = manifests.get('bash')!;
@@ -129,7 +130,7 @@ test.each(PROJECT_SELECTIONS)('scope %s selects configuration %s: %s', (scope, n
             ),
         },
         scope,
-        readManifests(),
+        readManifests(createReadCache(process.cwd())),
     ).map((manifest) => manifest.configuration.name);
     expect(names.includes(name)).toBe(selected);
     expect(names).toContain('gspot');

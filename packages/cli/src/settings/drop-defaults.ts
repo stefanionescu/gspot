@@ -2,6 +2,7 @@ import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
@@ -92,7 +93,7 @@ function dropTableDefaults(
  * @returns the draft without redundant setting values
  */
 export function dropDefaults(settings: TomlTable): TomlTable {
-    const manifests = readManifests();
+    const manifests = readManifests(createReadCache(process.cwd()));
     const level = settingsSchema.shape.level.parse(settings['level']);
     const scopes = (settings['scope'] ?? []) as TomlTable[];
     const selection = {

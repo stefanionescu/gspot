@@ -1,6 +1,7 @@
 // The plan initialization shows before writing files, including dry runs.
 import { colors } from '#cli/system/terminal.ts';
 import { stripUndefined } from '#cli/system/values.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
@@ -28,7 +29,7 @@ import {
     PYTHON_TOOL_PROJECT_FILE,
 } from '#cli/config/system/locations.ts';
 
-function toolProjectRows(everySelected: Manifest[]): InitPlan['change'] {
+function toolProjectRows(everySelected: Manifest[], reads: ReadCache): InitPlan['change'] {
     const pins = listToolProjectPins(everySelected);
     const count = Object.keys(pins.npm).length;
     const rows: InitPlan['change'] =
@@ -41,10 +42,10 @@ function toolProjectRows(everySelected: Manifest[]): InitPlan['change'] {
             path: PYTHON_TOOL_PROJECT_FILE,
             note: `${String(python)} pinned Python tools; matching uv.lock and tool environment`,
         });
-    if (listMisePins(everySelected).length > 0)
+    if (listMisePins(everySelected, reads).length > 0)
         rows.unshift({
             path: MISE_TOOL_PROJECT_FILE,
-            note: `${String(listMisePins(everySelected).length)} tool pins`,
+            note: `${String(listMisePins(everySelected, reads).length)} tool pins`,
         });
     return rows;
 }
@@ -154,7 +155,7 @@ export function buildInitPlan(
             .map((evidence) => evidence.configuration)
             .filter((id) => !selection.selectedIds.has(id)),
     };
-    const change = [ATTRIBUTES_ROW, ...toolProjectRows(requirements)];
+    const change = [ATTRIBUTES_ROW, ...toolProjectRows(requirements, planning.reads)];
     if (hasGit) {
         change.unshift({ path: '.gitignore', note: 'one managed block' });
         if (answers.hooks) change.push(HOOKS_ROW);

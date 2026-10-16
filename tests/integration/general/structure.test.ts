@@ -8,6 +8,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
@@ -112,9 +113,10 @@ We delve into records.
     );
 });
 
-const { value: defaultMaximum } = knownSettings([readManifests().get('structure')!], 'all').defaults.get(
-    'limits.function_parameters',
-)!;
+const { value: defaultMaximum } = knownSettings(
+    [readManifests(createReadCache(process.cwd())).get('structure')!],
+    'all',
+).defaults.get('limits.function_parameters')!;
 
 // SwiftLint ships no Windows build, which its tool pin records.
 for (const scenario of PARAMETER_LIMIT_TOOLS.filter(

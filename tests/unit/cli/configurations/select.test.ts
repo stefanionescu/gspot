@@ -1,5 +1,6 @@
 import { test, expect, describe } from 'bun:test';
 import { buildManifest } from '#tests/setup/manifest.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 
@@ -16,6 +17,8 @@ describe('selectConfigurations', () => {
     });
 
     test('an unknown configuration names the near matches', () => {
-        expect(() => selectConfigurations(['bassh'], readManifests())).toThrow('Did you mean `bash`');
+        expect(() => selectConfigurations(['bassh'], readManifests(createReadCache(process.cwd())))).toThrow(
+            'Did you mean `bash`',
+        );
     });
 });

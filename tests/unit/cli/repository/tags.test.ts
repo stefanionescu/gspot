@@ -17,7 +17,7 @@ test('tags and kinds come from the extension, the file name, and the content', a
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const files = new Map(repository.files.map((file) => [file.path, file]));
     expect(files.get('a.png')!.kind).toBe('binary');

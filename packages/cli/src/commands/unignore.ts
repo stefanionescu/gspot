@@ -5,6 +5,7 @@ import { counted } from '#cli/commands/check/report.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { saveSettings, startSettingsEdit } from '#cli/commands/save-settings.ts';
@@ -81,7 +82,7 @@ async function unignoreCommand(
     const names = commandChecks.flatMap((entry) =>
         isRecord(entry) && typeof entry['name'] === 'string' ? [{ name: entry['name'] }] : [],
     );
-    const known = listCheckIds(names);
+    const known = listCheckIds(names, createReadCache(root));
     if (!known.includes(options.check)) throw new GspotError('arguments', formatUnknownCheck(options.check, known));
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, options);
     const [noun, verb, pronoun] = everywhere === 1 ? ['ignore', 'covers', 'it'] : ['ignores', 'cover', 'them'];

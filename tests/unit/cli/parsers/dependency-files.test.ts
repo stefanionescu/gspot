@@ -15,7 +15,7 @@ test('Python dependency groups with includes keep every dependency', async () =>
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const packageManifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     expect(packageManifests[0]!.dependencies).toStrictEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
@@ -28,7 +28,7 @@ test('a pytest table counts as a pytest dependency', async () => {
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const manifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     expect(manifests[0]?.dependencies).toStrictEqual({ pytest: 'tool.pytest' });

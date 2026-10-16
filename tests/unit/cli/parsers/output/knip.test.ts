@@ -2,10 +2,11 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseOutput } from '#cli/parsers/output/formats.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { INVALID_KNIP_REPORTS } from '#tests/config/knip.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 
-const check = readManifests()
+const check = readManifests(createReadCache(process.cwd()))
     .get('javascript')!
     .checks.find(({ name }) => name === 'javascript/knip')!;
 

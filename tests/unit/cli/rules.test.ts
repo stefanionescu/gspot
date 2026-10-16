@@ -7,6 +7,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import type { Level } from '#cli/types/configurations.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { RULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import { test, spyOn, expect, describe, beforeAll } from 'bun:test';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
@@ -27,7 +28,7 @@ import { DRIZZLE_DRIVERS, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests
         });
         const session = await openSession(sandbox.path);
         const manifest = {
-            ...readManifests().get('bash')!,
+            ...readManifests(createReadCache(process.cwd())).get('bash')!,
             dir: sandbox.path.replaceAll('\\', '/'),
             rules: {},
         };

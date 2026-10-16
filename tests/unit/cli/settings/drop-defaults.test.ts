@@ -1,13 +1,14 @@
 import { test, expect } from 'bun:test';
 import { parseSettings } from '#cli/settings/read.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { scopeView, knownSettings } from '#cli/settings/view.ts';
 import { DEFAULT_CASES } from '#tests/config/settings/defaults.ts';
 import { emitSettings, parseTomlText } from '#cli/settings/file.ts';
 
 test("dropping defaults keeps every scope's paths the same", () => {
-    const manifests = readManifests();
+    const manifests = readManifests(createReadCache(process.cwd()));
     for (const source of [
         'configurations = ["supabase"]\n[supabase]\nfunctions_folder = "supabase/functions"\n[[scope]]\npath = "apps/api"\n',
         'configurations = ["supabase"]\n[[scope]]\npath = "app"\nsupabase.functions_folder = "supabase/functions"\n[[scope]]\npath = "app/child"\n',

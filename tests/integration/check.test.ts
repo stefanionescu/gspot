@@ -6,6 +6,7 @@ import { toolsPath } from '#tests/setup/install.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash/tools.ts';
@@ -43,7 +44,7 @@ test('a check whose tool is not installed fails with the pinned version and the 
     expect(check.code).toBe(2);
     expect(check.stdout).toContain('missing');
     expect(check.stdout).toContain(
-        `shellcheck ${String(getToolDeclaration([...readManifests().values()], 'shellcheck').version)} is not installed`,
+        `shellcheck ${String(getToolDeclaration([...readManifests(createReadCache(process.cwd())).values()], 'shellcheck').version)} is not installed`,
     );
     const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);

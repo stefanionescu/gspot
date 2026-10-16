@@ -9,6 +9,7 @@ import { buildProgramPin } from '#tests/setup/pins.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { chmod, mkdir, symlink } from 'node:fs/promises';
 import { parseVersionOutput } from '#cli/tools/versions.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
@@ -246,7 +247,7 @@ test.each(['gitleaks', 'next'])('the %s pin is outdated below its floor and acce
     await using sandbox = await testdir();
     using _which = spyOn(executables, 'sync').mockImplementation(((...[, options]: [string, executables.Options?]) =>
         options?.all === true ? [process.execPath] : process.execPath) as typeof executables.sync);
-    const pin = getToolDeclaration(readManifests().values(), name);
+    const pin = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), name);
     const floor = pin.min_version!;
     const available = pin.system === true ? 'system' : 'ok';
     for (const version of [belowFloor(floor), floor]) {

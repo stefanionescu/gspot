@@ -2,6 +2,7 @@ import { FIRST_READ } from '#cli/config/rules.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { everyTable } from '#cli/settings/inherit.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import { configurationSettings } from '#cli/settings/view.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
@@ -13,10 +14,10 @@ import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/t
 import type { ToolTable, SettingsError, RuleExcludeError } from '#cli/types/settings/file.ts';
 import { listRuleFiles, readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 
-function toolRuleErrors(tool: string, table: ToolTable, path: KeyPath): SettingsError[] {
+function toolRuleErrors(tool: string, table: ToolTable, path: KeyPath, reads: ReadCache): SettingsError[] {
     const rules = table['rules'];
     if (!isRecord(rules)) return [];
-    const manifests = readManifests();
+    const manifests = readManifests(reads);
     const disabledOptions = [...manifests.values()]
         .flatMap((manifest) => configurationSettings(manifest.configuration.name))
         .find((declaration) => declaration.name === `tools.${tool}.rules`)?.off_values;
@@ -61,10 +62,11 @@ function duplicateScopeErrors(paths: string[]): SettingsError[] {
 /**
  * Reports rules disabled outside the ignore settings.
  * @param settings the normalized settings
+ * @param reads the run cache.
  * @returns the prohibited changes, at both check levels
  */
-function disabledRuleErrors(settings: Settings): SettingsError[] {
-    const exclusions = ruleExcludeErrors(settings.rules.exclude).map(({ index, message }) => ({
+function disabledRuleErrors(settings: Settings, reads: ReadCache): SettingsError[] {
+    const exclusions = ruleExcludeErrors(settings.rules.exclude, reads).map(({ index, message }) => ({
         path: ['rules', 'exclude', index],
         message,
     }));
@@ -75,9 +77,11 @@ function disabledRuleErrors(settings: Settings): SettingsError[] {
                 const location = [...path, 'tools', tool];
                 const overrides = Array.isArray(table['override']) ? table['override'] : [];
                 return [
-                    ...toolRuleErrors(tool, table, location),
+                    ...toolRuleErrors(tool, table, location, reads),
                     ...overrides.flatMap((override: unknown, index) =>
-                        isRecord(override) ? toolRuleErrors(tool, override, [...location, 'override', index]) : [],
+                        isRecord(override)
+                            ? toolRuleErrors(tool, override, [...location, 'override', index], reads)
+                            : [],
                     ),
                 ];
             }),
@@ -151,11 +155,14 @@ function isExcluded(entry: string, path: string): boolean {
 /**
  * The errors in [rules] exclude: an entry that matches no rule, and an entry that hides a file the reader opens first.
  * @param exclude the entries as written, relative to the rules folder
+ * @param reads the run cache.
  * @returns each error with its position in the exclusion list
  */
-function ruleExcludeErrors(exclude: string[]): RuleExcludeError[] {
+function ruleExcludeErrors(exclude: string[], reads: ReadCache): RuleExcludeError[] {
     if (exclude.length === 0) return [];
-    const paths = [...readManifests().values()].flatMap((manifest) => listRuleFiles(manifest).map((file) => file.path));
+    const paths = [...readManifests(reads).values()].flatMap((manifest) =>
+        listRuleFiles(manifest).map((file) => file.path),
+    );
     return exclude.flatMap((entry, index) => {
         if ([...FIRST_READ].some((file) => isExcluded(entry, `${RULES_DIRECTORY}/${file}`)))
             return [

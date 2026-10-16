@@ -1,4 +1,5 @@
 // Selects tool builds and temporarily changes the reported operating system.
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { findMissingBuild, getToolDeclaration } from '#cli/configurations/tools.ts';
@@ -17,7 +18,7 @@ export const isMacos = process.platform === 'darwin';
  */
 export function hasToolBuild(name: string): boolean {
     const operatingSystem = getOperatingSystem();
-    const pin = getToolDeclaration(readManifests().values(), name);
+    const pin = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), name);
     return findMissingBuild(pin, operatingSystem, process.arch) === undefined;
 }
 

@@ -13,6 +13,7 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { hookContext } from '#tests/setup/repository.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { installCommand } from '#cli/commands/install.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { installedVersionResponse } from '#tests/setup/pins.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { hookStatus, installHooks } from '#cli/install/hooks.ts';
@@ -57,7 +58,10 @@ test.each([...HOOK_REPOSITORIES])(
             ]),
         );
         const native = processes.spawnProcess;
-        const editorconfig = getToolDeclaration(readManifests().values(), 'editorconfig-checker');
+        const editorconfig = getToolDeclaration(
+            readManifests(createReadCache(process.cwd())).values(),
+            'editorconfig-checker',
+        );
         using installer = spyOn(processes, 'spawnProcess').mockImplementation((argv, options) => {
             if (argv[0] === 'mise') return Promise.resolve(MISE_INSTALL_RESULT);
             const version = installedVersionResponse(sandbox.path, argv, editorconfig);
@@ -118,7 +122,10 @@ test.each(['', 'app/'])(
         expect(await pathExists(hook)).toBe(false);
         expect(readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
         const native = processes.spawnProcess;
-        const editorconfig = getToolDeclaration(readManifests().values(), 'editorconfig-checker');
+        const editorconfig = getToolDeclaration(
+            readManifests(createReadCache(process.cwd())).values(),
+            'editorconfig-checker',
+        );
         using _installer = spyOn(processes, 'spawnProcess').mockImplementation((argv, options) => {
             const version = installedVersionResponse(root, argv, editorconfig);
             return version === undefined ? native(argv, options) : Promise.resolve(version);

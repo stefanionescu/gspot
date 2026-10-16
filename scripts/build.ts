@@ -8,6 +8,7 @@ import { assertManifests } from './manifests.ts';
 import { JSON_INDENT } from './config/rule-lists.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import plugin from '../packages/eslint-plugin/src/plugin.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { GRAMMARS_FOLDER } from '#cli/config/system/assets.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
@@ -131,7 +132,7 @@ await writeFile(
         JSON_INDENT,
     ) + '\n',
 );
-const manifests = readManifests();
+const manifests = readManifests(createReadCache(root));
 assertManifests(manifests);
 validateEslintPresets(manifests);
 const cliBuild = await Bun.build({

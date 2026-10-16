@@ -3,6 +3,7 @@ import { join, win32 } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { isLinux } from '#tests/setup/operating-systems.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { commandOutcome } from '#cli/execution/command/output.ts';
 import { EDITORCONFIG_REPORT } from '#tests/config/formatting.ts';
 import { BASE_CHECK, FAILED_RUN } from '#tests/config/execution.ts';
@@ -51,7 +52,7 @@ test.each([
 ])('ShellCheck output keeps path, position and rule with %s line endings', async (_, ending) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'scripts/café build.sh': 'echo $1\n' });
-    const check = listChecksById(readManifests().values()).get('bash/shellcheck')!.check;
+    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get('bash/shellcheck')!.check;
     const path = join('scripts', 'café build.sh');
 
     const output = `${path}:1:6: note: Double quote to prevent globbing and word splitting. [SC2086]${ending}`;
@@ -60,7 +61,7 @@ test.each([
     expect(findings[0]).toMatchObject({ file: 'scripts/café build.sh', line: 1, column: 6, rule: 'SC2086' });
     expect(
         commandOutcome(
-            { check, manifest: readManifests().get('bash')! },
+            { check, manifest: readManifests(createReadCache(process.cwd())).get('bash')! },
             { ...FAILED_RUN, stderr: output },
             { cwd: sandbox.path, root: sandbox.path },
         ).findings,
@@ -70,7 +71,9 @@ test.each([
 test.each(['diff', 'log', 'both'])('Taplo reports one finding from %s', async (source) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'settings/café.toml': 'a=1\n' });
-    const check = listChecksById(readManifests().values()).get('files/taplo-format')!.check;
+    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
+        'files/taplo-format',
+    )!.check;
     const path = join(sandbox.path, 'settings', 'café.toml');
     const diff = `--- a/${path}\n+++ b/${path}\n@@ -1 +1 @@\n-a=1\n+a = 1\n`;
     const log = `ERROR taplo:format_files: the file is not properly formatted path="${path}"\n`;
@@ -82,7 +85,9 @@ test.each(['diff', 'log', 'both'])('Taplo reports one finding from %s', async (s
 });
 
 test('a Taplo syntax error names its file by a Windows path with a drive letter', () => {
-    const check = listChecksById(readManifests().values()).get('files/taplo-format')!.check;
+    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
+        'files/taplo-format',
+    )!.check;
     const stdout = 'error: invalid TOML\n  ┌─ C:/work/settings.toml:2:3\n  │\n';
     expect(parseOutput(check, stdout, '', { root: 'C:/work', cwd: 'C:/work' })).toMatchObject([
         { file: 'settings.toml', line: 2, column: 3 },
@@ -92,7 +97,9 @@ test('a Taplo syntax error names its file by a Windows path with a drive letter'
 test('grouped output drops line endings and makes absolute paths relative', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'settings/café.toml': 'a=1\n' });
-    const base = listChecksById(readManifests().values()).get('files/taplo-format')!.check;
+    const base = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
+        'files/taplo-format',
+    )!.check;
     const check: CheckDeclaration = { ...base, output: outputSchema.parse({ format: 'grouped' }) };
     const output = `${join(sandbox.path, 'settings', 'café.toml')}:\r\n  1: Incorrect spacing\r\n`;
     const findings = parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path });
@@ -103,7 +110,9 @@ test('grouped output drops line endings and makes absolute paths relative', asyn
 test('EditorConfig output keeps file and line findings', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.js': 'const greeting="hello";', ' notes.txt': 'text   \n' });
-    const check = listChecksById(readManifests().values()).get('format/editorconfig-checker')!.check;
+    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
+        'format/editorconfig-checker',
+    )!.check;
 
     const output = EDITORCONFIG_REPORT;
     const findings = parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path });
@@ -117,7 +126,9 @@ test('EditorConfig output keeps file and line findings', async () => {
 test.skipIf(isLinux)('an absolute path that names the root in another case is still relative to it', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'example/math.py': 'answer = 1\n' });
-    const base = listChecksById(readManifests().values()).get('files/taplo-format')!.check;
+    const base = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
+        'files/taplo-format',
+    )!.check;
     const check: CheckDeclaration = { ...base, output: outputSchema.parse({ format: 'grouped' }) };
     const output = `${join(sandbox.path.toUpperCase(), 'example', 'math.py')}:\n  1: Incorrect spacing\n`;
     expect(parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path })).toMatchObject([
@@ -126,7 +137,9 @@ test.skipIf(isLinux)('an absolute path that names the root in another case is st
 });
 
 test('a Taplo parse finding is not fixable', () => {
-    const check = listChecksById(readManifests().values()).get('files/taplo-format')!.check;
+    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
+        'files/taplo-format',
+    )!.check;
     const findings = parseOutput(check, '', '  ┌─ settings.toml:2:1\n', { root: '/repository', cwd: '/repository' });
     expect(findings).toMatchObject([
         { check: 'files/taplo-format', file: 'settings.toml', line: 2, column: 1, fixable: false },
@@ -139,7 +152,9 @@ test.each([
     // Bun escapes Unicode inside String.raw; create the Windows path from slashes.
     [win32.normalize('C:/repo'), win32.normalize('C:/repo/café file.js'), 'café file.js'],
 ])('ESLint paths are relative to the root only inside it: %s, %s', (root, path, expected) => {
-    const check = listChecksById(readManifests().values()).get('javascript/eslint')!.check;
+    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
+        'javascript/eslint',
+    )!.check;
     const stdout = JSON.stringify([
         { filePath: path, messages: [{ ruleId: null, severity: 2, message: 'Invalid syntax.', line: 1, column: 2 }] },
     ]);

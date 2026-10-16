@@ -34,7 +34,7 @@ function installationPrograms(session: Session, tools: ToolDeclaration[]) {
             findMissingBuild(tool, host.platform, host.arch) === undefined &&
             findMisePin(tool) !== undefined,
     );
-    const pins = listMisePins(manifests).filter(
+    const pins = listMisePins(manifests, session.reads).filter(
         (pin) =>
             programs.some((tool) => findMisePin(tool)?.name === pin.name) ||
             (pin.name === UV_TOOL && listToolProjectPins(manifests).python.length > 0),

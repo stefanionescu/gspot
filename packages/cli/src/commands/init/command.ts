@@ -144,8 +144,9 @@ function registerInit(program: Command): void {
  * @returns the plan, the settings text, and the files it read
  */
 async function planInit(root: string, options: InitOptions): Promise<InitPrepared> {
-    const manifests = readManifests();
-    const repo = await readRepository(createReadCache(root), { declarations: [], scopeEntries: [], manifests });
+    const reads = createReadCache(root);
+    const manifests = readManifests(reads);
+    const repo = await readRepository(reads, { declarations: [], scopeEntries: [], manifests });
     const packageManifests = repo.dependencyFiles;
     const scopes = repo.scopes;
     const inputs = { root, repo, packageManifests, scopes, manifests };
@@ -154,7 +155,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
     const hooks = settingsSchema.shape.hooks.unwrap().shape.enabled.parse(template.hooks?.enabled);
     const rules = settingsSchema.shape.rules.unwrap().shape.enabled.parse(template.rules?.enabled);
     const selection = selectForInit({ ...inputs, options });
-    const tooling = readExistingTools(root, repo.files, packageManifests);
+    const tooling = readExistingTools(root, repo.files, packageManifests, reads);
     let ci: InitAnswers['ci'] = 'none';
     if (options.template === undefined) ci = proposeCi(root, tooling);
     else if (templateCi?.enabled === true)
@@ -173,6 +174,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
     const generated = emitAll(session);
     const replaced = planReplacedFiles(root, tooling, tools, generated.fileEdits);
     const planning: InitPlanInputs = {
+        reads,
         root,
         hasGit: repo.hasGit,
         index: session.repository.index,

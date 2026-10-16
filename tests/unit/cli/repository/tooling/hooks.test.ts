@@ -48,7 +48,7 @@ test('pre-commit is found from its configuration file', async () => {
     const { files } = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     expect(readExistingTools(sandbox.path, files, []).hooks).toStrictEqual([
         { kind: 'pre-commit', path: '.pre-commit-config.yaml', files: [] },

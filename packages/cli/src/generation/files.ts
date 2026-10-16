@@ -191,7 +191,7 @@ export function emitAll(session: Session): Generated {
         ...hookFiles(root, settings, session.startRunner),
         ...npmProject({ root, scopes, manifests, installer: npmClient }),
         ...pythonProject(manifests),
-        miseFile(manifests),
+        miseFile(manifests, session.reads),
     );
     emitWorkflow(session, generated);
     const selected = listSelectedManifests(scopes);

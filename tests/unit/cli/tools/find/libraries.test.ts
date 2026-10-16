@@ -8,6 +8,7 @@ import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildLibraryPin } from '#tests/setup/pins.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
@@ -74,7 +75,7 @@ test('a system library is read from the chosen project, not from the tool projec
         '.gspot/node_modules/@vitest/coverage-v8/package.json': '{"name":"@vitest/coverage-v8","version":"4.1.11"}',
         'app/package.json': '{}',
     });
-    const tool = getToolDeclaration(readManifests().values(), '@vitest/coverage-v8');
+    const tool = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), '@vitest/coverage-v8');
     const context = {
         root: sandbox.path,
         cwd: join(sandbox.path, 'app'),
@@ -124,7 +125,7 @@ test('a system library is read from the chosen project, not from the tool projec
 test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $name report as $state', async (report) => {
     await using sandbox = await testdir();
     const tool = {
-        ...getToolDeclaration(readManifests().values(), 'pytest-cov'),
+        ...getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), 'pytest-cov'),
         ...('pattern' in report ? { version_pattern: report.pattern } : {}),
     };
     using _which = spyOn(executables, 'sync').mockImplementation(((...[, options]: [string, executables.Options?]) =>

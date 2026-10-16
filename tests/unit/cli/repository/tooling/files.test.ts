@@ -20,7 +20,7 @@ test('tool discovery finds nested tool files and skips root .gspot and vendored 
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
-        manifests: readManifests(),
+        manifests: readManifests(createReadCache(process.cwd())),
     });
     const discovered = readExistingTools(sandbox.path, repository.files, []);
     expect(discovered.toolFiles.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);

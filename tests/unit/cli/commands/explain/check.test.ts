@@ -3,38 +3,43 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { explain } from '#cli/commands/explain/command.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 
 test('a rule is explained with the page its manifest declares', () => {
-    const shellcheck = explain(undefined, 'shellcheck/SC2086');
+    const shellcheck = explain(undefined, 'shellcheck/SC2086', createReadCache(process.cwd()));
     expect(shellcheck).toMatchObject({
         kind: 'lint-rule',
         data: { tool: 'shellcheck', rule: 'SC2086', page: 'https://www.shellcheck.net/wiki/SC2086' },
     });
     expect(shellcheck.text).toContain('gspot ignore bash/shellcheck --rule SC2086');
     expect(shellcheck.text).not.toContain('tools.shellcheck.rules');
-    expect(explain(undefined, 'no-undef')).toMatchObject({
+    expect(explain(undefined, 'no-undef', createReadCache(process.cwd()))).toMatchObject({
         kind: 'lint-rule',
         subject: 'eslint/no-undef',
         data: { page: 'https://eslint.org/docs/latest/rules/no-undef' },
     });
-    expect(explain(undefined, 'no-var')).toMatchObject({
+    expect(explain(undefined, 'no-var', createReadCache(process.cwd()))).toMatchObject({
         kind: 'lint-rule',
         subject: 'eslint/no-var',
         data: { page: 'https://eslint.org/docs/latest/rules/no-var' },
     });
-    expect(explain(undefined, 'eslint/no-var')).toMatchObject({
+    expect(explain(undefined, 'eslint/no-var', createReadCache(process.cwd()))).toMatchObject({
         data: { page: 'https://eslint.org/docs/latest/rules/no-var' },
     });
 });
 
 test('a plugin rule is explained with the page of the plugin its prefix names', () => {
-    expect(explain(undefined, 'eslint/unicorn/prefer-set-has')).toMatchObject({
+    expect(explain(undefined, 'eslint/unicorn/prefer-set-has', createReadCache(process.cwd()))).toMatchObject({
         data: { page: 'https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md' },
     });
-    expect(explain(undefined, 'eslint/@typescript-eslint/no-explicit-any')).toMatchObject({
+    expect(
+        explain(undefined, 'eslint/@typescript-eslint/no-explicit-any', createReadCache(process.cwd())),
+    ).toMatchObject({
         data: { page: 'https://typescript-eslint.io/rules/no-explicit-any' },
     });
-    expect(explain(undefined, 'eslint/sonarjs/no-identical-functions')).toMatchObject({ data: { page: null } });
+    expect(explain(undefined, 'eslint/sonarjs/no-identical-functions', createReadCache(process.cwd()))).toMatchObject({
+        data: { page: null },
+    });
 });
 
 test.each([
@@ -45,44 +50,55 @@ test.each([
         'https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md',
     ],
 ])('a plugin rule without the eslint/ prefix finds its page: %s', (subject, page) => {
-    expect(explain(undefined, subject)).toMatchObject({ kind: 'lint-rule', data: { tool: 'eslint', page } });
+    expect(explain(undefined, subject, createReadCache(process.cwd()))).toMatchObject({
+        kind: 'lint-rule',
+        data: { tool: 'eslint', page },
+    });
 });
 
 test('a check explains the minimum version its declaring tool needs', () => {
-    const ruff = explain(undefined, 'python/ruff');
+    const ruff = explain(undefined, 'python/ruff', createReadCache(process.cwd()));
     expect(ruff.text).toContain('Needs ruff 0.9.0 or newer');
 });
 
 test('an unknown rule prefix is refused and names the subject', () => {
-    expect(() => explain(undefined, 'unknown/no-such-rule')).toThrow('There is no check called `unknown/no-such-rule`');
-    expect(explain(undefined, 'eslint/unknown/no-such-rule')).toMatchObject({
+    expect(() => explain(undefined, 'unknown/no-such-rule', createReadCache(process.cwd()))).toThrow(
+        'There is no check called `unknown/no-such-rule`',
+    );
+    expect(explain(undefined, 'eslint/unknown/no-such-rule', createReadCache(process.cwd()))).toMatchObject({
         kind: 'lint-rule',
         data: { tool: 'eslint', rule: 'unknown/no-such-rule', page: null },
     });
 });
 
 test('TypeScript errors have no rule options and no page link', () => {
-    const rule = explain(undefined, 'tsc/TS2345');
+    const rule = explain(undefined, 'tsc/TS2345', createReadCache(process.cwd()));
     expect(rule).toMatchObject({ kind: 'lint-rule', data: { tool: 'tsc', rule: 'TS2345', page: null } });
     expect(rule.text).toContain('Read the tsc documentation for TS2345.');
     expect(rule.text).not.toContain('Change its options:');
     expect(rule.text).not.toContain('tools.tsc.rules');
     expect(rule.text).not.toContain("The tool's page:");
-    expect(explain(undefined, 'javascript/tsc')).toMatchObject({
+    expect(explain(undefined, 'javascript/tsc', createReadCache(process.cwd()))).toMatchObject({
         data: { help: 'Add or fix the JSDoc type that the error names.' },
     });
 });
 
 test('a plugin prefix with an npm scope must match a manifest declaration', () => {
-    expect(explain(undefined, '@next/next/no-html-link-for-pages')).toMatchObject({
+    expect(explain(undefined, '@next/next/no-html-link-for-pages', createReadCache(process.cwd()))).toMatchObject({
         subject: 'eslint/@next/next/no-html-link-for-pages',
         data: { tool: 'eslint', rule: '@next/next/no-html-link-for-pages', page: null },
     });
-    expect(explain(undefined, 'eslint/@next/next/no-html-link-for-pages')).toMatchObject({
+    expect(
+        explain(undefined, 'eslint/@next/next/no-html-link-for-pages', createReadCache(process.cwd())),
+    ).toMatchObject({
         data: { tool: 'eslint', rule: '@next/next/no-html-link-for-pages', page: null },
     });
-    expect(() => explain(undefined, 'typescript-eslint/no-explicit-any')).toThrow('typescript-eslint/no-explicit-any');
-    expect(explain(undefined, 'eslint/typescript-eslint/no-explicit-any')).toMatchObject({ data: { page: null } });
+    expect(() => explain(undefined, 'typescript-eslint/no-explicit-any', createReadCache(process.cwd()))).toThrow(
+        'typescript-eslint/no-explicit-any',
+    );
+    expect(
+        explain(undefined, 'eslint/typescript-eslint/no-explicit-any', createReadCache(process.cwd())),
+    ).toMatchObject({ data: { page: null } });
 });
 
 test('rule pages work in the root and in a child scope', async () => {
