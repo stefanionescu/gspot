@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 import { isDocstring } from '#cli/parsers/python.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
+import { locateNode, buildFinding } from '#cli/checks/finding.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import type { IsSubstantial, CountedLanguage } from '#cli/types/checks/general.ts';
 import { CONVENTION_SOURCES } from '#cli/checks/general/structure/convention-sources.ts';
@@ -200,7 +200,7 @@ async function checkTrivialFunctions(input: CheckInput): Promise<Finding[]> {
                 : [
                       buildFinding(
                           input,
-                          { file: source.path, line: node.startPosition.row + 1 },
+                          locateNode(source.path, node),
                           'trivial-function',
                           formatTrivialFunction(
                               source.language === 'swift'

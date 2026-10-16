@@ -1,3 +1,4 @@
+import type { Node } from 'web-tree-sitter';
 import type { Finding, CheckInput, FindingPlace } from '#cli/types/checks/run/check.ts';
 
 /**
@@ -24,4 +25,14 @@ export function buildFinding(
         fixable: false,
         ...options,
     };
+}
+
+/**
+ * The place of a parsed source node: its file, and its line and column counted from one.
+ * @param file the repository path of the source.
+ * @param node the node that the finding points at.
+ * @returns the file, line, and column of the node.
+ */
+export function locateNode(file: string, node: Node): FindingPlace {
+    return { file, line: node.startPosition.row + 1, column: node.startPosition.column + 1 };
 }

@@ -1,7 +1,7 @@
 import { decodeHTMLAttribute } from 'entities';
-import { buildFinding } from '#cli/checks/finding.ts';
 import { listElementAttributes } from '#cli/parsers/html.ts';
 import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
+import { locateNode, buildFinding } from '#cli/checks/finding.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import type { SourceTree, MarkupAttribute } from '#cli/types/parsers/tree-sitter.ts';
 
@@ -45,11 +45,7 @@ function checkInlineScripts(input: CheckInput, source: SourceTree): Finding[] {
             return [
                 buildFinding(
                     input,
-                    {
-                        file: source.path,
-                        line: element.startPosition.row + 1,
-                        column: element.startPosition.column + 1,
-                    },
+                    locateNode(source.path, element),
                     'inline-script',
                     'Move executable inline script to a script file.',
                 ),
@@ -62,11 +58,7 @@ function checkScriptAttributes(input: CheckInput, source: SourceTree): Finding[]
         const attributes = listElementAttributes(element);
         const scriptType = attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
         return attributes.flatMap((attribute) => {
-            const position = {
-                file: source.path,
-                line: attribute.node.startPosition.row + 1,
-                column: attribute.node.startPosition.column + 1,
-            };
+            const position = locateNode(source.path, attribute.node);
             if (EVENT_ATTRIBUTE.test(attribute.name))
                 return [
                     buildFinding(

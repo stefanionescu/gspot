@@ -1,6 +1,6 @@
 import type { Node } from 'web-tree-sitter';
-import { buildFinding } from '#cli/checks/finding.ts';
 import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
+import { locateNode, buildFinding } from '#cli/checks/finding.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { COMMENT_LINE, XCTEST_PREFIX, SKIP_REASON_ARGUMENT, SWIFT_STRING_LITERAL } from '#cli/config/checks/testing.ts';
 
@@ -57,7 +57,7 @@ export async function checkSwiftSkipReasons(input: CheckInput): Promise<Finding[
             findings.push(
                 buildFinding(
                     input,
-                    { file: source.path, line: node.startPosition.row + 1 },
+                    locateNode(source.path, node),
                     'disabled',
                     'Explain why this test is disabled in its reason argument or availability annotation.',
                 ),

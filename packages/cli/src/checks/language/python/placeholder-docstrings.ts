@@ -1,5 +1,5 @@
-import { buildFinding } from '#cli/checks/finding.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
+import { locateNode, buildFinding } from '#cli/checks/finding.ts';
 import { findDocstring, PYTHON_SOURCES } from '#cli/parsers/python.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { NON_WORD_RUN, PLACEHOLDERS } from '#cli/config/checks/language/python.ts';
@@ -21,7 +21,7 @@ export async function checkPythonPlaceholderDocstrings(input: CheckInput): Promi
         return [
             buildFinding(
                 input,
-                { file: definition.path, line: definition.node.startPosition.row + 1 },
+                locateNode(definition.path, definition.node),
                 'placeholder-docstring',
                 `The docstring of ${definition.name} says nothing the name does not. Say what the function does, or for whom.`,
             ),
