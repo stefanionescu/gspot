@@ -40,7 +40,7 @@ const WORKSPACE_SOURCE_MEMO = { create: () => new Map<string, string[]>() };
  * @param root the repository root.
  * @returns the root-relative folders.
  */
-export function packageWorkspaces(root: string): string[] {
+function packageWorkspaces(root: string): string[] {
     const packages = workspacePackages(root);
     for (const found of packages)
         if (!isInside(relative(realpathSync(root), realpathSync(found.dir))))
@@ -56,7 +56,7 @@ export function packageWorkspaces(root: string): string[] {
  * @param reads the metadata cache.
  * @returns workspace dependency paths.
  */
-export function workspaceSourceFiles(root: string, scope: string, files: TrackedFile[], reads: ReadCache): string[] {
+function workspaceSourceFiles(root: string, scope: string, files: TrackedFile[], reads: ReadCache): string[] {
     const cache = getCachedValue(reads, WORKSPACE_SOURCE_MEMO);
     const project = files
         .map((file) => file.path)
@@ -123,7 +123,7 @@ export function workspaceSourceFiles(root: string, scope: string, files: Tracked
  * @param manifests the package.json paths.
  * @returns the repository-relative package files.
  */
-export function packageFiles(root: string, manifests: string[]): string[] {
+function packageFiles(root: string, manifests: string[]): string[] {
     return manifests.flatMap((path) => {
         const folder = dirname(path);
         const patterns = (readPackageJson(root, path)?.files ?? []).flatMap((pattern) => [
@@ -141,7 +141,7 @@ export function packageFiles(root: string, manifests: string[]): string[] {
  * @param manifest the absolute package.json path.
  * @returns the validated package fields, or undefined when the file does not exist.
  */
-export function installedPackage(files: Files | undefined, root: string, manifest: string): PackageJson | undefined {
+function installedPackage(files: Files | undefined, root: string, manifest: string): PackageJson | undefined {
     try {
         let text: string | undefined;
         if (files === undefined) text = readFileSync(manifest, 'utf8');
@@ -164,7 +164,7 @@ export function installedPackage(files: Files | undefined, root: string, manifes
  * @param name the installed dependency name.
  * @returns the resolved manifest and its version, or undefined when the dependency does not exist.
  */
-export function installedDependency(root: string, manifest: string, name: string): InstalledDependency | undefined {
+function installedDependency(root: string, manifest: string, name: string): InstalledDependency | undefined {
     const require = createRequire(join(root, manifest));
     let path: string;
     try {
@@ -175,3 +175,5 @@ export function installedDependency(root: string, manifest: string, name: string
     }
     return { path, version: installedPackage(undefined, root, path)?.version };
 }
+
+export { packageFiles, installedPackage, packageWorkspaces, installedDependency, workspaceSourceFiles };
