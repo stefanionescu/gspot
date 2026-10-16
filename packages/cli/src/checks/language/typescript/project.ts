@@ -16,7 +16,7 @@ import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 import type { TypeScriptReferenceCopy } from '#cli/types/checks/language.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 import { DOT_GSPOT, TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
-import { buildTsconfig, requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
+import { buildTsconfig, selectRequiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 
 import {
     TSCONFIG_FILE,
@@ -170,9 +170,9 @@ export async function runTsc(session: Session, planned: PlannedCheck, metadataRo
         session.reads,
     );
     const required = Object.fromEntries(
-        Object.entries(requiredTsconfigOptions(session.settingsFile.settings.level, planned.scope.selected)).filter(
-            ([name]) => !planned.scope.view.rulesOff(TYPESCRIPT_TSCONFIG_CHECK).includes(name),
-        ),
+        Object.entries(
+            selectRequiredTsconfigOptions(session.settingsFile.settings.level, planned.scope.selected),
+        ).filter(([name]) => !planned.scope.view.rulesOff(TYPESCRIPT_TSCONFIG_CHECK).includes(name)),
     );
     const target = project === undefined ? join(session.root, planned.scope.scope.path, TSCONFIG_FILE) : project.path;
     if (projectChecked(session.reads, planned.check.name, target, planned.scope.scope.path, required))

@@ -6,9 +6,9 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { listSubmodulePaths } from '#cli/repository/tracked.ts';
-import type { Generated } from '#cli/types/generation/files.ts';
 import { readLintJobs } from '#cli/repository/existing-tools.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
+import type { GenerationResult } from '#cli/types/generation/files.ts';
 import type { PackageJson } from '#cli/types/parsers/dependency-files.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { InitPlan, InitAnswers, InitFileRow, InitPlanInputs } from '#cli/types/commands/init.ts';
@@ -145,7 +145,7 @@ export function buildInitPlan(
     settings: Settings,
     settingsText: string,
     requirements: Manifest[],
-    generated: Generated,
+    generated: GenerationResult,
 ): InitPlan {
     const { root, hasGit, tooling, selection, answers, replaced, options } = planning;
     const template = options.template && {

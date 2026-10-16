@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitFile } from '#tests/setup/generate.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { containingAll } from '#tests/setup/matchers.ts';
@@ -126,7 +126,7 @@ test("Knip ignores gspot's pointer files and reports other configuration-like fi
         'gspot.toml': settingsText(['javascript', 'markdown'], { level: 'all', tables: KNIP_POINTER_TABLES }),
     });
     const session = await openSession(sandbox.path);
-    const generated = emitAll(session).files;
+    const generated = generate(session).files;
     const pointers = generated.filter(({ kind }) => kind === 'pointer');
     const configuration = generated.find(({ path }) => path === '.gspot/config/knip.json')!;
     for (const path of ['eslint.config.mjs', '.markdownlint-cli2.mjs'])
@@ -167,7 +167,7 @@ test("Knip gets each scope's test_files as entry points without sibling leaks", 
         'sibling/package.json': '{"private":true}',
     });
     const session = await openSession(sandbox.path);
-    const content = emitAll(session).files.find(({ path }) => path === '.gspot/config/knip.json')!.content;
+    const content = generate(session).files.find(({ path }) => path === '.gspot/config/knip.json')!.content;
     const { workspaces } = JSON.parse(content) as KnipToolFile;
     expect(workspaces['.']!.entry).toContain('specifications/**');
     expect(workspaces['app']!.entry).toContain('verification/**');

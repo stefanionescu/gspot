@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { SERVER_FILES } from '#tests/config/eslint/framework.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
@@ -19,7 +19,7 @@ test('a folder without Git keeps authored commit settings and reports its actual
         'gspot.toml': settingsText([], { level: 'all' }),
     });
     const session = await openSession(sandbox.path);
-    expect(emitAll(session).fileEdits).toStrictEqual([]);
+    expect(generate(session).fileEdits).toStrictEqual([]);
     expect(listSuggestions(session).unowned.filter((row) => row.note.includes('commitlint'))).toStrictEqual([
         { path: 'package.json', note: 'commitlint requires a Git repository', command: 'git init' },
     ]);

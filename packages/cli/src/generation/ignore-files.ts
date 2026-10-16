@@ -57,9 +57,9 @@ function expandGlobstarSkips(states: Set<number>, parts: string[]): Set<number> 
     return expanded;
 }
 
-function rebaseOntoScope(pattern: string, scope: string): string[] {
-    const isDirectoryPattern = pattern.endsWith('/');
-    const bare = isDirectoryPattern ? pattern.slice(0, -1) : pattern;
+function moveIntoScope(pattern: string, scope: string): string[] {
+    const isFolderPattern = pattern.endsWith('/');
+    const bare = isFolderPattern ? pattern.slice(0, -1) : pattern;
     const isAnchored = bare.startsWith('/') || bare.includes('/');
     const parts = bare.replace(/^\//u, '').split('/');
     if (!isAnchored) parts.unshift('**');
@@ -73,7 +73,7 @@ function rebaseOntoScope(pattern: string, scope: string): string[] {
         states = expandGlobstarSkips(new Set(next), parts);
     }
     if (states.has(parts.length)) return ['/**'];
-    return [...states].map((index) => `/${parts.slice(index).join('/')}${isDirectoryPattern ? '/' : ''}`);
+    return [...states].map((index) => `/${parts.slice(index).join('/')}${isFolderPattern ? '/' : ''}`);
 }
 
 /**
@@ -84,13 +84,13 @@ function rebaseOntoScope(pattern: string, scope: string): string[] {
  *
  * @returns the patterns relative to the scope.
  */
-export function scopeIgnorePatterns(patterns: string[], scope: string): string[] {
+export function moveIgnorePatterns(patterns: string[], scope: string): string[] {
     if (scope === '') return patterns;
     return patterns.flatMap((pattern) => {
         if (pattern === '' || pattern.startsWith('#')) return [];
         const isNegated = pattern.startsWith('!');
         const bare = isNegated ? pattern.slice(1) : pattern;
-        const rebased = expandAlternatives(bare).flatMap((entry) => rebaseOntoScope(entry, scope));
+        const rebased = expandAlternatives(bare).flatMap((entry) => moveIntoScope(entry, scope));
         return [...new Set(rebased)].map((entry) => `${isNegated ? '!' : ''}${entry}`);
     });
 }

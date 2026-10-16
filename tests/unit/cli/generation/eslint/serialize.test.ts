@@ -1,8 +1,8 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { ESLINT_FILE } from '#tests/config/tool-files.ts';
 import { createEslint, lintFindings } from '#tests/setup/generate.ts';
@@ -25,7 +25,7 @@ async function scopeShape(scope: string): Promise<string> {
         [`${child}/source.js`]: 'export const value = 2;',
     });
     const session = await openSession(sandbox.path);
-    const output = emitAll(session);
+    const output = generate(session);
     const file = output.files.find((entry) => entry.path === ESLINT_FILE);
     expect(file).toBeDefined();
     const tree = await parseSource('javascript', file!.content);
@@ -83,7 +83,7 @@ test('a reason text cannot add JavaScript statements or ignore entries', async (
             Dockerfile: 'FROM alpine:3.22',
         });
         const session = await openSession(sandbox.path);
-        const output = emitAll(session);
+        const output = generate(session);
         const script = output.files.find((file) => file.path === '.gspot/config/eslint.config.mjs');
         expect(script).toBeDefined();
         const tree = await parseSource('javascript', script!.content);

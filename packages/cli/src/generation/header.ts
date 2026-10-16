@@ -66,7 +66,7 @@ function block(value: unknown, depth: number, format: JsonFormat, taken: number)
     return primitive(value) ?? 'null';
 }
 
-function commented(lines: string[], mark: string): string {
+function formatCommentBlock(lines: string[], mark: string): string {
     const marked = lines.map((line) => `${mark} ${line}`).join('\n');
     return `${marked}\n`;
 }
@@ -88,7 +88,7 @@ export function jsonText(value: unknown, format: JsonFormat): string {
  * @returns the comment block ending in a newline.
  */
 export function hashCommentHeader(): string {
-    return commented([GENERATED_HEADER_TEXT], '#');
+    return formatCommentBlock([GENERATED_HEADER_TEXT], '#');
 }
 
 /**
@@ -98,15 +98,15 @@ export function hashCommentHeader(): string {
  *
  * @returns the comment block ending in a newline, or ''.
  */
-export function headerFor(path: string): string {
+export function formatHeader(path: string): string {
     if (isInGspotFolder(path)) return '';
     const extension = extractExtension(path);
     if (JSON_EXTENSIONS.has(extension)) return '';
-    if (SLASH_COMMENT_EXTENSIONS.has(extension)) return commented([GENERATED_HEADER_TEXT], '//');
+    if (SLASH_COMMENT_EXTENSIONS.has(extension)) return formatCommentBlock([GENERATED_HEADER_TEXT], '//');
     if (HTML_EXTENSIONS.has(extension)) {
         const indented = [GENERATED_HEADER_TEXT].map((line) => `  ${line}`).join('\n');
         return `<!--\n${indented}\n-->\n`;
     }
-    if (DASH_COMMENT_EXTENSIONS.has(extension)) return commented([GENERATED_HEADER_TEXT], '--');
+    if (DASH_COMMENT_EXTENSIONS.has(extension)) return formatCommentBlock([GENERATED_HEADER_TEXT], '--');
     return hashCommentHeader();
 }

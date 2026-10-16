@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitSetting } from '#cli/system/git.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { installCommand } from '#cli/commands/install.ts';
@@ -108,7 +108,7 @@ test.each(['', 'app/'])('install points core.hooksPath at %s.gspot/hooks', async
     {
         using log = openWriter(root);
         const session = await openSession(root);
-        writeGeneratedFiles(session, emitAll(session), log);
+        writeGeneratedFiles(session, generate(session), log);
     }
     await using registry = await createInstallationRegistry(root, runCommand);
     using _environment = useEnvironment(registry.environment);
@@ -142,7 +142,7 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
     commitAll(main);
     {
         using log = openWriter(main);
-        await openSession(main).then((session) => writeGeneratedFiles(session, emitAll(session), log));
+        await openSession(main).then((session) => writeGeneratedFiles(session, generate(session), log));
     }
     await using registry = await createInstallationRegistry(main, runCommand);
     const environment = {
@@ -191,7 +191,7 @@ command = ${JSON.stringify([process.execPath, '-e', INDEX_COMMAND])}
     {
         using log = openWriter(project);
         const session = await openSession(project);
-        writeGeneratedFiles(session, emitAll(session), log);
+        writeGeneratedFiles(session, generate(session), log);
     }
     await using registry = await createInstallationRegistry(project, runCommand);
     const applied = await runGspot(project, ['apply']);

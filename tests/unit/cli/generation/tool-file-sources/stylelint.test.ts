@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import stylelint, { type Config } from 'stylelint';
 import { testdir, createFileTree } from 'testdirs';
 import { testModules } from '#tests/setup/modules.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import type { StylelintToolFile } from '#tests/types/tool-files.ts';
@@ -15,7 +15,7 @@ test('Vue and Svelte stylesheet rules stay inside their scopes', async () => {
         'gspot.toml': settingsText(['css'], { level: 'all', tables: STYLELINT_SCOPE_TABLES }),
         ...STYLELINT_SCOPE_FILES,
     });
-    const outputs = emitAll(await openSession(sandbox.path)).files;
+    const outputs = generate(await openSession(sandbox.path)).files;
     const documents = Object.fromEntries(
         ['', 'vue', 'svelte', 'mixed'].map((scope) => {
             const prefix = scope === '' ? '' : `${scope}/`;
@@ -51,7 +51,7 @@ test.each(['recommended', 'all'] as const)(
             'child/source.css': 'a { color: #fff; width: 1.23456px; }',
         });
         const session = await openSession(sandbox.path);
-        const generated = emitAll(session);
+        const generated = generate(session);
         const paths = new Set(generated.files.map(({ path }) => path));
         const declaration = session.scopes[0]!.selected.flatMap(({ toolFiles }) => toolFiles).find(
             ({ target }) => target === '.gspot/config/stylelint.json',

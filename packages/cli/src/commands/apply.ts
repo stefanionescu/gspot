@@ -1,10 +1,10 @@
-import { emitAll } from '#cli/generation/files.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { findStaleFiles } from '#cli/apply/stale.ts';
 import { type StaleFile } from '#cli/types/apply.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { readVersionPin } from '#cli/apply/version-pin.ts';
@@ -30,7 +30,7 @@ function staleFilesText(drift: StaleFile[]): string {
 }
 
 function planApply(session: Session): CommandResult {
-    const generated = emitAll(session);
+    const generated = generate(session);
     const drift = findStaleFiles(session, generated);
     const summary = drift.length === 0 ? 'every generated file is up to date\n' : staleFilesText(drift);
     const text = summary + formatNotes(generated.notes);
@@ -73,6 +73,6 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
         return { ...result, text: `${result.text}Dry run: nothing was written.\n` };
     }
     using log = openWriter(root);
-    const report = writeGeneratedFiles(session, emitAll(session), log);
+    const report = writeGeneratedFiles(session, generate(session), log);
     return { text: reportText(report), json: report, exitCode: 0 };
 }

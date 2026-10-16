@@ -9,10 +9,10 @@ import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
-import { gitignoreBlock } from '#cli/generation/files.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { installToolProjects } from '#tests/setup/install.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
+import { buildGitignoreBlock } from '#cli/generation/generate.ts';
 
 import {
     PYTHON_INDEX_NAME,
@@ -35,7 +35,7 @@ async function createPythonSandbox(
 }> {
     const { indexFile, indexUrl } = options;
     await createFileTree(root, {
-        '.gitignore': `${gitignoreBlock()}\n.venv/\n`,
+        '.gitignore': `${buildGitignoreBlock()}\n.venv/\n`,
         'gspot.toml': settingsText(['python'], {
             ignore: { checks: PYTHON_SANDBOX_IGNORES, reason: 'This test exercises the pinned Ruff installation.' },
             level: 'recommended',

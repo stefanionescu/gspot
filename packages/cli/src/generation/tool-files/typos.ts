@@ -3,8 +3,8 @@ import type { Session } from '#cli/types/planning.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { generatedIgnores, selectedIgnorePaths } from '#cli/generation/ignore-patterns.ts';
-import type { EmitInputs, TyposSettings, TyposDictionary } from '#cli/types/generation/files.ts';
+import { generatedIgnores, selectedIgnorePaths } from '#cli/generation/ignore-files.ts';
+import type { TyposSettings, TyposDictionary, GenerationInputs } from '#cli/types/generation/files.ts';
 
 import {
     TOOL_EMIT_FORMAT,
@@ -19,21 +19,21 @@ import {
  *
  * @returns the settings dictionary and its native file selector.
  */
-function settingsDictionary(spellingScopes: ScopeSelection[]) {
+function buildSettingsDictionary(spellingScopes: ScopeSelection[]) {
     const dictionaries = spellingScopes.flatMap((entry) => {
         const native = entry.view.extra('typos') as TyposSettings | undefined;
         if (native === undefined) return [];
         return [native.default, ...(native.type === undefined ? [] : Object.values(native.type))];
     });
-    const terms = (key: keyof TyposDictionary): [string, string][] =>
+    const collectWords = (key: keyof TyposDictionary): [string, string][] =>
         dictionaries.flatMap((dictionary) => {
             const words = dictionary?.[key];
             return words === undefined ? [] : Object.keys(words).map((word): [string, string] => [word, word]);
         });
     return {
         'extend-glob': [SETTINGS_FILE],
-        'extend-identifiers': Object.fromEntries<string>(terms('extend-identifiers')),
-        'extend-words': Object.fromEntries<string>(terms('extend-words')),
+        'extend-identifiers': Object.fromEntries<string>(collectWords('extend-identifiers')),
+        'extend-words': Object.fromEntries<string>(collectWords('extend-words')),
     };
 }
 
@@ -44,8 +44,9 @@ function settingsDictionary(spellingScopes: ScopeSelection[]) {
  *
  * @returns the generated configuration text.
  */
-export function typosToolFile(
-    input: Pick<EmitInputs, 'selection' | 'scopes'> & Pick<Session, 'root' | 'settingsFile' | 'reads' | 'repository'>,
+export function buildTyposFile(
+    input: Pick<GenerationInputs, 'selection' | 'scopes'> &
+        Pick<Session, 'root' | 'settingsFile' | 'reads' | 'repository'>,
 ): string {
     const { settings, ignoresFor, extra } = input.selection.view;
     const ignoredPaths = [
@@ -57,7 +58,7 @@ export function typosToolFile(
     const spellingScopes = input.scopes
         .filter(({ view }) => view.configurations.includes('spelling'))
         .toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path));
-    const settingsType = settingsDictionary(spellingScopes);
+    const settingsType = buildSettingsDictionary(spellingScopes);
     const types = Object.fromEntries<TyposDictionary>(
         (typos?.type === undefined ? [] : Object.entries(typos.type)).map(([name, dictionary]) => [
             name,

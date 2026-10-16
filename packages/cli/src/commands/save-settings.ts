@@ -1,10 +1,10 @@
-import { emitAll } from '#cli/generation/files.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { formatNotes } from '#cli/system/terminal.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
@@ -24,7 +24,7 @@ async function saveSettings(root: string, options: SaveSettingsOptions): Promise
     using log = openWriter(root);
     const result = updateSettings(root, input, change);
     const session = await openSession(root, { settings: result.settings, text: result.text });
-    const generated = emitAll(session);
+    const generated = generate(session);
     writeSettings(log, result.text, input.original);
     let report: ApplyReport;
     try {

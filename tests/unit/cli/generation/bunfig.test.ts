@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { AGE_CASES } from '#tests/config/dependencies.ts';
 
@@ -15,7 +15,7 @@ test.each([...AGE_CASES])('Bun generation sets the required release age with $na
         ...(entry.source === undefined ? {} : { 'bunfig.toml': entry.source }),
     });
     const session = await openSession(repository.path);
-    const generated = emitAll(session).fileEdits.find((output) => output.path === 'bunfig.toml')!;
+    const generated = generate(session).fileEdits.find((output) => output.path === 'bunfig.toml')!;
     expect(generated.changes).toStrictEqual([
         { path: ['install', 'minimumReleaseAge'], value: entry.expected },
         { path: ['install', 'security', 'scanner'], value: '@socketsecurity/bun-security-scanner' },
@@ -35,5 +35,5 @@ test.each(['', 'apps/api/'])('Bun generation names a malformed %sbunfig.toml', a
         'apps/api/source.js': 'export const value = 1;\n',
     });
     const session = await openSession(repository.path);
-    expect(() => emitAll(session)).toThrow(`${path} is not valid TOML. Fix the file, then run gspot apply.`);
+    expect(() => generate(session)).toThrow(`${path} is not valid TOML. Fix the file, then run gspot apply.`);
 });

@@ -2,7 +2,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { writePlans } from '#cli/ownership/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Writer } from '#cli/types/ownership.ts';
-import { startRunner } from '#cli/generation/hooks.ts';
+import { selectRunner } from '#cli/generation/hooks.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { VERSION_PIN_FILE } from '#cli/config/system/locations.ts';
@@ -47,7 +47,7 @@ export function writeVersionPin(log: Writer): void {
 export async function assertVersionPin(root: string): Promise<void> {
     const pinned = readVersionPin(root);
     if (pinned !== undefined && pinned !== packageManifest.version) {
-        const runner = await startRunner(root);
+        const runner = await selectRunner(root);
         const command =
             runner.name === 'mise'
                 ? runner.pin.replace('<version>', pinned)

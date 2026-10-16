@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { toolsPath } from '#tests/setup/install.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
@@ -33,7 +33,7 @@ test('the staged scan skips a folder without Git and checks staged changes once 
     {
         using log = openWriter(sandbox.path);
         const session = await openSession(sandbox.path);
-        writeGeneratedFiles(session, emitAll(session), log);
+        writeGeneratedFiles(session, generate(session), log);
     }
     const withoutGit = await secretChecks(sandbox.path);
     expect(withoutGit.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('skipped');

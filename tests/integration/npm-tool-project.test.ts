@@ -1,11 +1,11 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
-import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { findStaleFiles } from '#cli/apply/stale.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { installTools } from '#cli/install/install.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
@@ -42,7 +42,7 @@ test.each(NPM_CLIENT_ROWS.filter(([, path]) => path === 'package.json'))(
         expect(staleApply.code, staleApply.stdout + staleApply.stderr).toBe(0);
         expect(await readFile(lockfilePath, 'utf8')).toBe(stale);
         const read = await openSession(root);
-        expect(findStaleFiles(read, emitAll(read))).toContainEqual({
+        expect(findStaleFiles(read, generate(read))).toContainEqual({
             path: `.gspot/${selectLockfileName(installer)}`,
             kind: 'changed',
         });
@@ -51,7 +51,7 @@ test.each(NPM_CLIENT_ROWS.filter(([, path]) => path === 'package.json'))(
         expect(JSON.parse(installed.stdout)).toMatchObject({ installed: true });
         expect(await readFile(lockfilePath, 'utf8')).not.toBe(stale);
         const repaired = await openSession(root);
-        expect(findStaleFiles(repaired, emitAll(repaired))).not.toContainEqual({
+        expect(findStaleFiles(repaired, generate(repaired))).not.toContainEqual({
             path: `.gspot/${selectLockfileName(installer)}`,
             kind: 'changed',
         });
@@ -83,7 +83,7 @@ test.each(NPM_CLIENT_ROWS.filter(([, path]) => path === 'package.json'))(
         {
             using log = openWriter(root);
             const session = await openSession(root);
-            repaired = writeGeneratedFiles(session, emitAll(session), log);
+            repaired = writeGeneratedFiles(session, generate(session), log);
         }
         expect(repaired.written).not.toContain(`.gspot/${selectLockfileName(installer)}`);
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
@@ -113,7 +113,7 @@ async function expectCloneInstallation(
     for (let attempt = 0; attempt < 2; attempt++) {
         using cloneLog = openWriter(clone);
         const { session } = await writeLockedInputs(clone, cloneLog);
-        const cloneInstall = await installTools(session, cloneLog, emitAll(session));
+        const cloneInstall = await installTools(session, cloneLog, generate(session));
         expect(cloneInstall.exitCode, cloneInstall.note).toBe(0);
         expect(cloneInstall.note).toContain('.gspot/node_modules');
         const status = git(clone, ['status', '--porcelain']);
@@ -135,7 +135,7 @@ test.each([...NPM_CLIENT_ROWS])(
         using log = openWriter(root);
         const { session, inputs } = await writeLockedInputs(root, log);
         const { manifest, lockfilePath, lockfile, mode } = inputs!;
-        const installed = await installTools(session, log, emitAll(session));
+        const installed = await installTools(session, log, generate(session));
         expect(installed.exitCode, installed.note).toBe(0);
         expect(installed.note).toContain('.gspot/node_modules');
         const workspace = join(root, 'pnpm-workspace.yaml');
@@ -164,7 +164,7 @@ test.each([...NPM_CLIENT_ROWS])(
         // Replace the file so native package-manager hardlinks do not edit its shared cache.
         await unlink(readmePath);
         await writeFile(readmePath, 'authored later');
-        const reinstalled = await installTools(session, log, emitAll(session));
+        const reinstalled = await installTools(session, log, generate(session));
         expect(reinstalled.exitCode, reinstalled.note).toBe(0);
         expect(await readFile(readmePath)).toStrictEqual(readme);
         const readyTools = ['prettier', 'editorconfig-checker'];
@@ -172,9 +172,9 @@ test.each([...NPM_CLIENT_ROWS])(
         expect(
             readyTools.map((name) => inspectTool(refreshed, tools.find((tool) => tool.name === name)!).state),
         ).toStrictEqual(readyTools.map(() => 'ok'));
-        expect(findStaleFiles(session, emitAll(session))).toStrictEqual([]);
+        expect(findStaleFiles(session, generate(session))).toStrictEqual([]);
         const second = await openSession(root).then((refreshed) =>
-            writeGeneratedFiles(refreshed, emitAll(refreshed), log),
+            writeGeneratedFiles(refreshed, generate(refreshed), log),
         );
         expect(second.written).toStrictEqual([]);
         expect(await readFile(lockfilePath)).toStrictEqual(Buffer.from(lockfile));

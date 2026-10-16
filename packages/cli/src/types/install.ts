@@ -3,7 +3,7 @@ import type { Session } from '#cli/types/planning.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
-import type { Generated, StartRunner } from '#cli/types/generation/files.ts';
+import type { StartRunner, GenerationResult } from '#cli/types/generation/files.ts';
 
 /** The installation commands, summary, and exit code. */
 export type InstallationResult = { note: string; exitCode: number; steps: readonly (readonly string[])[] };
@@ -19,7 +19,7 @@ export type HookPlan = { path?: string; command?: readonly string[]; note: strin
 export type InstallContext = {
     session: Session;
     writer: Writer;
-    generated: Generated;
+    generated: GenerationResult;
     tools: ToolDeclaration[];
     mise: string | null;
     steps: (readonly string[])[];

@@ -2,13 +2,13 @@
 import { z } from 'zod';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { miseFile } from '#cli/generation/mise.ts';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { CLI_MAIN } from '#tests/setup/run-gspot.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { buildMiseProject } from '#cli/generation/projects.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { hasToolBuild } from '#tests/setup/operating-systems.ts';
 import type { PreparedSuite } from '#tests/types/preparation.ts';
@@ -69,7 +69,7 @@ async function installPinnedTools(folder: string, cancelSignal: AbortSignal): Pr
     const names = listDistinctTools(manifests)
         .filter((tool) => tool.system !== true && hasToolBuild(tool.name))
         .flatMap((tool) => findMisePin(tool)?.name ?? []);
-    await writeFile(config, miseFile(manifests, createReadCache(process.cwd())).content);
+    await writeFile(config, buildMiseProject(manifests, createReadCache(process.cwd())).content);
     for (const argv of [
         [...MISE_TRUST, config],
         [...MISE_INSTALL, ...names],

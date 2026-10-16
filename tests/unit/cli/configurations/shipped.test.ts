@@ -5,7 +5,7 @@ import { readPresets } from '#cli/generation/eslint/presets.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { RULE_NAME_FILES } from '#tests/config/configurations.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
-import { ruleNamesFileSchema } from '#cli/generation/tool-file-sources/stylelint.ts';
+import { ruleNamesFileSchema } from '#cli/generation/tool-files/stylelint.ts';
 
 test('each lint-rule list names the pinned package version', () => {
     const manifests = [...readManifests(createReadCache(process.cwd())).values()];

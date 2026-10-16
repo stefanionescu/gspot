@@ -1,8 +1,8 @@
 import { parse } from 'yaml';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 
 test('Trivy severity settings add up through the root and child scopes', async () => {
@@ -15,7 +15,7 @@ test('Trivy severity settings add up through the root and child scopes', async (
         Dockerfile: 'FROM scratch\n',
         'child/Dockerfile': 'FROM scratch\n',
     });
-    const files = emitAll(await openSession(sandbox.path)).files;
+    const files = generate(await openSession(sandbox.path)).files;
     for (const scope of ['', 'child/']) {
         const text = files.find((file) => file.path === `.gspot/config/${scope}trivy.yml`)!.content;
         const parsed: unknown = parse(text);

@@ -11,7 +11,7 @@ import {
     SWIFTLINT_FUNCTION_NESTING,
 } from '#cli/config/generation/swift.ts';
 
-function pair(count: unknown) {
+function buildSeverityLimits(count: unknown) {
     return { warning: count, error: count };
 }
 
@@ -27,7 +27,7 @@ function pair(count: unknown) {
  *
  * @returns the generated configuration text.
  */
-export function swiftlintToolFile(
+export function buildSwiftlintFile(
     { settings, format, limit, rulesOff }: Pick<ScopeView, 'settings' | 'format' | 'limit' | 'rulesOff'>,
     level: Level,
 ): string {
@@ -35,16 +35,22 @@ export function swiftlintToolFile(
     const off = [...rulesOff('swift/swiftlint'), ...(isAll ? [] : SWIFTLINT_RECOMMENDED_OFF)];
     const offSet = new Set(off);
     const options = {
-        line_length: { ...pair(format.print_width), ignores_urls: true },
-        file_length: { ...pair(limit('file_lines', 'swift')), ignore_comment_only_lines: true },
-        type_body_length: pair(settings['limits.swift.type_lines']),
-        function_parameter_count: { ...pair(limit('function_parameters', 'swift')), ignores_default_parameters: false },
-        function_body_length: pair(limit('function_lines', 'swift')),
-        cyclomatic_complexity: pair(limit('cyclomatic_complexity', 'swift')),
-        closure_body_length: pair(settings['limits.swift.closure_lines']),
+        line_length: { ...buildSeverityLimits(format.print_width), ignores_urls: true },
+        file_length: { ...buildSeverityLimits(limit('file_lines', 'swift')), ignore_comment_only_lines: true },
+        type_body_length: buildSeverityLimits(settings['limits.swift.type_lines']),
+        function_parameter_count: {
+            ...buildSeverityLimits(limit('function_parameters', 'swift')),
+            ignores_default_parameters: false,
+        },
+        function_body_length: buildSeverityLimits(limit('function_lines', 'swift')),
+        cyclomatic_complexity: buildSeverityLimits(limit('cyclomatic_complexity', 'swift')),
+        closure_body_length: buildSeverityLimits(settings['limits.swift.closure_lines']),
         identifier_name: { min_length: 1, max_length: settings['naming.swift.max_characters'] },
         type_name: { min_length: 1, max_length: settings['naming.swift.max_characters'] },
-        nesting: { type_level: pair(1), function_level: pair(SWIFTLINT_FUNCTION_NESTING) },
+        nesting: {
+            type_level: buildSeverityLimits(1),
+            function_level: buildSeverityLimits(SWIFTLINT_FUNCTION_NESTING),
+        },
         missing_docs: { error: ['open', 'public'] },
         unused_import: { always_keep_imports: settings['tools.swiftlint.always_keep_imports'] },
         trailing_comma: { mandatory_comma: format.trailing_commas !== 'none' },

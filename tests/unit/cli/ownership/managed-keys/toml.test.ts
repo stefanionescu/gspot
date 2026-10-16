@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { writePlans, openWriter } from '#cli/ownership/writer.ts';
@@ -89,7 +89,7 @@ import { planRemoval, planManagedKeys } from '#cli/ownership/plans.ts';
             'bunfig.toml': original,
         });
         const session = await openSession(repository.path);
-        const generated = emitAll(session).fileEdits.find((entry) => entry.path === 'bunfig.toml')!;
+        const generated = generate(session).fileEdits.find((entry) => entry.path === 'bunfig.toml')!;
         const log = openWriter(repository.path);
         writePlans(log, [planManagedKeys(log, generated.path, generated.changes)]);
         const installed = await readFile(join(repository.path, 'bunfig.toml'), 'utf8');

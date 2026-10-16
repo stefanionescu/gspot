@@ -1,10 +1,10 @@
 import { parse } from 'yaml';
 import { test, expect } from 'bun:test';
 import { gitOutput } from '#tests/setup/git.ts';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { containingAll } from '#tests/setup/matchers.ts';
 import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
@@ -19,7 +19,7 @@ test('the Vale vocabulary joins selected product words and your words once each'
         }),
     });
     const session = await openSession(sandbox.path);
-    const output = emitAll(session);
+    const output = generate(session);
     const vocabulary = output.files.find(
         (file) => file.path === '.gspot/config/vale/styles/config/vocabularies/words/accept.txt',
     )!;
@@ -41,7 +41,7 @@ test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (
         'gspot.toml': settingsText(['prose'], { level }),
     });
     gitOutput(sandbox.path, ['init', '-q']);
-    const output = emitAll(await openSession(sandbox.path));
+    const output = generate(await openSession(sandbox.path));
     const paths = new Set(output.files.map((file) => file.path));
     expect(paths.has('.gspot/config/vale/styles/gspot/link-text.yml')).toBe(true);
     const configuration = output.files.find((file) => file.path === '.gspot/config/vale.ini')!;
@@ -61,7 +61,7 @@ test('your banned headings and the shipped ones reach the heading style once', a
         }),
     });
     const session = await openSession(sandbox.path);
-    const output = emitAll(session);
+    const output = generate(session);
     const style = output.files.find((file) => file.path.endsWith('/gspot/banned-headings.yml'))!.content;
     expect(parse(style)).toMatchObject({
         tokens: containingAll([String.raw`(?:\b|^)Owner: \[module\](?:\b|$)`, String.raw`(?:\b|^)source tree(?:\b|$)`]),
@@ -80,7 +80,7 @@ test('the Vale vocabulary and heading exceptions include products of child scope
         'app/sample.py': 'value = 1\n',
     });
     const session = await openSession(sandbox.path);
-    const files = emitAll(session).files;
+    const files = generate(session).files;
     const vocabulary = files
         .find(({ path }) => path.endsWith('/vocabularies/words/accept.txt'))!
         .content.trimEnd()

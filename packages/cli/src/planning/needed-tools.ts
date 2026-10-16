@@ -45,9 +45,9 @@ function isToolSelected(scope: ScopeSelection, conditions: ToolDeclaration['when
  *
  * @returns the package names required by active formatter plugins.
  */
-function prettierToolRequirements(scopes: ScopeSelection[], programs: ReadonlySet<string>): string[] {
+function listPrettierPluginNames(scopes: ScopeSelection[], programs: ReadonlySet<string>): string[] {
     return programs.has(PRETTIER_TOOL)
-        ? [...prettierPlugins(scopes.flatMap(({ selected }) => selected)).keys()].map(({ name }) => name)
+        ? [...listPrettierPlugins(scopes.flatMap(({ selected }) => selected)).keys()].map(({ name }) => name)
         : [];
 }
 
@@ -78,7 +78,7 @@ export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration, 
         .flatMap((config) => config.required_tools);
     const syntax =
         check.tool === STYLELINT_TOOL
-            ? stylelintComponents(scope.view.configurations).map((dialect) => dialect.customSyntax)
+            ? selectStylelintComponents(scope.view.configurations).map((dialect) => dialect.customSyntax)
             : [];
     return [...new Set([...(check.other_tools ?? []), ...companions, ...syntax])].filter((name) => {
         const pin = getToolDeclaration(scope.selected, name);
@@ -125,7 +125,7 @@ export function neededToolManifests(session: Session, checks: PlannedCheck[]): M
         .filter((project) => project.skip === undefined)
         .map((project) => (basename(project.manifest) === PACKAGE_JSON ? LICENSE_CHECKER : PIP_LICENSES_COMMAND[0]));
     const needed = new Set([...checks.flatMap((check) => requiredToolNames(check)), ...licenses]);
-    for (const name of prettierToolRequirements(session.scopes, needed)) needed.add(name);
+    for (const name of listPrettierPluginNames(session.scopes, needed)) needed.add(name);
     const selected = listSelectedManifests(session.scopes);
     const selectedTools = new Set(selected.flatMap((manifest) => manifest.tools.map(({ name }) => name)));
     for (const name of needed)
@@ -206,7 +206,7 @@ export function licenseProjects(
  *
  * @returns the selected formatter plugins and their module paths.
  */
-export function prettierPlugins(manifests: Iterable<Manifest>): Map<ToolDeclaration, PrettierPlugin> {
+export function listPrettierPlugins(manifests: Iterable<Manifest>): Map<ToolDeclaration, PrettierPlugin> {
     return new Map(
         [...manifests].flatMap(({ tools }) =>
             tools.flatMap((tool): [ToolDeclaration, PrettierPlugin][] => {
@@ -226,7 +226,7 @@ export function prettierPlugins(manifests: Iterable<Manifest>): Map<ToolDeclarat
  *
  * @returns the selected component dialects and their parser declarations.
  */
-export function stylelintComponents(configurations: string[]): StylelintComponent[] {
+export function selectStylelintComponents(configurations: string[]): StylelintComponent[] {
     return [
         ...(configurations.includes('vue') ? [VUE_STYLELINT_OVERRIDE] : []),
         ...(configurations.includes('svelte') ? [SVELTE_STYLELINT_OVERRIDE] : []),

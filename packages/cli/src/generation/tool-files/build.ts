@@ -1,40 +1,29 @@
 import { readAsset } from '#cli/system/assets.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { buildJsconfig } from '#cli/generation/jsconfig.ts';
-import { prettierPlugins } from '#cli/planning/needed-tools.ts';
-import { jsonText, headerFor } from '#cli/generation/headers.ts';
 import { JSON_EXTENSIONS } from '#cli/config/generation/header.ts';
-import { v8rToolFile } from '#cli/generation/tool-file-sources/v8r.ts';
-import { gixyToolFile } from '#cli/generation/tool-file-sources/gixy.ts';
-import { knipToolFile } from '#cli/generation/tool-file-sources/knip.ts';
-import { ruffToolFile } from '#cli/generation/tool-file-sources/ruff.ts';
-import { jscpdToolFile } from '#cli/generation/tool-file-sources/jscpd.ts';
-import { taploToolFile } from '#cli/generation/tool-file-sources/taplo.ts';
-import { trivyToolFile } from '#cli/generation/tool-file-sources/trivy.ts';
-import { typosToolFile } from '#cli/generation/tool-file-sources/typos.ts';
-import { lycheeToolFile } from '#cli/generation/tool-file-sources/lychee.ts';
-import { squawkToolFile } from '#cli/generation/tool-file-sources/squawk.ts';
+import { jsonText, formatHeader } from '#cli/generation/header.ts';
+import { buildKnipFile } from '#cli/generation/tool-files/knip.ts';
+import { listPrettierPlugins } from '#cli/planning/needed-tools.ts';
+import { buildJscpdFile } from '#cli/generation/tool-files/jscpd.ts';
+import { buildTyposFile } from '#cli/generation/tool-files/typos.ts';
+import { buildJsconfig } from '#cli/generation/tool-files/jsconfig.ts';
+import { buildSquawkFile } from '#cli/generation/tool-files/squawk.ts';
+import { buildHadolintFile } from '#cli/generation/tool-files/hadolint.ts';
+import { buildSqlfluffFile } from '#cli/generation/tool-files/sqlfluff.ts';
+import { buildYamllintFile } from '#cli/generation/tool-files/yamllint.ts';
+import { buildStylelintFile } from '#cli/generation/tool-files/stylelint.ts';
+import { buildSwiftlintFile } from '#cli/generation/tool-files/swiftlint.ts';
 import { eslintConfiguration } from '#cli/generation/eslint/configuration.ts';
-import { hadolintToolFile } from '#cli/generation/tool-file-sources/hadolint.ts';
-import { purgecssToolFile } from '#cli/generation/tool-file-sources/purgecss.ts';
-import { spectralToolFile } from '#cli/generation/tool-file-sources/spectral.ts';
-import { sqlfluffToolFile } from '#cli/generation/tool-file-sources/sqlfluff.ts';
-import { yamllintToolFile } from '#cli/generation/tool-file-sources/yamllint.ts';
-import type { EmitInputs, ToolFileBuilder } from '#cli/types/generation/files.ts';
-import { peripheryToolFile } from '#cli/generation/tool-file-sources/periphery.ts';
-import { stylelintToolFile } from '#cli/generation/tool-file-sources/stylelint.ts';
-import { swiftlintToolFile } from '#cli/generation/tool-file-sources/swiftlint.ts';
-import { commitlintToolFile } from '#cli/generation/tool-file-sources/commitlint.ts';
-import { shellcheckToolFile } from '#cli/generation/tool-file-sources/shellcheck.ts';
-import { osvScannerToolFile } from '#cli/generation/tool-file-sources/osv-scanner.ts';
-import { swiftformatToolFile } from '#cli/generation/tool-file-sources/swiftformat.ts';
-import { ansibleLintToolFile } from '#cli/generation/tool-file-sources/ansible-lint.ts';
-import { generatedIgnores, gitignorePatterns } from '#cli/generation/ignore-patterns.ts';
-import { basedpyrightToolFile } from '#cli/generation/tool-file-sources/basedpyright.ts';
-import { markdownlintToolFile } from '#cli/generation/tool-file-sources/markdownlint.ts';
-import { htmlValidateToolFile } from '#cli/generation/tool-file-sources/html-validate.ts';
+import { buildCommitlintFile } from '#cli/generation/tool-files/commitlint.ts';
+import { buildShellcheckFile } from '#cli/generation/tool-files/shellcheck.ts';
+import { buildSwiftformatFile } from '#cli/generation/tool-files/swiftformat.ts';
+import { buildMarkdownlintFile } from '#cli/generation/tool-files/markdownlint.ts';
+import { buildHtmlValidateFile } from '#cli/generation/tool-files/html-validate.ts';
+import { generatedIgnores, gitignorePatterns } from '#cli/generation/ignore-files.ts';
+import type { ToolFileBuilder, GenerationInputs } from '#cli/types/generation/files.ts';
+import { buildRuffFile, buildBasedpyrightFile } from '#cli/generation/tool-files/python.ts';
+import { buildSemgrepFile, buildSemgrepignore } from '#cli/generation/tool-files/semgrep.ts';
 import { SEMGREP_CONFIGURATION_COMPONENT } from '#cli/config/generation/tool-file-sources.ts';
-import { semgrepToolFile, semgrepignoreToolFile } from '#cli/generation/tool-file-sources/semgrep.ts';
 
 import {
     editorconfigToolFile,
@@ -43,50 +32,62 @@ import {
     prettierignoreToolFile,
 } from '#cli/generation/formatting.ts';
 import {
-    proseInputs,
-    altTextStyle,
-    acronymsStyle,
+    buildV8rFile,
+    buildGixyFile,
+    buildTaploFile,
+    buildTrivyFile,
+    buildLycheeFile,
+    buildPurgecssFile,
+    buildSpectralFile,
+    buildPeripheryFile,
+    buildOsvScannerFile,
+    buildAnsibleLintFile,
+} from '#cli/generation/tool-files/plain.ts';
+import {
     titleCaseStyle,
-    itemLengthStyle,
-    valeIniToolFile,
+    buildProseInputs,
+    buildValeIniFile,
     headingCaseStyle,
-    possessivesStyle,
-    bannedHeadingsStyle,
-    sentenceLengthStyle,
-    paragraphLengthStyle,
-    acceptedWordsToolFile,
-} from '#cli/generation/prose.ts';
+    buildAltTextStyle,
+    buildAcronymsStyle,
+    buildListItemStyle,
+    buildPossessivesStyle,
+    buildAcceptedWordsFile,
+    buildBannedHeadingsStyle,
+    buildSentenceLengthStyle,
+    buildParagraphLengthStyle,
+} from '#cli/generation/tool-files/vale.ts';
 
 const builders: Record<string, ToolFileBuilder | undefined> = {
-    'ansible-lint.yml': ({ selection }) => ansibleLintToolFile(selection.view),
+    'ansible-lint.yml': ({ selection }) => buildAnsibleLintFile(selection.view),
     'acronyms.yml': ({ session, manifests }) =>
-        acronymsStyle({
-            prose: proseInputs(session, manifests),
+        buildAcronymsStyle({
+            prose: buildProseInputs(session, manifests),
         }),
-    'gixy.cfg': ({ selection }) => gixyToolFile(selection.view),
+    'gixy.cfg': ({ selection }) => buildGixyFile(selection.view),
     'squawk.toml': ({ session, selection, files }) =>
-        squawkToolFile({ selection, files, settingsFile: session.settingsFile }),
-    'trivy.yml': ({ selection }) => trivyToolFile(selection.view),
-    shellcheckrc: ({ session, selection }) => shellcheckToolFile(selection.view, session.settingsFile.settings.level),
-    'commitlint.config.cjs': ({ selection, scopes }) => commitlintToolFile({ selection, scopes }),
+        buildSquawkFile({ selection, files, settingsFile: session.settingsFile }),
+    'trivy.yml': ({ selection }) => buildTrivyFile(selection.view),
+    shellcheckrc: ({ session, selection }) => buildShellcheckFile(selection.view, session.settingsFile.settings.level),
+    'commitlint.config.cjs': ({ selection, scopes }) => buildCommitlintFile({ selection, scopes }),
     'markdownlint.jsonc': ({ session, selection }) =>
-        markdownlintToolFile(selection.view, session.settingsFile.settings.level),
-    'jscpd.json': ({ selection }) => jscpdToolFile(selection.view),
-    'taplo.toml': ({ selection }) => taploToolFile(selection.view),
-    'lychee.toml': ({ selection }) => lycheeToolFile(selection.view),
-    'hadolint.yml': ({ session, selection }) => hadolintToolFile(selection.view, session.settingsFile.settings.level),
+        buildMarkdownlintFile(selection.view, session.settingsFile.settings.level),
+    'jscpd.json': ({ selection }) => buildJscpdFile(selection.view),
+    'taplo.toml': ({ selection }) => buildTaploFile(selection.view),
+    'lychee.toml': ({ selection }) => buildLycheeFile(selection.view),
+    'hadolint.yml': ({ session, selection }) => buildHadolintFile(selection.view, session.settingsFile.settings.level),
     'spectral.yaml': ({ session }) =>
-        spectralToolFile({
+        buildSpectralFile({
             isAll: session.settingsFile.settings.level === 'all',
         }),
-    'v8r.yml': ({ selection }) => v8rToolFile(selection.view),
-    'yamllint.yml': ({ selection }) => yamllintToolFile(selection.view),
-    'osv-scanner.toml': ({ selection }) => osvScannerToolFile(selection.view),
-    'purgecss.config.mjs': ({ selection }) => purgecssToolFile(selection.view),
+    'v8r.yml': ({ selection }) => buildV8rFile(selection.view),
+    'yamllint.yml': ({ selection }) => buildYamllintFile(selection.view),
+    'osv-scanner.toml': ({ selection }) => buildOsvScannerFile(selection.view),
+    'purgecss.config.mjs': ({ selection }) => buildPurgecssFile(selection.view),
     'html-validate-built.json': ({ session, selection, targetPath }) =>
-        htmlValidateToolFile(selection.view, { level: session.settingsFile.settings.level, targetPath }),
+        buildHtmlValidateFile(selection.view, { level: session.settingsFile.settings.level, targetPath }),
     semgrepignore: ({ session, selection, scopes }) =>
-        semgrepignoreToolFile({
+        buildSemgrepignore({
             selection,
             scopes,
             root: session.root,
@@ -105,33 +106,33 @@ const builders: Record<string, ToolFileBuilder | undefined> = {
             editorconfigOverrides: () => editorconfigOverrides(session.settingsFile.settings),
         }),
     'accept.txt': ({ session, manifests }) =>
-        acceptedWordsToolFile({
-            prose: proseInputs(session, manifests),
+        buildAcceptedWordsFile({
+            prose: buildProseInputs(session, manifests),
         }),
     'vale.ini': ({ session, manifests, targetPath }) =>
-        valeIniToolFile({
+        buildValeIniFile({
             targetPath,
             isAll: session.settingsFile.settings.level === 'all',
-            prose: proseInputs(session, manifests),
+            prose: buildProseInputs(session, manifests),
         }),
     'heading-case.yml': ({ session, manifests }) =>
         headingCaseStyle({
-            prose: proseInputs(session, manifests),
+            prose: buildProseInputs(session, manifests),
         }),
-    'paragraph-length.yml': ({ selection }) => paragraphLengthStyle(selection.view),
+    'paragraph-length.yml': ({ selection }) => buildParagraphLengthStyle(selection.view),
     'alt-text.yml': ({ session }) =>
-        altTextStyle({
+        buildAltTextStyle({
             isAll: session.settingsFile.settings.level === 'all',
         }),
-    'banned-headings.yml': ({ selection }) => bannedHeadingsStyle(selection.view),
-    'sentence-length.yml': ({ selection }) => sentenceLengthStyle(selection.view),
+    'banned-headings.yml': ({ selection }) => buildBannedHeadingsStyle(selection.view),
+    'sentence-length.yml': ({ selection }) => buildSentenceLengthStyle(selection.view),
     'title-case.yml': ({ session, manifests }) =>
         titleCaseStyle({
-            prose: proseInputs(session, manifests),
+            prose: buildProseInputs(session, manifests),
         }),
-    'item-length.yml': ({ selection }) => itemLengthStyle(selection.view),
+    'item-length.yml': ({ selection }) => buildListItemStyle(selection.view),
     'possessives.yml': ({ session }) =>
-        possessivesStyle({
+        buildPossessivesStyle({
             names: [
                 ...new Set(
                     session.scopes.flatMap(({ selected }) =>
@@ -144,7 +145,7 @@ const builders: Record<string, ToolFileBuilder | undefined> = {
             ],
         }),
     'typos.toml': ({ session, selection, scopes }) =>
-        typosToolFile({
+        buildTyposFile({
             selection,
             scopes,
             root: session.root,
@@ -153,7 +154,7 @@ const builders: Record<string, ToolFileBuilder | undefined> = {
             repository: session.repository,
         }),
     'basedpyrightconfig.json': ({ session, selection, scopes }) =>
-        basedpyrightToolFile({
+        buildBasedpyrightFile({
             selection,
             scopes,
             root: session.root,
@@ -163,7 +164,7 @@ const builders: Record<string, ToolFileBuilder | undefined> = {
             repository: session.repository,
         }),
     'ruff.toml': ({ session, selection, scopes }) =>
-        ruffToolFile({
+        buildRuffFile({
             selection,
             scopes,
             root: session.root,
@@ -173,21 +174,22 @@ const builders: Record<string, ToolFileBuilder | undefined> = {
             repository: session.repository,
         }),
     'stylelint.json': ({ session, selection }) =>
-        stylelintToolFile(
+        buildStylelintFile(
             { selection, packageManifests: session.packageManifests },
             session.settingsFile.settings.level,
         ),
     'html-validate-source.json': ({ session, selection, targetPath }) =>
-        htmlValidateToolFile(selection.view, { level: session.settingsFile.settings.level, targetPath }),
-    'periphery.yml': ({ selection }) => peripheryToolFile(selection.view),
+        buildHtmlValidateFile(selection.view, { level: session.settingsFile.settings.level, targetPath }),
+    'periphery.yml': ({ selection }) => buildPeripheryFile(selection.view),
     swiftformat: ({ session, selection }) =>
-        swiftformatToolFile(
+        buildSwiftformatFile(
             { selection, root: session.root, reads: session.reads },
             session.settingsFile.settings.level,
         ),
-    'swiftlint.yml': ({ session, selection }) => swiftlintToolFile(selection.view, session.settingsFile.settings.level),
+    'swiftlint.yml': ({ session, selection }) =>
+        buildSwiftlintFile(selection.view, session.settingsFile.settings.level),
     'knip.json': ({ session, selection, scopes, files, manifests }) =>
-        knipToolFile({
+        buildKnipFile({
             selection,
             scopes,
             files,
@@ -198,7 +200,7 @@ const builders: Record<string, ToolFileBuilder | undefined> = {
             repository: session.repository,
             startRunner: session.startRunner,
         }),
-    'sqlfluff.cfg': ({ session, selection }) => sqlfluffToolFile(selection.view, session.settingsFile.settings.level),
+    'sqlfluff.cfg': ({ session, selection }) => buildSqlfluffFile(selection.view, session.settingsFile.settings.level),
     'eslint.config.mjs': ({ session, selection }) => eslintConfiguration({ session, selection }),
     'jsconfig.json': ({ session, selection, targetPath }) =>
         JSON.stringify(
@@ -219,7 +221,7 @@ const builders: Record<string, ToolFileBuilder | undefined> = {
                 settings: session.settingsFile.settings,
                 format: selection.view.format,
                 extra: selection.view.extra('prettier'),
-                plugins: [...prettierPlugins(session.scopes.flatMap(({ selected }) => selected)).values()],
+                plugins: [...listPrettierPlugins(session.scopes.flatMap(({ selected }) => selected)).values()],
                 targetPath,
             }),
         ),
@@ -234,23 +236,23 @@ const builders: Record<string, ToolFileBuilder | undefined> = {
  *
  * @returns the generated configuration text.
  */
-export function emitTarget(sourcePath: string, targetPath: string, context: EmitInputs): string {
+export function emitTarget(sourcePath: string, targetPath: string, context: GenerationInputs): string {
     const { session, selection } = context;
 
     const builder = builders[targetPath.slice(targetPath.lastIndexOf('/') + 1).replace(/^\./u, '')];
     const source = builder === undefined ? readAsset(sourcePath) : builder({ ...context, targetPath });
     let emitted = source;
     if (sourcePath.includes('/semgrep/'))
-        emitted = semgrepToolFile(emitted, sourcePath.split('/').at(SEMGREP_CONFIGURATION_COMPONENT) ?? '', {
+        emitted = buildSemgrepFile(emitted, sourcePath.split('/').at(SEMGREP_CONFIGURATION_COMPONENT) ?? '', {
             selection,
             scopes: context.scopes,
             packageManifests: session.packageManifests,
         });
-    if (builder === undefined && !sourcePath.includes('/semgrep/')) return `${headerFor(targetPath)}${emitted}`;
+    if (builder === undefined && !sourcePath.includes('/semgrep/')) return `${formatHeader(targetPath)}${emitted}`;
     if (JSON_EXTENSIONS.has(extractExtension(targetPath)))
         return jsonText(JSON.parse(emitted), {
             width: selection.view.format.print_width,
             indent: selection.view.format.indent_width,
         });
-    return `${headerFor(targetPath)}${emitted.trimEnd()}\n`;
+    return `${formatHeader(targetPath)}${emitted.trimEnd()}\n`;
 }

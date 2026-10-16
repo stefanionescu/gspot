@@ -1,6 +1,6 @@
 import { stringify } from '@decimalturn/toml-patch';
 import type { Session } from '#cli/types/planning.ts';
-import type { EmitInputs } from '#cli/types/generation/files.ts';
+import type { GenerationInputs } from '#cli/types/generation/files.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
 import { TOOL_EMIT_FORMAT, SQUAWK_RECOMMENDED_OFF } from '#cli/config/generation/tool-file-sources.ts';
 
@@ -14,11 +14,11 @@ import { TOOL_EMIT_FORMAT, SQUAWK_RECOMMENDED_OFF } from '#cli/config/generation
  *
  * @returns the generated configuration text.
  */
-export function squawkToolFile({
+export function buildSquawkFile({
     selection,
     files,
     settingsFile,
-}: Pick<EmitInputs, 'selection' | 'files'> & Pick<Session, 'settingsFile'>): string {
+}: Pick<GenerationInputs, 'selection' | 'files'> & Pick<Session, 'settingsFile'>): string {
     const { settings, rulesOff } = selection.view;
     const isAll = settingsFile.settings.level === 'all';
     const migrations = files.flatMap((file) =>

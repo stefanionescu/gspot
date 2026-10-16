@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { parseDocument } from 'yaml';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { SEMGREP_IGNORE_CASES, SWIFT_IGNORE_FOLDERS } from '#tests/config/semgrep.ts';
@@ -19,7 +19,7 @@ test('a scoped semgrepignore rebases shared generated-file patterns', async () =
         'web/main.sh': 'echo source\n',
         'web/gen/output.sh': 'echo generated\n',
     });
-    const output = emitAll(await openSession(sandbox.path));
+    const output = generate(await openSession(sandbox.path));
     const ignore = output.files.find(({ path }) => path === 'web/.semgrepignore');
     expect(ignore?.content).toContain('/gen/**');
     expect(ignore?.content).not.toContain('web/');
@@ -33,13 +33,13 @@ test('a language choice brings its security rules without selecting security', a
     });
     const target = '.gspot/config/semgrep/bash.yml';
     const plainSession = await openSession(sandbox.path);
-    const plainOutput = emitAll(plainSession);
+    const plainOutput = generate(plainSession);
     expect(
         parseDocument(plainOutput.files.find((file) => file.path === target)!.content).getIn(['rules', 0, 'id']),
     ).toBe('gspot.bash.curl-pipe-shell');
     await writeFile(join(sandbox.path, 'gspot.toml'), settingsText(['bash', 'security']));
     const securitySession = await openSession(sandbox.path);
-    const securityOutput = emitAll(securitySession);
+    const securityOutput = generate(securitySession);
     const generated = securityOutput.files.find((file) => file.path === target);
     expect(generated?.content).toBe(plainOutput.files.find((file) => file.path === target)?.content);
     expect(generated?.content).not.toContain('gspot.javascript.no-eval');
@@ -58,7 +58,7 @@ for (const level of ['recommended', 'all'] as const) {
             'sibling/edge/handler.js': 'await req.json();\n',
         });
         const session = await openSession(sandbox.path);
-        const output = emitAll(session);
+        const output = generate(session);
         const worker = output.files.find(({ path }) => path.endsWith('/semgrep/cloudflare.yml'));
         if (level === 'recommended') expect(worker).toBeUndefined();
         else {
@@ -99,7 +99,7 @@ test('JWT rules are written only where the nearest package.json has jsonwebtoken
         'other/source.js': 'jwt.decode(token);\n',
     });
     const session = await openSession(sandbox.path);
-    const output = emitAll(session);
+    const output = generate(session);
     const paths = new Set(output.files.map(({ path }) => path));
     const declaration = session.scopes[0]!.selected.flatMap(({ toolFiles }) => toolFiles).find(
         ({ target }) => target === '.gspot/config/semgrep/javascript.yml',
@@ -125,7 +125,7 @@ test.each([...SEMGREP_IGNORE_CASES])('$name', async ({ configurations, tables, s
         ...sources,
         'gspot.toml': settingsText(configurations, { level: 'all', tables }),
     });
-    const output = emitAll(await openSession(sandbox.path));
+    const output = generate(await openSession(sandbox.path));
     const ignores = output.files.filter(({ path }) => path.endsWith('.semgrepignore'));
     expect(ignores.map(({ path }) => path)).toStrictEqual([...paths]);
     const root = ignores.find(({ path }) => path === '.semgrepignore')!;

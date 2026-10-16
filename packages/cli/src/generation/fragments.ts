@@ -33,7 +33,7 @@ import { testingLibraryFragment } from '#cli/generation/eslint/fragments/testing
 
 // The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target
 // written once asks every scope.
-function fragmentConfigurations(
+function listFragmentConfigurations(
     scopes: ScopeSelection[],
     selection: ScopeSelection,
     target: ToolFileDeclaration,
@@ -43,7 +43,7 @@ function fragmentConfigurations(
     return new Map(every.map((manifest) => [manifest.configuration.name, manifest])).values().toArray();
 }
 
-function emitFragment(manifest: Manifest, inputs: EslintFragmentInputs): string {
+function buildFragment(manifest: Manifest, inputs: EslintFragmentInputs): string {
     const builder = (
         {
             astro: astroFragment,
@@ -71,7 +71,7 @@ function emitFragment(manifest: Manifest, inputs: EslintFragmentInputs): string 
 }
 
 // The text emitted by each selected ESLint fragment.
-function emittedFragments(
+function buildSelectedFragments(
     session: Session,
     fragments: Fragment[],
     inputs: EslintFragmentInputs,
@@ -95,7 +95,7 @@ function emittedFragments(
                 ruleOptions: inputs.ruleOptions,
                 scope: { path: scope, excluded: children.map((path) => `${escapeGlob(path)}/**`) },
             });
-            const fragment = emitFragment(manifest, {
+            const fragment = buildFragment(manifest, {
                 ...inputs,
                 ...selection.view,
                 scope,
@@ -153,7 +153,7 @@ function typescriptImports(text: string): TypescriptImports {
  *
  * @returns the emitted fragments, their imports, file globs, and selector groups.
  */
-export function fragmentInputs(
+export function collectFragments(
     session: Session,
     scopes: ScopeSelection[],
     selection: ScopeSelection,
@@ -167,7 +167,7 @@ export function fragmentInputs(
     eslintModule: EslintFragmentInputs['eslintModule'];
     eslintFiles: EslintFragmentInputs['eslintFiles'];
 } {
-    const fragments = fragmentConfigurations(scopes, selection, target).flatMap((manifest) =>
+    const fragments = listFragmentConfigurations(scopes, selection, target).flatMap((manifest) =>
         manifest.toolFiles
             .filter((toolFile) => toolFile.fragment && toolFile.target === target.target)
             .map((toolFile) => ({ manifest, toolFile })),
@@ -180,7 +180,12 @@ export function fragmentInputs(
         nodeFiles: config.nodeFiles,
     });
     const eslintFragmentBlocks: EslintFragmentInputs['eslintFragmentBlocks'] = [];
-    const emitted = emittedFragments(session, fragments, { ...inputs, eslintFragmentBlocks, eslintFiles }, scopes);
+    const emitted = buildSelectedFragments(
+        session,
+        fragments,
+        { ...inputs, eslintFragmentBlocks, eslintFiles },
+        scopes,
+    );
     const parsed = emitted.map((fragment) => typescriptImports(fragment));
     const imports = parsed.flatMap(({ imports }) => imports);
     const bodies = parsed.map(({ body }) => body);

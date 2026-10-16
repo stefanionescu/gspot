@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
@@ -26,7 +26,7 @@ test("javascript/tsc uses gspot's own TypeScript when the project has none", asy
     await installToolProjects(sandbox.path);
     const session = await openSession(sandbox.path);
     using log = openWriter(sandbox.path);
-    writeGeneratedFiles(session, emitAll(session), log);
+    writeGeneratedFiles(session, generate(session), log);
     const broken = await spawnGspot(sandbox.path, ['check', '--only', 'javascript/tsc', '--json']);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     const report = JSON.parse(broken.stdout) as RunReport;
@@ -73,7 +73,7 @@ for (const entry of JSCONFIG_CASES)
         });
         const session = await openSession(sandbox.path);
         using log = openWriter(sandbox.path);
-        writeGeneratedFiles(session, emitAll(session), log);
+        writeGeneratedFiles(session, generate(session), log);
         const command = ['check', '--only', 'javascript/tsc', '--json'];
         const broken = await spawnGspot(sandbox.path, command);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);

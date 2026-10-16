@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { gitOutput } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
-import { headerFor } from '#cli/generation/headers.ts';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { formatHeader } from '#cli/generation/header.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import { createReadCache } from '#cli/system/files/cache.ts';
@@ -191,7 +191,7 @@ test('Git attributes follow Git order and are not decoded from the working tree'
 test('every generated header format marks a file generated outside .gspot', async () => {
     await using sandbox = await testdir();
     const paths = ['tool.js', 'tool.py', 'tool.sql', 'tool.md', 'tool.html'];
-    const files = Object.fromEntries(paths.map((path) => [path, `${headerFor(path)}content\n`]));
+    const files = Object.fromEntries(paths.map((path) => [path, `${formatHeader(path)}content\n`]));
     await createFileTree(sandbox.path, files);
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],

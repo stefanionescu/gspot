@@ -1,12 +1,12 @@
 import { testdir } from 'testdirs';
 import { join, delimiter } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { rejection } from '#tests/setup/matchers.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { installTools } from '#cli/install/install.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
@@ -82,7 +82,7 @@ test.each([...PYTHON_PROJECTS])(
             {
                 using log = openWriter(clone);
                 const session = await openSession(clone);
-                const installed = await installTools(session, log, emitAll(session));
+                const installed = await installTools(session, log, generate(session));
                 expect(installed.exitCode, installed.note).toBe(0);
                 expect(installed.note).toContain('installed locked Python tools');
             }
@@ -122,7 +122,7 @@ test('conflicted Python lockfiles survive offline apply and are repaired by inst
     {
         using log = openWriter(repository.path);
         const session = await openSession(repository.path);
-        const installed = await installTools(session, log, emitAll(session));
+        const installed = await installTools(session, log, generate(session));
         expect(installed.exitCode, installed.note).toBe(0);
     }
     await chmod(lockfilePath, 0o644);
@@ -133,7 +133,7 @@ test('conflicted Python lockfiles survive offline apply and are repaired by inst
     {
         using log = openWriter(repository.path);
         const session = await openSession(repository.path);
-        const installed = await installTools(session, log, emitAll(session));
+        const installed = await installTools(session, log, generate(session));
         expect(installed.exitCode, installed.note).toBe(0);
     }
     expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
@@ -161,7 +161,7 @@ test('a uv that copies index credentials into the lockfile is refused and the in
     {
         using log = openWriter(root);
         const session = await openSession(root);
-        const manifest = emitAll(session).files.find((file) => file.path === '.gspot/pyproject.toml')!;
+        const manifest = generate(session).files.find((file) => file.path === '.gspot/pyproject.toml')!;
         session.uvPath = join(bin, isWindows ? 'uv.cmd' : 'uv');
         const read = log.files.read.bind(log.files);
         using _read = spyOn(log.files, 'read').mockImplementation((path) =>

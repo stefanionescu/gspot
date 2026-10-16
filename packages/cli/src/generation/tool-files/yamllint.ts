@@ -16,7 +16,7 @@ import {
  *
  * @returns the generated configuration text.
  */
-export function yamllintToolFile({ settings, rulesOff }: Pick<ScopeView, 'settings' | 'rulesOff'>): string {
+export function buildYamllintFile({ settings, rulesOff }: Pick<ScopeView, 'settings' | 'rulesOff'>): string {
     const rules: Record<string, unknown> = {
         ...Object.fromEntries(YAMLLINT_RULES.map((rule) => [rule, {}])),
         ...YAMLLINT_RULE_OPTIONS,

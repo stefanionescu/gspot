@@ -1,8 +1,8 @@
 import type { FileCopy } from '#cli/types/system/files.ts';
-import type { Generated } from '#cli/types/generation/files.ts';
+import type { GenerationResult } from '#cli/types/generation/files.ts';
 
 export type WriteRequest = {
-    generated: Generated;
+    generated: GenerationResult;
     expectedPaths: ReadonlySet<string>;
     report: ApplyReport;
     retained: { prose: boolean; packages: boolean; python: boolean };

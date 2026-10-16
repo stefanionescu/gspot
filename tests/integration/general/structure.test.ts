@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
@@ -138,7 +138,7 @@ for (const scenario of PARAMETER_LIMIT_TOOLS.filter(
             const session = await openSession(directory.path);
             {
                 using log = openWriter(directory.path);
-                writeGeneratedFiles(session, emitAll(session), log);
+                writeGeneratedFiles(session, generate(session), log);
             }
             if (language === 'python') await installToolProjects(directory.path);
             const command =

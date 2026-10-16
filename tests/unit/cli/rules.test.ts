@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { format } from 'prettier';
 import * as assets from '#cli/system/assets.ts';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
@@ -118,7 +118,7 @@ import { DRIZZLE_DRIVERS, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests
         const session = await openSession(root);
         const { rules, level } = session.settingsFile.settings;
         const selected = listSelectedManifests(session.scopes);
-        const generated = emitAll(session);
+        const generated = generate(session);
         return buildAgentsBlock({
             generatedPaths: [...generated.files, ...generated.fileEdits]
                 .map(({ path }) => path)
@@ -167,7 +167,7 @@ import { DRIZZLE_DRIVERS, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests
             ...files,
         });
         const session = await openSession(sandbox.path);
-        const output = emitAll(session);
+        const output = generate(session);
         return new Map(output.files.filter((file) => file.kind === 'rules').map((file) => [file.path, file.content]));
     }
 

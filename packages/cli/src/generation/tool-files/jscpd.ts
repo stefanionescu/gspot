@@ -11,7 +11,7 @@ import { JSCPD_IGNORED } from '#cli/config/generation/tool-file-sources.ts';
  *
  * @returns the generated configuration text.
  */
-export function jscpdToolFile({ settings, ignoresFor }: Pick<ScopeView, 'settings' | 'ignoresFor'>): string {
+export function buildJscpdFile({ settings, ignoresFor }: Pick<ScopeView, 'settings' | 'ignoresFor'>): string {
     return JSON.stringify(
         {
             mode: 'strict',

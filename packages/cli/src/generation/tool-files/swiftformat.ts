@@ -6,7 +6,7 @@ import { PBXPROJ_NAME } from '#cli/config/parsers/xcode.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import { SWIFT_TOOLS_VERSION } from '#cli/config/generation/tool-file-sources.ts';
-import type { EmitInputs, SwiftVersionInput } from '#cli/types/generation/files.ts';
+import type { GenerationInputs, SwiftVersionInput } from '#cli/types/generation/files.ts';
 
 import {
     SWIFTFORMAT_OFF,
@@ -35,8 +35,8 @@ function readSwiftVersion(input: SwiftVersionInput, projectPath: string): string
  *
  * @returns the generated configuration text.
  */
-export function swiftformatToolFile(
-    { selection, root, reads }: Pick<EmitInputs, 'selection'> & Pick<Session, 'root' | 'reads'>,
+export function buildSwiftformatFile(
+    { selection, root, reads }: Pick<GenerationInputs, 'selection'> & Pick<Session, 'root' | 'reads'>,
     level: Level,
 ): string {
     const { format, rulesOff } = selection.view;

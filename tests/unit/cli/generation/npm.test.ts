@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { npmProject } from '#cli/generation/npm.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { buildNpmProject } from '#cli/generation/projects.ts';
 import { STYLESHEET_CASES } from '#tests/config/stylelint.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
@@ -19,7 +19,7 @@ test.each([...STYLESHEET_CASES])(
             ...entry.files,
         });
         const session = await openSession(sandbox.path);
-        const manifest = emitAll(session).files.find(({ path }) => path === '.gspot/package.json')!;
+        const manifest = generate(session).files.find(({ path }) => path === '.gspot/package.json')!;
         expect(
             Object.keys(parseToolProject(manifest.content, session.requirePackageManager().name).dependencies).includes(
                 'postcss-html',
@@ -40,7 +40,7 @@ test('a React Native project without Expo installs no Expo or DOM lint plugins',
         'tsconfig.json': JSON.stringify(REACT_NATIVE_TSCONFIG),
     });
     const session = await openSession(sandbox.path);
-    const generated = emitAll(session).files.find(({ path }) => path === '.gspot/package.json')!;
+    const generated = generate(session).files.find(({ path }) => path === '.gspot/package.json')!;
     const project = parseToolProject(generated.content, session.requirePackageManager().name);
     expect(project.dependencies).toHaveProperty('eslint-plugin-react-native');
     expect(project.dependencies).not.toHaveProperty('eslint-plugin-expo');
@@ -58,7 +58,7 @@ test.each([{ configurations: ['licenses'] }, { configurations: [] }])(
             'docs/package.json': '{"name":"docs","private":true}',
         });
         const session = await openSession(sandbox.path);
-        const generated = emitAll(session);
+        const generated = generate(session);
         expect(generated.files.find(({ path }) => path === '.gspot/package.json')?.content).toContain(
             'license-checker-rseidelsohn',
         );
@@ -69,7 +69,7 @@ test.each([{ configurations: ['licenses'] }, { configurations: [] }])(
 test.each([...YARN_CLIENTS])(
     'Yarn $installer.version gets the matching tool project settings',
     ({ installer, settings }) => {
-        const files = npmProject({
+        const files = buildNpmProject({
             root: process.cwd(),
             scopes: [],
             manifests: [],
@@ -109,10 +109,10 @@ test.each([...NEXT_INSTALLATIONS])('$name', async (row) => {
     });
     const session = await openSession(sandbox.path);
     if (row.expected === 'conflict') {
-        expect(() => emitAll(session)).toThrow('Tool pin @next/eslint-plugin-next conflicts');
-        expect(() => emitAll(session)).toThrow('the root requires ^16; app requires ^15');
+        expect(() => generate(session)).toThrow('Tool pin @next/eslint-plugin-next conflicts');
+        expect(() => generate(session)).toThrow('the root requires ^16; app requires ^15');
     } else {
-        const generated = emitAll(session).files.find(({ path }) => path === '.gspot/package.json');
+        const generated = generate(session).files.find(({ path }) => path === '.gspot/package.json');
         expect(
             parseToolProject(generated!.content, session.requirePackageManager().name).dependencies[
                 '@next/eslint-plugin-next'
@@ -134,7 +134,7 @@ test('only selected Next.js scopes set the shared plugin version', async () => {
         'api/node_modules/next/package.json': '{"name":"next","version":"15.5.9"}',
     });
     const session = await openSession(sandbox.path);
-    const output = emitAll(session).files.find(({ path }) => path === '.gspot/package.json');
+    const output = generate(session).files.find(({ path }) => path === '.gspot/package.json');
     expect(
         parseToolProject(output!.content, session.requirePackageManager().name).dependencies[
             '@next/eslint-plugin-next'

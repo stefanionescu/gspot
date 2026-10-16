@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { CLEAN_SWIFT } from '#tests/config/swift/lint.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/xcode.ts';
@@ -9,7 +9,7 @@ import { SWIFT_VERSION_FILES, SWIFT_PROJECT_SETTINGS } from '#tests/config/swift
 
 test("SwiftFormat reads each scope's Swift version from Package.swift", async () => {
     await using sandbox = await testdir(SWIFT_VERSION_FILES);
-    const outputs = emitAll(await openSession(sandbox.path)).files;
+    const outputs = generate(await openSession(sandbox.path)).files;
     expect(outputs.find((file) => file.path === '.gspot/config/swiftformat')?.content).toContain(
         '--swiftversion 5.9\n',
     );
@@ -33,7 +33,7 @@ test('SwiftFormat uses the Xcode project you choose in each scope', async () => 
     };
     await using sandbox = await testdir(files);
     const session = await openSession(sandbox.path);
-    const outputs = emitAll(session).files;
+    const outputs = generate(session).files;
     expect(outputs.find((file) => file.path === '.gspot/config/swiftformat')?.content).toContain(
         '--swiftversion 6.0\n',
     );
@@ -53,7 +53,7 @@ test.each(['lf', 'crlf'] as const)('SwiftFormat writes the %s line ending you se
         'Value.swift': CLEAN_SWIFT,
         'child/Value.swift': CLEAN_SWIFT,
     });
-    const files = emitAll(await openSession(sandbox.path)).files;
+    const files = generate(await openSession(sandbox.path)).files;
     expect(files.find((file) => file.path === '.gspot/config/swiftformat')!.content).toContain(
         `--linebreaks ${ending}\n`,
     );

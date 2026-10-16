@@ -1,9 +1,9 @@
 import { parse } from 'jsonc-parser';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 
 test.each([...LEVELS])(
@@ -18,7 +18,7 @@ test.each([...LEVELS])(
             'index.html': '<!doctype html><title>Root</title>',
             'app/index.html': '<!doctype html><title>App</title>',
         });
-        const output = emitAll(await openSession(sandbox.path));
+        const output = generate(await openSession(sandbox.path));
         const source = output.files.filter(({ path }) => path.endsWith('html-validate-source.json'));
         expect(source.map(({ path }) => path)).toEqual(['.gspot/config/html-validate-source.json']);
         for (const file of source) {
@@ -44,7 +44,7 @@ test.each(['html/validate', 'site/html-validate'])(
             }),
             'index.html': '<!doctype html><title>Root</title>',
         });
-        const output = emitAll(await openSession(sandbox.path));
+        const output = generate(await openSession(sandbox.path));
         for (const [name, selected] of [
             ['source', 'html/validate'],
             ['built', 'site/html-validate'],

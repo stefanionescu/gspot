@@ -1,9 +1,9 @@
 import { parse } from 'yaml';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { containingAll } from '#tests/setup/matchers.ts';
 
 test.each([true, false])('the v8r catalog lists your custom schemas: %s', async (hasSchemas) => {
@@ -27,7 +27,7 @@ test.each([true, false])('the v8r catalog lists your custom schemas: %s', async 
         }),
         'custom.json': '{}\n',
     });
-    const output = emitAll(await openSession(sandbox.path));
+    const output = generate(await openSession(sandbox.path));
     const text = output.files.find((file) => file.path === '.gspot/config/v8r.yml')!.content;
     const parsed: unknown = parse(text);
     if (hasSchemas)

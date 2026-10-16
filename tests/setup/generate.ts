@@ -2,10 +2,10 @@
 import { z } from 'zod';
 import { ESLint } from 'eslint';
 import { join, relative } from 'node:path';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -73,7 +73,7 @@ async function createEslint(root: string, options: ESLint.Options = {}): Promise
     await linkInstalledModules(join(root, 'node_modules'));
     const session = await openSession(root);
     using log = openWriter(root);
-    const generated = emitAll(session);
+    const generated = generate(session);
     writeGeneratedFiles(session, generated, log);
     return new ESLint({ ...options, cwd: root, overrideConfigFile: join(root, '.gspot/config/eslint.config.mjs') });
 }
@@ -89,7 +89,7 @@ async function emitFile(settings: string, path: string, files: Record<string, st
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { ...files, 'gspot.toml': settings });
     const session = await openSession(sandbox.path);
-    const output = emitAll(session);
+    const output = generate(session);
     const file = output.files.find((entry) => entry.path === path);
     if (file === undefined) throw new Error(`The sandbox generates no ${path}.`);
     return file.content;

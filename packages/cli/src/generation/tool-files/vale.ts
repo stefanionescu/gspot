@@ -21,12 +21,12 @@ import {
     VALE_SKIPPED_SCOPES,
 } from '#cli/config/generation/prose.ts';
 
-function escapedWord(word: string): string {
+function escapeWord(word: string): string {
     return word.replaceAll(VALE_REGEX_SYMBOLS, String.raw`\$&`);
 }
 
-function exceptions(prose: ProseInputs): string[] {
-    return [...new Set([...prose.words, ...ACRONYMS])].map((element) => escapedWord(element));
+function listExceptions(prose: ProseInputs): string[] {
+    return [...new Set([...prose.words, ...ACRONYMS])].map((element) => escapeWord(element));
 }
 
 /**
@@ -44,7 +44,7 @@ export function headingCaseStyle({ prose }: { prose: ProseInputs }): string {
         level: 'error',
         scope: 'heading.h2',
         match: '$sentence',
-        exceptions: exceptions(prose),
+        exceptions: listExceptions(prose),
     });
 }
 
@@ -63,7 +63,7 @@ export function titleCaseStyle({ prose }: { prose: ProseInputs }): string {
         level: 'error',
         scope: 'heading.h1',
         match: '$title',
-        exceptions: exceptions(prose),
+        exceptions: listExceptions(prose),
     });
 }
 
@@ -75,7 +75,7 @@ export function titleCaseStyle({ prose }: { prose: ProseInputs }): string {
  *
  * @returns the Vale style text.
  */
-export function acronymsStyle({ prose }: { prose: ProseInputs }): string {
+export function buildAcronymsStyle({ prose }: { prose: ProseInputs }): string {
     return stringify({
         extends: 'conditional',
         message: "'%s' is used without being spelled out on first use.",
@@ -83,7 +83,7 @@ export function acronymsStyle({ prose }: { prose: ProseInputs }): string {
         ignorecase: false,
         first: String.raw`\b([A-Z]{3,6})\b`,
         second: String.raw`(?:\b[A-Za-z]+(?:-[A-Za-z]+)* ){2,5}\(([A-Z]{3,6})\)`,
-        exceptions: exceptions(prose),
+        exceptions: listExceptions(prose),
     });
 }
 
@@ -97,7 +97,7 @@ export function acronymsStyle({ prose }: { prose: ProseInputs }): string {
  *
  * @returns the generated configuration text.
  */
-export function valeIniToolFile({ targetPath = '.gspot/config/vale.ini', isAll, prose }: ValeIniInputs): string {
+export function buildValeIniFile({ targetPath = '.gspot/config/vale.ini', isAll, prose }: ValeIniInputs): string {
     const rules: Record<string, string> = isAll
         ? Object.fromEntries(Object.keys(VALE_OFF_RULES).map((rule) => [rule, 'NO']))
         : Object.fromEntries(
@@ -155,7 +155,7 @@ export function valeIniToolFile({ targetPath = '.gspot/config/vale.ini', isAll, 
  *
  * @returns the Vale style text.
  */
-export function altTextStyle({ isAll }: { isAll: boolean }): string {
+export function buildAltTextStyle({ isAll }: { isAll: boolean }): string {
     return stringify({
         extends: 'existence',
         message: 'An image needs an alt attribute; decorative images can use an empty value.',
@@ -174,7 +174,7 @@ export function altTextStyle({ isAll }: { isAll: boolean }): string {
  *
  * @returns the Vale style text.
  */
-export function bannedHeadingsStyle({ settings }: Pick<ScopeView, 'settings'>): string {
+export function buildBannedHeadingsStyle({ settings }: Pick<ScopeView, 'settings'>): string {
     const headings = [...new Set([...BANNED_HEADINGS, ...(settings['docs.banned_headings'] as string[])])];
     return stringify({
         extends: 'existence',
@@ -183,7 +183,7 @@ export function bannedHeadingsStyle({ settings }: Pick<ScopeView, 'settings'>): 
         ignorecase: true,
         scope: 'heading',
         nonword: true,
-        tokens: headings.map((heading) => String.raw`(?:\b|^)${escapedWord(heading)}(?:\b|$)`),
+        tokens: headings.map((heading) => String.raw`(?:\b|^)${escapeWord(heading)}(?:\b|$)`),
     });
 }
 
@@ -195,7 +195,7 @@ export function bannedHeadingsStyle({ settings }: Pick<ScopeView, 'settings'>): 
  *
  * @returns the Vale style text.
  */
-export function itemLengthStyle({ limit }: Pick<ScopeView, 'limit'>): string {
+export function buildListItemStyle({ limit }: Pick<ScopeView, 'limit'>): string {
     const max = limit('list_item_words');
     return stringify({
         ...LENGTH_STYLES.item,
@@ -213,7 +213,7 @@ export function itemLengthStyle({ limit }: Pick<ScopeView, 'limit'>): string {
  *
  * @returns the Vale style text.
  */
-export function paragraphLengthStyle({ limit }: Pick<ScopeView, 'limit'>): string {
+export function buildParagraphLengthStyle({ limit }: Pick<ScopeView, 'limit'>): string {
     const max = limit('paragraph_sentences');
     return stringify({
         ...LENGTH_STYLES.paragraph,
@@ -231,7 +231,7 @@ export function paragraphLengthStyle({ limit }: Pick<ScopeView, 'limit'>): strin
  *
  * @returns the Vale style text.
  */
-export function sentenceLengthStyle({ limit }: Pick<ScopeView, 'limit'>): string {
+export function buildSentenceLengthStyle({ limit }: Pick<ScopeView, 'limit'>): string {
     const max = limit('sentence_words');
     return stringify({
         ...LENGTH_STYLES.sentence,
@@ -249,13 +249,13 @@ export function sentenceLengthStyle({ limit }: Pick<ScopeView, 'limit'>): string
  *
  * @returns the Vale style text.
  */
-export function possessivesStyle({ names }: { names: string[] }): string {
+export function buildPossessivesStyle({ names }: { names: string[] }): string {
     return stringify({
         extends: 'existence',
         message: "Possessive on a product or code name: '%s'. Rephrase with 'of' or 'the'.",
         level: 'error',
         nonword: true,
-        tokens: [String.raw`\b(?:${names.map((name) => escapedWord(name)).join('|')})'s\b`],
+        tokens: [String.raw`\b(?:${names.map((name) => escapeWord(name)).join('|')})'s\b`],
     });
 }
 
@@ -267,7 +267,7 @@ export function possessivesStyle({ names }: { names: string[] }): string {
  *
  * @returns the sorted accepted vocabulary.
  */
-export function acceptedWordsToolFile({ prose }: { prose: ProseInputs }): string {
+export function buildAcceptedWordsFile({ prose }: { prose: ProseInputs }): string {
     return prose.words.toSorted((left, right) => left.localeCompare(right)).join('\n') + '\n';
 }
 /**
@@ -278,7 +278,7 @@ export function acceptedWordsToolFile({ prose }: { prose: ProseInputs }): string
  *
  * @returns prose asset inputs.
  */
-export function proseInputs(session: Session, manifests: Manifest[]): ProseInputs {
+export function buildProseInputs(session: Session, manifests: Manifest[]): ProseInputs {
     const words = session.settingsFile.settings.allowed_words;
     return {
         words: [

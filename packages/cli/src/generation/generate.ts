@@ -1,29 +1,27 @@
 import { AGENTS_FILE } from '#cli/config/rules.ts';
-import { miseFile } from '#cli/generation/mise.ts';
-import { npmProject } from '#cli/generation/npm.ts';
 import { buildPathKey } from '#cli/system/paths.ts';
 import type { RuleFile } from '#cli/types/rules.ts';
-import { hookFiles } from '#cli/generation/hooks.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { bunfigChanges } from '#cli/generation/bunfig.ts';
-import { pythonProject } from '#cli/generation/python.ts';
+import { buildHookFiles } from '#cli/generation/hooks.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
+import { buildBunfigEdits } from '#cli/generation/bunfig.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { emitToolFiles } from '#cli/generation/tool-files.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
-import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
-import { packageRedirects } from '#cli/generation/redirects.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
-import type { Generated } from '#cli/types/generation/files.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/generation/ci.ts';
+import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
+import type { GenerationResult } from '#cli/types/generation/files.ts';
+import { buildToolFiles } from '#cli/generation/tool-files/generate.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
+import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
 import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { listSelectedManifests, isConfigurationSelected } from '#cli/configurations/select.ts';
+import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/projects.ts';
 import { DOT_GSPOT, STATE_DIRECTORY, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
 
 import {
@@ -35,7 +33,7 @@ import {
 } from '#cli/config/generation/files.ts';
 
 // CI includes the selected manual checks and adds macOS when a scope selects Swift.
-function emitWorkflow(session: Session, generated: Generated): void {
+function buildWorkflow(session: Session, generated: GenerationResult): void {
     const {
         settingsFile: { settings },
         scopes,
@@ -45,7 +43,7 @@ function emitWorkflow(session: Session, generated: Generated): void {
     const manual = session.configuredChecks.filter((planned) => planned.check.stage === 'manual');
     const required = new Set(manual.flatMap((element) => requiredToolNames(element)));
     generated.files.push(
-        (settings.ci.provider === 'github' ? githubFile : gitlabFile)({
+        (settings.ci.provider === 'github' ? buildGithubWorkflow : buildGitlabWorkflow)({
             version,
             npmClient: session.getPackageManager(),
             setupCommand: settings.ci.setup_command,
@@ -59,7 +57,7 @@ function emitWorkflow(session: Session, generated: Generated): void {
 
 // A path as a Git attributes pattern that matches only that file: anchored, with glob characters escaped, and quoted
 // when it holds a space or a quote.
-function attributePattern(path: string): string {
+function formatAttributePattern(path: string): string {
     const escaped = path.replaceAll(ATTRIBUTE_GLOB_CHARACTERS, (character) => `\\${character}`);
     const pattern = `/${escaped}`;
     if (!ATTRIBUTE_QUOTED_CHARACTERS.test(pattern)) return pattern;
@@ -68,7 +66,7 @@ function attributePattern(path: string): string {
 }
 
 // Each whole file gspot writes outside its folder keeps LF too, so a CRLF checkout does not read as an edit.
-function attributesBlock(files: Generated['files'], authored: string): string {
+function buildAttributesBlock(files: GenerationResult['files'], authored: string): string {
     const inheritsLineEndings = parseAttributePatterns(authored, '.').some(
         ({ pattern, attributes }) =>
             pattern === '**/*' && AUTO_LF_ATTRIBUTES.every((attribute) => attributes.includes(attribute)),
@@ -82,11 +80,16 @@ function attributesBlock(files: Generated['files'], authored: string): string {
     const lineEndings = inheritsLineEndings ? '' : ` ${LF_ATTRIBUTES}`;
     const lines = outside
         .toSorted((left, right) => left.localeCompare(right))
-        .map((path) => `${attributePattern(path)} linguist-generated${lineEndings}`);
+        .map((path) => `${formatAttributePattern(path)} linguist-generated${lineEndings}`);
     return [block, ...lines].join('\n');
 }
 
-function emitBlocks(session: Session, manifests: Manifest[], rules: RuleFile[], generated: Generated): void {
+function addManagedBlocks(
+    session: Session,
+    manifests: Manifest[],
+    rules: RuleFile[],
+    generated: GenerationResult,
+): void {
     const {
         repository,
         settingsFile: { settings },
@@ -97,10 +100,10 @@ function emitBlocks(session: Session, manifests: Manifest[], rules: RuleFile[], 
     const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
     if (repository.hasGit) {
         generated.blocks.push(
-            { path: GITIGNORE_FILE, block: gitignoreBlock(), style: 'hash' },
+            { path: GITIGNORE_FILE, block: buildGitignoreBlock(), style: 'hash' },
             {
                 path: GITATTRIBUTES_FILE,
-                block: attributesBlock(generated.files, authored),
+                block: buildAttributesBlock(generated.files, authored),
                 style: 'hash',
             },
         );
@@ -119,8 +122,8 @@ function emitBlocks(session: Session, manifests: Manifest[], rules: RuleFile[], 
         generated.blocks.push({ path, block, style: 'markdown' });
 }
 
-function mergeFileEdits(generated: Generated): void {
-    const assembled = new Map<string, Generated['fileEdits'][number]>();
+function mergeFileEdits(generated: GenerationResult): void {
+    const assembled = new Map<string, GenerationResult['fileEdits'][number]>();
     for (const file of generated.fileEdits) {
         const previous = assembled.get(file.path);
         if (previous === undefined) assembled.set(file.path, { ...file, changes: [...file.changes] });
@@ -131,7 +134,7 @@ function mergeFileEdits(generated: Generated): void {
     generated.fileEdits = [...assembled.values()];
 }
 
-function assertDistinctPaths(generated: Generated): void {
+function assertDistinctPaths(generated: GenerationResult): void {
     const paths = new Map<string, string>();
     const files = [...generated.files, ...generated.blocks, ...generated.fileEdits];
     for (const file of files) {
@@ -147,7 +150,7 @@ function assertDistinctPaths(generated: Generated): void {
  * The managed .gitignore block for tool projects and generated files.
  * @returns the paths that Git must leave untracked.
  */
-export function gitignoreBlock(): string {
+export function buildGitignoreBlock(): string {
     const toolProjectPaths = [...Object.values(INSTALLED_TOOL_FOLDERS), STATE_DIRECTORY].map((path) => `${path}/`);
     return [...toolProjectPaths, `${DOT_GSPOT}/${NPMRC_FILE}`, `${DOT_GSPOT}/${YARN_INSTALL_SETTINGS_FILE}`].join('\n');
 }
@@ -159,7 +162,7 @@ export function gitignoreBlock(): string {
  *
  * @returns the files, managed blocks, authored config-file edits, and notes.
  */
-export function emitAll(session: Session): Generated {
+export function generate(session: Session): GenerationResult {
     const {
         settingsFile: { settings },
         repository,
@@ -171,7 +174,7 @@ export function emitAll(session: Session): Generated {
     const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const checks = session.configuredChecks;
     const repositoryConsumers = { tools, checks: new Set(checks.map((check) => check.check.name)) };
-    const generated: Generated = { notes: [], files: [], blocks: [], fileEdits: [] };
+    const generated: GenerationResult = { notes: [], files: [], blocks: [], fileEdits: [] };
     const seen = new Set<string>();
     for (const selection of scopes) {
         const scopeChecks = checks.filter(
@@ -181,19 +184,19 @@ export function emitAll(session: Session): Generated {
             tools: new Set(scopeChecks.flatMap((check) => requiredToolNames(check))),
             checks: new Set(scopeChecks.map((check) => check.check.name)),
         };
-        emitToolFiles({ session, files, scopes, manifests, selection }, generated, seen, {
+        buildToolFiles({ session, files, scopes, manifests, selection }, generated, seen, {
             repository: repositoryConsumers,
             scope: scopeConsumers,
         });
     }
-    generated.fileEdits.push(...bunfigChanges(root, scopes), ...packageRedirects(session, generated.files));
+    generated.fileEdits.push(...buildBunfigEdits(root, scopes), ...buildPointerFieldEdits(session, generated.files));
     generated.files.push(
-        ...hookFiles(root, settings, session.startRunner),
-        ...npmProject({ root, scopes, manifests, installer: npmClient }),
-        ...pythonProject(manifests),
-        miseFile(manifests, session.reads),
+        ...buildHookFiles(root, settings, session.startRunner),
+        ...buildNpmProject({ root, scopes, manifests, installer: npmClient }),
+        ...buildPythonProject(manifests),
+        buildMiseProject(manifests, session.reads),
     );
-    emitWorkflow(session, generated);
+    buildWorkflow(session, generated);
     const selected = listSelectedManifests(scopes);
     const rules = selectRuleFiles(settings.rules, selected, repository, settings.level, session.packageManifests);
     generated.files.push(
@@ -203,7 +206,7 @@ export function emitAll(session: Session): Generated {
             kind: 'rules' as const,
         })),
     );
-    emitBlocks(session, selected, rules, generated);
+    addManagedBlocks(session, selected, rules, generated);
     generated.files.sort((a, b) => a.path.localeCompare(b.path));
     mergeFileEdits(generated);
     assertDistinctPaths(generated);

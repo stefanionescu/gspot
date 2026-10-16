@@ -1,9 +1,9 @@
 import { parse } from 'jsonc-parser';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 
 test.each([...LEVELS])('%s turns on MD041 and MD025 only at level all and keeps your MD044 names', async (level) => {
@@ -18,7 +18,7 @@ names = ["Widget"]
         'source.md': '# Widget\n',
     });
     const session = await openSession(sandbox.path);
-    const file = emitAll(session).files.find(({ path }) => path === '.gspot/config/markdownlint.jsonc')!;
+    const file = generate(session).files.find(({ path }) => path === '.gspot/config/markdownlint.jsonc')!;
     const config = parse(file.content) as Record<string, unknown>;
     expect(config['MD041']).toBe(level === 'all');
     expect(config['MD025']).toStrictEqual(level === 'all' ? { front_matter_title: '' } : false);

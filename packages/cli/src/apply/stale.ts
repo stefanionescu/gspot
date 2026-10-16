@@ -8,9 +8,9 @@ import { DIFF_CONTEXT_LINES } from '#cli/config/apply.ts';
 import { readBlock } from '#cli/system/managed-blocks.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
-import type { Generated } from '#cli/types/generation/files.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import { listStaleLockfiles } from '#cli/tools/project-lockfiles.ts';
+import type { GenerationResult } from '#cli/types/generation/files.ts';
 
 import {
     UV_LOCKFILE,
@@ -33,7 +33,7 @@ function patch(path: string, before: string, after: string, beforeName: string):
     );
 }
 
-function staleWholeFiles(files: Files, generated: Generated): StaleFile[] {
+function staleWholeFiles(files: Files, generated: GenerationResult): StaleFile[] {
     return generated.files.flatMap((file): StaleFile[] => {
         const current = files.read(file.path);
         if (current === undefined) return [{ path: file.path, kind: 'missing' }];
@@ -51,7 +51,7 @@ function staleWholeFiles(files: Files, generated: Generated): StaleFile[] {
     });
 }
 
-function staleBlocks(files: Files, generated: Generated): StaleFile[] {
+function staleBlocks(files: Files, generated: GenerationResult): StaleFile[] {
     const entries: StaleFile[] = [];
     for (const block of generated.blocks) {
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
@@ -69,7 +69,7 @@ function staleBlocks(files: Files, generated: Generated): StaleFile[] {
 }
 
 // Classify merged files with no remaining managed fields as missing or changed.
-function staleKeys(files: Files, generated: Generated): StaleFile[] {
+function staleKeys(files: Files, generated: GenerationResult): StaleFile[] {
     return generated.fileEdits.flatMap((output): StaleFile[] => {
         const current = files.read(output.path);
         if (current === undefined) return [{ path: output.path, kind: 'missing' }];
@@ -87,7 +87,7 @@ function staleKeys(files: Files, generated: Generated): StaleFile[] {
  */
 export function findStaleFiles(
     session: Pick<Session, 'root' | 'requirePackageManager' | 'repository' | 'settingsFile'>,
-    generated: Generated,
+    generated: GenerationResult,
 ): StaleFile[] {
     using files = openFiles(session.root);
     const known = expectedPaths(session, generated);
@@ -110,7 +110,10 @@ export function findStaleFiles(
  *
  * @returns the destination paths.
  */
-export function expectedPaths(session: Pick<Session, 'requirePackageManager'>, generated: Generated): Set<string> {
+export function expectedPaths(
+    session: Pick<Session, 'requirePackageManager'>,
+    generated: GenerationResult,
+): Set<string> {
     const paths = new Set([
         VERSION_PIN_FILE,
         ...[...generated.files, ...generated.blocks, ...generated.fileEdits].map((file) => file.path),

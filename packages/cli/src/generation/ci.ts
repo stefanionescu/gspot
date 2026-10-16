@@ -4,7 +4,7 @@ import { quoteArgument } from '#cli/system/text.ts';
 import { name as cliName } from '../../package.json';
 import { TOOL_BUILDS } from '#cli/config/configurations.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
-import { hashCommentHeader } from '#cli/generation/headers.ts';
+import { hashCommentHeader } from '#cli/generation/header.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
@@ -31,7 +31,7 @@ import {
 } from '#cli/config/generation/ci.ts';
 
 // An action pinned to a commit, with the version the pin stands for as its comment, which pinact verifies.
-function pinned({ name, sha, version }: ActionPin): Scalar {
+function buildPinnedAction({ name, sha, version }: ActionPin): Scalar {
     const node = new Scalar(`${name}@${sha}`);
     node.comment = ` ${version}`;
     return node;
@@ -51,7 +51,7 @@ function buildCheckScript(command: string): string {
 }
 
 // The selected package client shares the same mise invocation as Node and the published CLI.
-function ciCommand(pipeline: Pipeline): string {
+function buildGspotCommand(pipeline: Pipeline): string {
     const client = pipeline.npmClient;
     const tools = ['node@24', `npm:${cliName}@${pipeline.version}`];
     if (client !== undefined && client.name !== 'npm') tools.push(`${client.name}@${client.version}`);
@@ -59,7 +59,7 @@ function ciCommand(pipeline: Pipeline): string {
 }
 
 // Both providers select manual checks and their program builds for the machine that runs them.
-function supportedManual(pipeline: Pipeline, platform: Pipeline['operatingSystems'][number], arch: string) {
+function selectManualChecks(pipeline: Pipeline, platform: Pipeline['operatingSystems'][number], arch: string) {
     const checks = pipeline.manualChecks.filter(
         (planned) => systemSkip(planned.check, planned.tool, { platform, arch }) === undefined,
     );
@@ -84,7 +84,7 @@ function buildJob(
     check: GithubCheck,
 ): Record<string, unknown> {
     const machine = CI_PINS.githubRunners[platform];
-    const command = ciCommand(pipeline);
+    const command = buildGspotCommand(pipeline);
     const cacheFiles = CI_CACHE_FILES.map((path) => `'${path}'`).join(', ');
     return {
         'runs-on': machine.label,
@@ -92,15 +92,15 @@ function buildJob(
         ...(check.condition === undefined ? {} : { if: check.condition }),
         defaults: { run: { shell: 'bash' } },
         steps: [
-            { uses: pinned(CI_PINS.actions.checkout), with: CHECKOUT_OPTIONS },
+            { uses: buildPinnedAction(CI_PINS.actions.checkout), with: CHECKOUT_OPTIONS },
             {
-                uses: pinned(CI_PINS.actions.cache),
+                uses: buildPinnedAction(CI_PINS.actions.cache),
                 with: {
                     key: `gspot-\${{ runner.os }}-\${{ runner.arch }}-\${{ hashFiles(${cacheFiles}) }}`,
                     path: `${CACHED_PATHS.join('\n')}\n`,
                 },
             },
-            { uses: pinned(CI_PINS.actions.mise), with: { version: CI_PINS.mise.version, cache: false } },
+            { uses: buildPinnedAction(CI_PINS.actions.mise), with: { version: CI_PINS.mise.version, cache: false } },
             ...(pipeline.setupCommand === undefined
                 ? []
                 : [{ run: pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' ') }]),
@@ -117,8 +117,8 @@ function buildJob(
  *
  * @returns the GitHub workflow file.
  */
-export function githubFile(pipeline: Pipeline): GeneratedFile {
-    const command = `${ciCommand(pipeline)} check`;
+export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
+    const command = `${buildGspotCommand(pipeline)} check`;
     const check: GithubCheck = {
         step: {
             name: 'Check',
@@ -137,7 +137,7 @@ export function githubFile(pipeline: Pipeline): GeneratedFile {
         jobs: Object.fromEntries(
             platforms.flatMap((platform) => {
                 const machine = CI_PINS.githubRunners[platform];
-                const manual = supportedManual(pipeline, platform, machine.arch);
+                const manual = selectManualChecks(pipeline, platform, machine.arch);
                 const jobs: [string, Record<string, unknown>][] = [
                     [`check-${platform}`, buildJob(pipeline, platform, check)],
                 ];
@@ -155,7 +155,7 @@ export function githubFile(pipeline: Pipeline): GeneratedFile {
                                             : [
                                                   `(cd ${DOT_GSPOT} && mise install ${manual.tools.map((element) => quoteArgument(element)).join(' ')})`,
                                               ]),
-                                        `${ciCommand(pipeline)} check --only ${manual.checks.map((element) => quoteArgument(element)).join(' ')}`,
+                                        `${buildGspotCommand(pipeline)} check --only ${manual.checks.map((element) => quoteArgument(element)).join(' ')}`,
                                     ].join('\n') + '\n',
                             },
                         }),
@@ -176,8 +176,8 @@ export function githubFile(pipeline: Pipeline): GeneratedFile {
  *
  * @returns the GitLab include file.
  */
-export function gitlabFile(pipeline: Pipeline): GeneratedFile {
-    const command = ciCommand(pipeline);
+export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
+    const command = buildGspotCommand(pipeline);
     const setup = [
         ...(pipeline.setupCommand === undefined
             ? []
@@ -187,7 +187,7 @@ export function gitlabFile(pipeline: Pipeline): GeneratedFile {
     const branches = OPERATING_SYSTEMS.flatMap((system) =>
         TOOL_BUILDS.filter((build) => build.startsWith(`${system.name}-`)).flatMap((build) => {
             const arch = build.slice(system.name.length + 1);
-            const manual = supportedManual(pipeline, system.name, arch);
+            const manual = selectManualChecks(pipeline, system.name, arch);
             if (manual.checks.length === 0) return [];
             return [
                 `    ${system.nodeName}/${arch})`,

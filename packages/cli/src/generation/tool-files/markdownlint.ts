@@ -14,7 +14,7 @@ import { MARKDOWNLINT_RULES } from '#cli/config/generation/tool-file-sources.ts'
  *
  * @returns the generated configuration text.
  */
-export function markdownlintToolFile(
+export function buildMarkdownlintFile(
     { format, settings, rulesOff }: Pick<ScopeView, 'format' | 'settings' | 'rulesOff'>,
     level: Level,
 ): string {

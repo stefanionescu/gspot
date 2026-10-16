@@ -4,8 +4,8 @@ import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/repository/inventory.ts';
-import { requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import { projectChecked } from '#cli/checks/language/typescript/project.ts';
+import { selectRequiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { TSCONFIG_FILE, TSCONFIG_NAME } from '#cli/config/parsers/tsconfig.ts';
@@ -35,7 +35,7 @@ export function typescriptTsconfig(input: CheckInput): Finding[] {
                 return TSCONFIG_NAME.test(name);
             }),
     ]);
-    const required = requiredTsconfigOptions(input.settingsFile.settings.level, input.selection.selected);
+    const required = selectRequiredTsconfigOptions(input.settingsFile.settings.level, input.selection.selected);
     const projects = [...candidates].flatMap((path) => {
         const parsed = readTsconfig(input.root, join(input.root, path), input.reads);
         return parsed === undefined ? [] : [{ path, parsed }];

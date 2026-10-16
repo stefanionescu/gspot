@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/checks.ts';
-import { emitAll } from '#cli/generation/files.ts';
 import { applyChanges } from '#tests/setup/files.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { sandboxPath } from '#tests/setup/install.ts';
 import { containing } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { runCheckSample } from '#tests/setup/fixes.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
@@ -238,7 +238,7 @@ test('markdownlint JSON keeps file name delimiters, positions, and fixability', 
     const applied = await spawnGspot(root, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const session = await openSession(root);
-    const generated = emitAll(session);
+    const generated = generate(session);
     {
         using log = openWriter(root);
         writeGeneratedFiles(session, generated, log);

@@ -4,10 +4,10 @@ import type { Session } from '#cli/types/planning.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { VUE_STYLELINT_OVERRIDE } from '#cli/config/planning.ts';
-import type { EmitInputs } from '#cli/types/generation/files.ts';
-import { stylelintComponents } from '#cli/planning/needed-tools.ts';
 import type { RuleNamesFile } from '#cli/types/generation/eslint.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import type { GenerationInputs } from '#cli/types/generation/files.ts';
+import { selectStylelintComponents } from '#cli/planning/needed-tools.ts';
 import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 
 import {
@@ -27,13 +27,13 @@ import {
  *
  * @returns the component parser overrides.
  */
-function componentOverrides(
+function buildComponentOverrides(
     configurations: string[],
     tailwindFunctions: string[],
     chosen: Record<string, unknown>,
     off: string[],
 ) {
-    return stylelintComponents(configurations).map((override) => {
+    return selectStylelintComponents(configurations).map((override) => {
         const { files, ignorePseudoClasses } = override;
         const functions =
             override === VUE_STYLELINT_OVERRIDE ? [...VUE_STYLELINT_OVERRIDE.functions, ...tailwindFunctions] : [];
@@ -77,8 +77,8 @@ export const ruleNamesFileSchema = z.strictObject({
  *
  * @returns the generated configuration text.
  */
-export function stylelintToolFile(
-    { selection, packageManifests }: Pick<EmitInputs, 'selection'> & Pick<Session, 'packageManifests'>,
+export function buildStylelintFile(
+    { selection, packageManifests }: Pick<GenerationInputs, 'selection'> & Pick<Session, 'packageManifests'>,
     level: Level,
 ): string {
     const { rulesOff, configurations } = selection.view;
@@ -95,7 +95,7 @@ export function stylelintToolFile(
     const tailwind = scopeDependencies.includes('tailwindcss');
     const tailwindAtRules = tailwind ? TAILWIND_AT_RULES : [];
     const tailwindFunctions = tailwind ? ['theme'] : [];
-    const overrides = componentOverrides(configurations, tailwindFunctions, chosen, off);
+    const overrides = buildComponentOverrides(configurations, tailwindFunctions, chosen, off);
     const syntaxRules: Record<string, unknown> = {
         'at-rule-no-unknown': true,
         'function-no-unknown': true,

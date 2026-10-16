@@ -2,15 +2,15 @@ import { parse } from 'yaml';
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { bodyPointer } from '#cli/generation/pointers.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
+import { buildBodyPointer } from '#cli/generation/pointers.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { MODULE_VALUE, MODULE_TARGETS } from '#tests/config/serialization.ts';
 
@@ -37,7 +37,7 @@ test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
             [`${child}/Value.swift`]: 'import XCTest\n',
         });
         const session = await openSession(sandbox.path);
-        const files = emitAll(session).files;
+        const files = generate(session).files;
         const pointer = files.find((file) => file.path === `${directory}/.swiftlint.yml`)!;
         const config = scope === '' ? '.gspot/config/swiftlint.yml' : `.gspot/config/${scope}/swiftlint.yml`;
         expect(parse(pointer.content)).toMatchObject({
@@ -82,7 +82,7 @@ for (const configuration of ['javascript', 'markdown'])
         const paths = [];
         for (const [index, component] of components.entries()) {
             const target = `generated/${component}/owner.mjs`;
-            const output = bodyPointer(pointer, `entry-${String(index)}.mjs`, target);
+            const output = buildBodyPointer(pointer, `entry-${String(index)}.mjs`, target);
             await createFileTree(sandbox.path, {
                 [target]: `export default ${JSON.stringify(MODULE_VALUE)};\n`,
                 [output.path]: output.content,

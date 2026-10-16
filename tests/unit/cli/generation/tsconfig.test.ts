@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { buildTsconfig, requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import { MALFORMED_TSCONFIGS, STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
+import { buildTsconfig, selectRequiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 
 test.each(MALFORMED_TSCONFIGS)(
     'a malformed tsconfig.json fails with its path and reason: %s',
@@ -44,7 +44,7 @@ test('an authored project extends its own compiler options without forcing requi
     const session = await openSession(sandbox.path);
     const scope = session.scopes[0]!;
     const options = Object.fromEntries(
-        Object.entries(requiredTsconfigOptions('all', scope.selected)).filter(
+        Object.entries(selectRequiredTsconfigOptions('all', scope.selected)).filter(
             ([name]) => !scope.view.rulesOff('typescript/tsconfig').includes(name),
         ),
     );
@@ -85,7 +85,7 @@ test('projects without tsconfig.json get required options and framework options 
             files: session.repository.files,
             scopeEntries: session.repository.scopes,
             options: Object.fromEntries(
-                Object.entries(requiredTsconfigOptions('all', scope.selected)).filter(
+                Object.entries(selectRequiredTsconfigOptions('all', scope.selected)).filter(
                     ([name]) => !scope.view.rulesOff('typescript/tsconfig').includes(name),
                 ),
             ),

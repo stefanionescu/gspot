@@ -24,7 +24,7 @@ import {
  *
  * @returns each file path and its installation key changes.
  */
-export function bunfigChanges(root: string, scopes: ScopeSelection[]): FileEdit[] {
+export function buildBunfigEdits(root: string, scopes: ScopeSelection[]): FileEdit[] {
     using files = openFiles(root);
     const selected = scopes
         .filter((selection) =>

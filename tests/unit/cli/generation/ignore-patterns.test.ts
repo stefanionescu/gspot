@@ -2,12 +2,12 @@ import prettier from 'prettier';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse, stringify } from 'smol-toml';
-import { emitAll } from '#cli/generation/files.ts';
 import { getValueAt } from '#cli/system/values.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitFile } from '#tests/setup/generate.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
+import { generate } from '#cli/generation/generate.ts';
+import { moveIgnorePatterns } from '#cli/generation/ignore-files.ts';
 
 import {
     LANGUAGE_IGNORES,
@@ -29,7 +29,7 @@ test.each([...PRETTIER_IGNORE_CASES])(
             'source.ts': 'export const value = 1;\n',
             [file]: 'const value={enabled:true};\n',
         });
-        const generated = emitAll(await openSession(directory.path)).files.find(
+        const generated = generate(await openSession(directory.path)).files.find(
             ({ path }) => path === '.prettierignore',
         )!;
         const ignorePath = join(directory.path, generated.path);
@@ -42,18 +42,18 @@ test.each([...PRETTIER_IGNORE_CASES])(
 test.each([...SCOPE_PATTERN_CASES])(
     'scope projection keeps brace and escape meaning for $pattern',
     ({ pattern, expected }) => {
-        expect(scopeIgnorePatterns([pattern], 'apps/web')).toStrictEqual([...expected]);
+        expect(moveIgnorePatterns([pattern], 'apps/web')).toStrictEqual([...expected]);
     },
 );
 
 test('scope projection keeps exclusion order and leaves other scopes out', () => {
-    expect(scopeIgnorePatterns(['/apps/web/{a,b}.ts', '!/apps/web/a.ts'], 'apps/web')).toStrictEqual([
+    expect(moveIgnorePatterns(['/apps/web/{a,b}.ts', '!/apps/web/a.ts'], 'apps/web')).toStrictEqual([
         '/a.ts',
         '/b.ts',
         '!/a.ts',
     ]);
-    expect(scopeIgnorePatterns(['/{apps,packages}/web/file.ts'], 'services/web')).toStrictEqual([]);
-    expect(scopeIgnorePatterns(['# comment', '', '**/generated/'], '')).toStrictEqual([
+    expect(moveIgnorePatterns(['/{apps,packages}/web/file.ts'], 'services/web')).toStrictEqual([]);
+    expect(moveIgnorePatterns(['# comment', '', '**/generated/'], '')).toStrictEqual([
         '# comment',
         '',
         '**/generated/',
@@ -135,7 +135,7 @@ test.each([...LANGUAGE_IGNORES])(
             'web/readme.md': '# Example\n',
         });
         const session = await openSession(sandbox.path);
-        const files = new Map(emitAll(session).files.map(({ path, content }) => [path, content]));
+        const files = new Map(generate(session).files.map(({ path, content }) => [path, content]));
         const internal = files.get('.prettierignore')!;
         await Bun.write(join(sandbox.path, '.prettierignore'), internal);
         for (const path of ignored) {

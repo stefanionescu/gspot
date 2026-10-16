@@ -1,13 +1,13 @@
-import { emitAll } from '#cli/generation/files.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { type Session } from '#cli/types/planning.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { readCachedPrefix } from '#cli/system/files/reads.ts';
-import { type Generated } from '#cli/types/generation/files.ts';
 import { hasGeneratedHeader } from '#cli/repository/classify.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
+import { type GenerationResult } from '#cli/types/generation/files.ts';
 import { readLintJobs, readExistingTools } from '#cli/repository/existing-tools.ts';
 import { type Suggestions, type SuggestionRow } from '#cli/types/commands/doctor.ts';
 import { type ExistingTools, type FoundToolFile } from '#cli/types/repository/inventory.ts';
@@ -111,7 +111,7 @@ function unownedToolFiles(
     session: Session,
     tooling: ExistingTools,
     tools: Set<string>,
-    outputs: Generated,
+    outputs: GenerationResult,
 ): SuggestionRow[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
     const generated = new Set(outputs.files.map((file) => file.path));
@@ -147,7 +147,7 @@ export function listSuggestions(session: Session): Suggestions {
     const { packageManifests } = session;
     const manifests = session.neededToolManifests;
     const tooling = readExistingTools(session.root, session.repository.files, packageManifests, session.reads);
-    const generated = emitAll(session);
+    const generated = generate(session);
     const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {

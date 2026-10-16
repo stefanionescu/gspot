@@ -17,7 +17,7 @@ import {
  *
  * @returns the generated configuration text.
  */
-export function shellcheckToolFile({ extra, rulesOff }: Pick<ScopeView, 'extra' | 'rulesOff'>, level: Level): string {
+export function buildShellcheckFile({ extra, rulesOff }: Pick<ScopeView, 'extra' | 'rulesOff'>, level: Level): string {
     const isAll = level === 'all';
     const native = extra('shellcheck');
     const options = [...SHELLCHECK_OPTIONS, ...(native === undefined ? [] : Object.entries(native))];

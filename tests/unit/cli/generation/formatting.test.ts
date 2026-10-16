@@ -4,12 +4,12 @@ import { type Options } from 'prettier';
 import { parse as parseYaml } from 'yaml';
 import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
@@ -38,7 +38,7 @@ test('format.indent_width reaches EditorConfig, Prettier and each tool file', as
         'Sample.swift': 'let value = 1\n',
     });
     const session = await openSession(directory.path);
-    const generated = new Map(emitAll(session).files.map((file) => [file.path, file.content]));
+    const generated = new Map(generate(session).files.map((file) => [file.path, file.content]));
     // Isolate EditorConfig discovery from the Prettier generated configuration for this native consumer.
     await Bun.write(join(directory.path, '.editorconfig'), generated.get('.editorconfig')!);
     const path = join(directory.path, 'sample.yaml');
@@ -72,7 +72,7 @@ test('a YAML indent override gives EditorConfig and Prettier the same width', as
         'sample.yaml': 'parent:\n child: value\n',
     });
     const session = await openSession(directory.path);
-    const generated = emitAll(session);
+    const generated = generate(session);
     using log = openWriter(directory.path);
     writeGeneratedFiles(session, generated, log);
     const path = join(directory.path, 'sample.yaml');
@@ -104,7 +104,7 @@ test('Prettier overrides agree in the tool file, the root pointer and editor loo
     });
     using log = openWriter(root);
     const session = await openSession(root);
-    writeGeneratedFiles(session, emitAll(session), log);
+    writeGeneratedFiles(session, generate(session), log);
     for (const { file, ...expected } of PRETTIER_OPTIONS_BY_FILE) {
         for (const config of ['.gspot/config/prettier.json', 'prettier.config.mjs']) {
             const computed = await prettier.resolveConfig(join(root, file), {
@@ -196,6 +196,6 @@ test('extra editorconfig-checker options reach .editorconfig', async () => {
         'source.txt': 'text\n',
     });
     const session = await openSession(sandbox.path);
-    const editorconfig = emitAll(session).files.find(({ path }) => path === '.editorconfig');
+    const editorconfig = generate(session).files.find(({ path }) => path === '.editorconfig');
     expect(editorconfig?.content).toContain('[*.txt]\nend_of_line = crlf');
 });

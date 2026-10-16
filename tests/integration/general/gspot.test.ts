@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -28,7 +28,7 @@ test('gspot/generated-files reports an edited file and one with merge conflict m
     });
     await writeOwnedFiles(sandbox.path);
     const session = await openSession(sandbox.path);
-    const manifest = emitAll(session).files.find(({ path }) => path === NPM_TOOL_PROJECT_FILE)!;
+    const manifest = generate(session).files.find(({ path }) => path === NPM_TOOL_PROJECT_FILE)!;
     using files = openWriter(sandbox.path);
     const lockfile = await prepareNpmLockfile(buildInstallContext(session, files), manifest, undefined);
     await writeFile(join(sandbox.path, lockfile.path), lockfile.content);
@@ -71,5 +71,5 @@ test('gspot/generated-files reports an edited file and one with merge conflict m
 async function writeOwnedFiles(root: string): Promise<void> {
     using log = openWriter(root);
     const session = await openSession(root);
-    writeGeneratedFiles(session, emitAll(session), log);
+    writeGeneratedFiles(session, generate(session), log);
 }

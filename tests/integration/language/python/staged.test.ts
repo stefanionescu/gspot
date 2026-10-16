@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { emitAll } from '#cli/generation/files.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { containing } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { installTools } from '#cli/install/install.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
@@ -20,7 +20,7 @@ test('a staged Python finding is reported by Ruff from the installed environment
     {
         using log = openWriter(prepared.root);
         const session = await openSession(prepared.root);
-        const installed = await installTools(session, log, emitAll(session));
+        const installed = await installTools(session, log, generate(session));
         expect(installed.exitCode, installed.note).toBe(0);
     }
     // Public apply already generated the Ruff configuration before tool installation.

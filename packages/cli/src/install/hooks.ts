@@ -1,8 +1,8 @@
 import { resolve, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import { hookLine } from '#cli/generation/hooks.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { HOOK_ARGS } from '#cli/config/generation/hooks.ts';
+import { formatHookCommand } from '#cli/generation/hooks.ts';
 import { readHooks } from '#cli/repository/existing-tools.ts';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
@@ -36,7 +36,7 @@ function otherHooks(root: string, own: string): ExistingTools['hooks'] {
 
 // The hook commands a foreign setup must invoke; install and readiness use the same instructions.
 function otherHooksNote(hooks: ExistingTools['hooks'], runner: StartRunner): string {
-    const lines = (Object.keys(HOOK_ARGS) as HookName[]).map((name) => `  ${name}: ${hookLine(name, runner)}`);
+    const lines = (Object.keys(HOOK_ARGS) as HookName[]).map((name) => `  ${name}: ${formatHookCommand(name, runner)}`);
     return `hooks already run from ${hooks.map((hook) => hook.path).join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`;
 }
 

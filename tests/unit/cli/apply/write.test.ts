@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { git, commitAll } from '#tests/setup/git.ts';
@@ -10,6 +9,7 @@ import { applyCommand } from '#cli/commands/apply.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { TOOL_FOLDERS } from '#tests/config/tools.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { type ApplyReport } from '#cli/types/apply.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
@@ -31,7 +31,7 @@ import { STYLELINT_FILES, STYLELINT_PACKAGE_JSON } from '#tests/config/stylelint
         await Bun.write(join(sandbox.path, 'gspot.toml'), edited);
         {
             using log = openWriter(session.root);
-            expect(() => writeGeneratedFiles(session, emitAll(session), log)).toThrow(
+            expect(() => writeGeneratedFiles(session, generate(session), log)).toThrow(
                 'The gspot.toml file changed while gspot was running. Run the command again.',
             );
         }
@@ -217,7 +217,7 @@ test.each([
     });
     if (row.hasGit) commitAll(sandbox.path);
     let session = await openSession(sandbox.path);
-    const generated = emitAll(session);
+    const generated = generate(session);
     expect(generated.fileEdits).toStrictEqual(
         row.changes.map((file) => ({
             ...file,
@@ -234,10 +234,10 @@ test.each([
     await writeFile(join(sandbox.path, 'app/package.json'), installed.replace('native-project', 'edited-project'));
     await writeFile(join(sandbox.path, 'gspot.toml'), settingsText([], { level: row.leaveLevel }));
     session = await openSession(sandbox.path);
-    expect(emitAll(session).fileEdits).toStrictEqual([]);
+    expect(generate(session).fileEdits).toStrictEqual([]);
     {
         using log = openWriter(sandbox.path);
-        writeGeneratedFiles(session, emitAll(session), log);
+        writeGeneratedFiles(session, generate(session), log);
     }
     const root = JSON.parse(await readFile(join(sandbox.path, 'package.json'), 'utf8')) as Record<string, unknown>;
     expect(root[row.tool]).toBeDefined();

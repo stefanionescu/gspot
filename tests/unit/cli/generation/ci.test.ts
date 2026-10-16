@@ -8,9 +8,9 @@ import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import type { Pipeline } from '#cli/types/generation/ci.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
-import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { GithubWorkflow, GitlabPipeline } from '#tests/types/ci.ts';
+import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
 
 import {
     SETUP_CASES,
@@ -50,13 +50,13 @@ afterAll(async () => {
 });
 
 test('the GitHub workflow has a check job and a manual job per operating system, and no manual job without manual checks', () => {
-    const file = githubFile({
+    const file = buildGithubWorkflow({
         ...PIPELINE,
         manualChecks: PIPELINE.manualChecks.filter(({ check }) => check.name === 'docs/lychee-external'),
     });
     const workflow = parse(file.content) as GithubWorkflow;
     expect(Object.keys(workflow.jobs)).toStrictEqual(['check-linux', 'manual-linux']);
-    const none = parse(githubFile({ ...PIPELINE, manualChecks: [] }).content) as GithubWorkflow;
+    const none = parse(buildGithubWorkflow({ ...PIPELINE, manualChecks: [] }).content) as GithubWorkflow;
     expect(Object.keys(none.jobs)).toStrictEqual(['check-linux']);
 });
 
@@ -64,7 +64,7 @@ test.each(['docs/lychee-external', 'project/audit'])(
     'the manual job runs %s by name and the check job runs every check',
     (name) => {
         const workflow = parse(
-            githubFile({
+            buildGithubWorkflow({
                 ...PIPELINE,
                 manualChecks: PIPELINE.manualChecks.filter(({ check }) => check.name === name),
                 manualTools: name === 'docs/lychee-external' ? PIPELINE.manualTools : [],
@@ -84,7 +84,7 @@ test.each(['docs/lychee-external', 'project/audit'])(
 );
 
 test('a Swift scope adds the macOS jobs', () => {
-    const workflow = parse(githubFile({ ...PIPELINE, hasSwift: true }).content) as GithubWorkflow;
+    const workflow = parse(buildGithubWorkflow({ ...PIPELINE, hasSwift: true }).content) as GithubWorkflow;
     expect(Object.keys(workflow.jobs)).toContain('check-macos');
     expect(Object.keys(workflow.jobs)).toContain('manual-macos');
 });
@@ -109,10 +109,10 @@ test.each(SETUP_CASES)(
         };
         const script =
             provider === 'github'
-                ? (parse(githubFile(pipeline).content) as GithubWorkflow).jobs['check-linux']!.steps.flatMap((step) =>
-                      step.run === undefined ? [] : [step.run],
+                ? (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['check-linux']!.steps.flatMap(
+                      (step) => (step.run === undefined ? [] : [step.run]),
                   )
-                : (parse(gitlabFile(pipeline).content) as GitlabPipeline).gspot.script;
+                : (parse(buildGitlabWorkflow(pipeline).content) as GitlabPipeline).gspot.script;
         const result = await runCommand(['bash', '-e', '-c', script.join('\n')], {
             cwd: sandbox.path,
             env: {

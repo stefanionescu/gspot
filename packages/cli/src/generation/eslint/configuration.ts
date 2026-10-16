@@ -2,8 +2,8 @@
 import { z } from 'zod';
 import { readAsset } from '#cli/system/assets.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { fragmentInputs } from '#cli/generation/fragments.ts';
 import { eslintInputs } from '#cli/generation/eslint/inputs.ts';
+import { collectFragments } from '#cli/generation/fragments.ts';
 import { appliedBlocks } from '#cli/generation/eslint/blocks.ts';
 import type { ScopeSourceInputs } from '#cli/types/generation/files.ts';
 import { ESLINT_RULE_LEVELS_FILE } from '#cli/config/generation/eslint.ts';
@@ -33,7 +33,7 @@ export function eslintConfiguration({ session, selection }: ScopeSourceInputs): 
     ) as ToolFileDeclaration;
     const { eslint, json } = base;
     const { eslintModule, eslintFiles, eslintFragmentBlocks, fragmentParts, fragmentImports, fragmentSelectors } =
-        fragmentInputs(session, session.scopes, selection, target, base);
+        collectFragments(session, session.scopes, selection, target, base);
     base.eslintFiles = eslintFiles;
     const config = eslint();
     const plugins = eslintPlugins(base);

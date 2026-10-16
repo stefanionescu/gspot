@@ -20,7 +20,7 @@ import {
  *
  * @returns the generated configuration text.
  */
-export function htmlValidateToolFile(
+export function buildHtmlValidateFile(
     { rulesOff }: Pick<ScopeView, 'rulesOff'>,
     { level, targetPath }: { level: Level; targetPath: string },
 ): string {

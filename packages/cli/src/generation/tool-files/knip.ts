@@ -1,16 +1,16 @@
 // The entry files of a folder: what the settings declares for it, then what the configurations of the deepest scope around it know.
 
 import type { Session } from '#cli/types/planning.ts';
-import { pointerPaths } from '#cli/generation/pointers.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
+import { listPointerPaths } from '#cli/generation/pointers.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
-import type { EmitInputs } from '#cli/types/generation/files.ts';
 import { listWorkspaceFolders } from '#cli/tools/npm/packages.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import type { GenerationInputs } from '#cli/types/generation/files.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
-import { generatedIgnores, selectedIgnorePaths } from '#cli/generation/ignore-patterns.ts';
+import { generatedIgnores, selectedIgnorePaths } from '#cli/generation/ignore-files.ts';
 
 import {
     KNIP_IGNORED,
@@ -29,7 +29,7 @@ import {
  *
  * @returns entry patterns for each scope.
  */
-function entryFiles(settings: Settings, scopes: ScopeSelection[], scope: string): string[] {
+function selectEntryFiles(settings: Settings, scopes: ScopeSelection[], scope: string): string[] {
     const authored = listApplicableTables(settings, scope).flatMap(({ table }) => {
         const entries = table.tools?.['knip']?.[KNIP_ENTRY_SETTING];
         return Array.isArray(entries) ? entries.filter((entry): entry is string => typeof entry === 'string') : [];
@@ -62,7 +62,7 @@ function entryFiles(settings: Settings, scopes: ScopeSelection[], scope: string)
  *
  * @returns the native workspace settings.
  */
-function knipWorkspaces(root: string, settings: Settings, scopes: ScopeSelection[]) {
+function buildWorkspaces(root: string, settings: Settings, scopes: ScopeSelection[]) {
     const selected = scopes.filter(({ view }) => view.configurations.includes('javascript'));
     const paths = [...new Set(['', ...listWorkspaceFolders(root)])];
     return Object.fromEntries(
@@ -72,7 +72,7 @@ function knipWorkspaces(root: string, settings: Settings, scopes: ScopeSelection
             return [
                 path === '' ? '.' : path,
                 {
-                    entry: entryFiles(settings, scopes, path),
+                    entry: selectEntryFiles(settings, scopes, path),
                     ...(path !== '' && ignored !== undefined ? { ignoreDependencies: ignored } : {}),
                 },
             ];
@@ -87,8 +87,8 @@ function knipWorkspaces(root: string, settings: Settings, scopes: ScopeSelection
  *
  * @returns the generated configuration text.
  */
-export function knipToolFile(
-    input: Pick<EmitInputs, 'selection' | 'scopes' | 'files' | 'manifests'> &
+export function buildKnipFile(
+    input: Pick<GenerationInputs, 'selection' | 'scopes' | 'files' | 'manifests'> &
         Pick<Session, 'root' | 'settingsFile' | 'reads' | 'repository' | 'startRunner'>,
 ): string {
     const { selection, scopes, files, manifests, settingsFile, root, startRunner } = input;
@@ -101,7 +101,9 @@ export function knipToolFile(
     ];
     const pointers = scopes.flatMap((selection) =>
         selection.selected.flatMap((manifest) =>
-            manifest.toolFiles.flatMap((toolFile) => pointerPaths({ files, selection, manifest, scopes }, toolFile)),
+            manifest.toolFiles.flatMap((toolFile) =>
+                listPointerPaths({ files, selection, manifest, scopes }, toolFile),
+            ),
         ),
     );
     const tools = listDistinctTools(manifests);
@@ -112,7 +114,7 @@ export function knipToolFile(
     const toolPackages = tools.flatMap((tool) =>
         tool.installers['npm']?.name === undefined ? [] : [tool.installers['npm'].name],
     );
-    const workspaces = knipWorkspaces(root, settingsFile.settings, scopes);
+    const workspaces = buildWorkspaces(root, settingsFile.settings, scopes);
     return JSON.stringify(
         {
             $schema: KNIP_SCHEMA_URL,

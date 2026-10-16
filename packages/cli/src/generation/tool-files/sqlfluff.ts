@@ -18,7 +18,7 @@ import {
  *
  * @returns the generated configuration text.
  */
-export function sqlfluffToolFile(
+export function buildSqlfluffFile(
     { settings, format, rulesOff }: Pick<ScopeView, 'settings' | 'format' | 'rulesOff'>,
     level: Level,
 ): string {

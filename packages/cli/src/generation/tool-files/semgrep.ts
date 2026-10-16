@@ -2,8 +2,8 @@ import { parse, stringify } from 'yaml';
 import type { Session } from '#cli/types/planning.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
-import type { EmitInputs, SemgrepDocument } from '#cli/types/generation/files.ts';
-import { gitignorePatterns, scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
+import { gitignorePatterns, moveIgnorePatterns } from '#cli/generation/ignore-files.ts';
+import type { SemgrepDocument, GenerationInputs } from '#cli/types/generation/files.ts';
 import { SEMGREP_IGNORED, SEMGREP_ENV_PATTERNS_INDEX } from '#cli/config/generation/tool-file-sources.ts';
 
 /**
@@ -18,14 +18,14 @@ import { SEMGREP_IGNORED, SEMGREP_ENV_PATTERNS_INDEX } from '#cli/config/generat
  *
  * @returns the generated configuration text.
  */
-export function semgrepToolFile(
+export function buildSemgrepFile(
     source: string,
     configuration: string,
     {
         selection,
         scopes,
         packageManifests,
-    }: Pick<EmitInputs, 'selection' | 'scopes'> & Pick<Session, 'packageManifests'>,
+    }: Pick<GenerationInputs, 'selection' | 'scopes'> & Pick<Session, 'packageManifests'>,
 ): string {
     const scopeDependencies = Object.keys(getProjectDependencies(packageManifests, selection.scope.path));
     const document = parse(source) as SemgrepDocument;
@@ -48,14 +48,14 @@ export function semgrepToolFile(
  *
  * @returns the generated configuration text.
  */
-export function semgrepignoreToolFile(
-    input: Pick<EmitInputs, 'selection' | 'scopes'> & Pick<Session, 'root' | 'reads' | 'repository'>,
+export function buildSemgrepignore(
+    input: Pick<GenerationInputs, 'selection' | 'scopes'> & Pick<Session, 'root' | 'reads' | 'repository'>,
 ): string {
     const { ignoresFor } = input.selection.view;
     const scope = input.selection.scope.path;
     const ignoredPaths = gitignorePatterns(input);
     return (
-        scopeIgnorePatterns(
+        moveIgnorePatterns(
             [
                 ...SEMGREP_IGNORED.slice(0, SEMGREP_ENV_PATTERNS_INDEX),
                 ...ignoredPaths,

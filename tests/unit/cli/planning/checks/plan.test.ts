@@ -2,13 +2,13 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, spyOn, expect } from 'bun:test';
 import { executeRun } from '#cli/execution/run.ts';
-import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
 import { buildManifest } from '#tests/setup/manifest.ts';
@@ -158,7 +158,7 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
     await createFileTree(sandbox.path, { 'gspot.toml': FORMAT_SETTINGS, 'sample.json': '{"value":1}\n' });
     const initial = await openSession(sandbox.path);
     using log = openWriter(initial.root);
-    writeGeneratedFiles(initial, emitAll(initial), log);
+    writeGeneratedFiles(initial, generate(initial), log);
     expect(await pathExists(join(sandbox.path, '.prettierignore'))).toBe(true);
     expect(await pathExists(join(sandbox.path, '.gspot/config/prettier.json'))).toBe(true);
     await writeFile(join(sandbox.path, 'gspot.toml'), FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
@@ -169,14 +169,14 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
     expect(excluded.neededToolManifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name))).not.toContain(
         'prettier',
     );
-    const generated = emitAll(excluded);
+    const generated = generate(excluded);
     expect(generated.files.map((file) => file.path)).not.toContain('.gspot/config/prettier.json');
     const removed = writeGeneratedFiles(excluded, generated, log);
     expect(removed.removed).toContain('.prettierignore');
     expect(await pathExists(join(sandbox.path, '.prettierignore'))).toBe(false);
     const settled = await openSession(sandbox.path);
     expect(configuredChecks(settled).map((check) => check.check.name)).not.toContain('format/prettier');
-    const repeated = writeGeneratedFiles(settled, emitAll(settled), log);
+    const repeated = writeGeneratedFiles(settled, generate(settled), log);
     expect(repeated.written).toStrictEqual([]);
     expect(repeated.removed).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);

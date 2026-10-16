@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
@@ -107,7 +107,7 @@ configurations = ["swift-tests"]
             [`${prefix}AppTests/Deep/Value.swift`]: PARSER_SOURCE,
         });
         const session = await openSession(root);
-        const emitted = emitAll(session);
+        const emitted = generate(session);
         const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
         using log = openWriter(root);
@@ -154,7 +154,7 @@ configurations = ["swift-tests"]
             [`${prefix}AppTests/Deep/Value.swift`]: PARSER_SOURCE,
         });
         const session = await openSession(root);
-        const emitted = emitAll(session);
+        const emitted = generate(session);
         const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
         using log = openWriter(root);
@@ -198,7 +198,7 @@ configurations = ["swift-tests"]
             [`${prefix}AppTests/Deep/Value.swift`]: PARSER_SOURCE,
         });
         const session = await openSession(root);
-        const emitted = emitAll(session);
+        const emitted = generate(session);
         const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
         using log = openWriter(root);
@@ -237,7 +237,7 @@ configurations = ["swift-tests"]
             [`${prefix}AppTests/Deep/Value.swift`]: PARSER_SOURCE,
         });
         const session = await openSession(root);
-        const emitted = emitAll(session);
+        const emitted = generate(session);
         const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
         using log = openWriter(root);
@@ -267,7 +267,7 @@ configurations = ["swift-tests"]
             [`${scope}/Value.swift`]: PARSER_SOURCE,
         });
         const session = await openSession(sandbox.path);
-        const emitted = emitAll(session);
+        const emitted = generate(session);
         const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.filter(({ path }) => path === `${scope}/.swiftlint.yml`)).toHaveLength(1);
         using log = openWriter(sandbox.path);

@@ -86,7 +86,7 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
  *
  * @returns the required compiler options.
  */
-export function requiredTsconfigOptions(level: Level, selected: Manifest[]): Record<string, boolean> {
+export function selectRequiredTsconfigOptions(level: Level, selected: Manifest[]): Record<string, boolean> {
     const options: Record<string, boolean> = { ...(level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS) };
     if (selected.some((manifest) => manifest.configuration.name === NESTJS_CONFIGURATION))
         Object.assign(options, NESTJS_COMPILER_OPTIONS);

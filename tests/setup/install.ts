@@ -6,12 +6,12 @@ import { testdir } from 'testdirs';
 import { createHash } from 'node:crypto';
 import { join, delimiter } from 'node:path';
 import { parse, stringify } from 'smol-toml';
-import { emitAll } from '#cli/generation/files.ts';
 import { rejection } from '#tests/setup/matchers.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
@@ -252,7 +252,7 @@ export async function writeLockedInputs(root: string, suppliedLog?: Writer): Pro
     using resources = new DisposableStack();
     const log = suppliedLog ?? resources.use(openWriter(root));
     const session = await openSession(root);
-    const generated = emitAll(session);
+    const generated = generate(session);
     writeGeneratedFiles(session, generated, log);
     if (log.files.read('.gspot/mise.toml') !== undefined) {
         const trusted = await runCommand(['mise', 'trust', '.gspot/mise.toml'], { cwd: root });
@@ -308,7 +308,7 @@ export function buildInstallContext(session: Session, writer: Writer): InstallCo
     return {
         session,
         writer,
-        generated: emitAll(session),
+        generated: generate(session),
         tools: listDistinctTools(session.neededToolManifests),
         mise: null,
         steps: [],

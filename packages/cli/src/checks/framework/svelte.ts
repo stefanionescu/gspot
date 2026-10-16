@@ -7,8 +7,8 @@ import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { toolFindings } from '#cli/execution/command/output.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
-import { requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import { writeTsconfig } from '#cli/checks/language/typescript/project.ts';
+import { selectRequiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
 import { TSCONFIG_FILE, TYPESCRIPT_TSCONFIG_CHECK } from '#cli/config/parsers/tsconfig.ts';
@@ -77,9 +77,9 @@ export async function svelteCheck(input: CheckInput): Promise<Finding[]> {
     using runtime = createScratchFolder();
     const target = join(runtime.path, TOOL_FILE_DIRECTORY, input.selection.scope.path, TSCONFIG_FILE);
     const options = Object.fromEntries(
-        Object.entries(requiredTsconfigOptions(input.settingsFile.settings.level, input.selection.selected)).filter(
-            ([name]) => !input.selection.view.rulesOff(TYPESCRIPT_TSCONFIG_CHECK).includes(name),
-        ),
+        Object.entries(
+            selectRequiredTsconfigOptions(input.settingsFile.settings.level, input.selection.selected),
+        ).filter(([name]) => !input.selection.view.rulesOff(TYPESCRIPT_TSCONFIG_CHECK).includes(name)),
     );
     const config = writeTsconfig({
         root: input.root,

@@ -1,9 +1,9 @@
 import { confirm } from '@clack/prompts';
-import { emitAll } from '#cli/generation/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { readTemplate } from '#cli/settings/templates.ts';
 import { type Command } from '@commander-js/extra-typings';
@@ -171,7 +171,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
     const applicable = session.neededToolManifests;
     const tools = new Set(applicable.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     printDetection(inputs, selection, tooling, tools);
-    const generated = emitAll(session);
+    const generated = generate(session);
     const replaced = planReplacedFiles(root, tooling, tools, generated.fileEdits);
     const planning: InitPlanInputs = {
         reads,

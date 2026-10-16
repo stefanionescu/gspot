@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { git, gitOutput } from '#tests/setup/git.ts';
@@ -8,6 +7,7 @@ import { runGspot } from '#tests/setup/run-gspot.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { rm, stat, readFile } from 'node:fs/promises';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
@@ -57,7 +57,7 @@ test.each(['absent', 'authored', 'managed'])(
                   }),
         });
         gitOutput(sandbox.path, ['init', '-q']);
-        const generated = emitAll(await openSession(sandbox.path));
+        const generated = generate(await openSession(sandbox.path));
         const attributes = generated.blocks.find(({ path }) => path === '.gitattributes')!;
         expect(attributes.block.includes(' text eol=lf')).toBe(source !== 'authored');
         await Bun.write(
@@ -101,7 +101,7 @@ test('switching the level and back writes the same files and the AGENTS.md level
         const settings = settingsText(['javascript'], { rules: true, level: level });
         await Bun.write(join(sandbox.path, 'gspot.toml'), settings);
         const session = await openSession(sandbox.path);
-        const output = emitAll(session);
+        const output = generate(session);
         const config = output.files.find((file) => file.path.endsWith('/eslint.config.mjs'))!;
         using log = openWriter(sandbox.path);
         writeGeneratedFiles(session, output, log);
@@ -125,7 +125,7 @@ test.each([true, false])(
         {
             using log = openWriter(repository.path);
             const session = await openSession(repository.path);
-            writeGeneratedFiles(session, emitAll(session), log);
+            writeGeneratedFiles(session, generate(session), log);
         }
         const path = join(repository.path, '.gitignore');
         // Generation keeps any existing file outside Git. It creates no new file.
@@ -137,7 +137,7 @@ test.each([true, false])(
         {
             using log = openWriter(repository.path);
             const session = await openSession(repository.path);
-            writeGeneratedFiles(session, emitAll(session), log);
+            writeGeneratedFiles(session, generate(session), log);
         }
         const installed = await readFile(path, 'utf8');
         expect(installed.startsWith(original)).toBe(authored);
@@ -145,7 +145,7 @@ test.each([true, false])(
         {
             using log = openWriter(repository.path);
             const session = await openSession(repository.path);
-            writeGeneratedFiles(session, emitAll(session), log);
+            writeGeneratedFiles(session, generate(session), log);
         }
         expect(await readFile(path, 'utf8')).toBe(installed);
     },

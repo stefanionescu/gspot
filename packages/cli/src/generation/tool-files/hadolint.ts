@@ -13,7 +13,7 @@ import { HADOLINT_RECOMMENDED_OFF, HADOLINT_FAILURE_THRESHOLD } from '#cli/confi
  *
  * @returns the generated configuration text.
  */
-export function hadolintToolFile(
+export function buildHadolintFile(
     { settings, rulesOff }: Pick<ScopeView, 'settings' | 'rulesOff'>,
     level: Level,
 ): string {

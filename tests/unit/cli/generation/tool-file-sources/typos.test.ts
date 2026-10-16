@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { parse, stringify } from 'smol-toml';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { buildInitOptions } from '#tests/setup/init.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { containingAll } from '#tests/setup/matchers.ts';
@@ -24,7 +24,7 @@ test('typos.toml keeps quoted words and paths and adds no settings', async () =>
         }),
     });
     const session = await openSession(sandbox.path);
-    const output = emitAll(session);
+    const output = generate(session);
     const target = output.files.find((file) => file.path === '.gspot/config/typos.toml');
     expect(target).toBeDefined();
     const parsed = parse(target!.content);
@@ -65,7 +65,7 @@ test('a quoted word from a template reaches typos.toml through init', async () =
     if (typeof settings !== 'string') throw new Error('The initialization plan has no settings text.');
     await writeFile(join(sandbox.path, 'gspot.toml'), settings);
     const session = await openSession(sandbox.path);
-    const output = emitAll(session);
+    const output = generate(session);
     const target = output.files.find((file) => file.path === '.gspot/config/typos.toml');
     expect(target).toBeDefined();
     expect(parse(target!.content)['default']).toMatchObject({ 'extend-words': { [word]: word } });
@@ -89,7 +89,7 @@ spelling.locale = "en-us"
         }),
     });
     const session = await openSession(sandbox.path);
-    const output = emitAll(session);
+    const output = generate(session);
     const paths = new Set(output.files.map(({ path }) => path));
     const declaration = session.scopes[0]!.selected.flatMap(({ toolFiles }) => toolFiles).find(
         ({ target }) => target === '.gspot/config/typos.toml',

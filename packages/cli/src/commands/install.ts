@@ -1,8 +1,8 @@
-import { emitAll } from '#cli/generation/files.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { printResult } from '#cli/system/terminal.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { installTools } from '#cli/install/install.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
@@ -18,7 +18,7 @@ export async function installCommand(cwd: string): Promise<CommandResult> {
     const root = findRoot(cwd);
     await assertVersionPin(root);
     const session = await openSession(root);
-    const generated = emitAll(session);
+    const generated = generate(session);
     using log = openWriter(root);
     const { note, exitCode, steps } = await installTools(session, log, generated);
     return {

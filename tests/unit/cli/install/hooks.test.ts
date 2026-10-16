@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/setup/git.ts';
-import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitSetting } from '#cli/system/git.ts';
@@ -9,6 +8,7 @@ import { applyCommand } from '#cli/commands/apply.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { hookContext } from '#tests/setup/repository.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
@@ -44,7 +44,7 @@ test.each([...HOOK_REPOSITORIES])(
         {
             using log = openWriter(sandbox.path);
             const session = await openSession(sandbox.path);
-            writeGeneratedFiles(session, emitAll(session), log);
+            writeGeneratedFiles(session, generate(session), log);
         }
 
         const steps: (readonly string[])[] = [];

@@ -9,7 +9,7 @@ import { RUNNERS, HOOK_ARGS, HOOK_SHEBANG, COMMIT_MESSAGE_PATH_LINES } from '#cl
 
 // The script of one hook. Git runs it from the top level; a commit message path Git gives relative to there
 // becomes absolute first, in the Windows spelling under Git for Windows.
-function hookScript(name: HookName, runner: StartRunner, prefix: string): string {
+function buildHookScript(name: HookName, runner: StartRunner, prefix: string): string {
     const program = runner.name;
     const { missing } = runner;
     const quoted = prefix.replaceAll("'", String.raw`'\''`);
@@ -18,7 +18,7 @@ function hookScript(name: HookName, runner: StartRunner, prefix: string): string
         ...absolutePath,
         ...(prefix === '' ? [] : [`cd '${quoted}' || exit 2`]),
         `command -v ${program} >/dev/null 2>&1 || { echo '${program} is not installed. ${missing}' >&2; exit 2; }`,
-        `exec ${hookLine(name, runner)}`,
+        `exec ${formatHookCommand(name, runner)}`,
         '',
     ].join('\n');
     return `${HOOK_SHEBANG}\n${body}`;
@@ -31,7 +31,7 @@ function hookScript(name: HookName, runner: StartRunner, prefix: string): string
  *
  * @returns the package manager row, or mise when gspot has no root npm dependency.
  */
-export async function startRunner(root: string): Promise<StartRunner> {
+export async function selectRunner(root: string): Promise<StartRunner> {
     const manifest = readPackageJson(root, 'package.json');
     const hasDependency =
         manifest?.dependencies?.[cliName] !== undefined || manifest?.devDependencies?.[cliName] !== undefined;
@@ -49,7 +49,7 @@ export async function startRunner(root: string): Promise<StartRunner> {
  *
  * @returns the command line.
  */
-export function hookLine(name: HookName, runner: StartRunner): string {
+export function formatHookCommand(name: HookName, runner: StartRunner): string {
     return `${runner.command} ${HOOK_ARGS[name]}`;
 }
 
@@ -62,12 +62,12 @@ export function hookLine(name: HookName, runner: StartRunner): string {
  *
  * @returns the generated files.
  */
-export function hookFiles(root: string, settings: Settings, runner: StartRunner): GeneratedFile[] {
+export function buildHookFiles(root: string, settings: Settings, runner: StartRunner): GeneratedFile[] {
     if (settings.hooks?.enabled !== true) return [];
     const prefix = isGitRepository(root) ? readGitPrefix(root) : '';
     return (Object.keys(HOOK_ARGS) as HookName[]).map((name) => ({
         path: `${HOOKS_DIRECTORY}/${name}`,
-        content: hookScript(name, runner, prefix),
+        content: buildHookScript(name, runner, prefix),
         executable: true,
         kind: 'hook',
     }));

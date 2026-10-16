@@ -139,9 +139,9 @@ allowed_names = ["MISE_SHIMS_FOLDER"]
 reason = "The final placement names the actual mise shims folder MISE_SHIMS_FOLDER."
 
 [[naming.override]]
-paths = ["packages/cli/src/generation/tool-file-sources/v8r.ts"]
-allowed_names = ["v8r", "v8rToolFile"]
-reason = "The final placement retains the official v8r tool name and its producer v8rToolFile."
+paths = ["packages/cli/src/generation/tool-files/plain.ts"]
+allowed_names = ["buildV8rFile"]
+reason = "The final placement retains the official v8r tool name and its producer buildV8rFile."
 
 [[naming.override]]
 paths = ["packages/cli/src/tools/npm/lockfiles.ts"]
@@ -525,7 +525,7 @@ reason = "A configuration template takes the name of the file it writes, and a t
 
 [[ignore]]
 check = "structure/shared-prefixes"
-paths = ["packages/cli/src/checks/general/structure/file-folder-clashes.ts", "packages/cli/src/checks/language/swift/build-folder.ts", "packages/cli/src/config/generation/tool-file-sources.ts", "packages/cli/src/generation/eslint/fragments/react*.ts", "packages/cli/src/generation/tool-file-builders.ts", "packages/cli/src/generation/tool-files.ts", "tests/config/ignore-patterns.ts", "tests/config/swift-tests.ts", "tests/types/tool-files.ts", "tests/unit/cli/checks/general/structure/file-folder-clashes.test.ts", "tests/unit/cli/checks/language/swift/build-folder.test.ts", "tests/unit/cli/generation/tool-files.test.ts"]
+paths = ["packages/cli/src/checks/general/structure/file-folder-clashes.ts", "packages/cli/src/checks/language/swift/build-folder.ts", "packages/cli/src/config/generation/tool-file-sources.ts", "packages/cli/src/generation/eslint/fragments/react*.ts", "tests/config/ignore-patterns.ts", "tests/config/swift-tests.ts", "tests/types/tool-files.ts", "tests/unit/cli/checks/general/structure/file-folder-clashes.test.ts", "tests/unit/cli/checks/language/swift/build-folder.test.ts", "tests/unit/cli/generation/tool-files.test.ts"]
 reason = "The final placement names each distinct topic directly; these related topics share a word without sharing one implementation."
 
 [[ignore]]

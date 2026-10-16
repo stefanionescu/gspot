@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/checks.ts';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { javascriptTsc } from '#cli/checks/language/typescript/tsc.ts';
 
@@ -17,7 +17,7 @@ test('a scope whose project lists no JavaScript file passes with nothing to comp
         'site/README.md': '# No script here\n',
     });
     const session = await openSession(sandbox.path);
-    const projects = emitAll(session).files.filter(({ path }) => path.endsWith('jsconfig.json'));
+    const projects = generate(session).files.filter(({ path }) => path.endsWith('jsconfig.json'));
     expect(projects.map(({ path }) => path)).toStrictEqual(['.gspot/config/jsconfig.json']);
     const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(applied.exitCode).toBe(0);

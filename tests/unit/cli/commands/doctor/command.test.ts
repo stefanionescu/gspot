@@ -2,11 +2,11 @@ import semver from 'semver';
 import executables from 'which';
 import { test, spyOn, expect } from 'bun:test';
 import { readTree } from '#tests/setup/files.ts';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
@@ -33,7 +33,7 @@ test('doctor reports no unowned gspot files in a fresh clone', async () => {
     {
         using writer = openWriter(source);
         const session = await openSession(source);
-        writeGeneratedFiles(session, emitAll(session), writer);
+        writeGeneratedFiles(session, generate(session), writer);
     }
     commitAll(source);
     gitOutput(sandbox.path, ['clone', '--quiet', source, checkout]);
@@ -86,7 +86,7 @@ test('doctor suggests the command that adds the configuration of a new Python fi
     {
         using log = openWriter(sandbox.path);
         const session = await openSession(sandbox.path);
-        writeGeneratedFiles(session, emitAll(session), log);
+        writeGeneratedFiles(session, generate(session), log);
     }
     await writeFile(join(sandbox.path, 'service.py'), 'print("hello")\n');
     const result = await doctorCommand(sandbox.path);

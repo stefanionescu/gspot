@@ -1,12 +1,19 @@
-import { dirname, relative } from 'node:path';
-import { headerFor } from '#cli/generation/headers.ts';
+import { parseJsonFile } from '#cli/parsers/json.ts';
+import { posix, dirname, relative } from 'node:path';
+import { openFiles } from '#cli/system/files/open.ts';
+import type { Session } from '#cli/types/planning.ts';
+import type { FileEdit } from '#cli/types/ownership.ts';
+import { formatHeader } from '#cli/generation/header.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import { prettierConfiguration } from '#cli/generation/formatting.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
-import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import type { GeneratedFile, ToolFileInputs } from '#cli/types/generation/files.ts';
+import { type ToolFileDeclaration } from '#cli/types/configurations.ts';
+import { requiredToolNames, listPrettierPlugins } from '#cli/planning/needed-tools.ts';
+import { isInScope, joinScope, listNestedScopes, buildScopeTarget } from '#cli/repository/scopes.ts';
 import { convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
+import { type GeneratedFile, type ToolFileInputs, type PackageRedirectInputs } from '#cli/types/generation/files.ts';
 import { TARGET_PLACEHOLDER, TARGET_JSON_PLACEHOLDER, TARGET_MODULE_PLACEHOLDER } from '#cli/config/configurations.ts';
 
 /**
@@ -19,7 +26,7 @@ import { TARGET_PLACEHOLDER, TARGET_JSON_PLACEHOLDER, TARGET_MODULE_PLACEHOLDER 
  * @returns the text with quoted module and JSON paths preserved.
  */
 function fillTarget(value: string, pointerPath: string, targetPath: string): string {
-    const target = relativeTarget(pointerPath, targetPath);
+    const target = deriveRelativeTarget(pointerPath, targetPath);
     return value.replaceAll(TARGET_PLACEHOLDER, (placeholder) => {
         if (placeholder === TARGET_MODULE_PLACEHOLDER) {
             return JSON.stringify(
@@ -41,7 +48,7 @@ function fillTarget(value: string, pointerPath: string, targetPath: string): str
  *
  * @returns a portable relative path understood by configuration loaders.
  */
-export function relativeTarget(pointerPath: string, targetPath: string): string {
+function deriveRelativeTarget(pointerPath: string, targetPath: string): string {
     const relativePath = convertToPosixPath(relative(dirname(pointerPath), targetPath));
     return relativePath.startsWith('./') || relativePath.startsWith('../') ? relativePath : `./${relativePath}`;
 }
@@ -55,7 +62,7 @@ export function relativeTarget(pointerPath: string, targetPath: string): string 
  *
  * @returns the generated file.
  */
-export function bodyPointer(
+function buildBodyPointer(
     pointer: NonNullable<ToolFileDeclaration['pointer']>,
     pointerPath: string,
     targetPath: string,
@@ -64,7 +71,7 @@ export function bodyPointer(
     const ended = body.endsWith('\n') ? body : `${body}\n`;
     return {
         path: pointerPath,
-        content: `${headerFor(pointerPath)}${ended}`,
+        content: `${formatHeader(pointerPath)}${ended}`,
         kind: 'pointer',
     };
 }
@@ -77,7 +84,7 @@ export function bodyPointer(
  *
  * @returns root or directory paths.
  */
-export function pointerPaths(
+function listPointerPaths(
     context: Pick<ToolFileInputs, 'files' | 'selection' | 'manifest' | 'scopes'>,
     toolFile: ToolFileDeclaration,
 ): string[] {
@@ -101,13 +108,125 @@ export function pointerPaths(
         scope: '',
         view: selection.view,
     }).filter((file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)));
-    const directories = new Set(
+    const folders = new Set(
         owned.flatMap(({ path }) =>
             [...includeParentFolders([extractParentFolder(path)])]
-                .filter((directory) => directory !== '' && matches(directory))
+                .filter((folder) => folder !== '' && matches(folder))
                 .toSorted((left, right) => right.length - left.length)
-                .map((directory) => (isInScope(directory, scope) ? directory : scope)),
+                .map((folder) => (isInScope(folder, scope) ? folder : scope)),
         ),
     );
-    return [...directories].map((directory) => `${directory}/${pointer.path}`);
+    return [...folders].map((folder) => `${folder}/${pointer.path}`);
 }
+
+function listPointerFieldTargets({ selection, manifest, tool, consumed, paths, scopePaths }: PackageRedirectInputs) {
+    return (tool.replace_key ?? [])
+        .filter((replacement) => replacement.redirect === true)
+        .flatMap((replacement) =>
+            manifest.toolFiles
+                .map((file) => ({ file, target: buildScopeTarget(selection.scope.path, file, paths) }))
+                .filter(
+                    ({ file, target }) =>
+                        !file.fragment &&
+                        file.tool.includes(tool.name) &&
+                        paths.has(target) &&
+                        (!file.per_scope || consumed),
+                )
+                .map(({ file, target }) => {
+                    let scope = '';
+                    let children: string[] = [];
+                    if (file.per_scope) {
+                        scope = selection.scope.path;
+                        children = listNestedScopes(scopePaths, scope);
+                    }
+                    let pointerTarget = target;
+                    if (file.pointer !== undefined) {
+                        const pointerPath = posix.join(scope, file.pointer.path);
+                        pointerTarget = paths.has(pointerPath) ? pointerPath : file.pointer.path;
+                    }
+                    return {
+                        file: replacement.file,
+                        key: replacement.key,
+                        scope,
+                        children,
+                        target: pointerTarget,
+                    };
+                }),
+        );
+}
+
+/**
+ * Redirect authored package fields declared by selected manifests to generated tool files.
+ *
+ * @param session the authored inventory and selected scopes.
+ * @param generated the actual tool files emitted for applicable checks.
+ *
+ * @returns changes to the declared package fields.
+ */
+function buildPointerFieldEdits(session: Session, generated: GeneratedFile[]): FileEdit[] {
+    const { root, repository, scopes } = session;
+    const paths = new Set(generated.map(({ path }) => path));
+    const scopePaths = scopes.map(({ scope }) => scope.path);
+    const tools = scopes.flatMap((selection) => {
+        const required = new Set(
+            session.configuredChecks
+                .filter((check) => check.scope.scope.path === selection.scope.path || check.check.runs === 'once')
+                .flatMap((element) => requiredToolNames(element)),
+        );
+        return selection.selected.flatMap((manifest) =>
+            manifest.tools.map((tool) => ({ selection, manifest, tool, consumed: required.has(tool.name) })),
+        );
+    });
+    const declarations = tools.flatMap((selected) => listPointerFieldTargets({ ...selected, paths, scopePaths }));
+    const redirects = new Map(
+        declarations.map((row) => [JSON.stringify([row.file, row.key, row.scope, row.target]), row]),
+    );
+    const packages = new Set([
+        'package.json',
+        ...repository.files
+            .filter((file) => file.kind === 'source' && posix.basename(file.path) === 'package.json')
+            .map(({ path }) => path),
+    ]);
+    if (redirects.size === 0) return [];
+    using files = openFiles(root);
+    return [...packages].flatMap((path) => {
+        const source = files.read(path);
+        if (source === undefined) return [];
+        const document = parseJsonFile(path, source.bytes.toString('utf8'));
+        return [...redirects.values()]
+            .filter(
+                (row) =>
+                    Object.hasOwn(document, row.key) &&
+                    isInScope(path, row.scope) &&
+                    row.children.every((child) => !isInScope(path, child)),
+            )
+            .map((row) => ({
+                path,
+                changes: [{ path: [row.key], value: { extends: deriveRelativeTarget(path, row.target) } }],
+            }));
+    });
+}
+
+// Root and directory pointers use their body or generated formatter settings.
+/**
+ * Build the declared pointers for one generated tool file.
+ * @param context the repository and selected scope.
+ * @param toolFile the shipped tool-file declaration.
+ * @param target the generated destination path.
+ * @returns the pointer files for the tool file.
+ */
+function buildPointerFiles(context: ToolFileInputs, toolFile: ToolFileDeclaration, target: string): GeneratedFile[] {
+    const { pointer } = toolFile;
+    const { session, selection } = context;
+    if (pointer === undefined) return [];
+    return listPointerPaths(context, toolFile).map((path) =>
+        toolFile.target.endsWith('/prettier.json')
+            ? {
+                  path,
+                  kind: 'pointer',
+                  content: `${formatHeader(path)}export default ${JSON.stringify(prettierConfiguration({ settings: session.settingsFile.settings, format: selection.view.format, extra: selection.view.extra('prettier'), plugins: [...listPrettierPlugins(session.scopes.flatMap(({ selected }) => selected)).values()], targetPath: path }), null, JSON_INDENT)};\n`,
+              }
+            : buildBodyPointer(pointer, path, target),
+    );
+}
+export { buildBodyPointer, listPointerPaths, buildPointerFiles, buildPointerFieldEdits };

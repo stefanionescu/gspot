@@ -3,9 +3,9 @@ import { type Writer } from '#cli/types/ownership.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
 import { writeVersionPin } from '#cli/apply/version-pin.ts';
-import { type Generated } from '#cli/types/generation/files.ts';
 import { listStaleLockfiles } from '#cli/tools/project-lockfiles.ts';
-import { type ApplyReport, type WriteRequest } from '#cli/types/apply.ts';
+import type { ApplyReport, WriteRequest } from '#cli/types/apply.ts';
+import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { writePlans, notOverwrittenError } from '#cli/ownership/writer.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { planBlock, planRemoval, listStrayPaths, planManagedKeys, planReplacement } from '#cli/ownership/plans.ts';
@@ -97,7 +97,7 @@ function writeGenerated(session: Session, log: Writer, request: WriteRequest): v
  */
 export function writeGeneratedFiles(
     session: Session,
-    generated: Generated,
+    generated: GenerationResult,
     log: Writer,
     options?: Pick<WriteRequest, 'reviewedOriginals'>,
 ): ApplyReport {

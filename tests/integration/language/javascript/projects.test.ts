@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { stat, chmod } from 'node:fs/promises';
-import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { toolsPath } from '#tests/setup/install.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
@@ -29,7 +29,7 @@ test('javascript/tsc at level all also checks your build and dist folders', asyn
     const environment = { PATH: toolsPath() };
     const session = await openSession(sandbox.path);
     using log = openWriter(sandbox.path);
-    writeGeneratedFiles(session, emitAll(session), log);
+    writeGeneratedFiles(session, generate(session), log);
     const command = ['check', '--only', 'javascript/tsc', '--json'];
     const broken = await spawnGspot(sandbox.path, command, environment);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
@@ -62,7 +62,7 @@ export const total = accepted;
             ...authoredFiles,
         });
         const session = await openSession(sandbox.path);
-        const emitted = emitAll(session);
+        const emitted = generate(session);
         const generated = emitted.files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
         using log = openWriter(sandbox.path);
         writeGeneratedFiles(session, emitted, log);
@@ -93,7 +93,7 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
     await using sandbox = await testdir();
     const { config, corrected } = await prepareJsconfigScopes(sandbox.path);
     const session = await openSession(sandbox.path);
-    const emitted = emitAll(session);
+    const emitted = generate(session);
     const outputs = emitted.files.filter(({ path }) => path.endsWith('/jsconfig.json'));
     expect(outputs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         ...SCOPE_JSCONFIG_PATHS,
@@ -144,7 +144,7 @@ path = "apps/web"
         }),
     });
     const session = await openSession(sandbox.path);
-    const emitted = emitAll(session);
+    const emitted = generate(session);
     using ownership = openWriter(sandbox.path);
     writeGeneratedFiles(session, emitted, ownership);
     const environment = { PATH: toolsPath() };

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { findStaleFiles } from '#cli/apply/stale.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
@@ -50,7 +50,7 @@ test('a hand edit of the ESLint config shows as a byte diff without running it',
         expect(owned.length).toBeGreaterThan(0);
         await Bun.write(join(sandbox.path, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
         const session = await openSession(sandbox.path);
-        const generated = emitAll(session);
+        const generated = generate(session);
         const strays = findStaleFiles(session, generated).filter((entry) => entry.kind === 'stray');
         for (const entry of owned) {
             expect(strays).toContainEqual({ path: entry.path, kind: 'stray' });
@@ -79,6 +79,6 @@ test('a clone with changed settings and matching generated files needs no owners
     gitOutput(sandbox.path, ['clone', '--quiet', source, checkout]);
     expect(await pathExists(join(checkout, '.gspot/state/ownership.json'))).toBe(false);
     const session = await openSession(checkout);
-    const generated = emitAll(session);
+    const generated = generate(session);
     expect(findStaleFiles(session, generated).filter((entry) => entry.kind === 'changed')).toStrictEqual([]);
 });

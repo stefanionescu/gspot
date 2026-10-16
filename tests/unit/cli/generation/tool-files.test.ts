@@ -3,11 +3,11 @@ import { test, expect } from 'bun:test';
 import { parse as parseIni } from 'ini';
 import { pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { join, extname, basename } from 'node:path';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { parseExpiryDate } from '#cli/commands/ignore.ts';
@@ -43,7 +43,7 @@ test('a Ruff-only Python scope gets no type checker file or pointer', async () =
         'linted/source.py': 'value = 1\n',
         'typed/source.py': 'value: int = 1\n',
     });
-    const paths = emitAll(await openSession(sandbox.path)).files.map((file) => file.path);
+    const paths = generate(await openSession(sandbox.path)).files.map((file) => file.path);
     expect(paths).toContain('.gspot/config/linted/ruff.toml');
     expect(paths).not.toContain('.gspot/config/linted/basedpyrightconfig.json');
     expect(paths).not.toContain('linted/pyrightconfig.json');
@@ -59,7 +59,7 @@ test('a TypeScript-only scope gets the Knip file and no jsconfig', async () => {
         'src/main.ts': 'export const value = 1;\n',
     });
     const session = await openSession(sandbox.path);
-    const paths = emitAll(session).files.map((file) => file.path);
+    const paths = generate(session).files.map((file) => file.path);
     expect(paths).toContain('.gspot/config/knip.json');
     expect(paths).not.toContain('.gspot/config/jsconfig.json');
 });
@@ -70,7 +70,7 @@ test('ignoring SwiftLint and Periphery keeps SwiftFormat and drops their files',
         'gspot.toml': SWIFT_FORMAT_SETTINGS,
         'main.swift': 'let value = 1\n',
     });
-    const paths = emitAll(await openSession(sandbox.path)).files.map((file) => file.path);
+    const paths = generate(await openSession(sandbox.path)).files.map((file) => file.path);
     expect(paths).toContain('.gspot/config/swiftformat');
     expect(paths).not.toContain('.gspot/config/swiftlint.yml');
     expect(paths).not.toContain('.gspot/config/periphery.yml');
@@ -83,7 +83,7 @@ test('EditorConfig stays without a Prettier file or ignore file', async () => {
         'gspot.toml': EDITORCONFIG_SETTINGS,
         'sample.json': '{"value":1}\n',
     });
-    const paths = emitAll(await openSession(sandbox.path)).files.map((file) => file.path);
+    const paths = generate(await openSession(sandbox.path)).files.map((file) => file.path);
     expect(paths).toContain('.editorconfig');
     expect(paths).not.toContain('.gspot/config/prettier.json');
     expect(paths).not.toContain('.prettierignore');
@@ -97,7 +97,7 @@ test('Go and Rust sources get only the formatter files and tools they use', asyn
         'main.rs': 'fn main() {}\n',
     });
     const session = await openSession(sandbox.path);
-    const files = emitAll(session).files;
+    const files = generate(session).files;
     const paths = files.map((file) => file.path);
     expect(paths).toContain('.editorconfig');
     expect(paths).toContain('.gspot/config/taplo.toml');
@@ -161,7 +161,7 @@ test.each([...LEVELS])("every configuration's tool files parse at level %s", asy
     });
     await linkInstalledModules(join(sandbox.path, 'node_modules'));
     const session = await openSession(sandbox.path);
-    const output = emitAll(session);
+    const output = generate(session);
     const generated = output.files.filter((file) => file.kind === 'tool_file' || file.kind === 'pointer');
     const selected = new Set(
         session.scopes
@@ -200,7 +200,7 @@ test('odd JSON keys and YAML values stay literal in tool files', async () => {
         ...ODD_VALUE_FILES,
     });
     const session = await openSession(sandbox.path);
-    const output = emitAll(session);
+    const output = generate(session);
     for (const path of ['.gspot/config/prettier.json', '.gspot/config/knip.json']) {
         const file = output.files.find((entry) => entry.path === path);
         expect(file).toBeDefined();
@@ -263,7 +263,7 @@ test('TOML tool files keep odd strings and option keys', async () => {
         'package-lock.json': '{"lockfileVersion":3,"packages":{}}',
     });
     const session = await openSession(sandbox.path);
-    const output = emitAll(session);
+    const output = generate(session);
     const parsed = new Map(
         output.files.filter((file) => file.path.endsWith('.toml')).map((file) => [file.path, parseToml(file.content)]),
     );

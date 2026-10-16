@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
@@ -33,7 +33,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         await fakeTool(sandbox.path, 'node_modules/.bin/vale', launcher);
         using writer = openWriter(sandbox.path);
         const failedSteps: (readonly string[])[] = [];
-        const request = { session, writer, generated: emitAll(session), tools: [], mise: null, steps: failedSteps };
+        const request = { session, writer, generated: generate(session), tools: [], mise: null, steps: failedSteps };
         expect(installValePackages(request)).rejects.toThrow(expected);
         expect(await readFile(join(sandbox.path, '.gspot/vale/Google/terms.yml'), 'utf8')).toBe('previous bytes\n');
         expect(failedSteps).toStrictEqual([[executable, '--config', textContaining('vale-'), 'sync']]);
@@ -81,7 +81,7 @@ test('at level recommended install installs no Vale packages', async () => {
     const steps: (readonly string[])[] = [];
     using writer = openWriter(sandbox.path);
     expect(
-        installValePackages({ session, writer, generated: emitAll(session), tools: [], mise: null, steps }),
+        installValePackages({ session, writer, generated: generate(session), tools: [], mise: null, steps }),
     ).resolves.toBe('');
     expect(steps).toStrictEqual([]);
     expect(await pathExists(join(sandbox.path, '.gspot/vale'))).toBe(false);

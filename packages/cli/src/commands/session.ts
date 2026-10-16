@@ -2,7 +2,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { type Session } from '#cli/types/planning.ts';
-import { startRunner } from '#cli/generation/hooks.ts';
+import { selectRunner } from '#cli/generation/hooks.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
@@ -159,7 +159,7 @@ export async function openSession(
         },
         root,
         installedRoot,
-        startRunner: await startRunner(root),
+        startRunner: await selectRunner(root),
         version: packageManifest.version,
         settingsFile: { ...settingsFile, settings },
         manifests,

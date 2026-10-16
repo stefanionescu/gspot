@@ -2,11 +2,11 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
+import { generate } from '#cli/generation/generate.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { containingAll } from '#tests/setup/matchers.ts';
@@ -63,7 +63,7 @@ reason = "Test assertions deliberately verify the behavior."
     });
     await installToolProjects(sandbox.path);
     const session = await openSession(sandbox.path);
-    const emitted = emitAll(session);
+    const emitted = generate(session);
     const configs = emitted.files.filter(({ path }) => path.startsWith('.gspot/') && path.endsWith('/ruff.toml'));
     expect(configs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         '.gspot/config/app/ruff.toml',
