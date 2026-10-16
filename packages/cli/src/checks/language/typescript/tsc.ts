@@ -68,10 +68,11 @@ function buildScopeCompilerProject(
     config: TypeScriptConfiguration,
 ): Pick<TypeScriptConfiguration, 'fileNames' | 'options'> {
     const { root, repository } = session;
+    // The compiler names its files with forward slashes on every system.
     const files = new Set(
         repository.files
             .filter((file) => file.kind === 'source' && findScope(file.path, repository.scopes).path === scope)
-            .map((file) => join(root, file.path)),
+            .map((file) => convertToPosixPath(join(root, file.path))),
     );
     return {
         fileNames: config.fileNames.filter(
