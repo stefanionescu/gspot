@@ -59,7 +59,7 @@ function copyPackageFile(installed: Files, destination: Files, path: string): vo
 function listDependencyFolders(installed: Files, projects: string[]): string[] {
     return projects.flatMap((path) => {
         const folder = dirname(path);
-        if (basename(path) !== 'package.json') return [];
+        if (basename(path) !== PACKAGE_JSON) return [];
         return installed.stat(posix.join(folder, NODE_MODULES)) === undefined ? [] : [folder];
     });
 }
@@ -145,15 +145,9 @@ async function revisionDependencies(
     const inputs = entries.filter((entry) => {
         const name = basename(entry.path);
         const lockfile = findLockfile(name);
-        return (
-            new Set<string>(DEPENDENCY_FILES).has(name) ||
-            name === PACKAGE_SWIFT ||
-            (lockfile !== undefined && 'copied' in lockfile)
-        );
+        return DEPENDENCY_FILES.has(name) || name === PACKAGE_SWIFT || (lockfile !== undefined && 'copied' in lockfile);
     });
-    const projects = inputs
-        .map((entry) => entry.path)
-        .filter((path) => new Set<string>(DEPENDENCY_FILES).has(basename(path)));
+    const projects = inputs.map((entry) => entry.path).filter((path) => DEPENDENCY_FILES.has(basename(path)));
     const directories = listDependencyFolders(installed, projects);
     const environments = projects
         .filter(

@@ -106,7 +106,7 @@ export async function copyIntoScratch(source: ScratchCopyPaths): Promise<Scratch
  */
 export function projectCopyInputs(root: string, paths: string[], scopes: string[]): ScratchCopyPaths {
     const projects = paths.flatMap((path) =>
-        new Set<string>(DEPENDENCY_FILES).has(posix.basename(path)) && posix.basename(posix.dirname(path)) !== DOT_GSPOT
+        DEPENDENCY_FILES.has(posix.basename(path)) && posix.basename(posix.dirname(path)) !== DOT_GSPOT
             ? [posix.dirname(path)]
             : [],
     );

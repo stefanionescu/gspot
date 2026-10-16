@@ -22,7 +22,7 @@ export function loneFiles(input: CheckInput): Finding[] {
         const entries = tree.get(directory) ?? [];
         if (entries.some((entry) => entry.kind === 'dir')) return [];
         const siblings = entries.filter(
-            (entry) => ![...DECLARATION_EXTENSIONS].some((extension) => entry.name.endsWith(extension)),
+            (entry) => !DECLARATION_EXTENSIONS.some((extension) => entry.name.endsWith(extension)),
         );
         const [only] = siblings;
         if (only === undefined || siblings.length !== 1) return [];

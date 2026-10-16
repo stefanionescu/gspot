@@ -59,7 +59,7 @@ function planChecks(session: Session, options: RunOptions): RunnableCheck[] {
             check,
             run,
             arguments: builtIn?.arguments,
-            configurationFiles: builtIn?.toolFiles,
+            toolFiles: builtIn?.toolFiles,
         };
     });
 }
@@ -189,7 +189,6 @@ async function executeRun(opened: Session, options: RunOptions): Promise<RunOutc
     using resources = new DisposableStack();
     const session: Session = {
         ...opened,
-        repository: opened.repository,
         resources,
         ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
     };

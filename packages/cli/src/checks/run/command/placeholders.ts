@@ -1,17 +1,18 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { convertToSystemPath } from '#cli/system/paths.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
 import { extractToolFileName } from '#cli/planning/files.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
-import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
+import { type ToolFileDeclaration } from '#cli/types/configurations.ts';
 
-import type {
-    CommandPart,
-    CommandSource,
-    Substitutions,
-    SubstitutionCheck,
-    CommandInvocation,
+import {
+    type CommandPart,
+    type CommandSource,
+    type Substitutions,
+    type SubstitutionCheck,
+    type CommandInvocation,
 } from '#cli/types/execution/command.ts';
 import {
     EACH_PLACEHOLDER,
@@ -101,7 +102,7 @@ function plainPart(
     if (workspace !== undefined) {
         if (
             substitutions.scope === '' ||
-            statSync(join(session.root, substitutions.scope, 'package.json'), { throwIfNoEntry: false }) === undefined
+            statSync(join(session.root, substitutions.scope, PACKAGE_JSON), { throwIfNoEntry: false }) === undefined
         )
             return [];
         return [workspace, substitutions.scope];
@@ -139,7 +140,7 @@ export function toolFilePath(session: CommandSource, planned: SubstitutionCheck,
 export function commandToolFiles(
     session: CommandSource,
     planned: SubstitutionCheck,
-    command = planned.check.command ?? [],
+    command: readonly string[],
 ): string[] {
     const parts = [...command, ...(planned.check.env === undefined ? [] : Object.values(planned.check.env))];
     const scope = planned.scope.scope.path;

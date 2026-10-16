@@ -16,7 +16,7 @@ export const GLOB_EXCLUDE = '!';
 
 export const FOLDER_CONTENTS = '/**';
 
-export const DECLARATION_EXTENSIONS: ReadonlySet<string> = new Set(['.d.ts', '.d.mts', '.d.cts']);
+export const DECLARATION_EXTENSIONS: readonly string[] = ['.d.ts', '.d.mts', '.d.cts'];
 
 export const ANY_FOLDER_PREFIX = '**/';
 

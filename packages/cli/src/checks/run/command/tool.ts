@@ -77,9 +77,8 @@ export function findTool(
     return buildToolAvailability(tool, inspectTool({ ...session, cwd }, env === undefined ? tool : { ...tool, env }));
 }
 
-// A nested tool runs from its selected installation even inside a scratch copy.
 /**
- * Add installed companion directories to the process path.
+ * Add installed companion directories to the process path, including inside a scratch copy.
  *
  * @param input the source values.
  * @param names the companion tool names.

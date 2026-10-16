@@ -24,7 +24,7 @@ import { substitute, scratchFiles, perFileCommands } from '#cli/checks/run/comma
         const level = 'recommended';
         await using sandbox = await testdir();
         const table = '[openapi]';
-        const argv = ['bun', 'generate.ts', '', 'two words'];
+        const argv = [process.execPath, 'generate.ts', '', 'two words'];
         await createFileTree(sandbox.path, {
             'gspot.toml': settingsText(['openapi'], {
                 level,
@@ -37,17 +37,23 @@ import { substitute, scratchFiles, perFileCommands } from '#cli/checks/run/comma
         const planned = planRun(session, { stage: 'push', only: ['openapi/stale-document'] }).find(
             (entry) => entry.scope.scope.path === scope,
         )!;
-        const environment = commandEnvironment(session, planned);
-        expect(prepareCommand(session, planned, input.check.command!, environment).commands[0]?.argv).toStrictEqual(
-            argv,
-        );
+        const environment = commandEnvironment(session, planned, {});
+        expect(
+            prepareCommand(session, planned, input.check.command!, environment, process.execPath).commands[0]?.argv,
+        ).toStrictEqual(argv);
         expect(() =>
-            prepareCommand(session, planned, ['prefix{setting:openapi.generate_command}'], environment),
+            prepareCommand(
+                session,
+                planned,
+                ['prefix{setting:openapi.generate_command}'],
+                environment,
+                process.execPath,
+            ),
         ).toThrow('List setting openapi.generate_command must occupy a whole command argument.');
         input.scope.view.settings['openapi.generate_command'] = [];
-        expect(prepareCommand(session, planned, input.check.command!, environment).commands[0]?.argv).toStrictEqual([]);
-        const checked = await runBuiltInCheck(checkStaleGeneratorOutputs)(session, planned);
-        expect(checked.findings).toStrictEqual([]);
+        expect(substitute(session, planned, input.check.command!, environment.substitutions)).toStrictEqual([]);
+        const result = await runBuiltInCheck(checkStaleGeneratorOutputs)(session, planned);
+        expect(result.findings).toStrictEqual([]);
     });
 }
 {
@@ -151,7 +157,13 @@ stage = "commit"
         const plans = planRun(session, { stage: 'all', only: ['sandbox/arguments'] });
         const planned = plans[0]!;
         planned.tool = { name: 'echo', installers: {}, kind: 'program', env: { TOOL_RELEASE: 'v3.4.0' } };
-        const prepared = prepareCommand(session, planned, planned.check.command!, commandEnvironment(session, planned));
+        const prepared = prepareCommand(
+            session,
+            planned,
+            planned.check.command!,
+            commandEnvironment(session, planned, {}),
+            process.execPath,
+        );
         const result = await spawnProcess(prepared.commands[0]!.argv, { cwd: prepared.cwd, env: prepared.env });
         expect(result.code, result.stderr).toBe(0);
         expect(JSON.parse(result.stdout)).toStrictEqual([
@@ -209,6 +221,12 @@ indent_width = ${String(width)}
     });
     const session = await openSession(sandbox.path);
     const [planned] = planRun(session, { stage: 'all', only: ['bash/shfmt'] });
-    const command = prepareCommand(session, planned!, planned!.check.command!, commandEnvironment(session, planned!));
+    const command = prepareCommand(
+        session,
+        planned!,
+        planned!.check.command!,
+        commandEnvironment(session, planned!, {}),
+        process.execPath,
+    );
     expect(command.argv[command.argv.indexOf('-i') + 1]).toBe(String(width));
 });

@@ -58,7 +58,7 @@ test('a command in a scope runs in the scope folder with paths relative to it', 
     const planned = planRun(session, { stage: 'commit', only: ['swift/swiftlint'] });
     expect(planned.map((check) => check.scope.scope.path)).toStrictEqual(['', scope]);
     for (const check of planned) {
-        const environment = commandEnvironment(session, check);
+        const environment = commandEnvironment(session, check, {});
         expect(environment.cwd).toBe(join(sandbox.path, check.scope.scope.path));
         expect(environment.files).toStrictEqual(['Sources/Main.swift']);
         expect(environment.substitutions.files).toStrictEqual(['Sources/Main.swift']);

@@ -31,17 +31,17 @@ export function batchedCommands(
     planned: PlannedCheck,
     command: string[],
     substitutions: Substitutions,
-    toolPath: string | undefined,
+    toolPath: string,
 ): CommandInvocation[] {
     const fixed = substitute(session, planned, command, { ...substitutions, files: [] });
-    if (toolPath !== undefined) fixed[0] = toolPath;
+    fixed[0] = toolPath;
     return fileBatches(
         substitutions.files,
         fixed.filter((part) => typeof part === 'string'),
         process.platform,
     ).flatMap((files) => {
         const argv = substitute(session, planned, command, { ...substitutions, files });
-        if (toolPath !== undefined) argv[0] = toolPath;
+        argv[0] = toolPath;
         return perFileCommands(argv, files);
     });
 }

@@ -49,7 +49,7 @@ export function buildRunReport(input: ReportInput): RunReport {
     const failed = failedChecks(ran, fixes);
     let code = failed.length > 0 ? EXIT_FINDINGS : 0;
     if (isIncomplete(session, ran, fixes)) code = EXIT_ERROR;
-    const report: RunReport = {
+    return {
         ...(options.comparison === undefined ? {} : { comparison: options.comparison }),
         version: session.version,
         stage: options.stage,
@@ -75,7 +75,6 @@ export function buildRunReport(input: ReportInput): RunReport {
         failed,
         exitCode: code,
     };
-    return report;
 }
 
 /**

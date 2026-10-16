@@ -7,7 +7,7 @@ export const FILES_BETWEEN_PAUSES = 64;
 export const SCRATCH_EXTRAS = [SETTINGS_FILE, PACKAGE_JSON, TSCONFIG_FILE, PYPROJECT_TOML] as const;
 
 /** A project manifest marks a folder whose installed dependencies a scratch copy carries. */
-export const DEPENDENCY_FILES = [PACKAGE_JSON, PYPROJECT_TOML] as const;
+export const DEPENDENCY_FILES: ReadonlySet<string> = new Set([PACKAGE_JSON, PYPROJECT_TOML]);
 
 export const GIT_HASH_PATHS = ['hash-object', '--stdin-paths'] as const;
 export const GIT_SHARED_CLONE = ['clone', '--shared', '--no-checkout', '--quiet', '--'] as const;

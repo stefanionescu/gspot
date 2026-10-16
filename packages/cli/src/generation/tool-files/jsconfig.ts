@@ -55,7 +55,7 @@ function buildJsconfig(context: ToolFileContext): string {
     if (authored.options.jsx !== undefined) delete compilerOptions['jsx'];
     if (jsconfigOwner === undefined)
         jsconfig['files'] = authored.fileNames
-            .filter((path) => DECLARATION_EXTENSIONS.has(extractExtension(path)))
+            .filter((path) => DECLARATION_EXTENSIONS.includes(extractExtension(path)))
             .map((path) => convertToPosixPath(relative(join(root, dirname(target)), path)));
     return JSON.stringify(jsconfig, null, JSON_INDENT) + '\n';
 }

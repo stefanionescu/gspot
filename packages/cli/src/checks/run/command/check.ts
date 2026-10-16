@@ -159,7 +159,7 @@ export async function prepareInScratch(
     planned: PlannedCheck,
     command: string[],
     toolPath: string,
-    options: CheckRunOptions = {},
+    options: CheckRunOptions,
 ): Promise<PreparedScratch> {
     const copy = await copyIntoScratch({
         root: session.root,
@@ -201,7 +201,7 @@ export async function prepareInScratch(
 export function commandEnvironment(
     session: Session,
     planned: PlannedCheck,
-    options: CheckRunOptions = {},
+    options: CheckRunOptions,
 ): CommandEnvironment {
     const { check, scope } = planned;
     const runsInScope = check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root');
@@ -254,11 +254,11 @@ export function prepareCommand(
     planned: PlannedCheck,
     command: string[],
     environment: CommandEnvironment,
-    toolPath?: string,
+    toolPath: string,
 ): PreparedCommand {
     const { root, cwd, files, substitutions, env } = environment;
     const argv = substitute(session, planned, command, substitutions);
-    if (toolPath !== undefined) argv[0] = toolPath;
+    argv[0] = toolPath;
     const commands = command.includes(FILES_PLACEHOLDER)
         ? batchedCommands(session, planned, command, substitutions, toolPath)
         : perFileCommands(argv, files);

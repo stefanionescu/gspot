@@ -184,10 +184,8 @@ function changedPaths(before: Map<string, Buffer | undefined>, after: Map<string
         .toArray();
 }
 
-// Each pass after the first reruns the fixers over the files the pass before changed, so a formatter formats what a
-// codemod wrote after it.
 /**
- * Run selected fixers again over changed files until they settle.
+ * Run selected fixers again over changed files so a formatter handles the changes of a later codemod.
  *
  * @param session the execution context.
  * @param checks the selected fixers.

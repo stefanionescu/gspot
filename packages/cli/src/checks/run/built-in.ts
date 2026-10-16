@@ -1,5 +1,3 @@
-// The findings and covered files a built-in check returned, with missing help supplied by its check.
-
 import { emptyResult } from '#cli/checks/run/report.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { listWorkspaceDependencyFiles } from '#cli/tools/npm/packages.ts';
@@ -52,7 +50,7 @@ function buildCheckResult(
  * @returns the check input.
  */
 function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope' | 'check' | 'files'>): CheckInput {
-    const input: CheckInput = {
+    return {
         generatedPaths: session.generatedPaths,
         timeoutSeconds: session.timeoutSeconds,
         dependencyFiles: () =>
@@ -81,7 +79,6 @@ function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope' | 'che
         installedRoot: session.installedRoot,
         ...(session.cancelSignal === undefined ? {} : { cancelSignal: session.cancelSignal }),
     };
-    return input;
 }
 
 /**
