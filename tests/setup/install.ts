@@ -142,8 +142,8 @@ async function writeLockedInputs(root: string, suppliedLog?: Writer): Promise<Lo
 async function installCompiler(root: string, folder = join(root, 'node_modules')): Promise<string> {
     await mkdir(folder, { recursive: true });
     const kind = isWindows ? 'junction' : 'dir';
-    await symlink(await realpath(join(installedModules, 'typescript')), join(folder, 'typescript'), kind);
-    await symlink(await realpath(join(installedModules, '.bin')), join(folder, '.bin'), kind);
+    await symlink(await realpath(join(testModules, 'typescript')), join(folder, 'typescript'), kind);
+    await symlink(await realpath(join(testModules, '.bin')), join(folder, '.bin'), kind);
     return [join(folder, '.bin'), readEnvironmentVariable('PATH') ?? ''].join(delimiter);
 }
 
