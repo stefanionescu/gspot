@@ -1,7 +1,6 @@
 // Prepare and install the Python tool project.
 import { z } from 'zod';
 import { join } from 'node:path';
-import { runTool } from '#cli/tools/run.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { parse } from '@decimalturn/toml-patch';
 import { formatCount } from '#cli/system/text.ts';
@@ -16,6 +15,7 @@ import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
+import { runTool, assertWithinTimeLimit } from '#cli/tools/run.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
@@ -93,6 +93,7 @@ async function runUv(
                 state: 'missing',
             }),
         );
+    assertWithinTimeLimit(`UV ${String(commandArguments[0])}`, result, timeoutSeconds);
     if (result.code !== 0)
         throw new GspotError(
             'installation',

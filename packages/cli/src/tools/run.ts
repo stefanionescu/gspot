@@ -1,4 +1,5 @@
 // Run tools with the configured timeout and shared process options.
+import { GspotError } from '#cli/system/errors.ts';
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { buildGitEnvironment } from '#cli/system/git.ts';
@@ -39,6 +40,21 @@ export async function runTool(command: readonly string[], options: ToolRunOption
         stdout: result.stdout.replaceAll('\r\n', '\n'),
         stderr: result.stderr.replaceAll('\r\n', '\n'),
     };
+}
+
+/**
+ * Stop an installation step that ran past the time limit, so the error names the limit instead of an exit code.
+ *
+ * @param name the step, as the error names it.
+ * @param result the completed process result.
+ * @param timeoutSeconds the limit the step ran under.
+ */
+export function assertWithinTimeLimit(name: string, result: SpawnResult, timeoutSeconds: number): void {
+    if (result.isTimedOut === true)
+        throw new GspotError(
+            'installation',
+            `${name} ran longer than ${TOOL_TIMEOUT_SETTING} (${String(timeoutSeconds)}s). Raise it with gspot set ${TOOL_TIMEOUT_SETTING} <seconds>, then run: gspot install.`,
+        );
 }
 
 /**

@@ -92,6 +92,32 @@ test.each([...INSTALL_FAILURES])(
     },
 );
 
+test('an npm install that runs past the time limit names the limit', async () => {
+    await using repository = await testdir();
+    const manifest = JSON.stringify({ private: true, devDependencies: { prettier: '3.8.1' } });
+    await createFileTree(repository.path, {
+        'gspot.toml': buildSettingsText([]),
+        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
+        '.gspot/package.json': manifest,
+        '.gspot/bun.lock': JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.1' } } } }),
+    });
+    const session = await openSession(repository.path);
+    using owner = openWriter(repository.path);
+    using _bun = fakeCommand('bun', (command) =>
+        Promise.resolve({
+            code: command[1] === '--version' ? 0 : 1,
+            missing: false,
+            duration: 0,
+            stdout: command[1] === '--version' ? '1.4.2\n' : '',
+            stderr: '',
+            ...(command[1] === '--version' ? {} : { isTimedOut: true }),
+        }),
+    );
+    expect(await captureRejection(installNpmTools(buildInstallContext(session, owner)))).toBe(
+        `bun ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>, then run: gspot install.`,
+    );
+});
+
 test.each([false, true])(
     'credentials in a lockfile are refused before installation or after resolution, frozen=%s',
     async (frozen) => {

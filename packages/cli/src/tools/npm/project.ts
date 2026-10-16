@@ -2,7 +2,6 @@
 import which from 'which';
 import semver from 'semver';
 import { join } from 'node:path';
-import { runTool } from '#cli/tools/run.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
@@ -13,6 +12,7 @@ import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
 import { REINSTALL_HINT } from '#cli/config/tools/credentials.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
+import { runTool, assertWithinTimeLimit } from '#cli/tools/run.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
 import { buildLockfileResult } from '#cli/tools/project-lockfiles.ts';
@@ -135,6 +135,7 @@ async function runPackageManager(
             timeoutSeconds,
         });
         context.cancelSignal?.throwIfAborted();
+        assertWithinTimeLimit(packageManager.name, result, timeoutSeconds);
         if (result.code !== 0) {
             throw new GspotError(
                 'installation',
