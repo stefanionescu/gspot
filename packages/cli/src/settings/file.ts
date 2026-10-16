@@ -32,27 +32,18 @@ function parseTomlText(text: string, path: string, kind: 'settings' | 'template'
 }
 
 /**
- * Read written settings text, following only links contained by the repository.
- * @param root the repository root
- * @returns the UTF-8 settings text
+ * Read settings text through the repository file boundary.
+ * @param root the repository root.
+ * @returns the UTF-8 text and captured file identity.
  */
 function readSettingsFile(root: string): SettingsSource {
     using files = openFiles(root);
     const original = files.read(SETTINGS_FILE);
     if (original === undefined)
         throw new GspotError('settings', 'There is no gspot.toml here. Run `gspot init` to create one.');
-    return { text: decodeSettingsText(original.bytes), original };
-}
-
-/**
- * Decode settings bytes captured at the file boundary.
- * @param bytes the captured settings bytes
- * @returns the UTF-8 settings text
- */
-function decodeSettingsText(bytes: Buffer): string {
-    const text = decodeUtf8(bytes);
+    const text = decodeUtf8(original.bytes);
     if (text === undefined) throw new GspotError('settings', 'gspot.toml must contain valid UTF-8 text.');
-    return text;
+    return { text, original };
 }
 
 /**

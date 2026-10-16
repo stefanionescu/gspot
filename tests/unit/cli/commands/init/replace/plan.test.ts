@@ -10,6 +10,7 @@ import { parseTemplate } from '#cli/settings/templates.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
@@ -83,7 +84,7 @@ exclude_rules = LT01, RF01
     await chmod(join(sandbox.path, path), 0o640);
     const initialized = await runGspot(sandbox.path, buildInitArguments(['sql'], { json: true }));
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    expect(readSettings(sandbox.path).settings.ignore).toStrictEqual([]);
+    expect(readSettings(sandbox.path, createReadCache(process.cwd())).settings.ignore).toStrictEqual([]);
     expect((JSON.parse(initialized.stdout) as InitJson).plan!.delete.some((entry) => entry.path === path)).toBe(false);
     expect((JSON.parse(initialized.stdout) as InitJson).plan!.retained).toContainEqual({
         path,

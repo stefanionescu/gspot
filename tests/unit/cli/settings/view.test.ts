@@ -135,7 +135,11 @@ test('an until date ends at the end of that day in UTC, and the expired ignore s
                 until: parseExpiryDate('2030-05-21'),
             },
         ] as const;
-        const settings = parseSettings(formatSettingsText('', { configurations: [], ignore: entries }));
+        const settings = parseSettings(
+            formatSettingsText('', { configurations: [], ignore: entries }),
+            undefined,
+            createReadCache(process.cwd()),
+        );
         const selected = selectForScope(settings, '', readManifests(createReadCache(process.cwd())));
         const view = buildScopeView(buildKnownSettings(selected), settings, selected, '');
         expect(view.ignoresFor('dependencies/osv')).toStrictEqual([

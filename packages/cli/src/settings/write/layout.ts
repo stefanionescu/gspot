@@ -1,10 +1,18 @@
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
+import { encodeValue } from '#cli/settings/write/values.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
 import { type KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { type TomlTable, type LayoutSection } from '#cli/types/settings/file.ts';
 import { isRecord, getValueAt, createTable, normalizeTables } from '#cli/system/values.ts';
 
+import {
+    isKeyValue,
+    getTomlRange,
+    addTomlComment,
+    insertTomlComments,
+    listAnchoredComments,
+} from '#cli/parsers/toml/comments.ts';
 import {
     METADATA_PREFIXES,
     TOML_HEADER_FORMAT,
@@ -13,25 +21,17 @@ import {
     TEMPLATE_COMMENT_PREFIX,
 } from '#cli/config/settings/file.ts';
 import {
-    isKeyValue,
-    getTomlRange,
-    isInlineArray,
-    isInlineTable,
-    addTomlComment,
-    insertTomlComments,
-    listAnchoredComments,
-} from '#cli/parsers/toml/comments.ts';
-import {
     type TomlBlock,
-    type TomlValue,
     type TomlSyntax,
     type TomlComments,
     type TomlKeyValue,
     type TomlCommentNode,
     type TomlCommentAnchor,
+    type TomlAnchoredComment,
+    type TomlCommentPlacement,
 } from '#cli/types/parsers/toml.ts';
 
-function encodeAssignment(key: string, value: unknown, dotted = false): { text: string; pair: TomlKeyValue } {
+function encodeAssignment(key: string, value: unknown, dotted: boolean): { text: string; pair: TomlKeyValue } {
     const assignment = stringify({ [key]: value }, TOML_ASSIGNMENT_FORMAT);
     const text = dotted ? assignment.replace(JSON.stringify(key), key) : assignment;
     const pair = parseDocument(text).cst.find(isKeyValue) as TomlKeyValue;
@@ -48,42 +48,6 @@ function encodeHeader(path: KeyPath, array: boolean): string {
     ) as Exclude<TomlBlock, TomlKeyValue | TomlCommentNode>;
     const header = text.slice(...getTomlRange(section.key));
     return array ? `[${header}]` : header;
-}
-
-function encodeValue(node: TomlValue, text: string, path: KeyPath, comments: TomlComments, indent: string): string {
-    if (isInlineArray(node)) {
-        const items = node.items.map(({ item }, index) => {
-            const keys = [...path, index];
-            const notes = [...comments.values()]
-                .filter(({ path: note }) => path.toReversed()[1] === 'rules' && keys.every((key, i) => note[i] === key))
-                .map(({ path: field }) => insertTomlComments(comments, 'key', field, ''))
-                .filter(Boolean);
-            return insertTomlComments(
-                comments,
-                'item',
-                keys,
-                insertTomlComments(
-                    comments,
-                    'header',
-                    keys,
-                    [...notes, encodeValue(item as TomlValue, text, keys, comments, indent)].join('\n'),
-                ),
-            );
-        });
-        return items.some((item) => item.includes('\n'))
-            ? `[\n${items
-                  .map((item) =>
-                      `${item},`
-                          .split('\n')
-                          .map((line) => `${indent}${line}`)
-                          .join('\n'),
-                  )
-                  .join('\n')}\n]`
-            : `[${items.join(', ')}]`;
-    }
-    if (isInlineTable(node))
-        return `{ ${node.items.map(({ item }) => text.slice(getTomlRange(item.key)[0], getTomlRange(item.value)[0]) + encodeValue(item.value, text, [...path, ...item.key.value], comments, indent)).join(', ')} }`;
-    return text.slice(...getTomlRange(node));
 }
 
 function listScopeAssignments(key: string, value: unknown): [string, unknown][] {
@@ -187,8 +151,9 @@ function encodeSettings(target: TomlTable, indent: string, comments: TomlComment
     }
     encodeTable(target, []);
     const metadata = insertTomlComments(comments, 'provenance', [], '');
+    const first = root.length > 0 ? root.join('\n') : (blocks.shift() ?? '');
     const output =
-        [metadata, insertTomlComments(comments, 'preamble', [], ''), root.join('\n'), ...blocks]
+        [metadata, insertTomlComments(comments, 'preamble', [], first), ...blocks]
             .filter((block) => block !== '')
             .join('\n\n') + '\n';
     if (comments.size > 0)
@@ -276,6 +241,28 @@ function findCommentTarget(syntax: TomlSyntax, target: TomlTable, written: TomlT
     return { kind: owner.kind, path };
 }
 
+function findKeptCommentPlacement(
+    syntax: TomlSyntax,
+    target: TomlTable,
+    written: TomlTable,
+    { comment, anchor: owner }: TomlAnchoredComment,
+): TomlCommentPlacement {
+    const isOpening =
+        owner === undefined && syntax.entries.every((entry) => getTomlRange(comment)[1] < getTomlRange(entry.node)[0]);
+    if (isOpening) return { kind: 'preamble', path: [], comment, placement: 'free' };
+    if (owner !== undefined) {
+        const mapped = findCommentTarget(syntax, target, written, owner);
+        return { ...mapped, comment, placement: mapped.kind === 'preamble' ? 'free' : 'owned' };
+    }
+    const next = syntax.entries.find(
+        (entry) =>
+            getTomlRange(entry.node)[0] > getTomlRange(comment)[1] &&
+            listDestinationPaths(syntax, target, entry.path).length > 0,
+    );
+    const anchor = findCommentTarget(syntax, target, written, next ?? { kind: 'preamble', path: [] });
+    return { ...anchor, comment, placement: 'free' };
+}
+
 /**
  * Keep exact physical comments on their surviving semantic owner before records merge or move.
  * An ambiguous split gives its general comments to the first ordered row; path comments follow their own values.
@@ -284,32 +271,16 @@ function findCommentTarget(syntax: TomlSyntax, target: TomlTable, written: TomlT
  * @param written the draft before omission of tool defaults
  * @returns source-ordered owned blocks and separately anchored free prose
  */
-// eslint-disable-next-line sonarjs/cognitive-complexity -- reason: One pass retains comment ownership and physical order. It handles orphan and preamble placement.
 function collectKeptComments(syntax: TomlSyntax, target: TomlTable, written: TomlTable): TomlComments {
     const comments: TomlComments = new Map();
-    for (const { comment, anchor: owner } of listAnchoredComments(syntax)) {
+    for (const entry of listAnchoredComments(syntax)) {
+        const { comment } = entry;
         if (METADATA_PREFIXES.some((prefix) => comment.raw.startsWith(prefix))) {
             if (comment.raw.startsWith(TEMPLATE_COMMENT_PREFIX))
                 addTomlComment(comments, { kind: 'provenance', path: [], comment, placement: 'owned' });
             continue;
         }
-        if (owner !== undefined) {
-            const mapped = findCommentTarget(syntax, target, written, owner);
-            addTomlComment(comments, {
-                kind: mapped.kind,
-                path: mapped.path,
-                comment,
-                placement: mapped.kind === 'preamble' ? 'free' : 'owned',
-            });
-            continue;
-        }
-        const next = syntax.entries.find(
-            (entry) =>
-                getTomlRange(entry.node)[0] > getTomlRange(comment)[1] &&
-                listDestinationPaths(syntax, target, entry.path).length > 0,
-        );
-        const anchor = findCommentTarget(syntax, target, written, next ?? { kind: 'preamble', path: [] });
-        addTomlComment(comments, { kind: anchor.kind, path: anchor.path, comment, placement: 'free' });
+        addTomlComment(comments, findKeptCommentPlacement(syntax, target, written, entry));
     }
     return comments;
 }

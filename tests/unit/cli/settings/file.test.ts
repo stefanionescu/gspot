@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { COMMENTED_SETTINGS } from '#tests/config/samples/settings.ts';
 import { link, stat, symlink, readFile, writeFile } from 'node:fs/promises';
 import { setKey, updateSettings, readSettingsEdit } from '#cli/settings/edit.ts';
@@ -48,12 +49,12 @@ test('an edit planned from old bytes is refused, and a new plan is written', asy
         setKey(written, 'level', 'all');
     });
     writeSettings(log, next.text, fresh.original);
-    expect(readSettings(sandbox.path).settings.level).toBe('all');
+    expect(readSettings(sandbox.path, createReadCache(process.cwd())).settings.level).toBe('all');
 });
 
 test('reading or editing a missing gspot.toml is refused and creates nothing', async () => {
     await using sandbox = await testdir();
-    expect(() => readSettings(sandbox.path)).toThrow('Run `gspot init`');
+    expect(() => readSettings(sandbox.path, createReadCache(process.cwd()))).toThrow('Run `gspot init`');
     expect(() => readSettingsEdit(sandbox.path)).toThrow('Run `gspot init`');
     expect(await stat(join(sandbox.path, 'gspot.toml')).catch(() => undefined)).toBeUndefined();
 });

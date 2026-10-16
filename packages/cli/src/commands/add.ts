@@ -23,7 +23,7 @@ import { saveSettings, startSettingsEdit, refuseAlwaysSelected } from '#cli/comm
  */
 async function addCommand(options: ConfigurationsOptions): Promise<CommandResult> {
     const { root, input } = await startSettingsEdit(options.cwd);
-    parseSettings(input.text, root);
+    parseSettings(input.text, root, createReadCache(root));
     const manifests = readManifests(createReadCache(root));
     const [unavailable] = listUnknownConfigurations(
         options.configurations.map((name) => ({ name })),

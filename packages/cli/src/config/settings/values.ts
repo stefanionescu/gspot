@@ -5,12 +5,13 @@ export const CATEGORY_KEY_PARTS = 2;
 
 export const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 
+// The configuration group folder sets scalar default precedence.
 export const OVERRIDING_KINDS = new Set<string>(['framework', 'platform', 'library', 'database']);
 
 export const REASON_WORDS_MIN = 2;
 
 export const SETTING_TYPES = ['number', 'string', 'path', 'boolean', 'list', 'table'] as const;
-export const PATH_ROLES = ['source', 'destination'] as const;
+export const PATH_ROLES = ['source', 'destination', 'build'] as const;
 export const REASON_NEEDED = ['raising', 'lowering', 'adding'] as const;
 
 export const ALL_LANGUAGES = '*';

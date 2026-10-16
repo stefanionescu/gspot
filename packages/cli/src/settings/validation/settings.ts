@@ -1,10 +1,8 @@
 import type { z } from 'zod';
-import { isRecord } from '#cli/system/values.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
-import { type Settings } from '#cli/types/settings/values.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
@@ -14,17 +12,10 @@ import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { listUnknownConfigurations } from '#cli/configurations/select.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
 import type { ConfigurationDeclaration } from '#cli/types/configurations.ts';
+import { type Settings, type KnownSettings } from '#cli/types/settings/values.ts';
 import { RECORD_FIELDS, SETTINGS_REFERENCE_URL } from '#cli/config/settings/file.ts';
 import { listCheckIds, readManifests, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import { validateScopePaths, validateExtraOptions, validateDisabledRules } from '#cli/settings/validation/values.ts';
-
-function formatNestedSettingsIssues(
-    path: string,
-    prefix: z.core.$ZodIssue['path'],
-    issues: z.core.$ZodIssue[],
-): string[] {
-    return issues.flatMap((issue) => formatSettingsIssue(path, { ...issue, path: [...prefix, ...issue.path] }));
-}
 
 /**
  * Format a validation issue with the settings file and its declaration path.
@@ -37,8 +28,14 @@ function formatSettingsIssue(path: string, issue: z.core.$ZodIssue): string[] {
     const reasonedValueErrors = branches.find((errors) =>
         errors.some((child) => child.path[0] === 'value' || child.path[0] === 'reason'),
     );
-    if (reasonedValueErrors !== undefined) return formatNestedSettingsIssues(path, issue.path, reasonedValueErrors);
-    if (issue.code === 'invalid_key') return formatNestedSettingsIssues(path, issue.path, issue.issues);
+    if (reasonedValueErrors !== undefined)
+        return reasonedValueErrors.flatMap((child) =>
+            formatSettingsIssue(path, { ...child, path: [...issue.path, ...child.path] }),
+        );
+    if (issue.code === 'invalid_key')
+        return issue.issues.flatMap((child) =>
+            formatSettingsIssue(path, { ...child, path: [...issue.path, ...child.path] }),
+        );
     const segments = issue.path.filter((part): part is KeyPath[number] => typeof part !== 'symbol');
     if (issue.code !== 'unrecognized_keys') return formatZodIssue(issue).map((line) => `${path}: ${line}`);
     const [record, scopeIndex, ...scopeFields] = segments;
@@ -65,6 +62,7 @@ function throwErrors(errors: SettingsError[]): never {
 }
 
 // Commands and check execution validate the same settings.
+
 /**
  * Collect selection, scope, and tool-setting errors through the shared validation path.
  * @param settings the parsed settings.
@@ -72,88 +70,59 @@ function throwErrors(errors: SettingsError[]): never {
  * @param reads the file reads for this validation run.
  * @returns the errors with their setting paths.
  */
-function collectErrors(settings: Settings, root: string | undefined, reads: ReadCache): SettingsError[] {
-    return [
-        ...validateSettingReasons(settings),
-        ...(Array.isArray(settings.written['command_check']) ? settings.written['command_check'] : []).flatMap(
-            (entry, index) =>
-                isRecord(entry) && typeof entry['name'] === 'string' && listCheckIds([], reads).includes(entry['name'])
-                    ? [
-                          {
-                              path: ['command_check', index, 'name'],
-                              message: `The command check ${entry['name']} has the same name as a configuration check. Give it another name.`,
-                          },
-                      ]
-                    : [],
-        ),
-        ...settings.ignore.flatMap((entry, index) => {
-            const checks = listCheckIds(Object.values(settings.check), reads);
-            return checks.includes(entry.check)
-                ? []
-                : [
-                      {
-                          path: ['ignore', index, 'check'],
-                          message: formatUnknownCheck(entry.check, checks),
-                      },
-                  ];
-        }),
-        ...validateDisabledRules(settings, reads),
-        ...(root === undefined ? [] : validateScopePaths(root, settings)),
-        ...settingErrors(settings, reads),
-    ];
-}
-
-/**
- * The configuration names the settings select that no manifest defines, each at its declaration.
- * @param settings the parsed settings.
- * @param reads the read cache for this run.
- * @returns one error per unknown name.
- */
-function unknownConfigurationErrors(settings: Settings, reads: ReadCache): SettingsError[] {
+function validateSettings(settings: Settings, root: string | undefined, reads: ReadCache): void {
     const manifests = readManifests(reads);
     const declarations: ConfigurationDeclaration[] = [
         ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
-        ...Object.entries(settings.scope).flatMap(([, scope], scopeIndex) =>
+        ...Object.values(settings.scope).flatMap((scope, scopeIndex) =>
             scope.configurations.map((name, index) => ({ name, path: ['scope', scopeIndex, 'configurations', index] })),
         ),
     ];
-    return listUnknownConfigurations(declarations, manifests).map(({ path, message }) => ({
-        path,
-        message,
-    }));
-}
-
-/**
- * Every error the selection and the known settings find in a settings whose configuration names all exist.
- * @param settings the parsed settings.
- * @param reads the read cache for this run.
- * @returns the errors, each at the value that raised it.
- */
-function settingErrors(settings: Settings, reads: ReadCache): SettingsError[] {
-    const manifests = readManifests(reads);
-    const errors: SettingsError[] = [];
+    const unknown = listUnknownConfigurations(declarations, manifests);
+    if (unknown.length > 0) throwErrors(unknown);
     const tools = listDistinctTools([...manifests.values()]);
-    for (const { table, path } of listSettingsTables(settings))
-        errors.push(
-            ...validateExtraOptions(table, tools).map((error) => ({ ...error, path: [...path, ...error.path] })),
-        );
-    const rootSelected = selectForScope(settings, '', manifests);
-    // Each scope table uses the settings of its selected configurations, including the root configurations.
-    const scopeKnown = new Map(
-        Object.keys(settings.scope).map((scope) => [
-            scope,
-            buildKnownSettings(selectForScope(settings, scope, manifests), settings.level, reads),
-        ]),
+    const bundledChecks = listCheckIds([], reads);
+    const checks = listCheckIds(Object.values(settings.check), reads);
+    const knownBySelection = new Map<string, KnownSettings>();
+    const scopes = new Map(
+        ['', ...Object.keys(settings.scope)].map((scope) => {
+            const selected = selectForScope(settings, scope, manifests);
+            const key = JSON.stringify(selected.map((manifest) => manifest.configuration.name));
+            let known = knownBySelection.get(key);
+            if (known === undefined) {
+                known = buildKnownSettings(selected, settings.level, reads);
+                knownBySelection.set(key, known);
+            }
+            return [scope, known];
+        }),
     );
-    errors.push(
-        ...validateKeys(
-            buildKnownSettings(rootSelected, settings.level, reads),
-            settings,
-            scopeKnown,
-            buildKnownSettings([...manifests.values()], settings.level, reads),
+    const known = scopes.get('') as KnownSettings;
+    scopes.delete('');
+    const errors: SettingsError[] = [
+        ...validateSettingReasons(settings),
+        ...Object.values(settings.check).flatMap((entry, index) =>
+            bundledChecks.includes(entry.name)
+                ? [
+                      {
+                          path: ['command_check', index, 'name'],
+                          message: `The command check ${entry.name} has the same name as a configuration check. Give it another name.`,
+                      },
+                  ]
+                : [],
         ),
-    );
-    return errors;
+        ...settings.ignore.flatMap((entry, index) =>
+            checks.includes(entry.check)
+                ? []
+                : [{ path: ['ignore', index, 'check'], message: formatUnknownCheck(entry.check, checks) }],
+        ),
+        ...validateDisabledRules(settings, manifests),
+        ...(root === undefined ? [] : validateScopePaths(root, settings)),
+        ...listSettingsTables(settings).flatMap(({ table, path }) =>
+            validateExtraOptions(table, tools).map((error) => ({ ...error, path: [...path, ...error.path] })),
+        ),
+        ...validateKeys(known, settings, scopes, buildKnownSettings([...manifests.values()], settings.level, reads)),
+    ];
+    if (errors.length > 0) throwErrors(errors);
 }
 
 /**
@@ -168,4 +137,4 @@ function formatSettingsError(error: SettingsError, file?: string): string {
     return [...place, error.message].join(': ');
 }
 
-export { throwErrors, collectErrors, formatSettingsIssue, unknownConfigurationErrors };
+export { validateSettings, formatSettingsIssue };

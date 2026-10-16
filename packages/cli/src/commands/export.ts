@@ -11,6 +11,7 @@ import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readIndexEntries } from '#cli/repository/tracked.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { dirname, resolve, basename, relative } from 'node:path';
@@ -30,7 +31,7 @@ export async function exportCommand(options: ExportOptions): Promise<CommandResu
     const parentPath = dirname(resolve(cwd, file));
     const root = findRoot(cwd);
     await assertVersionPin(root);
-    const settingsFile = readSettings(root);
+    const settingsFile = readSettings(root, createReadCache(root));
     const saved = exportTemplate(settingsFile.text);
     const template = parseTemplate(saved.text, file);
     let parent;

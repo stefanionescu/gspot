@@ -25,7 +25,7 @@ export function unusedEntries(input: CheckInput): Finding[] {
         const schema = scope === '' ? settingsSchema : scopeSchema;
         const visit: PathVisitor = (pattern, keys, role) => {
             const matches = buildPathMatcher([pattern.replace(NEGATED_PATTERN, '')]);
-            if (role !== 'destination' && !candidates.some((candidate) => matches(candidate))) {
+            if (role === 'source' && !candidates.some((candidate) => matches(candidate))) {
                 const names = keys
                     .filter((part): part is string => typeof part === 'string')
                     .filter((part, index, fields) => part !== 'paths' || index !== fields.length - 1);

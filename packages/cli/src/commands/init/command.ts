@@ -165,7 +165,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
     const effective = { ...draft, ...stripUndefined({ template: options.template }) };
     const formats = readFormatTables(effective, repo, manifests, packageManifests);
     const settingsText = initSettingsText(effective, repo, manifests, formats);
-    const settings = parseSettings(settingsText, root);
+    const settings = parseSettings(settingsText, root, reads);
     const session = await openSession(root, { settings, text: settingsText });
     const everySelected = listSelectedManifests(session.scopes);
     const applicable = session.neededToolManifests;

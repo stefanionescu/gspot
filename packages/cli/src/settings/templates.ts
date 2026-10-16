@@ -64,9 +64,8 @@ function exportTemplate(settingsText: string): ExportedTemplate {
           )
         : [];
     Reflect.deleteProperty(written, 'scope');
-    const document = written;
     return {
-        text: formatSettingsText(settingsText, document),
+        text: formatSettingsText(settingsText, written),
         leftOut: scopes.map((scope) => `scope.${JSON.stringify(scope)}: belongs to this repository`),
     };
 }

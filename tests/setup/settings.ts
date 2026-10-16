@@ -3,6 +3,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { REPORT_PROGRAM } from '#tests/config/execution.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import type { WrittenSettings } from '#cli/types/settings/file.ts';
 
 /**
@@ -51,7 +52,7 @@ export function settingsText(
  */
 export function settingsErrors(text: string, root?: string): string[] {
     try {
-        parseSettings(text, root);
+        parseSettings(text, root, createReadCache(process.cwd()));
         return [];
     } catch (error) {
         if (error instanceof GspotError && error.code === 'settings') return error.message.split('\n');

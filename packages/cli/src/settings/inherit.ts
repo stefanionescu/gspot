@@ -212,8 +212,7 @@ function findSettingDefault(
         (languageKey === undefined ? undefined : known.defaults.get(languageKey)) ??
         known.defaults.get(declaration.name);
     if (shipped === undefined) return undefined;
-    const folder =
-        declaration.name === 'site.allowed_unlisted_pages' ? (readValue('site.build_folder') as string) : scope;
+    const folder = declaration.path_role === 'build' ? (readValue('site.build_folder') as string) : scope;
     return { ...shipped, value: joinDefaultPaths(declaration.name, shipped.value, folder) };
 }
 

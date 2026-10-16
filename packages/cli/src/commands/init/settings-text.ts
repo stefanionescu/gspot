@@ -8,15 +8,14 @@ import { detectDefaults } from '#cli/settings/known.ts';
 import { parseBuildSettings } from '#cli/parsers/xcode.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
+import { type TomlTable } from '#cli/types/settings/file.ts';
 import { CI_FILE_LABELS } from '#cli/config/generation/ci.ts';
 import { ORIGIN_URL_SETTING } from '#cli/config/system/git.ts';
 import { readLintJobs } from '#cli/repository/existing-tools.ts';
 import { formatSettingsText } from '#cli/settings/write/text.ts';
-import { buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import { PBXPROJ, PBXPROJ_NAME } from '#cli/config/parsers/xcode.ts';
 import { TEMPLATE_COMMENT_PREFIX } from '#cli/config/settings/file.ts';
-import type { ConfigurationSelection } from '#cli/types/repository/selection.ts';
+import { type ConfigurationSelection } from '#cli/types/repository/selection.ts';
 import { type Repository, type ExistingTools } from '#cli/types/repository/inventory.ts';
 import { PREFACE_BODY, REMOTE_URL_USER, REMOTE_URL_SCHEME } from '#cli/config/commands/init.ts';
 import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/existing-tools.ts';
@@ -38,11 +37,15 @@ function buildOpenapiTables(
         );
     return new Map(
         openapiSelections.flatMap(({ scope, openapi }) => {
-            const matches = buildFilenameMatcher(openapi.detect.filenames);
-            const document = repository.files.find(
-                (file) => matches(file.path) && findScope(file.path, draft.scopes).path === scope,
-            );
-            return document === undefined ? [] : [[scope, { openapi: { document: document.path } }] as const];
+            const document = detectDefaults({
+                openapi: {
+                    filenames: openapi.detect.filenames,
+                    paths: repository.files
+                        .filter((file) => findScope(file.path, draft.scopes).path === scope)
+                        .map((file) => file.path),
+                },
+            }).get('openapi.document');
+            return document === undefined ? [] : [[scope, { openapi: { document } }] as const];
         }),
     );
 }

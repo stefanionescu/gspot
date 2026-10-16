@@ -1,6 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
 import { isRecord } from '#cli/system/values.ts';
-import { stringify } from '@decimalturn/toml-patch';
 import { parseTomlText } from '#cli/settings/file.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { dropDefaults } from '#cli/settings/write/defaults.ts';
@@ -96,9 +95,6 @@ function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable {
  * @param table the written table
  * @returns TOML that retains dates, number kinds, and array order
  */
-function sortedToml(table: TomlTable): string {
-    return stringify(sortTable(table));
-}
 
 /**
  * Write the settings while retaining written comments and template provenance.
@@ -119,4 +115,4 @@ function formatSettingsText(previousText: string, settings: TomlTable): string {
     return encodeSettings(target, indent, comments);
 }
 
-export { sortedToml, mergeIgnore, formatSettingsText };
+export { mergeIgnore, formatSettingsText };

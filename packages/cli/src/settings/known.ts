@@ -5,6 +5,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { mergeValue } from '#cli/settings/inherit.ts';
 import { toolsSchema } from '#cli/settings/schema/tools.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
+import { buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 import type { MemoKey, ReadCache } from '#cli/types/system/files.ts';
@@ -70,18 +71,26 @@ function addManifest(known: KnownSettings, manifest: Manifest, level: Level): vo
 function convertSchemaType(type: z.core.JSONSchema.JSONSchema['type']): SettingDeclaration['type'] {
     if (type === 'array') return 'list';
     if (type === 'object') return 'table';
-    if (type === 'number' || type === 'integer') return 'number';
+    if (['number', 'integer'].includes(type as string)) return 'number';
     if (type === 'string' || type === 'boolean') return type;
     throw new Error(`The setting schema has no supported value type: ${String(type)}.`);
+}
+
+function getSchemaPathRole(input: z.core.JSONSchema.JSONSchema): unknown {
+    if (input['pathRole'] !== undefined) return input['pathRole'];
+    if (typeof input.items === 'object' && !Array.isArray(input.items)) return input.items['pathRole'];
+    return undefined;
 }
 
 function deriveSettingType(schema: z.ZodType): Pick<SettingDeclaration, 'type' | 'path_role'> {
     const document = convertToJsonSchema(schema);
     const input = document.anyOf?.find((value) => typeof value === 'object' && value.type !== undefined) ?? document;
-    const pathRole = input['pathRole'];
+    const pathRole = getSchemaPathRole(input);
     return {
         type: input.type === 'string' && pathRole !== undefined ? 'path' : convertSchemaType(input.type),
-        ...(pathRole === 'source' || pathRole === 'destination' ? { path_role: pathRole } : {}),
+        ...(['source', 'destination', 'build'].includes(pathRole as string)
+            ? { path_role: pathRole as NonNullable<SettingDeclaration['path_role']> }
+            : {}),
     };
 }
 
@@ -149,10 +158,21 @@ function buildKnownSettings(selected: Manifest[], level: Level = 'recommended', 
  * @param inputs.npmClient the detected package manager.
  * @param inputs.sdkRoot the detected Xcode SDK.
  * @param inputs.scopes the workspace names.
+ * @param inputs.openapi the detected OpenAPI filenames and candidate documents.
+ * @param inputs.openapi.filenames the filenames that identify an OpenAPI document.
+ * @param inputs.openapi.paths the repository-relative paths searched for an OpenAPI document.
  * @returns computed setting defaults, with undefined when their project input does not exist.
  */
-function detectDefaults(inputs: { npmClient?: string; sdkRoot?: string; scopes?: string[] }): Map<string, unknown> {
+function detectDefaults(inputs: {
+    npmClient?: string;
+    sdkRoot?: string;
+    scopes?: string[];
+    openapi?: { filenames: string[]; paths: string[] };
+}): Map<string, unknown> {
+    const matches = inputs.openapi === undefined ? undefined : buildFilenameMatcher(inputs.openapi.filenames);
+    const document = inputs.openapi?.paths.find((path) => matches?.(path) === true);
     return new Map<string, unknown>([
+        ['openapi.document', document],
         ['site.build_command', inputs.npmClient === undefined ? undefined : [inputs.npmClient, ...BUILD_SCRIPT]],
         ['xcode.destination', XCODE_DESTINATIONS.get(inputs.sdkRoot)],
         [

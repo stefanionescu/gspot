@@ -7,6 +7,7 @@ import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { hookFiles, startRunner } from '#cli/generation/hooks.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { HOOK_CASES, HOOK_PROGRAM, START_COMMANDS } from '#tests/config/hooks.ts';
@@ -14,7 +15,11 @@ import { HOOK_CASES, HOOK_PROGRAM, START_COMMANDS } from '#tests/config/hooks.ts
 test('a repository at the Git top level gets hooks that change no folder', async () => {
     await using sandbox = await testdir();
     gitOutput(sandbox.path, ['init', '-q']);
-    const settings = parseSettings(settingsText([], { rules: true, tables: '[hooks]\nenabled = true\n' }));
+    const settings = parseSettings(
+        settingsText([], { rules: true, tables: '[hooks]\nenabled = true\n' }),
+        undefined,
+        createReadCache(process.cwd()),
+    );
     const files = hookFiles(sandbox.path, settings, await startRunner(sandbox.path));
     expect(files).toHaveLength(3);
     for (const file of files) expect(file.content).not.toContain('\ncd ');
@@ -35,7 +40,11 @@ test.each(START_COMMANDS)(
                     devDependencies: { '@gspothq/cli': '1.2.3' },
                 }),
             );
-        const settings = parseSettings(settingsText([], { rules: true, tables: '[hooks]\nenabled = true\n' }));
+        const settings = parseSettings(
+            settingsText([], { rules: true, tables: '[hooks]\nenabled = true\n' }),
+            undefined,
+            createReadCache(process.cwd()),
+        );
         const files = hookFiles(root, settings, await startRunner(root));
         expect(files.map((file) => file.path)).toStrictEqual(HOOK_CASES.map(([name]) => `.gspot/hooks/${name}`));
         await fakeTool(sandbox.path, `bin/${program}`, HOOK_PROGRAM);
@@ -76,7 +85,11 @@ test.each(START_COMMANDS)(
 test('a hook says how to install mise when mise is missing', async () => {
     await using sandbox = await testdir();
     gitOutput(sandbox.path, ['init', '-q']);
-    const settings = parseSettings(settingsText([], { rules: true, tables: '[hooks]\nenabled = true\n' }));
+    const settings = parseSettings(
+        settingsText([], { rules: true, tables: '[hooks]\nenabled = true\n' }),
+        undefined,
+        createReadCache(process.cwd()),
+    );
     const hook = hookFiles(sandbox.path, settings, await startRunner(sandbox.path)).find((file) =>
         file.path.endsWith('pre-push'),
     )!;

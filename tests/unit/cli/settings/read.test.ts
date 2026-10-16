@@ -5,6 +5,7 @@ import { symlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { parseSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { KEY_PATH_CASES } from '#tests/config/settings/errors.ts';
 import { INVALID_RUNTIMES } from '#tests/config/eslint/overrides.ts';
 import { rejection, textContaining } from '#tests/setup/matchers.ts';
@@ -15,8 +16,10 @@ test.each([...INVALID_RUNTIMES])('an invalid runtime %s names the setting', (run
         configurations: ['javascript'],
         tools: { eslint: { override: [{ paths: ['**/*.js'], runtime }] } },
     });
-    expect(() => parseSettings(text)).toThrow('tools.eslint.override.0.runtime');
-    expect(() => parseSettings(text)).toThrow('Invalid option');
+    expect(() => parseSettings(text, undefined, createReadCache(process.cwd()))).toThrow(
+        'tools.eslint.override.0.runtime',
+    );
+    expect(() => parseSettings(text, undefined, createReadCache(process.cwd()))).toThrow('Invalid option');
 });
 
 test('an OSV ignore expiry cannot add a TOML table', async () => {

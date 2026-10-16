@@ -1,32 +1,36 @@
 import { FIRST_READ } from '#cli/config/rules.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
+import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
+import { SETTING_FIELDS } from '#cli/config/settings/schema.ts';
 import { RULES_DIRECTORY } from '#cli/config/system/locations.ts';
-import { listConfigurationSettings } from '#cli/settings/known.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import { buildPathKey, trimTrailingSlashes } from '#cli/system/paths.ts';
+import { listRuleFiles, listChecksById } from '#cli/configurations/manifests.ts';
+import { type Manifest, type ToolDeclaration } from '#cli/types/configurations.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import type { ToolTable, SettingsError, RuleExcludeError } from '#cli/types/settings/file.ts';
-import { listRuleFiles, readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 
-function validateToolRules(tool: string, table: ToolTable, path: KeyPath, reads: ReadCache): SettingsError[] {
+function validateToolRules(
+    tool: string,
+    table: ToolTable,
+    path: KeyPath,
+    manifests: Map<string, Manifest>,
+): SettingsError[] {
     const rules = table['rules'];
     if (!isRecord(rules)) return [];
-    const manifests = readManifests(reads);
-    const disabledOptions = [...manifests.values()]
-        .flatMap((manifest) => listConfigurationSettings(manifest.configuration.name))
-        .find((declaration) => declaration.name === `tools.${tool}.rules`)?.offValues;
-    if (disabledOptions === undefined) return [];
+    const declarations: Readonly<
+        Record<string, { description: string; offValues?: readonly (string | number | boolean)[] }>
+    > = SETTING_FIELDS;
+    const offValues = declarations[`${tool}_rules`]?.offValues;
+    if (offValues === undefined) return [];
     const disabled = Object.entries(rules).filter(([, option]) => {
         const severity: unknown = Array.isArray(option) ? option[0] : option;
         return (
             (typeof severity === 'string' || typeof severity === 'number' || typeof severity === 'boolean') &&
-            disabledOptions.includes(severity)
+            offValues.includes(severity)
         );
     });
     if (disabled.length === 0) return [];
@@ -44,29 +48,15 @@ function validateToolRules(tool: string, table: ToolTable, path: KeyPath, reads:
 }
 
 // Duplicate scope declarations after case and Unicode normalization.
-function duplicateScopeErrors(paths: string[]): SettingsError[] {
-    const seen = new Set<string>();
-    const errors: SettingsError[] = [];
-    for (const path of paths) {
-        const key = buildPathKey(trimTrailingSlashes(path));
-        if (seen.has(key))
-            errors.push({
-                path: ['scope', path],
-                message: `Scope path is declared more than once: ${path}.`,
-            });
-        seen.add(key);
-    }
-    return errors;
-}
 
 /**
  * Reports rules disabled outside the ignore settings.
  * @param settings the normalized settings
- * @param reads the run cache.
+ * @param manifests the shipped configuration declarations indexed by name.
  * @returns the prohibited changes, at both check levels
  */
-function validateDisabledRules(settings: Settings, reads: ReadCache): SettingsError[] {
-    const exclusions = validateRuleExcludes(settings.rules.exclude, reads).map(({ index, message }) => ({
+function validateDisabledRules(settings: Settings, manifests: Map<string, Manifest>): SettingsError[] {
+    const exclusions = validateRuleExcludes(settings.rules.exclude, manifests).map(({ index, message }) => ({
         path: ['rules', 'exclude', index],
         message,
     }));
@@ -77,10 +67,10 @@ function validateDisabledRules(settings: Settings, reads: ReadCache): SettingsEr
                 const location = [...path, 'tools', tool];
                 const overrides = Array.isArray(table['override']) ? table['override'] : [];
                 return [
-                    ...validateToolRules(tool, table, location, reads),
+                    ...validateToolRules(tool, table, location, manifests),
                     ...overrides.flatMap((override: unknown, index) =>
                         isRecord(override)
-                            ? validateToolRules(tool, override, [...location, 'override', index], reads)
+                            ? validateToolRules(tool, override, [...location, 'override', index], manifests)
                             : [],
                     ),
                 ];
@@ -96,13 +86,9 @@ function validateDisabledRules(settings: Settings, reads: ReadCache): SettingsEr
  * @returns the errors in plain English
  */
 function validateScopePaths(root: string, settings: Settings): SettingsError[] {
-    const paths = Array.isArray(settings.written['scope'])
-        ? settings.written['scope'].flatMap((entry) =>
-              isRecord(entry) && typeof entry['path'] === 'string' ? [entry['path']] : [],
-          )
-        : [];
+    const paths = Object.values(settings.scopeTables).map((table) => table.written['path'] as string);
     using files = openFiles(root);
-    const missing = paths.flatMap((path) => {
+    return paths.flatMap((path) => {
         const location: KeyPath = ['scope', path];
         try {
             const entry = files.stat(trimTrailingSlashes(path));
@@ -118,7 +104,6 @@ function validateScopePaths(root: string, settings: Settings): SettingsError[] {
             return [{ path: location, message: String(error) }];
         }
     });
-    return [...missing, ...duplicateScopeErrors(paths)];
 }
 
 /**
@@ -148,30 +133,25 @@ function validateExtraOptions(table: Partial<Settings>, tools: ToolDeclaration[]
  * @param path the rule path relative to its folder.
  * @returns whether the entry excludes the rule.
  */
-function isExcluded(entry: string, path: string): boolean {
-    return isInScope(path, trimTrailingSlashes(entry));
-}
 
 /**
  * The errors in [rules] exclude: an entry that matches no rule, and an entry that hides a file the reader opens first.
  * @param exclude the entries as written, relative to the rules folder
- * @param reads the run cache.
+ * @param manifests the shipped configuration declarations indexed by name.
  * @returns each error with its position in the exclusion list
  */
-function validateRuleExcludes(exclude: string[], reads: ReadCache): RuleExcludeError[] {
+function validateRuleExcludes(exclude: string[], manifests: Map<string, Manifest>): RuleExcludeError[] {
     if (exclude.length === 0) return [];
-    const paths = [...readManifests(reads).values()].flatMap((manifest) =>
-        listRuleFiles(manifest).map((file) => file.path),
-    );
+    const paths = [...manifests.values()].flatMap((manifest) => listRuleFiles(manifest).map((file) => file.path));
     return exclude.flatMap((entry, index) => {
-        if ([...FIRST_READ].some((file) => isExcluded(entry, `${RULES_DIRECTORY}/${file}`)))
+        if ([...FIRST_READ].some((file) => isInScope(`${RULES_DIRECTORY}/${file}`, trimTrailingSlashes(entry))))
             return [
                 {
                     index,
                     message: `[rules] exclude names ${formatCodeList([entry])}, which holds a file every agent opens first (${formatCodeList([...FIRST_READ])}). Remove the entry.`,
                 },
             ];
-        if (paths.some((path) => isExcluded(entry, `${RULES_DIRECTORY}/${path}`))) return [];
+        if (paths.some((path) => isInScope(`${RULES_DIRECTORY}/${path}`, trimTrailingSlashes(entry)))) return [];
         const near = selectSimilarNames(
             entry,
             paths.map((path) => `${RULES_DIRECTORY}/${path}`),
@@ -181,4 +161,4 @@ function validateRuleExcludes(exclude: string[], reads: ReadCache): RuleExcludeE
     });
 }
 
-export { isExcluded, validateScopePaths, validateExtraOptions, validateDisabledRules };
+export { validateScopePaths, validateExtraOptions, validateDisabledRules };

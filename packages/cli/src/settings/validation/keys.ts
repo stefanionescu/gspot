@@ -2,9 +2,10 @@ import { z } from 'zod';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import type { SettingsError } from '#cli/types/settings/file.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
+import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import { findSettingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
-import { isLoosening, validateReason, isReasonNeeded, isReasonAccepted } from '#cli/settings/validation/reasons.ts';
+import { isLoosening, validateReason, isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 
 import type {
     Settings,
@@ -58,7 +59,7 @@ function validateScalar(
         const message = validateReason(key, written.reason);
         if (message !== undefined) return [{ path: [...key.split('.'), 'reason'], message }];
     }
-    if (!isReasonNeeded(match.declaration, shipped, written.value) || isReasonAccepted(written.reason)) return [];
+    if (!isLoosening(match.declaration, written.value, shipped) || isReasonAccepted(written.reason)) return [];
     const error = formatLooseningError(key, written, shipped, scope);
     return [{ path: key.split('.'), message: error }];
 }
@@ -80,7 +81,7 @@ function validateWrittenKey(
         scope ?? '',
         (dependentKey) => (getSettingValue(known, settings, dependentKey, scope) as SettingEntry).value,
     )?.value;
-    if (written.reason !== undefined && !isReasonNeeded(match.declaration, shipped, written.value))
+    if (written.reason !== undefined && !isLoosening(match.declaration, written.value, shipped))
         return [
             {
                 path: key.split('.'),
@@ -135,8 +136,7 @@ function listUnsettledConflicts(
 function isKeyGroup(known: KnownSettings, key: string, value: unknown): value is Record<string, unknown> {
     if (known.declarations.has(key) || !isRecord(value)) return false;
     let schema = findSettingSchema(key);
-    while (schema instanceof z.ZodOptional || schema instanceof z.ZodDefault || schema instanceof z.ZodPrefault)
-        schema = schema.unwrap() as z.ZodType;
+    if (schema !== undefined) schema = unwrapSettingSchema(schema);
     return schema instanceof z.ZodObject;
 }
 

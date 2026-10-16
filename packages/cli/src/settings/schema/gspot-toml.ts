@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/objects.ts';
-import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { namingSchema } from '#cli/settings/schema/naming.ts';
+import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { SETTINGS_DESCRIPTIONS } from '#cli/config/settings/values.ts';
+import { buildPathKey, trimTrailingSlashes } from '#cli/system/paths.ts';
 import { architectureSchema } from '#cli/settings/schema/architecture.ts';
 import { SCHEMA_FILE, SCHEMA_URL_PREFIX } from '#cli/config/settings/file.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/settings/schema/tools.ts';
@@ -201,7 +202,7 @@ const settingsSchema = z
             {
                 key: 'scope',
                 field: 'path',
-                names: (written.scope ?? []).map((entry) => trimTrailingSlashes(entry.path)),
+                names: (written.scope ?? []).map((entry) => buildPathKey(trimTrailingSlashes(entry.path))),
             },
             {
                 key: 'command_check',
@@ -232,7 +233,7 @@ function buildJsonSchema(): Record<string, unknown> {
     return {
         $schema: JSON_SCHEMA_DIALECT,
         $id: `${SCHEMA_URL_PREFIX}${packageManifest.version}/${SCHEMA_FILE}`,
-        title: 'gspot.toml',
+        title: SETTINGS_FILE,
         description: 'The settings of gspot for one repository.',
         ...convertToJsonSchema(settingsSchema),
     };

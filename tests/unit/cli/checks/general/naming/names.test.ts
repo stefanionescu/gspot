@@ -17,7 +17,11 @@ const check = listChecksById(readManifests(createReadCache(process.cwd())).value
 test('a number word such as base64 counts as one word; repeated, extra, banned and digit words are still reported', () => {
     const selected = selectConfigurations(['naming'], readManifests(createReadCache(process.cwd())));
     const known = buildKnownSettings(selected);
-    const settings = parseSettings(settingsText(['naming'], { rules: true }));
+    const settings = parseSettings(
+        settingsText(['naming'], { rules: true }),
+        undefined,
+        createReadCache(process.cwd()),
+    );
     const view = buildScopeView(known, settings, selected, '');
     const effective = readNamingSettings({
         selection: { view: view, scope: { path: '' }, selected: selected },

@@ -70,7 +70,7 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
         new Map(),
     );
     expect(text).toContain('configurations = ["typescript",');
-    const settings = parseSettings(text);
+    const settings = parseSettings(text, undefined, createReadCache(process.cwd()));
     expect(settings.configurations).toStrictEqual([...INIT_CONFIGURATIONS]);
     expect(settings.scope['apps/site']?.configurations).toStrictEqual(INIT_CONFIGURATIONS.slice(0, 12));
     expect(formatSettingsText(text, parseTomlText(text, 'gspot.toml', 'settings'))).toBe(text);
@@ -176,7 +176,7 @@ instruction_files = ["TEAM.md"]
     expect(text).toContain(`# Copied from template team.template.toml, sha256 ${template.digest}.`);
     expect(text).toContain('# Rule owner\n[rules]');
     expect(parse(text)).toMatchObject({ rules: { instruction_files: ['TEAM.md'] } });
-    expect(parseSettings(text).rules.enabled).toBe(true);
+    expect(parseSettings(text, undefined, createReadCache(process.cwd())).rules.enabled).toBe(true);
     expect(formatSettingsText(text, parseTomlText(text, 'gspot.toml', 'settings'))).toBe(text);
 });
 
@@ -195,7 +195,7 @@ test.each([...SDK_DESTINATIONS])('init picks the Xcode destination for SDK $sdk'
         new Map(),
     );
     const session = await openSession(sandbox.path, {
-        settings: parseSettings(text),
+        settings: parseSettings(text, undefined, createReadCache(process.cwd())),
         text,
     });
     expect(session.scopes[0]!.view.options('xcode').destination).toBe(destination);
@@ -230,7 +230,7 @@ test.each([...TEMPLATE_SWIFT_CHOICES])(
             new Map(),
         );
         const session = await openSession(sandbox.path, {
-            settings: parseSettings(text),
+            settings: parseSettings(text, undefined, createReadCache(process.cwd())),
             text,
         });
         const choices = session.scopes[0]!.view.options('xcode');

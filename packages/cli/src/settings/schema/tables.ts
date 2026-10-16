@@ -18,7 +18,6 @@ import {
     wholeNumber,
     formatSchema,
     relativePath,
-    relativePaths,
     nonemptyString,
     destinationPath,
     nonemptyStrings,
@@ -121,7 +120,7 @@ const configurationTableSchemas = {
         .strictObject({
             build_command: commandSchema.default(['npm', 'run', 'build']).meta(TABLE_FIELDS.build_command),
             build_folder: destinationPath.default('dist').meta(TABLE_FIELDS.build_folder),
-            allowed_unlisted_pages: allowReasonedValue(relativePaths)
+            allowed_unlisted_pages: allowReasonedValue(z.array(relativePath.meta({ pathRole: 'build' })))
                 .default(['404.html'])
                 .meta(TABLE_FIELDS.allowed_unlisted_pages),
             size_limit: z

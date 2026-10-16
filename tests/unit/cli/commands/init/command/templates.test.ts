@@ -9,6 +9,7 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTree, pathExists } from '#tests/setup/files.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash/tools.ts';
 import { ALWAYS_SELECTED } from '#tests/config/configurations.ts';
@@ -42,7 +43,9 @@ stage = "manual"
     });
     const original = parse(await Bun.file(join(sandbox.path, 'team.template.toml')).text());
     expect(parse(report.settings)['command_check']).toStrictEqual(original['command_check']);
-    expect(Object.keys(parseSettings(report.settings, sandbox.path).check)).toStrictEqual(['reviewed']);
+    expect(
+        Object.keys(parseSettings(report.settings, sandbox.path, createReadCache(process.cwd())).check),
+    ).toStrictEqual(['reviewed']);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
@@ -61,7 +64,9 @@ test('an empty template still lets init add the detected configurations, and a d
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const report = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings' | 'plan'>>;
-    expect(parseSettings(report.settings).configurations).toContain('javascript');
+    expect(parseSettings(report.settings, undefined, createReadCache(process.cwd())).configurations).toContain(
+        'javascript',
+    );
     const selected = report.plan.configurations.map(({ configuration }) => configuration);
     for (const configuration of ALWAYS_SELECTED) expect(selected).toContain(configuration);
     expect(await readTree(sandbox.path)).toStrictEqual(before);

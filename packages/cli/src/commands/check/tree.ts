@@ -1,12 +1,9 @@
 // Selects positional repository paths and refuses unknown check IDs.
 // Checking one tree: the working tree, or a copy of the index or of a pushed commit.
-// Selects positional repository paths and refuses unknown check IDs.
-// Checking one tree: the working tree, or a copy of the index or of a pushed commit.
 import { resolve, relative } from 'node:path';
 import { executeRun } from '#cli/execution/run.ts';
 import { hookStatus } from '#cli/install/hooks.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { readSettings } from '#cli/settings/read.ts';
 import { formatCodeList } from '#cli/system/text.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openSession } from '#cli/commands/session.ts';
@@ -207,8 +204,7 @@ export async function checkTree(
     revision?: RevisionSource,
 ): Promise<CommandResult<RunReport>> {
     await assertVersionPin(root);
-    const settingsFile = readSettings(root);
-    const session = await openSession(root, settingsFile, { installedRoot: revision?.installedRoot ?? root });
+    const session = await openSession(root, undefined, { installedRoot: revision?.installedRoot ?? root });
     refuseUnknownChecks(session, options.only);
     warnAboutHooks(session, revision);
     const selections = await runFilters(session, options, signal, revision);

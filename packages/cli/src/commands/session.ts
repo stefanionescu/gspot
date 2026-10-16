@@ -7,6 +7,7 @@ import { readRepository } from '#cli/repository/read.ts';
 import { getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
+import { buildScopeView } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
@@ -17,7 +18,6 @@ import { detectConfigurations } from '#cli/repository/detect.ts';
 import { neededToolManifests } from '#cli/planning/needed-tools.ts';
 import { type Repository } from '#cli/types/repository/inventory.ts';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
-import { rootView, buildScopeView } from '#cli/settings/scope-view.ts';
 import { locateCandidates, readMiseBinPaths } from '#cli/tools/locate.ts';
 import { MISSING_PACKAGE_MANAGER_MESSAGE } from '#cli/config/tools/npm.ts';
 import { detectDefaults, buildKnownSettings } from '#cli/settings/known.ts';
@@ -107,18 +107,19 @@ async function readSessionRepository(
 
 /**
  * Open a repository session. Refuse invalid settings or configuration choices.
- * @param rootPath the repository root
- * @param input the settings as read, read here by default
- * @param options the repository whose installed tools run against this source tree
- * @param options.installedRoot the working repository with the installed tools
- * @returns the session
+ *
+ * @param rootPath the repository root.
+ * @param input the supplied settings, or settings read from the repository.
+ * @param options the repository with installed tools for this source tree.
+ * @param options.installedRoot the working repository with the installed tools.
+ * @param options.reads the file reads already collected for this run.
+ * @returns the session.
  */
 export async function openSession(
     rootPath: string,
     input?: SettingsFile,
-    { installedRoot = rootPath }: { installedRoot?: string } = {},
+    { installedRoot = rootPath, reads = createReadCache(rootPath) }: { installedRoot?: string; reads?: ReadCache } = {},
 ): Promise<Session> {
-    const reads = createReadCache(rootPath);
     const settingsFile = input ?? readSettings(rootPath, reads);
     const root = reads.root;
     const manifests = readManifests(reads);
@@ -126,7 +127,9 @@ export async function openSession(
     const repository = await readSessionRepository(root, settings, settingsFile.text, manifests, reads);
     const packageManifests = repository.dependencyFiles;
     const [scopes, getPackageManagerIdentity] = await scopeSelections(settings, repository, manifests, reads);
-    const timeoutSeconds = getToolTimeoutSeconds(rootView(scopes));
+    const timeoutSeconds = getToolTimeoutSeconds(
+        (scopes.find((selection) => selection.scope.path === '') as ScopeSelection).view,
+    );
     let packageManagerIdentity: PackageManagerDeclaration | undefined = undefined;
     let packageManagerState: PackageManager | undefined;
     let generatedPaths: ReadonlySet<string> | undefined;

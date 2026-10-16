@@ -17,7 +17,6 @@ import {
     type SettingEntry,
     type KnownSettings,
     type ScopeSettings,
-    type ScopeSelection,
 } from '#cli/types/settings/values.ts';
 
 /**
@@ -89,10 +88,6 @@ function buildScopeView(known: KnownSettings, settings: Settings, selected: Mani
  * @param scopes the command's validated scope selections.
  * @returns the root scope's merged view.
  */
-function rootView(scopes: ScopeSelection[]): ScopeView {
-    const root = scopes.find((selection) => selection.scope.path === '') as ScopeSelection;
-    return root.view;
-}
 
 function listNamingVariants(known: KnownSettings, settings: Settings, scope: string): SettingEntry[] {
     return SETTING_LANGUAGES.flatMap((language) =>
@@ -194,4 +189,4 @@ function fillTableValues(namespaces: Record<string, unknown>, rows: SettingEntry
     }
 }
 
-export { rootView, buildScopeView, listActiveIgnores };
+export { buildScopeView, listActiveIgnores };

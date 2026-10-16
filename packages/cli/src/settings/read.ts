@@ -1,7 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { limitsSchema } from '#cli/settings/schema/limits.ts';
 import { namingSchema } from '#cli/settings/schema/naming.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
@@ -11,13 +11,7 @@ import { architectureSchema } from '#cli/settings/schema/architecture.ts';
 import { type Settings, type SettingsFile } from '#cli/types/settings/values.ts';
 import { type TomlTable, type ParsedSettings } from '#cli/types/settings/file.ts';
 import { SCOPE_EMPTY_RECORDS, COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/values.ts';
-
-import {
-    throwErrors,
-    collectErrors,
-    formatSettingsIssue,
-    unknownConfigurationErrors,
-} from '#cli/settings/validation/settings.ts';
+import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/settings.ts';
 
 /**
  * Parse and validate gspot.toml. Throw a GspotError with every settings error.
@@ -27,7 +21,7 @@ import {
  * @param reads the read cache for this run.
  * @returns the normalized settings.
  */
-function parseSettings(text: string, root?: string, reads = createReadCache(root ?? process.cwd())): Settings {
+function parseSettings(text: string, root: string | undefined, reads: ReadCache): Settings {
     const written = parseTomlText(text, SETTINGS_FILE, 'settings');
     const result = settingsSchema.safeParse(written);
     if (!result.success)
@@ -36,10 +30,7 @@ function parseSettings(text: string, root?: string, reads = createReadCache(root
             result.error.issues.flatMap((issue) => formatSettingsIssue(SETTINGS_FILE, issue)).join('\n'),
         );
     const settings = buildSettings(result.data, written);
-    const unknown = unknownConfigurationErrors(settings, reads);
-    if (unknown.length > 0) throwErrors(unknown);
-    const errors = collectErrors(settings, root, reads);
-    if (errors.length > 0) throwErrors(errors);
+    validateSettings(settings, root, reads);
     return settings;
 }
 
@@ -49,7 +40,7 @@ function parseSettings(text: string, root?: string, reads = createReadCache(root
  * @param reads the read cache for this run.
  * @returns the settings and the file's text.
  */
-function readSettings(root: string, reads = createReadCache(root)): SettingsFile {
+function readSettings(root: string, reads: ReadCache): SettingsFile {
     const { text } = readSettingsFile(root);
     const settings = parseSettings(text, root, reads);
     return { settings, text };
@@ -176,4 +167,4 @@ function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
     };
 }
 
-export { readSettings, parseSettings };
+export { readSettings, parseSettings, buildSettings };

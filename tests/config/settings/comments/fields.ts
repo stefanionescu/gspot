@@ -63,32 +63,30 @@ hooks.enabled=true
 # Z scope
 [[scope]]
 path="z/app"
-level="all"
 
 # A check
 [[command_check]]
 name="a/task"
 command=["bun","task.ts"]
 paths=["src/**"]
+stage="manual"
 summary="Old task" # Summary inline
 
 # A scope
 [[scope]]
 path="a/app"
-level="recommended"
 `,
         target: `level="all"
 hooks.enabled=true
 [[scope]]
 path="z/app"
-level="all"
 [[scope]]
 path="a/app"
-level="recommended"
 [[command_check]]
 name="a/task"
 command=["bun","task.ts"]
 paths=["src/**"]
+stage="manual"
 summary="Changed task"
 `,
         expected: `# Copied from template team, sha256 abc.
@@ -109,13 +107,13 @@ path = "z/app"
 # A scope
 [[scope]]
 path = "a/app"
-level = "recommended"
 
 # A check
 [[command_check]]
 name = "a/task"
 command = ["bun", "task.ts"]
 paths = ["src/**"]
+stage = "manual"
 # Summary inline
 summary = "Changed task"
 `,

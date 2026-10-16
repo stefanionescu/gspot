@@ -84,7 +84,7 @@ const known = buildKnownSettings([
 
 test('two configurations with different defaults are an error until gspot.toml sets the value', () => {
     const source = settingsText(['sql'], { rules: true });
-    const settings = parseSettings(source);
+    const settings = parseSettings(source, undefined, createReadCache(process.cwd()));
     expect(validateKeys(known, settings, new Map(), buildKnownSettings([]))).toStrictEqual([
         {
             path: ['configurations'],
@@ -92,7 +92,11 @@ test('two configurations with different defaults are an error until gspot.toml s
                 'The configurations `sql` and `alternate-sql` set `tools.sqlfluff.dialect` to different values. Set it yourself in gspot.toml to decide.',
         },
     ]);
-    const corrected = parseSettings(`${source}[tools.sqlfluff]\ndialect = "sqlite"\n`);
+    const corrected = parseSettings(
+        `${source}[tools.sqlfluff]\ndialect = "sqlite"\n`,
+        undefined,
+        createReadCache(process.cwd()),
+    );
     expect(validateKeys(known, corrected, new Map(), buildKnownSettings([]))).toStrictEqual([]);
     expect(getSettingValue(known, corrected, 'tools.sqlfluff.dialect')).toMatchObject({
         value: 'sqlite',
@@ -103,6 +107,8 @@ test('two configurations with different defaults are an error until gspot.toml s
 test('the conflict is reported at the scope that selects both configurations', () => {
     const settings = parseSettings(
         settingsText([], { rules: true, tables: '\n[[scope]]\npath = "db"\nconfigurations = ["sql"]\n' }),
+        undefined,
+        createReadCache(process.cwd()),
     );
     expect(
         validateKeys(buildKnownSettings([]), settings, new Map([['db', known]]), buildKnownSettings([])),
@@ -115,6 +121,8 @@ test('a scope value settles the scopes below it, and a sibling scope still repor
             rules: true,
             tables: '\n[[scope]]\npath = "app"\nconfigurations = ["sql"]\ntools.sqlfluff.dialect = "sqlite"\n[[scope]]\npath = "app/db"\nconfigurations = ["sql"]\n[[scope]]\npath = "other"\nconfigurations = ["sql"]\n',
         }),
+        undefined,
+        createReadCache(process.cwd()),
     );
     const scopes = new Map(Object.keys(settings.scope).map((path) => [path, known]));
     expect(validateKeys(buildKnownSettings([]), settings, scopes, buildKnownSettings([]))).toStrictEqual([
@@ -129,12 +137,16 @@ test('a scope value settles the scopes below it, and a sibling scope still repor
 test("a written false overrides a configuration's true default", () => {
     const known = buildKnownSettings(selectConfigurations(['supabase'], readManifests(createReadCache(process.cwd()))));
     const source = settingsText(['supabase'], { rules: true });
-    const settings = parseSettings(source);
+    const settings = parseSettings(source, undefined, createReadCache(process.cwd()));
     expect(getSettingValue(known, settings, 'tools.squawk.assume_in_transaction')).toMatchObject({
         value: true,
         source: 'configuration supabase',
     });
-    const corrected = parseSettings(`${source}[tools.squawk]\nassume_in_transaction = false\n`);
+    const corrected = parseSettings(
+        `${source}[tools.squawk]\nassume_in_transaction = false\n`,
+        undefined,
+        createReadCache(process.cwd()),
+    );
     expect(getSettingValue(known, corrected, 'tools.squawk.assume_in_transaction')).toMatchObject({
         value: false,
         source: 'gspot.toml',
@@ -143,7 +155,11 @@ test("a written false overrides a configuration's true default", () => {
 
 test('an inherited default names the configuration that declares it', () => {
     const known = buildKnownSettings(selectConfigurations(['supabase'], readManifests(createReadCache(process.cwd()))));
-    const settings = parseSettings(settingsText(['supabase'], { rules: true }));
+    const settings = parseSettings(
+        settingsText(['supabase'], { rules: true }),
+        undefined,
+        createReadCache(process.cwd()),
+    );
     expect(validateKeys(known, settings, new Map(), buildKnownSettings([]))).toStrictEqual([]);
     expect(getSettingValue(known, settings, 'tools.sqlfluff.dialect')).toMatchObject({
         value: 'postgres',
@@ -183,6 +199,8 @@ test('a value comes from the configuration default, then the root table, then th
             rules: true,
             tables: '[limits]\nfile_lines = 250\n[[scope]]\npath = "api"\nlimits.file_lines = 200\n',
         }),
+        undefined,
+        createReadCache(process.cwd()),
     );
     expect(getSettingValue(baseKnown, settings, 'limits.file_lines')?.value).toBe(250);
     expect(getSettingValue(baseKnown, settings, 'limits.file_lines', 'api')?.value).toBe(200);
@@ -195,6 +213,8 @@ test('lists add up across tables without repeats', () => {
             rules: true,
             tables: '[naming]\nbanned_words = ["dispatcher"]\n[[scope]]\npath = "api"\nnaming.banned_words = ["dispatcher", "orchestrator"]\n',
         }),
+        undefined,
+        createReadCache(process.cwd()),
     );
     expect(getSettingValue(baseKnown, settings, 'naming.banned_words', 'api')?.value).toStrictEqual([
         'dispatcher',
@@ -218,6 +238,8 @@ test('list defaults add up across configurations before root and scope additions
             rules: true,
             tables: '[naming]\nbanned_words = ["dispatcher", "manager"]\n[[scope]]\npath = "api"\nnaming.banned_words = ["orchestrator", "handler"]\n',
         }),
+        undefined,
+        createReadCache(process.cwd()),
     );
     expect(getSettingValue(defaults, settings, 'naming.banned_words', 'api')?.value).toStrictEqual([
         'dispatcher',
@@ -235,6 +257,8 @@ test("a scope's rules keep other rules and replace the whole options of the same
             rules: true,
             tables: '[tools.stylelint.rules]\nselector-max-id = 0\ncolor-named = ["never", { severity = "error" }]\n[[scope]]\npath = "app"\nconfigurations = []\ntools.stylelint.rules.color-named = ["always-where-possible"]\n',
         }),
+        undefined,
+        createReadCache(process.cwd()),
     );
     expect(getSettingValue(known, settings, 'tools.stylelint.rules', 'app')?.value).toStrictEqual({
         'selector-max-id': 0,

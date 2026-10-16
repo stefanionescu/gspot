@@ -1,8 +1,8 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { JSONSchema } from 'zod/v4/core';
 import { isRecord } from '#cli/system/values.ts';
-import { sortedToml } from '#cli/settings/write/text.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { formatSettingsText } from '#cli/settings/write/text.ts';
 import { cell, table, section, referencePage } from './markdown.ts';
 import { buildJsonSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { version } from '@gspothq/cli/package.json' with { type: 'json' };
@@ -57,7 +57,7 @@ function schemaSections(schema: JSONSchema.JSONSchema): string {
                     : `See the [settings reference](/reference/gspot-toml/) for ${topic}.`,
             ]);
         const example = schema.examples?.filter(isRecord).find((document) => Object.hasOwn(document, name));
-        const text = example === undefined ? '' : sortedToml(example);
+        const text = example === undefined ? '' : formatSettingsText('', example);
         return section(
             name,
             (text.trim() === '' ? '' : `\`\`\`toml\n${text}\`\`\`\n\n`) +

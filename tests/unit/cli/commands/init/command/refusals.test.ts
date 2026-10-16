@@ -7,6 +7,7 @@ import { GIT_PLAN_CASES } from '#tests/config/init.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTree, pathExists } from '#tests/setup/files.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash/tools.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
@@ -101,7 +102,7 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     expect(changes.includes('.gitignore')).toBe(hasGit);
     expect(changes.includes('.gspot/hooks')).toBe(hasGit);
     expect(changes).toContain('.gitattributes');
-    expect(parseSettings(report.settings).hooks).toBeDefined();
+    expect(parseSettings(report.settings, undefined, createReadCache(process.cwd())).hooks).toBeDefined();
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const initialized = await runGspot(sandbox.path, argv);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);

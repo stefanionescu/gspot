@@ -132,6 +132,8 @@ const settings = parseSettings(
         rules: true,
         tables: '[[format.override]]\npaths = ["docs/**"]\nprint_width = 80\n',
     }),
+    undefined,
+    createReadCache(process.cwd()),
 );
 
 const selected = selectConfigurations(settings.configurations, readManifests(createReadCache(process.cwd())));

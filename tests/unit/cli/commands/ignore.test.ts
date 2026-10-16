@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { TWO_RULES } from '#tests/config/ignore.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
@@ -77,12 +78,7 @@ test('ignore merges entries with the same --until date, keeps other dates apart,
         expect(saved.code, saved.stdout + saved.stderr).toBe(0);
     }
     const entry = { check: 'bash/shellcheck', rule: 'SC2086', reason: 'The sandbox preserves word splitting.' };
-    const readEntries = async () =>
-        parseSettings(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).ignore.map((entry) => ({
-            ...entry,
-            until: entry.until?.toISOString(),
-        }));
-    expect(await readEntries()).toStrictEqual([
+    expect(await readEntries(directory.path)).toStrictEqual([
         {
             ...entry,
             until: '2099-05-20',
@@ -103,7 +99,7 @@ test('ignore merges entries with the same --until date, keeps other dates apart,
         'b.sh',
     ]);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(await readEntries()).toStrictEqual([
+    expect(await readEntries(directory.path)).toStrictEqual([
         {
             ...entry,
             until: '2099-05-20',
@@ -255,3 +251,12 @@ test('an ignored folder covers its subfolders, and a negated file in it is still
         new Set(['legacy scripts/nested/example.sh']),
     );
 });
+
+/** Read saved ignore records with their dates serialized for the assertions. */
+async function readEntries(root: string) {
+    return parseSettings(
+        await readFile(join(root, 'gspot.toml'), 'utf8'),
+        undefined,
+        createReadCache(process.cwd()),
+    ).ignore.map((entry) => ({ ...entry, until: entry.until?.toISOString() }));
+}

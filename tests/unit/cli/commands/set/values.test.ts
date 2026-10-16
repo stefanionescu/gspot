@@ -68,7 +68,7 @@ test.each([...EXTRA_OPTION_SCOPES])(
         expect(await readTree(sandbox.path)).toStrictEqual(before);
         const written = await runGspot(sandbox.path, [...argv, '--reason', TAPLO_REASON]);
         expect(written.code, written.stdout + written.stderr).toBe(0);
-        const { settings } = readSettings(sandbox.path);
+        const { settings } = readSettings(sandbox.path, createReadCache(process.cwd()));
         const selected = selectForScope(settings, scope, readManifests(createReadCache(process.cwd())));
         expect(getSettingValue(buildKnownSettings(selected), settings, key, scope)).toMatchObject({
             value: TAPLO_OPTIONS,
@@ -82,7 +82,7 @@ test.each([...EXTRA_OPTION_SCOPES])(
         expect(await pathExists(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
         const reset = await runGspot(sandbox.path, ['unset', key, ...scopeArguments]);
         expect(reset.code, reset.stdout + reset.stderr).toBe(0);
-        const next = readSettings(sandbox.path).settings;
+        const next = readSettings(sandbox.path, createReadCache(process.cwd())).settings;
         const table = scope === '' ? next.written : next.scopeTables[scope]?.written;
         expect(getValueAt(table, ['tools', 'taplo', 'extra'])).toBeUndefined();
         expect(await readFile(join(sandbox.path, 'app/settings.toml'), 'utf8')).toBe('enabled = true\n');
@@ -134,5 +134,5 @@ test('a fresh clone can change the level without an ownership log', async () => 
     expect(await pathExists(join(checkout, '.gspot/state/ownership.json'))).toBe(false);
     const changed = await runGspot(checkout, ['set', 'level', 'all']);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-    expect(readSettings(checkout).settings.level).toBe('all');
+    expect(readSettings(checkout, createReadCache(process.cwd())).settings.level).toBe('all');
 });

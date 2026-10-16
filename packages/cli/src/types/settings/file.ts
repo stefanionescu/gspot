@@ -253,7 +253,7 @@ export type ExportedTemplate = { text: string; leftOut: string[] };
 
 export type SettingsSource = { text: string; original: FileCopy };
 
-export type SettingsEdit = { text: string; table: TomlTable; values: string; original: FileCopy };
+export type SettingsEdit = { text: string; table: TomlTable; values: TomlTable; original: FileCopy };
 
 export type EditedSettings = { text: string; settings: Settings; changed: boolean; original: FileCopy };
 

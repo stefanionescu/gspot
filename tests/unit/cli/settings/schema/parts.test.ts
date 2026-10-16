@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { parseTomlText } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { formatSettingsText } from '#cli/settings/write/text.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { UNTIL_DATE_CASES, UNSAFE_DIRECTORIES } from '#tests/config/settings/schema.ts';
@@ -13,7 +14,7 @@ for (const row of UNTIL_DATE_CASES)
         const written = parseTomlText(source, 'dates.toml', 'settings');
         expect(settingsSchema.safeParse(written).success).toBe(row.valid);
         if (!row.valid) return;
-        const settings = parseSettings(source);
+        const settings = parseSettings(source, undefined, createReadCache(process.cwd()));
         expect(settings.ignore[0]?.until?.toISOString()).toBe(row.date);
         const output = formatSettingsText(source, written);
         expect(output).toContain(`until = ${row.date}`);
@@ -21,7 +22,7 @@ for (const row of UNTIL_DATE_CASES)
     });
 
 test.each([...UNSAFE_DIRECTORIES])('scope refuses the path %s', (path) => {
-    expect(() => parseSettings(stringify({ scope: [{ path }] }))).toThrow(
+    expect(() => parseSettings(stringify({ scope: [{ path }] }), undefined, createReadCache(process.cwd()))).toThrow(
         'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
     );
 });
@@ -30,5 +31,9 @@ test('relative folders with spaces, percent signs and Unicode are accepted', asy
     const path = 'apps/café 100%';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [`${path}/source.ts`]: 'export const count = 1;\n' });
-    expect(Object.keys(parseSettings(stringify({ scope: [{ path }] }), sandbox.path).scope)).toStrictEqual([path]);
+    expect(
+        Object.keys(
+            parseSettings(stringify({ scope: [{ path }] }), sandbox.path, createReadCache(process.cwd())).scope,
+        ),
+    ).toStrictEqual([path]);
 });

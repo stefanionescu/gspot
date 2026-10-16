@@ -1,10 +1,12 @@
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import { parseSettings } from '#cli/settings/read.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import { formatSettingsText } from '#cli/settings/write/text.ts';
 import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
-import { sortedToml, formatSettingsText } from '#cli/settings/write/text.ts';
 import { getWrittenValue, replaceWrittenValue } from '#cli/settings/inherit.ts';
 import { isRecord, getValueAt, createTable, normalizeTables } from '#cli/system/values.ts';
 import type { Mutation, TomlTable, SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/file.ts';
@@ -23,10 +25,11 @@ function splitKey(key: string): SettingKey {
  */
 function updateSettings(root: string, input: SettingsEdit, mutate: Mutation): EditedSettings {
     const { text, table, values } = input;
+    const reads = createReadCache(root);
     mutate(table);
-    parseSettings(sortedToml(table), root);
-    const next = sortedToml(table) === values ? text : formatSettingsText(text, table);
-    const settings = parseSettings(next, root);
+    parseSettings(stringify(table), root, reads);
+    const next = isDeepStrictEqual(structuredClone(table), values) ? text : formatSettingsText(text, table);
+    const settings = parseSettings(next, root, reads);
     return { text: next, settings, changed: next !== text, original: input.original };
 }
 
@@ -159,7 +162,7 @@ function findScopeTable(written: TomlTable, scope: string | undefined): TomlTabl
 function readSettingsEdit(root: string): SettingsEdit {
     const { text, original } = readSettingsFile(root);
     const table = parseTomlText(text, SETTINGS_FILE, 'settings');
-    return { text, table, values: sortedToml(table), original };
+    return { text, table, values: structuredClone(table), original };
 }
 
 export { setKey, deleteKey, addToList, updateSettings, findScopeTable, removeFromList, readSettingsEdit };

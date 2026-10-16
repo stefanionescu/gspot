@@ -1,6 +1,5 @@
 import { emitAll } from '#cli/generation/files.ts';
 import { findRoot } from '#cli/repository/read.ts';
-import { readSettings } from '#cli/settings/read.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { printResult } from '#cli/system/terminal.ts';
 import { openSession } from '#cli/commands/session.ts';
@@ -18,7 +17,7 @@ import { assertVersionPin } from '#cli/apply/version-pin.ts';
 export async function installCommand(cwd: string): Promise<CommandResult> {
     const root = findRoot(cwd);
     await assertVersionPin(root);
-    const session = await openSession(root, readSettings(root));
+    const session = await openSession(root);
     const generated = emitAll(session);
     using log = openWriter(root);
     const { note, exitCode, steps } = await installTools(session, log, generated);

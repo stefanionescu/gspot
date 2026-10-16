@@ -7,6 +7,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import * as processes from '#cli/system/processes.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTree, pathExists } from '#tests/setup/files.ts';
 
 test.each([
@@ -91,7 +92,7 @@ configurations = ["bash"]
     expect(JSON.parse(result.stdout)).toMatchObject({ changed: true });
     expect(installations).toStrictEqual([]);
     expect(result.stdout + result.stderr).toContain('Run: gspot install');
-    const saved = readSettings(sandbox.path).settings;
+    const saved = readSettings(sandbox.path, createReadCache(process.cwd())).settings;
     expect(saved.scope['api']!.configurations).toStrictEqual(configurations);
     expect(saved.configurations).toStrictEqual(['markdown']);
     expect(await pathExists(join(sandbox.path, '.gspot/config/api/shellcheckrc'))).toBe(false);

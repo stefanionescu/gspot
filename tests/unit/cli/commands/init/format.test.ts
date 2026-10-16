@@ -35,7 +35,7 @@ test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', a
     );
     const text = initSettingsText(draft, repository, manifests, formats);
     const session = await openSession(sandbox.path, {
-        settings: parseSettings(text),
+        settings: parseSettings(text, undefined, createReadCache(process.cwd())),
         text,
     });
     expect(session.scopes[0]!.view.options('format')).toMatchObject(expected);
@@ -76,7 +76,7 @@ test.each([...SCOPE_FORMAT_CASES])(
         );
         const text = initSettingsText(draft, repository, manifests, formats);
         const session = await openSession(sandbox.path, {
-            settings: parseSettings(text),
+            settings: parseSettings(text, undefined, createReadCache(process.cwd())),
             text,
         });
         expect(

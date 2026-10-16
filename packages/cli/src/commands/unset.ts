@@ -5,6 +5,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
@@ -28,9 +29,10 @@ export function registerUnset(program: Command): void {
             if (['configurations', 'removed_configurations'].includes(setting))
                 throw new GspotError('arguments', 'Use gspot add or gspot remove to change configurations.');
             const { root, input } = await startSettingsEdit(process.cwd());
-            const settings = parseSettings(input.text, root);
+            const reads = createReadCache(root);
+            const settings = parseSettings(input.text, root, reads);
             findScopeTable(input.table, flags.scope);
-            const session = await openSession(root, { settings, text: input.text });
+            const session = await openSession(root, { settings, text: input.text }, { reads });
             const known = (
                 session.scopes.find((selection) => selection.scope.path === (flags.scope ?? '')) as ScopeSelection
             ).known;

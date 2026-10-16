@@ -1,11 +1,12 @@
 // Selects agent rules and builds their managed instruction block.
 import { posix } from 'node:path';
 import { readAsset } from '#cli/system/assets.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
+import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
 import { detectConditions } from '#cli/repository/detect.ts';
-import { isExcluded } from '#cli/settings/validation/values.ts';
 import { listRuleFiles } from '#cli/configurations/manifests.ts';
 import type { ParsedRules } from '#cli/types/settings/tables.ts';
 import { RULES_DIRECTORY } from '#cli/config/system/locations.ts';
@@ -123,7 +124,10 @@ export function selectRuleFiles(
     );
     return sources
         .values()
-        .filter(({ path }) => !rules.exclude.some((entry) => isExcluded(entry, `${RULES_DIRECTORY}/${path}`)))
+        .filter(
+            ({ path }) =>
+                !rules.exclude.some((entry) => isInScope(`${RULES_DIRECTORY}/${path}`, trimTrailingSlashes(entry))),
+        )
         .flatMap(({ source, path, group }) => {
             const text = readAsset(source);
             const content = stripAllLevelSections(text, level);

@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/objects.ts';
-import { relativePath } from '#cli/settings/schema/parts.ts';
 import { CI_PROVIDERS } from '#cli/config/settings/schema.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
+import { destinationPath } from '#cli/settings/schema/parts.ts';
 import { type ParsedRules } from '#cli/types/settings/tables.ts';
 import { type WrittenSettings } from '#cli/types/settings/file.ts';
 import { SETTINGS_DESCRIPTIONS } from '#cli/config/settings/values.ts';
@@ -15,13 +15,10 @@ const rulesSchema = z.strictObject({
     exclude: z.array(z.string()).default([]).meta({
         description: 'Rule files and folders left out of the installed selection.',
     }),
-    instruction_files: z
-        .array(relativePath.meta({ pathRole: 'destination' }))
-        .default([])
-        .meta({
-            description:
-                'Other files that get the managed block, besides AGENTS.md. Paths are relative to the repository root.',
-        }),
+    instruction_files: z.array(destinationPath).default([]).meta({
+        description:
+            'Other files that get the managed block, besides AGENTS.md. Paths are relative to the repository root.',
+    }),
 } satisfies SchemaShape<ParsedRules, NonNullable<WrittenSettings['rules']>>);
 
 const hooksSchema = z.strictObject({

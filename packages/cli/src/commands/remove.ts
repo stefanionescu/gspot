@@ -22,7 +22,7 @@ import { saveSettings, startSettingsEdit, refuseAlwaysSelected } from '#cli/comm
  */
 async function removeCommand(options: ConfigurationsOptions): Promise<CommandResult> {
     const { root, input } = await startSettingsEdit(options.cwd);
-    parseSettings(input.text, root);
+    parseSettings(input.text, root, createReadCache(root));
     const manifests = readManifests(createReadCache(root));
     refuseAlwaysSelected(options.configurations, manifests);
     const written = findScopeTable(input.table, options.scope);

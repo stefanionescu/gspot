@@ -29,6 +29,8 @@ test('category limits inherit root and scope language settings while explicit ca
             rules: true,
             tables: SWIFT_NAMING_LIMITS,
         }),
+        undefined,
+        createReadCache(process.cwd()),
     );
     for (const { scope, characters, functions, words } of SCOPE_LIMITS) {
         const view = buildScopeView(known, settings, selected, scope);
@@ -51,7 +53,11 @@ test('category limits inherit root and scope language settings while explicit ca
 test.each([...NAMING_LANGUAGES])('%s accepts its exact limits and reports the next character or word', (language) => {
     const selected = selectConfigurations(['naming'], readManifests(createReadCache(process.cwd())));
     const known = buildKnownSettings(selected);
-    const settings = parseSettings(settingsText(['naming'], { rules: true }));
+    const settings = parseSettings(
+        settingsText(['naming'], { rules: true }),
+        undefined,
+        createReadCache(process.cwd()),
+    );
     const view = buildScopeView(known, settings, selected, '');
     const effective = readNamingSettings({
         selection: { view: view, scope: { path: '' }, selected: selected },
@@ -97,6 +103,8 @@ test.each([...LINTER_CHECKED_CATEGORIES])(
                 level: 'all',
                 tables: UPPER_SNAKE_OVERRIDE,
             }),
+            undefined,
+            createReadCache(process.cwd()),
         );
         const effective = readNamingSettings({
             selection: { view: buildScopeView(known, settings, selected, ''), scope: { path: '' }, selected: selected },
@@ -128,7 +136,7 @@ test("a framework's naming rules come after the shipped ones and before the repo
         rules: true,
         tables: '[naming]\nbanned_words = ["handle", "use"]\n[[naming.override]]\npaths = ["src/hooks/**"]\ncategories = ["functions"]\nignored_prefix = "^use(?=[A-Z])"\nreason = "A hook starts with use."\n',
     });
-    const settings = parseSettings(text);
+    const settings = parseSettings(text, undefined, createReadCache(process.cwd()));
     const selected = selectConfigurations(['naming', 'typescript', 'express'], manifests);
     const effective = readNamingSettings({
         selection: {

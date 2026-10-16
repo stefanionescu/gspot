@@ -1,23 +1,17 @@
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
+import { buildSettings } from '#cli/settings/read.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import type { WrittenTable } from '#cli/types/settings/values.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
+import { findDeclaration, getSettingValue } from '#cli/settings/inherit.ts';
 import { detectDefaults, buildKnownSettings } from '#cli/settings/known.ts';
-
-import {
-    mergeValue,
-    getWrittenValue,
-    findDeclaration,
-    listCandidateKeys,
-    findSettingDefault,
-} from '#cli/settings/inherit.ts';
+import { type Settings, type WrittenTable } from '#cli/types/settings/values.ts';
 
 function parseConfigurationSelection(table: TomlTable) {
     return {
@@ -26,28 +20,36 @@ function parseConfigurationSelection(table: TomlTable) {
     };
 }
 
-function inheritedValue(tables: WrittenTable[], key: string, consumer: WrittenTable, omitted?: string): unknown {
-    const match = findDeclaration(consumer.known, key);
-    if (match === undefined) return undefined;
-    let value = findSettingDefault(consumer.known, match, consumer.scope, (dependentKey) =>
-        inheritedValue(tables, dependentKey, consumer),
-    )?.value;
-    for (const table of tables.filter(({ scope }) => isInScope(consumer.scope, scope))) {
-        const candidates = listCandidateKeys(match, key)
-            .filter((candidate) => !(table.scope === omitted && candidate === key))
-            .map((candidate) => getValueAt(table.table, candidate.split('.')))
-            .filter((written) => written !== undefined);
-        for (const written of candidates) {
-            value = mergeValue(match.declaration, value, getWrittenValue(written));
-        }
+function changesInheritedValue(
+    name: string,
+    key: string,
+    segments: string[],
+    writtenTable: WrittenTable,
+    tables: WrittenTable[],
+    settings: Settings,
+): boolean {
+    const consumers = tables.filter(({ scope }) => isInScope(scope, writtenTable.scope));
+    const omitted = structuredClone(writtenTable.table);
+    Reflect.deleteProperty(getValueAt(omitted, segments.slice(0, -1)) as TomlTable, name);
+    const changed = { ...settings };
+    if (writtenTable.scope === '') changed.written = omitted;
+    else {
+        const previous = settings.scopeTables[writtenTable.scope] as Settings['scopeTables'][string];
+        changed.scopeTables = { ...settings.scopeTables, [writtenTable.scope]: { ...previous, written: omitted } };
     }
-    return value;
+    return !consumers.every((consumer) =>
+        isDeepStrictEqual(
+            getSettingValue(consumer.known, settings, key, consumer.scope)?.value,
+            getSettingValue(consumer.known, changed, key, consumer.scope)?.value,
+        ),
+    );
 }
 
 function dropTableDefaults(
     table: TomlTable,
     writtenTable: WrittenTable,
     tables: WrittenTable[],
+    settings: Settings,
     path: string[] = [],
 ): TomlTable {
     const fields = Object.entries(table).map(([name, value]) => {
@@ -58,16 +60,10 @@ function dropTableDefaults(
     const declared = new Map(
         fields
             .filter(({ declaration }) => declaration !== undefined)
-            .flatMap(({ name, value, key }) => {
-                const consumers = tables.filter(({ scope }) => isInScope(scope, writtenTable.scope));
-                return consumers.every((consumer) =>
-                    isDeepStrictEqual(
-                        inheritedValue(tables, key, consumer),
-                        inheritedValue(tables, key, consumer, writtenTable.scope),
-                    ),
-                )
-                    ? []
-                    : [[name, value]];
+            .flatMap(({ name, value, key, segments }) => {
+                return changesInheritedValue(name, key, segments, writtenTable, tables, settings)
+                    ? [[name, value]]
+                    : [];
             }),
     );
     const rootFields = new Map<string, z.ZodType>(path.length === 0 ? Object.entries(settingsSchema.shape) : []);
@@ -77,7 +73,12 @@ function dropTableDefaults(
             .flatMap(({ name, value, segments }) => {
                 const defaultValue = rootFields.get(name)?.safeParse(undefined);
                 if (defaultValue?.success === true && isDeepStrictEqual(value, defaultValue.data)) return [];
-                return [[name, isRecord(value) ? dropTableDefaults(value, writtenTable, tables, segments) : value]];
+                return [
+                    [
+                        name,
+                        isRecord(value) ? dropTableDefaults(value, writtenTable, tables, settings, segments) : value,
+                    ],
+                ];
             }),
     );
     const kept = new Map([...declared, ...remaining]);
@@ -100,7 +101,10 @@ function dropTableDefaults(
  * @returns the draft without redundant setting values
  */
 function dropDefaults(settings: TomlTable): TomlTable {
-    const manifests = readManifests(createReadCache(process.cwd()));
+    const reads = createReadCache(process.cwd());
+    const manifests = readManifests(reads);
+    const parsed = settingsSchema.parse(settings);
+    const effectiveSettings = buildSettings(parsed, settings);
     const level = settingsSchema.shape.level.parse(settings['level']);
     const scopes = (settings['scope'] ?? []) as TomlTable[];
     const selection = {
@@ -127,10 +131,10 @@ function dropDefaults(settings: TomlTable): TomlTable {
     for (const [index, table] of scopes.entries()) {
         const scope = trimTrailingSlashes(table['path'] as string);
         const writtenTable = tables.find((entry) => entry.scope === scope) as WrittenTable;
-        scopes[index] = dropTableDefaults(writtenTable.table, writtenTable, tables);
+        scopes[index] = dropTableDefaults(writtenTable.table, writtenTable, tables, effectiveSettings);
     }
     if (scopes.length > 0) settings['scope'] = scopes;
-    return dropTableDefaults(settings, root, tables);
+    return dropTableDefaults(settings, root, tables, effectiveSettings);
 }
 
 export { dropDefaults };

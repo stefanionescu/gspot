@@ -92,7 +92,7 @@ async function unignoreCommand(
             : `Kept ${String(everywhere)} ${noun} that ${verb} every path. To delete ${pronoun}, run gspot unignore without --paths.\n`;
     const warningFields = stripUndefined({ warning: everywhere === 0 ? undefined : warning.trim() });
     if (deleted === 0 && changedIgnores === 0) {
-        parseSettings(input.text, root);
+        parseSettings(input.text, root, createReadCache(root));
         return {
             text: `nothing to remove\n${warning}`,
             json: { changed: false, ...warningFields },

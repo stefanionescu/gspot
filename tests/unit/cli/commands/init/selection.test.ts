@@ -12,6 +12,7 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { VUE_COMPONENT } from '#tests/config/components.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash/tools.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
@@ -43,7 +44,9 @@ test.each([...NON_JAVASCRIPT_PROJECTS])(
         expect(json.code, json.stdout + json.stderr).toBe(0);
         const output = JSON.parse(json.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
         expect(output.plan.configurations.map(({ configuration }) => configuration)).toContain('javascript');
-        expect(Object.keys(parseSettings(output.settings, sandbox.path).scope)).toStrictEqual(['app']);
+        expect(
+            Object.keys(parseSettings(output.settings, sandbox.path, createReadCache(process.cwd())).scope),
+        ).toStrictEqual(['app']);
         expect(await readTree(sandbox.path)).toStrictEqual(before);
         const written = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
         expect(written.code, written.stdout + written.stderr).toBe(0);
@@ -219,7 +222,7 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
     const proposed = await runGspot(sandbox.path, [...command, '--dry-run', '--json']);
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
     const plan = JSON.parse(proposed.stdout) as Required<Pick<InitJson, 'settings'>>;
-    const settings = parseSettings(plan.settings);
+    const settings = parseSettings(plan.settings, undefined, createReadCache(process.cwd()));
     expect(Object.keys(settings.scope)).toStrictEqual(['packages/api']);
     await writeFile(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
     const before = await readTree(sandbox.path);

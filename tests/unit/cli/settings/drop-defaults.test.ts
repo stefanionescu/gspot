@@ -15,9 +15,9 @@ test("dropping defaults keeps every scope's paths the same", () => {
         'configurations = ["supabase"]\n[supabase]\nfunctions_folder = "supabase/functions"\n[[scope]]\npath = "apps/api"\n',
         'configurations = ["supabase"]\n[[scope]]\npath = "app"\nsupabase.functions_folder = "supabase/functions"\n[[scope]]\npath = "app/child"\n',
     ]) {
-        const before = parseSettings(source);
+        const before = parseSettings(source, undefined, createReadCache(process.cwd()));
         const written = formatSettingsText(source, parseTomlText(source, 'gspot.toml', 'settings'));
-        const after = parseSettings(written);
+        const after = parseSettings(written, undefined, createReadCache(process.cwd()));
         for (const path of ['', ...Object.keys(before.scope)]) {
             const selected = selectForScope(before, path, manifests);
             const known = buildKnownSettings(selected);

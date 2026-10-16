@@ -43,12 +43,6 @@ function validateExtraReason(entry: Record<string, unknown>, path: KeyPath): Set
     );
 }
 
-function ignoreErrors(settings: Settings): SettingsError[] {
-    return settings.ignore.flatMap((entry, index) =>
-        buildErrorsAt(['ignore', index, 'reason'], validateReason(`ignore.${String(index)}`, entry.reason)),
-    );
-}
-
 /**
  * Missing or invalid reasons on ignores, declarations, naming exceptions, and custom tool options.
  * @param settings the normalized settings.
@@ -82,7 +76,12 @@ function validateSettingReasons(settings: Settings): SettingsError[] {
                 .flatMap(([key, entry]) => visit(entry, [...path, key])),
         ];
     }
-    return [...ignoreErrors(settings), ...visit(settings.written, [])];
+    return [
+        ...settings.ignore.flatMap((entry, index) =>
+            buildErrorsAt(['ignore', index, 'reason'], validateReason(`ignore.${String(index)}`, entry.reason)),
+        ),
+        ...visit(settings.written, []),
+    ];
 }
 
 /**
@@ -120,15 +119,4 @@ function isLoosening(declaration: SettingDeclaration, value: unknown, shipped: u
     return false;
 }
 
-/**
- * Require a setting explanation when loosening values do not carry their own reasons.
- * @param declaration the setting's declared direction.
- * @param before the selected default before the written change.
- * @param after the written value after the change.
- * @returns whether the setting needs a reason in its value envelope.
- */
-function isReasonNeeded(declaration: SettingDeclaration, before: unknown, after: unknown): boolean {
-    return isLoosening(declaration, after, before);
-}
-
-export { isLoosening, validateReason, isReasonNeeded, isReasonAccepted, validateSettingReasons };
+export { isLoosening, validateReason, isReasonAccepted, validateSettingReasons };

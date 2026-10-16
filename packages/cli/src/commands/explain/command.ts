@@ -16,8 +16,8 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { isReasonNeeded } from '#cli/settings/validation/reasons.ts';
 import { REASON_NEEDED_TEXTS } from '#cli/config/commands/explain.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { checkStageSchema } from '#cli/configurations/schema/parts.ts';
@@ -98,7 +98,7 @@ function scopeLines(key: string, declaration: SettingDeclaration, entry: Setting
         `Scope: ${scope === '' ? 'root' : scope}`,
         `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
         `Current value: ${JSON.stringify(value)} (from ${source})`,
-        ...(value !== undefined && isReasonNeeded(declaration, shipped, value)
+        ...(value !== undefined && isLoosening(declaration, value, shipped)
             ? [
                   'If you set this value, give a reason: write it as { value = ..., reason = "..." }, or run gspot set with --reason.',
               ]

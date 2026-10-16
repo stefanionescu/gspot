@@ -13,6 +13,7 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { RECORD_FIELDS } from '#cli/config/settings/file.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { findSettingSchema } from '#cli/settings/schema/gspot-toml.ts';
@@ -164,9 +165,10 @@ async function setCommand(options: SetOptions): Promise<CommandResult> {
             `Write [[${options.key}]] by hand in gspot.toml. Record lists have their own fields.`,
         );
     const { root, input } = await startSettingsEdit(options.cwd);
-    const settings = parseSettings(input.text, root);
+    const reads = createReadCache(root);
+    const settings = parseSettings(input.text, root, reads);
     findScopeTable(input.table, options.scope);
-    const session = await openSession(root, { settings, text: input.text });
+    const session = await openSession(root, { settings, text: input.text }, { reads });
     const known = (session.scopes.find((selection) => selection.scope.path === (options.scope ?? '')) as ScopeSelection)
         .known;
     const match = findDeclaration(known, options.key);
