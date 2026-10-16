@@ -22,10 +22,14 @@ jobs:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
-            # Defender scans every file that npm, uv, mise, and the test sandboxes write on the disposable runner.
+            # The C: drive of a Windows runner writes files many times slower than D:, which holds the runner's temporary
+            # folder. Keep the test sandboxes and the npm cache on D:.
             - if: runner.os == 'Windows'
               shell: pwsh
-              run: Add-MpPreference -ExclusionPath $env:GITHUB_WORKSPACE, $env:RUNNER_TEMP, $env:LOCALAPPDATA, "$env:USERPROFILE\.bun"
+              run: |
+                  "TEMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
+                  "TMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
+                  "npm_config_cache=$env:RUNNER_TEMP\npm-cache" >> $env:GITHUB_ENV
             - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
               with:
                   version: '2026.10.7'
