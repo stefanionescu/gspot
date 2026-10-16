@@ -1,7 +1,7 @@
 import { stringify } from '@decimalturn/toml-patch';
 import type { Session } from '#cli/types/planning.ts';
 import type { EmitInputs } from '#cli/types/generation/files.ts';
-import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
+import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
 import { TOOL_EMIT_FORMAT, SQUAWK_RECOMMENDED_OFF } from '#cli/config/generation/tool-file-sources.ts';
 
 /**
@@ -27,7 +27,7 @@ export function squawkToolFile({
     const document = {
         assume_in_transaction: settings['tools.squawk.assume_in_transaction'],
         excluded_rules: [...rulesOff('postgres/squawk'), ...(isAll ? [] : SQUAWK_RECOMMENDED_OFF)],
-        excluded_paths: [...frozenMigrationPaths(migrations, settings['postgres.frozen_through'] as string)],
+        excluded_paths: [...selectFrozenMigrations(migrations, settings['postgres.frozen_through'] as string)],
     };
     return stringify(document, TOOL_EMIT_FORMAT).trimEnd();
 }

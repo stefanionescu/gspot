@@ -2,7 +2,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { setImmediate } from 'node:timers/promises';
 import type { Files } from '#cli/types/system/files.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
-import { lockfileEntry } from '#cli/repository/classify.ts';
+import { findLockfile } from '#cli/repository/classify.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { DIRECTORY_MODE } from '#cli/config/system/modes.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
@@ -143,7 +143,7 @@ async function revisionDependencies(
     using installed = openFiles(root);
     const inputs = entries.filter((entry) => {
         const name = basename(entry.path);
-        const lockfile = lockfileEntry(name);
+        const lockfile = findLockfile(name);
         return (
             new Set<string>(DEPENDENCY_FILES).has(name) ||
             name === PACKAGE_SWIFT ||

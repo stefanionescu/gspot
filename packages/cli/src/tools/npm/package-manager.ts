@@ -11,29 +11,29 @@ import type {
     NpmClientDeclaration,
 } from '#cli/types/parsers/dependency-files.ts';
 
-const npmClientVersion = z
+const exactVersionSchema = z
     .string()
     .refine(
         (value) => semver.valid(value) !== null,
         'Package manager version must be exact.',
     ) satisfies z.ZodType<string>;
 
-function parseNpmClientField(value: string): NpmClientDeclaration {
+function parsePackageManagerField(value: string): NpmClientDeclaration {
     const [name, declared, ...verbatim] = value.split('@');
     if (verbatim.length > 0) throw new Error('Invalid packageManager declaration.');
     const version = (declared ?? '').split(NPM_CLIENT_HASH_SUFFIX, 1)[0];
-    return npmClientDeclarationSchema.parse({ name, version });
+    return packageManagerDeclarationSchema.parse({ name, version });
 }
 
 export const npmClientIdentitySchema = z.strictObject({
     name: z.enum(NPM_CLIENTS),
-    version: npmClientVersion.optional(),
+    version: exactVersionSchema.optional(),
 } satisfies SchemaShape<NpmClientIdentity>);
 
-export const npmClientSchema = npmClientIdentitySchema.required() satisfies z.ZodType<NpmClient>;
+export const packageManagerSchema = npmClientIdentitySchema.required() satisfies z.ZodType<NpmClient>;
 
 /** Authored manager names before installation validates their requested version. */
-export const npmClientDeclarationSchema = z.strictObject({
+export const packageManagerDeclarationSchema = z.strictObject({
     name: z.enum(NPM_CLIENTS),
     version: z.string().optional(),
 } satisfies SchemaShape<NpmClientDeclaration>);
@@ -62,9 +62,9 @@ export function npmClientMajor(installer: NpmClient): number {
  * @param manifest the validated package manifest.
  * @returns packageManager first, then the first devEngines declaration, or no declaration.
  */
-export function declaredNpmClient(manifest: PackageJson): NpmClientDeclaration | undefined {
-    if (manifest.packageManager !== undefined) return parseNpmClientField(manifest.packageManager);
+export function readPackageManagerDeclaration(manifest: PackageJson): NpmClientDeclaration | undefined {
+    if (manifest.packageManager !== undefined) return parsePackageManagerField(manifest.packageManager);
     const engines = manifest.devEngines?.packageManager;
     const entry = Array.isArray(engines) ? engines[0] : engines;
-    return entry?.name === undefined ? undefined : npmClientDeclarationSchema.parse(entry);
+    return entry?.name === undefined ? undefined : packageManagerDeclarationSchema.parse(entry);
 }

@@ -4,7 +4,7 @@ import { runGitBlocking } from '#cli/system/git.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { classifyFile } from '#cli/repository/kind.ts';
 import { findScopes } from '#cli/repository/scopes.ts';
-import { swiftSourceTags } from '#cli/parsers/swift.ts';
+import { detectSwiftTags } from '#cli/parsers/swift.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
@@ -15,9 +15,9 @@ import { readPrefix, readSource } from '#cli/system/files/reads.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
-import { attributesFor, gitAttributes, attributeRules } from '#cli/parsers/git.ts';
 import { readIndexEntries, listRepositoryFiles } from '#cli/repository/tracked.ts';
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
+import { mergeAttributes, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
 
 import {
     SET_VALUES,
@@ -39,7 +39,7 @@ function readAttributes(root: string, paths: string[]): Map<string, Record<strin
         stdin: paths.join('\0') + '\0',
     });
     if (result.code !== 0) throw new Error(`Git could not read the attributes: ${result.stderr.trim()}`);
-    return gitAttributes(result.stdout);
+    return parsePathAttributes(result.stdout);
 }
 
 /**
@@ -72,7 +72,7 @@ export async function readRepository(
         const prefix = entry.symlink ? Buffer.alloc(0) : readPrefix(root, entry.path, FILE_PREFIX_BYTES, reads);
         const file = classifyFile(root, entry, prefix, { declarations, attributes });
         if (!entry.symlink && file.kind === 'source' && file.path.endsWith(SWIFT_EXTENSION)) {
-            const tags = await swiftSourceTags(file.path, readSource(root, file.path, reads).toString('utf8'));
+            const tags = await detectSwiftTags(file.path, readSource(root, file.path, reads).toString('utf8'));
             file.tags.push(...tags);
         }
         files.push(file);
@@ -120,9 +120,9 @@ export function readGeneratedPatterns(root: string, paths: string[], reads?: Rea
                     const text = readSource(root, path, reads).toString('utf8');
                     const span = findBlockSpan(text, { path, style: 'hash' });
                     const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
-                    return attributeRules(authored, posix.dirname(path))
+                    return parseAttributePatterns(authored, posix.dirname(path))
                         .filter((rule) =>
-                            Object.entries(attributesFor(rule.attributes, {})).some(
+                            Object.entries(mergeAttributes(rule.attributes, {})).some(
                                 ([name, value]) =>
                                     (name === GENERATED_ATTRIBUTE || name === VENDORED_ATTRIBUTE) &&
                                     new Set<string>(SET_VALUES).has(value),

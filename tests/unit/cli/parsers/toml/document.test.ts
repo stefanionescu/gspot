@@ -8,7 +8,7 @@ test('adding a root key keeps the leading comments on their table', () => {
         source: '# Authored tool table.\n# Exact dependency choices.\n[install]\nexact = true\n',
     });
     document.set(['level'], 'all');
-    expect(document.text()).toBe(
+    expect(document.getText()).toBe(
         'level = "all"\n# Authored tool table.\n# Exact dependency choices.\n[install]\nexact = true\n',
     );
 });
@@ -19,21 +19,21 @@ test("deleting a root key keeps separate comments and the next table's comments"
         source: '# A project note.\n\nlevel = "all"\n\n# Authored tool table.\n[install]\nexact = true # Exact version.\n',
     });
     document.set(['level'], undefined);
-    expect(document.text()).toBe(
+    expect(document.getText()).toBe(
         '# A project note.\n\n\n# Authored tool table.\n[install]\nexact = true # Exact version.\n',
     );
 });
 
 test('reading TOML values: nested tables, arrays, scalars and missing keys', () => {
     const document = openTomlFile({ path: 'tool.toml', source: '[defaults]\nenabled = false\nvalues = [0, ""]\n' });
-    expect(document.value(['defaults', 'enabled'])).toBe(false);
-    expect(document.value(['defaults', 'values', 0])).toBe(0);
-    expect(document.value(['defaults', 'values', 1])).toBe('');
-    expect(document.value(['defaults'])).toStrictEqual({ enabled: false, values: [0, ''] });
-    expect(document.value(['missing', 'enabled'])).toBeUndefined();
-    expect(document.value(['defaults', 'enabled', 'missing'])).toBeUndefined();
+    expect(document.getValue(['defaults', 'enabled'])).toBe(false);
+    expect(document.getValue(['defaults', 'values', 0])).toBe(0);
+    expect(document.getValue(['defaults', 'values', 1])).toBe('');
+    expect(document.getValue(['defaults'])).toStrictEqual({ enabled: false, values: [0, ''] });
+    expect(document.getValue(['missing', 'enabled'])).toBeUndefined();
+    expect(document.getValue(['defaults', 'enabled', 'missing'])).toBeUndefined();
     document.set(['defaults', 'enabled'], true);
-    expect(document.value(['defaults', 'enabled'])).toBe(true);
+    expect(document.getValue(['defaults', 'enabled'])).toBe(true);
 });
 
 test('a TOML syntax error names the file and keeps the parser error as its cause', () => {
@@ -54,17 +54,17 @@ test('a TOML edit names the file when a scalar is in the way of a table', () => 
     }).toThrow(
         'apps/api/bunfig.toml has a TOML field that is not a table: install. Fix the field, then run gspot apply.',
     );
-    expect(document.text()).toBe(source);
+    expect(document.getText()).toBe(source);
 });
 
 test('TOML edits keep dates, array order and keys named like object properties', () => {
     const source = '# Release timestamp\npublished = 2026-10-06T00:00:00Z\n';
     const document = openTomlFile({ path: 'tool.toml', source });
     const entries = [Object.fromEntries([['constructor', 'first']]), { constructor: 'second' }];
-    document.set(['copied'], document.value(['published']));
+    document.set(['copied'], document.getValue(['published']));
     document.set(['metadata', 'entries'], entries);
-    const text = document.text();
+    const text = document.getText();
     expect(text.startsWith(source)).toBe(true);
     expect(Reflect.get(Bun.TOML.parse(text), 'metadata')).toStrictEqual({ entries });
-    expect(document.value(['copied'])).toBeInstanceOf(Date);
+    expect(document.getValue(['copied'])).toBeInstanceOf(Date);
 });

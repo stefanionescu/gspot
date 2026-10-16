@@ -165,7 +165,7 @@ reason = "Zod names its schema information property _zod."
 
 [[naming.override]]
 paths = ["packages/cli/src/tools/npm/package-manager.ts"]
-allowed_names = ["package-manager"]
+allowed_names = ["package-manager", "packageManagerDeclarationSchema", "packageManagerSchema", "parsePackageManagerField", "readPackageManagerDeclaration"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [architecture.roles]

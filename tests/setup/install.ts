@@ -21,9 +21,9 @@ import { isWindows } from '#tests/setup/operating-systems.ts';
 import type { SandboxSettings } from '#tests/types/sandbox.ts';
 import { installPythonTools } from '#cli/tools/python/project.ts';
 import { prepareLockfiles } from '#cli/tools/project-lockfiles.ts';
+import { selectLockfileName } from '#cli/tools/npm/tool-project.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { toolProjectLockfile } from '#cli/tools/npm/tool-project.ts';
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 import { testModules, installedModules } from '#tests/setup/modules.ts';
 import type { LockedInputs, ToolProjectFiles } from '#tests/types/npm.ts';
@@ -285,7 +285,7 @@ export async function installCompiler(root: string, folder = join(root, 'node_mo
 
 /** Captures the generated manifest, lockfile, and ownership bytes before an installation journey. */
 export async function readToolProjectFiles(root: string, installer: NpmClient['name']): Promise<ToolProjectFiles> {
-    const lockfilePath = join(root, '.gspot', toolProjectLockfile(installer));
+    const lockfilePath = join(root, '.gspot', selectLockfileName(installer));
     await using lockfile = await open(lockfilePath, 'r');
     const attributes = await lockfile.stat();
     return {

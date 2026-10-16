@@ -6,7 +6,7 @@ import ts from 'typescript';
  * @param root the source or subtree to inspect.
  * @returns nodes in source traversal order, including the root.
  */
-export function typescriptNodes(root: ts.Node): ts.Node[] {
+export function listTypescriptNodes(root: ts.Node): ts.Node[] {
     const nodes: ts.Node[] = [];
     const visit = (node: ts.Node): void => {
         nodes.push(node);

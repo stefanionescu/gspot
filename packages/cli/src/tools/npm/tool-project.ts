@@ -33,7 +33,7 @@ const toolProjectSchema = z.strictObject({
  */
 export function parseToolProject(text: string, npmClient: NpmClient): NpmToolProject {
     const parsed = toolProjectSchema.parse(JSON.parse(text));
-    const lockfile = toolProjectLockfile(npmClient.name);
+    const lockfile = selectLockfileName(npmClient.name);
     return { npmClient, dependencies: parsed.devDependencies, lockfile, lockfilePath: `${DOT_GSPOT}/${lockfile}` };
 }
 
@@ -42,7 +42,7 @@ export function parseToolProject(text: string, npmClient: NpmClient): NpmToolPro
  * @param npmClient the validated package manager.
  * @returns the lockfile basename declared by its registry entry.
  */
-export function toolProjectLockfile(npmClient: NpmClient['name']): ToolProjectLockfileName {
+export function selectLockfileName(npmClient: NpmClient['name']): ToolProjectLockfileName {
     return (
         LOCKFILES.filter((entry) => 'toolProject' in entry).find((entry) => entry.client === npmClient) as Extract<
             Lockfile,

@@ -10,9 +10,9 @@ import { installTools } from '#cli/install/install.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
+import { selectLockfileName } from '#cli/tools/npm/tool-project.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { TOOL_PROJECT_BYTE_ATTRIBUTES } from '#tests/config/git.ts';
-import { toolProjectLockfile } from '#cli/tools/npm/tool-project.ts';
 import { createNpmClientSandbox } from '#tests/setup/npm-clients.ts';
 import { NPM_CLIENT_ROWS, NPM_REGISTRY_TOKEN } from '#tests/config/npm.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
@@ -43,7 +43,7 @@ test.each(NPM_CLIENT_ROWS.filter(([, path]) => path === 'package.json'))(
         expect(await readFile(lockfilePath, 'utf8')).toBe(stale);
         const read = await openSession(root);
         expect(findStaleFiles(read, emitAll(read))).toContainEqual({
-            path: `.gspot/${toolProjectLockfile(installer)}`,
+            path: `.gspot/${selectLockfileName(installer)}`,
             kind: 'changed',
         });
         const installed = await spawnGspot(root, ['install', '--json']);
@@ -52,7 +52,7 @@ test.each(NPM_CLIENT_ROWS.filter(([, path]) => path === 'package.json'))(
         expect(await readFile(lockfilePath, 'utf8')).not.toBe(stale);
         const repaired = await openSession(root);
         expect(findStaleFiles(repaired, emitAll(repaired))).not.toContainEqual({
-            path: `.gspot/${toolProjectLockfile(installer)}`,
+            path: `.gspot/${selectLockfileName(installer)}`,
             kind: 'changed',
         });
     },
@@ -85,7 +85,7 @@ test.each(NPM_CLIENT_ROWS.filter(([, path]) => path === 'package.json'))(
             const session = await openSession(root);
             repaired = writeGeneratedFiles(session, emitAll(session), log);
         }
-        expect(repaired.written).not.toContain(`.gspot/${toolProjectLockfile(installer)}`);
+        expect(repaired.written).not.toContain(`.gspot/${selectLockfileName(installer)}`);
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);

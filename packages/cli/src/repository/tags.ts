@@ -1,7 +1,7 @@
 // Assigns content and extension tags to repository files.
 import { posix } from 'node:path';
 import { extractExtension } from '#cli/system/paths.ts';
-import { parseShebang, lockfileEntry } from '#cli/repository/classify.ts';
+import { parseShebang, findLockfile } from '#cli/repository/classify.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependency-files.ts';
 import type { Tagged, FileEntry, ContentPrefix } from '#cli/types/repository/inventory.ts';
 
@@ -71,7 +71,7 @@ export function tagEntry(entry: FileEntry, prefix: Buffer): Tagged {
     const base = posix.basename(entry.path);
     const flags: [boolean, string][] = [
         [entry.symlink, 'symlink'],
-        [lockfileEntry(base) !== undefined, 'lockfile'],
+        [findLockfile(base) !== undefined, 'lockfile'],
         [base.startsWith(DOCKERFILE_NAME) || extension === DOCKERFILE_EXTENSION, 'dockerfile'],
         [base.startsWith(DOTENV_PREFIX), 'dotenv'],
         [entry.executable, 'executable'],

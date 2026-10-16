@@ -1,6 +1,6 @@
 // Redirect declared shared package fields to their generated tool files.
 import { posix } from 'node:path';
-import { readJson } from '#cli/parsers/json.ts';
+import { parseJsonFile } from '#cli/parsers/json.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Session } from '#cli/types/planning.ts';
 import type { FileEdit } from '#cli/types/ownership.ts';
@@ -82,7 +82,7 @@ export function packageRedirects(session: Session, generated: GeneratedFile[]): 
     return [...packages].flatMap((path) => {
         const source = files.read(path);
         if (source === undefined) return [];
-        const document = readJson(path, source.bytes.toString('utf8'));
+        const document = parseJsonFile(path, source.bytes.toString('utf8'));
         return [...redirects.values()]
             .filter(
                 (row) =>

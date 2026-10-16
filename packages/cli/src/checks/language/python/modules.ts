@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { visitParsed } from '#cli/system/files/cache.ts';
+import { parseCached } from '#cli/system/files/cache.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
-import { readPython, docstringOf, disposePython } from '#cli/parsers/python.ts';
 import { NON_WORD_RUN, PLACEHOLDERS } from '#cli/config/checks/language/python.ts';
+import { readPython, findDocstring, deletePythonTrees } from '#cli/parsers/python.ts';
 
 /**
  * Report Python docstrings that only repeat a name or placeholder.
@@ -10,10 +10,10 @@ import { NON_WORD_RUN, PLACEHOLDERS } from '#cli/config/checks/language/python.t
  * @returns the findings for that check.
  */
 export async function pythonPlaceholderDocstrings(input: CheckInput): Promise<Finding[]> {
-    const parsed = await visitParsed(input, readPython, disposePython, input.resources);
+    const parsed = await parseCached(input, readPython, deletePythonTrees, input.resources);
     const { functions } = parsed;
     return functions.flatMap((definition) => {
-        const text = docstringOf(definition.node);
+        const text = findDocstring(definition.node);
         if (text === undefined) return [];
         const plain = text.toLowerCase().replaceAll(NON_WORD_RUN, ' ').trim();
         const isName = plain === definition.name.toLowerCase().replaceAll('_', ' ').trim();

@@ -1,18 +1,18 @@
 import { test, expect } from 'bun:test';
-import { codeLines, parseBashScript } from '#cli/parsers/bash.ts';
+import { listCodeLines, parseBashScript } from '#cli/parsers/bash.ts';
 import { BASH_COMMENT_CASES, MKTEMP_CLEANUP_CASES } from '#tests/config/bash/parsing.ts';
 
 test.each(BASH_COMMENT_CASES)(
     'Bash comments keep quoted and parameter hashes as code: %s',
     async (source, expected) => {
         const parsed = await parseBashScript(source);
-        expect(codeLines(parsed.code)).toStrictEqual([{ number: 1, text: expected }]);
+        expect(listCodeLines(parsed.code)).toStrictEqual([{ number: 1, text: expected }]);
     },
 );
 
 test('comment masking keeps line numbers and drops blank lines', async () => {
     const parsed = await parseBashScript('\n# note\na=1 # b\n  ');
-    expect(codeLines(parsed.code)).toStrictEqual([{ number: 3, text: 'a=1' }]);
+    expect(listCodeLines(parsed.code)).toStrictEqual([{ number: 3, text: 'a=1' }]);
 });
 
 test.each([...MKTEMP_CLEANUP_CASES])(

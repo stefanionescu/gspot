@@ -4,7 +4,7 @@ import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { runGit, runGitForBytes } from '#cli/system/git.ts';
 import { readIndexEntries } from '#cli/repository/tracked.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
-import { parseGitBlobs, parseTreeEntries, parseIndexRevision } from '#cli/parsers/git.ts';
+import { parseGitBlobs, parseTreeEntries, stripIndexStages } from '#cli/parsers/git.ts';
 
 import {
     HEAD_ARGUMENTS,
@@ -25,7 +25,7 @@ export async function listRevisionEntries(
     source: Revision,
     cancelSignal?: AbortSignal,
 ): Promise<GitEntry[]> {
-    if (source.kind === 'index') return parseIndexRevision(await readIndexEntries(root, cancelSignal));
+    if (source.kind === 'index') return stripIndexStages(await readIndexEntries(root, cancelSignal));
     const read = await runGitForBytes(root, [...TREE_ENTRIES_ARGUMENTS, source.hash], { cancelSignal });
     if (read.code !== 0)
         throw new GspotError(

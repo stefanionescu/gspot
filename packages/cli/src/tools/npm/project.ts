@@ -20,7 +20,7 @@ import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 import { toolVersionState, parseVersionOutput } from '#cli/tools/versions.ts';
 import { isYarnBerry, npmClientMajor } from '#cli/tools/npm/package-manager.ts';
 import { lockfileMatches, stripRegistryUrls } from '#cli/tools/npm/lockfiles.ts';
-import { parseToolProject, toolProjectLockfile } from '#cli/tools/npm/tool-project.ts';
+import { parseToolProject, selectLockfileName } from '#cli/tools/npm/tool-project.ts';
 import { rmSync, existsSync, realpathSync, readFileSync, writeFileSync } from 'node:fs';
 import { installationDiagnostics, assertCredentialFreeLockfile } from '#cli/tools/diagnostics.ts';
 import { writeNpmrc, registryEnvironment, registryCredentials } from '#cli/tools/npm/registry.ts';
@@ -183,7 +183,7 @@ async function runNpmClient(request: NpmClientExecution): Promise<NpmClientRun> 
                 `${client.name} ${failure} (exit ${String(result.code)}). ${REINSTALL_HINT}.\n${installationDiagnostics(result, credentials)}`,
             );
         }
-        const lockfile = readFileSync(join(work, toolProjectLockfile(client.name)), 'utf8');
+        const lockfile = readFileSync(join(work, selectLockfileName(client.name)), 'utf8');
         assertCredentialFreeLockfile(
             lockfile,
             credentials,

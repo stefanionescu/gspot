@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
-import { readJson } from '#cli/parsers/json.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import { parseJsonFile } from '#cli/parsers/json.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { selectForScope } from '#cli/repository/select.ts';
@@ -76,7 +76,7 @@ function readFormattingFields(file: string): InitFormatOptions | null {
 function readFormatOptions(file: string, dependencies: Record<string, string>): InitFormatOptions | null {
     const root = posix.dirname(file);
     const pkg = readText(root, PACKAGE_JSON);
-    const packageOptions = pkg === undefined ? undefined : readJson(file, pkg)['prettier'];
+    const packageOptions = pkg === undefined ? undefined : parseJsonFile(file, pkg)['prettier'];
     const prettierFile = PRETTIER_FILES.map((path) => ({ path, text: readText(root, path) })).find(
         (entry): entry is { path: (typeof PRETTIER_FILES)[number]; text: string } => entry.text !== undefined,
     );
@@ -85,7 +85,7 @@ function readFormatOptions(file: string, dependencies: Record<string, string>): 
     if (usesPrettier) {
         let options: unknown = isRecord(packageOptions) ? packageOptions : {};
         if (prettierFile !== undefined && (PRETTIER_JSON_FILES as readonly string[]).includes(prettierFile.path))
-            options = readJson(posix.join(root, prettierFile.path), prettierFile.text);
+            options = parseJsonFile(posix.join(root, prettierFile.path), prettierFile.text);
         return { ...PRETTIER_DEFAULTS, ...stripUndefined(formatOptionsSchema.parse(options)) };
     }
     return readFormattingFields(file);

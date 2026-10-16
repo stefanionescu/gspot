@@ -12,7 +12,7 @@ import type { PythonFiles, PythonModule, PythonFunction } from '#cli/types/parse
  * @param module the module.
  * @returns the functions.
  */
-function pythonFunctions(module: PythonModule): PythonFunction[] {
+function listFunctions(module: PythonModule): PythonFunction[] {
     return module.tree.rootNode
         .descendantsOfType([...PYTHON_FUNCTION_NODES])
         .filter((node) => node.isNamed)
@@ -54,7 +54,7 @@ export async function readPython(input: SourceInput): Promise<PythonFiles> {
             const text = readSource(input.root, file.path, input.reads).toString('utf8');
             modules.push(await parsePythonModule(file.path, text, input));
         }
-        return { modules, functions: modules.flatMap((module) => pythonFunctions(module)) };
+        return { modules, functions: modules.flatMap((module) => listFunctions(module)) };
     } catch (error) {
         for (const module of modules) module.tree.delete();
         throw error;
@@ -86,7 +86,7 @@ export async function parsePythonModule(path: string, text: string, cache?: Pars
  * @param definition the function definition.
  * @returns the text inside the quotes.
  */
-export function docstringOf(definition: Node): string | undefined {
+export function findDocstring(definition: Node): string | undefined {
     const siblings = definition.childForFieldName('body')?.namedChildren ?? [];
     const first = siblings.find((child) => child.type !== 'comment');
     if (first === undefined || !isDocstring(first, siblings)) return undefined;
@@ -98,6 +98,6 @@ export function docstringOf(definition: Node): string | undefined {
  * Release the trees held by parsed Python modules.
  * @param parsed the modules whose readers have finished.
  */
-export function disposePython(parsed: PythonFiles): void {
+export function deletePythonTrees(parsed: PythonFiles): void {
     for (const source of parsed.modules) source.tree.delete();
 }

@@ -10,7 +10,7 @@ import type { Finding } from '#cli/types/execution/check.ts';
 import type { TypoEntry } from '#cli/types/parsers/output.ts';
 
 // The lines of a source file as bytes, read once per file, so byte offsets map to columns.
-function sourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {
+function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {
     const held = cache.get(path);
     if (held !== undefined) return held;
     let source: Buffer;
@@ -32,14 +32,14 @@ function sourceLines(root: string, path: string, cache: Map<string, Buffer[]>): 
 }
 
 // The line and character column of a typo, from the byte offset typos reports.
-function typoPosition(
+function computeTypoPosition(
     root: string,
     path: string,
     entry: TypoEntry,
     cache: Map<string, Buffer[]>,
 ): Pick<Finding, 'line' | 'column'> {
     if (entry.line_num === undefined) return {};
-    const sourceLine = sourceLines(root, path, cache)[entry.line_num - 1];
+    const sourceLine = readSourceLines(root, path, cache)[entry.line_num - 1];
     if (sourceLine === undefined || entry.byte_offset > sourceLine.length)
         throw new GspotError('output', `Typos reported a position outside the source: ${path}`);
     return {
@@ -50,7 +50,7 @@ function typoPosition(
 }
 
 // One typos entry as a finding: a filename typo when it has no line, otherwise a positioned one.
-function typoFinding(
+function buildFinding(
     check: string,
     help: string,
     entry: TypoEntry,
@@ -71,7 +71,7 @@ function typoFinding(
     };
 }
 
-const typosEntrySchema = z.object({
+const reportedTypoSchema = z.object({
     type: z.literal('typo'),
     path: z.string().min(1),
     line_num: z.number().int().positive().optional(),
@@ -92,19 +92,19 @@ const typosEntrySchema = z.object({
  * @param cwd the directory typos ran in.
  * @returns the findings.
  */
-export function typosFindings(check: string, stdout: string, help: string, root: string, cwd: string): Finding[] {
+export function parseTyposFindings(check: string, stdout: string, help: string, root: string, cwd: string): Finding[] {
     let entries: TypoEntry[];
     try {
         entries = stdout
             .split('\n')
             .filter((line) => line.trim() !== '')
-            .map((line) => typosEntrySchema.parse(JSON.parse(line)));
+            .map((line) => reportedTypoSchema.parse(JSON.parse(line)));
     } catch (error) {
         throw new GspotError('output', 'Typos returned invalid structured findings.', { cause: error });
     }
     const linesByPath = new Map<string, Buffer[]>();
     return entries.map((entry) => {
         const path = convertToPosixPath(relative(root, resolve(cwd, entry.path)));
-        return typoFinding(check, help, entry, path, typoPosition(root, path, entry, linesByPath));
+        return buildFinding(check, help, entry, path, computeTypoPosition(root, path, entry, linesByPath));
     });
 }

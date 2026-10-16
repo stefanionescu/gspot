@@ -1,7 +1,7 @@
 import type { RangeVar, Constraint } from '@pgsql/types';
 import type { SqlStatementReaders } from '#cli/types/parsers/sql.ts';
-import { nodeOf, nodesOf, partsOf, readStatement } from '#cli/parsers/sql/postgres.ts';
 import { PUBLIC_SCHEMA, SCHEMA_PART_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/checks/database.ts';
+import { getNodeFields, listNameParts, readStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 
 import type {
     Schema,
@@ -58,7 +58,7 @@ function recordConstraint(state: SchemaState, at: Location, node: Constraint, co
     if (!(kind in CONSTRAINT_SUFFIXES)) return;
     const { keys, columns } =
         column === undefined
-            ? { keys: partsOf(node.keys), columns: partsOf(node.fk_attrs) }
+            ? { keys: listNameParts(node.keys), columns: listNameParts(node.fk_attrs) }
             : { keys: [column], columns: [column] };
     const isForeign = kind === 'CONSTR_FOREIGN';
     const name = constraintName(node, at.table, kind, isForeign ? columns : keys);
@@ -74,12 +74,12 @@ const readCreateTable: StatementReader<'CreateStmt'> = (statement, state, migrat
     forgetTable(state, table);
     const at = { migration, statement, table };
     state.tables.set(table, { path: migration.path, offset: statement.start, text: migration.text });
-    const columns = nodesOf(statement.fields.tableElts, 'ColumnDef');
+    const columns = listNodeFields(statement.fields.tableElts, 'ColumnDef');
     const inColumns = columns.flatMap((column) =>
-        nodesOf(column.constraints, 'Constraint').map((node) => ({ node, column: column.colname ?? '' })),
+        listNodeFields(column.constraints, 'Constraint').map((node) => ({ node, column: column.colname ?? '' })),
     );
     for (const entry of inColumns) recordConstraint(state, at, entry.node, entry.column);
-    const inTable = nodesOf(statement.fields.tableElts, 'Constraint');
+    const inTable = listNodeFields(statement.fields.tableElts, 'Constraint');
     for (const node of inTable) recordConstraint(state, at, node);
 };
 
@@ -93,21 +93,21 @@ const ALTERATIONS: SchemaAlterations = {
         state.indexes = state.indexes.filter((index) => index.table !== at.table || index.constraint !== name);
     },
     AT_AddConstraint: (state, at, command) => {
-        const node = nodeOf(command.def, 'Constraint');
+        const node = getNodeFields(command.def, 'Constraint');
         if (node !== undefined) recordConstraint(state, at, node);
     },
 };
 
 const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, state, migration) => {
     const at: Location = { migration, statement, table: qualifyRelation(statement.fields.relation) };
-    for (const command of nodesOf(statement.fields.cmds, 'AlterTableCmd'))
+    for (const command of listNodeFields(statement.fields.cmds, 'AlterTableCmd'))
         if (command.subtype !== undefined) ALTERATIONS[command.subtype]?.(state, at, command);
 };
 
 // A dropped table leaves the state, so the checks ask nothing of a table the schema does not hold.
 const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
-    for (const item of nodesOf(statement.fields.objects, 'List')) {
-        const parts = partsOf(item.items);
+    for (const item of listNodeFields(statement.fields.objects, 'List')) {
+        const parts = listNameParts(item.items);
         switch (statement.fields.removeType) {
             case 'OBJECT_TABLE': {
                 forgetTable(state, qualifyParts(parts));
@@ -132,7 +132,7 @@ const READERS: SqlStatementReaders<void, [SchemaState, Migration]> = {
     CreateStmt: readCreateTable,
     AlterTableStmt: readAlterTable,
     IndexStmt: (statement, state) => {
-        const [first] = nodesOf(statement.fields.indexParams, 'IndexElem');
+        const [first] = listNodeFields(statement.fields.indexParams, 'IndexElem');
         const column = first?.name ?? '';
         if (column === '') return;
         const table = qualifyRelation(statement.fields.relation);

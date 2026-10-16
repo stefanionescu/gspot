@@ -16,7 +16,7 @@ import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { type TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import { readTsconfig, projectSources, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
+import { readTsconfig, listSourceFiles, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 
 import {
     JSCONFIG_FILE,
@@ -41,7 +41,7 @@ function compilerInputs(session: Session, projects: Iterable<readonly [string, T
     return [...projects]
         .flatMap(([scope, config]) => [
             ...config.configurationFiles,
-            ...projectSources(session.root, scope, session.reads, config).map((source) => source.fileName),
+            ...listSourceFiles(session.root, scope, session.reads, config).map((source) => source.fileName),
         ])
         .map((path) => convertToPosixPath(relative(session.root, path)))
         .filter(isInside);

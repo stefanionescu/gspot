@@ -3,7 +3,7 @@ import type { Finding } from '#cli/types/execution/check.ts';
 import type { OutputSpec, RegexParser } from '#cli/types/parsers/output.ts';
 import { LEADING_DOT_SLASH, TRAILING_PAREN_RULE, TRAILING_BRACKET_RULE } from '#cli/config/parsers/output.ts';
 
-function positioned(finding: Finding, groups: Record<string, string | undefined>): Finding {
+function setMatchedFields(finding: Finding, groups: Record<string, string | undefined>): Finding {
     const line = groups['line'];
     const column = groups['column'];
     const rule = groups['rule'];
@@ -23,14 +23,14 @@ function splitTrailingRule(finding: Finding): void {
     finding.message = text.slice(0, trailing.index).trim();
 }
 
-function regexFinding(
+function buildFinding(
     check: string,
     parser: RegexParser,
     line: string,
     groups: Record<string, string | undefined>,
 ): Finding {
     const { output, fixable, help } = parser;
-    const finding = positioned(
+    const finding = setMatchedFields(
         {
             check,
             file: (groups['file'] ?? '').replace(LEADING_DOT_SLASH, ''),
@@ -53,7 +53,7 @@ function regexFinding(
  * @param help the advice attached to each finding.
  * @returns the findings from matched lines.
  */
-export function parseRegex(
+export function parseRegexFindings(
     check: string,
     output: Extract<OutputSpec, { format: 'regex' }>,
     text: string,
@@ -66,7 +66,7 @@ export function parseRegex(
     for (const line of text.split(/\r?\n/u)) {
         const groups = pattern.exec(line)?.groups;
         if (groups) {
-            const finding = regexFinding(check, parser, line, groups);
+            const finding = buildFinding(check, parser, line, groups);
             findings.set(JSON.stringify(finding), finding);
         }
     }
@@ -81,7 +81,7 @@ export function parseRegex(
  * @param help the advice attached to each finding.
  * @returns the findings under each matched file heading.
  */
-export function parseGrouped(
+export function parseGroupedFindings(
     check: string,
     output: Extract<OutputSpec, { format: 'grouped' }>,
     text: string,
@@ -99,8 +99,8 @@ export function parseGrouped(
         }
         const groups = pattern.exec(line)?.groups;
         if (groups) {
-            const diagnostic = (groups['message'] ?? line).trim();
-            findings.push(positioned({ check, file, message: diagnostic, help, fixable: false }, groups));
+            const message = (groups['message'] ?? line).trim();
+            findings.push(setMatchedFields({ check, file, message: message, help, fixable: false }, groups));
         }
     }
     return findings;

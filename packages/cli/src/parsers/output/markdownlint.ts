@@ -9,7 +9,7 @@ import type { MarkdownlintEntry } from '#cli/types/parsers/output.ts';
 import { MARKDOWNLINT_SEVERITIES } from '#cli/config/parsers/output.ts';
 
 // One markdownlint entry as a finding.
-function markdownlintFinding(check: string, help: string, entry: MarkdownlintEntry, file: string): Finding {
+function buildFinding(check: string, help: string, entry: MarkdownlintEntry, file: string): Finding {
     return {
         check,
         file,
@@ -47,7 +47,7 @@ const markdownlintReportSchema = z.array(
  * @param cwd the directory markdownlint ran in.
  * @returns the findings.
  */
-export function markdownlintFindings(
+export function parseMarkdownlintFindings(
     check: string,
     stdout: string,
     help: string,
@@ -62,6 +62,6 @@ export function markdownlintFindings(
     }
     return entries.map((entry) => {
         const file = convertToPosixPath(relative(root, resolve(cwd, entry.fileName)));
-        return markdownlintFinding(check, help, entry, file);
+        return buildFinding(check, help, entry, file);
     });
 }

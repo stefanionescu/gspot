@@ -5,16 +5,16 @@ import { isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { jsonFindings } from '#cli/parsers/output/json.ts';
-import { knipFindings } from '#cli/parsers/output/knip.ts';
-import { sarifFindings } from '#cli/parsers/output/sarif.ts';
-import { typosFindings } from '#cli/parsers/output/typos.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
-import { semgrepFindings } from '#cli/parsers/output/semgrep.ts';
-import { parseRegex, parseGrouped } from '#cli/parsers/output/text.ts';
-import { trufflehogFindings } from '#cli/parsers/output/trufflehog.ts';
-import { markdownlintFindings } from '#cli/parsers/output/markdownlint.ts';
+import { parseJsonFindings } from '#cli/parsers/output/json.ts';
+import { parseKnipFindings } from '#cli/parsers/output/knip.ts';
+import { parseSarifFindings } from '#cli/parsers/output/sarif.ts';
+import { parseTyposFindings } from '#cli/parsers/output/typos.ts';
+import { parseSemgrepFindings } from '#cli/parsers/output/semgrep.ts';
+import { parseTrufflehogFindings } from '#cli/parsers/output/trufflehog.ts';
 import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
+import { parseMarkdownlintFindings } from '#cli/parsers/output/markdownlint.ts';
+import { parseRegexFindings, parseGroupedFindings } from '#cli/parsers/output/text.ts';
 
 import type {
     OutputSpec,
@@ -32,7 +32,7 @@ import {
     DEFAULT_GROUPED_PATTERN,
 } from '#cli/config/parsers/output.ts';
 
-function relativeTo(root: string, file: string): string {
+function stripRoot(root: string, file: string): string {
     const prefix = `${root}/`;
     if (file.startsWith(prefix)) return file.slice(prefix.length);
     if (!isAbsolute(file)) return file;
@@ -47,7 +47,7 @@ function relativeTo(root: string, file: string): string {
     }
 }
 
-function namesFiles(output: OutputSpec): boolean {
+function hasFilePaths(output: OutputSpec): boolean {
     return (
         (output.file_type ?? 'path') === 'path' &&
         (output.pattern === undefined ? output.fields?.file !== undefined : output.pattern.includes(FILE_GROUP))
@@ -62,14 +62,14 @@ export const outputFormats = {
         redactsOutput: false,
     },
     json: {
-        read: ({ check, stdout }, output) => jsonFindings(check.name, output, stdout, check.help),
+        read: ({ check, stdout }, output) => parseJsonFindings(check.name, output, stdout, check.help),
         namesFiles: (output) => (output.file_type ?? 'path') === 'path' && output.fields?.file !== undefined,
         redactsOutput: false,
     },
     sarif: {
         read: ({ check, stdout, root }) => {
             try {
-                return sarifFindings(JSON.parse(stdout), check.name, check.help, root);
+                return parseSarifFindings(JSON.parse(stdout), check.name, check.help, root);
             } catch (error) {
                 throw new GspotError('output', 'The tool returned an invalid SARIF report.', { cause: error });
             }
@@ -78,27 +78,27 @@ export const outputFormats = {
         redactsOutput: false,
     },
     trufflehog: {
-        read: ({ check, stdout }) => trufflehogFindings(check.name, stdout, check.help),
+        read: ({ check, stdout }) => parseTrufflehogFindings(check.name, stdout, check.help),
         namesFiles: () => false,
         redactsOutput: true,
     },
     typos: {
-        read: ({ check, stdout, root, cwd }) => typosFindings(check.name, stdout, check.help, root, cwd),
+        read: ({ check, stdout, root, cwd }) => parseTyposFindings(check.name, stdout, check.help, root, cwd),
         namesFiles: () => true,
         redactsOutput: false,
     },
     markdownlint: {
-        read: ({ check, stdout, root, cwd }) => markdownlintFindings(check.name, stdout, check.help, root, cwd),
+        read: ({ check, stdout, root, cwd }) => parseMarkdownlintFindings(check.name, stdout, check.help, root, cwd),
         namesFiles: () => true,
         redactsOutput: false,
     },
     knip: {
-        read: ({ check, stdout }) => knipFindings(check.name, stdout, check.help),
+        read: ({ check, stdout }) => parseKnipFindings(check.name, stdout, check.help),
         namesFiles: () => true,
         redactsOutput: false,
     },
     semgrep: {
-        read: ({ check, stdout }) => semgrepFindings(check.name, stdout, check.help),
+        read: ({ check, stdout }) => parseSemgrepFindings(check.name, stdout, check.help),
         namesFiles: () => true,
         redactsOutput: false,
     },
@@ -113,11 +113,11 @@ export const outputFormats = {
         redactsOutput: false,
     },
     regex: {
-        namesFiles,
+        namesFiles: hasFilePaths,
         redactsOutput: false,
     },
     grouped: {
-        namesFiles,
+        namesFiles: hasFilePaths,
         redactsOutput: false,
     },
 } satisfies Record<OutputSpec['format'], OutputDescriptor>;
@@ -139,11 +139,11 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
     let findings: Finding[];
     switch (output.format) {
         case 'regex': {
-            findings = parseRegex(check.name, output, text, check.help);
+            findings = parseRegexFindings(check.name, output, text, check.help);
             break;
         }
         case 'grouped': {
-            findings = parseGrouped(check.name, output, text, check.help);
+            findings = parseGroupedFindings(check.name, output, text, check.help);
             break;
         }
         default: {
@@ -153,7 +153,7 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
     return findings.map((finding) => ({
         ...finding,
         fixable: check.fix !== undefined && finding.fixable,
-        file: relativeTo(nativeRoot, convertToPosixPath(finding.file)),
+        file: stripRoot(nativeRoot, convertToPosixPath(finding.file)),
     }));
 }
 

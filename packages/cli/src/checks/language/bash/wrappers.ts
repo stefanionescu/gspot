@@ -1,5 +1,5 @@
-import { codeLines } from '#cli/parsers/bash.ts';
 import { findingAt } from '#cli/checks/finding.ts';
+import { listCodeLines } from '#cli/parsers/bash.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 
@@ -19,7 +19,7 @@ export async function bashWrappers(input: CheckInput): Promise<Finding[]> {
     const index = await readScripts(input);
     return index.flatMap((file) => {
         const findings = [];
-        const code = codeLines(file.code);
+        const code = listCodeLines(file.code);
         const alias = file.lines.findIndex((line) => DEPRECATED_ALIAS.test(line));
         if (alias !== -1)
             findings.push(

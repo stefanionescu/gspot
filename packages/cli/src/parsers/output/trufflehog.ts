@@ -27,7 +27,7 @@ const trufflehogResultSchema = z.object({
  * @param help the check's help text.
  * @returns the findings.
  */
-export function trufflehogFindings(check: string, stdout: string, help: string): Finding[] {
+export function parseTrufflehogFindings(check: string, stdout: string, help: string): Finding[] {
     const findings: Finding[] = [];
     for (const line of stdout.split('\n').filter((line) => line.trim() !== '')) {
         try {

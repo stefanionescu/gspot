@@ -1,6 +1,6 @@
 import { Query, type Node } from 'web-tree-sitter';
 import { readSource } from '#cli/system/files/reads.ts';
-import { visitParsed } from '#cli/system/files/cache.ts';
+import { parseCached } from '#cli/system/files/cache.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { isInGspotFolder } from '#cli/repository/selectors.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
@@ -73,5 +73,5 @@ function disposeConventionSources(sources: ConventionSource[]): void {
  * @returns the captured convention sources.
  */
 export function conventionSources(input: CheckInput): Promise<ConventionSource[]> {
-    return visitParsed(input, readConventionSources, disposeConventionSources, input.resources);
+    return parseCached(input, readConventionSources, disposeConventionSources, input.resources);
 }

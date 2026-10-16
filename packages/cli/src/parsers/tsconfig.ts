@@ -27,7 +27,7 @@ const TSCONFIG_MEMO = { create: () => new Map<string, TypeScriptConfiguration | 
  * @param reads the run-owned reads.
  * @returns actual parsed projects indexed by their absolute system paths.
  */
-function tsconfigProjects(root: string, path: string, reads: ReadCache): Map<string, TypeScriptConfiguration> {
+function readReferencedProjects(root: string, path: string, reads: ReadCache): Map<string, TypeScriptConfiguration> {
     const projects = new Map<string, TypeScriptConfiguration>();
     const pending = [resolve(path)];
     for (const candidate of pending) {
@@ -54,7 +54,7 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
     if (source.error !== undefined) throw new Error(ts.flattenDiagnosticMessageText(source.error.messageText, '\n'));
     const raw: unknown = source.config;
     const authored = typeScriptConfigSchema.parse(raw);
-    const configurationFiles = [path];
+    const tsconfigFiles = [path];
     const sourceFile: ts.TsConfigSourceFile = ts.parseJsonText(path, text);
     const parsed = ts.parseJsonSourceFileConfigFileContent(
         sourceFile,
@@ -62,7 +62,7 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
             ...host,
             readFile: (file) => {
                 const contents = host.readFile(file);
-                if (contents !== undefined) configurationFiles.push(file);
+                if (contents !== undefined) tsconfigFiles.push(file);
                 return contents;
             },
         },
@@ -79,7 +79,7 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
     return {
         ...parsed,
         raw: authored,
-        configurationFiles,
+        configurationFiles: tsconfigFiles,
         extendedConfigurationFiles: sourceFile.extendedSourceFiles ?? [],
     };
 }
@@ -92,7 +92,12 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
  * @param options the TypeScript compiler options.
  * @returns the guarded TypeScript compiler host.
  */
-function compilerHost(root: string, scope: string, reads: ReadCache, options: ts.CompilerOptions): ts.CompilerHost {
+function buildCompilerHost(
+    root: string,
+    scope: string,
+    reads: ReadCache,
+    options: ts.CompilerOptions,
+): ts.CompilerHost {
     const host = ts.createCompilerHost(options);
     const libraries = new Set([dirname(dirname(ts.getDefaultLibFilePath(options)))]);
     const nativeRealpath = host.realpath?.bind(host);
@@ -201,7 +206,7 @@ export function readTsconfigProject(
         config = readTsconfig(root, path, reads);
     }
     if (config === undefined) return undefined;
-    const projects = tsconfigProjects(root, path, reads);
+    const projects = readReferencedProjects(root, path, reads);
     const members = new Set(
         [...projects.values()].flatMap((project) => project.fileNames.map((file) => convertToPosixPath(file))),
     );
@@ -217,7 +222,7 @@ export function readTsconfigProject(
  * @param config the parsed project.
  * @returns resolved source files without installed or compiler libraries.
  */
-export function projectSources(
+export function listSourceFiles(
     root: string,
     scope: string,
     reads: ReadCache,
@@ -227,7 +232,7 @@ export function projectSources(
         rootNames: config.fileNames,
         options: config.options,
         ...(config.projectReferences === undefined ? {} : { projectReferences: config.projectReferences }),
-        host: compilerHost(root, scope, reads, config.options),
+        host: buildCompilerHost(root, scope, reads, config.options),
     });
     return program
         .getSourceFiles()

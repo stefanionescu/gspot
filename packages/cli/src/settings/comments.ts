@@ -1,8 +1,8 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { tomlRange, addTomlComment, tomlCommentAnchors } from '#cli/parsers/toml/comments.ts';
 import type { TomlSyntax, TomlComments, TomlCommentAnchor } from '#cli/types/parsers/toml.ts';
+import { getTomlRange, addTomlComment, listAnchoredComments } from '#cli/parsers/toml/comments.ts';
 import { isRecord, getValueAt, createTable, isRecordArray, normalizeTables } from '#cli/system/values.ts';
 import { METADATA_PREFIXES, IGNORE_IDENTITY_FIELDS, TEMPLATE_COMMENT_PREFIX } from '#cli/config/settings/file.ts';
 
@@ -88,7 +88,7 @@ function commentTarget(syntax: TomlSyntax, target: TomlTable, written: TomlTable
  */
 export function keptComments(syntax: TomlSyntax, target: TomlTable, written: TomlTable): TomlComments {
     const comments: TomlComments = new Map();
-    for (const { comment, anchor: owner } of tomlCommentAnchors(syntax)) {
+    for (const { comment, anchor: owner } of listAnchoredComments(syntax)) {
         if (METADATA_PREFIXES.some((prefix) => comment.raw.startsWith(prefix))) {
             if (comment.raw.startsWith(TEMPLATE_COMMENT_PREFIX))
                 addTomlComment(comments, 'provenance', [], comment, 'owned');
@@ -101,7 +101,8 @@ export function keptComments(syntax: TomlSyntax, target: TomlTable, written: Tom
         }
         const next = syntax.entries.find(
             (entry) =>
-                tomlRange(entry.node)[0] > tomlRange(comment)[1] && destinations(syntax, target, entry.path).length > 0,
+                getTomlRange(entry.node)[0] > getTomlRange(comment)[1] &&
+                destinations(syntax, target, entry.path).length > 0,
         );
         const anchor = commentTarget(syntax, target, written, next ?? { kind: 'preamble', path: [] });
         addTomlComment(comments, anchor.kind, anchor.path, comment, 'free');

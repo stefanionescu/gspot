@@ -5,9 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
-import { commentText, parseComments } from '#cli/parsers/comments.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { suppressions } from '#cli/checks/general/gspot/suppressions.ts';
+import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
 
 import {
     JSX_COMMENTS,
@@ -111,7 +111,9 @@ test.each(['js', 'ts'])(
         ]);
         const parsed = await parseComments(path, await Bun.file(`${sandbox.path}/${path}`).text());
         expect(
-            parsed.flatMap(({ text, line }) => (/^(?:\/\/|#|--|<!--) ?marker:/u.test(commentText(text)) ? [line] : [])),
+            parsed.flatMap(({ text, line }) =>
+                /^(?:\/\/|#|--|<!--) ?marker:/u.test(stripCommentEnd(text)) ? [line] : [],
+            ),
         ).toStrictEqual([12]);
     },
 );

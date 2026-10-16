@@ -5,7 +5,14 @@ import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { TomlTable, LayoutSection } from '#cli/types/settings/file.ts';
 import { TOML_HEADER_FORMAT, TOML_ASSIGNMENT_FORMAT } from '#cli/config/settings/file.ts';
 import type { TomlBlock, TomlValue, TomlComments, TomlKeyValue, TomlCommentNode } from '#cli/types/parsers/toml.ts';
-import { tomlRange, isKeyValue, isInlineArray, isInlineTable, emitTomlComments } from '#cli/parsers/toml/comments.ts';
+
+import {
+    isKeyValue,
+    getTomlRange,
+    isInlineArray,
+    isInlineTable,
+    insertTomlComments,
+} from '#cli/parsers/toml/comments.ts';
 
 function tomlAssignment(key: string, value: unknown, dotted = false): { text: string; pair: TomlKeyValue } {
     const assignment = stringify({ [key]: value }, TOML_ASSIGNMENT_FORMAT);
@@ -22,7 +29,7 @@ function tomlHeader(path: KeyPath, array: boolean): string {
     const section = parseDocument(text).cst.find(
         (node) => 'items' in node && JSON.stringify(node.key.item.value) === JSON.stringify(keys),
     ) as Exclude<TomlBlock, TomlKeyValue | TomlCommentNode>;
-    const header = text.slice(...tomlRange(section.key));
+    const header = text.slice(...getTomlRange(section.key));
     return array ? `[${header}]` : header;
 }
 
@@ -32,13 +39,13 @@ function encodeValue(node: TomlValue, text: string, path: KeyPath, comments: Tom
             const keys = [...path, index];
             const notes = [...comments.values()]
                 .filter(({ path: note }) => path.toReversed()[1] === 'rules' && keys.every((key, i) => note[i] === key))
-                .map(({ path: field }) => emitTomlComments(comments, 'key', field, ''))
+                .map(({ path: field }) => insertTomlComments(comments, 'key', field, ''))
                 .filter(Boolean);
-            return emitTomlComments(
+            return insertTomlComments(
                 comments,
                 'item',
                 keys,
-                emitTomlComments(
+                insertTomlComments(
                     comments,
                     'header',
                     keys,
@@ -58,8 +65,8 @@ function encodeValue(node: TomlValue, text: string, path: KeyPath, comments: Tom
             : `[${items.join(', ')}]`;
     }
     if (isInlineTable(node))
-        return `{ ${node.items.map(({ item }) => text.slice(tomlRange(item.key)[0], tomlRange(item.value)[0]) + encodeValue(item.value, text, [...path, ...item.key.value], comments, indent)).join(', ')} }`;
-    return text.slice(...tomlRange(node));
+        return `{ ${node.items.map(({ item }) => text.slice(getTomlRange(item.key)[0], getTomlRange(item.value)[0]) + encodeValue(item.value, text, [...path, ...item.key.value], comments, indent)).join(', ')} }`;
+    return text.slice(...getTomlRange(node));
 }
 
 function sectionEntries(
@@ -136,11 +143,11 @@ export function layOutSettings(target: TomlTable, indent: string, comments: Toml
         const { assignments, children } = sectionEntries(value, path, comments);
         const lines = assignments.map(([key, child]) => {
             const { text, pair } = tomlAssignment(key, child, path[0] === 'scope' && key.includes('.'));
-            return emitTomlComments(
+            return insertTomlComments(
                 comments,
                 'key',
                 [...path, key],
-                text.slice(tomlRange(pair.key)[0], tomlRange(pair.value)[0]) +
+                text.slice(getTomlRange(pair.key)[0], getTomlRange(pair.value)[0]) +
                     encodeValue(pair.value, text, [...path, key], comments, indent),
             );
         });
@@ -148,7 +155,7 @@ export function layOutSettings(target: TomlTable, indent: string, comments: Toml
         else if (lines.length > 0 || children.length === 0 || comments.has(JSON.stringify(['header', ...path])))
             blocks.push(
                 [
-                    emitTomlComments(comments, 'header', path, tomlHeader(path, typeof path.at(-1) === 'number')),
+                    insertTomlComments(comments, 'header', path, tomlHeader(path, typeof path.at(-1) === 'number')),
                     ...lines,
                 ].join('\n'),
             );
@@ -157,9 +164,9 @@ export function layOutSettings(target: TomlTable, indent: string, comments: Toml
         }
     }
     table(target, []);
-    const metadata = emitTomlComments(comments, 'provenance', [], '');
+    const metadata = insertTomlComments(comments, 'provenance', [], '');
     const output =
-        [metadata, emitTomlComments(comments, 'preamble', [], ''), root.join('\n'), ...blocks]
+        [metadata, insertTomlComments(comments, 'preamble', [], ''), root.join('\n'), ...blocks]
             .filter((block) => block !== '')
             .join('\n\n') + '\n';
     if (comments.size > 0)

@@ -17,7 +17,7 @@ import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { normalizedPythonPackage } from '#cli/parsers/dependency-files.ts';
+import { normalizePythonPackage } from '#cli/parsers/dependency-files.ts';
 import { parsePythonSettings, writePythonSettings } from '#cli/tools/python/settings.ts';
 import { installationDiagnostics, assertCredentialFreeLockfile } from '#cli/tools/diagnostics.ts';
 import { DOT_GSPOT, UV_LOCKFILE, PYTHON_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
@@ -95,7 +95,7 @@ async function runUv({
 // Requirements as one text each, with the package name normalized, in order, so a project and its lockfile compare.
 function requirementTexts(requirements: PythonRequirement[]): string[] {
     return requirements
-        .map(({ name, specifier }) => `${normalizedPythonPackage(name)}${specifier}`)
+        .map(({ name, specifier }) => `${normalizePythonPackage(name)}${specifier}`)
         .toSorted((left, right) => left.localeCompare(right));
 }
 
@@ -274,7 +274,7 @@ export function pythonLockfileMatches(project: PythonToolProject, lockfile: stri
     const projectEntry = recorded.package.find((entry) => entry.name === manifest.name && entry.source.virtual === '.');
     if (projectEntry === undefined || recorded['requires-python'] !== manifest['requires-python']) return false;
     const expected = manifest.dependencies
-        .map((value) => value.replace(PINNED_PACKAGE_NAME, normalizedPythonPackage))
+        .map((value) => value.replace(PINNED_PACKAGE_NAME, normalizePythonPackage))
         .toSorted((left, right) => left.localeCompare(right));
     return isDeepStrictEqual(requirementTexts(projectEntry.metadata['requires-dist']), expected);
 }

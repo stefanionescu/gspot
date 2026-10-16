@@ -35,6 +35,6 @@ export function parseShebang(firstLine: string): string | undefined {
  * @param filename the file basename.
  * @returns its metadata, or undefined for an unsupported filename.
  */
-export function lockfileEntry(filename: string): Lockfile | undefined {
+export function findLockfile(filename: string): Lockfile | undefined {
     return LOCKFILES.find((entry) => entry.file === filename);
 }

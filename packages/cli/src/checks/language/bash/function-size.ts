@@ -1,5 +1,5 @@
-import { codeLines } from '#cli/parsers/bash.ts';
 import { findingAt } from '#cli/checks/finding.ts';
+import { listCodeLines } from '#cli/parsers/bash.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import { COUNT_LIMITS } from '#cli/config/checks/language/bash.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
@@ -14,7 +14,7 @@ export async function bashFunctionSize(input: CheckInput): Promise<Finding[]> {
     const limit = input.selection.view.limit('function_lines', 'bash');
     const lines = index.flatMap((file) =>
         file.functions.flatMap((entry) => {
-            const count = codeLines(entry.body).length;
+            const count = listCodeLines(entry.body).length;
             if (count <= limit) return [];
             return [
                 findingAt(

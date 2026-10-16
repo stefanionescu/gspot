@@ -1,7 +1,7 @@
 // Reads repository dependency files and installed package versions.
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { readJson } from '#cli/parsers/json.ts';
+import { parseJsonFile } from '#cli/parsers/json.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { isToolingPath } from '#cli/repository/selectors.ts';
@@ -10,7 +10,7 @@ import { join, dirname, basename, relative } from 'node:path';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { type Files, type ReadCache } from '#cli/types/system/files.ts';
-import { packageJsonSchema, dependencyFileParser } from '#cli/parsers/dependency-files.ts';
+import { packageJsonSchema, selectDependencyFileParser } from '#cli/parsers/dependency-files.ts';
 import type { PackageJson, DependencyFile, InstalledDependency } from '#cli/types/parsers/dependency-files.ts';
 
 /**
@@ -29,7 +29,7 @@ export async function readDependencyFiles(
     const manifests: DependencyFile[] = [];
     for (const file of files.filter((file) => file.kind === 'source' && !isToolingPath(file.path))) {
         try {
-            const parse = dependencyFileParser(file.path);
+            const parse = selectDependencyFileParser(file.path);
             if (parse === undefined) continue;
             const text = readText(root, file.path, reads);
             if (text === undefined) throw new Error(`Manifest is missing: ${file.path}`);
@@ -51,7 +51,7 @@ export async function readDependencyFiles(
 export function readPackageJson(root: string, path: string): PackageJson | undefined {
     const text = readText(root, path);
     if (text === undefined) return undefined;
-    return readJson(path, text, packageJsonSchema);
+    return parseJsonFile(path, text, packageJsonSchema);
 }
 
 /**
@@ -87,7 +87,7 @@ export function installedPackage(files: Files | undefined, root: string, manifes
             const path = convertToPosixPath(relative(root, join(directory, basename(manifest))));
             text = readText(root, path);
         }
-        return text === undefined ? undefined : readJson(manifest, text, packageJsonSchema);
+        return text === undefined ? undefined : parseJsonFile(manifest, text, packageJsonSchema);
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
         throw error;

@@ -25,7 +25,7 @@ export type ProjectMetadata = { objects: Record<string, ProjectEntry>; root: Pro
 export type XcodeProject = {
     objects: Record<string, ProjectEntry>;
     root: ProjectRoot;
-    directory: string;
+    folder: string;
     parents: Map<string, string>;
     visiting: Set<string>;
 };

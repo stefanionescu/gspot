@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
-import { readJson } from '#cli/parsers/json.ts';
 import { findingAt } from '#cli/checks/finding.ts';
+import { parseJsonFile } from '#cli/parsers/json.ts';
 import { readSource } from '#cli/system/files/reads.ts';
-import { lockfileEntry } from '#cli/repository/classify.ts';
+import { findLockfile } from '#cli/repository/classify.ts';
 import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
@@ -26,7 +26,7 @@ function rootFindings(input: CheckInput, root: PackageJson | undefined): Finding
 function lockfileFindings(input: CheckInput): Finding[] {
     const kinds = new Map<string, string>();
     for (const file of input.files) {
-        const lockfile = lockfileEntry(posix.basename(file.path));
+        const lockfile = findLockfile(posix.basename(file.path));
         const kind =
             lockfile !== undefined && 'configuration' in lockfile && lockfile.configuration === 'javascript'
                 ? lockfile.client
@@ -59,7 +59,7 @@ export function packageJson(input: CheckInput): Finding[] {
     const manifest =
         root === undefined
             ? undefined
-            : readJson(
+            : parseJsonFile(
                   PACKAGE_JSON,
                   readSource(input.root, PACKAGE_JSON, input.reads).toString('utf8'),
                   packageJsonSchema,

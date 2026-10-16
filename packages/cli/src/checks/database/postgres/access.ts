@@ -1,22 +1,22 @@
 // The access checks of the schema the migrations build: row security, grants, and definer functions.
 import { findingAt } from '#cli/checks/finding.ts';
 import { computePosition } from '#cli/system/text.ts';
-import { nodeOf, nodesOf } from '#cli/parsers/sql/postgres.ts';
 import type { Migration } from '#cli/types/checks/database.ts';
 import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
-import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
+import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
+import { getNodeFields, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 
 function isLooseDefiner(statement: SqlStatementView): boolean {
     if (statement.kind !== 'CreateFunctionStmt') return false;
-    const options = nodesOf(statement.fields.options, 'DefElem');
+    const options = listNodeFields(statement.fields.options, 'DefElem');
     const isDefiner = options.some(
-        (option) => option.defname === 'security' && nodeOf(option.arg, 'Boolean')?.boolval === true,
+        (option) => option.defname === 'security' && getNodeFields(option.arg, 'Boolean')?.boolval === true,
     );
     const hasPath = options.some(
-        (option) => option.defname === 'set' && nodeOf(option.arg, 'VariableSetStmt')?.name === 'search_path',
+        (option) => option.defname === 'set' && getNodeFields(option.arg, 'VariableSetStmt')?.name === 'search_path',
     );
     return isDefiner && !hasPath;
 }
@@ -71,7 +71,7 @@ export async function postgresRowLevelSecurity(input: CheckInput): Promise<Findi
  */
 export async function postgresGrants(input: CheckInput): Promise<Finding[]> {
     const migrations = await readMigrations(input);
-    const frozen = frozenMigrationPaths(
+    const frozen = selectFrozenMigrations(
         migrations.map(({ path }) => path),
         input.selection.view.options('postgres').frozen_through,
     );

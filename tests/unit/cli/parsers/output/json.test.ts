@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
-import { jsonFindings } from '#cli/parsers/output/json.ts';
 import { parseOutput } from '#cli/parsers/output/formats.ts';
+import { parseJsonFindings } from '#cli/parsers/output/json.ts';
 
 test('a flat JSON list maps its fields to a finding', () => {
     const stdout = JSON.stringify([{ path: 'nginx.conf', line: 9, plugin: 'ssrf', summary: 'Possible SSRF.' }]);
@@ -8,7 +8,7 @@ test('a flat JSON list maps its fields to a finding', () => {
         format: 'json' as const,
         fields: { file: 'path', line: 'line', rule: 'plugin', message: 'summary' },
     };
-    expect(jsonFindings('nginx/gixy', output, stdout, 'help')).toStrictEqual([
+    expect(parseJsonFindings('nginx/gixy', output, stdout, 'help')).toStrictEqual([
         {
             check: 'nginx/gixy',
             file: 'nginx.conf',
@@ -31,7 +31,7 @@ test('a nested list reads the file from the item and the rest from the child', (
         children: 'violations',
         fields: { file: 'filepath', line: 'start_line_no', rule: 'code', message: 'description' },
     };
-    const [finding] = jsonFindings('sql/sqlfluff', output, stdout, 'help');
+    const [finding] = parseJsonFindings('sql/sqlfluff', output, stdout, 'help');
     expect([finding?.file, finding?.line, finding?.rule]).toStrictEqual(['a.sql', 3, 'LT01']);
 });
 
@@ -65,7 +65,7 @@ test('a tool that counts lines from zero names its line base', () => {
         line_base: 0 as const,
         fields: { file: 'file', line: 'line', column: 'column', rule: 'rule_name', message: 'message' },
     };
-    const [finding] = jsonFindings('postgres/squawk', output, stdout, 'help');
+    const [finding] = parseJsonFindings('postgres/squawk', output, stdout, 'help');
     expect([finding?.line, finding?.column]).toStrictEqual([1, 19]);
 });
 
@@ -89,7 +89,7 @@ test('lists nested two levels down read the file from the top and join several m
         children: 'packages.vulnerabilities',
         fields: { file: 'source.path', rule: 'id', message: 'package.name package.version summary' },
     };
-    const [finding] = jsonFindings('dependencies/osv', output, stdout, 'help');
+    const [finding] = parseJsonFindings('dependencies/osv', output, stdout, 'help');
     expect([finding?.file, finding?.rule, finding?.message]).toStrictEqual([
         'bun.lock',
         'GHSA-1',
@@ -98,20 +98,20 @@ test('lists nested two levels down read the file from the top and join several m
 });
 
 test.each(['', '{ broken', '{"items":null}'])('an invalid JSON report is refused: %s', (stdout) => {
-    expect(() => jsonFindings('x/y', { format: 'json', items: 'items' }, stdout, 'help')).toThrow(
+    expect(() => parseJsonFindings('x/y', { format: 'json', items: 'items' }, stdout, 'help')).toThrow(
         'The tool returned an invalid JSON report.',
     );
 });
 
 test('an empty report has no findings, and missing nested lists are refused', () => {
-    expect(jsonFindings('x/y', { format: 'json' }, '[]', 'help')).toStrictEqual([]);
+    expect(parseJsonFindings('x/y', { format: 'json' }, '[]', 'help')).toStrictEqual([]);
     for (const output of [
         { format: 'json' as const },
         { format: 'json' as const, fields: { message: 'message' } },
         { format: 'json' as const, children: 'messages' },
     ])
         expect(() =>
-            jsonFindings(
+            parseJsonFindings(
                 'x/y',
                 output,
                 output.fields === undefined && output.children === undefined ? '[null]' : '[{}]',

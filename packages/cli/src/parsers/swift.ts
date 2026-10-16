@@ -23,7 +23,7 @@ import {
  * @param text the Swift source.
  * @returns the imported modules, test frameworks, and target kinds the source declares.
  */
-export async function swiftSourceTags(path: string, text: string): Promise<string[]> {
+export async function detectSwiftTags(path: string, text: string): Promise<string[]> {
     const tree = await parseSource('swift', text);
     try {
         const imports = tree.rootNode

@@ -8,7 +8,7 @@ import { FROZEN_ALL, FROZEN_NONE, MIGRATION_NUMBER, MIGRATION_VERSION } from '#c
  * @param through the written freeze version.
  * @returns the frozen paths.
  */
-export function frozenMigrationPaths(paths: string[], through: string): Set<string> {
+export function selectFrozenMigrations(paths: string[], through: string): Set<string> {
     if (through === FROZEN_NONE) return new Set();
     return new Set(
         paths.filter((path) => {

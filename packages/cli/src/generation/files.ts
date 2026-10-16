@@ -4,11 +4,11 @@ import { npmProject } from '#cli/generation/npm.ts';
 import { buildPathKey } from '#cli/system/paths.ts';
 import type { RuleFile } from '#cli/types/rules.ts';
 import { hookFiles } from '#cli/generation/hooks.ts';
-import { attributeRules } from '#cli/parsers/git.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { bunfigChanges } from '#cli/generation/bunfig.ts';
 import { pythonProject } from '#cli/generation/python.ts';
+import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { emitToolFiles } from '#cli/generation/tool-files.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
@@ -68,7 +68,7 @@ function attributePattern(path: string): string {
 
 // Each whole file gspot writes outside its folder keeps LF too, so a CRLF checkout does not read as an edit.
 function attributesBlock(files: Generated['files'], authored: string): string {
-    const inheritsLineEndings = attributeRules(authored, '.').some(
+    const inheritsLineEndings = parseAttributePatterns(authored, '.').some(
         ({ pattern, attributes }) =>
             pattern === '**/*' && AUTO_LF_ATTRIBUTES.every((attribute) => attributes.includes(attribute)),
     );

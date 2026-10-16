@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { readJson } from '#cli/parsers/json.ts';
 import { statSync, writeFileSync } from 'node:fs';
 import { findingAt } from '#cli/checks/finding.ts';
+import { parseJsonFile } from '#cli/parsers/json.ts';
 import { coveredBy } from '#cli/repository/select.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { FULL_PERCENTAGE } from '#cli/config/units.ts';
@@ -83,7 +83,7 @@ export async function jscpd(input: CheckInput): Promise<Finding[]> {
     const generated = files.read(`${TOOL_FILE_DIRECTORY}/${JSCPD_CONFIG_FILE}`);
     if (generated === undefined)
         throw new Error(`Missing ${TOOL_FILE_DIRECTORY}/${JSCPD_CONFIG_FILE}. Run gspot apply.`);
-    const shipped = readJson(`${TOOL_FILE_DIRECTORY}/${JSCPD_CONFIG_FILE}`, generated.bytes.toString('utf8'));
+    const shipped = parseJsonFile(`${TOOL_FILE_DIRECTORY}/${JSCPD_CONFIG_FILE}`, generated.bytes.toString('utf8'));
     // The file list goes into a configuration of its own: a long list overflows a command line, and jscpd reads paths from its configuration.
     const config = join(work, JSCPD_CONFIG_FILE);
     writeFileSync(config, JSON.stringify({ ...shipped, path: owned.map((path) => join(input.root, path)) }));

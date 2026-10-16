@@ -6,9 +6,9 @@ import { type CheckResult } from '#cli/types/execution/check.ts';
 import { readText, readSource } from '#cli/system/files/reads.ts';
 import { runCommandGroups } from '#cli/execution/command/check.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
-import { docstringOf, parsePythonModule } from '#cli/parsers/python.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
+import { findDocstring, parsePythonModule } from '#cli/parsers/python.ts';
 import { type PythonDocstringStyle, type DocstringConfiguration } from '#cli/types/checks/language.ts';
 
 import {
@@ -29,7 +29,7 @@ async function sourceStyle(session: Session, path: string): Promise<PythonDocstr
     );
     try {
         for (const node of module.tree.rootNode.descendantsOfType(['function_definition', 'class_definition'])) {
-            const docstring = docstringOf(node);
+            const docstring = findDocstring(node);
             if (docstring === undefined) continue;
             if (GOOGLE_DOCSTRING.test(docstring)) return 'google';
             if (NUMPY_DOCSTRING.test(docstring)) return 'numpy';

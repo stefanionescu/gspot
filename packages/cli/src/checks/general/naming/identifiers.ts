@@ -5,9 +5,9 @@ import { sqlIdentifiers } from '#cli/checks/general/naming/sql.ts';
 import { REST_SEGMENT } from '#cli/config/checks/general/naming.ts';
 import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
 import { bashIdentifiers } from '#cli/checks/general/naming/bash.ts';
-import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { swiftIdentifiers } from '#cli/checks/general/naming/swift.ts';
 import { pythonIdentifiers } from '#cli/checks/general/naming/python.ts';
+import { parseSource, selectGrammar } from '#cli/parsers/tree-sitter.ts';
 import { createIdentifier } from '#cli/checks/general/naming/declarations.ts';
 import type { Identifier, PathContainer } from '#cli/types/checks/general.ts';
 import { typescriptIdentifiers } from '#cli/checks/general/naming/typescript.ts';
@@ -70,7 +70,7 @@ export async function identifiersOf(
     context?: Pick<CheckInput, 'reads' | 'resources'>,
 ): Promise<Identifier[]> {
     if (language === 'sql') return sqlIdentifiers(file, text, context?.reads);
-    const grammar = grammarFor(file, language);
+    const grammar = selectGrammar(file, language);
     if (grammar === undefined) return [];
     const tree = await parseSource(grammar, text, context);
     try {

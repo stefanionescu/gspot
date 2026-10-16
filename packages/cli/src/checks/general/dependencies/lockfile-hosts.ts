@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/system/files/reads.ts';
-import { lockfileEntry } from '#cli/repository/classify.ts';
+import { findLockfile } from '#cli/repository/classify.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { LOCKFILE_URL, NPM_DOWNLOAD, BINARY_BUN_LOCKFILE } from '#cli/config/checks/general/dependencies.ts';
 
@@ -13,7 +13,7 @@ function urlMessage(url: URL, hosts: Set<string>): string | undefined {
 function fileFindings(input: CheckInput, path: string, hosts: Set<string>): Finding[] {
     const lines = readSource(input.root, path, input.reads).toString('utf8').split('\n');
     // An npm lockfile also holds funding pages and deprecation notes; only its resolved field names a download.
-    const isNpm = lockfileEntry(posix.basename(path))?.client === 'npm';
+    const isNpm = findLockfile(posix.basename(path))?.client === 'npm';
     return lines.flatMap((text, index) =>
         (isNpm
             ? text.matchAll(NPM_DOWNLOAD).map((match) => match[1] ?? '')
@@ -39,7 +39,7 @@ export function lockfileHosts(input: CheckInput): Finding[] {
         .map((file) => file.path)
         .filter((path) => {
             const name = posix.basename(path);
-            const entry = lockfileEntry(name);
+            const entry = findLockfile(name);
             return (
                 entry !== undefined &&
                 'configuration' in entry &&

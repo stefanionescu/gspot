@@ -22,10 +22,10 @@ import {
     ALL_POSITIONAL_PARAMETERS,
 } from '#cli/config/parsers/bash.ts';
 
-function highestRead(node: Node): number {
+function findHighestParameter(node: Node): number {
     const expansions = node.descendantsOfType([...EXPANSION_NODES]);
     const positions = expansions.flatMap((expansion) => {
-        if (enclosingFunction(expansion)?.id !== node.id) return [];
+        if (findEnclosingFunction(expansion)?.id !== node.id) return [];
         const parameter = expansion.namedChildren[0]?.text;
         if (parameter === undefined) return [];
         if (ALL_POSITIONAL_PARAMETERS.has(parameter)) return [Number.POSITIVE_INFINITY];
@@ -36,7 +36,7 @@ function highestRead(node: Node): number {
             .descendantsOfType('command')
             .some(
                 (command) =>
-                    enclosingFunction(command)?.id === node.id &&
+                    findEnclosingFunction(command)?.id === node.id &&
                     command.childForFieldName('name')?.text === SHIFT_COMMAND,
             )
     )
@@ -49,7 +49,7 @@ function highestRead(node: Node): number {
  * @param node the parsed syntax node.
  * @returns the containing function, or undefined outside a function.
  */
-function enclosingFunction(node: Node): Node | undefined {
+function findEnclosingFunction(node: Node): Node | undefined {
     let parent = node.parent;
     while (parent !== null) {
         if (parent.type === 'function_definition') return parent;
@@ -71,7 +71,7 @@ function parseBashFunctions(root: Node, codeText: string): ScriptSyntax['functio
         if (name === undefined || body === null) return [];
         const controls = node
             .descendantsOfType([...BASH_BRANCH_NODES, ...BASH_COMPOUND_NODES])
-            .filter((child) => enclosingFunction(child)?.id === node.id);
+            .filter((child) => findEnclosingFunction(child)?.id === node.id);
         const compoundNodes = controls.filter((child) =>
             new Set<string | undefined>(BASH_COMPOUND_NODES).has(child.type),
         );
@@ -99,7 +99,7 @@ function parseBashFunctions(root: Node, codeText: string): ScriptSyntax['functio
                 start: node.startPosition.row + 1,
                 end: node.endPosition.row + 1,
                 body: codeText.slice(body.startIndex + 1, body.endIndex - 1).split('\n'),
-                highestRead: highestRead(node),
+                highestRead: findHighestParameter(node),
                 branches: controls.filter((child) => new Set<string | undefined>(BASH_BRANCH_NODES).has(child.type))
                     .length,
                 nesting,
@@ -107,7 +107,7 @@ function parseBashFunctions(root: Node, codeText: string): ScriptSyntax['functio
                     .descendantsOfType('variable_assignment')
                     .filter(
                         (write) =>
-                            enclosingFunction(write)?.id === node.id &&
+                            findEnclosingFunction(write)?.id === node.id &&
                             !ignored.some(
                                 (part) => part.startIndex <= write.startIndex && part.endIndex >= write.endIndex,
                             ),
@@ -118,7 +118,7 @@ function parseBashFunctions(root: Node, codeText: string): ScriptSyntax['functio
 }
 
 // Preserve code-unit positions and line breaks while removing the syntax tree's comment spans.
-function maskComments(text: string, comments: Node[]): string {
+function stripComments(text: string, comments: Node[]): string {
     const pieces: string[] = [];
     let offset = 0;
     for (const comment of comments) {
@@ -145,7 +145,7 @@ function isTemporaryValue(assignment: Node): boolean {
 }
 
 // Bare local declarations can shadow a global temporary even without an assignment.
-function localNames(root: Node): Set<string> {
+function listLocalNames(root: Node): Set<string> {
     const declarations = root
         .descendantsOfType('declaration_command')
         .filter(
@@ -155,7 +155,7 @@ function localNames(root: Node): Set<string> {
         );
     return new Set(
         declarations.flatMap((declaration) => {
-            const owner = enclosingFunction(declaration)?.id;
+            const owner = findEnclosingFunction(declaration)?.id;
             if (owner === undefined) return [];
             return declaration.namedChildren.flatMap((child) => {
                 let name: string | undefined;
@@ -168,15 +168,15 @@ function localNames(root: Node): Set<string> {
 }
 
 // Reassigning the same variable in its function makes a deferred cleanup target ambiguous.
-function temporaryTargets(root: Node): TemporaryTargets {
+function collectTemporaryTargets(root: Node): TemporaryTargets {
     const assignments = root.descendantsOfType('variable_assignment');
-    const locals = localNames(root);
+    const locals = listLocalNames(root);
     const counts = new Map<string, number>();
     const names = new Map<string, number>();
     for (const assignment of assignments) {
         const name = assignment.childForFieldName('name')?.text;
         if (name === undefined) continue;
-        const key = JSON.stringify([enclosingFunction(assignment)?.id, name]);
+        const key = JSON.stringify([findEnclosingFunction(assignment)?.id, name]);
         counts.set(key, (counts.get(key) ?? 0) + 1);
         names.set(name, (names.get(name) ?? 0) + 1);
     }
@@ -184,7 +184,7 @@ function temporaryTargets(root: Node): TemporaryTargets {
     const paths = assignments.flatMap((assignment) => {
         const name = assignment.childForFieldName('name')?.text;
         if (name === undefined || !isTemporaryValue(assignment)) return [];
-        const key = JSON.stringify([enclosingFunction(assignment)?.id, name]);
+        const key = JSON.stringify([findEnclosingFunction(assignment)?.id, name]);
         const path: TemporaryPath = { name, line: assignment.startPosition.row + 1, cleanupLines: [] };
         const isUnique = locals.has(key) ? counts.get(key) === 1 : names.get(name) === 1;
         if (isUnique) targets.set(key, path);
@@ -194,7 +194,7 @@ function temporaryTargets(root: Node): TemporaryTargets {
 }
 
 // A cleanup argument must contain only the temporary variable.
-function temporaryTarget(
+function findTemporaryTarget(
     argument: Node,
     owner: number | undefined,
     registry: TemporaryTargets,
@@ -215,15 +215,15 @@ function temporaryTarget(
 function recordRemovals(removals: Node[], context: CleanupContext): void {
     const { lineOffset, owner, registry, lines } = context;
     for (const removal of removals) {
-        const targets = removalTargets(removal);
+        const targets = listRemovalTargets(removal);
         const line = lineOffset + removal.startPosition.row;
-        const paths = targets.map((argument) => temporaryTarget(argument, owner, registry));
+        const paths = targets.map((argument) => findTemporaryTarget(argument, owner, registry));
         lines.set(line, [...(lines.get(line) ?? []), ...(paths.length === 0 ? [undefined] : paths)]);
     }
 }
 
 // After --, arguments beginning with a dash also name removal targets.
-function removalTargets(command: Node): Node[] {
+function listRemovalTargets(command: Node): Node[] {
     const targets: Node[] = [];
     let isOptions = true;
     for (const argument of command.childrenForFieldName('argument')) {
@@ -238,8 +238,8 @@ function removalTargets(command: Node): Node[] {
 }
 
 // Parse deferred trap bodies with the same grammar before treating any recursive removal as cleanup.
-async function temporaryCleanups(root: Node, commands: Node[], cache?: ParseCache): Promise<TemporaryPath[]> {
-    const registry = temporaryTargets(root);
+async function listTemporaryPaths(root: Node, commands: Node[], cache?: ParseCache): Promise<TemporaryPath[]> {
+    const registry = collectTemporaryTargets(root);
     const lines = new Map<number, Array<TemporaryPath | undefined>>(
         commands
             .filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND)
@@ -263,7 +263,7 @@ async function temporaryCleanups(root: Node, commands: Node[], cache?: ParseCach
                 .filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND);
             recordRemovals(removals, {
                 lineOffset: body.startPosition.row + 1,
-                owner: enclosingFunction(trap)?.id,
+                owner: findEnclosingFunction(trap)?.id,
                 registry: {
                     ...registry,
                     targets: new Map([...registry.targets].filter(([, path]) => !assigned.has(path.name))),
@@ -291,7 +291,7 @@ async function temporaryCleanups(root: Node, commands: Node[], cache?: ParseCach
 export async function parseBashScript(text: string, cache?: ParseCache): Promise<ScriptSyntax> {
     const tree = await parseSource('bash', text, cache);
     try {
-        const codeText = maskComments(text, tree.rootNode.descendantsOfType('comment'));
+        const codeText = stripComments(text, tree.rootNode.descendantsOfType('comment'));
 
         const commands = tree.rootNode.descendantsOfType('command');
 
@@ -306,7 +306,7 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
             code: codeText.split('\n'),
             functions,
             calls,
-            temporaryPaths: await temporaryCleanups(tree.rootNode, commands, cache),
+            temporaryPaths: await listTemporaryPaths(tree.rootNode, commands, cache),
         };
     } finally {
         tree.delete();
@@ -318,7 +318,7 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
  * @param lines the parsed code lines.
  * @returns trimmed code and one-based positions.
  */
-export function codeLines(lines: string[]): NumberedLine[] {
+export function listCodeLines(lines: string[]): NumberedLine[] {
     return lines.flatMap((line, index) => {
         const code = line.trim();
         return code === '' ? [] : [{ number: index + 1, text: code }];

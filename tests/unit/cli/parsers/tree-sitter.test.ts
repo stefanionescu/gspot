@@ -2,8 +2,8 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { TYPED_DECLARATION } from '#tests/config/typescript.ts';
-import { readPython, disposePython } from '#cli/parsers/python.ts';
-import { visitParsed, createReadCache } from '#cli/system/files/cache.ts';
+import { readPython, deletePythonTrees } from '#cli/parsers/python.ts';
+import { parseCached, createReadCache } from '#cli/system/files/cache.ts';
 
 test('parses are cached per run and copied trees outlive the cache', async () => {
     const reads = createReadCache(process.cwd());
@@ -47,16 +47,16 @@ test('a second visit with the same files returns the same value, in the same pat
         ],
     };
     const held = await Promise.all([
-        visitParsed(input, readPython, disposePython, resources),
-        visitParsed(input, readPython, disposePython, resources),
+        parseCached(input, readPython, deletePythonTrees, resources),
+        parseCached(input, readPython, deletePythonTrees, resources),
     ]);
     const python = held[0];
     const concurrent = held[1];
     expect(concurrent).toBe(python);
-    const reversed = await visitParsed(
+    const reversed = await parseCached(
         { ...input, files: input.files.toReversed() },
         readPython,
-        disposePython,
+        deletePythonTrees,
         resources,
     );
     expect(reversed).not.toBe(python);

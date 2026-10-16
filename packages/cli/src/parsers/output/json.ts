@@ -16,10 +16,10 @@ function listAt(value: unknown, path: string | undefined): unknown[] {
 }
 
 // Every chain of nodes under one node, nearest first: each key of the path names a list one level further down.
-function chainsUnder(chain: unknown[], keys: string[]): unknown[][] {
+function listChains(chain: unknown[], keys: string[]): unknown[][] {
     const [key, ...rest] = keys;
     if (key === undefined) return [chain];
-    return listAt(chain[0], key).flatMap((child) => chainsUnder([child, ...chain], rest));
+    return listAt(chain[0], key).flatMap((child) => listChains([child, ...chain], rest));
 }
 
 // A tool that counts from zero names its base, and the finding counts from one.
@@ -28,19 +28,19 @@ function setPosition(finding: Finding, base: number, line: string | undefined, c
     if (column !== undefined && Number(column) >= base) finding.column = Number(column) - base + 1;
 }
 
-function jsonFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
+function buildFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
     const { check, help, output } = shape;
     if (sources.some((source) => source === null || typeof source !== 'object' || Array.isArray(source)))
         throw new Error('The JSON report contains an invalid finding object.');
     const fields: Record<string, string | undefined> | undefined = output.fields;
     // A field may name several paths with spaces between them; the values join in that order.
-    const values = (name: string) =>
+    const getFieldValues = (name: string) =>
         (fields?.[name] ?? '')
             .split(' ')
             .filter((path) => path !== '')
             .map((path) => sources.map((source) => getValueAt(source, path.split('.'))));
-    const read = (name: string): string | undefined => {
-        const joined = values(name)
+    const getField = (name: string): string | undefined => {
+        const joined = getFieldValues(name)
             .map(
                 (entries) =>
                     entries
@@ -53,18 +53,18 @@ function jsonFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
             .join(' ');
         return joined === '' ? undefined : joined;
     };
-    const diagnostic = read('message');
-    if (diagnostic === undefined) throw new Error('The JSON report contains a finding without its mapped message.');
-    const file = read('file') ?? '';
+    const message = getField('message');
+    if (message === undefined) throw new Error('The JSON report contains a finding without its mapped message.');
+    const file = getField('file') ?? '';
     const finding: Finding = {
         check,
         file: isAbsolute(file) ? convertToPosixPath(file) : normalizeOutputPath(file),
-        message: diagnostic,
+        message: message,
         help,
-        fixable: values('fixable').some((entries) => entries.some((value) => value !== undefined)),
+        fixable: getFieldValues('fixable').some((entries) => entries.some((value) => value !== undefined)),
     };
-    setPosition(finding, output.line_base ?? 1, read('line'), read('column'));
-    const rule = read('rule');
+    setPosition(finding, output.line_base ?? 1, getField('line'), getField('column'));
+    const rule = getField('rule');
     if (rule !== undefined) finding.rule = rule;
     return finding;
 }
@@ -78,7 +78,7 @@ function jsonFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
  * @param help the fix text of the check.
  * @returns the findings from a valid report.
  */
-export function jsonFindings(check: string, output: OutputSpec, stdout: string, help: string): Finding[] {
+export function parseJsonFindings(check: string, output: OutputSpec, stdout: string, help: string): Finding[] {
     try {
         const start = stdout.search(JSON_START);
         if (start === -1) throw new Error('The tool returned no JSON report.');
@@ -86,7 +86,7 @@ export function jsonFindings(check: string, output: OutputSpec, stdout: string, 
         const shape = { check, help, output };
         const keys = output.children === undefined ? [] : output.children.split('.');
         return listAt(parsed, output.items).flatMap((item) =>
-            chainsUnder([item], keys).map((chain) => jsonFinding(shape, chain)),
+            listChains([item], keys).map((chain) => buildFinding(shape, chain)),
         );
     } catch (error) {
         throw new GspotError('output', 'The tool returned an invalid JSON report.', { cause: error });

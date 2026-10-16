@@ -17,9 +17,9 @@ import { TOML_EXTENSION, EMPTY_JSON_TEXT, JSON_EDIT_EXTENSIONS } from '#cli/conf
 function planKeyChanges(request: KeyChangeRequest): KeyChangePlan {
     const { path, changes, current } = request;
     const document = openKeysDocument(path, current);
-    const before = current === undefined ? '' : document.text();
+    const before = current === undefined ? '' : document.getText();
     for (const field of changes) document.set(field.path, field.value);
-    const text = document.text();
+    const text = document.getText();
     return {
         next: { bytes: Buffer.from(text), mode: current?.mode ?? OWNER_WRITABLE_FILE },
         status: text === before ? 'unchanged' : 'changed',
@@ -55,7 +55,9 @@ function openKeysDocument(path: string, current: FileCopy | undefined): Editable
  */
 function hasManagedKeys(output: FileEdit, current: FileCopy): boolean {
     const document = openKeysDocument(output.path, current);
-    return output.changes.every((field) => isDeepStrictEqual(document.value(field.path), normalizeTables(field.value)));
+    return output.changes.every((field) =>
+        isDeepStrictEqual(document.getValue(field.path), normalizeTables(field.value)),
+    );
 }
 
 export { planKeyChanges, hasManagedKeys };

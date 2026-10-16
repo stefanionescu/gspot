@@ -29,7 +29,7 @@ const gitEntrySchema = z.object({
     path: z.string(),
 } satisfies SchemaShape<GitEntry>);
 
-function entryLines(text: string): string[] {
+function splitEntries(text: string): string[] {
     return text.split('\0').filter(Boolean);
 }
 
@@ -40,7 +40,7 @@ function parseEntry(match: RegExpExecArray | null): GitEntry {
 }
 
 // Ignore empty transport chunks. A missing required byte marks an incomplete Git response.
-async function nextChunk(stream: GitStream): Promise<boolean> {
+async function readNextChunk(stream: GitStream): Promise<boolean> {
     while (stream.cursor === stream.chunk.length) {
         const next = await stream.chunks.next();
         if (next.done === true) return false;
@@ -52,7 +52,7 @@ async function nextChunk(stream: GitStream): Promise<boolean> {
 
 async function readBlobLine(stream: GitStream): Promise<string> {
     const pieces: Buffer[] = [];
-    while (await nextChunk(stream)) {
+    while (await readNextChunk(stream)) {
         const end = stream.chunk.indexOf(LINE_FEED, stream.cursor);
         pieces.push(stream.chunk.subarray(stream.cursor, end === -1 ? stream.chunk.length : end));
         stream.cursor = end === -1 ? stream.chunk.length : end + 1;
@@ -65,7 +65,8 @@ async function readBytes(stream: GitStream, size: number): Promise<Buffer> {
     const bytes = Buffer.alloc(size);
     let filled = 0;
     while (filled < size) {
-        if (!(await nextChunk(stream))) throw new GspotError('git', 'The Git object stream is incomplete or invalid.');
+        if (!(await readNextChunk(stream)))
+            throw new GspotError('git', 'The Git object stream is incomplete or invalid.');
         const length = Math.min(size - filled, stream.chunk.length - stream.cursor);
         stream.chunk.copy(bytes, filled, stream.cursor, stream.cursor + length);
         stream.cursor += length;
@@ -74,7 +75,7 @@ async function readBytes(stream: GitStream, size: number): Promise<Buffer> {
     return bytes;
 }
 
-function blobSize(header: string, hash: string): number {
+function parseBlobSize(header: string, hash: string): number {
     const match = BLOB_HEADER.exec(header);
     const size = Number(match?.[2]);
     if (match?.[1] !== hash || !Number.isSafeInteger(size))
@@ -88,7 +89,7 @@ function blobSize(header: string, hash: string): number {
  * @param folder the repository-relative folder containing the declarations.
  * @returns selectors rooted in that folder and their declared attributes.
  */
-export function attributeRules(text: string, folder: string): AttributeRule[] {
+export function parseAttributePatterns(text: string, folder: string): AttributeRule[] {
     // eslint-disable-next-line complexity -- reason: Git attribute records need complete field validation and one parser position; splitting it repeats record state.
     return text.split('\n').flatMap((line) => {
         const trimmed = line.trim();
@@ -115,7 +116,7 @@ export function attributeRules(text: string, folder: string): AttributeRule[] {
  * @param previous the attributes inherited from earlier declarations.
  * @returns the final attributes without mutating the inherited table.
  */
-export function attributesFor(declarations: string[], previous: Record<string, string>): Record<string, string> {
+export function mergeAttributes(declarations: string[], previous: Record<string, string>): Record<string, string> {
     const attributes = { ...previous };
     for (const match of declarations) {
         const [name = '', value] = match.split('=');
@@ -132,7 +133,7 @@ export function attributesFor(declarations: string[], previous: Record<string, s
  * @param text the successful check-attr -z output.
  * @returns the final attributes per path.
  */
-export function gitAttributes(text: string): Map<string, Record<string, string>> {
+export function parsePathAttributes(text: string): Map<string, Record<string, string>> {
     const fields = text.split('\0');
     const attributes = new Map<string, Record<string, string>>();
     for (let index = 0; index + ATTRIBUTE_FIELDS <= fields.length; index += ATTRIBUTE_FIELDS) {
@@ -151,7 +152,7 @@ export function gitAttributes(text: string): Map<string, Record<string, string>>
  * @returns supported modes, full object IDs, stages, and paths.
  */
 export function parseIndexEntries(text: string): GitIndexEntry[] {
-    return entryLines(text).map((line) => {
+    return splitEntries(text).map((line) => {
         const match = INDEX_ENTRY.exec(line);
         const entry = parseEntry(match);
         return { ...entry, stage: Number(match?.groups?.['stage']) };
@@ -166,7 +167,7 @@ export function parseIndexEntries(text: string): GitIndexEntry[] {
 export function parseTreeEntries(output: Uint8Array): GitEntry[] {
     const text = decodeUtf8(output);
     if (text === undefined) throw new GspotError('git', 'Revision paths must be valid UTF-8.');
-    return entryLines(text).map((line) => parseEntry(TREE_ENTRY.exec(line)));
+    return splitEntries(text).map((line) => parseEntry(TREE_ENTRY.exec(line)));
 }
 
 /**
@@ -174,7 +175,7 @@ export function parseTreeEntries(output: Uint8Array): GitEntry[] {
  * @param entries validated working-tree index entries.
  * @returns entries from the resolved index.
  */
-export function parseIndexRevision(entries: GitIndexEntry[]): GitEntry[] {
+export function stripIndexStages(entries: GitIndexEntry[]): GitEntry[] {
     if (entries.some((entry) => entry.stage !== 0)) throw new GspotError('git', UNSUPPORTED_ENTRY);
     return entries.map(({ mode, hash, path }) => ({ mode, hash, path }));
 }
@@ -182,20 +183,20 @@ export function parseIndexRevision(entries: GitIndexEntry[]): GitEntry[] {
 /**
  * Validate batch identities and framing while retaining only the current blob.
  * @param chunks raw output chunks in stream order.
- * @param objects requested full object IDs in response order.
+ * @param requestedIds requested full object IDs in response order.
  * @returns each object's exact bytes before reading its successor.
  */
 export async function* parseGitBlobs(
     chunks: AsyncIterable<Buffer>,
-    objects: readonly string[],
+    requestedIds: readonly string[],
 ): AsyncGenerator<readonly [string, Buffer]> {
     const stream: GitStream = {
         chunks: chunks[Symbol.asyncIterator](),
         chunk: Buffer.alloc(0),
         cursor: 0,
     };
-    for (const hash of objects) {
-        const bytes = await readBytes(stream, blobSize(await readBlobLine(stream), hash));
+    for (const hash of requestedIds) {
+        const bytes = await readBytes(stream, parseBlobSize(await readBlobLine(stream), hash));
         await readBytes(stream, 1);
         yield [hash, bytes];
     }

@@ -57,7 +57,7 @@ export function createReadCache(root: string): ReadCache {
  * @param resources the resources released at the end of the run.
  * @returns the parsed value, valid until disposing of the cleanup stack.
  */
-export async function visitParsed<Value, Input extends SourceInput>(
+export async function parseCached<Value, Input extends SourceInput>(
     input: Input,
     read: (input: Input) => Promise<Value>,
     dispose: (value: Value) => void,

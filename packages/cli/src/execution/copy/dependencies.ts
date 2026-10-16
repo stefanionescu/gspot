@@ -8,7 +8,7 @@ import { splitSystemPath } from '#cli/system/files/names.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { GIT_IGNORED_PATHS } from '#cli/config/execution/copy.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import { readTsconfig, projectSources } from '#cli/parsers/tsconfig.ts';
+import { readTsconfig, listSourceFiles } from '#cli/parsers/tsconfig.ts';
 import { TSCONFIG_FILE, JSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 
@@ -171,7 +171,7 @@ export async function declarationDependencies(
         });
         const ignored = await ignoredPaths(root, declarations, cancelSignal);
         if (ignored.length === 0) continue;
-        const selected = projectSources(root, dirname(entry.path), reads, config)
+        const selected = listSourceFiles(root, dirname(entry.path), reads, config)
             .filter((source) => source.isDeclarationFile)
             .flatMap((source) => {
                 const local = untrackedDeclaration(root, tracked, source.fileName);

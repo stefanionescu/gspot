@@ -8,8 +8,8 @@ import { isRecord, getValueAt, normalizeTables } from '#cli/system/values.ts';
 import { parse, modify, applyEdits, type ParseError, printParseErrorCode } from 'jsonc-parser';
 
 // Parse the complete JSON document before editing or returning any of its fields.
-export function readJson(path: string, source: string): Record<string, unknown>;
-export function readJson<Value>(path: string, source: string, schema: z.ZodType<Value>): Value;
+export function parseJsonFile(path: string, source: string): Record<string, unknown>;
+export function parseJsonFile<Value>(path: string, source: string, schema: z.ZodType<Value>): Value;
 /**
  * Read a JSON object. Validate its shape against any supplied schema.
  * @param path the repository-relative file path.
@@ -17,7 +17,7 @@ export function readJson<Value>(path: string, source: string, schema: z.ZodType<
  * @param schema the schema for parsed-value validation.
  * @returns the parsed JSON object, checked against the supplied schema.
  */
-export function readJson(path: string, source: string, schema?: z.ZodType): unknown {
+export function parseJsonFile(path: string, source: string, schema?: z.ZodType): unknown {
     try {
         const value: unknown = path.endsWith(JSONC_EXTENSION) ? parseJsonc(source) : JSON.parse(source);
         if (!isRecord(value)) throw new Error('JSON configuration must contain an object.');
@@ -33,7 +33,7 @@ export function readJson(path: string, source: string, schema?: z.ZodType): unkn
  * @param schema the fields and constraints to validate.
  * @returns the validated value or a source diagnostic.
  */
-export function parseJsonDocument<T>(text: string, schema: z.ZodType<T>): Parsed<T> {
+export function safeParseJson<T>(text: string, schema: z.ZodType<T>): Parsed<T> {
     let value: unknown;
     try {
         value = JSON.parse(text);
@@ -53,17 +53,17 @@ export function parseJsonDocument<T>(text: string, schema: z.ZodType<T>): Parsed
  */
 export function openJsonFile(path: string, source: string): EditableFile {
     let text = source;
-    let document = readJson(path, text);
+    let document = parseJsonFile(path, text);
     return {
         format: 'json',
-        value: (keys) => normalizeTables(getValueAt(document, keys)),
+        getValue: (keys) => normalizeTables(getValueAt(document, keys)),
         set(keys, value) {
             if (isDeepStrictEqual(normalizeTables(getValueAt(document, keys)), normalizeTables(value))) return;
             const next = applyEdits(text, modify(text, [...keys], value, {}));
-            document = readJson(path, next);
+            document = parseJsonFile(path, next);
             text = next;
         },
-        text: () => text,
+        getText: () => text,
     };
 }
 

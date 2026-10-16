@@ -7,10 +7,10 @@ import { REASON_ABOVE } from '#cli/config/checks/general/gspot.ts';
 import { isReasonAccepted } from '#cli/settings/errors/reasons.ts';
 import type { SourceComment } from '#cli/types/parsers/comments.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { commentText, parseComments } from '#cli/parsers/comments.ts';
 import type { SuppressionSyntax } from '#cli/types/checks/general.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
 
 // A preceding reason belongs only to the next line. Intervening source or comments break adjacency.
 function reasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
@@ -21,7 +21,7 @@ function reasonAbove(previous: SourceComment | undefined, comment: SourceComment
         previous.text.includes('\n')
     )
         return undefined;
-    const text = commentText(previous.text);
+    const text = stripCommentEnd(previous.text);
     return REASON_ABOVE.exec(text)?.groups?.['reason']?.trim();
 }
 
@@ -81,7 +81,7 @@ export async function suppressions(input: CheckInput): Promise<Finding[]> {
             found.push(
                 ...comments.flatMap((comment, index) => {
                     const preceding = reasonAbove(comments[index - 1], comment);
-                    const text = commentText(comment.text);
+                    const text = stripCommentEnd(comment.text);
                     // eslint-disable-next-line complexity -- reason: Suppression syntax varies by tool; this callback keeps each matched comment and its reason together.
                     return forms.flatMap((form): Finding[] => {
                         const marker = comment.standalone ? form.marker : form.inlineMarker;

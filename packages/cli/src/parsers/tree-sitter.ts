@@ -37,7 +37,7 @@ async function buildParser(name: GrammarName): Promise<Parser> {
  * @param name the grammar.
  * @returns the parser.
  */
-function parserFor(name: GrammarName): Promise<Parser> {
+function getParser(name: GrammarName): Promise<Parser> {
     let parser = state.parsers.get(name);
     if (parser === undefined) {
         parser = buildParser(name);
@@ -54,7 +54,7 @@ function parserFor(name: GrammarName): Promise<Parser> {
  * @returns a caller-owned tree copy.
  */
 export async function parseSource(name: GrammarName, text: string, cache?: ParseCache): Promise<Tree> {
-    const parser = await parserFor(name);
+    const parser = await getParser(name);
     if (cache?.resources === undefined) return parser.parse(text) as Tree;
     const trees = getCachedValue(cache.reads, TREE_MEMO);
     const key = JSON.stringify([name, text]);
@@ -93,7 +93,7 @@ export async function visitParsedSources(input: ParsedSourceInput, visit: (sourc
  * @param language the language configuration the file belongs to.
  * @returns the grammar, or undefined for declaration files and languages without a grammar.
  */
-export function grammarFor(path: string, language: string): GrammarName | undefined {
+export function selectGrammar(path: string, language: string): GrammarName | undefined {
     if ([...DECLARATION_EXTENSIONS].some((extension) => path.endsWith(extension))) return undefined;
     const grammar = Object.entries(LANGUAGE_GRAMMARS).find(([configuration]) => configuration === language)?.[1];
     return grammar === 'typescript' && path.endsWith(TSX_EXTENSION) ? 'tsx' : grammar;

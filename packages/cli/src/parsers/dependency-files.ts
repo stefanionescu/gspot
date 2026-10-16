@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import { readJson } from '#cli/parsers/json.ts';
+import { parseJsonFile } from '#cli/parsers/json.ts';
 import { parseComments } from '#cli/parsers/comments.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 
@@ -32,15 +32,15 @@ import {
 } from '#cli/config/parsers/dependency-files.ts';
 
 // A requirement names a distribution: letters or digits at both ends, dots, dashes, and underscores between.
-function requirementName(spec: string): string | undefined {
+function parseRequirementName(spec: string): string | undefined {
     const trimmed = spec.trim();
     const end = trimmed.search(REQUIREMENT_NAME_END);
     const name = end === -1 ? trimmed : trimmed.slice(0, end);
     if (!REQUIREMENT_NAME.test(name)) return undefined;
-    return normalizedPythonPackage(name);
+    return normalizePythonPackage(name);
 }
 
-function poetryDependencies(poetry: PoetrySettings): DependencyMap {
+function listPoetryDependencies(poetry: PoetrySettings): DependencyMap {
     const poetryGroups = [
         ...(poetry?.dependencies === undefined ? [] : [poetry.dependencies]),
         ...(poetry?.group === undefined ? [] : Object.values(poetry.group)).flatMap((entry) =>
@@ -51,13 +51,13 @@ function poetryDependencies(poetry: PoetrySettings): DependencyMap {
         .flatMap((group) => Object.entries(group))
         .map(
             ([name, value]) =>
-                [normalizedPythonPackage(name), typeof value === 'string' ? value : JSON.stringify(value)] as const,
+                [normalizePythonPackage(name), typeof value === 'string' ? value : JSON.stringify(value)] as const,
         )
         .filter(([name]) => name !== 'python');
     return Object.fromEntries(poetryEntries);
 }
 
-function pythonDependencies(parsed: Pyproject): DependencyMap {
+function listPythonDependencies(parsed: Pyproject): DependencyMap {
     const { project = {} } = parsed;
     const groups = [
         ...(project.dependencies ?? []),
@@ -75,12 +75,12 @@ function pythonDependencies(parsed: Pyproject): DependencyMap {
         dependencies,
         Object.fromEntries(
             groups.map((spec) => {
-                const name = requirementName(spec);
+                const name = parseRequirementName(spec);
                 if (name === undefined) throw new Error(`Invalid Python dependency requirement: ${spec}`);
                 return [name, spec];
             }),
         ),
-        poetryDependencies(parsed.tool?.poetry),
+        listPoetryDependencies(parsed.tool?.poetry),
     );
 }
 
@@ -89,7 +89,7 @@ function parseRequirements(path: string, text: string): DependencyFile {
     for (const line of text.replaceAll(LINE_CONTINUATION, '').split(/\r?\n/u)) {
         const comment = line.search(INLINE_COMMENT);
         const spec = (comment === -1 ? line : line.slice(0, comment)).trim();
-        const name = requirementName(spec);
+        const name = parseRequirementName(spec);
         if (name !== undefined) dependencies[name] = spec;
     }
     return {
@@ -107,7 +107,7 @@ const readers: Record<string, DependencyFileParser> = {
     Pipfile: parsePipfile,
 };
 
-function packageRuntimes(path: string, manifest: PackageJson): Record<string, string> {
+function detectPackageRuntimes(path: string, manifest: PackageJson): Record<string, string> {
     const runtimes: Record<string, string> = {};
     for (const runtime of JAVASCRIPT_RUNTIMES)
         if (manifest.engines?.[runtime] !== undefined) runtimes[runtime] = `${runtime} in ${path} engines`;
@@ -119,7 +119,7 @@ function packageRuntimes(path: string, manifest: PackageJson): Record<string, st
 }
 
 function parsePackageJson(path: string, text: string): DependencyFile {
-    const parsed = readJson(path, text, packageJsonSchema);
+    const parsed = parseJsonFile(path, text, packageJsonSchema);
     const installed: DependencyMap = { ...parsed.dependencies, ...parsed.devDependencies };
     const dependencies: DependencyMap = {
         ...installed,
@@ -131,7 +131,7 @@ function parsePackageJson(path: string, text: string): DependencyFile {
         kind: 'package.json',
         dependencies,
         installed,
-        runtimes: packageRuntimes(path, parsed),
+        runtimes: detectPackageRuntimes(path, parsed),
     };
 }
 
@@ -139,14 +139,14 @@ function parsePipfile(path: string, text: string): DependencyFile {
     const parsed = pipfileSchema.parse(parseToml(text));
     const dependencies: DependencyMap = {};
     for (const [name, value] of Object.entries({ ...parsed.packages, ...parsed['dev-packages'] })) {
-        dependencies[normalizedPythonPackage(name)] = typeof value === 'string' ? value : JSON.stringify(value);
+        dependencies[normalizePythonPackage(name)] = typeof value === 'string' ? value : JSON.stringify(value);
     }
     return { path, kind: 'Pipfile', dependencies, installed: dependencies };
 }
 
 function parsePyproject(path: string, text: string): DependencyFile {
     const parsed = pyprojectSchema.parse(parseToml(text));
-    const dependencies = pythonDependencies(parsed);
+    const dependencies = listPythonDependencies(parsed);
     return {
         path,
         kind: 'pyproject.toml',
@@ -255,7 +255,7 @@ const pyprojectSchema = z.object({
  * @param name the name as written.
  * @returns the name in lower case with one hyphen between words.
  */
-export function normalizedPythonPackage(name: string): string {
+export function normalizePythonPackage(name: string): string {
     return name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-');
 }
 
@@ -264,8 +264,8 @@ export function normalizedPythonPackage(name: string): string {
  * @param identity the distribution name and its exact version.
  * @returns the normalized name with the version unchanged.
  */
-export function normalizedPythonIdentity(identity: string): string {
-    return identity.replace(PYTHON_IDENTITY_NAME, normalizedPythonPackage);
+export function normalizePythonIdentity(identity: string): string {
+    return identity.replace(PYTHON_IDENTITY_NAME, normalizePythonPackage);
 }
 
 /**
@@ -273,7 +273,7 @@ export function normalizedPythonIdentity(identity: string): string {
  * @param path the repository-relative path used in fields and parsing diagnostics.
  * @returns the text parser, or undefined for an unsupported file name.
  */
-export function dependencyFileParser(path: string): DependencyFileParser | undefined {
+export function selectDependencyFileParser(path: string): DependencyFileParser | undefined {
     const base = posix.basename(path);
     return base.startsWith('requirements') && base.endsWith('.txt') ? parseRequirements : readers[base];
 }

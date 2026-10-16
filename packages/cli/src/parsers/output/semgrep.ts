@@ -48,7 +48,7 @@ const semgrepReportSchema = z.object({
  * @param help the check's correction guidance.
  * @returns positioned diagnostics from a validated report.
  */
-export function semgrepFindings(check: string, text: string, help: string): Finding[] {
+export function parseSemgrepFindings(check: string, text: string, help: string): Finding[] {
     let report: SemgrepReport;
     try {
         report = semgrepReportSchema.parse(JSON.parse(text));

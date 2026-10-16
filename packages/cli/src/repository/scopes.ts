@@ -12,7 +12,7 @@ import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
-import { projectSources, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
+import { listSourceFiles, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
 import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 import { packageFiles, readPackageJson } from '#cli/repository/dependency-files.ts';
@@ -267,7 +267,7 @@ export function workspaceSourceFiles(root: string, scope: string, files: Tracked
         const sources =
             project === undefined
                 ? []
-                : projectSources(root, folder, reads, {
+                : listSourceFiles(root, folder, reads, {
                       ...project.config,
                       fileNames: project.config.fileNames.filter((file) =>
                           isInScope(convertToPosixPath(relative(root, file)), folder),

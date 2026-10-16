@@ -2,7 +2,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { FROZEN_NONE } from '#cli/config/parsers/sql.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { MIGRATION_DOWN } from '#cli/config/checks/database.ts';
-import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
+import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
@@ -107,7 +107,7 @@ export async function postgresEditedMigrations(input: CheckInput): Promise<Findi
         input,
         migrations.map((migration) => migration.path),
     );
-    const frozen = frozenMigrationPaths(
+    const frozen = selectFrozenMigrations(
         migrations.map((migration) => migration.path),
         through,
     );

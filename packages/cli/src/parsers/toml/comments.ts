@@ -18,7 +18,10 @@ import type {
     TomlAnchoredComment,
 } from '#cli/types/parsers/toml.ts';
 
-function tablePath(node: Exclude<TomlBlock, TomlKeyValue | TomlCommentNode>, positions: TomlTablePositions): KeyPath {
+function buildTablePath(
+    node: Exclude<TomlBlock, TomlKeyValue | TomlCommentNode>,
+    positions: TomlTablePositions,
+): KeyPath {
     const path: KeyPath[number][] = [];
     for (const [index, key] of node.key.item.value.entries()) {
         path.push(key);
@@ -36,17 +39,17 @@ function tablePath(node: Exclude<TomlBlock, TomlKeyValue | TomlCommentNode>, pos
     return path;
 }
 
-function valueEntries(node: TomlValue, path: KeyPath): TomlSyntax['entries'] {
+function listNestedNodes(node: TomlValue, path: KeyPath): TomlSyntax['entries'] {
     if (isInlineArray(node))
         return node.items.flatMap(({ item }, index): TomlSyntax['entries'] => {
             const value = item as TomlValue;
             const child = [...path, index];
-            return [{ kind: 'item', path: child, node: value }, ...valueEntries(value, child)];
+            return [{ kind: 'item', path: child, node: value }, ...listNestedNodes(value, child)];
         });
     if (isInlineTable(node))
         return node.items.flatMap(({ item }): TomlSyntax['entries'] => {
             const child = [...path, ...item.key.value];
-            return [{ kind: 'key', path: child, node: item }, ...valueEntries(item.value, child)];
+            return [{ kind: 'key', path: child, node: item }, ...listNestedNodes(item.value, child)];
         });
     return [];
 }
@@ -57,16 +60,16 @@ function valueEntries(node: TomlValue, path: KeyPath): TomlSyntax['entries'] {
  * @param comment a concrete comment token.
  * @returns its syntax entry, or no entry for a separate comment.
  */
-function tomlCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlSyntaxEntry | undefined {
+function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlSyntaxEntry | undefined {
     const inline = syntax.entries
         .filter(
             ({ node }) =>
                 node.loc.end.line === comment.loc.start.line && node.loc.end.column <= comment.loc.start.column,
         )
-        .toSorted((left, right) => tomlRange(left.node)[1] - tomlRange(right.node)[1])
+        .toSorted((left, right) => getTomlRange(left.node)[1] - getTomlRange(right.node)[1])
         .at(-1);
     if (inline !== undefined) return inline;
-    const next = syntax.entries.find(({ node }) => tomlRange(node)[0] > tomlRange(comment)[1]);
+    const next = syntax.entries.find(({ node }) => getTomlRange(node)[0] > getTomlRange(comment)[1]);
     let end = comment.loc.end.line;
     while (
         syntax.comments.some(({ loc }) => loc.start.line === end + 1 && loc.start.column === comment.loc.start.column)
@@ -91,7 +94,7 @@ function isComment(node: { type: unknown }): node is TomlCommentNode {
  * @param value parsed values.
  * @returns syntax entries and source-ordered comments.
  */
-function tomlSyntax(source: string, value: Record<string, unknown>): TomlSyntax {
+function parseTomlSyntax(source: string, value: Record<string, unknown>): TomlSyntax {
     const document = parseDocument(source);
     const comments: TomlSyntax['comments'] = [];
     const positions = { value, counts: new Map<string, number>(), active: new Map<string, number>() };
@@ -101,8 +104,8 @@ function tomlSyntax(source: string, value: Record<string, unknown>): TomlSyntax 
             return [];
         }
         if (isKeyValue(node))
-            return [{ kind: 'key', path: node.key.value, node }, ...valueEntries(node.value, node.key.value)];
-        const path = tablePath(node, positions);
+            return [{ kind: 'key', path: node.key.value, node }, ...listNestedNodes(node.value, node.key.value)];
+        const path = buildTablePath(node, positions);
         const children = node.items.flatMap((child): TomlSyntax['entries'] => {
             if (isComment(child)) {
                 comments.push(child);
@@ -114,7 +117,7 @@ function tomlSyntax(source: string, value: Record<string, unknown>): TomlSyntax 
                     path: [...path, ...child.key.value],
                     node: child,
                 },
-                ...valueEntries(child.value, [...path, ...child.key.value]),
+                ...listNestedNodes(child.value, [...path, ...child.key.value]),
             ];
         });
         return [{ kind: 'header', path, node: node.key }, ...children];
@@ -123,7 +126,7 @@ function tomlSyntax(source: string, value: Record<string, unknown>): TomlSyntax 
         document,
         value,
         entries,
-        comments: comments.toSorted((left, right) => tomlRange(left)[0] - tomlRange(right)[0]),
+        comments: comments.toSorted((left, right) => getTomlRange(left)[0] - getTomlRange(right)[0]),
     };
 }
 
@@ -135,7 +138,7 @@ function tomlSyntax(source: string, value: Record<string, unknown>): TomlSyntax 
  * @param text the entry text.
  * @returns syntax with exact source-ordered leading comments.
  */
-function emitTomlComments(comments: TomlComments, kind: string, path: KeyPath, text: string): string {
+function insertTomlComments(comments: TomlComments, kind: string, path: KeyPath, text: string): string {
     const id = JSON.stringify([kind, ...path]);
     const block = comments.get(id);
     if (block === undefined) return text;
@@ -160,9 +163,9 @@ function emitTomlComments(comments: TomlComments, kind: string, path: KeyPath, t
  * @param syntax indexed syntax.
  * @returns comments with their original anchors and stable path identities.
  */
-function tomlCommentAnchors(syntax: TomlSyntax): TomlAnchoredComment[] {
+function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] {
     return syntax.comments.map((comment) => {
-        const anchor = tomlCommentAnchor(syntax, comment);
+        const anchor = findCommentAnchor(syntax, comment);
         const identity = anchor === undefined ? 'free' : JSON.stringify([anchor.kind, ...anchor.path]);
         return { comment, anchor, identity };
     });
@@ -203,7 +206,7 @@ function isInlineArray(node: { type: unknown }): node is InlineArray {
  * @param node parsed syntax.
  * @returns the token's source extent.
  */
-function tomlRange(node: SourceRange): readonly [number, number] {
+function getTomlRange(node: SourceRange): readonly [number, number] {
     if (node.range === undefined) throw new Error('The TOML parser omitted a source range.');
     return node.range;
 }
@@ -228,19 +231,19 @@ function addTomlComment(
     const block = comments.get(id) ?? { path, owned: [], free: [] };
     block[kind === 'preamble' ? 'free' : placement].push({
         raw: comment.raw,
-        start: tomlRange(comment)[0],
+        start: getTomlRange(comment)[0],
         line: comment.loc.start.line,
     });
     comments.set(id, block);
 }
 
 export {
-    tomlRange,
-    tomlSyntax,
     isKeyValue,
+    getTomlRange,
     isInlineTable,
     isInlineArray,
     addTomlComment,
-    emitTomlComments,
-    tomlCommentAnchors,
+    parseTomlSyntax,
+    insertTomlComments,
+    listAnchoredComments,
 };

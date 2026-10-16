@@ -1,8 +1,8 @@
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
-import { quotedEnd } from '#cli/parsers/comments.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { readSource } from '#cli/system/files/reads.ts';
+import { findQuotedEnd } from '#cli/parsers/comments.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
@@ -151,7 +151,7 @@ function scanAt(text: string, at: number): DirectiveScan {
     if (/\s/u.test(char)) return { token: undefined, end: at + 1 };
     if (char === '#') return nginxComment(text, at);
     if (NGINX_PUNCTUATION.has(char)) return { token: char, end: at + 1 };
-    const end = char === '"' || char === "'" ? quotedEnd(text, at) : wordEnd(text, at);
+    const end = char === '"' || char === "'" ? findQuotedEnd(text, at) : wordEnd(text, at);
     return end <= at ? { token: undefined, end: at + 1 } : { token: text.slice(at, end), end };
 }
 

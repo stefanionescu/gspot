@@ -2,8 +2,8 @@ import { join } from 'node:path/posix';
 import { readText } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/planning.ts';
 import type { Level } from '#cli/types/configurations.ts';
+import { parseBuildSettings } from '#cli/parsers/xcode.ts';
 import { PBXPROJ_NAME } from '#cli/config/parsers/xcode.ts';
-import { projectBuildSettings } from '#cli/parsers/xcode.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import { SWIFT_TOOLS_VERSION } from '#cli/config/generation/tool-file-sources.ts';
 import type { EmitInputs, SwiftVersionInput } from '#cli/types/generation/files.ts';
@@ -21,7 +21,7 @@ function readSwiftVersion(input: SwiftVersionInput, projectPath: string): string
     const packageText = readText(root, join(scope, PACKAGE_SWIFT), reads);
     if (packageText !== undefined) return SWIFT_TOOLS_VERSION.exec(packageText)?.[1];
     const projectText = projectPath === '' ? undefined : readText(root, join(projectPath, PBXPROJ_NAME), reads);
-    return projectText === undefined ? undefined : projectBuildSettings(projectText).swiftVersion;
+    return projectText === undefined ? undefined : parseBuildSettings(projectText).swiftVersion;
 }
 
 /**

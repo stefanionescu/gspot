@@ -1,6 +1,6 @@
 import { decodeHTMLAttribute } from 'entities';
 import { findingAt } from '#cli/checks/finding.ts';
-import { elementAttributes } from '#cli/parsers/html.ts';
+import { listElementAttributes } from '#cli/parsers/html.ts';
 import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import type { SourceTree, MarkupAttribute } from '#cli/types/parsers/tree-sitter.ts';
@@ -39,7 +39,7 @@ function inlineFindings(input: CheckInput, source: SourceTree): Finding[] {
             element.namedChildren.some((child) => child.type === 'raw_text' && child.text.trim() !== ''),
         )
         .flatMap((element) => {
-            const attributes = elementAttributes(element);
+            const attributes = listElementAttributes(element);
             const scriptType = attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
             if (INERT_SCRIPT_TYPES.has(scriptType) || attributes.some((entry) => entry.name === 'src')) return [];
             return [
@@ -59,7 +59,7 @@ function inlineFindings(input: CheckInput, source: SourceTree): Finding[] {
 
 function attributeFindings(input: CheckInput, source: SourceTree): Finding[] {
     return source.rootNode.descendantsOfType(['element', 'script_element']).flatMap((element) => {
-        const attributes = elementAttributes(element);
+        const attributes = listElementAttributes(element);
         const scriptType = attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
         return attributes.flatMap((attribute) => {
             const position = {

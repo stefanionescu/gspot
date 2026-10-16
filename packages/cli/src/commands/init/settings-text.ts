@@ -7,8 +7,8 @@ import { readText } from '#cli/system/files/reads.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { detectedDefaults } from '#cli/settings/view.ts';
 import { readLintJobs } from '#cli/repository/tooling.ts';
+import { parseBuildSettings } from '#cli/parsers/xcode.ts';
 import { selectForScope } from '#cli/repository/select.ts';
-import { projectBuildSettings } from '#cli/parsers/xcode.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { CI_FILE_LABELS } from '#cli/config/generation/ci.ts';
@@ -91,7 +91,7 @@ function headTables(
     const projects = new Map(
         swiftFiles.map(({ scope, file }) => {
             const text = readText(repository.root, file);
-            const sdkRoot = text === undefined ? undefined : projectBuildSettings(text).sdkRoot;
+            const sdkRoot = text === undefined ? undefined : parseBuildSettings(text).sdkRoot;
             const destination = detectedDefaults(sdkRoot === undefined ? {} : { sdkRoot }).get('xcode.destination');
             const xcode = {
                 ...(scope === '' ? swift : {}),

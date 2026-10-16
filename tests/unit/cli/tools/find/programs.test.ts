@@ -2,9 +2,9 @@ import executables from 'which';
 import { join } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { readJson } from '#cli/parsers/json.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { parseJsonFile } from '#cli/parsers/json.ts';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { buildProgramPin } from '#tests/setup/pins.ts';
 import { installCompiler } from '#tests/setup/install.ts';
@@ -31,7 +31,7 @@ test("inspectTool finds the project compiler, and the original repository's comp
     await installCompiler(work);
     const compiler = toolDeclaration(configurationManifests().values(), 'tsc');
     const projectPath = join(work, 'node_modules/typescript/package.json');
-    const project = packageJsonSchema.parse(readJson(projectPath, await readFile(projectPath, 'utf8')));
+    const project = packageJsonSchema.parse(parseJsonFile(projectPath, await readFile(projectPath, 'utf8')));
     expect(
         inspectTool(
             {

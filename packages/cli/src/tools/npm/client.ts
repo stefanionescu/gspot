@@ -11,21 +11,21 @@ import { NPM_PROGRAM, NPM_CLIENT_DETECTION } from '#cli/config/tools/npm.ts';
 import type { NpmClient, NpmClientIdentity } from '#cli/types/parsers/dependency-files.ts';
 
 import {
-    npmClientSchema,
-    declaredNpmClient,
+    packageManagerSchema,
     npmClientIdentitySchema,
-    npmClientDeclarationSchema,
+    readPackageManagerDeclaration,
+    packageManagerDeclarationSchema,
 } from '#cli/tools/npm/package-manager.ts';
 
 // Read the package manager from repository declarations and lockfiles.
 async function detectedNpmClient(root: string, candidates: string[]) {
     for (const path of candidates) {
         const manifest = readPackageJson(root, path);
-        const declared = manifest === undefined ? undefined : declaredNpmClient(manifest);
+        const declared = manifest === undefined ? undefined : readPackageManagerDeclaration(manifest);
         if (declared !== undefined) return declared;
         const detected = await detectPackageManager(join(root, dirname(path)), NPM_CLIENT_DETECTION);
         if (detected !== undefined)
-            return npmClientDeclarationSchema.parse({ name: detected.name, version: detected.version });
+            return packageManagerDeclarationSchema.parse({ name: detected.name, version: detected.version });
     }
     return { name: NPM_PROGRAM, version: undefined };
 }
@@ -54,7 +54,7 @@ export async function selectNpmClient(root: string, trackedPaths: string[]): Pro
                 'installation',
                 `The tool project needs an exact ${name} version, such as ${name}@1.2.3, and package.json declares ${version}. Write an exact packageManager version.`,
             );
-        return npmClientSchema.parse({ name, version });
+        return packageManagerSchema.parse({ name, version });
     }
     return npmClientIdentitySchema.parse({ name });
 }
@@ -76,5 +76,5 @@ export function readNpmClientVersion(root: string, client: NpmClientIdentity, ti
         timeoutSeconds: timeoutSeconds,
     });
     if (result.code !== 0) throw new GspotError('tool', `Cannot determine the ${name} version for the tool project.`);
-    return npmClientSchema.parse({ name, version: result.stdout.trim() });
+    return packageManagerSchema.parse({ name, version: result.stdout.trim() });
 }

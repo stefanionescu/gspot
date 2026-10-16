@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { parseGitBlobs, parseTreeEntries, parseIndexEntries, parseIndexRevision } from '#cli/parsers/git.ts';
+import { parseGitBlobs, parseTreeEntries, stripIndexStages, parseIndexEntries } from '#cli/parsers/git.ts';
 import { SHA1, SHA256, ENTRY_PATH, BINARY_BLOB, INVALID_BLOBS, INVALID_ENTRIES } from '#tests/config/git.ts';
 
 test('tree entries keep full object IDs, modes and unquoted paths', () => {
@@ -24,7 +24,7 @@ for (const { name, output, message } of INVALID_ENTRIES)
                 ? Buffer.from(output)
                 : Buffer.concat([Buffer.from(output.prefix), Buffer.from(output.bytes)]);
         if (name === 'unmerged index stage') {
-            expect(() => parseIndexRevision(parseIndexEntries(bytes.toString('utf8')))).toThrow(message);
+            expect(() => stripIndexStages(parseIndexEntries(bytes.toString('utf8')))).toThrow(message);
         } else {
             if (typeof output === 'string') expect(() => parseIndexEntries(output)).toThrow(message);
             const tab = bytes.indexOf(9);

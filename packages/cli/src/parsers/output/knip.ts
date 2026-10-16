@@ -55,7 +55,7 @@ const knipReportSchema = z.strictObject({
  * @param help the check help text.
  * @returns categorized findings, including each positioned member of a grouped issue.
  */
-export function knipFindings(check: string, text: string, help: string): Finding[] {
+export function parseKnipFindings(check: string, text: string, help: string): Finding[] {
     let report: KnipReport;
     try {
         report = knipReportSchema.parse(JSON.parse(text));

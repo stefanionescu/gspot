@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { statSync } from 'node:fs';
 import satisfies from 'spdx-satisfies';
-import { readJson } from '#cli/parsers/json.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { join, dirname, basename } from 'node:path';
 import parseExpression from 'spdx-expression-parse';
+import { parseJsonFile } from '#cli/parsers/json.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
@@ -20,7 +20,7 @@ import { configurationTableSchemas } from '#cli/settings/schema/tables.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { type LicensedPackage, type ProjectLicenses } from '#cli/types/checks/general.ts';
 import { PIP_LICENSES_COMMAND, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
-import { packageJsonSchema, normalizedPythonIdentity } from '#cli/parsers/dependency-files.ts';
+import { packageJsonSchema, normalizePythonIdentity } from '#cli/parsers/dependency-files.ts';
 
 import {
     NODE_MODULES,
@@ -86,7 +86,7 @@ async function scanLicenses(input: CheckInput) {
     for (const { manifest, selection, skip } of projects) {
         if (skip !== undefined) continue;
         if (basename(manifest) === 'package.json') {
-            const project = readJson(
+            const project = parseJsonFile(
                 manifest,
                 readSource(input.root, manifest, input.reads).toString('utf8'),
                 packageJsonSchema,
@@ -100,7 +100,7 @@ async function scanLicenses(input: CheckInput) {
         const scanner =
             basename(manifest) === 'package.json'
                 ? { scan: javascriptLicenses, packageKey: (name: string) => name }
-                : { scan: pythonLicenses, packageKey: normalizedPythonIdentity };
+                : { scan: pythonLicenses, packageKey: normalizePythonIdentity };
         const selected = {
             ...input,
             selection,

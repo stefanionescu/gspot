@@ -13,7 +13,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { HTTP_URL } from '#cli/config/tools/diagnostics.ts';
 import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
-import { toolProjectLockfile } from '#cli/tools/npm/tool-project.ts';
+import { selectLockfileName } from '#cli/tools/npm/tool-project.ts';
 import { PNPM_ROOT_IMPORTER } from '#cli/config/parsers/lockfiles.ts';
 import type { BunPackage, NpmClientRun } from '#cli/types/tools/project.ts';
 import type { NpmClient, DependencyMap } from '#cli/types/parsers/dependency-files.ts';
@@ -201,7 +201,7 @@ export function lockfileMatches(name: NpmClient['name'], content: string, depend
  * @param root0.lockfile the resolved lockfile bytes.
  */
 export function stripRegistryUrls(work: string, client: NpmClient, { env, lockfile }: NpmClientRun): void {
-    const lockfilePath = join(work, toolProjectLockfile(client.name));
+    const lockfilePath = join(work, selectLockfileName(client.name));
     if (client.name === 'bun') writeFileSync(lockfilePath, stripBunRegistryUrls(lockfile, env));
     if (client.name !== 'yarn' || isYarnBerry(client)) return;
     const registry = env[`${NPM_SETTING_PREFIX}registry`];

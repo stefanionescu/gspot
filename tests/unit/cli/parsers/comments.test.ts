@@ -1,11 +1,13 @@
 import { test, expect } from 'bun:test';
-import { commentText, parseComments } from '#cli/parsers/comments.ts';
+import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
 import { MARKER_COMMENT, COMMENT_BOUNDARIES } from '#tests/config/comments.ts';
 
 // Find comments that start with the marker. Skip markers inside strings and block values.
 async function markedLines(path: string, source: string): Promise<number[]> {
     const comments = await parseComments(path, source);
-    return comments.filter((comment) => MARKER_COMMENT.test(commentText(comment.text))).map((comment) => comment.line);
+    return comments
+        .filter((comment) => MARKER_COMMENT.test(stripCommentEnd(comment.text)))
+        .map((comment) => comment.line);
 }
 
 test('a Bash comment after a quoted apostrophe is a comment, and quoted marker text is not', async () => {

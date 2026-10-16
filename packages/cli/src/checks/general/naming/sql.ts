@@ -1,10 +1,10 @@
-import { sqlTokens } from '#cli/parsers/sql/lexer.ts';
 import { computePosition } from '#cli/system/text.ts';
+import { listSqlTokens } from '#cli/parsers/sql/lexer.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { SqlNamed, Identifier } from '#cli/types/checks/general.ts';
 import { createIdentifier } from '#cli/checks/general/naming/declarations.ts';
-import { nodesOf, partsOf, parseSqlFile, readStatement } from '#cli/parsers/sql/postgres.ts';
 import type { SqlFile, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
+import { parseSqlFile, listNameParts, readStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 
 import {
     SQL_NAME_TOKEN,
@@ -15,10 +15,10 @@ import {
 } from '#cli/config/parsers/sql.ts';
 
 function addedColumns({ fields }: SqlStatementView<'AlterTableStmt'>): SqlNamed[] {
-    return nodesOf(fields.cmds, 'AlterTableCmd')
+    return listNodeFields(fields.cmds, 'AlterTableCmd')
         .filter((command) => command.subtype === 'AT_AddColumn')
         .flatMap((command) =>
-            nodesOf(command.def === undefined ? [] : [command.def], 'ColumnDef').map((column) => ({
+            listNodeFields(command.def === undefined ? [] : [command.def], 'ColumnDef').map((column) => ({
                 category: 'columns',
                 name: column.colname ?? '',
                 ...(column.location === undefined ? {} : { location: column.location }),
@@ -34,7 +34,7 @@ const NAME_READERS: SqlStatementReaders<SqlNamed[]> = {
             name: fields.relation?.relname ?? '',
             ...(fields.relation?.location === undefined ? {} : { location: fields.relation.location }),
         },
-        ...nodesOf(fields.tableElts, 'ColumnDef').map<SqlNamed>((column) => ({
+        ...listNodeFields(fields.tableElts, 'ColumnDef').map<SqlNamed>((column) => ({
             category: 'columns',
             name: column.colname ?? '',
             ...(column.location === undefined ? {} : { location: column.location }),
@@ -57,7 +57,7 @@ const NAME_READERS: SqlStatementReaders<SqlNamed[]> = {
 function parameterSpans(source: string, start: number): { spans: number[]; end: number } {
     const spans: number[] = [];
     const literals = new Map(
-        [...sqlTokens(source.slice(start))].map((token) => [token.start + start, token.end + start]),
+        [...listSqlTokens(source.slice(start))].map((token) => [token.start + start, token.end + start]),
     );
     let span = start;
     let depth = 0;
@@ -91,7 +91,7 @@ function functionNames(statement: SqlStatementView<'CreateFunctionStmt'>, source
     const names: SqlNamed[] = [
         {
             category: 'functions',
-            name: partsOf(statement.fields.funcname).at(-1) ?? '',
+            name: listNameParts(statement.fields.funcname).at(-1) ?? '',
             offset: start + (lastPart?.index ?? 0),
         },
     ];
@@ -100,7 +100,7 @@ function functionNames(statement: SqlStatementView<'CreateFunctionStmt'>, source
     const output = SQL_TABLE_PARAMETERS.exec(source.slice(input.end));
     const spans =
         output === null ? input.spans : [...input.spans, ...parameterSpans(source, input.end + output[0].length).spans];
-    for (const [index, parameter] of nodesOf(statement.fields.parameters, 'FunctionParameter').entries()) {
+    for (const [index, parameter] of listNodeFields(statement.fields.parameters, 'FunctionParameter').entries()) {
         const span = spans[index];
         if (span === undefined) continue;
         names.push({
@@ -182,7 +182,7 @@ export async function sqlIdentifiers(file: string, source: string, reads?: ReadC
         );
     // eslint-disable-next-line unicorn/prefer-spread -- reason: SQL offsets count UTF-16 code units, including each surrogate half.
     const characters = parsed.source.split('');
-    for (const token of sqlTokens(parsed.source))
+    for (const token of listSqlTokens(parsed.source))
         if (token.kind === 'line-comment' || token.kind === 'block-comment')
             characters.fill(' ', token.start, token.end);
     const lexicalSource = characters.join('');

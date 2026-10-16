@@ -1,9 +1,9 @@
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
 import { visit } from 'unist-util-visit';
-import { readJson } from '#cli/parsers/json.ts';
 import { statSync, readdirSync } from 'node:fs';
 import { findingAt } from '#cli/checks/finding.ts';
+import { parseJsonFile } from '#cli/parsers/json.ts';
 import { parseMiseTasks } from '#cli/parsers/mise.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { readSource } from '#cli/system/files/reads.ts';
@@ -89,7 +89,11 @@ function miseTasks(input: CheckInput, file: string): string[] {
 
 function packageScripts(input: CheckInput, file: string): string[] | undefined {
     try {
-        const manifest = readJson(file, readSource(input.root, file, input.reads).toString('utf8'), packageJsonSchema);
+        const manifest = parseJsonFile(
+            file,
+            readSource(input.root, file, input.reads).toString('utf8'),
+            packageJsonSchema,
+        );
         return manifest.scripts === undefined ? [] : Object.keys(manifest.scripts);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;

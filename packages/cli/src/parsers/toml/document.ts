@@ -7,11 +7,11 @@ import { isRecord, getValueAt, normalizeTables } from '#cli/system/values.ts';
 import type { TomlInput, TomlSyntax, TomlComments, TomlTextChunk, TomlTableOptions } from '#cli/types/parsers/toml.ts';
 
 import {
-    tomlRange,
-    tomlSyntax,
+    getTomlRange,
     addTomlComment,
-    emitTomlComments,
-    tomlCommentAnchors,
+    parseTomlSyntax,
+    insertTomlComments,
+    listAnchoredComments,
 } from '#cli/parsers/toml/comments.ts';
 
 // The TOML table a key path's parent names, creating missing parents before setting a value.
@@ -47,13 +47,13 @@ function findTomlTable(
  * @param values the resulting values.
  * @returns the edited document with its comments.
  */
-function patchToml(original: TomlSyntax, values: Record<string, unknown>): string {
+function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>): string {
     const patched = patch(original.document.toTomlString, values, PATCH_FORMAT);
-    const current = tomlSyntax(patched, values);
-    const unmatched = new Set(tomlCommentAnchors(current));
+    const current = parseTomlSyntax(patched, values);
+    const unmatched = new Set(listAnchoredComments(current));
     const retained = new Set(current.entries.map(({ kind, path }) => JSON.stringify([kind, ...path])));
     const comments: TomlComments = new Map();
-    const changed = tomlCommentAnchors(original)
+    const changed = listAnchoredComments(original)
         .map((source) => {
             const found = [...unmatched].find((candidate) => candidate.comment.raw === source.comment.raw);
             if (found !== undefined) unmatched.delete(found);
@@ -65,7 +65,7 @@ function patchToml(original: TomlSyntax, values: Record<string, unknown>): strin
             authored ??
             original.entries.find(
                 (entry) =>
-                    tomlRange(entry.node)[0] > tomlRange(comment)[1] &&
+                    getTomlRange(entry.node)[0] > getTomlRange(comment)[1] &&
                     retained.has(JSON.stringify([entry.kind, ...entry.path])),
             );
         if (owner === undefined) return [];
@@ -73,13 +73,13 @@ function patchToml(original: TomlSyntax, values: Record<string, unknown>): strin
         if (!retained.has(key)) return [];
         addTomlComment(comments, owner.kind, owner.path, comment, authored === undefined ? 'free' : 'owned');
         if (found === undefined) return [];
-        const [start, end] = tomlRange(found.comment);
+        const [start, end] = getTomlRange(found.comment);
         return [{ start, end: end + Number(patched[end] === '\n'), text: '' }];
     });
     for (const entry of current.entries) {
-        const text = emitTomlComments(comments, entry.kind, entry.path, '');
+        const text = insertTomlComments(comments, entry.kind, entry.path, '');
         if (text === '') continue;
-        const start = tomlRange(entry.node)[0];
+        const start = getTomlRange(entry.node)[0];
         chunks.push({ start, end: start, text: text + '\n' });
     }
     let position = 0;
@@ -102,10 +102,10 @@ function patchToml(original: TomlSyntax, values: Record<string, unknown>): strin
  */
 export function openTomlFile(input: TomlInput): EditableFile {
     const document: Record<string, unknown> = parseTomlFile(input);
-    const original = tomlSyntax(input.source, document);
+    const original = parseTomlSyntax(input.source, document);
     return {
         format: 'toml',
-        value: (path) => getValueAt(document, path),
+        getValue: (path) => getValueAt(document, path),
         set(path, value) {
             if (path.some((key) => typeof key !== 'string')) throw new Error(`${input.path} requires TOML table keys.`);
             const key = path.at(-1);
@@ -125,8 +125,8 @@ export function openTomlFile(input: TomlInput): EditableFile {
                     configurable: true,
                 });
         },
-        text() {
-            return patchToml(original, document);
+        getText() {
+            return buildPatchedToml(original, document);
         },
     };
 }

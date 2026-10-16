@@ -5,10 +5,10 @@ import { stripVTControlCharacters } from 'node:util';
 import { checkInput } from '#cli/execution/built-in.ts';
 import { readSource } from '#cli/system/files/reads.ts';
 import { allChecks } from '#cli/configurations/manifests.ts';
-import { typescriptNodes } from '#cli/parsers/typescript.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
+import { listTypescriptNodes } from '#cli/parsers/typescript.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
@@ -64,7 +64,7 @@ function literalValue(value: ts.Expression): ts.Expression {
  */
 function nextSettingsFindings(input: Pick<CheckInput, 'check'>, path: string, text: string): Finding[] {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
-    return typescriptNodes(source)
+    return listTypescriptNodes(source)
         .filter((node) => ts.isPropertyAssignment(node))
         .flatMap((node): Finding[] => {
             const name = propertyName(node.name);

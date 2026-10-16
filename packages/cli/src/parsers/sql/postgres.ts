@@ -2,15 +2,15 @@
 // SQL payloads use PostgreSQL's node union; procedural output has a separate external shape.
 import type { Parsed } from '#cli/types/errors.ts';
 import { computePosition } from '#cli/system/text.ts';
-import { maskPsqlSyntax } from '#cli/parsers/sql/lexer.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
+import { replacePsqlSyntax } from '#cli/parsers/sql/lexer.ts';
 import type { Node, RawStmt, ParseResult } from '@pgsql/types';
 import type { SqlFile, SqlNodeFields, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
 
 const SQL_MEMO = { create: () => new Map<string, Promise<SqlFile>>() };
 
-function statementView(bytes: Buffer, statement: RawStmt): SqlStatementView[] {
+function buildStatementViews(bytes: Buffer, statement: RawStmt): SqlStatementView[] {
     if (statement.stmt === undefined) return [];
     const start = bytes.subarray(0, statement.stmt_location ?? 0).toString('utf8').length;
     return Object.entries(statement.stmt).map(([kind, fields]) => ({ kind, fields, start }) as SqlStatementView);
@@ -22,7 +22,7 @@ function statementView(bytes: Buffer, statement: RawStmt): SqlStatementView[] {
  * @returns the statements, or the parse error with its position.
  */
 async function parseSqlText(text: string): Promise<SqlFile> {
-    const prepared = maskPsqlSyntax(text);
+    const prepared = replacePsqlSyntax(text);
     const source = prepared.text;
     const variables = prepared.variables;
     if (source.trim() === '') return { source, variables, statements: [], error: undefined };
@@ -47,7 +47,7 @@ async function parseSqlText(text: string): Promise<SqlFile> {
     return {
         source,
         variables,
-        statements: statements.flatMap((statement) => statementView(bytes, statement)),
+        statements: statements.flatMap((statement) => buildStatementViews(bytes, statement)),
         error: undefined,
     };
 }
@@ -74,7 +74,7 @@ export async function parsePostgres(text: string): Promise<Parsed<ParseResult, {
  * @param kind the wanted kind.
  * @returns that kind's typed fields, or nothing for a different kind.
  */
-export function nodeOf<Kind extends keyof SqlNodeFields>(
+export function getNodeFields<Kind extends keyof SqlNodeFields>(
     node: Node | undefined,
     kind: Kind,
 ): SqlNodeFields[Kind] | undefined {
@@ -88,9 +88,12 @@ export function nodeOf<Kind extends keyof SqlNodeFields>(
  * @param kind the wanted kind.
  * @returns the matching payloads in source order.
  */
-export function nodesOf<Kind extends keyof SqlNodeFields>(list: Node[] | undefined, kind: Kind): SqlNodeFields[Kind][] {
+export function listNodeFields<Kind extends keyof SqlNodeFields>(
+    list: Node[] | undefined,
+    kind: Kind,
+): SqlNodeFields[Kind][] {
     return (list ?? []).flatMap((node) => {
-        const fields = nodeOf(node, kind);
+        const fields = getNodeFields(node, kind);
         return fields === undefined ? [] : [fields];
     });
 }
@@ -116,8 +119,8 @@ export function readStatement<Result, Arguments extends unknown[]>(
  * @param list the optional list of String nodes.
  * @returns each part in source order.
  */
-export function partsOf(list: Node[] | undefined): string[] {
-    return nodesOf(list, 'String').map((node) => node.sval ?? '');
+export function listNameParts(list: Node[] | undefined): string[] {
+    return listNodeFields(list, 'String').map((node) => node.sval ?? '');
 }
 
 /**

@@ -1,6 +1,6 @@
 // The Bash interpreter contract: shebang, strict mode, entry point, library shape, and temporary cleanup.
-import { codeLines } from '#cli/parsers/bash.ts';
 import { findingAt } from '#cli/checks/finding.ts';
+import { listCodeLines } from '#cli/parsers/bash.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
@@ -88,7 +88,7 @@ function fileFindings(input: CheckInput, file: ScriptFile, isConfigOwner: boolea
     };
     if (!BASH_SHEBANGS.has(file.lines[0] ?? ''))
         report(1, 'shebang', `The first line is not one of ${[...BASH_SHEBANGS].join(' or ')}.`);
-    const code = codeLines(file.code);
+    const code = listCodeLines(file.code);
     if (file.isExecutable) {
         strictModeFindings(code, report);
         entryFindings(file, code, report);
