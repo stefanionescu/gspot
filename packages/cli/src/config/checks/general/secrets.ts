@@ -3,7 +3,8 @@ export const GITLEAKS_LOG_OPTIONS = '--no-walk --diff-merges=separate';
 
 /** A key line in an environment file, trimmed: the key before the equals sign. */
 export const ENV_KEY_LINE = /^(?:export )?(?<key>[A-Z][A-Z0-9_]*)=/u;
-export const TRUFFLEHOG_GIT_COMMAND = ['trufflehog', 'git'] as const;
+// TruffleHog reads file:///D:/repo as the path /D:/repo, which Windows refuses. file://. names the working folder.
+export const TRUFFLEHOG_GIT_COMMAND = ['trufflehog', 'git', 'file://.'] as const;
 export const TRUFFLEHOG_FLAGS = [
     '--results=verified',
     '--json',

@@ -1,5 +1,4 @@
 import { posix } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { readGitText } from '#cli/system/git.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
@@ -100,15 +99,7 @@ export async function checkSecretsTrufflehogPushed(session: Session, planned: Pl
     const head = await readGitText(session.root, ['rev-parse', 'HEAD'], { cancelSignal: session.cancelSignal });
     const since = planned.base ?? (await readPushBase(session.root, session.cancelSignal));
     const result = await runCheckCommand(session, planned, {
-        command: [
-            ...TRUFFLEHOG_GIT_COMMAND,
-            pathToFileURL(session.root).href,
-            '--branch',
-            head.trim(),
-            '--since-commit',
-            since,
-            ...TRUFFLEHOG_FLAGS,
-        ],
+        command: [...TRUFFLEHOG_GIT_COMMAND, '--branch', head.trim(), '--since-commit', since, ...TRUFFLEHOG_FLAGS],
     });
     return { ...result, duration: performance.now() - started };
 }
