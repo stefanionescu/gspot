@@ -1,5 +1,7 @@
 # Docker
 
+Read this rule when you change a Dockerfile, a Compose file, or `.dockerignore`.
+
 ## Image inputs
 
 Select a base image that supports the application's runtime, target architecture, native libraries,

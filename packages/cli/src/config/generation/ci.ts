@@ -112,3 +112,14 @@ export {
     GITHUB_MANUAL_CONDITION,
     GITLAB_MANUAL_CONDITION,
 };
+
+export const CI_NODE = 'node@24';
+export const CI_STEP_NAMES = {
+    checkout: 'Check out source',
+    cache: 'Restore tool caches',
+    mise: 'Set up mise',
+    setup: 'Set up the project',
+    install: 'Install gspot tools',
+    check: 'Check',
+    manual: 'Manual checks',
+} as const;

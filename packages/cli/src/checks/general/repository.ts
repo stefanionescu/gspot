@@ -1,32 +1,32 @@
 import { posix } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
-import { BYTES_PER_KB } from '#cli/config/units.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { findScope } from '#cli/repository/scopes.ts';
+import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { LFS_FILTER } from '#cli/config/repository/inventory.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 
 /**
- * One finding per tracked file over `limits.file_kilobytes` outside generated, vendored, and Git Large File Storage paths.
- * @param input the check input.
+ * One finding per tracked file over `repository.max_file_kilobytes` outside generated, vendored, and Git Large File Storage paths.
+ * @param input the full source inventory, Git attributes, and per-scope size ceiling.
  * @returns the findings.
  */
-export function largeFiles(input: CheckInput): Finding[] {
-    const limitKilobytes = input.scope.view.limit('file_kilobytes');
+export function checkLargeFiles(input: CheckInput): Finding[] {
+    const limitKilobytes = input.scope.view.options('repository').max_file_kilobytes;
     return input.repositoryFiles
         .filter(
             (file) =>
                 file.kind !== 'generated' &&
                 file.kind !== 'vendored' &&
-                file.size > limitKilobytes * BYTES_PER_KB &&
+                file.size > limitKilobytes * BYTES_PER_KILOBYTE &&
                 input.attributes.get(file.path)?.['filter'] !== LFS_FILTER,
         )
         .map((file) =>
-            findingAt(
+            buildFinding(
                 input,
                 { file: file.path, line: 1 },
                 'size',
-                `${String(Math.round(file.size / BYTES_PER_KB))} kB is over the ${String(limitKilobytes)} kB limit; mark it as generated or vendored in .gitattributes, move it to LFS, or ignore this finding with a reason.`,
+                `${String(Math.round(file.size / BYTES_PER_KILOBYTE))} kB is over the ${String(limitKilobytes)} kB limit; mark it as generated or vendored in .gitattributes, move it to LFS, or ignore this finding with a reason.`,
             ),
         );
 }
@@ -36,7 +36,7 @@ export function largeFiles(input: CheckInput): Finding[] {
  * @param input the check input with the shared index and resolved selections.
  * @returns one finding per matching indexed path.
  */
-export function trackedFiles(input: CheckInput): Finding[] {
+export function checkIgnoredFilesTracked(input: CheckInput): Finding[] {
     const scopes = input.selections.map(({ scope }) => scope);
     const matchers = input.selections.map(({ scope, selected, view }) => {
         const matches = buildPathMatcher(
@@ -65,7 +65,7 @@ export function trackedFiles(input: CheckInput): Finding[] {
             ),
         )
         .map((path) =>
-            findingAt(
+            buildFinding(
                 input,
                 { file: path, line: 1 },
                 'tracked-file',

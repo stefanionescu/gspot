@@ -1,4 +1,4 @@
-import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
+import { HOOKS_PATH } from '#cli/config/system/locations.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 
 export const COLUMN_GAP = 2;
@@ -9,7 +9,7 @@ export const REASON_WIDTH = 12;
 
 /** The plan row of the hooks folder. */
 export const HOOKS_ROW = {
-    path: HOOKS_DIRECTORY,
+    path: HOOKS_PATH,
     note: 'gspot install points core.hooksPath here; a repository that already runs hooks gets the lines to add instead',
 } as const;
 
@@ -30,24 +30,11 @@ export const PRETTIER_DEFAULTS = { tabWidth: 2, printWidth: 80, singleQuote: fal
 
 export const EDITORCONFIG_FILE = '.editorconfig';
 
-export const PRETTIER_FILES = [
-    '.prettierrc',
-    '.prettierrc.json',
-    '.prettierrc.js',
-    '.prettierrc.cjs',
-    '.prettierrc.mjs',
-    'prettier.config.js',
-    'prettier.config.cjs',
-    'prettier.config.mjs',
-] as const;
-
 /** Instructions for the CI files shown in the initialization plan. */
 export const CI_FILE_NOTES = {
     [GITHUB_WORKFLOW]: 'check workflow',
     [GITLAB_WORKFLOW]: `add include: [{ local: ${GITLAB_WORKFLOW} }] to .gitlab-ci.yml`,
 } as const;
-
-export const NO_CONFIGURATIONS = 'none';
 
 export const REMOTE_URL_SCHEME = /^(?:https?|ssh):\/\//u;
 export const REMOTE_URL_USER = /^[^@/]+@/u;
@@ -63,3 +50,10 @@ export const INIT_TEMPLATE_DEFAULTS = {
     rules: { enabled: true },
     ci: undefined,
 } as const;
+
+export const EDITORCONFIG_SECTION = /^\s*\[(.+)\]\s*$/u;
+
+export const INIT_INSTALL_NOTES: ReadonlySet<string> = new Set([
+    'Git hooks changed. Run: gspot install',
+    'Tool dependencies need installation. Run: gspot install',
+]);

@@ -1,14 +1,14 @@
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { findQuotedEnd } from '#cli/parsers/comments.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { toolOutputDetail } from '#cli/checks/run/command/output.ts';
-import { type Finding, type CheckInput, type CheckOutcome } from '#cli/types/execution/check.ts';
-import { type Mount, type NginxMounts, type DirectiveScan } from '#cli/types/checks/infrastructure.ts';
+import { formatOutputTail } from '#cli/checks/run/command/output.ts';
+import type { Mount, NginxMounts, DirectiveScan } from '#cli/types/checks/infrastructure.ts';
+import { type Finding, type CheckInput, type BuiltInCheckResult } from '#cli/types/checks/run/check.ts';
 
 import {
     NGINX_CONF,
@@ -39,10 +39,10 @@ import {
     OPENSSL_CERTIFICATE_FLAG,
 } from '#cli/config/checks/infrastructure/nginx.ts';
 
-// Include paths use the main configuration directory, matching nginx prefix semantics.
-function includedFiles(input: CheckInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
+// Include paths use the main settings folder, matching nginx prefix semantics.
+function listIncludedFiles(input: CheckInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
     const included: Pick<Mount, 'path' | 'target'>[] = [];
-    for (const [name, value] of parseDirectives(text)) {
+    for (const [name, value] of parseNginxDirectives(text)) {
         if (name !== 'include' || value === undefined || value.includes('$')) continue;
         const target = posix.resolve(NGINX_FOLDER, value);
         const isIncluded = picomatch(posix.normalize(posix.join(base, posix.relative(NGINX_FOLDER, target))));
@@ -53,46 +53,55 @@ function includedFiles(input: CheckInput, text: string, base: string): Pick<Moun
 }
 
 function copyNginxFiles(input: CheckInput, path: string, work: string): Map<string, Mount> {
-    const directory = mkdtempSync(join(work, 'configuration-'));
+    const folder = mkdtempSync(join(work, 'configuration-'));
     const configurations = new Map<string, Mount>();
     const pending = [{ path, target: NGINX_MAIN_TARGET }];
     const base = posix.dirname(path);
     for (const entry of pending) {
         if (configurations.has(entry.target)) continue;
-        const source = join(directory, `${String(configurations.size)}.conf`);
+        const source = join(folder, `${String(configurations.size)}.conf`);
         const bytes = readCachedBytes(input.reads, entry.path);
         writeFileSync(source, bytes);
         const text = bytes.toString('utf8');
         configurations.set(entry.target, { ...entry, source, text });
-        pending.push(...includedFiles(input, text, base));
+        pending.push(...listIncludedFiles(input, text, base));
     }
     return configurations;
 }
 
-function syntaxOutcome(
+function buildSyntaxResult(
     input: CheckInput,
     path: string,
     configurations: Map<string, Mount>,
-    diagnostic: string,
-): CheckOutcome {
-    const location = ERROR_LOCATION.exec(diagnostic)?.groups;
+    message: string,
+): BuiltInCheckResult {
+    const location = ERROR_LOCATION.exec(message)?.groups;
     const { file: target = '', line = '1' } = location === undefined ? {} : location;
     const file = configurations.get(target)?.path ?? path;
     return {
-        findings: [findingAt(input, { file, line: Number(line) }, 'syntax', diagnostic)],
+        findings: [buildFinding(input, { file, line: Number(line) }, 'syntax', message)],
         files: configurations.has(target) ? [file] : [],
     };
 }
 
-async function testNginxFile(input: CheckInput, path: string, work: string, image: string): Promise<CheckOutcome> {
+async function testNginxFile(
+    input: CheckInput,
+    path: string,
+    work: string,
+    image: string,
+): Promise<BuiltInCheckResult> {
     const configurations = copyNginxFiles(input, path, work);
     const mounts = {
         configs: [...configurations.values()],
         certificate: join(work, NGINX_CERTIFICATE_FILE),
         key: join(work, NGINX_KEY_FILE),
     };
-    const argv = testArguments([...configurations.values()].map((entry) => entry.text).join('\n'), mounts, image);
-    const result = await runCheckTool(input, ['docker', ...argv], { cwd: input.root });
+    const commandArguments = buildNginxTestArguments(
+        [...configurations.values()].map((entry) => entry.text).join('\n'),
+        mounts,
+        image,
+    );
+    const result = await runCheckTool(input, ['docker', ...commandArguments], { cwd: input.root });
     if (result.code === 0) {
         const parsed = [...result.stdout.matchAll(/^# configuration file (?<path>[^\n]+):$/gmu)]
             .map((match) => match.groups?.['path'])
@@ -107,14 +116,14 @@ async function testNginxFile(input: CheckInput, path: string, work: string, imag
             }),
         };
     }
-    const diagnostic = result.stderr.split('\n').find((line) => line.includes('[emerg]'));
-    if (result.code !== 1 || diagnostic === undefined)
+    const errorLine = result.stderr.split('\n').find((line) => line.includes('[emerg]'));
+    if (result.code !== 1 || errorLine === undefined)
         throw new Error(`The nginx run failed (exit ${String(result.code)}): ${result.stderr.trim()}`);
-    return syntaxOutcome(input, path, configurations, diagnostic);
+    return buildSyntaxResult(input, path, configurations, errorLine);
 }
 
 // The index past an escape pair or a braced variable that starts at at, or `-1` when neither starts there.
-function protectedUnitEnd(text: string, at: number): number {
+function findProtectedUnitEnd(text: string, at: number): number {
     const char = text[at];
     if (char === '\\') return at + 1 < text.length ? at + ESCAPE_LENGTH : -1;
     if (char !== '$' || text[at + 1] !== '{') return -1;
@@ -123,18 +132,18 @@ function protectedUnitEnd(text: string, at: number): number {
 }
 
 // The index past one unit of a bare word: an escape pair, a braced variable, or one plain character.
-function unitEnd(text: string, at: number, stops: RegExp): number {
-    const special = protectedUnitEnd(text, at);
+function findUnitEnd(text: string, at: number, stops: RegExp): number {
+    const special = findProtectedUnitEnd(text, at);
     if (special !== -1) return special;
     return stops.test(text[at] ?? '') ? at : at + 1;
 }
 
 // The index past the bare word that starts at at, or at itself when no word starts there.
-function wordEnd(text: string, at: number): number {
-    let end = unitEnd(text, at, WORD_START_STOPS);
+function findWordEnd(text: string, at: number): number {
+    let end = findUnitEnd(text, at, WORD_START_STOPS);
     if (end === at) return at;
     while (end < text.length) {
-        const next = unitEnd(text, end, WORD_STOPS);
+        const next = findUnitEnd(text, end, WORD_STOPS);
         if (next === end) break;
         end = next;
     }
@@ -142,7 +151,7 @@ function wordEnd(text: string, at: number): number {
 }
 
 // A comment: the hash to the end of the line.
-function nginxComment(text: string, at: number): DirectiveScan {
+function scanComment(text: string, at: number): DirectiveScan {
     const end = text.indexOf('\n', at);
     const stop = end === -1 ? text.length : end;
     return { token: undefined, end: stop };
@@ -152,14 +161,14 @@ function nginxComment(text: string, at: number): DirectiveScan {
 function scanAt(text: string, at: number): DirectiveScan {
     const char = text[at] ?? '';
     if (/\s/u.test(char)) return { token: undefined, end: at + 1 };
-    if (char === '#') return nginxComment(text, at);
+    if (char === '#') return scanComment(text, at);
     if (NGINX_PUNCTUATION.has(char)) return { token: char, end: at + 1 };
-    const end = char === '"' || char === "'" ? findQuotedEnd(text, at) : wordEnd(text, at);
+    const end = char === '"' || char === "'" ? findQuotedEnd(text, at) : findWordEnd(text, at);
     return end <= at ? { token: undefined, end: at + 1 } : { token: text.slice(at, end), end };
 }
 
 // The tokens of an nginx configuration: comments, punctuation, quoted arguments, and bare words.
-function tokenize(text: string): string[] {
+function splitTokens(text: string): string[] {
     const found: string[] = [];
     let at = 0;
     while (at < text.length) {
@@ -177,11 +186,11 @@ function tokenize(text: string): string[] {
  * @param mounts.configs the captured tool files and container paths.
  * @param mounts.certificate the throwaway certificate.
  * @param mounts.key the throwaway key.
- * @param image the nginx image.
- * @returns the argv after docker.
+ * @param image the container tag that supplies the nginx configuration parser.
+ * @returns the command arguments after docker.
  */
-function testArguments(text: string, mounts: NginxMounts, image: string): string[] {
-    const parsed = parseDirectives(text);
+function buildNginxTestArguments(text: string, mounts: NginxMounts, image: string): string[] {
+    const parsed = parseNginxDirectives(text);
     const hosts = new Set(
         parsed.flatMap(([name, value]) => {
             if (value === undefined || value.includes('$')) return [];
@@ -214,10 +223,10 @@ function testArguments(text: string, mounts: NginxMounts, image: string): string
  * @param text the nginx configuration text.
  * @returns each directive as its name followed by its arguments.
  */
-function parseDirectives(text: string): [string, ...string[]][] {
+function parseNginxDirectives(text: string): [string, ...string[]][] {
     const found: [string, ...string[]][] = [];
     let directive: string[] = [];
-    for (const token of tokenize(text)) {
+    for (const token of splitTokens(text)) {
         switch (token) {
             case '}': {
                 directive = [];
@@ -225,8 +234,8 @@ function parseDirectives(text: string): [string, ...string[]][] {
             }
             case ';':
             case '{': {
-                const [name, ...args] = directive;
-                if (name !== undefined) found.push([name, ...args]);
+                const [name, ...commandArguments] = directive;
+                if (name !== undefined) found.push([name, ...commandArguments]);
                 directive = [];
                 break;
             }
@@ -244,10 +253,10 @@ function parseDirectives(text: string): [string, ...string[]][] {
 
 /**
  * Tests every tracked nginx.conf with the server's own parser.
- * @param input the check input.
+ * @param input the selected configuration files and container image settings.
  * @returns one finding for each file nginx refuses.
  */
-export async function nginxConfigTest(input: CheckInput): Promise<CheckOutcome> {
+export async function checkNginxSyntax(input: CheckInput): Promise<BuiltInCheckResult> {
     const image = input.scope.view.options('tools.nginx')['image'];
     const paths = input.files
         .map((file) => file.path)
@@ -269,14 +278,14 @@ export async function nginxConfigTest(input: CheckInput): Promise<CheckOutcome> 
     );
     if (certificate.code !== 0)
         throw new Error(
-            `The openssl command could not write the temporary certificate: ${toolOutputDetail(certificate, 'The tool printed no diagnostic.')}`,
+            `The openssl command could not write the temporary certificate: ${formatOutputTail(certificate, 'The tool printed no diagnostic.')}`,
         );
     const findings: Finding[] = [];
     const checked = new Set<string>();
     for (const path of paths) {
-        const outcome = await testNginxFile(input, path, work, image);
-        findings.push(...outcome.findings);
-        for (const file of outcome.files) checked.add(file);
+        const result = await testNginxFile(input, path, work, image);
+        findings.push(...result.findings);
+        for (const file of result.files) checked.add(file);
     }
     return { findings, files: [...checked] };
 }

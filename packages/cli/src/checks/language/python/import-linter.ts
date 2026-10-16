@@ -1,17 +1,17 @@
 import { z } from 'zod';
-import { parse } from 'smol-toml';
+import { parse } from '@decimalturn/toml-patch';
 import { join, posix, basename } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
-import { toolFindings } from '#cli/checks/run/command/output.ts';
 import { buildUvRunCommand } from '#cli/tools/python/project.ts';
 import { hasIniSection } from '#cli/repository/existing-tools.ts';
+import { assertToolFindings } from '#cli/checks/run/command/output.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
-import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
+import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { BROKEN_CONTRACT, IMPORT_LINTER_FILES, LINT_IMPORTS_COMMAND } from '#cli/config/checks/language/python.ts';
 
 // Run Python import contracts for one scope and retain the dependency chains behind each broken contract.
@@ -73,8 +73,8 @@ export async function importLinter(input: CheckInput): Promise<Finding[]> {
                       .slice(start + 1, end)
                       .join('\n')
                       .trim();
-        const diagnostic = [`The import contract "${name}" is broken.`, detail].filter(Boolean).join('\n');
-        return findingAt(input, { file: configuration, line: 1 }, 'contract', diagnostic);
+        const message = [`The import contract "${name}" is broken.`, detail].filter(Boolean).join('\n');
+        return buildFinding(input, { file: configuration, line: 1 }, 'contract', message);
     });
-    return toolFindings(result, findings, 'lint-imports');
+    return assertToolFindings(result, findings, 'lint-imports');
 }

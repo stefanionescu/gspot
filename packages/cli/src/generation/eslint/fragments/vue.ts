@@ -1,9 +1,8 @@
 import { serializeBlocks } from '#cli/generation/eslint/print.ts';
 import { FRAGMENT_SPACING } from '#cli/config/generation/eslint.ts';
 import { VUE_RULES } from '#cli/config/generation/eslint-fragments.ts';
-import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
-import { pickPresetFields, buildPresetBlocks } from '#cli/generation/eslint/presets.ts';
 import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
+import { pickPresetFields, promotePresetRules, buildArrayPresetBlocks } from '#cli/generation/eslint/presets.ts';
 
 /**
  * Apply Vue presets, accessibility rules, and component parsing.
@@ -25,30 +24,13 @@ function buildVueFragment(
     const presets = eslintPresets.get('vue') as FragmentPresets;
     const typed = configurations.includes('typescript');
     output.push(
+        serializeBlocks(eslintModule, buildArrayPresetBlocks(presets.recommended, 'vuePlugin', promotePresetRules)),
         serializeBlocks(
             eslintModule,
-            buildPresetBlocks(presets.recommended, 'vuePlugin', (block, index, source) => [
-                {
-                    ...pickPresetFields(block),
-                    ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
-                },
-                `...${source}[${String(index)}]`,
-                {
-                    expression: `${source}[${String(index)}].rules`,
-                    rules: block.rules,
-                },
-            ]),
-        ),
-        serializeBlocks(
-            eslintModule,
-            buildPresetBlocks(presets.accessibility, 'vueAccessibility', (block, index, source) => [
-                { ...pickPresetFields(block), files: ['**/*.vue'] },
-                `...${source}[${String(index)}]`,
-                {
-                    expression: `${source}[${String(index)}].rules`,
-                    rules: block.rules,
-                },
-            ]),
+            buildArrayPresetBlocks(presets.accessibility, 'vueAccessibility', (block) => ({
+                ...pickPresetFields(block),
+                files: ['**/*.vue'],
+            })),
         ),
         '\n',
         eslintModule.block(

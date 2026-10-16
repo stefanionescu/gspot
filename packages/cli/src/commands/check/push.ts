@@ -1,14 +1,13 @@
 // Checking every revision a push sends, each in its own copy, with one report for the push.
-import { GspotError } from '#cli/system/errors.ts';
+
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { checkTree } from '#cli/commands/check/tree.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { selectPush } from '#cli/repository/revisions/push.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { copyRevision } from '#cli/checks/run/copy/revision.ts';
+import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { type PushReport, type CheckOptions } from '#cli/types/commands/check.ts';
 import { type PushRevision, type PushSelection } from '#cli/types/repository/revisions.ts';
-
 // Checks one pushed commit in a copy of it, or undefined when the signal stopped the run.
 async function checkRevision(
     root: string,
@@ -54,41 +53,25 @@ function buildPushReport(selected: PushSelection, revisions: PushReport['revisio
 }
 
 /**
- * Refuses the options that select or change files, which a push of exact objects cannot honor.
- * @param options the parsed flags
- */
-export function assertPushOptions(options: CheckOptions): void {
-    const hasConflict =
-        options.staged ||
-        options.base !== undefined ||
-        options.fix ||
-        options.isDryRun ||
-        options.stage !== undefined ||
-        options.messageFile !== undefined;
-    if (hasConflict)
-        throw new GspotError(
-            'arguments',
-            'The pre-push hook checks the pushed commits. Leave out --staged, --changed, --fix, --dry-run, and --message-file.',
-        );
-}
-
-/**
  * Checks the revisions Git's pre-push protocol names, each in an exact copy.
- * @param root the repository root.
+ * @param repositoryRoot the working tree that supplies settings and receives the push report.
  * @param options the parsed flags, with the pre-push input.
  * @param signal cancellation for the run.
  * @returns the text to print, the push report, and the exit code.
  */
 export async function checkPush(
-    root: string,
+    repositoryRoot: string,
     options: CheckOptions & { push: NonNullable<CheckOptions['push']> },
     signal: AbortSignal,
-): Promise<CommandResult> {
-    const selected = await selectPush(root, options.push.stdin, options.push.remote, signal);
+): Promise<CommandResult<PushReport>> {
+    const selected = await selectPush(repositoryRoot, options.push.stdin, options.push.remote, signal);
     const revisions: PushReport['revisions'] = [];
-    const text: string[] = [];
+    const text: string[] =
+        selected.revisions.length === 0 && selected.skipped.length === 0
+            ? ['The push sends no commits to check.\n']
+            : [];
     for (const revision of selected.revisions) {
-        const result = await checkRevision(root, options, signal, revision);
+        const result = await checkRevision(repositoryRoot, options, signal, revision);
         if (result === undefined) break;
         revisions.push({
             hash: revision.hash,

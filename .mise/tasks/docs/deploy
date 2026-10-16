@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+#MISE description="Build the docs site and deploy it to the gspot-docs Worker at generativespotting.com."
+#MISE depends=["docs:build"]
+#MISE dir="{{config_root}}/docs"
+set -euo pipefail
+
+# Wrangler uses the login of `wrangler login` on this machine.
+bun run wrangler deploy

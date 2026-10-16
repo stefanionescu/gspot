@@ -1,5 +1,7 @@
 # Errors
 
+Read this rule when you write code that raises, catches, or reports an error.
+
 ## Error taxonomy
 
 - Return a typed result or throw a typed error for an expected operational failure. Invalid input, missing resources, denied permission, and provider timeouts need results the caller can act on.

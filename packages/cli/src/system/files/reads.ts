@@ -23,6 +23,18 @@ function readFilePrefix(source: string, limit: number): Buffer {
     }
 }
 
+// Decode both direct and cached reads through the same missing-file and encoding boundary.
+function readUtf8(path: string, read: () => Buffer): string | undefined {
+    try {
+        const text = decodeUtf8(read());
+        if (text === undefined) throw new Error(`${path} is not UTF-8 text.`);
+        return text;
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
+        throw error;
+    }
+}
+
 /**
  * Read a bounded prefix using the run's resolved root and any held source bytes.
  * @param reads the run's source reads.
@@ -37,12 +49,12 @@ function readCachedPrefix(reads: ReadCache, path: string, limit: number): Buffer
 
 /**
  * Read contained file bytes directly from disk.
- * @param root the source folder.
+ * @param sourceFolder the boundary for resolving the relative file path.
  * @param path the root-relative path.
  * @returns the file bytes.
  */
-function readBytes(root: string, path: string): Buffer {
-    return readFileSync(readContainedPath(realpathSync(root), path));
+function readBytes(sourceFolder: string, path: string): Buffer {
+    return readFileSync(readContainedPath(realpathSync(sourceFolder), path));
 }
 
 /**
@@ -61,19 +73,12 @@ function readCachedBytes(reads: ReadCache, path: string): Buffer {
 
 /**
  * Read UTF-8 text from disk, or return undefined for a missing file.
- * @param root the source folder.
+ * @param sourceFolder the boundary for resolving the relative file path.
  * @param path the root-relative path.
  * @returns the file text.
  */
-function readText(root: string, path: string): string | undefined {
-    try {
-        const text = decodeUtf8(readBytes(root, path));
-        if (text === undefined) throw new Error(`${path} is not UTF-8 text.`);
-        return text;
-    } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
-        throw error;
-    }
+function readText(sourceFolder: string, path: string): string | undefined {
+    return readUtf8(path, () => readBytes(sourceFolder, path));
 }
 
 /**
@@ -83,31 +88,24 @@ function readText(root: string, path: string): string | undefined {
  * @returns the cached file text.
  */
 function readCachedText(reads: ReadCache, path: string): string | undefined {
-    try {
-        const text = decodeUtf8(readCachedBytes(reads, path));
-        if (text === undefined) throw new Error(`${path} is not UTF-8 text.`);
-        return text;
-    } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
-        throw error;
-    }
+    return readUtf8(path, () => readCachedBytes(reads, path));
 }
 
 /**
  * Resolve a source path while refusing links outside the root.
- * @param root the resolved source folder.
+ * @param sourceFolder the canonical folder for checking symbolic link destinations.
  * @param path the root-relative path.
- * @returns the contained path.
+ * @returns the resolved file location after the boundary check.
  */
-function readContainedPath(root: string, path: string): string {
-    const target = realpathSync(join(root, ...splitSystemPath(path)));
-    if (!isInside(relative(root, target))) throw new Error(`Source link leaves the repository: ${path}`);
+function readContainedPath(sourceFolder: string, path: string): string {
+    const target = realpathSync(join(sourceFolder, ...splitSystemPath(path)));
+    if (!isInside(relative(sourceFolder, target))) throw new Error(`Source link leaves the repository: ${path}`);
     return target;
 }
 
 /**
  * Decode UTF-8 bytes as text.
- * @param bytes the bytes.
+ * @param bytes the source buffer to validate before decoding.
  * @returns the text, or undefined for invalid UTF-8.
  */
 function decodeUtf8(bytes: Uint8Array): string | undefined {

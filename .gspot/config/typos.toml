@@ -8,6 +8,13 @@ IIF = "IIF"
 LICENCE = "LICENCE"
 next-intl = "next-intl"
 udid = "udid"
+NGINX = "NGINX"
+Stylelint = "Stylelint"
+markdownlint = "markdownlint"
+React = "React"
+Native = "Native"
+Simple = "Simple"
+Icons = "Icons"
 
 [default.extend-words]
 capitalisation = "capitalisation"
@@ -15,9 +22,16 @@ IIF = "IIF"
 LICENCE = "LICENCE"
 next-intl = "next-intl"
 udid = "udid"
+NGINX = "NGINX"
+Stylelint = "Stylelint"
+markdownlint = "markdownlint"
+React = "React"
+Native = "Native"
+Simple = "Simple"
+Icons = "Icons"
 
 [files]
-extend-exclude = ["*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/config/vale/", "tests/config/spelling.ts", ".gspot/**", "**/node_modules/**", "**/bower_components/**", "docs/worker-configuration.d.ts", "tests/worker-configuration.d.ts", "bun.lock", "npm-shrinkwrap.json"]
+extend-exclude = ["*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/config/vale/", "tests/data/checks/spelling.ts", ".gspot/**", "**/node_modules/**", "**/bower_components/**", "docs/worker-configuration.d.ts", "bun.lock", "npm-shrinkwrap.json"]
 
 [type]
 
@@ -25,7 +39,7 @@ extend-exclude = ["*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", 
 extend-glob = ["gspot.toml"]
 
 [type.zod_types]
-extend-glob = ["objects.ts"]
+extend-glob = ["shapes.ts"]
 
 [type.gspot-settings]
 extend-glob = ["gspot.toml"]

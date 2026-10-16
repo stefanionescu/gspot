@@ -5,6 +5,6 @@ export type KeyPath = readonly (string | number)[];
 export type EditableFile = {
     format: 'toml' | 'json';
     getValue(path: KeyPath): unknown;
-    set(path: KeyPath, getValue: unknown): void;
+    set(path: KeyPath, value: unknown): void;
     getText(): string;
 };

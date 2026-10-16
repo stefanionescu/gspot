@@ -7,7 +7,7 @@ import { type TomlTable, type LayoutSection } from '#cli/types/settings/file.ts'
 import { isRecord, getValueAt, createTable, normalizeTables } from '#cli/system/values.ts';
 
 import {
-    isKeyValue,
+    isTomlKind,
     getTomlRange,
     addTomlComment,
     insertTomlComments,
@@ -34,7 +34,7 @@ import {
 function encodeAssignment(key: string, value: unknown, dotted: boolean): { text: string; pair: TomlKeyValue } {
     const assignment = stringify({ [key]: value }, TOML_ASSIGNMENT_FORMAT);
     const text = dotted ? assignment.replace(JSON.stringify(key), key) : assignment;
-    const pair = parseDocument(text).cst.find(isKeyValue) as TomlKeyValue;
+    const pair = parseDocument(text).cst.find((node) => isTomlKind(node, 'KeyValue')) as TomlKeyValue;
     return { text, pair };
 }
 
@@ -226,7 +226,7 @@ function findCommentTarget(syntax: TomlSyntax, target: TomlTable, written: TomlT
     if (path === undefined) {
         if (owner.kind === 'item' || getValueAt(written, owner.path) === undefined) return { kind: owner.kind, path };
         const [header] = [
-            syntax.entries.findLast(
+            syntax.pathNodes.findLast(
                 (entry) => entry.kind === 'header' && entry.path.every((key, index) => owner.path[index] === key),
             ),
         ].flatMap((entry) => (entry?.path.every((key) => typeof key === 'string') === true ? [entry.path] : []));
@@ -248,13 +248,14 @@ function findKeptCommentPlacement(
     { comment, anchor: owner }: TomlAnchoredComment,
 ): TomlCommentPlacement {
     const isOpening =
-        owner === undefined && syntax.entries.every((entry) => getTomlRange(comment)[1] < getTomlRange(entry.node)[0]);
+        owner === undefined &&
+        syntax.pathNodes.every((entry) => getTomlRange(comment)[1] < getTomlRange(entry.node)[0]);
     if (isOpening) return { kind: 'preamble', path: [], comment, placement: 'free' };
     if (owner !== undefined) {
         const mapped = findCommentTarget(syntax, target, written, owner);
         return { ...mapped, comment, placement: mapped.kind === 'preamble' ? 'free' : 'owned' };
     }
-    const next = syntax.entries.find(
+    const next = syntax.pathNodes.find(
         (entry) =>
             getTomlRange(entry.node)[0] > getTomlRange(comment)[1] &&
             listDestinationPaths(syntax, target, entry.path).length > 0,
@@ -286,7 +287,7 @@ function collectKeptComments(syntax: TomlSyntax, target: TomlTable, written: Tom
 }
 
 /**
- * Identify nonempty arrays of parsed tables for native section layout.
+ * Identify nonempty arrays of parsed tables for section layout.
  *
  * @param value a parsed value.
  *

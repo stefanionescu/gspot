@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { nonemptyString } from '#cli/settings/schema/parts.ts';
 import type { TableSettings } from '#cli/types/settings/tables.ts';
 import type { StylelintOptions } from '#cli/types/settings/file.ts';

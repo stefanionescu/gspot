@@ -1,12 +1,13 @@
 // The report a run ends with: every result, the ignores that matched, the skips, and the exit code.
 import { quoteArgument } from '#cli/system/text.ts';
+import { listCoveredInputs } from '#cli/planning/checks.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import { FAILED_STATUSES, INCOMPLETE_STATUSES } from '#cli/config/execution/run.ts';
-import type { FixReport, RunReport, CheckResult, ReportInput, ReproduceOptions } from '#cli/types/execution/check.ts';
+import { FAILED_STATUSES, INCOMPLETE_STATUSES } from '#cli/config/checks/run/run.ts';
+import type { FixReport, RunReport, CheckResult, ReportInput, ReproduceOptions } from '#cli/types/checks/run/check.ts';
 
 // Name each failed or unavailable check and failed fixer once.
-function failedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
+function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
     const checks = results.filter((result) => FAILED_STATUSES.has(result.status)).map((result) => result.check);
     const corrections = (fixes?.results ?? []).flatMap((result) => (result.status === 'failed' ? [result.check] : []));
     return [...new Set([...checks, ...corrections])];
@@ -24,14 +25,15 @@ function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport
  *
  * @param planned the selected check and scope.
  *
+ * @param session the scope selections for the run.
  * @returns a passed result before execution adds findings or a diagnostic.
  */
-export function emptyResult(planned: PlannedCheck): CheckResult {
+export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 'scopes'>): CheckResult {
     return {
         check: planned.check.name,
         scope: planned.scope.scope.path,
         status: 'passed',
-        fileCount: planned.files.length,
+        fileCount: listCoveredInputs(session, planned).length,
         duration: 0,
         findings: [],
     };
@@ -42,11 +44,20 @@ export function emptyResult(planned: PlannedCheck): CheckResult {
  *
  * @param input the session, the options, the plan, and what ran.
  *
- * @returns the report.
+ * @returns ordered results, effective ignores, skip reasons, and the combined exit status.
  */
 export function buildRunReport(input: ReportInput): RunReport {
     const { session, options, started, planned, ran, uses, fixes } = input;
-    const failed = failedChecks(ran, fixes);
+    const results = new Map(input.active.map((check, index) => [check, ran[index] as CheckResult]));
+    const checks = planned.map(
+        (check) =>
+            results.get(check) ?? {
+                ...buildBaseResult(check, session),
+                status: 'skipped' as const,
+                note: check.skip?.note ?? 'No matching files.',
+            },
+    );
+    const failed = listFailedChecks(checks, fixes);
     let code = failed.length > 0 ? EXIT_FINDINGS : 0;
     if (isIncomplete(session, ran, fixes)) code = EXIT_ERROR;
     return {
@@ -55,7 +66,7 @@ export function buildRunReport(input: ReportInput): RunReport {
         stage: options.stage,
         started: started.toISOString(),
         duration: Date.now() - started.getTime(),
-        checks: ran,
+        checks,
         ignores: uses
             .values()
             .map(({ entry, matched }) => ({
@@ -91,16 +102,16 @@ export function buildRunReport(input: ReportInput): RunReport {
  *
  * @returns the command line.
  */
-export function reproduceLine(checkName: string, scope: string, options: ReproduceOptions): string {
+export function formatReproduceCommand(checkName: string, scope: string, options: ReproduceOptions): string {
     const { push, messageFile: commitFile, staged } = options;
     if (push !== undefined) {
         const remote = push.remote === undefined ? '' : ` -- ${quoteArgument(push.remote)}`;
         return `printf '%s' ${quoteArgument(push.stdin)} | gspot check --hook pre-push --only ${quoteArgument(checkName)}${remote}`;
     }
     const parts = ['gspot check'];
-    if (scope !== '') parts.push(quoteArgument(scope));
+    if (scope !== '' && commitFile === undefined) parts.push(quoteArgument(scope));
     parts.push('--only', quoteArgument(checkName));
-    if (commitFile !== undefined) parts.push('--message-file', quoteArgument(commitFile));
+    if (commitFile !== undefined) parts.push('--hook', 'commit-msg', '--', quoteArgument(commitFile));
     if (staged === true) parts.push('--staged');
     return parts.join(' ');
 }

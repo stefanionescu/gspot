@@ -2,20 +2,20 @@
 import ts from 'typescript';
 import { ENV_NAME } from '#cli/config/checks/general/structure.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
-import { JAVASCRIPT_ENVIRONMENT_OBJECTS, JAVASCRIPT_ENVIRONMENT_GETTERS } from '#cli/config/parsers/environment.ts';
+import { JAVASCRIPT_ENVIRONMENT_FIELDS, JAVASCRIPT_ENVIRONMENT_GETTERS } from '#cli/config/parsers/environment.ts';
 
 /**
  * Walk the parsed TypeScript syntax once, visiting declarations and expressions without comment or string contents.
- * @param root the source or subtree to inspect.
+ * @param syntaxRoot the source or subtree to inspect.
  * @returns nodes in source traversal order, including the root.
  */
-function listTypescriptNodes(root: ts.Node): ts.Node[] {
+function listTypescriptNodes(syntaxRoot: ts.Node): ts.Node[] {
     const nodes: ts.Node[] = [];
     const visit = (node: ts.Node): void => {
         nodes.push(node);
         ts.forEachChild(node, visit);
     };
-    visit(root);
+    visit(syntaxRoot);
     return nodes;
 }
 
@@ -28,7 +28,7 @@ function readGetterKey(node: ts.CallExpression, source: ts.SourceFile, getters: 
 function readEnvironmentKey(node: ts.Node, source: ts.SourceFile, getters: Set<string>): string | undefined {
     if (ts.isCallExpression(node)) return readGetterKey(node, source, getters);
     if (!ts.isPropertyAccessExpression(node) && !ts.isElementAccessExpression(node)) return undefined;
-    if (!JAVASCRIPT_ENVIRONMENT_OBJECTS.has(node.expression.getText(source).replaceAll(/\s+/gu, ''))) return undefined;
+    if (!JAVASCRIPT_ENVIRONMENT_FIELDS.has(node.expression.getText(source).replaceAll(/\s+/gu, ''))) return undefined;
     if (ts.isPropertyAccessExpression(node)) return node.name.text;
     return ts.isStringLiteralLike(node.argumentExpression) ? node.argumentExpression.text : undefined;
 }

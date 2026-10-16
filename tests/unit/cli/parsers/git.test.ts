@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { parseGitBlobs, parseTreeEntries, stripIndexStages, parseIndexEntries } from '#cli/parsers/git.ts';
-import { SHA1, SHA256, ENTRY_PATH, BINARY_BLOB, INVALID_BLOBS, INVALID_ENTRIES } from '#tests/config/git.ts';
+import { SHA1, SHA256, ENTRY_PATH, BINARY_BLOB, INVALID_BLOBS, INVALID_ENTRIES } from '#tests/data/parsers/git.ts';
 
 test('tree entries keep full object IDs, modes and unquoted paths', () => {
     const output =
@@ -17,27 +18,26 @@ test('tree entries keep full object IDs, modes and unquoted paths', () => {
     expect(parseTreeEntries(Buffer.alloc(0))).toStrictEqual([]);
 });
 
-for (const { name, output, message } of INVALID_ENTRIES)
-    test(`a Git entry listing is refused: ${name}`, () => {
-        const bytes =
-            typeof output === 'string'
-                ? Buffer.from(output)
-                : Buffer.concat([Buffer.from(output.prefix), Buffer.from(output.bytes)]);
-        if (name === 'unmerged index stage') {
-            expect(() => stripIndexStages(parseIndexEntries(bytes.toString('utf8')))).toThrow(message);
-        } else {
-            if (typeof output === 'string') expect(() => parseIndexEntries(output)).toThrow(message);
-            const tab = bytes.indexOf(9);
-            const space = bytes.indexOf(32);
-            const tree = Buffer.concat([
-                bytes.subarray(0, space + 1),
-                Buffer.from('blob '),
-                bytes.subarray(space + 1, tab - 2),
-                bytes.subarray(tab),
-            ]);
-            expect(() => parseTreeEntries(tree)).toThrow(message);
-        }
-    });
+test.each([...INVALID_ENTRIES])(`a Git entry listing is refused: $name`, ({ name, output, message }) => {
+    const bytes =
+        typeof output === 'string'
+            ? Buffer.from(output)
+            : Buffer.concat([Buffer.from(output.prefix), Buffer.from(output.bytes)]);
+    if (name === 'unmerged index stage') {
+        expect(() => stripIndexStages(parseIndexEntries(bytes.toString('utf8')))).toThrow(message);
+    } else {
+        if (typeof output === 'string') expect(() => parseIndexEntries(output)).toThrow(message);
+        const tab = bytes.indexOf(9);
+        const space = bytes.indexOf(32);
+        const tree = Buffer.concat([
+            bytes.subarray(0, space + 1),
+            Buffer.from('blob '),
+            bytes.subarray(space + 1, tab - 2),
+            bytes.subarray(tab),
+        ]);
+        expect(() => parseTreeEntries(tree)).toThrow(message);
+    }
+});
 
 test('a batch keeps binary content and an empty blob in response order', async () => {
     const output = Buffer.concat([
@@ -78,9 +78,9 @@ test('a batch keeps binary content and an empty blob in response order', async (
     ).toStrictEqual(new Map());
 });
 
-for (const { name, output, message } of INVALID_BLOBS)
-    test(`a batch is refused: ${name}`, () => {
-        expect(
+test.each([...INVALID_BLOBS])(`a batch is refused: $name`, async ({ output, message }) => {
+    expect(
+        await captureRejection(
             Array.fromAsync(
                 parseGitBlobs(
                     // eslint-disable-next-line @typescript-eslint/require-await -- reason: The Git reader takes an async stream; this test supplies fixed byte chunks.
@@ -90,8 +90,9 @@ for (const { name, output, message } of INVALID_BLOBS)
                     [SHA1],
                 ),
             ),
-        ).rejects.toThrow(new RegExp(message));
-    });
+        ),
+    ).toMatch(new RegExp(message));
+});
 
 test.each([0, 1])('index entries keep stage %i and the full object ID', (stage) => {
     expect(parseIndexEntries(`100755 ${SHA256} ${String(stage)}\t${ENTRY_PATH}\0`)).toStrictEqual([

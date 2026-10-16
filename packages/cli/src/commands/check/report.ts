@@ -1,124 +1,142 @@
-import { colors } from '#cli/system/terminal.ts';
-import { MS_PER_SECOND } from '#cli/config/units.ts';
+import { formatCount } from '#cli/system/text.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { Columns } from '#cli/types/terminal.ts';
-import { FAILED_STATUSES } from '#cli/config/execution/run.ts';
+import { warn, colors } from '#cli/system/terminal.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
-import type { Finding, RunReport, CheckResult } from '#cli/types/execution/check.ts';
+import type { Finding, RunReport, FixReport, CheckResult, CheckProgress } from '#cli/types/checks/run/check.ts';
 
 import {
-    EXIT_ERROR,
-    FILES_WIDTH,
-    ID_WIDTH_MIN,
-    STATUS_WIDTH,
     NOTE_STATUSES,
     FINDINGS_SHOWN,
-    SCOPE_WIDTH_MIN,
+    PROGRESS_CLEAR,
     CHECK_STATUS_COLORS,
+    FIXER_ERROR_MESSAGE,
     COMMIT_PREFIX_LENGTH,
 } from '#cli/config/terminal.ts';
 
-function seconds(milliseconds: number): string {
-    return `${(milliseconds / MS_PER_SECOND).toFixed(1)}s`;
+function formatFixerFailure(note: string): string {
+    return (
+        note
+            .split('\n')
+            .find((line) => FIXER_ERROR_MESSAGE.test(line))
+            ?.replace(FIXER_ERROR_MESSAGE, '') ?? note.split('\n').slice(0, 1).join('')
+    );
 }
 
-function location(finding: Finding): string {
+// Format check findings, fixes, progress, and the final run summary.
+
+function printFailedFixers(fixes: FixReport, verbose: boolean): void {
+    for (const result of fixes.results) {
+        if (result.status !== 'failed') continue;
+        const note = stripVTControlCharacters(result.note);
+        const detail = formatFixerFailure(note);
+        warn(
+            `The ${result.check} fixer failed: ${detail.endsWith('.') ? detail.slice(0, -1) : detail}. Run gspot check --only ${result.check} --fix --verbose.`,
+        );
+        if (verbose)
+            process.stderr.write(
+                note
+                    .split('\n')
+                    .map((line) => '  ' + line)
+                    .join('\n') + '\n',
+            );
+    }
+}
+
+function formatProgressSubject(comparison: CheckProgress['comparison']): string {
+    if (comparison?.content === 'index') return 'the staged files';
+    if (comparison?.content === 'commit') return `commit ${comparison.reference.slice(0, COMMIT_PREFIX_LENGTH)}`;
+    return 'the working tree';
+}
+
+function formatUnstagedChanges(report: RunReport): string[] {
+    if (report.unstagedChanges === 0) return [];
+    const verb = report.unstagedChanges === 1 ? 'has' : 'have';
+    const subject = report.comparison?.content === 'index' ? 'staged files' : 'working tree';
+    return [
+        `Checked the ${subject}. ${formatCount(report.unstagedChanges, 'file')} ${verb} unstaged changes that were not checked.`,
+    ];
+}
+
+function formatSeconds(milliseconds: number): string {
+    return `${(milliseconds / MILLISECONDS_PER_SECOND).toFixed(1)}s`;
+}
+
+function formatLocation(finding: Finding): string {
     if (finding.file === '') return '';
     const line = finding.line === undefined ? '' : `:${String(finding.line)}`;
     const column = finding.column === undefined ? '' : `:${String(finding.column)}`;
     return `${finding.file}${line}${column}  `;
 }
 
-// The lines of one finding. Its help follows unless the next finding shares it, so a run of findings with the same
-// help prints it once, after the last of them.
-function findingLines(finding: Finding, next?: Finding): string[] {
-    const { dim, cyan } = colors;
-    const rule = cyan(finding.rule ?? finding.check);
-    const lines = [`  ${location(finding)}${rule}  ${finding.message}`];
+// Shared help follows the last finding that needs it.
+function formatFinding(finding: Finding, next?: Finding): string[] {
+    const rule = finding.rule === undefined || finding.rule === finding.check ? '' : `${colors().cyan(finding.rule)}  `;
+    const lines = [`  ${formatLocation(finding)}${rule}${finding.message}`];
     if (finding.help !== undefined && finding.help !== '' && next?.help !== finding.help)
-        lines.push(`    ${dim('help:')} ${finding.help}`);
+        lines.push(`  ${colors().dim('help:')} ${finding.help}`);
     return lines;
 }
 
-function checkTail(check: CheckResult): string {
+function formatCheckTail(check: CheckResult): string {
     if (NOTE_STATUSES.has(check.status)) return check.note ?? '';
-    return `${counted(check.fileCount, 'file').padEnd(FILES_WIDTH)} ${seconds(check.duration)}`;
+    if (check.status === 'failed') return formatCount(check.findings.length, 'finding');
+    return `${formatCount(check.fileCount, 'file')}  ${formatSeconds(check.duration)}`;
 }
 
-function failureLines(check: CheckResult, verbose: boolean): string[] {
-    const shown = verbose ? check.findings : check.findings.slice(0, FINDINGS_SHOWN);
-    const lines = shown.flatMap((finding, index) => findingLines(finding, shown[index + 1]));
-    const hidden = check.findings.length - shown.length;
+function formatCheckFindings(findings: readonly Finding[], verbose: boolean): string[] {
+    const shown = verbose ? findings : findings.slice(0, FINDINGS_SHOWN);
+    const lines = shown.flatMap((finding, index) => formatFinding(finding, shown[index + 1]));
+    const hidden = findings.length - shown.length;
     if (hidden > 0) {
-        const more = `and ${String(hidden)} more (--verbose prints every finding)`;
-        lines.push(`  ${colors.dim(more)}`);
+        const message = `and ${String(hidden)} more (--verbose prints every finding)`;
+        lines.push(`  ${colors().dim(message)}`);
     }
     return lines;
 }
 
-function checkLines(check: CheckResult, columns: Columns, verbose: boolean): string[] {
-    const scope = (check.scope === '' ? 'root' : check.scope).padEnd(columns.scope);
-    const word = colors[CHECK_STATUS_COLORS[check.status]](check.status);
-    const status = word.padEnd(STATUS_WIDTH + word.length - stripVTControlCharacters(word).length);
-    const lines = [`${scope}  ${check.check.padEnd(columns.check)}  ${status}  ${checkTail(check)}`.trimEnd()];
-    if (verbose && check.command) {
-        const command = `$ ${check.command.join(' ')}`;
-        lines.push(`  ${colors.dim(command)}`);
-    }
-    if (check.status === 'failed') lines.push(...failureLines(check, verbose));
-    if (check.reproduce !== undefined) lines.push(`  ${colors.dim('reproduce:')} ${check.reproduce}`);
+function formatCheck(check: CheckResult, { verbose }: { verbose: boolean }): string[] {
+    const status = colors()[CHECK_STATUS_COLORS[check.status]](check.status);
+    const scope = check.scope === '' ? '' : `${check.scope}  `;
+    const tail = formatCheckTail(check);
+    const lines = [`${scope}${check.check}  ${status}  ${tail}`.trimEnd()];
+    if (verbose && check.command) lines.push(`  ${colors().dim('$ ' + check.command.join(' '))}`);
+    if (check.status === 'failed') lines.push(...formatCheckFindings(check.findings, verbose));
+    if ((check.status === 'failed' || check.status === 'error') && check.reproduce !== undefined)
+        lines.push(`  ${colors().dim('run again:')} ${check.reproduce}`);
     return lines;
 }
 
-function ignoreLines(report: RunReport, verbose: boolean): string[] {
+function formatIgnores(report: RunReport, { verbose }: { verbose: boolean }): string[] {
     if (report.ignores.length === 0) return [];
     if (!verbose) return [`ignores    ${String(report.ignores.length)} (printed with --verbose)`];
     return report.ignores.map((ignore) => {
         const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
         const paths = ignore.paths === undefined ? '' : ` ${ignore.paths.join(' ')}`;
-        const matched = `(${String(ignore.matched)} matched)`;
-        return `ignore     ${ignore.check}${rule}${paths}  ${ignore.reason === undefined ? '' : colors.dim(ignore.reason)}  ${matched}`;
+        return `ignore     ${ignore.check}${rule}${paths}  ${ignore.reason === undefined ? '' : colors().dim(ignore.reason)}  (${String(ignore.matched)} matched)`;
     });
 }
 
-function tailLines(report: RunReport, verbose: boolean): string[] {
-    const lines = [
-        ...ignoreLines(report, verbose),
-        ...report.skips.map((skip) => {
-            const cause = colors.dim(`(${skip.cause})`);
-            return `skipped    ${skip.check}  ${cause}`;
-        }),
-    ];
-    if (report.unstagedChanges > 0) {
-        const verb = report.unstagedChanges === 1 ? ' has' : 's have';
-        lines.push(
-            `Checked the ${report.comparison?.content === 'index' ? 'staged files' : 'working tree'}. ${String(report.unstagedChanges)} file${verb} unstaged changes that were not checked.`,
-        );
-    }
-    return lines;
-}
-
-/**
- * Print a count with its singular or plural noun.
- * @param value the number of items
- * @param noun the singular item name
- * @returns the count and noun
- */
-function counted(value: number, noun: string): string {
-    return `${String(value)} ${noun}${value === 1 ? '' : 's'}`;
-}
-
-function summaryLine(report: RunReport): string {
+function formatSummary(report: RunReport): string {
+    const failed = report.checks.filter((check) => check.status === 'failed');
+    const missing = report.checks.filter((check) => check.status === 'missing').length;
+    const errors = report.checks.filter((check) => check.status === 'error').length;
     const passed = report.checks.filter((check) => check.status === 'passed').length;
-    const failed = report.checks.filter((check) => FAILED_STATUSES.has(check.status)).length;
     const skipped = report.checks.filter((check) => check.status === 'skipped').length;
-    const findings = report.checks.reduce((count, check) => count + check.findings.length, 0);
-    const summary = `${counted(passed, 'check')} passed, ${counted(failed, 'check')} failed, ${counted(skipped, 'check')} skipped, ${counted(findings, 'finding')}, ${seconds(report.duration)}`;
-    if (report.exitCode === EXIT_ERROR) return colors.red(`${summary} (incomplete)`);
-    return report.exitCode === 0 ? summary : colors.red(`${summary} (failed)`);
+    const findings = failed.reduce((count, check) => count + check.findings.length, 0);
+    const parts = [];
+    if (failed.length > 0)
+        parts.push(`Failed: ${formatCount(failed.length, 'check')} with ${formatCount(findings, 'finding')}.`);
+    if (missing + errors > 0)
+        parts.push(
+            `Could not run: ${formatCount(missing + errors, 'check')}${missing > 0 ? ' (a tool is missing; run gspot install)' : ''}.`,
+        );
+    parts.push(`Passed: ${formatCount(passed, 'check')}.`, `Skipped: ${formatCount(skipped, 'check')}.`);
+    const text = parts.join(' ');
+    return report.exitCode === 0 ? text : colors().red(text);
 }
 
-function comparisonLine(comparison: RunReport['comparison']): string {
+function formatComparison(comparison: RunReport['comparison']): string {
     if (comparison === undefined) return '';
     if (comparison.content === 'working-tree') return `Checked the files changed since ${comparison.reference}.\n`;
     if (comparison.content === 'index') return 'Checked the staged files.\n';
@@ -126,40 +144,67 @@ function comparisonLine(comparison: RunReport['comparison']): string {
 }
 
 /**
- * The run as text: one line per check, its findings, the ignores and skips, and the summary.
- * @param report the run report
- * @param verbose whether to print every finding, command, and ignore
- * @param hook the hook whose failure needs a bypass instruction
- * @returns the text for stdout
+ * Format one report from the same result list used for its summary.
+ * @param report the completed check results and run totals.
+ * @param options the report presentation choices.
+ * @param options.verbose whether to include successful checks and complete process output.
+ * @param options.hook the Git hook that selected this run.
+ * @returns the visible check lines and the final run summary.
  */
-export function runText(report: RunReport, verbose: boolean, hook?: (typeof CHECK_HOOKS)[number]): string {
-    const shown = report.checks;
-    const columns: Columns = {
-        scope: Math.max(
-            SCOPE_WIDTH_MIN,
-            ...report.checks.map((check) => (check.scope === '' ? 'root' : check.scope).length),
-        ),
-        check: Math.max(ID_WIDTH_MIN, ...report.checks.map((check) => check.check.length)),
-    };
-    const body = shown.flatMap((check) => checkLines(check, columns, verbose));
-    const tail = tailLines(report, verbose);
-    const isSeparated = tail.length > 0 && body.length > 0;
-    const lines = [...body, ...(isSeparated ? [''] : []), ...tail];
-    if (lines.length > 0) lines.push('');
-    lines.push(summaryLine(report));
+export function formatRunReport(
+    report: RunReport,
+    options: { verbose: boolean; hook?: (typeof CHECK_HOOKS)[number] },
+): string {
+    const { verbose, hook } = options;
+    const checks = report.checks.filter(
+        (check) => verbose || (check.status !== 'passed' && check.status !== 'skipped'),
+    );
+    const lines = checks.flatMap((check) => [...formatCheck(check, { verbose }), '']);
+    lines.push(
+        ...formatIgnores(report, { verbose }),
+        ...formatUnstagedChanges(report),
+        formatSummary(report),
+        `Time: ${formatSeconds(report.duration)}. Exit code ${String(report.exitCode)}.`,
+    );
     if (hook !== undefined && report.exitCode !== 0)
         lines.push(`Bypass this hook once: git ${hook === 'pre-push' ? 'push' : 'commit'} --no-verify`);
-    return `${comparisonLine(report.comparison)}${lines.join('\n')}\n`;
+    return `${formatComparison(report.comparison)}${lines.join('\n')}\n`;
 }
 
 /**
- * Print completed check states without mixing progress into machine-readable output.
- * @param result the completed check
+ * Print one terminal status line, or clear it before printing the report.
+ * @param progress the completed check and its position in this run.
  */
-export function progress(result: CheckResult): void {
-    const failed = FAILED_STATUSES.has(result.status);
-    if (!failed && !process.stderr.isTTY) return;
-    process.stderr.write(`${result.scope === '' ? 'root' : result.scope}  ${result.check}  ${result.status}\n`);
+export function printProgress(progress: CheckProgress | undefined): void {
+    if (!process.stderr.isTTY) return;
+    if (progress === undefined) {
+        process.stderr.write(PROGRESS_CLEAR);
+        return;
+    }
+    const subject = formatProgressSubject(progress.comparison);
+    process.stderr.write(
+        `${PROGRESS_CLEAR}Checking ${subject}: ${String(progress.completed)} of ${String(progress.total)} checks done`,
+    );
 }
 
-export { counted };
+/**
+ * Describe corrections without sending tool output or successful fixes through warnings.
+ * @param fixes the fixer results and verification state.
+ * @param options the report presentation choices.
+ * @param options.isDryRun whether the command previews fixes without writing source files.
+ * @param options.verbose whether to include successful checks and complete process output.
+ * @returns the corrections, failed fixer details, and verification summary.
+ */
+export function fixLines(fixes: FixReport, options: { isDryRun: boolean; verbose: boolean }): string[] {
+    const { isDryRun, verbose } = options;
+    printFailedFixers(fixes, verbose);
+    const count = fixes.changed.length;
+    if (isDryRun)
+        return [
+            ...fixes.diffs,
+            count === 0 ? 'No fixer changes anything.' : `${formatCount(count, 'file')} would change.`,
+            '',
+        ];
+    if (count === 0) return ['No fixer changed anything.'];
+    return [`fixed ${formatCount(count, 'file')}: ${fixes.changed.join(', ')}. The changes are not staged.`];
+}

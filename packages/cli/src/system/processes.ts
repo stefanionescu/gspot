@@ -2,9 +2,9 @@
 import { statSync } from 'node:fs';
 import { onExit } from 'signal-exit';
 import { execa, execaSync } from 'execa';
-import { MS_PER_SECOND } from '#cli/config/units.ts';
 import type { ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
 import { environmentKey, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
@@ -12,20 +12,21 @@ import type {
     StdoutRead,
     SpawnResult,
     SpawnOptions,
+    RunningProcess,
     SpawnCompletion,
     AsyncSpawnOptions,
     ProcessTermination,
     ProcessTreeControl,
 } from '#cli/types/system/processes.ts';
 import {
-    REAP_MS,
-    DRAIN_MS,
     FAILED_CODE,
     MISSING_CODE,
     PATHEXT_DEFAULT,
     PATH_SEPARATORS,
     TASKKILL_PROGRAM,
     TASKKILL_OPTIONS,
+    REAP_MILLISECONDS,
+    DRAIN_MILLISECONDS,
     TASKKILL_GONE_CODE,
 } from '#cli/config/system/processes.ts';
 
@@ -49,6 +50,14 @@ function buildExecaOptions(options: SpawnOptions, executable: string) {
         reject: false,
         maxBuffer: Infinity,
         killSignal: 'SIGKILL' as const,
+    };
+}
+
+function buildAsyncExecaOptions(options: AsyncSpawnOptions, executable: string) {
+    return {
+        ...buildExecaOptions(options, executable),
+        ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
+        detached: process.platform !== 'win32',
     };
 }
 
@@ -121,7 +130,7 @@ function stopProcessTree(child: ChildProcess, state: ProcessTermination): void {
         if (process.platform === 'win32') {
             const result = execaSync(TASKKILL_PROGRAM, ['/pid', String(child.pid), ...TASKKILL_OPTIONS], {
                 reject: false,
-                timeout: DRAIN_MS,
+                timeout: DRAIN_MILLISECONDS,
             });
             const code = result.exitCode ?? FAILED_CODE;
             if (![0, TASKKILL_GONE_CODE].includes(code))
@@ -133,10 +142,10 @@ function stopProcessTree(child: ChildProcess, state: ProcessTermination): void {
     child.kill('SIGKILL');
     state.drainTimer = setTimeout(() => {
         const error = new Error(
-            `Tool output did not close within ${String(DRAIN_MS / MS_PER_SECOND)} seconds after termination.`,
+            `Tool output did not close within ${String(DRAIN_MILLISECONDS / MILLISECONDS_PER_SECOND)} seconds after termination.`,
         );
         for (const stream of child.stdio) stream?.destroy(error);
-    }, DRAIN_MS);
+    }, DRAIN_MILLISECONDS);
 }
 
 /**
@@ -162,11 +171,11 @@ function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
                   if (termination.stopped) return;
                   state.isTimedOut = true;
                   stopTree();
-              }, options.timeoutSeconds * MS_PER_SECOND);
+              }, options.timeoutSeconds * MILLISECONDS_PER_SECOND);
     let exitCleanup: Promise<void> | undefined;
     const startExitCleanup = () => {
         clearTimeout(timer);
-        exitCleanup = delay(REAP_MS).then(() => {
+        exitCleanup = delay(REAP_MILLISECONDS).then(() => {
             if (process.platform !== 'win32') stopTree();
             termination.stopped = true;
         });
@@ -198,30 +207,16 @@ function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
     };
 }
 
-/**
- * Run a supervised process tree and capture its text.
- * @param command executable and literal arguments.
- * @param options working directory, environment, and process controls.
- * @returns captured output and termination status.
- */
-// eslint-disable-next-line complexity, sonarjs/cognitive-complexity -- reason: Process supervision keeps stream failures, cancellation, and child cleanup in one try/finally boundary.
-export async function spawnProcess(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
-    const started = performance.now();
-    const [executable, ...argv] = command;
-    if (executable === undefined) throw new Error('An empty command cannot run.');
-    if (isExecutableAbsent(executable, options.cwd))
-        return buildSpawnResult(buildNotFoundCompletion(executable), started);
-    const child = execa(executable, argv, {
-        ...buildExecaOptions(options, executable),
-        ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
-        detached: process.platform !== 'win32',
-    });
-    const supervision = trackProcessTree(child, options);
-    if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
-    if (options.onStderr !== undefined) child.stderr.on('data', options.onStderr);
+// Capture and streamed readers share process failure classification and tree cleanup.
+async function completeProcess(
+    child: RunningProcess,
+    supervision: ProcessTreeControl,
+    started: number,
+    completion: PromiseLike<SpawnCompletion>,
+): Promise<SpawnResult> {
     let executionFailure: unknown;
     try {
-        const result = await child;
+        const result = await completion;
         if (result.failed) executionFailure = new Error(result.shortMessage);
         return { ...buildSpawnResult(result, started), ...supervision.state };
     } catch (error) {
@@ -235,6 +230,40 @@ export async function spawnProcess(command: readonly string[], options: AsyncSpa
     }
 }
 
+// The reader owns standard output bytes and checks cancellation after the stream ends.
+async function readProcessOutput(
+    child: RunningProcess,
+    options: AsyncSpawnOptions,
+    readStdout: Exclude<StdoutRead, 'utf8'>,
+): Promise<SpawnCompletion> {
+    await readStdout({
+        async *[Symbol.asyncIterator]() {
+            yield* child.stdout;
+            options.cancelSignal?.throwIfAborted();
+        },
+    });
+    return child;
+}
+
+/**
+ * Run a supervised process tree and capture its text.
+ * @param command executable and literal arguments.
+ * @param options working directory, environment, and process controls.
+ * @returns captured output and termination status.
+ */
+export async function spawnProcess(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
+    const started = performance.now();
+    const [executable, ...commandArguments] = command;
+    if (executable === undefined) throw new Error('An empty command cannot run.');
+    if (isExecutableAbsent(executable, options.cwd))
+        return buildSpawnResult(buildNotFoundCompletion(executable), started);
+    const child = execa(executable, commandArguments, buildAsyncExecaOptions(options, executable));
+    const supervision = trackProcessTree(child, options);
+    if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
+    if (options.onStderr !== undefined) child.stderr.on('data', options.onStderr);
+    return completeProcess(child, supervision, started, child);
+}
+
 /**
  * Run a supervised process tree and read its output bytes.
  * @param command executable and literal arguments.
@@ -242,46 +271,24 @@ export async function spawnProcess(command: readonly string[], options: AsyncSpa
  * @param readStdout the reader of output bytes.
  * @returns output and termination status, with empty stdout when the callback reads it.
  */
-// eslint-disable-next-line complexity, sonarjs/cognitive-complexity -- reason: Process supervision keeps stream failures, cancellation, and child cleanup in one try/finally boundary.
 export async function streamProcess(
     command: readonly string[],
     options: AsyncSpawnOptions,
     readStdout: Exclude<StdoutRead, 'utf8'>,
 ): Promise<SpawnResult> {
     const started = performance.now();
-    const [executable, ...argv] = command;
+    const [executable, ...commandArguments] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
     if (isExecutableAbsent(executable, options.cwd))
         return buildSpawnResult(buildNotFoundCompletion(executable), started);
-    const child = execa(executable, argv, {
-        ...buildExecaOptions(options, executable),
+    const child = execa(executable, commandArguments, {
+        ...buildAsyncExecaOptions(options, executable),
         buffer: { stdout: false },
-        ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
-        detached: process.platform !== 'win32',
     });
     const supervision = trackProcessTree(child, options);
     if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
     if (options.onStderr !== undefined) child.stderr.on('data', options.onStderr);
-    let executionFailure: unknown;
-    try {
-        await readStdout({
-            async *[Symbol.asyncIterator]() {
-                yield* child.stdout;
-                options.cancelSignal?.throwIfAborted();
-            },
-        });
-        const result = await child;
-        if (result.failed) executionFailure = new Error(result.shortMessage);
-        return { ...buildSpawnResult(result, started), ...supervision.state };
-    } catch (error) {
-        executionFailure = error;
-        supervision.stop();
-        const result = await child;
-        if (result.code === 'ENOENT') return { ...buildSpawnResult(result, started), ...supervision.state };
-        throw error;
-    } finally {
-        await supervision.release(executionFailure);
-    }
+    return completeProcess(child, supervision, started, readProcessOutput(child, options, readStdout));
 }
 
 /**
@@ -292,11 +299,12 @@ export async function streamProcess(
  */
 export function spawnProcessBlocking(command: readonly string[], options: SpawnOptions): SpawnResult {
     const started = performance.now();
-    const [executable, ...argv] = command;
+    const [executable, ...commandArguments] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
     if (isExecutableAbsent(executable, options.cwd))
         return buildSpawnResult(buildNotFoundCompletion(executable), started);
-    const deadline = options.timeoutSeconds === undefined ? {} : { timeout: options.timeoutSeconds * MS_PER_SECOND };
-    const result = execaSync(executable, argv, { ...buildExecaOptions(options, executable), ...deadline });
+    const deadline =
+        options.timeoutSeconds === undefined ? {} : { timeout: options.timeoutSeconds * MILLISECONDS_PER_SECOND };
+    const result = execaSync(executable, commandArguments, { ...buildExecaOptions(options, executable), ...deadline });
     return buildSpawnResult(result, started);
 }

@@ -1,5 +1,7 @@
 # UIKit
 
+Read this rule when you change UIKit screens, lists, or cells.
+
 ## Framework boundaries
 
 Use UIKit for UIKit screens and components. Use SwiftUI for SwiftUI screens. Preserve the
@@ -16,10 +18,10 @@ without moving network, persistence, or authorization work into reusable views.
 
 Keep framework types out of domain contracts unless those contracts explicitly represent UI.
 Follow declared import boundaries. Put reusable delegate or data-source behavior in a dedicated
-owner when multiple screens need it or the controller mixes unrelated responsibilities.
+type when multiple screens need it or the controller mixes unrelated responsibilities.
 A view controller can own a small list's data source and delegate directly.
 
-Use existing navigation and dependency-construction owners. Do not introduce a coordinator,
+Use the types that build navigation and dependencies. Do not introduce a coordinator,
 router, view model, or composition type solely to satisfy a prescribed type layout.
 
 ## View-controller lifecycle
@@ -53,7 +55,7 @@ unavailable only when the component's actual construction contract excludes it.
 ## Lists and reusable cells
 
 - Retain separately owned data sources and delegates. Table and collection views do not keep
-  these weakly referenced owners alive for the screen.
+  these weakly referenced objects alive for the screen.
 - Use stable item identifiers. An `IndexPath` identifies a position in the current collection,
   not an item across insertions, removals, or asynchronous work.
 - Look up the current item before handling selection. Do not retain an old index path as identity.

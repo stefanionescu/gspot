@@ -1,7 +1,7 @@
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 
 import {
     WORD,
@@ -12,7 +12,7 @@ import {
     SHELLCHECK_TOOL_COMMENT,
 } from '#cli/config/checks/language/bash.ts';
 
-function blockAbove(lines: string[], start: number): string[] {
+function collectCommentBlock(lines: string[], start: number): string[] {
     const block: string[] = [];
     let index = start - 1;
     while (index > 0) {
@@ -34,7 +34,10 @@ function isMeaningful(name: string, summary: string): boolean {
     return words.some((word) => !nameWords.has(word));
 }
 
-function docFinding(entry: ScriptFunction, block: string[]): Required<Pick<Finding, 'rule' | 'message'>> | undefined {
+function validateDocComment(
+    entry: ScriptFunction,
+    block: string[],
+): Required<Pick<Finding, 'rule' | 'message'>> | undefined {
     const first = block[0];
     if (first === undefined)
         return {
@@ -63,15 +66,15 @@ function docFinding(entry: ScriptFunction, block: string[]): Required<Pick<Findi
  * @param input the check context.
  * @returns the findings.
  */
-export async function bashDocComments(input: CheckInput): Promise<Finding[]> {
+export async function checkBashDocComments(input: CheckInput): Promise<Finding[]> {
     const index = await readScripts(input);
     return index.flatMap((file) => {
         return file.functions.flatMap((entry) => {
             if (entry.name === MAIN_FUNCTION) return [];
-            const found = docFinding(entry, blockAbove(file.lines, entry.start));
+            const found = validateDocComment(entry, collectCommentBlock(file.lines, entry.start));
             return found === undefined
                 ? []
-                : [findingAt(input, { file: file.path, line: entry.start }, found.rule, found.message)];
+                : [buildFinding(input, { file: file.path, line: entry.start }, found.rule, found.message)];
         });
     });
 }

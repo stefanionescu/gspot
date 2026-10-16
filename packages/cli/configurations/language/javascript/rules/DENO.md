@@ -1,6 +1,6 @@
 # Deno
 
-Rules that hold because the code runs on Deno.
+Read this rule when code runs on Deno.
 
 ## Module resolution
 

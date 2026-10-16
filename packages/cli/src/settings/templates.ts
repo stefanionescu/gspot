@@ -20,8 +20,8 @@ import {
     GITHUB_PREFIX,
     TEMPLATE_FILE,
     DEFAULT_GIT_REF,
-    REQUEST_TIMEOUT_MS,
     GITHUB_TOKEN_VARIABLE,
+    REQUEST_TIMEOUT_MILLISECONDS,
 } from '#cli/config/settings/templates.ts';
 
 function buildGithubRawUrl(source: string): string {
@@ -35,7 +35,7 @@ async function readRemoteText(url: string): Promise<string> {
     const token =
         new URL(url).origin === new URL(RAW_HOST).origin ? readEnvironmentVariable(GITHUB_TOKEN_VARIABLE) : undefined;
     const headers = token === undefined ? {} : { Authorization: `Bearer ${token}` };
-    const response = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS), headers });
+    const response = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS), headers });
     if (!response.ok) throw new GspotError('template', `The template at ${url} answered ${String(response.status)}.`);
     return response.text();
 }
@@ -115,4 +115,4 @@ async function readTemplate(source: string, cwd: string): Promise<Template> {
     return parseTemplate(text, source);
 }
 
-export { readTemplate, parseTemplate, exportTemplate };
+export { readTemplate, exportTemplate };

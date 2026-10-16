@@ -1,27 +1,29 @@
 import { z } from 'zod';
-import { type SchemaShape } from '#cli/types/objects.ts';
-import { DEFAULT_FIELDS } from '#cli/config/settings/defaults.ts';
+import { type SchemaShape } from '#cli/types/shapes.ts';
 import { SETTING_LANGUAGES } from '#cli/config/settings/schema.ts';
+import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
 import { namingOverrideSchema } from '#cli/configurations/schema/naming.ts';
 import { nonemptyPaths, namingCategorySchema } from '#cli/settings/schema/parts.ts';
-import { type TableSettings, type NamingCategory, type NamingLanguage } from '#cli/types/settings/tables.ts';
+import { type TableSettings, type NamingCategory, type SettingLanguage } from '#cli/types/settings/tables.ts';
 import { type WrittenNaming, type ParsedNamingOverride, type WrittenNamingOverride } from '#cli/types/settings/file.ts';
 
 const namingLanguageSchema = namingCategorySchema.extend({
     files: namingCategorySchema.optional(),
-    directories: namingCategorySchema.optional(),
+    folders: namingCategorySchema.optional(),
     types: namingCategorySchema.optional(),
     functions: namingCategorySchema.optional(),
     parameters: namingCategorySchema.optional(),
     variables: namingCategorySchema.optional(),
     properties: namingCategorySchema.optional(),
 } satisfies SchemaShape<
-    Pick<NonNullable<TableSettings<'naming'>[NamingLanguage]>, NamingCategory>,
-    Pick<NonNullable<WrittenNaming[NamingLanguage]>, NamingCategory>
+    Pick<NonNullable<TableSettings<'naming'>[SettingLanguage]>, NamingCategory>,
+    Pick<NonNullable<WrittenNaming[SettingLanguage]>, NamingCategory>
 >);
 
+namingLanguageSchema.register(z.globalRegistry, { id: 'namingLanguage' });
+
 const namingLists = {
-    banned_words: z.array(z.string()).default([]).meta(DEFAULT_FIELDS.banned_words),
+    banned_words: z.array(z.string()).default([]).meta(SETTING_DECLARATIONS['naming.banned_words']),
     override: z
         .array(
             namingOverrideSchema.extend({
@@ -39,7 +41,7 @@ const namingLists = {
             >),
         )
         .default([])
-        .meta(DEFAULT_FIELDS.override),
+        .meta(SETTING_DECLARATIONS['naming.override']),
 };
 
 const namingSchema = z.strictObject({

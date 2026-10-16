@@ -1,26 +1,26 @@
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
-import { directoryTree, structureSources, isDependencyFolder } from '#cli/checks/general/structure/folder-tree.ts';
+import { listCodeFiles, buildFolderTree, isDependencyFolder } from '#cli/checks/general/structure/folder-tree.ts';
 
 /**
  * One finding per leaf folder that holds exactly one code file and nothing else.
  * @param input the check context.
  * @returns the findings.
  */
-export function loneFiles(input: CheckInput): Finding[] {
-    const files = structureSources(input);
-    const tree = directoryTree(input.files);
+export function checkLoneFiles(input: CheckInput): Finding[] {
+    const files = listCodeFiles(input);
+    const tree = buildFolderTree(input.files);
     const extensions = filterSourceConfigurations(input.scope.selected).flatMap(
         (manifest) => manifest.files.extensions,
     );
     const checked = new Set(files.map((file) => extractParentFolder(file.path)));
-    return [...checked].flatMap((directory) => {
-        if (directory === '' || isDependencyFolder(directory)) return [];
-        const entries = tree.get(directory) ?? [];
-        if (entries.some((entry) => entry.kind === 'dir')) return [];
+    return [...checked].flatMap((folder) => {
+        if (folder === '' || isDependencyFolder(folder)) return [];
+        const entries = tree.get(folder) ?? [];
+        if (entries.some((entry) => entry.kind === 'folder')) return [];
         const siblings = entries.filter(
             (entry) => !DECLARATION_EXTENSIONS.some((extension) => entry.name.endsWith(extension)),
         );
@@ -28,11 +28,11 @@ export function loneFiles(input: CheckInput): Finding[] {
         if (only === undefined || siblings.length !== 1) return [];
         if (!extensions.some((extension) => only.name.endsWith(extension))) return [];
         return [
-            findingAt(
+            buildFinding(
                 input,
-                { file: `${directory}/${only.name}`, line: 1 },
+                { file: `${folder}/${only.name}`, line: 1 },
                 'lone-file',
-                `The folder ${directory}/ holds only ${only.name}.`,
+                `The folder ${folder}/ holds only ${only.name}.`,
             ),
         ];
     });

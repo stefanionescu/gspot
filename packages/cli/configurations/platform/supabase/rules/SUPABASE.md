@@ -1,5 +1,7 @@
 # Supabase
 
+Read this rule when you change Supabase migrations, storage, Edge Functions, or `config.toml`.
+
 Layout, database access, storage, Edge Functions, configuration, and secrets of a Supabase
 project, on top of the Postgres rules. Supabase uses the API roles `anon`, `authenticated`, and
 `service_role`.
@@ -13,11 +15,10 @@ project, on top of the Postgres rules. Supabase uses the API roles `anon`, `auth
 
 - `[api].schemas` in `config.toml` lists the schemas the Data API exposes. Treat those schemas as
   externally reachable.
-- row level security (RLS) with no policy denies access through the API roles. Use that choice for tables that clients
-  must not read.
+- A table with row level security (RLS) on and no policy denies access to the API roles. Use that choice for tables
+  that clients must not read.
 - Roles Supabase creates for auth, cron, or storage stay scoped to the functions and schemas they need.
-- Each policy chooses `TO anon`, `TO authenticated`, or `TO service_role` deliberately. The service
-  role never stands in for precise grants or hides a missing policy.
+- Name Supabase's roles in `TO`: `anon`, `authenticated`, or `service_role`.
 - A table can skip the foreign key to `auth.users` so its history survives account deletion.
 - Keep `[api].max_rows` conservative to bound accidental or malicious payloads.
 
@@ -32,10 +33,8 @@ Choose the Supabase connection mode for the workload.
 | Persistent server on an IPv4-only network       | Session pooler when the direct endpoint is unavailable                |
 | Migrations, dumps, or session-dependent tooling | Direct connection; use a supported session alternative when necessary |
 
-A separate migration credential holds schema privileges. The application role holds only what
-runtime needs.
-See [connection modes](https://supabase.com/docs/guides/database/connecting-to-postgres). Postgres.js
-uses the transaction pooler's supported configuration.
+A separate migration credential holds schema privileges. The application role holds only what the running application needs.
+See [connection modes](https://supabase.com/docs/guides/database/connecting-to-postgres).
 
 Set explicit connection, idle, and query timeouts. Budget connections across instances and
 workers. With Postgres.js through transaction pooling, set `prepare: false` and confirm the setting

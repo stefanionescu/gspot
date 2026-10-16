@@ -1,19 +1,19 @@
 import { z } from 'zod';
 import { parse } from 'yaml';
 import { join, posix } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
-import { type SchemaShape } from '#cli/types/objects.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { runCommandGroups } from '#cli/checks/run/command/check.ts';
-import { toolOutputDetail } from '#cli/checks/run/command/output.ts';
-import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
+import { TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
+import { formatOutputTail } from '#cli/checks/run/command/output.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { DOCKERIGNORE, DOCKERFILE_NAME } from '#cli/config/repository/inventory.ts';
-import { type Finding, type CheckInput, type CheckResult } from '#cli/types/execution/check.ts';
-import { type ComposeFiles, type ComposeService, type ComposeDocuments } from '#cli/types/checks/infrastructure.ts';
+import { type Finding, type CheckInput, type CheckResult } from '#cli/types/checks/run/check.ts';
+import type { ComposeFiles, ComposeService, ComposeDocuments } from '#cli/types/checks/infrastructure.ts';
 
 import {
     TRIVY_YML,
@@ -27,7 +27,7 @@ import {
 } from '#cli/config/checks/infrastructure/docker.ts';
 
 // Group actual project paths in the order of base files before their overrides for metadata and validation.
-function composeGroups(files: TrackedFile[]): ComposeFiles[] {
+function groupComposeFiles(files: TrackedFile[]): ComposeFiles[] {
     const groups = new Map<string, ComposeFiles>();
     for (const file of files) {
         const baseName = COMPOSE_OVERRIDE.exec(posix.basename(file.path))?.groups?.['base'];
@@ -50,13 +50,13 @@ function composeGroups(files: TrackedFile[]): ComposeFiles[] {
     return [...groups.values()];
 }
 
-// Compose declares paths. Native YAML owns service, image, and build metadata.
+// Compose declares paths. YAML defines service, image, and build metadata.
 /**
- * Parse selected Compose projects and keep their service, image, and build declarations.
- * @param input the Compose paths, selected manifests, and cached file reads.
- * @returns the declarations and Dockerfile build contexts.
+ * Read Compose declarations and resolve their local build contexts.
+ * @param input the selected Compose files and source reads.
+ * @returns the service declarations and their build contexts.
  */
-function composeDocuments(input: CheckInput): ComposeDocuments {
+function readComposeDocuments(input: CheckInput): ComposeDocuments {
     const patterns = input.manifests
         .values()
         .flatMap(({ checks }) => checks)
@@ -65,7 +65,7 @@ function composeDocuments(input: CheckInput): ComposeDocuments {
         .toArray();
     const isCompose = buildPathMatcher(patterns);
     const documents: ComposeDocuments = { declarations: [], contexts: new Map() };
-    for (const group of composeGroups(input.files.filter(({ path }) => isCompose(path)))) {
+    for (const group of groupComposeFiles(input.files.filter(({ path }) => isCompose(path)))) {
         const declarations = [...group.before, group.last].flatMap(({ path }) => {
             try {
                 const document = composeSchema.parse(
@@ -103,21 +103,21 @@ function composeDocuments(input: CheckInput): ComposeDocuments {
     return documents;
 }
 
-// Native exit status and parsed findings must agree before a scan can count as clean.
+// The tool's exit status and parsed findings must agree before a scan can count as clean.
 async function scanImage(input: CheckInput, image: string, path: string): Promise<Finding[]> {
     const result = await runCheckTool(
         input,
-        [...TRIVY_IMAGE_COMMAND, join(input.root, TOOL_FILE_DIRECTORY, input.scope.scope.path, TRIVY_YML), image],
+        [...TRIVY_IMAGE_COMMAND, join(input.root, TOOL_FILES_FOLDER, input.scope.scope.path, TRIVY_YML), image],
         { cwd: input.root },
     );
     if (result.code !== 0 && result.code !== TRIVY_EXIT) {
-        const detail = toolOutputDetail(result, `exit ${String(result.code)}`);
+        const detail = formatOutputTail(result, `exit ${String(result.code)}`);
         throw new Error(`Trivy could not scan ${image}: ${detail}`);
     }
     const report = imageReportSchema.parse(JSON.parse(result.stdout));
     const findings = (report.Results ?? []).flatMap((entry) => [
         ...(entry.Vulnerabilities ?? []).map((vulnerability) =>
-            findingAt(
+            buildFinding(
                 input,
                 { file: path, line: 1 },
                 vulnerability.VulnerabilityID,
@@ -125,7 +125,7 @@ async function scanImage(input: CheckInput, image: string, path: string): Promis
             ),
         ),
         ...(entry.Secrets ?? []).map((secret) =>
-            findingAt(input, { file: path, line: 1 }, 'secret', `${image}: ${secret.RuleID}: ${secret.Title}`),
+            buildFinding(input, { file: path, line: 1 }, 'secret', `${image}: ${secret.RuleID}: ${secret.Title}`),
         ),
     ]);
     if ((result.code === TRIVY_EXIT) !== findings.length > 0)
@@ -202,14 +202,14 @@ const composeSchema = z.object({
 } satisfies SchemaShape<{ services?: Record<string, ComposeService> | undefined }>);
 
 /**
- * Scan each literal service image once and attribute findings to its Compose declarations.
- * @param input the Compose file paths, image settings, and tool execution services.
- * @returns the image diagnostics at each declaring Compose file.
+ * Scan each literal service image once and attribute its findings to every declaring Compose file.
+ * @param input the Compose declarations, image settings, and tool execution services.
+ * @returns the findings.
  */
-export async function trivyImage(input: CheckInput): Promise<Finding[]> {
+export async function checkDockerTrivyImage(input: CheckInput): Promise<Finding[]> {
     const scanned = new Map<string, Finding[]>();
     const findings: Finding[] = [];
-    const files = Map.groupBy(composeDocuments(input).declarations, ({ path }) => path);
+    const files = Map.groupBy(readComposeDocuments(input).declarations, ({ path }) => path);
     for (const [path, services] of files) {
         const images = new Set(
             services
@@ -231,12 +231,12 @@ export async function trivyImage(input: CheckInput): Promise<Finding[]> {
 /**
  * Validate each Compose project with its declared overrides through the shared command runner.
  * @param session the open session.
- * @param planned the planned Compose check.
- * @returns the findings and process outcome.
+ * @param planned the selected Compose files, overrides, and invoking scope.
+ * @returns the findings and process result.
  */
-export async function dockerCompose(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkDockerCompose(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const isCompose = buildPathMatcher(planned.check.files?.paths ?? []);
-    const groups = composeGroups(planned.files.filter(({ path }) => isCompose(path)));
+    const groups = groupComposeFiles(planned.files.filter(({ path }) => isCompose(path)));
     return runCommandGroups(
         session,
         planned,
@@ -257,4 +257,4 @@ export async function dockerCompose(session: Session, planned: PlannedCheck): Pr
     );
 }
 
-export { composeDocuments };
+export { readComposeDocuments };

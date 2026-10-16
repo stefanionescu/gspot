@@ -5,28 +5,28 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { PERMISSION_BITS } from '#cli/config/system/modes.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
 import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
+import type { CheckInput } from '#cli/types/checks/run/check.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { copyDependencies } from '#cli/checks/run/copy/dependencies.ts';
 import { type Files, type ScratchFolder } from '#cli/types/system/files.ts';
-import { ENTRY_MODES, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
-import { SCRATCH_EXTRAS, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/execution/copy.ts';
+import { SYMLINK_MODE, ENTRY_FILE_MODES } from '#cli/config/repository/revisions.ts';
+import { SCRATCH_EXTRAS, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/checks/run/copy.ts';
 import { statSync, chmodSync, constants, mkdirSync, symlinkSync, copyFileSync, writeFileSync } from 'node:fs';
-import type { ScratchFile, DependencyCopy, ScratchCopyPlan, ScratchCopyPaths } from '#cli/types/execution/copy.ts';
+import type { ScratchFile, DependencyCopy, ScratchCopyPlan, ScratchCopyPaths } from '#cli/types/checks/run/copy.ts';
 
 // All scratch destinations share writes; source reads retain the repository boundary.
 function writeScratchFile(files: Files, scratch: string, file: ScratchFile): void {
     const target = join(scratch, ...splitSystemPath(typeof file === 'string' ? file : file.entry.path));
     mkdirSync(dirname(target), { recursive: true });
     if (typeof file === 'string') {
-        const source = files.realPath(file);
+        const source = files.readRealPath(file);
         copyFileSync(source, target, constants.COPYFILE_FICLONE);
         chmodSync(target, statSync(source).mode & PERMISSION_BITS);
         return;
     }
-    const mode = normalizeFileMode({ mode: ENTRY_MODES[file.entry.mode] });
+    const mode = normalizeFileMode({ mode: ENTRY_FILE_MODES[file.entry.mode] });
     if (file.entry.mode === SYMLINK_MODE) symlinkSync(file.bytes, target);
     else {
         writeFileSync(target, file.bytes, { flag: 'wx', mode });
@@ -62,10 +62,10 @@ export async function writeScratchFiles(input: ScratchCopyPlan): Promise<void> {
  */
 export function checkCopyInputs(input: CheckInput, extra: string[] = []): ScratchCopyPaths {
     return {
-        ...projectCopyInputs(
+        ...selectScratchCopyPaths(
             input.root,
             [...input.files.map((file) => file.path), ...input.dependencyFiles(), ...extra],
-            input.scopeEntries.map((scope) => scope.path),
+            input.scopes.map((scope) => scope.path),
         ),
         cancelSignal: input.cancelSignal,
     };
@@ -98,13 +98,13 @@ export async function copyIntoScratch(source: ScratchCopyPaths): Promise<Scratch
 /**
  * Select scope dependencies and existing configuration extras for a working-tree project copy.
  *
- * @param root the source repository.
+ * @param repositoryRoot the base directory for installed projects and configuration extras.
  * @param paths selected authored files.
  * @param scopes the scope paths owning installed dependencies.
  *
  * @returns exact paths and dependency copy operations.
  */
-export function projectCopyInputs(root: string, paths: string[], scopes: string[]): ScratchCopyPaths {
+export function selectScratchCopyPaths(repositoryRoot: string, paths: string[], scopes: string[]): ScratchCopyPaths {
     const projects = paths.flatMap((path) =>
         DEPENDENCY_FILES.has(posix.basename(path)) && posix.basename(posix.dirname(path)) !== DOT_GSPOT
             ? [posix.dirname(path)]
@@ -113,7 +113,7 @@ export function projectCopyInputs(root: string, paths: string[], scopes: string[
     const dependencies = [
         ...new Set([DOT_GSPOT, ...scopes, ...projects].map((project) => posix.join(project, NODE_MODULES))),
     ]
-        .filter((path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined)
+        .filter((path) => statSync(join(repositoryRoot, path), { throwIfNoEntry: false }) !== undefined)
         .map(
             (path): DependencyCopy => ({
                 path,
@@ -121,9 +121,9 @@ export function projectCopyInputs(root: string, paths: string[], scopes: string[
             }),
         );
     return {
-        root,
+        root: repositoryRoot,
         paths: [...new Set([...paths, ...SCRATCH_EXTRAS])].filter(
-            (path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined,
+            (path) => statSync(join(repositoryRoot, path), { throwIfNoEntry: false }) !== undefined,
         ),
         dependencies,
     };

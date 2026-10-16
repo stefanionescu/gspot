@@ -1,5 +1,7 @@
 # Configuration
 
+Read this rule when you change how a program reads its configuration or environment.
+
 ## Validate external values
 
 - A missing or invalid value stops startup. The message names the variable and never prints its

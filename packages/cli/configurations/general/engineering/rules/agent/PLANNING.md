@@ -1,5 +1,7 @@
 # Planning
 
+Read this rule before you write a plan.
+
 ## Complete change content
 
 A plan holds the complete content of every change it proposes, so another agent can carry it
@@ -39,4 +41,5 @@ Mention an edge case only when it belongs to the requested work.
 
 ## Verification steps
 
-A plan verifies the requested change.
+End the plan with the commands that prove the change works, and the result each command prints when it passes. Run
+only the checks that cover the change, as WORKING.md says.

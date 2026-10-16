@@ -1,6 +1,6 @@
 {
     "name": "@gspothq/eslint-plugin",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "publishConfig": {
         "access": "public"
     },
@@ -15,12 +15,13 @@
     "sideEffects": false,
     "exports": {
         ".": {
-            "types": "./dist/plugin.d.ts",
+            "types": "./plugin.d.ts",
             "default": "./dist/plugin.js"
         }
     },
     "files": [
-        "dist"
+        "dist/plugin.js",
+        "./plugin.d.ts"
     ],
     "dependencies": {
         "@typescript-eslint/utils": "^8.70.0",
@@ -42,5 +43,13 @@
         "typescript": {
             "optional": true
         }
-    }
+    },
+    "keywords": [
+        "eslint",
+        "eslintplugin",
+        "eslint-plugin",
+        "gspot"
+    ],
+    "homepage": "https://generativespotting.com/reference/eslint-plugin/",
+    "bugs": "https://github.com/stefanionescu/gspot/issues"
 }

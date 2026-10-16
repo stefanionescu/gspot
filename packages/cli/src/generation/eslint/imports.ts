@@ -101,5 +101,4 @@ function buildScopeImportBlocks(
         });
 }
 
-export { buildScopeImportBlocks, buildImportBoundariesRule };
-export { buildImportStyleBlocks };
+export { buildImportStyleBlocks, buildScopeImportBlocks, buildImportBoundariesRule };

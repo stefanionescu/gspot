@@ -1,0 +1,10 @@
+---
+import { THEME_STORAGE_KEY } from '../../config/site.ts';
+---
+
+{/* Every visit starts dark, whatever the system theme, unless the reader chose light with the theme switch. */}
+<script is:inline define:vars={{ THEME_STORAGE_KEY }}>
+    const stored = typeof localStorage === 'undefined' ? null : localStorage.getItem(THEME_STORAGE_KEY);
+    document.documentElement.dataset.theme = stored === 'light' ? 'light' : 'dark';
+    globalThis.StarlightThemeProvider = { updatePickers() {} };
+</script>

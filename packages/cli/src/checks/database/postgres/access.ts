@@ -1,11 +1,11 @@
 // The access checks of the schema the migrations build: row security, grants, and definer functions.
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { computePosition } from '#cli/system/text.ts';
 import type { Migration } from '#cli/types/checks/database.ts';
 import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { getNodeFields, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 
@@ -21,7 +21,7 @@ function isLooseDefiner(statement: SqlStatementView): boolean {
     return isDefiner && !hasPath;
 }
 
-function statementFindings(
+function checkStatements(
     input: CheckInput,
     migrations: Migration[],
     { rule, message, isWrong }: { rule: string; message: string; isWrong: (statement: SqlStatementView) => boolean },
@@ -30,7 +30,7 @@ function statementFindings(
         migration.statements
             .filter((statement) => isWrong(statement))
             .map((statement) =>
-                findingAt(
+                buildFinding(
                     input,
                     { file: migration.path, ...computePosition(migration.text, statement.start) },
                     rule,
@@ -42,10 +42,10 @@ function statementFindings(
 
 /**
  * One finding for each table in a client schema with row security off.
- * @param input the check input.
+ * @param input the selected migrations and configured client schemas.
  * @returns the findings.
  */
-export async function postgresRowLevelSecurity(input: CheckInput): Promise<Finding[]> {
+export async function checkRowLevelSecurity(input: CheckInput): Promise<Finding[]> {
     const { migrations, findings: syntax } = await readMigrations(input);
     if (syntax.length > 0) return syntax;
     const schema = buildSchema(migrations);
@@ -54,7 +54,7 @@ export async function postgresRowLevelSecurity(input: CheckInput): Promise<Findi
         .entries()
         .filter(([table]) => schemas.has(table.slice(0, table.indexOf('.'))) && !schema.secured.has(table))
         .map(([table, at]) =>
-            findingAt(
+            buildFinding(
                 input,
                 { file: at.path, ...computePosition(at.text, at.offset) },
                 'row-security',
@@ -66,17 +66,17 @@ export async function postgresRowLevelSecurity(input: CheckInput): Promise<Findi
 
 /**
  * One finding for each mutable migration that grants every privilege.
- * @param input the check input.
+ * @param input the selected migrations and the last frozen version.
  * @returns the findings.
  */
-export async function postgresGrants(input: CheckInput): Promise<Finding[]> {
+export async function checkPostgresGrants(input: CheckInput): Promise<Finding[]> {
     const { migrations, findings: syntax } = await readMigrations(input);
     if (syntax.length > 0) return syntax;
     const frozen = selectFrozenMigrations(
         migrations.map(({ path }) => path),
         input.scope.view.options('postgres').frozen_through,
     );
-    return statementFindings(
+    return checkStatements(
         input,
         migrations.filter(({ path }) => !frozen.has(path)),
         {
@@ -95,17 +95,17 @@ export async function postgresGrants(input: CheckInput): Promise<Finding[]> {
 
 /**
  * One finding for each SECURITY DEFINER function that sets no search_path.
- * @param input the check input.
+ * @param input the migration paths and SQL parsing services.
  * @returns the findings.
  */
-export async function postgresDefinerSearchPath(input: CheckInput): Promise<Finding[]> {
-    const diagnostic =
+export async function checkDefinerSearchPath(input: CheckInput): Promise<Finding[]> {
+    const message =
         'This SECURITY DEFINER function sets no search_path. Set an explicit search_path so callers cannot choose the objects it accesses.';
     const { migrations, findings: syntax } = await readMigrations(input);
     if (syntax.length > 0) return syntax;
-    return statementFindings(input, migrations, {
+    return checkStatements(input, migrations, {
         rule: 'definer-search-path',
-        message: diagnostic,
+        message: message,
         isWrong: isLooseDefiner,
     });
 }

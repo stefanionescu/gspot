@@ -1,10 +1,10 @@
 import { NPM_CLIENTS } from '#cli/config/parsers/dependency-files.ts';
 
-export const LINT_DIRECTORIES = ['quality', 'lint', 'linting', '.qlty', 'code-quality'] as const;
+export const LINT_FOLDERS = ['quality', 'lint', 'linting', '.qlty', 'code-quality'] as const;
 
 export const AGENT_FILES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules', 'CONVENTIONS.md'] as const;
 
-export const RULES_DIRECTORIES = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'] as const;
+export const RULE_FOLDERS = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'] as const;
 
 // The words in a CI job name that say it lints.
 export const LINT_WORDS = new Set(['lint', 'quality', 'gspot']);

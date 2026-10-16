@@ -1,21 +1,21 @@
 // Writes license test settings and scanner version commands.
 import { createFileTree } from 'testdirs';
 import { join, relative } from 'node:path';
-import { fakeTool } from '#tests/setup/fake-tool.ts';
+import { fakeTool } from '#tests/setup/fakes.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
-import { settingsText } from '#tests/setup/settings.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { buildSettingsText } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 
 import {
     LICENSE_SETTINGS,
     SAMPLE_PYPROJECT,
-    ALLOWED_PACKAGE_ENTRY,
+    ALLOWED_PACKAGE_REASON,
     ABSENT_PACKAGE_LOCKFILE,
     LICENSE_TOOL_PROJECT_FILES,
     type ALLOWED_PACKAGE_SCOPE_CASES,
-} from '#tests/config/licenses.ts';
+} from '#tests/data/checks/licenses.ts';
 
 /** Write the license settings and a scanner version command before mocking scan output. */
 export async function prepareLicenseSandbox(
@@ -31,7 +31,7 @@ export async function prepareLicenseSandbox(
     };
     if (typeof plan !== 'string') {
         const { scopes, reports } = plan;
-        const allowedPackageText = `[[licenses.allowed_package]]\nname = "Absent_Package"\nversion = "2.0.0"\n${ALLOWED_PACKAGE_ENTRY}`;
+        const allowedPackageText = `[[licenses.allowed_package]]\nname = "Absent_Package"\nversion = "2.0.0"\n${ALLOWED_PACKAGE_REASON}`;
         settings += allowedPackageText;
         if ('ignore' in plan)
             settings += `[[ignore]]\ncheck = "licenses/allowed"\npaths = ["${plan.ignore}/**"]\nreason = "Scope is intentionally outside this license run."\n`;
@@ -44,7 +44,7 @@ export async function prepareLicenseSandbox(
         );
     }
     await createFileTree(root, {
-        'gspot.toml': settingsText(['licenses'], { tables: settings }),
+        'gspot.toml': buildSettingsText(['licenses'], { tables: settings }),
         ...files,
         ...(typeof plan === 'string' ? {} : { 'uv.lock': ABSENT_PACKAGE_LOCKFILE, ...LICENSE_TOOL_PROJECT_FILES }),
     });

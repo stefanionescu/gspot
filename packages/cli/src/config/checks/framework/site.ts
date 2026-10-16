@@ -37,7 +37,6 @@ export const ASSET_FOLDER = /(?:^|\/)(?:assets|public|static)\//u;
 export const OUTPUT_TAIL_LINES = 10;
 
 export const LINKINATOR_STATES = ['OK', 'BROKEN', 'SKIPPED'] as const;
-export const GIT_FILE_MODES: ReadonlySet<string> = new Set(['100644', '100755']);
 export const LINKINATOR = 'linkinator';
 export const LOCAL_HOSTS: ReadonlySet<string> = new Set(['localhost', '127.0.0.1']);
 export const INDEX_PAGE = 'index.html';

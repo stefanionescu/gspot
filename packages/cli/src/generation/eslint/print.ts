@@ -1,13 +1,17 @@
+// Print JavaScript imports, selectors, and readable ESLint configuration objects.
+import ts from 'typescript';
 import { isDeepStrictEqual } from 'node:util';
-import { ESLINT_BASE_IMPORTS } from '#cli/config/generation/eslint.ts';
+import type { Level } from '#cli/types/configurations.ts';
+import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import { ESLINT_INDENT, ESLINT_BASE_IMPORTS } from '#cli/config/generation/eslint.ts';
 
 import type {
     EslintParts,
     EslintModule,
     EslintPlugins,
-    EslintRuleSource,
     EslintFileSelector,
     EslintSettingsBlock,
+    EslintRuleExpression,
 } from '#cli/types/generation/eslint.ts';
 
 function serializeSelector(selector: EslintFileSelector): string {
@@ -17,14 +21,34 @@ function serializeSelector(selector: EslintFileSelector): string {
     return `runtimeMatches(${String(selector.runtime.index)}, runtimeDeclarations)`;
 }
 
-function serializePresetRules(rules: EslintSettingsBlock['rules'], preset: EslintRuleSource): string[] {
+function serializeRules(rules: EslintSettingsBlock['rules'], level: Level | undefined): string {
+    const entries = rules === undefined ? [] : Object.entries(rules);
+    return entries
+        .map(([name, value]) => {
+            const configured: unknown[] = Array.isArray(value) ? value : [value];
+            const [severity, ...options] = configured;
+            const source =
+                name.startsWith('gspot/') && level !== undefined && severity !== 'off' && severity !== 0
+                    ? `gspot.configs.${level}.rules[${JSON.stringify(name)}] ?? 'off'`
+                    : JSON.stringify(severity);
+            const suffix =
+                options.length === 0 ? '' : ', ' + options.map((option) => JSON.stringify(option)).join(', ');
+            const setting = Array.isArray(value) ? `[${source}${suffix}]` : source;
+            return `${JSON.stringify(name)}: ${setting}`;
+        })
+        .join(', ');
+}
+
+function serializePresetRules(
+    rules: EslintSettingsBlock['rules'],
+    preset: EslintRuleExpression,
+    level: Level | undefined,
+): string[] {
     const entries = rules === undefined ? [] : Object.entries(rules);
     const changed = Object.fromEntries(
         entries.filter(([name, value]) => !isDeepStrictEqual(value, preset.rules?.[name])),
     );
-    const hasPresetRules = preset.rules !== undefined && Object.keys(preset.rules).length > 0;
-    if (!hasPresetRules && Object.keys(changed).length === 0) return [];
-    const additions = Object.keys(changed).length === 0 ? '' : ', ...' + JSON.stringify(changed);
+    const additions = Object.keys(changed).length === 0 ? '' : ', ' + serializeRules(changed, level);
     return [`rules: { ...${preset.expression}${additions} }`];
 }
 
@@ -34,18 +58,25 @@ function serializePresetRules(rules: EslintSettingsBlock['rules'], preset: Eslin
  * @param block the actual ESLint rule fields.
  * @param runtime plugin, parser, and settings expressions that contain no rule fields.
  * @param preset the declared ESLint preset.
+ * @param level the selected ESLint plugin configuration.
  *
  * @returns a JavaScript configuration block.
  */
-function serializeBlock(block: EslintSettingsBlock, runtime: string, preset: EslintRuleSource | undefined): string {
+function serializeBlock(
+    block: EslintSettingsBlock,
+    runtime: string,
+    preset: EslintRuleExpression | undefined,
+    level?: Level,
+): string {
     const { files, rules, ...fields } = block;
     const content = {
         ...fields,
-        ...(preset !== undefined || rules === undefined || Object.keys(rules).length === 0 ? {} : { rules }),
     };
     const parts = runtime === '' ? [] : [runtime];
     parts.push(...Object.entries(content).map(([name, value]) => `${JSON.stringify(name)}: ${JSON.stringify(value)}`));
-    if (preset !== undefined) parts.push(...serializePresetRules(rules, preset));
+    if (preset !== undefined) parts.push(...serializePresetRules(rules, preset, level));
+    else if (rules !== undefined && Object.keys(rules).length > 0)
+        parts.push(`rules: { ${serializeRules(rules, level)} }`);
     if (files !== undefined) {
         const expressions = files.map((entry) => {
             if (!Array.isArray(entry)) return serializeSelector(entry);
@@ -54,15 +85,60 @@ function serializeBlock(block: EslintSettingsBlock, runtime: string, preset: Esl
         });
         parts.push(`files: [${expressions.join(', ')}]`);
     }
-    return `{${parts.join(', ')}}`;
+    return printConfiguration(`{${parts.join(', ')}}`);
 }
+
+// Rebuild objects and arrays as multiline syntax without changing their expressions.
+function formatSyntaxNode(node: ts.Node, context: ts.TransformationContext): ts.VisitResult<ts.Node> {
+    const child = ts.visitEachChild(node, (entry) => formatSyntaxNode(entry, context), context);
+    if (ts.isObjectLiteralExpression(child)) {
+        const fields = child.properties.map((property) => {
+            if (ts.isPropertyAssignment(property))
+                return context.factory.createPropertyAssignment(property.name, property.initializer);
+            if (ts.isSpreadAssignment(property)) return context.factory.createSpreadAssignment(property.expression);
+            return property;
+        });
+        return ts.setTextRange(context.factory.createObjectLiteralExpression(fields, true), child);
+    }
+    if (ts.isArrayLiteralExpression(child)) {
+        const elements = child.elements.map((element) =>
+            ts.isStringLiteral(element) ? context.factory.createStringLiteral(element.text) : element,
+        );
+        return ts.setTextRange(context.factory.createArrayLiteralExpression(elements, true), child);
+    }
+    return child;
+}
+
+// The constructed export always contains one expression and the transformer preserves it.
+function printConfiguration(literal: string): string {
+    const source = ts.createSourceFile(
+        'eslint-block.js',
+        `export default ${literal};`,
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.JS,
+    );
+    const declaration = source.statements[0] as ts.ExportAssignment;
+    const printed = ts.transform(declaration.expression, [
+        (context) => (node) => formatSyntaxNode(node, context) as ts.Expression,
+    ]);
+    const [expression] = printed.transformed as [ts.Expression, ...ts.Expression[]];
+    try {
+        return ts
+            .createPrinter({ newLine: ts.NewLineKind.LineFeed })
+            .printNode(ts.EmitHint.Expression, expression, source);
+    } finally {
+        printed.dispose();
+    }
+}
+
 /**
  * Serialize the runtime declarations used by the shared file selectors.
  * @param runtimes the ordered runtime declarations and their file selectors.
  * @returns the JavaScript declaration shared by runtime file matchers.
  */
-export function serializeRuntimeSelectors(runtimes: EslintParts['runtimes']): string {
-    return `const runtimeDeclarations = ${JSON.stringify(runtimes)};\n`;
+function serializeRuntimeSelectors(runtimes: EslintParts['runtimes']): string {
+    return `const runtimeDeclarations = ${JSON.stringify(runtimes, null, JSON_INDENT)};\n`;
 }
 
 /**
@@ -73,7 +149,7 @@ export function serializeRuntimeSelectors(runtimes: EslintParts['runtimes']): st
  *
  * @returns the import expression for the declared preset.
  */
-export function serializePresetAccess(variable: string, source: string): string {
+function serializePresetAccess(variable: string, source: string): string {
     return (
         variable +
         (source === ''
@@ -93,7 +169,7 @@ export function serializePresetAccess(variable: string, source: string): string 
  *
  * @returns the imports used by the generated configuration.
  */
-export function serializeImports(plugins: EslintPlugins, fragments: string): string {
+function serializeImports(plugins: EslintPlugins, fragments: string): string {
     return (
         [...ESLINT_BASE_IMPORTS, ...Object.values(plugins)]
             .map(([importName, source]) => `import ${importName} from ${JSON.stringify(source)};`)
@@ -112,7 +188,27 @@ export function serializeImports(plugins: EslintPlugins, fragments: string): str
  *
  * @returns the serialized ESLint blocks.
  */
-export function serializeBlocks(module: EslintModule, blocks: Parameters<EslintModule['block']>[]): string {
-    return blocks.map((block) => '\n    ' + module.block(...block) + ',\n').join('');
+function serializeBlocks(module: EslintModule, blocks: Parameters<EslintModule['block']>[]): string {
+    return blocks.map((block) => '\n' + module.block(...block) + ',\n').join('');
 }
-export { serializeBlock };
+
+/**
+ * Indent every line of an emitted ESLint block beneath its configuration array.
+ * @param source the already serialized block or explanatory comment.
+ * @returns the block text with the shared indentation.
+ */
+function indentEslintBlock(source: string): string {
+    return source
+        .split('\n')
+        .map((line) => ESLINT_INDENT + line)
+        .join('\n');
+}
+
+export {
+    serializeBlock,
+    serializeBlocks,
+    serializeImports,
+    indentEslintBlock,
+    serializePresetAccess,
+    serializeRuntimeSelectors,
+};

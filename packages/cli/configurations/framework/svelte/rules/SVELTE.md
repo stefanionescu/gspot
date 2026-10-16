@@ -1,6 +1,6 @@
 # Svelte
 
-These rules cover Svelte 5 components, runes, props and events, markup, and data loading in SvelteKit.
+Read this rule when you change Svelte components or SvelteKit routes.
 
 ## Components
 

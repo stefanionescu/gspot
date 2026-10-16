@@ -28,7 +28,7 @@ tool = "squawk"
 command = ["squawk", "--config", "{tool_file:squawk}", "--reporter", "json", "{files}"]
 example = "A migration adding a constraint that requires a disruptive table scan can report a migration-safety finding. Follow the reported rule to separate creation and validation or otherwise reduce the lock, then review the migration against the deployment database."
 files = { paths = ["{setting:postgres.migrations_folder}/**/*.sql"] }
-help = "Follow the help squawk prints for the rule. Turn one rule off with gspot ignore postgres/squawk --rule `<name>` --reason \"`<why>`\"."
+help = "Follow the help squawk prints for the rule. Turn one rule off with `gspot ignore postgres/squawk --rule <name> --reason \"<why>\"`."
 level = "recommended"
 name = "squawk"
 output = { format = "json", line_base = 0, fields = { file = "file", line = "line", column = "column", rule = "rule_name", message = "message" } }
@@ -98,7 +98,7 @@ why = "Deleting a parent row scans the whole child table when the foreign key ha
 
 [[naming.override]]
 allow_digits = true
-categories = ["directories"]
+categories = ["folders"]
 paths = ["**/migrations/**"]
 reason = "Migration directories use the migration tool timestamp names."
 

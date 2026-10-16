@@ -45,7 +45,4 @@ export const LOCKFILES = [
     { file: 'Podfile.lock', client: 'cocoapods' },
 ] as const;
 
-// eslint-disable-next-line gspot/no-alias-exports -- reason: This fixed value selects the uv file name from the single lockfile table; callers do not own its row position.
-export const UV_LOCKFILE_NAME = LOCKFILES[6].file;
-
 export const PNPM_ROOT_IMPORTER = '.';

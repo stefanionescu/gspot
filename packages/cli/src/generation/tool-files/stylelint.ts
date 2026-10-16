@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { readAsset } from '#cli/system/assets.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { VUE_STYLELINT_OVERRIDE } from '#cli/config/planning.ts';
 import type { RuleNamesFile } from '#cli/types/generation/eslint.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
@@ -13,7 +13,7 @@ import {
     STYLELINT_BASE_RULES,
     STYLELINT_ALL_LEVEL_RULES,
     STYLELINT_RULE_NAMES_FILE,
-} from '#cli/config/generation/tool-file-sources.ts';
+} from '#cli/config/generation/tool-files.ts';
 
 /**
  * Component parsers need file-specific pseudo-class and function rules.
@@ -71,13 +71,13 @@ const ruleNamesFileSchema = z.strictObject({
  */
 function buildStylelintFile(context: ToolFileContext): string {
     const { selection } = context;
-    const { packageManifests } = context.session;
+    const { dependencyFiles } = context.session;
     const level = context.level;
 
     const { rulesOff, configurations } = selection.view;
     const options = selection.view.options('tools.stylelint');
     const isAll = level === 'all';
-    const scopeDependencies = Object.keys(getProjectDependencies(packageManifests, selection.scope.path));
+    const scopeDependencies = Object.keys(getProjectDependencies(dependencyFiles, selection.scope.path));
     const stylelintRuleNames = ruleNamesFileSchema.parse(JSON.parse(readAsset(STYLELINT_RULE_NAMES_FILE))).rules;
 
     const off = rulesOff('css/stylelint');
@@ -116,5 +116,4 @@ function buildStylelintFile(context: ToolFileContext): string {
     return `${JSON.stringify(document, null, JSON_INDENT)}\n`;
 }
 
-export { buildStylelintFile };
-export { ruleNamesFileSchema };
+export { buildStylelintFile, ruleNamesFileSchema };

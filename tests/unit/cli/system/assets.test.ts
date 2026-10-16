@@ -3,17 +3,16 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { cp, symlink, readFile } from 'node:fs/promises';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
-import { BASH_MANIFEST, PACKAGE_FOLDER, ASSET_READER_SCRIPT, PACKAGE_FOLDER_FILES } from '#tests/config/system.ts';
-
-const root = join(import.meta.dir, '../../../..');
+import { BASH_MANIFEST, PACKAGE_FOLDER, ASSET_READER_SCRIPT, PACKAGE_FOLDER_FILES } from '#tests/data/system.ts';
 
 /**
  * Writes the copied checkout whose native asset reader both cases execute.
- * @param directory the sandbox folder.
+ * @param folder the sandbox folder.
  * @returns the copied checkout folder.
  */
-async function writePackageFolder(directory: string): Promise<string> {
-    await createFileTree(directory, {
+async function writePackageFolder(folder: string): Promise<string> {
+    const root = join(import.meta.dir, '../../../..');
+    await createFileTree(folder, {
         [`${PACKAGE_FOLDER}/tsconfig.json`]: JSON.stringify({
             compilerOptions: { paths: { '#cli/*': ['./packages/cli/src/*'] } },
         }),
@@ -27,7 +26,7 @@ async function writePackageFolder(directory: string): Promise<string> {
             Object.entries(PACKAGE_FOLDER_FILES).map(([path, text]) => [`${PACKAGE_FOLDER}/${path}`, text]),
         ),
     });
-    const cwd = join(directory, PACKAGE_FOLDER);
+    const cwd = join(folder, PACKAGE_FOLDER);
     // The whole source tree, so the copy follows every import the asset reader makes.
     await cp(join(root, 'packages/cli/src'), join(cwd, 'packages/cli/src'), { recursive: true });
     await symlink(join(root, 'packages/cli/node_modules'), join(cwd, 'packages/cli/node_modules'), 'junction');

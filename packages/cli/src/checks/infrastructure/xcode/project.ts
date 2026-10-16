@@ -1,28 +1,28 @@
 import { posix } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
 import { parsePbxproj } from '#cli/parsers/xcode.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { PBXPROJ } from '#cli/config/parsers/xcode.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listSourcePaths } from '#cli/repository/coverage.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { XCODEPROJ_SUFFIX } from '#cli/config/checks/infrastructure/xcode.ts';
 
 // The folder that holds the project bundle, with its trailing slash, or an empty string at the root.
-function projectFolder(projectFile: string): string {
+function getProjectFolder(projectFile: string): string {
     const bundle = projectFile.slice(0, projectFile.indexOf(XCODEPROJ_SUFFIX));
     return bundle.slice(0, bundle.lastIndexOf('/') + 1);
 }
 /**
  * Report Swift sources outside targets.
- * @param input the check input.
+ * @param input the selected project files, Swift sources, and cached file reads.
  * @returns the findings.
  */
-export function xcodeFilesWithoutTarget(input: CheckInput): Finding[] {
+export function checkXcodeUntargetedFiles(input: CheckInput): Finding[] {
     const projects = listSourcePaths(input.files, [PBXPROJ]).map((path) => ({
         path,
-        ...parsePbxproj(readCachedBytes(input.reads, path).toString('utf8'), projectFolder(path)),
+        ...parsePbxproj(readCachedBytes(input.reads, path).toString('utf8'), getProjectFolder(path)),
     }));
     if (projects.length === 0) return [];
     const references = projects.flatMap((project) =>
@@ -43,6 +43,6 @@ export function xcodeFilesWithoutTarget(input: CheckInput): Finding[] {
                 folders.every(({ path, excluded }) => !file.startsWith(path) || excluded.has(file)),
         )
         .map((file) =>
-            findingAt(input, { file, line: 1 }, 'untargeted', 'This Swift file is in no target of the project.'),
+            buildFinding(input, { file, line: 1 }, 'untargeted', 'This Swift file is in no target of the project.'),
         );
 }

@@ -2,7 +2,7 @@ import { EXECUTABLE_FILE, PERMISSION_BITS, OWNER_WRITABLE_FILE } from '#cli/conf
 
 export const ABSENT_HASH = /^0+$/u;
 
-export const COMMIT_DIFF_ARGUMENTS = ['diff', '--relative', '--name-only', '--no-renames', '-z'] as const;
+export const DIFF_NAMES_ARGUMENTS = ['diff', '--relative', '--name-only', '--no-renames', '-z'] as const;
 
 export const LOG_ARGUMENTS = [
     'log',
@@ -14,12 +14,10 @@ export const LOG_ARGUMENTS = [
     '-z',
 ] as const;
 
-export const WORKTREE_DIFF_ARGUMENTS = ['diff', '--relative', '--name-only', '--no-renames', '-z'] as const;
-
 export const GITLINK_MODE = '160000';
 export const SYMLINK_MODE = '120000';
 
-export const ENTRY_MODES = {
+export const ENTRY_FILE_MODES = {
     '100644': OWNER_WRITABLE_FILE,
     '100755': EXECUTABLE_FILE,
     [SYMLINK_MODE]: PERMISSION_BITS,
@@ -47,6 +45,13 @@ export const TREE_ARGUMENTS = ['rev-parse', '--verify'] as const;
 export const TREE_SUFFIX = '^{tree}';
 export const REMOTE_ARGUMENTS = ['remote'] as const;
 
-export const GIT_ENTRY_MODES = ['100644', '100755', '120000', '160000'] as const;
+export const REGULAR_FILE_MODES: ReadonlySet<string> = new Set(
+    Object.keys(ENTRY_FILE_MODES).filter((mode) => mode !== SYMLINK_MODE),
+);
+
+export const GIT_ENTRY_MODES = [
+    ...(Object.keys(ENTRY_FILE_MODES) as (keyof typeof ENTRY_FILE_MODES)[]),
+    GITLINK_MODE,
+] as const;
 
 export const MISSING_PUSH_REVISION_MESSAGE = 'Cannot find pushed object {hash}. Fetch the remote again.';

@@ -1,5 +1,5 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { SOURCE_GROUPS } from '#cli/config/configurations.ts';
+import { SOURCE_FILE_GROUPS } from '#cli/config/configurations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 
@@ -29,7 +29,7 @@ function visit(walk: SelectionWalk, configurationName: string): void {
  * @param manifests every configuration manifest.
  * @returns the manifests, requirements first, in order of first mention.
  */
-export function selectConfigurations(configurationNames: string[], manifests: Map<string, Manifest>): Manifest[] {
+function selectConfigurations(configurationNames: string[], manifests: Map<string, Manifest>): Manifest[] {
     const walk: SelectionWalk = { manifests, errors: [], order: [], seen: new Set() };
     for (const configurationName of configurationNames) visit(walk, configurationName);
     if (walk.errors.length > 0) throw new GspotError('arguments', walk.errors.join('\n'));
@@ -41,17 +41,17 @@ export function selectConfigurations(configurationNames: string[], manifests: Ma
  * @param selected the selected manifests.
  * @returns the source settings owners.
  */
-export function filterSourceConfigurations(selected: Manifest[]): Manifest[] {
-    const groups: readonly string[] = SOURCE_GROUPS;
+function filterSourceConfigurations(selected: Manifest[]): Manifest[] {
+    const groups: readonly string[] = SOURCE_FILE_GROUPS;
     return selected.filter((manifest) => groups.includes(manifest.configuration.group));
 }
 
 /**
  * Every distinct manifest across the scopes, in first-seen order.
- * @param scopes the selected scopes.
- * @returns the manifests.
+ * @param scopes selections whose enabled configuration declarations may overlap.
+ * @returns one declaration per configuration name, in first-seen order.
  */
-export function listSelectedManifests(scopes: Pick<ScopeSelection, 'selected'>[]): Manifest[] {
+function listSelectedManifests(scopes: Pick<ScopeSelection, 'selected'>[]): Manifest[] {
     const seen = new Map<string, Manifest>();
     for (const scope of scopes)
         for (const manifest of scope.selected)
@@ -62,10 +62,10 @@ export function listSelectedManifests(scopes: Pick<ScopeSelection, 'selected'>[]
 /**
  * Tests whether any resolved scope selects a configuration.
  * @param scopes the validated scope selections
- * @param name the configuration name
+ * @param name the identifier to find in each scope's enabled configurations.
  * @returns whether any scope includes the configuration
  */
-export function isConfigurationSelected(scopes: Pick<ScopeSelection, 'selected'>[], name: string): boolean {
+function isConfigurationSelected(scopes: Pick<ScopeSelection, 'selected'>[], name: string): boolean {
     return scopes.some((selection) => selection.selected.some((manifest) => manifest.configuration.name === name));
 }
 
@@ -75,7 +75,7 @@ export function isConfigurationSelected(scopes: Pick<ScopeSelection, 'selected'>
  * @param known the declared configuration names
  * @returns the public diagnostic
  */
-export function formatUnknownConfiguration(name: string, known: string[]): string {
+function formatUnknownConfiguration(name: string, known: string[]): string {
     const suggestions = selectSimilarNames(name, known);
     return `There is no configuration called \`${name}\`.${suggestions.length > 0 ? ' Did you mean ' + formatCodeList(suggestions) + '?' : ''} Run \`gspot list configurations\` to see the available configurations.`;
 }
@@ -86,7 +86,7 @@ export function formatUnknownConfiguration(name: string, known: string[]): strin
  * @param manifests the declared configurations
  * @returns each unknown declaration with its public diagnostic
  */
-export function listUnknownConfigurations<Declaration extends Pick<ConfigurationDeclaration, 'name'>>(
+function listUnknownConfigurations<Declaration extends Pick<ConfigurationDeclaration, 'name'>>(
     declarations: readonly Declaration[],
     manifests: ReadonlyMap<string, Manifest>,
 ): UnknownConfiguration<Declaration>[] {
@@ -98,3 +98,26 @@ export function listUnknownConfigurations<Declaration extends Pick<Configuration
             message: formatUnknownConfiguration(declaration.name, known),
         }));
 }
+
+/**
+ * Refuse explicit edits to configurations that gspot selects itself.
+ * @param names the configuration names
+ * @param manifests the configuration declarations
+ */
+function refuseAlwaysSelected(names: string[], manifests: Map<string, Manifest>): void {
+    const name = names.find((entry) => manifests.get(entry)?.configuration.always_selected === true);
+    if (name !== undefined)
+        throw new GspotError(
+            'arguments',
+            `gspot selects ${name} by itself when the repository needs it, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To turn one check off, run gspot ignore.`,
+        );
+}
+
+export {
+    selectConfigurations,
+    refuseAlwaysSelected,
+    listSelectedManifests,
+    isConfigurationSelected,
+    listUnknownConfigurations,
+    filterSourceConfigurations,
+};

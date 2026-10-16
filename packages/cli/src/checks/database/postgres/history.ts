@@ -1,9 +1,9 @@
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { FROZEN_NONE } from '#cli/config/parsers/sql.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { MIGRATION_DOWN } from '#cli/config/checks/database.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { readBlobs, listHeadEntries } from '#cli/repository/revisions/tree-entries.ts';
@@ -34,10 +34,10 @@ async function readCommittedMigrations(input: CheckInput, paths: string[]): Prom
 
 /**
  * One finding for a version two files share, a file with no version, and a new file that sorts before a committed one.
- * @param input the check input.
+ * @param input the selected migrations and committed repository history.
  * @returns the findings.
  */
-async function postgresMigrationOrder(input: CheckInput): Promise<Finding[]> {
+export async function checkPostgresMigrationOrder(input: CheckInput): Promise<Finding[]> {
     const { migrations, findings: syntax } = await readMigrations(input);
     if (syntax.length > 0) return syntax;
     const findings: Finding[] = [];
@@ -45,7 +45,7 @@ async function postgresMigrationOrder(input: CheckInput): Promise<Finding[]> {
     for (const migration of migrations) {
         if (migration.version === '')
             findings.push(
-                findingAt(
+                buildFinding(
                     input,
                     { file: migration.path, line: 1 },
                     'version',
@@ -55,7 +55,7 @@ async function postgresMigrationOrder(input: CheckInput): Promise<Finding[]> {
         const earlier = seen.get(migration.version);
         if (earlier !== undefined && migration.version !== '')
             findings.push(
-                findingAt(
+                buildFinding(
                     input,
                     { file: migration.path, line: 1 },
                     'duplicate-version',
@@ -81,7 +81,7 @@ async function postgresMigrationOrder(input: CheckInput): Promise<Finding[]> {
     return [
         ...findings,
         ...late.map((migration) =>
-            findingAt(
+            buildFinding(
                 input,
                 { file: migration.path, line: 1 },
                 'order',
@@ -93,10 +93,10 @@ async function postgresMigrationOrder(input: CheckInput): Promise<Finding[]> {
 
 /**
  * One finding for each migration at or before postgres.frozen_through whose text differs from the committed one.
- * @param input the check input.
+ * @param input the migration paths and configured frozen-version boundary.
  * @returns the findings.
  */
-async function postgresEditedMigrations(input: CheckInput): Promise<Finding[]> {
+export async function checkPostgresEditedMigrations(input: CheckInput): Promise<Finding[]> {
     const through = input.scope.view.options('postgres')['frozen_through'];
     if (through === FROZEN_NONE) return [];
     const { migrations, findings: syntax } = await readMigrations(input);
@@ -115,7 +115,7 @@ async function postgresEditedMigrations(input: CheckInput): Promise<Finding[]> {
             const committed = texts.get(migration.path);
             if (committed === undefined || (committed.split(MIGRATION_DOWN, 1)[0] ?? '') === migration.text) return [];
             return [
-                findingAt(
+                buildFinding(
                     input,
                     { file: migration.path, line: 1 },
                     'frozen',
@@ -124,5 +124,3 @@ async function postgresEditedMigrations(input: CheckInput): Promise<Finding[]> {
             ];
         });
 }
-
-export { postgresMigrationOrder, postgresEditedMigrations };

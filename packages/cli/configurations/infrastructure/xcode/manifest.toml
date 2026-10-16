@@ -21,7 +21,7 @@ system = true
 
 [[check]]
 command = ["plutil", "-lint", "{files}"]
-example = "A plist containing an unclosed dictionary fails native validation. Close the dictionary and plist elements, then rerun with plutil available on a declared platform."
+example = "A plist containing an unclosed dictionary fails plutil validation. Close the dictionary and plist elements, then rerun with plutil available on a declared platform."
 files = { extensions = [".plist", ".entitlements"] }
 help = "Fix the element plutil names."
 level = "recommended"
@@ -67,7 +67,7 @@ why = "An image set with no image draws nothing at run time."
 [[check]]
 example = "An asset set named only in an Xcode build setting counts as used. An asset that no source or build setting names reports an unused-asset finding."
 files = { paths = ["**/*.xcassets/**"], extensions = [".swift", ".storyboard", ".xib", ".plist", ".pbxproj", ".xcconfig"] }
-help = "Delete the asset or name it where it is used. For an accepted asset selected at runtime, run gspot ignore xcode/unused-assets --rule unused-asset --paths `<glob>` --reason \"`<why>`\"."
+help = "Delete the asset or name it where it is used. For an accepted asset selected at runtime, run `gspot ignore xcode/unused-assets --rule unused-asset --paths <glob> --reason \"<why>\"`."
 level = "all"
 name = "unused-assets"
 runs = "scope"

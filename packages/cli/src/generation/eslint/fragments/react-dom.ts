@@ -7,7 +7,7 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
  * @param context the selected presets, rule printer, and scope settings.
  * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildReactDomFragment(
+function buildReactDomFragment(
     context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'configurations'>,
 ): EslintFragment {
     const { eslintPresets, eslintModule, configurations } = context;
@@ -36,3 +36,5 @@ export function buildReactDomFragment(
     output.push('\n');
     return { imports: imports, blocks: output.join('') };
 }
+
+export { buildReactDomFragment };

@@ -1,8 +1,8 @@
-// Validates npm tool projects and chooses their lockfiles.
+// Validate npm tool projects and choose their lockfiles.
 import { z } from 'zod';
 import semver from 'semver';
 import { parseJsonFile } from '#cli/parsers/json.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 import type { NpmProjectFile, NpmToolProject } from '#cli/types/tools/project.ts';

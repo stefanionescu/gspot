@@ -1,10 +1,10 @@
 # JavaScript
 
-Keep development tooling out of production runtime imports. Keep inputs and side effects explicit.
-Validate external values where the program receives them, before sending them to a database or another service.
-These values include HTTP bodies, query strings, route params, headers, environment variables, and database rows.
-Also validate remote procedure call results, provider responses, file input, generated data sources, webhooks, and scheduled-job payloads.
-If a check and this file disagree, tell the user.
+Read this rule when you change JavaScript or TypeScript code.
+
+Keep development tooling out of production runtime imports. Keep inputs and side effects explicit. Validate the
+values that the security rules list where the program receives them, before you send them to a database or another
+service.
 
 ## Runtime
 
@@ -25,9 +25,13 @@ imports rare and explain their required effect. Browser code imports no server i
 - Avoid mutable exports and default exports in application modules. Preserve a default export
   when a tool or framework requires it.
 - Do not create container classes or exported objects only to simulate a namespace.
-- Keep JSDoc `@typedef` declarations with their behavioral owner, following the project's folder
+- Keep JSDoc `@typedef` declarations in the module that uses them, following the project's folder
   arrangement. Share them through type imports when another module needs the contract.
 - Import the module that declares a symbol. A library can explicitly select index-only re-exports.
+- Name a namespace import after the imported file or package, such as `fileOne` for `file-one.js`.
+- Keep the exported name of a named import. Add an alias only when two imports collide, and name the alias for its
+  domain, such as `DomesticatedCat`.
+- Use a default import only for a package that requires one, and name it for what the package exports.
 
 ## Values
 
@@ -48,7 +52,6 @@ A function that mutates its input names and documents that effect.
 
 <!-- level: all -->
 
-- Use an options object for several related arguments.
 - Do not add optional parameters to hide a broken caller contract.
 - Use early returns when they make missing-value and error handling clearer.
 - Keep constructors small. Add inheritance only for a real runtime relationship.
@@ -58,3 +61,13 @@ A function that mutates its input names and documents that effect.
 
 Await a promise that must finish before the next step. Release child processes, subscriptions,
 and other resources in `finally` or the API's cleanup mechanism.
+
+## Workspaces
+
+<!-- level: all -->
+
+- Each workspace package builds itself. Its build file lives in the package and imports only that package's files.
+- Code outside a package uses its public entry points and its `package.json`, never its source files. Tests may read source files.
+- Declare each dependency in the workspace package that imports it, not in the root `package.json`.
+- Pass a value from one package to another through a declared setting or the package's public API, not through a
+  file that a build writes.

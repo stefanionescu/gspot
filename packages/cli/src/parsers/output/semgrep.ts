@@ -1,10 +1,10 @@
 // Reads Semgrep findings and parse errors.
 import { z } from 'zod';
 import { GspotError } from '#cli/system/errors.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
 import { parseReport } from '#cli/parsers/output/formats.ts';
-import type { Finding } from '#cli/types/execution/check.ts';
+import type { Finding } from '#cli/types/checks/run/check.ts';
 import { type ReportInput, type SemgrepReport } from '#cli/types/parsers/output.ts';
 import { SEMGREP_PARSE_EXIT, SEMGREP_PARSE_RULE, SEMGREP_PARSE_ERRORS } from '#cli/config/parsers/output.ts';
 

@@ -2,16 +2,19 @@ import type { ImplementedFunction } from './types/syntax.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    WRAPPERS,
     FUNCTIONS,
     TYPE_ONLY,
+    UNWRAPPABLE_NODES,
     COMPARISON_OPERATORS,
     EXECUTABLE_DECLARATIONS,
     NON_EXECUTABLE_STATEMENTS,
 } from './config/syntax.ts';
 
 // Read syntax children through the parser visitor keys. Exclude metadata and parent links.
-function childNodes(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): TSESTree.Node[] {
+function listChildNodes(
+    node: TSESTree.Node,
+    visitorKeys: Readonly<Record<string, readonly string[]>>,
+): TSESTree.Node[] {
     return (visitorKeys[node.type] ?? []).flatMap((key) => {
         const child: unknown = node[key as keyof TSESTree.Node];
         if (Array.isArray(child)) return child.filter((item: unknown) => item !== null) as TSESTree.Node[];
@@ -20,7 +23,7 @@ function childNodes(node: TSESTree.Node, visitorKeys: Readonly<Record<string, re
 }
 
 // Only values that depend on an expression count as calculations; literal and identity returns stay trivial.
-function constructsDynamicValue(node: TSESTree.Node): boolean {
+function isDynamicValue(node: TSESTree.Node): boolean {
     switch (node.type) {
         case AST_NODE_TYPES.ConditionalExpression:
         case AST_NODE_TYPES.LogicalExpression: {
@@ -48,7 +51,7 @@ function constructsDynamicValue(node: TSESTree.Node): boolean {
 }
 
 // Compositions transform an earlier operation's result rather than forwarding one call unchanged.
-function combinesOperations(node: TSESTree.CallExpression): boolean {
+function isComposedCall(node: TSESTree.CallExpression): boolean {
     return (
         (node.callee.type === AST_NODE_TYPES.MemberExpression &&
             node.callee.object.type === AST_NODE_TYPES.CallExpression &&
@@ -62,16 +65,16 @@ function combinesOperations(node: TSESTree.CallExpression): boolean {
  * body counts as one statement.
  * @param node the function implementation, or a node inside it
  * @param visitorKeys the child keys of each node type, from the parser
- * @returns the count
+ * @returns the executable statement total, including nested function bodies.
  */
-export function totalStatements(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
+export function countStatements(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
     if (TYPE_ONLY.has(node.type)) return 0;
     if ('declare' in node && node.declare) return 0;
     const isExpressionBody =
         FUNCTIONS.has(node.type) && (node as ImplementedFunction).body.type !== AST_NODE_TYPES.BlockStatement;
     const isStatement = node.type.endsWith('Statement') && !NON_EXECUTABLE_STATEMENTS.has(node.type);
     const own = [isExpressionBody, isStatement, EXECUTABLE_DECLARATIONS.has(node.type)].includes(true) ? 1 : 0;
-    return childNodes(node, visitorKeys).reduce((total, child) => total + totalStatements(child, visitorKeys), own);
+    return listChildNodes(node, visitorKeys).reduce((total, child) => total + countStatements(child, visitorKeys), own);
 }
 
 /**
@@ -99,7 +102,7 @@ export function hasConstructorState(node: ImplementedFunction): boolean {
  */
 export function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
     let value = node;
-    const canUnwrap = ASTUtils.isNodeOfTypes(WRAPPERS.map((type) => AST_NODE_TYPES[type]));
+    const canUnwrap = ASTUtils.isNodeOfTypes(UNWRAPPABLE_NODES.map((type) => AST_NODE_TYPES[type]));
     while (value !== null && canUnwrap(value)) value = value.expression;
     return value;
 }
@@ -110,11 +113,8 @@ export function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
  * @param visitorKeys the parser's child keys
  * @returns whether the expression constructs data, selects a value, or combines operations
  */
-export function ownsCalculation(
-    node: TSESTree.Node,
-    visitorKeys: Readonly<Record<string, readonly string[]>>,
-): boolean {
-    if (constructsDynamicValue(node)) return true;
-    if (node.type === AST_NODE_TYPES.CallExpression && combinesOperations(node)) return true;
-    return childNodes(node, visitorKeys).some((child) => ownsCalculation(child, visitorKeys));
+export function hasCalculation(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): boolean {
+    if (isDynamicValue(node)) return true;
+    if (node.type === AST_NODE_TYPES.CallExpression && isComposedCall(node)) return true;
+    return listChildNodes(node, visitorKeys).some((child) => hasCalculation(child, visitorKeys));
 }

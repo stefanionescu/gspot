@@ -1,7 +1,7 @@
 // Reads Xcode projects, source groups, and build settings.
 import { z } from 'zod';
 import { posix } from 'node:path';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
 
 import {
@@ -13,7 +13,7 @@ import {
 } from '#cli/config/parsers/xcode.ts';
 import {
     type Folder,
-    type ProjectEntry,
+    type PbxElement,
     type XcodeProject,
     type ProjectTokens,
     type ProjectSources,
@@ -85,14 +85,14 @@ function parseProjectDocument(text: string): unknown {
 }
 
 // The object an id names, which must exist.
-function getElement(project: Pick<XcodeProject, 'objects'>, id: string): ProjectEntry {
+function getElement(project: Pick<XcodeProject, 'objects'>, id: string): PbxElement {
     const found = project.objects[id];
     if (found === undefined) throw new Error(`The Xcode project references an unknown object: ${id}.`);
     return found;
 }
 
 // Find each object's parent group. Refuse objects that two groups claim.
-function buildParentGroups(objects: Record<string, ProjectEntry>): Map<string, string> {
+function buildParentGroups(objects: Record<string, PbxElement>): Map<string, string> {
     const parents = new Map<string, string>();
     for (const [id, entry] of Object.entries(objects))
         for (const child of entry.children ?? []) {
@@ -132,7 +132,7 @@ function findElementPath(project: XcodeProject, id: string): string {
 }
 
 // The Swift files a target compiles, from its sources build phases.
-function listTargetSources(project: XcodeProject, target: ProjectEntry): string[] {
+function listTargetSources(project: XcodeProject, target: PbxElement): string[] {
     const phases = (target.buildPhases ?? []).map((phaseId) => getElement(project, phaseId));
     return phases
         .filter((phase) => phase.isa === 'PBXSourcesBuildPhase')
@@ -146,7 +146,7 @@ function listTargetSources(project: XcodeProject, target: ProjectEntry): string[
 }
 
 // The folders whose source files Xcode manages, each with the files its exceptions leave out.
-function listTargetFolders(project: XcodeProject, id: string, target: ProjectEntry): Folder[] {
+function listTargetFolders(project: XcodeProject, id: string, target: PbxElement): Folder[] {
     return (target.fileSystemSynchronizedGroups ?? []).map((groupId) => {
         const group = getElement(project, groupId);
         const path = findElementPath(project, groupId);
@@ -176,7 +176,7 @@ const itemSchema = z.object({
                     String,
                 ) satisfies z.ZodType<string, string | number>
             ).optional(),
-        } satisfies SchemaShape<NonNullable<ProjectEntry['buildSettings']>>)
+        } satisfies SchemaShape<NonNullable<PbxElement['buildSettings']>>)
         .optional(),
     name: z.string().optional(),
     path: z.string().optional(),
@@ -193,12 +193,12 @@ const itemSchema = z.object({
     mainGroup: z.string().optional(),
     targets: z.array(z.string()).optional(),
     projectDirPath: z.string().optional(),
-} satisfies SchemaShape<ProjectEntry>);
+} satisfies SchemaShape<PbxElement>);
 
 const pbxprojSchema = z.object({
     rootObject: z.string(),
     objects: z.record(z.string(), itemSchema),
-} satisfies SchemaShape<{ rootObject: string; objects: Record<string, ProjectEntry> }>);
+} satisfies SchemaShape<{ rootObject: string; objects: Record<string, PbxElement> }>);
 
 /**
  * Find the Swift sources and managed folders that belong to project targets.

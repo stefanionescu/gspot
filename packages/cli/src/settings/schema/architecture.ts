@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { TableSettings } from '#cli/types/settings/tables.ts';
-import { RECORD_DESCRIPTIONS } from '#cli/config/settings/defaults.ts';
 import type { WrittenArchitecture } from '#cli/types/settings/file.ts';
+import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
 import { relativePath, nonemptyPaths } from '#cli/settings/schema/parts.ts';
 
 const architectureRolesSchema = z.strictObject({
@@ -23,9 +23,12 @@ const architectureSchema = z
         module: z
             .array(
                 z.strictObject({
-                    name: z.string().min(1).describe(RECORD_DESCRIPTIONS.module_name),
-                    paths: nonemptyPaths.describe(RECORD_DESCRIPTIONS.module_paths),
-                    may_import: z.array(z.string()).default([]).describe(RECORD_DESCRIPTIONS.module_may_import),
+                    name: z.string().min(1).describe(SETTING_DECLARATIONS['architecture.module.name'].description),
+                    paths: nonemptyPaths.describe(SETTING_DECLARATIONS['architecture.module.paths'].description),
+                    may_import: z
+                        .array(z.string())
+                        .default([])
+                        .describe(SETTING_DECLARATIONS['architecture.module.may_import'].description),
                 } satisfies SchemaShape<
                     TableSettings<'architecture'>['module'][number],
                     NonNullable<WrittenArchitecture['module']>[number]
@@ -35,7 +38,7 @@ const architectureSchema = z
             .meta({
                 configurations: ['structure'],
                 description:
-                    'Which module may import which; a module imports itself and the modules in its may_import list',
+                    'A module may import itself, the modules listed before it, and the modules in its may_import list.',
             }),
         roles: z
             .strictObject({

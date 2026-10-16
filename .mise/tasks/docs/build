@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="Build the docs site into docs/dist."
+#MISE dir="{{config_root}}/docs"
+set -euo pipefail
+
+bun --bun astro build

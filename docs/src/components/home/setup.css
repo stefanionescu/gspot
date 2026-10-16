@@ -1,0 +1,197 @@
+/* Setup card: two modes in one card. Both panels share one grid cell, so the card keeps its height when the mode changes. */
+.setup {
+    display: block;
+    width: 100%;
+    max-width: 34rem;
+    margin-block-start: 40px;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 12px;
+    background: var(--sl-color-gray-6);
+    text-align: start;
+}
+
+.setup-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px;
+    border-bottom: 1px solid var(--sl-color-gray-5);
+}
+
+.modes {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 8px;
+    background: var(--sl-color-black);
+}
+
+.modes button {
+    min-width: 72px;
+    min-height: 36px;
+    padding-inline: 14px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--sl-color-gray-3);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 550;
+    cursor: pointer;
+}
+
+.modes button[aria-selected='true'] {
+    background: var(--sl-color-gray-5);
+    color: var(--sl-color-white);
+}
+
+.setup-tools {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.manager {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.manager select {
+    appearance: none;
+    min-height: 36px;
+    padding-inline: 12px 30px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--sl-color-gray-1);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+@media (hover: hover) {
+    .manager select:hover {
+        background: color-mix(in srgb, var(--sl-color-white) 6%, transparent);
+    }
+}
+
+.manager .icon-16 {
+    position: absolute;
+    inset-inline-end: 9px;
+    pointer-events: none;
+    color: var(--sl-color-gray-3);
+}
+
+.setup[data-mode='agent'] .manager {
+    visibility: hidden;
+}
+
+.copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 36px;
+    padding-inline: 12px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--sl-color-gray-1);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+@media (hover: hover) {
+    .copy:hover {
+        background: color-mix(in srgb, var(--sl-color-white) 6%, transparent);
+        color: var(--sl-color-white);
+    }
+}
+
+.copy-label {
+    display: none;
+}
+
+.setup-body {
+    display: grid;
+}
+
+.setup-panel {
+    grid-area: 1 / 1;
+    min-width: 0;
+    padding: 18px 20px 20px;
+}
+
+.setup-panel[hidden] {
+    display: block;
+    visibility: hidden;
+}
+
+.commands {
+    font-family: var(--sl-font-mono);
+    margin: 0;
+    display: grid;
+    gap: 6px;
+    color: var(--code-text);
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: normal;
+}
+
+.commands .cmd {
+    padding-inline-start: 2ch;
+    text-indent: -2ch;
+    overflow-wrap: anywhere;
+}
+
+.commands .prompt {
+    color: var(--sl-color-gray-3);
+    user-select: none;
+}
+
+.agent-prompt {
+    margin: 0;
+    color: var(--code-text);
+    font-family: var(--sl-font-mono);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.agent-prompt .nowrap {
+    white-space: nowrap;
+}
+
+.agent-prompt .em {
+    color: var(--sl-color-text-accent);
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+@media (width >= 50rem) {
+    .commands,
+    .agent-prompt {
+        margin: 0;
+        font-size: 15px;
+    }
+
+    .copy-label {
+        display: inline;
+    }
+}
+
+.setup .icon-16 {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+}

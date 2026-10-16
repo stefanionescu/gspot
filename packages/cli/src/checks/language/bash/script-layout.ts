@@ -1,11 +1,12 @@
 // The Bash interpreter contract: shebang, strict mode, entry point, library shape, and temporary cleanup.
-import { findingAt } from '#cli/checks/finding.ts';
 import { listCodeLines } from '#cli/parsers/bash.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import { ENVIRONMENT_READERS_ROLE } from '#cli/config/settings/values.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import type { ScriptFile, ScriptReport } from '#cli/types/checks/language.ts';
-import { functionAt, readScripts } from '#cli/checks/language/bash/scripts.ts';
+import { readScripts, findEnclosingFunction } from '#cli/checks/language/bash/scripts.ts';
 
 import {
     EXIT_CALL,
@@ -22,14 +23,14 @@ import {
     TOP_LEVEL_ASSIGNMENT,
 } from '#cli/config/checks/language/bash.ts';
 
-function strictModeFindings(code: NumberedLine[], report: ScriptReport): void {
+function checkStrictMode(code: NumberedLine[], report: ScriptReport): void {
     const first = code.findIndex((line) => !BASH_OPTION_COMMANDS.some((command) => line.text.startsWith(command)));
     const before = new Set(code.slice(0, first === -1 ? code.length : first).map((line) => line.text));
     if (!before.has(STRICT_MODE))
         report(code[0]?.number ?? 1, 'strict-mode', `Put ${STRICT_MODE} before the first command.`);
 }
 
-function entryFindings(file: ScriptFile, code: NumberedLine[], report: ScriptReport): void {
+function checkMainFunction(file: ScriptFile, code: NumberedLine[], report: ScriptReport): void {
     if (file.functions.length === 0) return;
     if (file.functions.filter((entry) => entry.name === MAIN_FUNCTION).length !== 1)
         report(1, 'main-function', 'An executable defines exactly one main function.');
@@ -41,14 +42,14 @@ function isDeclarativeLine(text: string): boolean {
     return (
         SOURCE_STATEMENT.test(text) ||
         text.startsWith(READONLY_WORD) ||
-        TOP_LEVEL_ASSIGNMENT.test(withoutDeclaration(text))
+        TOP_LEVEL_ASSIGNMENT.test(stripDeclaration(text))
     );
 }
 
-function libraryLineFindings(
+function checkLibraryLine(
     line: NumberedLine,
     file: ScriptFile,
-    { isConfigOwner, report }: { isConfigOwner: boolean; report: ScriptReport },
+    { isEnvironmentReader, report }: { isEnvironmentReader: boolean; report: ScriptReport },
 ): void {
     if (line.text.startsWith(SET_COMMAND)) {
         report(line.number, 'library-options', 'A sourced library does not change shell options.');
@@ -58,12 +59,12 @@ function libraryLineFindings(
         report(line.number, 'library-main', 'A sourced library does not call main.');
         return;
     }
-    if (functionAt(file.functions, line.number) !== undefined) return;
+    if (findEnclosingFunction(file.functions, line.number) !== undefined) return;
     if (EXIT_CALL.test(line.text)) {
         report(line.number, 'library-exit', 'A sourced library does not exit.');
         return;
     }
-    if (isConfigOwner || isDeclarativeLine(line.text)) return;
+    if (isEnvironmentReader || isDeclarativeLine(line.text)) return;
     report(
         line.number,
         'library-flow',
@@ -71,10 +72,10 @@ function libraryLineFindings(
     );
 }
 
-function libraryFindings(
+function checkLibraryScript(
     file: ScriptFile,
     code: NumberedLine[],
-    { isConfigOwner, report }: { isConfigOwner: boolean; report: ScriptReport },
+    { isEnvironmentReader, report }: { isEnvironmentReader: boolean; report: ScriptReport },
 ): void {
     const last = code.at(-1);
     if (last?.text === MAIN_CALL) {
@@ -87,21 +88,25 @@ function libraryFindings(
     }
     if (file.functions.some((entry) => entry.name === MAIN_FUNCTION))
         report(1, 'library-main', 'A sourced library defines no main.');
-    for (const line of code) libraryLineFindings(line, file, { isConfigOwner, report });
+    for (const line of code) checkLibraryLine(line, file, { isEnvironmentReader, report });
 }
 
-function fileFindings(input: CheckInput, file: ScriptFile, { isConfigOwner }: { isConfigOwner: boolean }): Finding[] {
+function checkScriptFile(
+    input: CheckInput,
+    file: ScriptFile,
+    { isEnvironmentReader }: { isEnvironmentReader: boolean },
+): Finding[] {
     const findings: Finding[] = [];
     const report: ScriptReport = (line, rule, text) => {
-        findings.push(findingAt(input, { file: file.path, line }, rule, text));
+        findings.push(buildFinding(input, { file: file.path, line }, rule, text));
     };
     if (!BASH_SHEBANGS.has(file.lines[0] ?? ''))
         report(1, 'shebang', `The first line is not one of ${[...BASH_SHEBANGS].join(' or ')}.`);
     const code = listCodeLines(file.code);
     if (file.isExecutable) {
-        strictModeFindings(code, report);
-        entryFindings(file, code, report);
-    } else libraryFindings(file, code, { isConfigOwner, report });
+        checkStrictMode(code, report);
+        checkMainFunction(file, code, report);
+    } else checkLibraryScript(file, code, { isEnvironmentReader, report });
     for (const temporary of file.temporaryPaths)
         if (temporary.cleanupLines.length === 0)
             report(temporary.line, 'mktemp-trap', `The temporary path ${temporary.name} needs a trap that removes it.`);
@@ -113,7 +118,7 @@ function fileFindings(input: CheckInput, file: ScriptFile, { isConfigOwner }: { 
  * @param code a comment-free code line.
  * @returns the value after export, readonly, local, declare, or typeset.
  */
-function withoutDeclaration(code: string): string {
+function stripDeclaration(code: string): string {
     const words = code.split(/\s+/u);
     if (!DECLARATION_WORDS.has(words[0] ?? '')) return code;
     let index = 1;
@@ -126,10 +131,10 @@ function withoutDeclaration(code: string): string {
  * @param input the check context.
  * @returns the findings.
  */
-export async function bashScriptLayout(input: CheckInput): Promise<Finding[]> {
-    const isOwner = buildPathMatcher(input.scope.view.roles.environment_readers);
+export async function checkBashScriptLayout(input: CheckInput): Promise<Finding[]> {
+    const isEnvironmentReader = buildPathMatcher(input.scope.view.roles[ENVIRONMENT_READERS_ROLE]);
     const index = await readScripts(input);
     return index
         .filter((file) => !OTHER_SHEBANG.test(file.lines[0] ?? ''))
-        .flatMap((file) => fileFindings(input, file, { isConfigOwner: isOwner(file.path) }));
+        .flatMap((file) => checkScriptFile(input, file, { isEnvironmentReader: isEnvironmentReader(file.path) }));
 }

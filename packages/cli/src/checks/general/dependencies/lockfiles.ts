@@ -1,16 +1,17 @@
 import { posix } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { findLockfile } from '#cli/repository/classify.ts';
+import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
-import { LOCKFILE_URL, NPM_DOWNLOAD, BINARY_BUN_LOCKFILE } from '#cli/config/checks/general/dependencies.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import { LOCKFILE_URL, NPM_DOWNLOAD } from '#cli/config/checks/general/dependencies.ts';
 
-function urlMessage(url: URL, hosts: Set<string>): string | undefined {
+function validateUrl(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;
     return hosts.has(url.host) ? undefined : `${url.host} is not an allowed registry host.`;
 }
 
-function fileFindings(input: CheckInput, path: string, hosts: Set<string>): Finding[] {
+function checkFileHosts(input: CheckInput, path: string, hosts: Set<string>): Finding[] {
     const lines = readCachedBytes(input.reads, path).toString('utf8').split('\n');
     // An npm lockfile also holds funding pages and deprecation notes; only its resolved field names a download.
     const isNpm = findLockfile(path)?.client === 'npm';
@@ -20,20 +21,46 @@ function fileFindings(input: CheckInput, path: string, hosts: Set<string>): Find
             : text.matchAll(LOCKFILE_URL).map((match) => match[0])
         )
             .flatMap((url) => {
-                const diagnostic = URL.canParse(url) ? urlMessage(new URL(url), hosts) : undefined;
-                if (diagnostic === undefined) return [];
-                return [findingAt(input, { file: path, line: index + 1 }, 'host', diagnostic)];
+                const message = URL.canParse(url) ? validateUrl(new URL(url), hosts) : undefined;
+                if (message === undefined) return [];
+                return [buildFinding(input, { file: path, line: index + 1 }, 'host', message)];
             })
             .toArray(),
     );
 }
 
+function checkForeignLockfiles(input: CheckInput): Finding[] {
+    const kinds = new Map<string, string>();
+    for (const file of input.files) {
+        const lockfile = findLockfile(file.path);
+        const kind =
+            lockfile !== undefined && 'configuration' in lockfile && lockfile.configuration === 'javascript'
+                ? lockfile.client
+                : undefined;
+        if (kind !== undefined && !kinds.has(kind)) kinds.set(kind, file.path);
+    }
+    if (kinds.size <= 1) return [];
+    const listed = kinds.values().toArray().join(', ');
+    return kinds
+        .values()
+        .toArray()
+        .slice(1)
+        .map((path) =>
+            buildFinding(
+                input,
+                { file: path, line: 1 },
+                'foreign-lockfile',
+                `The repository holds lockfiles of ${String(kinds.size)} package managers: ${listed}. Keep one.`,
+            ),
+        );
+}
+
 /**
  * The findings of the lockfile host check over tracked npm, pnpm, Yarn, and text Bun lockfiles.
- * @param input the check input.
+ * @param input the repository paths, registry allowlist, and cached source bytes.
  * @returns the findings.
  */
-export function lockfileHosts(input: CheckInput): Finding[] {
+export function checkLockfiles(input: CheckInput): Finding[] {
     const hosts = new Set(input.scope.view.options('dependencies')['allowed_registries']);
     const paths = input.files
         .map((file) => file.path)
@@ -44,8 +71,13 @@ export function lockfileHosts(input: CheckInput): Finding[] {
                 entry !== undefined &&
                 'configuration' in entry &&
                 entry.configuration === 'javascript' &&
-                name !== BINARY_BUN_LOCKFILE
+                name !==
+                    (
+                        LOCKFILES.find(
+                            ({ client, file }) => client === 'bun' && file.endsWith('b'),
+                        ) as (typeof LOCKFILES)[number]
+                    ).file
             );
         });
-    return paths.flatMap((path) => fileFindings(input, path, hosts));
+    return [...checkForeignLockfiles(input), ...paths.flatMap((path) => checkFileHosts(input, path, hosts))];
 }

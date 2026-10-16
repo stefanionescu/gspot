@@ -5,12 +5,12 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import type { ToolSearch } from '#cli/types/tools/find.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { checkCompanions } from '#cli/planning/needed-tools.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/checks/run/check.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { runTool, getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import { executionFailure } from '#cli/checks/run/command/output.ts';
+import { findExecutionFailure } from '#cli/checks/run/command/output.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import type { ToolRunOptions, ToolAvailability } from '#cli/types/tools/run.ts';
 import { environmentKey, readEnvironmentVariable } from '#cli/system/environment.ts';
@@ -21,7 +21,7 @@ import type {
     CheckToolOptions,
     CheckToolProgram,
     PlannedToolResult,
-} from '#cli/types/execution/command.ts';
+} from '#cli/types/checks/run/command.ts';
 
 function checkTool(
     input: CheckInput,
@@ -41,7 +41,7 @@ function checkTool(
 /**
  * Run a check tool with the shared timeout and classify its process failure.
  *
- * @param argv the executable and expanded arguments.
+ * @param commandArguments the executable and expanded arguments.
  * @param options the command options.
  * @param view the resolved scope settings.
  * @param name the tool or setting name.
@@ -49,13 +49,13 @@ function checkTool(
  * @returns the process result and any execution failure.
  */
 export async function runPlannedTool(
-    argv: string[],
+    commandArguments: string[],
     options: Omit<ToolRunOptions, 'timeoutSeconds'>,
     view: ScopeView,
     name: string,
 ): Promise<PlannedToolResult> {
-    const result = await runTool(argv, { ...options, timeoutSeconds: getToolTimeoutSeconds(view) });
-    return { result, failure: executionFailure(result, name, view) };
+    const result = await runTool(commandArguments, { ...options, timeoutSeconds: getToolTimeoutSeconds(view) });
+    return { result, failure: findExecutionFailure(result, name, view) };
 }
 
 /**
@@ -86,20 +86,20 @@ export function findTool(
  *
  * @returns the process environment with installed companion directories.
  */
-export function companionEnvironment(
+export function buildCompanionEnvironment(
     input: Session | CheckInput,
     names: string[] | undefined,
     env: Record<string, string>,
 ): Record<string, string> {
-    const directories = (names ?? [])
+    const folders = (names ?? [])
         .map((name) => inspectTool(input, getToolDeclaration(input.manifests.values(), name)).path)
         .filter((path) => path !== undefined)
         .map((path) => dirname(path));
-    if (directories.length === 0) return env;
+    if (folders.length === 0) return env;
     return {
         ...env,
         PATH: [
-            ...directories,
+            ...folders,
             env[Object.keys(env).find((name) => environmentKey(name) === 'PATH') ?? 'PATH'] ??
                 readEnvironmentVariable('PATH') ??
                 '',
@@ -122,13 +122,13 @@ export async function runCheckTool(
     options: CheckToolOptions,
 ): Promise<SpawnResult> {
     const { name, path, env } = checkTool(input, 'tool' in command ? command.tool : (command[0] as string), options);
-    const argv =
+    const commandArguments =
         'tool' in command ? [process.execPath, buildAssetPath(command.entry), path] : [path, ...command.slice(1)];
     const { result, failure } = await runPlannedTool(
-        argv,
+        commandArguments,
         {
             ...options,
-            env: companionEnvironment(input, checkCompanions(input.scope, input.check), env),
+            env: buildCompanionEnvironment(input, checkCompanions(input.scope, input.check), env),
             cancelSignal: input.cancelSignal,
         },
         input.scope.view,

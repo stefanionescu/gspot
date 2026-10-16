@@ -1,5 +1,7 @@
 # Secrets
 
+Read this rule when code reads, stores, or logs a secret.
+
 - Never hardcode API keys, tokens, passwords, or secrets anywhere in the codebase.
 - Read secrets from the environment or a secret store in one configuration module. A secret has
   no fallback or default value.

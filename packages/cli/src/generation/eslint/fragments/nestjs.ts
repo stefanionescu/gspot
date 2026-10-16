@@ -8,7 +8,7 @@ import { NESTJS_ALL_LEVEL_RULES, NESTJS_INJECTABLE_FILTER_PATHS } from '#cli/con
  * @param context the selected presets, rule printer, and scope settings.
  * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildNestjsFragment(
+function buildNestjsFragment(
     context: Pick<EslintContext, 'eslintModule' | 'eslintFiles' | 'eslintPresets' | 'scope' | 'scopeDependencies'>,
 ): EslintFragment {
     const { eslintModule, eslintFiles, eslintPresets, scope, scopeDependencies } = context;
@@ -64,3 +64,5 @@ export function buildNestjsFragment(
     );
     return { imports: imports, blocks: output.join('') };
 }
+
+export { buildNestjsFragment };

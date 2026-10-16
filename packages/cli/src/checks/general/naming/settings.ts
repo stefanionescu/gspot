@@ -3,35 +3,35 @@ import { stripUndefined } from '#cli/system/values.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/checks/run/check.ts';
 import { readNamingDefaults } from '#cli/configurations/manifests.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY, CATEGORY_PARENTS } from '#cli/config/checks/general/naming.ts';
 
 import type {
-    Term,
+    BannedWord,
     NamingDefaults,
-    NamingLanguage,
     NamingOverride,
     NamingSettings,
     CompiledOverride,
+    NamingDefaultsLanguage,
 } from '#cli/types/checks/general.ts';
 
-function toSet(names: string[] | undefined): Set<string> | undefined {
+function collectNames(names: string[] | undefined): Set<string> | undefined {
     return names === undefined || names.length === 0 ? undefined : new Set(names);
 }
 
 function compileOverride(rule: NamingOverride, source: string): CompiledOverride {
     return {
         matches: buildPathMatcher(rule.paths ?? ['**']),
-        languages: toSet(rule.languages),
-        categories: toSet(rule.categories),
-        allowed: toSet(rule.allowed_names),
+        languages: collectNames(rule.languages),
+        categories: collectNames(rule.categories),
+        allowedNames: collectNames(rule.allowed_names),
         isDigitsAllowed: rule.allow_digits === true,
         isRepeatAllowed: rule.allow_repeated_words === true,
-        structuralPrefix: rule.ignored_prefix === undefined ? undefined : new RegExp(rule.ignored_prefix, 'u'),
-        caseNames: rule.cases,
-        source,
+        ignoredPrefix: rule.ignored_prefix === undefined ? undefined : new RegExp(rule.ignored_prefix, 'u'),
+        cases: rule.cases,
+        origin: source,
     };
 }
 
@@ -49,7 +49,7 @@ function getNamingLimits(view: Pick<ScopeView, 'options'>, language: string, cat
 }
 
 function listDefaultCases(shipped: NamingDefaults, language: string, category: string, parent: string) {
-    const table: NamingLanguage | undefined = shipped.languages[language];
+    const table: NamingDefaultsLanguage | undefined = shipped.languages[language];
     for (const name of [category, parent]) {
         const cases = table?.categories[name]?.cases;
         if (cases !== undefined) return cases;
@@ -78,9 +78,12 @@ function buildLimitsFor(shipped: NamingDefaults, view: Pick<ScopeView, 'options'
  * @param origin the display source and stable group, when the terms belong to a group.
  * @returns the compiled terms, empty ones dropped.
  */
-function compileTerms(terms: string[], origin: Pick<Term, 'source' | 'group' | 'categories'>): Term[] {
+function compileBannedWords(
+    terms: string[],
+    origin: Pick<BannedWord, 'setting' | 'group' | 'categories'>,
+): BannedWord[] {
     return terms
-        .map((term) => ({ term: term.trim().toLowerCase(), parts: splitParts(term), ...origin }))
+        .map((term) => ({ word: term.trim().toLowerCase(), parts: splitParts(term), ...origin }))
         .filter((term) => term.parts.length > 0);
 }
 
@@ -89,7 +92,7 @@ function compileTerms(terms: string[], origin: Pick<Term, 'source' | 'group' | '
  * @param input the effective selection, written settings, and run's source reads.
  * @returns the effective settings.
  */
-function readNamingSettings(
+export function readNamingSettings(
     input: Pick<CheckInput, 'reads'> & {
         scope: Pick<CheckInput['scope'], 'view' | 'selected'> & {
             scope: Pick<CheckInput['scope']['scope'], 'path'>;
@@ -109,13 +112,13 @@ function readNamingSettings(
     const bannedWords = [...new Set(tables.flatMap((table) => table?.banned_words ?? []))];
     const terms = [
         ...Object.entries(shipped.groups).flatMap(([group, { terms }]) =>
-            compileTerms(terms, {
-                source: `${group} group`,
+            compileBannedWords(terms, {
+                setting: `${group} group`,
                 group,
-                ...(group === 'folders' ? { categories: ['directories'] } : {}),
+                ...(group === 'folders' ? { categories: ['folders'] } : {}),
             }),
         ),
-        ...compileTerms(bannedWords, { source: 'naming.banned_words' }),
+        ...compileBannedWords(bannedWords, { setting: 'naming.banned_words' }),
     ];
     // The shipped rules first, then what the selected configurations know about their own files, then the repository's.
     const rules = [
@@ -131,7 +134,8 @@ function readNamingSettings(
         ),
     ];
     return {
-        terms,
+        bannedWords: terms,
+        allowedPhrases: shipped.allowed_phrases.map((phrase) => splitParts(phrase)),
         reserved: new Map(
             Object.entries(shipped.reserved).map(([term, categories]) => [term.toLowerCase(), categories]),
         ),
@@ -145,9 +149,9 @@ function readNamingSettings(
 /**
  * The parts of an identifier, lowercased. `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`; `base64` stays one word.
  * @param name the identifier.
- * @returns the parts.
+ * @returns lowercase word and digit groups, preserving recognized numeric words.
  */
-function splitParts(name: string): string[] {
+export function splitParts(name: string): string[] {
     return name
         .split(SEPARATORS)
         .filter((segment) => segment !== '')
@@ -156,5 +160,3 @@ function splitParts(name: string): string[] {
         .map((part) => part.toLowerCase())
         .filter((part) => part !== '');
 }
-
-export { splitParts, readNamingSettings };

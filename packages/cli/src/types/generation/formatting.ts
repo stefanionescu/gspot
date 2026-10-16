@@ -22,7 +22,7 @@ export type ExtraOverride<Options> = {
     options: Options;
 };
 
-/** Plugin list emitted only when the formatter has applicable plugins. */
+/** Plugin list used only when the formatter has applicable plugins. */
 export type PrettierPluginOptions = { plugins?: string[] };
 
 /** Effective formatting choices and authored overrides for one generated Prettier config file. */

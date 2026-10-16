@@ -1,5 +1,7 @@
 # SwiftUI
 
+Read this rule when you change SwiftUI views or state.
+
 ## Architecture
 
 <!-- level: all -->
@@ -24,9 +26,9 @@ down.
 
 <!-- level: all -->
 
-- Views render state and forward user intent to the project's operation or state owner.
+- Views render state and forward user intent to the project's operation or the object that holds the state.
 - Keep business workflows, network calls, database calls, and concrete infrastructure
-  construction in their existing owners.
+  construction in the types that handle them now.
 - Do not add explicit `@ViewBuilder` to `body`; the compiler provides it.
 - Use `@ViewBuilder` for helper properties or functions that need conditional view branches.
 - Omit `else { EmptyView() }` when the missing branch already produces no content.
@@ -39,7 +41,7 @@ down.
 
 <!-- level: all -->
 
-Keep screen and flow state in the project's selected state owner. Use a shared owner
+Keep screen and flow state in the type the project chose for that state. Use a shared store
 when multiple screens need the same state. A store owns cohesive feature or domain
 state; app-wide state belongs in app composition only for global state, such as
 session, theme, or connectivity.

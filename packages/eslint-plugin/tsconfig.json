@@ -5,10 +5,7 @@
         "module": "ESNext",
         "moduleResolution": "Bundler",
         "types": ["node"],
-        "lib": ["ESNext"],
-        "declaration": true,
-        "outDir": "dist",
-        "rootDir": "src"
+        "lib": ["ESNext"]
     },
-    "include": ["src/**/*.ts"]
+    "include": ["src/**/*.ts", "plugin.d.ts"]
 }

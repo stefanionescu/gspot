@@ -1,9 +1,8 @@
-import { z } from 'zod';
 import { posix } from 'node:path';
-import { parse as parseToml } from 'smol-toml';
-import type { RuleSource } from '#cli/types/rules.ts';
+import type { ShippedRule } from '#cli/types/rules.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
+import { parse as parseToml } from '@decimalturn/toml-patch';
 import { readAsset, listAssets } from '#cli/system/assets.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
@@ -14,20 +13,19 @@ import { formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import { namingDefaultsSchema } from '#cli/configurations/schema/naming.ts';
 
 import {
+    RULES_FOLDER,
+    MANIFEST_FILE,
+    NAMING_DEFAULTS_FILE,
+    CONFIGURATIONS_FOLDER,
+    SHIPPED_TOOL_FILES_FOLDER,
+} from '#cli/config/configurations.ts';
+import {
     type Manifest,
     type ToolDeclaration,
     type CheckDeclaration,
     type ConfigurationCheck,
     type ManifestDeclaration,
 } from '#cli/types/configurations.ts';
-import {
-    RULES_FOLDER,
-    MANIFEST_FILE,
-    TOOL_FILES_FOLDER,
-    TOOL_VERSIONS_FILE,
-    NAMING_DEFAULTS_FILE,
-    CONFIGURATIONS_FOLDER,
-} from '#cli/config/configurations.ts';
 
 // Producer identities retain bundled declarations only for the supplied run cache.
 const MANIFESTS = { create: readBundledManifests };
@@ -35,26 +33,15 @@ const MANIFESTS = { create: readBundledManifests };
 const NAMING_DEFAULTS = { create: readBundledNamingDefaults };
 
 // Every tool-files asset has one canonical output; metadata adds consumers and generation settings.
-function readToolFileDeclarations(dir: string, toolFiles: unknown): unknown {
+function readToolFileDeclarations(configurationFolder: string, toolFiles: unknown): unknown {
     if (toolFiles !== undefined && !Array.isArray(toolFiles)) return toolFiles;
     const declarations: unknown[] = toolFiles === undefined ? [] : toolFiles;
     const declaredTargets = new Set(declarations.flatMap((entry) => (isRecord(entry) ? [entry['target']] : [])));
-    const folder = `${dir}/${TOOL_FILES_FOLDER}/`;
+    const folder = `${configurationFolder}/${SHIPPED_TOOL_FILES_FOLDER}/`;
     const copied = listAssets(folder)
         .map((path) => ({ target: TOOL_FILE_PREFIX + posix.relative(folder, path) }))
         .filter(({ target }) => !declaredTargets.has(target));
     return [...declarations, ...copied];
-}
-
-// The shared build supplies versions once for declarations and their installers.
-function applyToolVersions(manifest: ManifestDeclaration, versions: Record<string, string>): void {
-    for (const tool of manifest.tools) {
-        if (typeof tool === 'string') continue;
-        const version = versions[tool.name];
-        if (version === undefined) continue;
-        tool.version = version;
-        for (const installer of Object.values(tool.installers)) installer.version ??= version;
-    }
 }
 
 /**
@@ -83,25 +70,25 @@ function linkManifestTools(manifests: ManifestDeclaration[]): Map<string, Manife
 
 /**
  * Parse one manifest text into validated declarations; invalid input throws GspotError with code manifest.
- * @param text the manifest.toml text
- * @param dir the configuration folder inside the assets, such as configurations/general/docs, which gives the configuration its name and group
- * @returns the manifest
+ * @param text the `manifest.toml` content.
+ * @param configurationFolder the asset folder that determines the configuration name and group.
+ * @returns validated declarations with qualified check IDs and discovered tool files.
  */
-function parseManifest(text: string, dir: string): ManifestDeclaration {
-    const parsed = parseToml(text);
+function parseManifest(text: string, configurationFolder: string): ManifestDeclaration {
+    const parsed = parseToml(text) as Record<string, unknown>;
     const toolFiles = parsed['tool_file'];
-    const discoveredToolFiles = readToolFileDeclarations(dir, toolFiles);
+    const discoveredToolFiles = readToolFileDeclarations(configurationFolder, toolFiles);
     const result = manifestSchema.safeParse({
         ...parsed,
         tool_file: discoveredToolFiles,
         configuration: {
             ...(isRecord(parsed['configuration']) ? parsed['configuration'] : {}),
-            name: posix.basename(dir),
-            group: posix.basename(posix.dirname(dir)),
+            name: posix.basename(configurationFolder),
+            group: posix.basename(posix.dirname(configurationFolder)),
         },
     });
     if (!result.success)
-        throw buildManifestError(posix.basename(dir), [
+        throw buildManifestError(posix.basename(configurationFolder), [
             ...new Set(result.error.issues.flatMap((issue) => formatZodIssue(issue))),
         ]);
     const declared = result.data;
@@ -111,22 +98,17 @@ function parseManifest(text: string, dir: string): ManifestDeclaration {
         checks: declared.checks.map((check) =>
             stripUndefined({ ...check, name: `${declared.configuration.name}/${check.name}` }),
         ),
-        dir,
+        folder: configurationFolder,
     };
 }
 
 // Parse shipped declarations only for the first manifest read in one run.
 function readBundledManifests(): Map<string, Manifest> {
     const manifests = new Map<string, ManifestDeclaration>();
-    const toolVersions = (z.record(z.string(), z.string().min(1)) satisfies z.ZodType<Record<string, string>>).parse(
-        JSON.parse(readAsset(TOOL_VERSIONS_FILE)),
-    );
-    // The checks across manifests run at build time and in the tests, not on every start.
     const paths = listAssets(`${CONFIGURATIONS_FOLDER}/`).filter((path) => path.endsWith(`/${MANIFEST_FILE}`));
     for (const path of paths) {
-        const dir = path.slice(0, -`/${MANIFEST_FILE}`.length);
-        const manifest = parseManifest(readAsset(path), dir);
-        applyToolVersions(manifest, toolVersions);
+        const folder = path.slice(0, -`/${MANIFEST_FILE}`.length);
+        const manifest = parseManifest(readAsset(path), folder);
         manifests.set(manifest.configuration.name, manifest);
     }
     return linkManifestTools(
@@ -141,9 +123,22 @@ function readBundledNamingDefaults(): NamingDefaults {
 }
 
 /**
+ * The error for an invalid configuration manifest.
+ * @param configuration the configuration name
+ * @param errors the errors in plain English
+ * @returns the error to throw
+ */
+function buildManifestError(configuration: string, errors: string[]): GspotError {
+    return new GspotError(
+        'manifest',
+        [`The configuration manifest for \`${configuration}\` is not valid:`, ...errors].join('\n'),
+    );
+}
+
+/**
  * Every configuration manifest by configuration name, retained only for the supplied run.
  * @param reads the run cache
- * @returns the manifests
+ * @returns the run-cached declarations indexed by configuration name.
  */
 function readManifests(reads: ReadCache): Map<string, Manifest> {
     return getCachedValue(reads, MANIFESTS);
@@ -175,13 +170,13 @@ function readNamingDefaults(reads: ReadCache): NamingDefaults {
  * @param manifest the configuration
  * @returns each file with its path inside the rules folder
  */
-function listRuleFiles(manifest: Manifest): RuleSource[] {
+function listRuleFiles(manifest: Manifest): ShippedRule[] {
     const { group, name } = manifest.configuration;
-    const sources = listAssets(`${manifest.dir}/${RULES_FOLDER}/`);
+    const sources = listAssets(`${manifest.folder}/${RULES_FOLDER}/`);
     return sources.map((source) => ({
         source,
         group,
-        path: `${group}/${name}/${posix.relative(manifest.dir + '/' + RULES_FOLDER, source)}`,
+        path: `${group}/${name}/${posix.relative(manifest.folder + '/' + RULES_FOLDER, source)}`,
     }));
 }
 
@@ -198,19 +193,6 @@ function listChecksById(manifests: Iterable<Manifest>): Map<string, Configuratio
         }
     }
     return checks;
-}
-
-/**
- * The error for an invalid configuration manifest.
- * @param configuration the configuration name
- * @param errors the errors in plain English
- * @returns the error to throw
- */
-function buildManifestError(configuration: string, errors: string[]): GspotError {
-    return new GspotError(
-        'manifest',
-        [`The configuration manifest for \`${configuration}\` is not valid:`, ...errors].join('\n'),
-    );
 }
 
 /**
@@ -231,7 +213,7 @@ function listDeclaredTools(manifests: Iterable<ManifestDeclaration>): Map<string
 }
 
 /**
- * Name an unknown check and suggest nearby checks from the caller's native inventory.
+ * Name an unknown check and suggest nearby checks from the caller's inventory.
  * @param name the requested check ID
  * @param known the check IDs available to the caller
  * @returns the shared selection diagnostic
@@ -241,13 +223,4 @@ function formatUnknownCheck(name: string, known: string[]): string {
     return `There is no check called \`${name}\`.${suggestions.length > 0 ? ' Did you mean ' + formatCodeList(suggestions) + '?' : ''}`;
 }
 
-export {
-    listCheckIds,
-    readManifests,
-    listRuleFiles,
-    listChecksById,
-    listDeclaredTools,
-    readNamingDefaults,
-    buildManifestError,
-    formatUnknownCheck,
-};
+export { listCheckIds, readManifests, listRuleFiles, listChecksById, readNamingDefaults, formatUnknownCheck };

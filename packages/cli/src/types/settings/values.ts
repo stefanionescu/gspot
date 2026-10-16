@@ -1,6 +1,6 @@
-import type { Defined } from '#cli/types/objects.ts';
+import type { Defined } from '#cli/types/shapes.ts';
+import type { Scope } from '#cli/types/repository/inventory.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
 
 import type {
@@ -14,7 +14,7 @@ import type {
 import type {
     TomlTable,
     ToolTable,
-    IgnoreEntry,
+    IgnoreRecord,
     WrittenFormat,
     FormatSettings,
     ParsedSettings,
@@ -22,7 +22,7 @@ import type {
 } from '#cli/types/settings/file.ts';
 
 type ScopeSelection = {
-    scope: ScopeEntry;
+    scope: Scope;
     selected: Manifest[];
     known: KnownSettings;
     view: ScopeView;
@@ -50,12 +50,12 @@ type ScopeView = {
     limit: (key: string, language?: string) => number;
     values: TableValues;
     options: <Name extends TableName>(name: Name) => TableSettings<Name>;
-    ignoresFor: (check: string) => (IgnoreEntry & { paths: string[] })[];
+    ignoresFor: (check: string) => (IgnoreRecord & { paths: string[] })[];
     rulesOff: (check: string) => string[];
     extra: (name: string) => Record<string, unknown> | undefined;
 };
 
-type SettingEntry = {
+type EffectiveSetting = {
     key: string;
     declaration: SettingDeclaration;
     value: unknown;
@@ -67,7 +67,7 @@ type SettingEntry = {
 };
 
 /** Where a resolved value stands after the reader applies some tables. */
-type SettingState = Pick<SettingEntry, 'value' | 'source' | 'origin' | 'originScope'> & {
+type SettingState = Pick<EffectiveSetting, 'value' | 'source' | 'origin' | 'originScope'> & {
     reason: string | undefined;
 };
 
@@ -83,9 +83,6 @@ type DeclarationMatch = { declaration: SettingDeclaration; language?: string; ca
 type StructureSettings = Defined<Required<NonNullable<ParsedSettings['structure']>>>;
 
 type LimitTable = Record<string, number>;
-
-/** Root-relative path and selected configurations of an written scope. */
-type ScopeConfigurations = { configurations: string[]; removed_configurations: string[] };
 
 type Settings = Omit<
     ParsedSettings,
@@ -106,7 +103,6 @@ type Settings = Omit<
     written: TomlTable;
     level: NonNullable<ParsedSettings['level']>;
     configurations: string[];
-    scope: Record<string, ScopeConfigurations>;
     removed_configurations: string[];
     limits: NonNullable<ParsedSettings['limits']>;
     naming: NonNullable<ParsedSettings['naming']>;
@@ -116,15 +112,15 @@ type Settings = Omit<
     allowed_words: NonNullable<ParsedSettings['allowed_words']>;
     tools: Record<string, ToolTable>;
     test_files: string[];
-    ignore: IgnoreEntry[];
-    check: Record<string, CommandCheck>;
+    ignore: IgnoreRecord[];
+    commandChecks: Record<string, CommandCheck>;
     hooks?: Defined<Required<NonNullable<ParsedSettings['hooks']>>>;
     ci?: ParsedCi;
     rules: ParsedRules;
-    scopeTables: Record<string, Partial<Settings> & Pick<Settings, 'written'>>;
+    scopes: Record<string, Partial<Settings> & Pick<Settings, 'written' | 'configurations' | 'removed_configurations'>>;
 };
 
-type WrittenSetting = Pick<SettingEntry, 'value' | 'reason'>;
+type WrittenSetting = Pick<EffectiveSetting, 'value' | 'reason'>;
 
 type CommandCheck = CheckDeclaration & {
     command: string[];
@@ -136,7 +132,7 @@ type ArchitectureSettings = Omit<Defined<Required<NonNullable<ParsedSettings['ar
 };
 
 /** Root or scoped values and their source-document location. */
-type SettingsTable = { table: Partial<Settings> & Pick<Settings, 'written'>; scope?: string; path: KeyPath };
+type WrittenScopeTable = { table: Partial<Settings> & Pick<Settings, 'written'>; scope?: string; path: KeyPath };
 
 /** A setting default and the configuration responsible for it. */
 type SettingDefault = { value: unknown; configuration: string };
@@ -152,15 +148,15 @@ export type {
     ScopeView,
     PathVisitor,
     SettingsFile,
-    SettingEntry,
     SettingState,
     CommandCheck,
     WrittenTable,
     ScopeSettings,
     KnownSettings,
-    SettingsTable,
     ScopeSelection,
     WrittenSetting,
     SettingDefault,
+    EffectiveSetting,
     DeclarationMatch,
+    WrittenScopeTable,
 };

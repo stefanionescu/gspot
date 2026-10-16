@@ -2,41 +2,63 @@
 import { spyOn } from 'bun:test';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
-import { main } from '#cli/commands/program.ts';
-import { gitOutput } from '#tests/setup/git.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { useEnvironment } from '#tests/setup/environment.ts';
-import { type FindingRow } from '#tests/types/tool-output.ts';
-import { GSPOT_ENVIRONMENT } from '#tests/config/processes.ts';
-import { type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
-import { type RunReport, type RunOptions } from '#cli/types/execution/check.ts';
-import { type StdinOptions, type SpawnOutcome } from '#tests/types/processes.ts';
+import { runProgram, buildProgram } from '#cli/main.ts';
+import type { CommandResult } from '#cli/types/terminal.ts';
+import { GSPOT_ENVIRONMENT } from '#tests/data/test-setup.ts';
+import type { FindingRow } from '#tests/types/tool-output.ts';
+import { overrideEnvironment } from '#tests/setup/environment.ts';
+import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
+import type { StdinOptions, ProcessOutput } from '#tests/types/processes.ts';
+import type { Finding, RunReport, CheckResult } from '#cli/types/checks/run/check.ts';
 
 /** The gspot source folder in this checkout. */
-export const CLI_SOURCE = join(import.meta.dir, '../../packages/cli/src');
+export const CLI_SOURCE_PATH = join(import.meta.dir, '../../packages/cli/src');
 
-export function findingRows(report: RunReport): FindingRow[] {
+export function listFindingRows(report: RunReport): FindingRow[] {
     return report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule })));
 }
 
 /** Resolve the source executable once for this checkout's test processes. */
-export const CLI_MAIN = join(CLI_SOURCE, 'main.ts');
+export const CLI_MAIN = join(CLI_SOURCE_PATH, 'main.ts');
+
+/**
+ * Run registered command actions and capture their result before terminal formatting.
+ * @param cwd the sandbox in which the command starts.
+ * @param commandArguments the public command and its arguments.
+ * @returns the command result.
+ * @throws the argument or command error when parsing or execution fails.
+ */
+export async function runRegisteredCommand(cwd: string, commandArguments: readonly string[]): Promise<CommandResult> {
+    let result!: CommandResult;
+    const program = buildProgram((value) => {
+        result = value;
+    });
+    const previousFolder = process.cwd();
+    try {
+        process.chdir(cwd);
+        await program.parseAsync([...commandArguments], { from: 'user' });
+        return result;
+    } finally {
+        process.chdir(previousFolder);
+    }
+}
 
 /**
  * Runs gspot in this process over a directory with color off and CI set, capturing what it writes.
  * @param cwd the sandbox.
- * @param argv the command line after gspot.
+ * @param commandArguments the command line after gspot.
  * @param environment verbatim variables, restored afterwards.
  * @param options byte input for commands that read standard input.
  * @returns the exit code and both streams.
  */
 export async function runGspot(
     cwd: string,
-    argv: readonly string[],
+    commandArguments: readonly string[],
     environment: Record<string, string> = {},
     options: StdinOptions = {},
-): Promise<SpawnOutcome> {
-    const previousDirectory = process.cwd();
+): Promise<ProcessOutput> {
+    const previousFolder = process.cwd();
     const stdout: string[] = [];
     const stderr: string[] = [];
     using resources = new DisposableStack();
@@ -54,7 +76,7 @@ export async function runGspot(
     const exitCode = process.exitCode;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Node defines process.stdin on the process object.
     const stdin = Object.getOwnPropertyDescriptor(process, 'stdin')!;
-    using _environment = useEnvironment(variables);
+    using _environment = overrideEnvironment(variables);
     process.exitCode = 0;
     try {
         if (options.stdin !== undefined)
@@ -63,10 +85,10 @@ export async function runGspot(
                 configurable: true,
             });
         process.chdir(cwd);
-        const code = await main([...argv]);
+        const code = await runProgram([...commandArguments]);
         return { code, stdout: stdout.join(''), stderr: stderr.join('') };
     } finally {
-        process.chdir(previousDirectory);
+        process.chdir(previousFolder);
         Object.defineProperty(process, 'stdin', stdin);
         // Assigning undefined keeps the last Bun exit code; restore an unset code as 0.
         process.exitCode = exitCode ?? 0;
@@ -74,52 +96,25 @@ export async function runGspot(
 }
 
 /**
- * Runs the ordinary pre-push hook for the selected revision and its remote base.
- * @param root the repository.
- * @param base the remote revision.
- * @param head the pushed revision.
- * @param checks the check names selected for this hook run.
- * @returns the hook exit code and output.
- */
-export async function runPrePush(
-    root: string,
-    base: string,
-    head: string,
-    checks: readonly string[],
-): Promise<SpawnOutcome> {
-    gitOutput(root, ['update-ref', 'refs/remotes/origin/main', base]);
-    return await runGspot(
-        root,
-        ['check', '--hook', 'pre-push', '--only', ...checks, '--json', '--', 'origin'],
-        {},
-        {
-            stdin: `refs/heads/main ${head} refs/heads/main ${base}\n`,
-        },
-    );
-}
-
-/**
  * Capture a JSON check report while retaining the command's exit code and both streams.
  * @param cwd the sandbox.
- * @param argv the test's complete check command, including JSON output.
+ * @param commandArguments the test's complete check command, including JSON output.
  * @param environment the command's environment.
- * @param options byte input for hook commands.
  * @returns the command evidence and its parsed report.
  */
 export async function checkReport(
     cwd: string,
-    argv: readonly string[],
+    commandArguments: readonly string[],
     environment: Record<string, string> = {},
-    options: StdinOptions = {},
-): Promise<SpawnOutcome & { report: RunReport }> {
-    const result = await runGspot(cwd, argv, environment, options);
+): Promise<ProcessOutput & { report: RunReport }> {
+    const result = await runGspot(cwd, commandArguments, environment);
     return { ...result, report: JSON.parse(result.stdout) as RunReport };
 }
 
 /**
  * Runs gspot as a child process in a directory with color off and CI set, through the product's child process.
  * @param cwd the sandbox.
- * @param argv the command line after gspot.
+ * @param commandArguments the command line after gspot.
  * @param environment verbatim variables.
  * @param options stdin for the child process.
  * @returns the exit code and both streams.
@@ -127,23 +122,39 @@ export async function checkReport(
 
 export async function spawnGspot(
     cwd: string,
-    argv: readonly string[],
+    commandArguments: readonly string[],
     environment: Record<string, string> = {},
     options: Pick<AsyncSpawnOptions, 'stdin'> = {},
-): Promise<SpawnOutcome> {
-    return await runCommand([process.execPath, CLI_MAIN, ...argv], {
+): Promise<ProcessOutput> {
+    return await runCommand([process.execPath, CLI_MAIN, ...commandArguments], {
         cwd,
         env: { ...GSPOT_ENVIRONMENT, ...environment },
         ...options,
     });
 }
 
-/**
- * The options of an in-process run: every stage, the built-in checks, nothing skipped, no fixes, and a real run.
- * @param overrides the options a test changes, such as the checks it runs with only.
- * @returns the run options.
- */
+/** Run a public check command as a child and parse its JSON report. */
+export async function spawnCheckReport(
+    cwd: string,
+    commandArguments: readonly string[],
+    environment: Record<string, string> = {},
+): Promise<ProcessOutput & { report: RunReport }> {
+    const result = await spawnGspot(cwd, commandArguments, environment);
+    return { ...result, report: JSON.parse(result.stdout) as RunReport };
+}
 
-export function buildRunOptions(overrides: Partial<RunOptions> = {}): RunOptions {
-    return { stage: 'all', fix: false, isDryRun: false, ...overrides };
+/** Select the root check from an actual child-process JSON report. */
+export async function spawnRootCheck(root: string, check: string): Promise<CheckResult> {
+    const result = await spawnCheckReport(root, ['check', '--only', check, '--json']);
+    return result.report.checks.find((entry) => entry.scope === '') as CheckResult;
+}
+
+/** Collect findings across the scopes reported by an actual public check command. */
+export async function spawnCheckFindings(
+    root: string,
+    commandArguments: readonly string[],
+    environment: Record<string, string>,
+): Promise<ProcessOutput & { findings: Finding[] }> {
+    const result = await spawnCheckReport(root, commandArguments, environment);
+    return { ...result, findings: result.report.checks.flatMap((check) => check.findings) };
 }

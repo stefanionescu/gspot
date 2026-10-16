@@ -1,28 +1,36 @@
 import { stringify } from '@decimalturn/toml-patch';
+import { findLockfile } from '#cli/repository/classify.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { generatedIgnores, selectedIgnorePaths } from '#cli/generation/ignore-files.ts';
-import { type TyposSettings, type TyposDictionary, type ToolFileContext } from '#cli/types/generation/files.ts';
+import { IGNORE_SECTION_TITLES } from '#cli/config/generation/ignore-files.ts';
+import { globSections, ignoreSections, settingsSections } from '#cli/generation/ignore-files.ts';
 
 import {
-    TOOL_EMIT_FORMAT,
+    type IgnoreSection,
+    type TyposSettings,
+    type TyposDictionary,
+    type ToolFileContext,
+} from '#cli/types/generation/files.ts';
+import {
+    TOML_FORMAT,
     TYPOS_EXCLUDED_FILES,
+    TYPOS_EXCLUDED_ARRAY,
     TYPOS_IGNORE_PATTERNS,
-} from '#cli/config/generation/tool-file-sources.ts';
+} from '#cli/config/generation/tool-files.ts';
 
 /**
  * Accept the dictionary keys written in gspot.toml without extending every source-file dictionary.
  *
  * @param spellingScopes the scopes with spelling checks.
  *
- * @returns the settings dictionary and its native file selector.
+ * @returns the settings dictionary and its file selector.
  */
 function buildSettingsDictionary(spellingScopes: ScopeSelection[]) {
     const dictionaries = spellingScopes.flatMap((entry) => {
-        const native = entry.view.extra('typos') as TyposSettings | undefined;
-        if (native === undefined) return [];
-        return [native.default, ...(native.type === undefined ? [] : Object.values(native.type))];
+        const extraOptions = entry.view.extra('typos') as TyposSettings | undefined;
+        if (extraOptions === undefined) return [];
+        return [extraOptions.default, ...(extraOptions.type === undefined ? [] : Object.values(extraOptions.type))];
     });
     const collectWords = (key: keyof TyposDictionary): [string, string][] =>
         dictionaries.flatMap((dictionary) => {
@@ -35,21 +43,44 @@ function buildSettingsDictionary(spellingScopes: ScopeSelection[]) {
         'extend-words': Object.fromEntries<string>(collectWords('extend-words')),
     };
 }
-/**
- * Build typos file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the spelling dictionaries and reason-grouped exclusions as TOML.
- */
-function buildTyposFile(context: ToolFileContext): string {
-    const { settings, ignoresFor, extra } = context.selection.view;
-    const ignoredPaths = [
-        ...generatedIgnores(context.session),
-        ...selectedIgnorePaths(context.scopes).filter((path) => !path.endsWith('/')),
-    ];
-    const typos = extra('typos') as TyposSettings | undefined;
-    const allowed = Object.fromEntries<string>(
-        context.session.settingsFile.settings.allowed_words.map((word) => [word, word]),
+// Convert each shared ignore section once and retain the first reason for a repeated path.
+function buildTyposSections(context: ToolFileContext): IgnoreSection[] {
+    const excludedLockfiles = TYPOS_EXCLUDED_FILES.filter(
+        (path) => path === '*.lock' || findLockfile(path) !== undefined,
     );
+    const excludedFormats = TYPOS_EXCLUDED_FILES.filter((path) => !excludedLockfiles.includes(path));
+    const sections = [
+        ...ignoreSections(context.session),
+        ...settingsSections(context.selection.view, 'spelling/typos'),
+    ].map((section) => {
+        if (section.title === IGNORE_SECTION_TITLES.lockfiles)
+            return {
+                ...section,
+                patterns: [...section.patterns, ...excludedLockfiles].filter(
+                    (path) => path === '*.lock' || !path.endsWith('.lock'),
+                ),
+            };
+        return section.title === IGNORE_SECTION_TITLES.generators
+            ? { ...section, patterns: [...section.patterns, ...excludedFormats] }
+            : section;
+    });
+    const seen = new Set<string>();
+    const grouped: IgnoreSection[] = sections.map((section) => ({
+        ...section,
+        patterns: globSections([section]).filter((path) => {
+            if (seen.has(path)) return false;
+            seen.add(path);
+            return true;
+        }),
+    }));
+    return grouped;
+}
+
+// Merge words used in settings without extending unrelated source-file dictionaries.
+function buildSpellingTypes(
+    context: ToolFileContext,
+    typos: TyposSettings | undefined,
+): Record<string, TyposDictionary> {
     const spellingScopes = context.scopes
         .filter(({ view }) => view.configurations.includes('spelling'))
         .toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path));
@@ -69,7 +100,43 @@ function buildTyposFile(context: ToolFileContext): string {
                 : dictionary,
         ]),
     );
-    return stringify(
+    return { ...types, 'gspot-settings': settingsType };
+}
+
+// Keep the exclusion-array comments beside their original ordered groups.
+function serializeExclusions(grouped: IgnoreSection[]): string {
+    return [
+        'extend-exclude = [',
+        ...grouped.flatMap(({ title, patterns }) =>
+            patterns.length === 0
+                ? []
+                : [
+                      ...title
+                          .replaceAll('\r\n', '\n')
+                          .replaceAll('\r', '\n')
+                          .split('\n')
+                          .map((line) => `  # ${line}`),
+                      ...patterns.map((pattern) => `  ${JSON.stringify(pattern)},`),
+                  ],
+        ),
+        ']',
+    ].join('\n');
+}
+
+/**
+ * Build typos file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the spelling dictionaries and reason-grouped exclusions as TOML.
+ */
+function buildTyposFile(context: ToolFileContext): string {
+    const { settings, extra } = context.selection.view;
+    const grouped = buildTyposSections(context);
+    const ignoredPaths = grouped.flatMap((section) => section.patterns);
+    const typos = extra('typos') as TyposSettings | undefined;
+    const allowed = Object.fromEntries<string>(
+        context.session.settingsFile.settings.allowed_words.map((word) => [word, word]),
+    );
+    const text = stringify(
         {
             default: {
                 locale: settings['spelling.locale'],
@@ -78,23 +145,13 @@ function buildTyposFile(context: ToolFileContext): string {
                 'extend-words': { ...allowed, ...typos?.default?.['extend-words'] },
             },
             files: {
-                'extend-exclude': [
-                    ...new Set([
-                        ...TYPOS_EXCLUDED_FILES,
-                        ...ignoresFor('spelling/typos')
-                            .filter((entry) => entry.rule === undefined)
-                            .flatMap((entry) => entry.paths),
-                        ...ignoredPaths,
-                    ]),
-                ],
+                'extend-exclude': ignoredPaths,
             },
-            type: {
-                ...types,
-                'gspot-settings': settingsType,
-            },
+            type: buildSpellingTypes(context, typos),
         },
-        TOOL_EMIT_FORMAT,
+        TOML_FORMAT,
     );
+    return text.replace(TYPOS_EXCLUDED_ARRAY, () => serializeExclusions(grouped));
 }
 
 export { buildTyposFile };

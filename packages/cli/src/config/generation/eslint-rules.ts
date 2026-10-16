@@ -1,4 +1,4 @@
-const CORE_RULES = {
+const ESLINT_RULES = {
     // regexp also validates constructor patterns and Unicode set expressions.
     'no-empty-character-class': 'off',
     'no-useless-constructor': 'error',
@@ -214,7 +214,20 @@ export const ALL_LEVEL_RULES = {
             },
         ],
         'jsdoc/require-description': 'error',
-        'jsdoc/require-param': 'error',
+        'jsdoc/require-param': ['error', { enableFixer: false }],
+        'jsdoc/match-name': [
+            'error',
+            {
+                match: [
+                    {
+                        tags: ['param'],
+                        disallowName: String.raw`/^root\d*$/`,
+                        message: 'Name the parameter for its role, such as options.',
+                    },
+                ],
+            },
+        ],
+        'jsdoc/informative-docs': 'error',
         'jsdoc/require-param-description': 'error',
         'jsdoc/require-returns': 'error',
         'jsdoc/require-returns-description': 'error',
@@ -287,7 +300,7 @@ export const TEST_RULES = {
 } as const;
 
 export const BASE_RULES = {
-    ...CORE_RULES,
+    ...ESLINT_RULES,
     ...SORTING_RULES,
     ...SONAR_RULES,
     ...UNICORN_RULES,

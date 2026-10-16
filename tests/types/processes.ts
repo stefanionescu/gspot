@@ -1,10 +1,10 @@
-import type { SpawnResult } from '#cli/types/system/processes.ts';
+import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 
 /** A stalled Git boundary and the copy path it started. */
 export type PausedGit = { pid: number; checkout?: string };
 
 /** What a spawned command left behind, for tests. */
-export type SpawnOutcome = Pick<SpawnResult, 'code' | 'stdout' | 'stderr'>;
+export type ProcessOutput = Pick<SpawnResult, 'code' | 'stdout' | 'stderr'>;
 
 /** Exact byte input for a live source CLI child. */
 export type StdinOptions = { stdin?: string | Uint8Array };
@@ -23,4 +23,10 @@ export type GitHookReport = {
     workingBytes: string;
     indexRetained: boolean;
     reports: Record<string, unknown>[];
+};
+
+/** One test process implementation with the same command and result contract. */
+export type ProcessBackend = {
+    name: string;
+    execute: (command: string[], options: AsyncSpawnOptions) => SpawnResult | Promise<SpawnResult>;
 };

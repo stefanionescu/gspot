@@ -1,3 +1,6 @@
+import { TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
+
+const ESLINT_INDENT_WIDTH = 4;
 const FRAGMENT_BLANK_LINES = 3;
 
 export const ESLINT_RULE_NAMES_FILE = 'eslint-rule-names.json';
@@ -20,8 +23,6 @@ export const TEST_RULE_NAMES = [
     'valid-expect',
     'prefer-strict-equal',
 ] as const;
-
-// Shared ESLint data comes from the JavaScript configuration's shipped assets.
 
 // The check that runs ESLint, whose ignores with a rule become blocks of the generated tool file.
 export const ESLINT_CHECK = 'javascript/eslint';
@@ -150,16 +151,13 @@ export const ESLINT_SETTINGS_TABLE = 'tools.eslint';
 export const NODE_SHEBANG_TAG = 'shebang:node';
 export const TRIVIAL_FILES_RULE = 'gspot/no-trivial-files';
 export const TRIVIAL_FUNCTIONS_RULE = 'gspot/no-trivial-functions';
-export const TRIVIAL_FUNCTION_LIMIT = 'min_function_statements';
+export const TRIVIAL_FUNCTION_LIMIT = 'trivial_function_statements';
 export const DEFAULT_TRIVIAL_FUNCTION_LIMIT = 2;
 export const ENVIRONMENT_LANGUAGES = ['javascript', 'typescript', 'vue', 'svelte', 'astro'] as const;
 export const TYPED_LANGUAGES = ['typescript', 'vue', 'svelte', 'astro'] as const;
 export const FILE_EXTENSION_RULE = 'n/file-extension-in-import';
 export const COMPONENT_CONFIGURATIONS = ['vue', 'svelte'] as const;
 export const CODE_LANGUAGES = ['javascript', 'typescript'] as const;
-
-/** Build-derived plugin rule levels, with no copied source preset. */
-export const ESLINT_RULE_LEVELS_FILE = 'dist/eslint-rule-levels.json';
 
 /** CommonJS file extensions preserve their module globals. */
 export const COMMONJS_FILES = '**/*.{cjs,cts}';
@@ -180,7 +178,7 @@ export const FILE_PRESETS = [
 export const PACKAGE_JSON_PATTERN = '**/package.json';
 
 export const ESLINT_RUNTIME_FILE = 'eslint-runtime.mjs';
-export const ESLINT_RUNTIME_TARGET = '.gspot/config/eslint-runtime.mjs';
+export const ESLINT_RUNTIME_TARGET = `${TOOL_FILES_FOLDER}/eslint-runtime.mjs`;
 
 export const ESLINT_BASE_IMPORTS = [
     ['{ root, runtimeMatches, stripRuntimeGlobals, componentMatches }', './' + ESLINT_RUNTIME_FILE],
@@ -192,6 +190,9 @@ export const ESLINT_BASE_IMPORTS = [
     ['prettierConfig', 'eslint-config-prettier'],
     ['globals', 'globals'],
 ] as const;
+
+/** Indentation shared by emitted ESLint configuration blocks. */
+export const ESLINT_INDENT = ' '.repeat(ESLINT_INDENT_WIDTH);
 
 /** Spacing preceding component framework preset blocks. */
 export const FRAGMENT_SPACING = '\n'.repeat(FRAGMENT_BLANK_LINES);

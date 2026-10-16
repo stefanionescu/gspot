@@ -1,18 +1,18 @@
 import { readAsset } from '#cli/system/assets.ts';
 import { formatHeader } from '#cli/generation/header.ts';
-import { buildPointerFiles } from '#cli/generation/pointers.ts';
+import { join, dirname, relative } from 'node:path/posix';
 import { buildKnipFile } from '#cli/generation/tool-files/knip.ts';
 import { buildJscpdFile } from '#cli/generation/tool-files/jscpd.ts';
 import { buildTyposFile } from '#cli/generation/tool-files/typos.ts';
 import { buildEslintFile } from '#cli/generation/eslint/tool-file.ts';
-import { buildPrettierignore } from '#cli/generation/ignore-files.ts';
 import { buildJsconfig } from '#cli/generation/tool-files/jsconfig.ts';
 import { buildSquawkFile } from '#cli/generation/tool-files/squawk.ts';
-import { SEMGREP_RULE_PACK_FOLDER } from '#cli/config/generation/files.ts';
+import { buildSemgrepFile } from '#cli/generation/tool-files/semgrep.ts';
 import { buildHadolintFile } from '#cli/generation/tool-files/hadolint.ts';
 import { buildPrettierFile } from '#cli/generation/tool-files/prettier.ts';
 import { buildSqlfluffFile } from '#cli/generation/tool-files/sqlfluff.ts';
 import { buildYamllintFile } from '#cli/generation/tool-files/yamllint.ts';
+import { MARKDOWNLINT_CLI_TEXT } from '#cli/config/generation/tool-files.ts';
 import { buildStylelintFile } from '#cli/generation/tool-files/stylelint.ts';
 import { buildSwiftlintFile } from '#cli/generation/tool-files/swiftlint.ts';
 import { buildCommitlintFile } from '#cli/generation/tool-files/commitlint.ts';
@@ -21,11 +21,17 @@ import { buildSwiftformatFile } from '#cli/generation/tool-files/swiftformat.ts'
 import { buildEditorconfigFile } from '#cli/generation/tool-files/editorconfig.ts';
 import { buildMarkdownlintFile } from '#cli/generation/tool-files/markdownlint.ts';
 import { buildHtmlValidateFile } from '#cli/generation/tool-files/html-validate.ts';
+import { buildSemgrepignore, buildPrettierignore } from '#cli/generation/ignore-files.ts';
 import { buildRuffFile, buildBasedpyrightFile } from '#cli/generation/tool-files/python.ts';
-import { buildSemgrepFile, buildSemgrepignore } from '#cli/generation/tool-files/semgrep.ts';
 import { ESLINT_RUNTIME_FILE, ESLINT_RUNTIME_TARGET } from '#cli/config/generation/eslint.ts';
-import { type GeneratedFile, type ToolFileBuilder, type ToolFileContext } from '#cli/types/generation/files.ts';
+import { TOOL_FILE_REFERENCE, SEMGREP_RULE_PACK_FOLDER } from '#cli/config/generation/files.ts';
 
+import {
+    type GeneratedFile,
+    type ToolFileBuilder,
+    type ToolFileContext,
+    type ToolFileGeneration,
+} from '#cli/types/generation/files.ts';
 import {
     buildV8rFile,
     buildGixyFile,
@@ -52,7 +58,7 @@ import {
 } from '#cli/generation/tool-files/vale.ts';
 
 const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
-    [ESLINT_RUNTIME_TARGET]: (context) => readAsset(`${context.manifest.dir}/${ESLINT_RUNTIME_FILE}`),
+    [ESLINT_RUNTIME_TARGET]: (context) => readAsset(`${context.manifest.folder}/${ESLINT_RUNTIME_FILE}`),
     '.gspot/config/ansible-lint.yml': buildAnsibleLintFile,
     '.gspot/config/vale/styles/gspot/acronyms.yml': buildAcronymsStyle,
     '.gspot/config/gixy.cfg': buildGixyFile,
@@ -61,6 +67,7 @@ const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
     '.gspot/config/shellcheckrc': buildShellcheckFile,
     '.gspot/config/commitlint.config.cjs': buildCommitlintFile,
     '.gspot/config/markdownlint.jsonc': buildMarkdownlintFile,
+    '.gspot/config/markdownlint-cli2.mjs': () => MARKDOWNLINT_CLI_TEXT,
     '.gspot/config/jscpd.json': buildJscpdFile,
     '.gspot/config/taplo.toml': buildTaploFile,
     '.gspot/config/lychee.toml': buildLycheeFile,
@@ -102,25 +109,26 @@ const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
 /**
  * Build one target file and its declared pointers.
  * @param context the declared output, its owner, and the selected scope settings.
- * @param fragmentPaths the existing fragment paths that keep their own output.
- * @returns the generated target and the pointer files that do not replace fragments.
+ * @param targets the generated tool files chosen for each scope.
+ * @returns the generated file with companion paths relative to its chosen location.
  */
-function buildToolFile(context: ToolFileContext, fragmentPaths: ReadonlySet<string>): GeneratedFile[] {
+function buildToolFile(context: ToolFileContext, targets: ToolFileGeneration['targets']): GeneratedFile {
     const { toolFile, targetPath } = context;
     const folder = toolFile.target.slice(0, toolFile.target.lastIndexOf('/') + 1);
     const builder = builders[toolFile.target] ?? builders[folder];
-    const source = builder === undefined ? readAsset(`${context.manifest.dir}/${toolFile.source}`) : builder(context);
-    const file: GeneratedFile = {
+    const source = (
+        builder === undefined ? readAsset(`${context.manifest.folder}/${toolFile.source}`) : builder(context)
+    ).replaceAll(TOOL_FILE_REFERENCE, (match: string, ...replacementArguments: unknown[]) => {
+        const groups = replacementArguments.at(-1) as { path: string };
+        const declared = join(dirname(toolFile.target), groups.path);
+        const chosen = targets.get(context.selection.scope.path)?.get(declared);
+        return chosen === undefined ? match : match.replace(groups.path, relative(dirname(targetPath), chosen));
+    });
+    return {
         path: targetPath,
         content: `${formatHeader(targetPath)}${source.trimEnd()}\n`,
         kind: 'tool_file',
     };
-    return [
-        file,
-        ...buildPointerFiles(context, toolFile, targetPath).filter(
-            (pointer) => toolFile.pointer?.directories !== undefined || !fragmentPaths.has(pointer.path),
-        ),
-    ];
 }
 
 export { buildToolFile };

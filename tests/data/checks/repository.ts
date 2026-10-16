@@ -1,0 +1,63 @@
+/** Selected and unselected paths for the native repository index contract. */
+export const TRACKED_PATTERNS = {
+    indexOnly: ['.env.'],
+    refused: [
+        '.env',
+        '.env.local',
+        '.env.example.local',
+        'nested/.dev.vars.production',
+        'node_modules/.env.example',
+        'bower_components/package/index.js',
+        'python/.venv/lib/package.py',
+        'python/nested/venv/lib/package.py',
+        'python/deep/.venv/lib/package.py',
+        'swift/Pods/Library/source.swift',
+        'swift/DerivedData/output.bin',
+        'swift/.build/output.bin',
+        'sibling/node_modules/package/index.js',
+        'sibling/.dev.vars',
+    ],
+    allowed: [
+        '.env.example',
+        '.env.template',
+        '.env.sample',
+        '.dev.vars.example',
+        'nested/.env.example',
+        'nested/.env.template',
+        'nested/.env.sample',
+        'nested/.dev.vars.example',
+        'python/node_modules/package/index.js',
+        'swift/node_modules/package/index.js',
+        'sibling/.venv/lib/package.py',
+        '.venv/lib/package.py',
+        '.build/output.bin',
+        'python/source.py',
+    ],
+    scopes: `[[scope]]
+path = "python"
+configurations = ["python"]
+removed_configurations = ["javascript"]
+[[scope]]
+path = "python/deep"
+[[scope]]
+path = "swift"
+configurations = ["swift"]
+removed_configurations = ["javascript"]
+[[scope]]
+path = "sibling"
+`,
+} as const;
+
+export const LICENSE_LIKE_SOURCES = ['license-lockfiles.test.ts', 'license.ts', 'licenses.json', 'notice.py'] as const;
+
+export const LARGE_FILE_SETTINGS = `[[scope]]
+path = "app"
+
+[repository]
+max_file_kilobytes = 1
+`;
+
+export const LARGE_FILE_ATTRIBUTES = `lfs.bin filter=lfs
+data/** linguist-generated
+vendor/** linguist-vendored
+`;

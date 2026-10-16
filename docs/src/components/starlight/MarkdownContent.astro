@@ -1,0 +1,9 @@
+---
+import { FIRST_PAINT_TARGET } from '../../config/site.ts';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro';
+---
+
+<Default>
+    <slot />
+</Default>
+<span id={FIRST_PAINT_TARGET.slice(1)} hidden></span>

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
@@ -22,17 +22,21 @@ const TSCONFIG_MEMO = { create: () => new Map<string, TypeScriptConfiguration | 
 
 /**
  * Resolve a project and every project it references with the run-owned configuration cache.
- * @param root the repository root.
+ * @param repositoryRoot the base folder used by cached source readers.
  * @param path the absolute project path.
  * @param reads the run-owned reads.
  * @returns actual parsed projects indexed by their absolute system paths.
  */
-function readReferencedProjects(root: string, path: string, reads: ReadCache): Map<string, TypeScriptConfiguration> {
+function readReferencedProjects(
+    repositoryRoot: string,
+    path: string,
+    reads: ReadCache,
+): Map<string, TypeScriptConfiguration> {
     const projects = new Map<string, TypeScriptConfiguration>();
     const pending = [resolve(path)];
     for (const candidate of pending) {
         if (projects.has(candidate)) continue;
-        const parsed = readTsconfig(root, candidate, reads);
+        const parsed = readTsconfig(repositoryRoot, candidate, reads);
         if (parsed === undefined) throw new Error(`Missing TypeScript project: ${candidate}`);
         projects.set(candidate, parsed);
         pending.push(
@@ -79,31 +83,31 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
     return {
         ...parsed,
         raw: authored,
-        configurationFiles: tsconfigFiles,
+        tsconfigFiles: tsconfigFiles,
         extendedConfigurationFiles: sourceFile.extendedSourceFiles ?? [],
     };
 }
 
 /**
- * Read compiler libraries through their observed installed package tree.
- * @param root the captured repository.
- * @param scope the compiler scope.
- * @param reads the captured read cache.
+ * Read compiler inputs through the repository cache and preserve installed library paths.
+ * @param repositoryRoot the base folder used by cached source readers.
+ * @param scope the scope path relative to the repository.
+ * @param reads the run source-read cache.
  * @param options the TypeScript compiler options.
- * @returns the guarded TypeScript compiler host.
+ * @returns the compiler host backed by captured repository reads.
  */
 function buildCompilerHost(
-    root: string,
+    repositoryRoot: string,
     scope: string,
     reads: ReadCache,
     options: ts.CompilerOptions,
 ): ts.CompilerHost {
     const host = ts.createCompilerHost(options);
     const libraries = new Set([dirname(dirname(ts.getDefaultLibFilePath(options)))]);
-    const nativeRealpath = host.realpath?.bind(host);
-    const nativeSourceFile = host.getSourceFile.bind(host);
+    const readRealPath = host.realpath?.bind(host);
+    const getSourceFile = host.getSourceFile.bind(host);
     host.getSourceFile = (path, languageVersion, _onError, createSource) =>
-        nativeSourceFile(
+        getSourceFile(
             path,
             languageVersion,
             (message) => {
@@ -111,10 +115,10 @@ function buildCompilerHost(
             },
             createSource,
         );
-    host.getCurrentDirectory = () => join(root, scope);
+    host.getCurrentDirectory = () => join(repositoryRoot, scope);
     host.realpath = (path) => {
-        const target = nativeRealpath?.(path) ?? path;
-        const local = convertToPosixPath(relative(root, path));
+        const target = readRealPath?.(path) ?? path;
+        const local = convertToPosixPath(relative(repositoryRoot, path));
         if (
             (isInside(local) && local.split('/').includes(NODE_MODULES)) ||
             [...libraries].some((library) => isInside(relative(library, path)))
@@ -127,27 +131,27 @@ function buildCompilerHost(
     host.readFile = (path) =>
         [...libraries].some((library) => isInside(relative(library, path)))
             ? ts.sys.readFile(path)
-            : readCompilerFile(root, path, reads);
+            : readCompilerFile(repositoryRoot, path, reads);
     return host;
 }
 
 /**
  * Read a file for the TypeScript compiler, following links into node_modules.
- * @param root the source repository.
+ * @param repositoryRoot the base folder used by cached source readers.
  * @param path the absolute system input path.
  * @param reads the repository read cache.
  * @returns source text, or undefined for a missing input.
  */
-function readCompilerFile(root: string, path: string, reads: ReadCache): string | undefined {
-    const local = convertToPosixPath(relative(root, path));
-    using files = openFiles(root);
+function readCompilerFile(repositoryRoot: string, path: string, reads: ReadCache): string | undefined {
+    const local = convertToPosixPath(relative(repositoryRoot, path));
+    using files = openFiles(repositoryRoot);
     try {
         const segments = local.split('/');
         const dependency = segments.indexOf(NODE_MODULES);
         if (dependency !== -1 && segments[0] !== DOT_GSPOT) {
             // Follow linked dependency folders. Refuse links preceding node_modules.
 
-            if (dependency > 0) files.stat(segments.slice(0, dependency).join('/'));
+            if (dependency > 0) files.readStats(segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');
         }
         return readCachedText(reads, local);
@@ -159,21 +163,24 @@ function readCompilerFile(root: string, path: string, reads: ReadCache): string 
 
 /**
  * Resolves compiler options and inherited paths with the TypeScript compiler.
- * @param root the repository root for the tool file.
+ * @param repositoryRoot the base folder used by cached source readers.
  * @param path the absolute configuration path.
  * @param reads the configuration cache owned by this run.
  * @returns the parsed configuration, or undefined when the file does not exist.
  */
-export function readTsconfig(root: string, path: string, reads: ReadCache): TypeScriptConfiguration | undefined {
+function readTsconfig(repositoryRoot: string, path: string, reads: ReadCache): TypeScriptConfiguration | undefined {
     const configurations = getCachedValue(reads, TSCONFIG_MEMO);
-    const key = JSON.stringify([root, resolve(path)]);
+    const key = JSON.stringify([repositoryRoot, resolve(path)]);
     if (configurations.has(key)) return configurations.get(key);
     try {
-        const text = readCompilerFile(root, path, reads);
+        const text = readCompilerFile(repositoryRoot, path, reads);
         const parsed =
             text === undefined
                 ? undefined
-                : parseTsconfig(path, text, { ...ts.sys, readFile: (file) => readCompilerFile(root, file, reads) });
+                : parseTsconfig(path, text, {
+                      ...ts.sys,
+                      readFile: (file) => readCompilerFile(repositoryRoot, file, reads),
+                  });
         configurations.set(key, parsed);
         return parsed;
     } catch (error) {
@@ -184,46 +191,47 @@ export function readTsconfig(root: string, path: string, reads: ReadCache): Type
 
 /**
  * Find the nearest TypeScript project that includes every source owned by a scope.
- * @param root the repository boundary.
+ * @param repositoryRoot the base folder used by cached source readers.
  * @param scope the repository-relative scope.
  * @param files the scope-owned source paths.
  * @param reads the run-owned configuration cache.
  * @returns the covering project, or no project for a standalone scope.
  */
-export function readTsconfigProject(
-    root: string,
+function readTsconfigProject(
+    repositoryRoot: string,
     scope: string,
     files: string[],
     reads: ReadCache,
 ): TypeScriptProject | undefined {
-    const own = join(root, scope);
+    const own = join(repositoryRoot, scope);
     let folder = own;
     let path = join(folder, TSCONFIG_FILE);
-    let config = readTsconfig(root, path, reads);
-    while (config === undefined && folder !== root) {
+    let config = readTsconfig(repositoryRoot, path, reads);
+    while (config === undefined && folder !== repositoryRoot) {
         folder = dirname(folder);
         path = join(folder, TSCONFIG_FILE);
-        config = readTsconfig(root, path, reads);
+        config = readTsconfig(repositoryRoot, path, reads);
     }
     if (config === undefined) return undefined;
-    const projects = readReferencedProjects(root, path, reads);
+    const projects = readReferencedProjects(repositoryRoot, path, reads);
     const members = new Set(
         [...projects.values()].flatMap((project) => project.fileNames.map((file) => convertToPosixPath(file))),
     );
-    if (folder !== own && files.some((file) => !members.has(convertToPosixPath(join(root, file))))) return undefined;
+    if (folder !== own && files.some((file) => !members.has(convertToPosixPath(join(repositoryRoot, file)))))
+        return undefined;
     return { path, config, projects };
 }
 
 /**
  * Resolve source inputs through the project's TypeScript compiler configuration.
- * @param root the captured repository.
+ * @param repositoryRoot the base folder used by cached source readers.
  * @param scope the importing project scope.
  * @param reads the run-owned metadata cache.
  * @param config the parsed project.
  * @returns resolved source files without installed or compiler libraries.
  */
-export function listSourceFiles(
-    root: string,
+function listSourceFiles(
+    repositoryRoot: string,
     scope: string,
     reads: ReadCache,
     config: TypeScriptConfiguration,
@@ -232,7 +240,7 @@ export function listSourceFiles(
         rootNames: config.fileNames,
         options: config.options,
         ...(config.projectReferences === undefined ? {} : { projectReferences: config.projectReferences }),
-        host: buildCompilerHost(root, scope, reads, config.options),
+        host: buildCompilerHost(repositoryRoot, scope, reads, config.options),
     });
     return program
         .getSourceFiles()
@@ -240,3 +248,5 @@ export function listSourceFiles(
             (source) => !program.isSourceFileDefaultLibrary(source) && !program.isSourceFileFromExternalLibrary(source),
         );
 }
+
+export { readTsconfig, listSourceFiles, buildCompilerHost, readTsconfigProject };

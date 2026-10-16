@@ -1,9 +1,3 @@
-/** The repository and generated Yarn settings used during package lockfile resolution. */
-
-/** The repository and declared wrappers verified before installing the package project. */
-
-/** The repository and generated Yarn settings used during package lockfile resolution. */
-/** The repository and declared wrappers verified before installing the package project. */
 import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 import type { ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
 
@@ -18,7 +12,7 @@ export type PackageManagerCommand = {
 /** One uv operation with its private index configuration and diagnostic credentials. */
 export type UvExecution = {
     work: string;
-    args: readonly string[];
+    commandArguments: readonly string[];
     executable: string;
     credentials: string[];
     configFile?: string;
@@ -30,7 +24,7 @@ export type PackageCommandResult = {
     lockfile: string;
 };
 
-/** Native package operations for a declared manager major. */
+/** Package operations for a declared manager major. */
 export type PackageManagerArguments = { lockfile: string[]; install: string[] };
 
 /** The validated uv lockfile of the Python tool project. */

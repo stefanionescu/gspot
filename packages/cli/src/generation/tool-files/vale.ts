@@ -2,8 +2,8 @@ import { stringify } from 'yaml';
 import type { Session } from '#cli/types/planning.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { dirname, basename, relative } from 'node:path/posix';
+import { VALE_STYLES_PATH, VALE_PACKAGES_PATH } from '#cli/config/system/locations.ts';
 import { type ProseInputs, type ToolFileContext } from '#cli/types/generation/files.ts';
-import { STYLES_DIRECTORY, VALE_PACKAGE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { VALE_PACKAGES, PROSE_FORMATS, VALE_RULE_EXTENSION } from '#cli/config/tools/vale.ts';
 
 import {
@@ -18,7 +18,7 @@ import {
     VALE_REGEX_SYMBOLS,
     RECOMMENDED_STYLES,
     VALE_SKIPPED_SCOPES,
-} from '#cli/config/generation/prose.ts';
+} from '#cli/config/generation/vale.ts';
 
 function escapeWord(word: string): string {
     return word.replaceAll(VALE_REGEX_SYMBOLS, String.raw`\$&`);
@@ -80,12 +80,12 @@ function buildValeIniFile(context: ToolFileContext): string {
         : Object.fromEntries(
               prose.rules.filter((rule) => !RECOMMENDED_STYLES.has(rule)).map((rule) => [`gspot.${rule}`, 'NO']),
           );
-    const folders = [STYLES_DIRECTORY];
+    const folders = [VALE_STYLES_PATH];
     const basedOn = ['gspot'];
     const packages: string[] = [];
     const markupRules: string[] = [];
     if (isAll) {
-        folders.push(VALE_PACKAGE_DIRECTORY);
+        folders.push(VALE_PACKAGES_PATH);
         basedOn.push('Vale', ...VALE_PACKAGES);
         packages.push(`Packages = ${VALE_PACKAGES.join(', ')}`);
         markupRules.push('gspot.merge-conflict-markers = YES');
@@ -165,9 +165,7 @@ function buildBannedHeadingsStyle(context: ToolFileContext): string {
  * @returns the Vale list-item punctuation rule.
  */
 function buildListItemStyle(context: ToolFileContext): string {
-    const { limit } = context.selection.view;
-
-    const max = limit('list_item_words');
+    const max = context.selection.view.options('prose').max_list_item_words;
     return stringify({
         ...LENGTH_STYLES.item,
         message: `A list item longer than ${String(max)} words. Split it or make it a paragraph.`,
@@ -181,9 +179,7 @@ function buildListItemStyle(context: ToolFileContext): string {
  * @returns the Vale paragraph length rule with the configured ceiling.
  */
 function buildParagraphLengthStyle(context: ToolFileContext): string {
-    const { limit } = context.selection.view;
-
-    const max = limit('paragraph_sentences');
+    const max = context.selection.view.options('prose').max_paragraph_sentences;
     return stringify({
         ...LENGTH_STYLES.paragraph,
         message: `A paragraph longer than ${String(max)} sentences. Split it.`,
@@ -197,9 +193,7 @@ function buildParagraphLengthStyle(context: ToolFileContext): string {
  * @returns the Vale sentence length rule with the configured ceiling.
  */
 function buildSentenceLengthStyle(context: ToolFileContext): string {
-    const { limit } = context.selection.view;
-
-    const max = limit('sentence_words');
+    const max = context.selection.view.options('prose').max_sentence_words;
     return stringify({
         ...LENGTH_STYLES.sentence,
         message: `A sentence longer than ${String(max)} words. Split it.`,

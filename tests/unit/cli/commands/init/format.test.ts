@@ -1,39 +1,18 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { openSession } from '#cli/session.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { runGspot } from '#tests/setup/run-gspot.ts';
 import { parseSettings } from '#cli/settings/read.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { readRepository } from '#cli/repository/read.ts';
-import { parseTemplate } from '#cli/settings/templates.ts';
+import type { InitJson } from '#cli/types/commands/init.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { readFormatTables } from '#cli/commands/init/format.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
-import type { SettingsDraft } from '#cli/types/commands/init.ts';
-import { initSettingsText } from '#cli/commands/init/settings-text.ts';
-import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
-import { FORMAT_FILE_CASES, SCOPE_FORMAT_CASES, SCOPE_FORMAT_FILES } from '#tests/config/init.ts';
+import { buildInitArguments } from '#tests/setup/builders.ts';
+import { FORMAT_FILE_CASES, SCOPE_FORMAT_CASES, SCOPE_FORMAT_FILES } from '#tests/data/commands/init.ts';
 
 test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', async ({ files, expected }) => {
     await using sandbox = await testdir(files);
-    const repository = await readRepository(createReadCache(sandbox.path), {
-        declarations: [],
-        scopeEntries: [],
-        manifests: readManifests(createReadCache(process.cwd())),
-    });
-    const draft: SettingsDraft = {
-        configurations: ['format'],
-        scopes: [],
-        hooks: false,
-        ci: 'none',
-        rules: false,
-    };
-    const manifests = readManifests(createReadCache(process.cwd()));
-    const formats = readFormatTables(
-        draft,
-        repository,
-        manifests,
-        await readDependencyFiles(createReadCache(sandbox.path), repository.files),
-    );
-    const text = initSettingsText(draft, repository, manifests, formats);
+    const result = await runGspot(sandbox.path, [...buildInitArguments(['format']), '--dry-run', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const text = (JSON.parse(result.stdout) as InitJson).settings!;
     const session = await openSession(sandbox.path, {
         settings: parseSettings(text, undefined, createReadCache(process.cwd())),
         text,
@@ -48,33 +27,21 @@ test.each([...SCOPE_FORMAT_CASES])(
     'init reads the format settings of each scope with $name',
     async ({ template, expected }) => {
         await using sandbox = await testdir(SCOPE_FORMAT_FILES);
-        const repository = await readRepository(createReadCache(sandbox.path), {
-            declarations: [],
-            scopeEntries: [],
-            manifests: readManifests(createReadCache(process.cwd())),
+        await createFileTree(sandbox.path, {
+            'package.json': '{"private":true,"workspaces":["app","app/deep","sibling"]}',
+            'app/package.json': '{"private":true}',
+            'app/deep/package.json': '{"private":true}',
+            'sibling/package.json': '{"private":true}',
+            ...(template ? { 'team.template.toml': template } : {}),
         });
-        const draft: SettingsDraft = {
-            configurations: ['format'],
-            scopes: ['app', 'app/deep', 'sibling'].map((path) => ({
-                name: path,
-                path,
-                source: 'project',
-                configurations: [],
-            })),
-            hooks: false,
-            ci: 'none',
-            rules: false,
-
-            ...(template ? { template: parseTemplate(template, 'team.template.toml') } : {}),
-        };
-        const manifests = readManifests(createReadCache(process.cwd()));
-        const formats = readFormatTables(
-            draft,
-            repository,
-            manifests,
-            await readDependencyFiles(createReadCache(sandbox.path), repository.files),
-        );
-        const text = initSettingsText(draft, repository, manifests, formats);
+        const result = await runGspot(sandbox.path, [
+            ...buildInitArguments(['format']),
+            '--dry-run',
+            '--json',
+            ...(template ? ['--from', 'team.template.toml'] : []),
+        ]);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+        const text = (JSON.parse(result.stdout) as InitJson).settings!;
         const session = await openSession(sandbox.path, {
             settings: parseSettings(text, undefined, createReadCache(process.cwd())),
             text,

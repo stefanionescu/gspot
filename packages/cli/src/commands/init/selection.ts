@@ -1,8 +1,8 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import type { Scope } from '#cli/types/repository/inventory.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
-import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/selection.ts';
 import { selectConfigurations, listUnknownConfigurations } from '#cli/configurations/select.ts';
 
@@ -21,7 +21,7 @@ function findCandidate(context: InitDetection, configuration: string): Manifest 
     return manifest;
 }
 
-function rootSelection(
+function selectRootConfigurations(
     context: InitDetection,
     detected: Pick<ConfigurationEvidence, 'configuration'>[],
     hasScopes: boolean,
@@ -41,12 +41,12 @@ function rootSelection(
     return [...new Set(named ?? detectedConfigurations)];
 }
 
-function scopeSelection(context: InitDetection, scope: ScopeEntry, rootIds: string[]): string[] {
+function selectScopeConfigurations(context: InitDetection, scope: Scope, rootIds: string[]): string[] {
     const ids = detectConfigurations(
         context.root,
         context.files,
         context.manifests,
-        context.packageManifests,
+        context.dependencyFiles,
         scope.path,
     )
         .filter((evidence) => {
@@ -59,7 +59,7 @@ function scopeSelection(context: InitDetection, scope: ScopeEntry, rootIds: stri
     return ids.filter((id) => !atRoot.has(id) || context.manifests.get(id)?.configuration.group !== 'language');
 }
 
-function hasSourceOutsideScopes(context: InitDetection, manifest: Manifest, scopes: ScopeEntry[]): boolean {
+function hasSourceOutsideScopes(context: InitDetection, manifest: Manifest, scopes: Scope[]): boolean {
     return context.files.some(
         (file) =>
             file.kind === 'source' &&
@@ -71,11 +71,11 @@ function hasSourceOutsideScopes(context: InitDetection, manifest: Manifest, scop
 function assertKnown(options: InitInputs['options'], manifests: Map<string, Manifest>): void {
     const configurations = options.configurations ?? [];
     const declarations = configurations.map((name) => ({ name }));
-    const unknown = listUnknownConfigurations(declarations, manifests).map(({ message: diagnostic }) => diagnostic);
+    const unknown = listUnknownConfigurations(declarations, manifests).map(({ message }) => message);
     if (unknown.length > 0) throw new GspotError('arguments', unknown.join('\n'));
 }
 
-function listedConfigurations(ids: string[], manifests: Map<string, Manifest>, detected: Set<string>): string[] {
+function expandSuggestions(ids: string[], manifests: Map<string, Manifest>, detected: Set<string>): string[] {
     const suggestions = ids.flatMap((id) => manifests.get(id)?.configuration.suggests ?? []);
     return [
         ...new Set([
@@ -92,7 +92,7 @@ function listedConfigurations(ids: string[], manifests: Map<string, Manifest>, d
     ];
 }
 
-function reasonFor(id: string, sets: ConfigurationChoices): ConfigurationReason {
+function getSelectionReason(id: string, sets: ConfigurationChoices): ConfigurationReason {
     if (sets.named.has(id)) return 'named';
     if (sets.chosen.has(id)) return 'detected';
     return sets.listed.has(id) ? 'suggested' : 'required';
@@ -104,20 +104,20 @@ function reasonFor(id: string, sets: ConfigurationChoices): ConfigurationReason 
  * @returns the scopes, the root and per-scope configuration ids, and the closure of everything selected.
  */
 export function selectForInit(inputs: InitInputs): InitSelection {
-    const { root, repo, packageManifests, manifests, options } = inputs;
+    const { root, repository, dependencyFiles, manifests, options } = inputs;
     const context: InitDetection = {
         root,
         manifests,
-        files: repo.files,
-        packageManifests,
+        files: repository.files,
+        dependencyFiles,
         options,
-        hasGit: repo.hasGit,
+        hasGit: repository.hasGit,
     };
     assertKnown(options, manifests);
     const scopes = inputs.scopes;
     const hasScopes = scopes.length > 1;
-    const detected = detectConfigurations(root, repo.files, manifests, packageManifests);
-    const proposedRoot = rootSelection(context, detected, hasScopes);
+    const detected = detectConfigurations(root, repository.files, manifests, dependencyFiles);
+    const proposedRoot = selectRootConfigurations(context, detected, hasScopes);
     const scopeConfigurations = new Map<string, string[]>();
     const heldAtRoot = proposedRoot.filter((id) => {
         const manifest = manifests.get(id);
@@ -128,7 +128,8 @@ export function selectForInit(inputs: InitInputs): InitSelection {
         );
     });
     for (const scope of scopes)
-        if (scope.path !== '') scopeConfigurations.set(scope.path, scopeSelection(context, scope, heldAtRoot));
+        if (scope.path !== '')
+            scopeConfigurations.set(scope.path, selectScopeConfigurations(context, scope, heldAtRoot));
     const inScopes = new Set(scopeConfigurations.values().toArray().flat());
     const named = new Set([...(options.configurations ?? []), ...(options.template?.tables.configurations ?? [])]);
     const automatic = new Set(
@@ -136,7 +137,7 @@ export function selectForInit(inputs: InitInputs): InitSelection {
             .filter((manifest) => manifest.configuration.group === 'general' && manifest.configuration.always_selected)
             .map((manifest) => manifest.configuration.name),
     );
-    const rootIds = listedConfigurations(
+    const rootIds = expandSuggestions(
         [...proposedRoot, ...inScopes],
         manifests,
         new Set(detected.map((evidence) => evidence.configuration)),
@@ -151,6 +152,6 @@ export function selectForInit(inputs: InitInputs): InitSelection {
         chosen: new Set([...proposedRoot, ...inScopes]),
         listed: new Set([...rootIds, ...inScopes]),
     };
-    const how = new Map([...selectedIds].map((id) => [id, reasonFor(id, sets)]));
+    const how = new Map([...selectedIds].map((id) => [id, getSelectionReason(id, sets)]));
     return { scopes, rootIds, scopeConfigurations, selectedIds, detected, how };
 }

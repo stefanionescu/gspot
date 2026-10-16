@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
-import { toolFindings } from '#cli/checks/run/command/output.ts';
 import { isInstalledToolPath } from '#cli/repository/classify.ts';
-import { substitute } from '#cli/checks/run/command/placeholders.ts';
-import { commandSubstitutions } from '#cli/checks/run/command/check.ts';
-import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
+import { assertToolFindings } from '#cli/checks/run/command/output.ts';
+import { expandCommand } from '#cli/checks/run/command/placeholders.ts';
+import { buildCommandSubstitutions } from '#cli/checks/run/command/check.ts';
+import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { LINT_LINE, ANSIBLE_CFG, ANSIBLE_CONFIG_SUFFIX } from '#cli/config/checks/infrastructure/ansible.ts';
 
 async function lintProject(input: CheckInput, folder: string): Promise<Finding[]> {
@@ -16,17 +16,17 @@ async function lintProject(input: CheckInput, folder: string): Promise<Finding[]
     if (files.length === 0) return [];
     const cwd = join(input.root, folder);
     const planned = { ...input, files };
-    const substitutions = commandSubstitutions(input, planned, cwd);
-    const argv = substitute(input, planned, input.check.command as string[], substitutions).filter(
+    const substitutions = buildCommandSubstitutions(input, planned, cwd);
+    const commandArguments = expandCommand(input, planned, input.check.command as string[], substitutions).filter(
         (part) => typeof part === 'string',
     );
-    const result = await runCheckTool(input, [...argv, ...substitutions.files], { cwd });
+    const result = await runCheckTool(input, [...commandArguments, ...substitutions.files], { cwd });
     const found = result.stdout.split('\n').flatMap((line): Finding[] => {
         const groups = LINT_LINE.exec(line)?.groups;
         if (groups === undefined) return [];
         const file = folder === '' ? (groups['file'] ?? '') : `${folder}/${groups['file'] ?? ''}`;
         return [
-            findingAt(
+            buildFinding(
                 input,
                 { file, line: Number(groups['line']) },
                 groups['rule'] ?? 'ansible-lint',
@@ -34,15 +34,15 @@ async function lintProject(input: CheckInput, folder: string): Promise<Finding[]
             ),
         ];
     });
-    return toolFindings(result, found, 'ansible-lint');
+    return assertToolFindings(result, found, 'ansible-lint');
 }
 
 /**
  * The ansible-lint findings of every playbook project in the repository.
- * @param input the check input.
+ * @param input the playbook project paths and tool execution services.
  * @returns the findings.
  */
-export async function ansibleLint(input: CheckInput): Promise<Finding[]> {
+export async function checkAnsibleLint(input: CheckInput): Promise<Finding[]> {
     const folders = input.files
         .map((file) => file.path)
         .filter((path) => path === ANSIBLE_CFG || path.endsWith(`/${ANSIBLE_CFG}`))

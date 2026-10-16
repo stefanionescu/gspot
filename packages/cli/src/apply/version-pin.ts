@@ -1,22 +1,18 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { writePlans } from '#cli/ownership/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { Writer } from '#cli/types/ownership.ts';
 import { selectRunner } from '#cli/generation/hooks.ts';
-import { planReplacement } from '#cli/ownership/plans.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { VERSION_PIN_FILE } from '#cli/config/system/locations.ts';
 import packageManifest from '../../package.json' with { type: 'json' };
 
 /**
  * The pinned version, or undefined when the repository has none.
  *
- * @param root the repository root.
+ * @param repositoryRoot the folder containing the managed version file.
  *
  * @returns the version in .gspot/version.
  */
-export function readVersionPin(root: string): string | undefined {
-    using files = openFiles(root);
+export function readVersionPin(repositoryRoot: string): string | undefined {
+    using files = openFiles(repositoryRoot);
     const current = files.read(VERSION_PIN_FILE);
     if (current === undefined) return undefined;
     const line = current.bytes.toString('utf8').trim();
@@ -24,30 +20,14 @@ export function readVersionPin(root: string): string | undefined {
 }
 
 /**
- * Writes the pin.
- *
- * @param log the command's locked ownership log.
- */
-export function writeVersionPin(log: Writer): void {
-    const plan = planReplacement(log, {
-        path: VERSION_PIN_FILE,
-        next: { bytes: Buffer.from(`${packageManifest.version}\n`), mode: OWNER_WRITABLE_FILE },
-        canReplace: true,
-    });
-    if (plan.status === 'preserved')
-        throw new Error(`${VERSION_PIN_FILE} was edited by hand. Delete it, then run gspot apply.`);
-    writePlans(log, [plan]);
-}
-
-/**
  * Throws when the repository pins a different gspot version.
  *
- * @param root the repository root.
+ * @param repositoryRoot the folder whose pin and start command determine upgrade guidance.
  */
-export async function assertVersionPin(root: string): Promise<void> {
-    const pinned = readVersionPin(root);
+export async function assertVersionPin(repositoryRoot: string): Promise<void> {
+    const pinned = readVersionPin(repositoryRoot);
     if (pinned !== undefined && pinned !== packageManifest.version) {
-        const runner = await selectRunner(root);
+        const runner = await selectRunner(repositoryRoot);
         const command =
             runner.name === 'mise'
                 ? runner.pin.replace('<version>', pinned)

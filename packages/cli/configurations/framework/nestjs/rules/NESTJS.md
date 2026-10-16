@@ -1,6 +1,6 @@
 # NestJS
 
-These rules cover NestJS modules, controllers, providers, validation, configuration, and tests.
+Read this rule when you change NestJS modules, controllers, providers, or their tests.
 
 ## Request handling
 
@@ -11,7 +11,7 @@ These rules cover NestJS modules, controllers, providers, validation, configurat
 
 ## Providers and lifecycle
 
-- Register each provider with its intended owner. Repeated registration can create distinct instances.
+- Register each provider with the module that provides it. Repeated registration can create distinct instances.
 - Request-scoped dependencies propagate request scope to their consumers. Check lifetime and
   resource costs before selecting that scope.
 - Close connections and timers through the application lifecycle, such as `OnModuleDestroy`.
@@ -21,7 +21,7 @@ These rules cover NestJS modules, controllers, providers, validation, configurat
 - Fail startup when required configuration has missing or malformed values.
 - Use guards for route authorization. Enforce additional permissions at each protected operation
   when one request performs several operations or the service has non-HTTP callers.
-- Guards run before pipes. Do not assume guard inputs have passed DTO transformation or validation.
+- Guards run before pipes. Do not assume guard inputs have passed data transfer object (DTO) transformation or validation.
 - Set request-size limits, security headers, and rate limits for the exposed application.
 
 ## Feature organization

@@ -1,7 +1,7 @@
-export const HOOK_ARGS = {
+export const HOOK_ARGUMENTS = {
     'pre-commit': 'check --hook pre-commit',
     'pre-push': 'check --hook pre-push -- "$@"',
-    'commit-msg': 'check --message-file "$1"',
+    'commit-msg': 'check --hook commit-msg -- "$1"',
 } as const;
 
 /** Start commands and exact pin commands for the repository installation. */
@@ -34,7 +34,7 @@ export const RUNNERS = {
 } as const;
 
 /** Hooks that run the check command. */
-export const CHECK_HOOKS = ['pre-commit', 'pre-push'] as const;
+export const CHECK_HOOKS = ['pre-commit', 'pre-push', 'commit-msg'] as const;
 
 export const HOOK_SHEBANG = '#!/bin/sh';
 export const COMMIT_MESSAGE_PATH_LINES = [

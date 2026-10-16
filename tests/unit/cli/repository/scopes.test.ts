@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
-import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
+import { readTestRepository } from '#tests/setup/builders.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { listWorkspaceFolders } from '#cli/tools/npm/packages.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
+import { LAYERED_SCOPE_SETTINGS } from '#tests/data/settings/scopes.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
-import { NESTED_SCOPES_SETTINGS } from '#tests/config/settings/scopes.ts';
-import { PYTHON_WORKSPACE_FILES } from '#tests/config/python/tool-project.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
+import { PYTHON_WORKSPACE_FILES } from '#tests/data/tools/python-tool-project.ts';
 import { joinScope, findScopes, findProjectFolder } from '#cli/repository/scopes.ts';
 
 import {
@@ -19,19 +19,19 @@ import {
     PROJECT_FILE_FOLDERS,
     WORKSPACE_DECLARATIONS,
     INVALID_WORKSPACE_FILES,
-} from '#tests/config/repository.ts';
+} from '#tests/data/repository/scopes.ts';
 
 test('a command check reads each matching file once across nested scopes', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, {
-        'gspot.toml': NESTED_SCOPES_SETTINGS + BASH_SYNTAX_CHECK,
+    await using folder = await testdir();
+    await createFileTree(folder.path, {
+        'gspot.toml': LAYERED_SCOPE_SETTINGS + BASH_SYNTAX_CHECK,
         'api/entry.sh': 'if then\n',
         'api/worker/entry.sh': 'if then\n',
         'api/worker/query.sql': 'SELECT 1;\n',
     });
-    const applied = await runGspot(directory.path, ['apply']);
+    const applied = await runGspot(folder.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const checked = await checkReport(directory.path, ['check', '--only', 'project/bash-syntax', '--json']);
+    const checked = await checkReport(folder.path, ['check', '--only', 'project/bash-syntax', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const checks = checked.report.checks;
     expect(
@@ -59,11 +59,7 @@ test.each([...WORKSPACE_DECLARATIONS])(
             'packages/api/package.json': '{"dependencies":{"express":"5.0.0"}}',
             'packages/lint/package.json': '{"devDependencies":{"eslint":"10.0.0"}}',
         });
-        const repository = await readRepository(createReadCache(sandbox.path), {
-            declarations: [],
-            scopeEntries: [],
-            manifests: readManifests(createReadCache(process.cwd())),
-        });
+        const repository = await readTestRepository(sandbox.path);
         expect(listWorkspaceFolders(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
             'packages/api',
             'packages/lint',
@@ -86,8 +82,8 @@ test('workspace detection stays inside the given folder', async () => {
         'child/package.json': '{}',
         'empty/source.py': '',
     });
-    for (const directory of ['child', 'empty']) {
-        const root = join(sandbox.path, directory);
+    for (const folder of ['child', 'empty']) {
+        const root = join(sandbox.path, folder);
         expect(listWorkspaceFolders(root)).toStrictEqual([]);
     }
     await writeFile(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
@@ -112,15 +108,15 @@ test.each([
 ])(
     'workspace detection refuses a package folder outside the repository from %s',
     async (path, declaration, escaped) => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, {
+        await using folder = await testdir();
+        await createFileTree(folder.path, {
             'project/package.json': '{}',
             [`project/${path}`]: declaration,
             'project/packages/.keep': '',
             'outside/package.json': '{"name":"outside"}',
             'outside/app/package.json': '{"name":"outside-app"}',
         });
-        const root = join(directory.path, 'project');
+        const root = join(folder.path, 'project');
         await symlink('../../outside', join(root, 'packages/linked'), 'dir');
         expect(() => listWorkspaceFolders(root)).toThrow(`Workspace package leaves the repository: ${join(escaped)}`);
         expect(listWorkspaceFolders(join(root, 'packages'))).toStrictEqual([]);
@@ -128,21 +124,17 @@ test.each([
 );
 
 test('broad workspace patterns skip .gspot/.venv and its outside interpreter link', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, {
+    await using folder = await testdir();
+    await createFileTree(folder.path, {
         'project/package.json': '{"workspaces":["**"]}',
         'project/packages/app/package.json': '{"name":"application"}',
         'project/.gspot/package.json': '{"name":"private-tools"}',
         'project/.gspot/.venv/bin/.keep': '',
         'outside/python': 'The interpreter belongs outside the repository.\n',
     });
-    const root = join(directory.path, 'project');
+    const root = join(folder.path, 'project');
     await symlink('../../../../outside/python', join(root, '.gspot/.venv/bin/python'));
-    const repository = await readRepository(createReadCache(root), {
-        declarations: [],
-        scopeEntries: [],
-        manifests: readManifests(createReadCache(process.cwd())),
-    });
+    const repository = await readTestRepository(root);
     expect(listWorkspaceFolders(root)).toStrictEqual(['packages/app']);
     expect(
         findScopes(
@@ -154,14 +146,14 @@ test('broad workspace patterns skip .gspot/.venv and its outside interpreter lin
 });
 
 test('workspace detection does not parse an unused lower-priority file', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, {
+    await using folder = await testdir();
+    await createFileTree(folder.path, {
         'package.json': '{}',
         'pnpm-workspace.yaml': 'packages: ["packages/*"]\n',
         'lerna.json': 'malformed inactive configuration',
         'packages/app/package.json': '{"name":"inside"}',
     });
-    expect(listWorkspaceFolders(directory.path)).toStrictEqual(['packages/app']);
+    expect(listWorkspaceFolders(folder.path)).toStrictEqual(['packages/app']);
 });
 
 test('every folder that holds a project file is a scope, the root and lint-only packages aside', async () => {
@@ -177,18 +169,10 @@ test('every folder that holds a project file is a scope, the root and lint-only 
         'tools/lint/package.json': '{"devDependencies":{"eslint":"10.0.0"}}',
         'apps/web/supabase/config.toml': 'project_id = "web"\n',
     });
-    const repository = await readRepository(createReadCache(sandbox.path), {
-        declarations: [],
-        scopeEntries: [],
-        manifests: readManifests(createReadCache(process.cwd())),
-    });
-    const packageManifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
-    const found = findScopes(
-        repository.files,
-        packageManifests,
-        readManifests(createReadCache(process.cwd())).values(),
-    );
-    expect(found.map((scope) => [scope.path, scope.source])).toStrictEqual([
+    const repository = await readTestRepository(sandbox.path);
+    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    const found = findScopes(repository.files, dependencyFiles, readManifests(createReadCache(process.cwd())).values());
+    expect(found.map((scope) => [scope.path, scope.origin])).toStrictEqual([
         ['api', 'project'],
         ['apps/web', 'project'],
         ['ios', 'project'],
@@ -208,11 +192,7 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
         'package.json': '{"workspaces":["packages/*"]}',
         ...manifests,
     });
-    const repository = await readRepository(createReadCache(sandbox.path), {
-        declarations: [],
-        scopeEntries: [],
-        manifests: readManifests(createReadCache(process.cwd())),
-    });
+    const repository = await readTestRepository(sandbox.path);
     expect(listWorkspaceFolders(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'packages/custom',
         'packages/hooks',
@@ -230,11 +210,7 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
         join(sandbox.path, 'packages/next/package.json'),
         '{"dependencies":{"next":"16.0.0"},"devDependencies":{"@next/eslint-plugin-next":"16.0.0"}}',
     );
-    const corrected = await readRepository(createReadCache(sandbox.path), {
-        declarations: [],
-        scopeEntries: [],
-        manifests: readManifests(createReadCache(process.cwd())),
-    });
+    const corrected = await readTestRepository(sandbox.path);
     expect(
         findScopes(
             corrected.files,
@@ -247,15 +223,11 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
 test('Python scopes use the dependency files read with the repository', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, PYTHON_WORKSPACE_FILES);
-    const repository = await readRepository(createReadCache(sandbox.path), {
-        declarations: [],
-        scopeEntries: [],
-        manifests: readManifests(createReadCache(process.cwd())),
-    });
-    const packageManifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    const repository = await readTestRepository(sandbox.path);
+    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     await writeFile(join(sandbox.path, 'pyproject.toml'), '[invalid');
     expect(
-        findScopes(repository.files, packageManifests, readManifests(createReadCache(process.cwd())).values()).map(
+        findScopes(repository.files, dependencyFiles, readManifests(createReadCache(process.cwd())).values()).map(
             (scope) => scope.path,
         ),
     ).toStrictEqual(['api']);

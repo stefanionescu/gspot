@@ -4,26 +4,26 @@ import picomatch from 'picomatch';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
-import { draftSelection } from '#cli/commands/init/settings-text.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
+import { buildDraftSelection } from '#cli/commands/init/settings-text.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { SettingsDraft, InitFormatOptions } from '#cli/types/commands/init.ts';
 
 import {
-    PRETTIER_FILES,
     EDITORCONFIG_FILE,
     PRETTIER_DEFAULTS,
     EDITORCONFIG_NUMBER,
     PRETTIER_JSON_FILES,
+    EDITORCONFIG_SECTION,
     EDITORCONFIG_COMMENT,
 } from '#cli/config/commands/init.ts';
-
 // Read only the formatting options that gspot settings use.
 const formatOptionsSchema = z.object({
     tabWidth: z.number().optional(),
@@ -47,7 +47,7 @@ function readFormattingFields(file: string): InitFormatOptions | null {
     let applies = false;
     const matching: string[] = [];
     for (const line of text.split(/\r?\n/u).filter((line) => !EDITORCONFIG_COMMENT.test(line))) {
-        const section = /^\s*\[(.+)\]\s*$/u.exec(line);
+        const section = EDITORCONFIG_SECTION.exec(line);
         if (section !== null) {
             applies = picomatch(section[1] as string, { dot: true, matchBase: true })(posix.basename(file));
             continue;
@@ -71,15 +71,20 @@ function readFormattingFields(file: string): InitFormatOptions | null {
  * Reads JSON Prettier settings or the matching EditorConfig section without executing written code.
  * @param file the project package path
  * @param dependencies the declared project dependencies
+ * @param prettierFiles the authored formatter declarations discovered in this repository.
  * @returns the three formatting options, or null when the repository configures neither formatter
  */
-function readFormatOptions(file: string, dependencies: Record<string, string>): InitFormatOptions | null {
+function readFormatOptions(
+    file: string,
+    dependencies: Record<string, string>,
+    prettierFiles: string[],
+): InitFormatOptions | null {
     const root = posix.dirname(file);
-    const pkg = readText(root, PACKAGE_JSON);
-    const packageOptions = pkg === undefined ? undefined : parseJsonFile(file, pkg)['prettier'];
-    const prettierFile = PRETTIER_FILES.map((path) => ({ path, text: readText(root, path) })).find(
-        (entry): entry is { path: (typeof PRETTIER_FILES)[number]; text: string } => entry.text !== undefined,
-    );
+    const packageJson = readText(root, PACKAGE_JSON);
+    const packageOptions = packageJson === undefined ? undefined : parseJsonFile(file, packageJson)['prettier'];
+    const prettierFile = prettierFiles
+        .map((path) => ({ path, text: readText(root, path) }))
+        .find((entry): entry is { path: string; text: string } => entry.text !== undefined);
     const usesPrettier =
         prettierFile !== undefined || packageOptions !== undefined || dependencies['prettier'] !== undefined;
     if (usesPrettier) {
@@ -96,27 +101,29 @@ function readFormatOptions(file: string, dependencies: Record<string, string>): 
  * @param draft the selected configurations and written template
  * @param repository the source root and tracked files
  * @param manifests the configuration declarations
- * @param packageManifests the already parsed project dependencies
+ * @param dependencyFiles the already parsed project dependencies
  * @returns inferred formatting tables, with written template values retained
  */
 export function readFormatTables(
     draft: SettingsDraft,
     repository: Repository,
     manifests: Map<string, Manifest>,
-    packageManifests: DependencyFile[],
+    dependencyFiles: DependencyFile[],
 ): Map<string, TomlTable> {
-    const selection = draftSelection(draft);
+    const selection = buildDraftSelection(draft);
     return new Map(
         ['', ...draft.scopes.map((scope) => scope.path)].map((scope) => {
             const configurations = selectForScope(selection, scope, manifests);
-            if (!configurations.some((entry) => entry.configuration.name === 'format')) return [scope, {}] as const;
+            const format = configurations.find((entry) => entry.configuration.name === 'format');
+            if (format === undefined) return [scope, {}] as const;
             const options = readFormatOptions(
                 posix.join(repository.root, scope, PACKAGE_JSON),
                 Object.fromEntries(
-                    packageManifests
+                    dependencyFiles
                         .filter((entry) => findScope(entry.path, draft.scopes).path === scope)
                         .flatMap((entry) => Object.entries(entry.dependencies)),
                 ),
+                getToolDeclaration([format], 'prettier').replace as string[],
             );
             if (options === null) return [scope, {}] as const;
             let quotes;

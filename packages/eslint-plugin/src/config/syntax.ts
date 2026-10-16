@@ -1,4 +1,4 @@
-const TYPE_WRAPPERS = [
+const TYPE_ASSERTION_NODES = [
     'TSAsExpression',
     'TSSatisfiesExpression',
     'TSNonNullExpression',
@@ -10,7 +10,7 @@ export const FUNCTIONS = new Set(['FunctionDeclaration', 'FunctionExpression', '
 
 export const TYPE_ONLY = new Set(['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSDeclareFunction']);
 
-export const WRAPPERS = ['ChainExpression', ...TYPE_WRAPPERS] as const;
+export const UNWRAPPABLE_NODES = ['ChainExpression', ...TYPE_ASSERTION_NODES] as const;
 
 /** The default maximum statement count for a trivial function. */
 export const TRIVIAL_STATEMENTS = 2;
@@ -42,7 +42,7 @@ export const MIN_SHARED_READS = 2;
 
 export const EXPORT_REFERENCES = new Set(['ExportSpecifier', 'ExportDefaultDeclaration', 'TSExportAssignment']);
 
-export const TRANSPARENT_EXPRESSIONS = ['ConditionalExpression', 'LogicalExpression', ...TYPE_WRAPPERS] as const;
+export const TRANSPARENT_EXPRESSIONS = ['ConditionalExpression', 'LogicalExpression', ...TYPE_ASSERTION_NODES] as const;
 
 export const FUNCTION_SELECTOR = ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression)';
 

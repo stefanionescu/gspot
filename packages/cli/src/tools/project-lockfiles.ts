@@ -1,10 +1,11 @@
-import { parse as parseToml } from 'smol-toml';
+// Prepare and check the npm and Python tool-project lockfiles.
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { type FileCopy } from '#cli/types/system/files.ts';
 import type { InstallContext } from '#cli/types/install.ts';
+import { parse as parseToml } from '@decimalturn/toml-patch';
 // eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
 import { prepareNpmLockfile } from '#cli/tools/npm/project.ts';
+import { type FileContents } from '#cli/types/system/files.ts';
 import { isLockfileCurrent } from '#cli/tools/npm/lockfiles.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
@@ -82,11 +83,11 @@ export async function prepareLockfiles(context: InstallContext, files: Generated
 
 /**
  * Build a generated lockfile with its recorded replacement source.
- * @param path the lockfile path.
+ * @param path the repository-relative destination for the replacement bytes.
  * @param content the credential-free lockfile.
  * @param original the recorded copy, when the file exists.
- * @returns the generated lockfile.
+ * @returns the replacement bytes with the previous file attached for write validation.
  */
-export function lockfileResult(path: string, content: string, original: FileCopy | undefined): GeneratedFile {
+export function lockfileResult(path: string, content: string, original: FileContents | undefined): GeneratedFile {
     return { path, content, kind: 'lock', ...(original === undefined ? {} : { read: original }) };
 }

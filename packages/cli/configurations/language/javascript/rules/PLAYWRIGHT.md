@@ -1,5 +1,7 @@
 # Playwright
 
+Read this rule when you write or change a Playwright test.
+
 ## Tests
 
 - Give each test a coherent user journey with independent setup and observable assertions.
@@ -30,4 +32,4 @@
   artifacts, restrict access, and avoid capturing credentials or unrelated private data.
 - Enable parallel execution only when each test has its own accounts and mutable resources.
   Document any scenario that requires serial execution.
-- Test the production build for release acceptance. Use a development server only when the test covers development behavior.
+- Test the production build for release acceptance. Use a development server only when the test covers behavior that exists only in development.

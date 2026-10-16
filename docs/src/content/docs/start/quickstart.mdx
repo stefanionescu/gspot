@@ -1,0 +1,65 @@
+---
+title: Quickstart
+description: Set up gspot yourself or with your coding agent.
+---
+
+import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
+import { AGENT_PROMPT, SETUP_COMMANDS } from '../../../config/setup.ts';
+
+Set up gspot yourself, or give one prompt to your coding agent.
+
+## Set up gspot
+
+<Tabs syncKey="setup">
+<TabItem label="Human">
+
+Run these commands in the root of your repository.
+
+<Tabs syncKey="package-manager">
+    {SETUP_COMMANDS.map(({ label, lines }) => (
+        <TabItem label={label}>
+            <Code code={lines.join('\n')} lang="shell" />
+        </TabItem>
+    ))}
+</Tabs>
+
+1. The first command adds gspot to the project, pinned to one version.
+2. `gspot init` shows a plan. When you accept it, it writes `gspot.toml`, the tool files, `AGENTS.md`, the agent
+   rules, and the Git hooks.
+3. `gspot install` installs the pinned tools and turns on the hooks. From then on, every commit runs the checks.
+
+gspot starts at level `recommended`. For stricter checks, run `gspot set level all`, then `gspot install` again.
+[Levels](/start/concepts/#levels) says what each level checks.
+
+</TabItem>
+<TabItem label="Agent">
+
+Paste this prompt into Claude Code, Codex, Cursor, or another coding agent that can run commands.
+
+<Code code={AGENT_PROMPT} lang="text" />
+
+The agent then:
+
+1. Adds `@gspothq/cli` with the package manager of your repository, or pins it with mise.
+2. Runs `gspot init --dry-run`, shows you the plan, and asks which [level](/start/concepts/#levels) you want. It
+   writes the plan only after you agree.
+3. Runs `gspot install` and `gspot check`, and shows you the result.
+4. Reads `AGENTS.md` and the agent rules before it writes more code.
+
+:::note
+Agents read the steps in [/llms.txt](/llms.txt). Read the whole documentation in [/llms-full.txt](/llms-full.txt).
+:::
+
+</TabItem>
+</Tabs>
+
+## After setup
+
+Commit as usual. The pre-commit hook checks the staged files and stops the commit when a check fails. Run
+`gspot check` to check every file, including work that you did not commit.
+
+## Next steps
+
+- [Read and fix findings](/use/findings/)
+- [Choose checks in gspot.toml](/configure/gspot-toml/)
+- [Coding agents](/use/agent-rules/)

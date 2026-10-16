@@ -1,79 +1,140 @@
 # ![gspot](docs/assets/readme/banner/light.svg#gh-light-mode-only)![gspot](docs/assets/readme/banner/dark.svg#gh-dark-mode-only)
 
-[![npm: 0.1.1](docs/assets/readme/badges/npm.svg)](https://www.npmjs.com/package/@gspothq/cli/v/0.1.1)
-[![Documentation source](docs/assets/readme/badges/docs.svg)](docs/src/content/docs/guides/overview.md)
+[![npm package](docs/assets/readme/badges/npm.svg)](https://www.npmjs.com/package/@gspothq/cli)
 [![License: Apache-2.0](docs/assets/readme/badges/license.svg)](LICENSE.md)
 
-gspot lints AI-generated code and installs rules for AI coding agents.
+`gspot init` installs rules and linters for the languages and frameworks in your repo. Then gspot runs the
+linters before every commit.
 
-## Requirements
+**Documentation:** [generativespotting.com](https://generativespotting.com/)
 
-Use Git and Node.js 24.15 or newer. Read [Install gspot](docs/src/content/docs/guides/install.md) for the runtimes and tools each check needs.
+## What it catches
+
+An agent adds a checkout module to a TypeScript project. It forgets `await`, turns off the linter for one line,
+and leaves the `catch` empty:
+
+```ts title="src/checkout.ts"
+import type { Cart } from './cart.js';
+import { charge } from './payments.js';
+
+export async function pay(cart: Cart) {
+    try {
+        // eslint-disable-next-line
+        charge(cart.total);
+    } catch {}
+}
+```
+
+The pre-commit hook stops the commit. This report omits help, commands to run checks again, and run time:
+
+```text
+Checked the staged files.
+javascript/eslint  failed  4 findings
+  src/checkout.ts:4:8  @typescript-eslint/require-await  Async function 'pay' has no 'await' expression.
+  src/checkout.ts:5:5  sonarjs/no-try-promise  Consider using 'await' for the promise inside this 'try' or replace it with 'Promise.prototype.catch(...)' usage.
+  src/checkout.ts:6  unicorn/no-abusive-eslint-disable  Specify the rules you want to disable.
+  src/checkout.ts:8:13  no-empty  Empty block statement.
+
+gspot/suppressions  failed  1 finding
+  src/checkout.ts:6  eslint-limit  Split the code by its steps, or ask the user to raise the limit in gspot.toml.
+
+Failed: 2 checks with 5 findings. Passed: 11 checks. Skipped: 8 checks.
+Bypass this hook once: git commit --no-verify
+```
+
+The findings name the three problems:
+
+1. **No await.** The function returns before the charge ends. Rules: `@typescript-eslint/require-await` and `sonarjs/no-try-promise`.
+2. **Linter off.** The comment turns off every rule for line 7 and gives no reason. Rules: `unicorn/no-abusive-eslint-disable` and `eslint-limit`.
+3. **Errors dropped.** The empty `catch` throws away every error it catches. Rule: `no-empty`.
+
+gspot installed ESLint and its plugins and wrote their configuration. gspot itself runs `gspot/suppressions`:
+it rejects this blanket directive.
+
+The fix waits for the charge and lets a failed payment reach the caller:
+
+```ts title="src/checkout.ts"
+import type { Cart } from './cart.js';
+import { charge } from './payments.js';
+
+export async function pay(cart: Cart) {
+    await charge(cart.total);
+}
+```
+
+The next commit passes: `Passed: 13 checks. Skipped: 8 checks.`
+
+## What it checks
+
+`gspot init` reads your files and turns on the checks they need. Each check runs a tool you know, pinned to one
+version on every machine and in CI.
+
+- **Linters and formatters:** lint, format, and type checks for TypeScript, JavaScript, Python, Swift, CSS, HTML,
+  Bash, SQL, and Markdown. Rules cover React, Next.js, Vue, Svelte, Astro, FastAPI, and other frameworks.
+- **Secrets and dependencies:** leaked keys, vulnerable dependencies, licenses, broken links, spelling, and
+  security patterns.
+- **Agent rules:** `AGENTS.md` and one rule file per language and topic, so your agent writes code that passes the
+  checks.
+
+The tools include ESLint, Prettier, Ruff, Stylelint, ShellCheck, Semgrep, TypeScript, Vitest, Jest, pytest, Knip,
+Trivy, Gitleaks, typos, Vale, SwiftLint, and Hadolint.
+
+The [check reference](https://generativespotting.com/reference/checks/) lists every check.
 
 ## Install
 
-Choose by repository:
+You need Git and Node.js 24.15 or newer. Program tools such as Gitleaks, typos, and ShellCheck install with mise;
+without mise, `gspot install` names the programs that you must install yourself.
 
-| Repository                                   | Install                                                        | Run commands with                                                  |
-| -------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Has `package.json`                           | Exact CLI development dependency using npm, pnpm, Yarn, or Bun | `npx gspot`, `pnpm exec gspot`, `yarn exec gspot`, or `bunx gspot` |
-| Python, Swift, or another project using mise | Install the npm CLI through mise                               | `mise exec -- gspot`                                               |
+In a repository with `package.json`, add gspot as a development dependency:
 
-For npm:
+| Package manager | Install                                            | Run               |
+| --------------- | -------------------------------------------------- | ----------------- |
+| npm             | `npm install --save-dev --save-exact @gspothq/cli` | `npx gspot`       |
+| pnpm            | `pnpm add --save-dev --save-exact @gspothq/cli`    | `pnpm exec gspot` |
+| Yarn            | `yarn add --dev --exact @gspothq/cli`              | `yarn exec gspot` |
+| Bun             | `bun add --dev --exact @gspothq/cli`               | `bunx gspot`      |
+
+In a Python, Swift, or other repository without `package.json`, pin gspot with mise:
 
 ```shell
-npm install --save-dev --save-exact @gspothq/cli
+mise use --pin node@24 --tool-option allow_low_downloads=true npm:@gspothq/cli
+```
+
+`--pin` writes the exact Node.js and gspot versions to `mise.toml`. mise refuses a new npm package, or one with
+few downloads, until you approve it; `allow_low_downloads=true` approves gspot. Run gspot with `mise exec -- gspot`.
+
+## Set up
+
+These commands use npm. Use the run command of your package manager from the table above.
+
+```shell
 npx gspot init
 npx gspot install
 ```
 
-Follow [Install gspot](docs/src/content/docs/guides/install.md) for other package managers, mise, and setup verification.
+1. `gspot init` shows a plan and writes it when you accept: `gspot.toml`, the tool files, `AGENTS.md` and the
+   agent rules, and the Git hooks. On GitHub or GitLab it also writes a CI workflow when the repository has no
+   lint job. It installs nothing.
+2. `gspot install` installs the pinned tools and turns on the Git hooks. From then on, every commit runs the
+   checks.
 
-## Check
+Run `npx gspot check` to check every file now, including work that you did not commit.
 
-Check your current files, including uncommitted work:
+The default level, `recommended`, checks bugs, security, types, accessibility, and formatting. Level `all` also
+checks naming, structure, doc comments, wording, duplication, and complexity, and installs a few more tools. To use
+it, run `gspot set level all`, then `gspot install`; see [Levels](https://generativespotting.com/start/concepts/#levels).
 
-```shell
-npx gspot check
-```
+## Learn more
 
-## What it catches
-
-An agent adds this forwarding module to a TypeScript project at level `all`. A receipt module imports it.
-
-```typescript title="src/utils.ts"
-import { calculateTotal } from './orders.js';
-
-/**
- * The total of an order.
- * @param order the order
- * @returns the total
- */
-export function getOrderTotal(order: any): number {
-    return calculateTotal(order);
-}
-```
-
-At level `all`, the commit hook rejects the forwarding helper with these findings:
-
-```text
-src/utils.ts:1:1  gspot/no-trivial-files  This file has only forwarding code, aliases, or small functions. Move that code to the module that uses it and delete this file.
-src/utils.ts:8:31  @typescript-eslint/explicit-module-boundary-types  Argument 'order' should be typed with a non-any type.
-src/utils.ts:8:38  @typescript-eslint/no-explicit-any  Unexpected any. Specify a different type.
-src/utils.ts:9:27  @typescript-eslint/no-unsafe-argument  Unsafe argument of type `any` assigned to a parameter of type `Order`.
-src/utils.ts:1:1  banned-term  typescript file "utils": "utils" is banned (roles group).
-```
-
-Each finding names the file, the line, the rule, and what to do. The
-[JavaScript and TypeScript quickstart](docs/src/content/docs/guides/quickstart/javascript-typescript.mdx) shows the setup and correction.
-
-## Documentation
-
-- [What gspot does](docs/src/content/docs/guides/overview.md).
-- [Requirements and installation](docs/src/content/docs/guides/install.md).
-- [JavaScript and TypeScript](docs/src/content/docs/guides/quickstart/javascript-typescript.mdx), [Python](docs/src/content/docs/guides/quickstart/python.md), and [Swift](docs/src/content/docs/guides/quickstart/swift.md) quickstarts.
-- [Settings reference source](docs/src/reference/gspot-toml.ts) and [template reuse](docs/src/content/docs/guides/templates.md).
-- [Coding agents](docs/src/content/docs/guides/agents.md).
+- [Quickstart](https://generativespotting.com/start/quickstart/): set up gspot yourself or with your coding agent.
+- [Install](https://generativespotting.com/start/install/): every package manager, mise, and private registries.
+- [Read and fix findings](https://generativespotting.com/use/findings/).
+- [gspot.toml](https://generativespotting.com/configure/gspot-toml/): configurations, the level, and settings.
+- [Coding agents](https://generativespotting.com/use/agent-rules/): the agent rules that gspot writes.
+- [Command reference](https://generativespotting.com/reference/commands/) and
+  [configuration reference](https://generativespotting.com/reference/configurations/).
+- [ESLint plugin](packages/eslint-plugin/README.md): the gspot lint rules for ESLint on their own.
 
 ## License
 

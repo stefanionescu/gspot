@@ -50,7 +50,7 @@ tool = "trivy"
 command = ["hadolint", "--no-color", "--config", "{tool_file:hadolint}", "{files}"]
 example = "The instruction `FROM node:latest` reports DL3007 because the tag changes over time. Select a reviewed, explicit version tag or digest and rerun."
 files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*.dockerignore"] }
-help = "Change the instruction the way the rule says. Turn one rule off with gspot ignore docker/hadolint --rule `<id>` --reason \"`<why>`\"."
+help = "Change the instruction the way the rule says. Turn one rule off with `gspot ignore docker/hadolint --rule <id> --reason \"<why>\"`."
 level = "recommended"
 name = "hadolint"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+) (?<rule>[A-Z]+\\d+) [a-z]+: (?<message>.*)$" }
@@ -87,7 +87,7 @@ why = "Without it the whole folder goes to the daemon, and copying the folder pu
 command = ["trivy", "config", "--misconfig-scanners", "dockerfile", "--quiet", "--skip-check-update", "--config", "{tool_file:trivy}", "--ignorefile", "{tool_file:trivyignore}", "--exit-code", "10", "--format", "sarif", "{root}"]
 example = "A Dockerfile whose final application stage runs as root can report a container-security finding. Create an unprivileged user, grant it only required file access, and select it with `USER` before running the application."
 exit_codes = [10]
-help = "Change the file the way the message says. Accept one advisory with gspot ignore docker/trivy-config --rule `<id>` --reason \"...\"."
+help = "Change the file the way the message says. Accept one advisory with `gspot ignore docker/trivy-config --rule <id> --reason \"...\"`."
 level = "recommended"
 name = "trivy-config"
 output = { format = "sarif" }
@@ -100,7 +100,7 @@ why = "A container that runs as root turns any bug in the service into control o
 
 [[check]]
 example = "A configured image containing a package with a known advisory reports that advisory. Move to a reviewed image version containing the package fix, then rerun the image scan. Results depend on the advisory database and available image."
-help = "Move to a newer tag of the image. Accept one advisory with gspot ignore docker/trivy-image --rule `<id>` --reason \"...\"."
+help = "Move to a newer tag of the image. Accept one advisory with `gspot ignore docker/trivy-image --rule <id> --reason \"...\"`."
 level = "recommended"
 name = "trivy-image"
 needs = ["docker"]

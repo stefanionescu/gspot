@@ -1,7 +1,7 @@
-// Claims writer locks and recovers abandoned locks.
+// Lock managed writes and release their locks.
 import { randomUUID } from 'node:crypto';
-import type { FileCopy, FilesState } from '#cli/types/system/files.ts';
-import { PRIVATE_FILE, PRIVATE_DIRECTORY } from '#cli/config/system/modes.ts';
+import { PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/system/modes.ts';
+import type { FilesState, FileContents } from '#cli/types/system/files.ts';
 import { readEntry, verifyPath, preparePath } from '#cli/system/files/entries.ts';
 import { linkSync, mkdirSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { LOCK_TOKEN_SEPARATOR, LOCK_RECOVERY_SUFFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files.ts';
@@ -22,7 +22,7 @@ function writeLockFile(target: string, token: string): boolean {
 }
 
 // Refuses an incomplete lock or one whose process still runs; retire only abandoned locks.
-function assertAbandonedLock(current: FileCopy, path: string): void {
+function assertAbandonedLock(current: FileContents, path: string): void {
     const pid = Number(current.bytes.toString('utf8').split(LOCK_TOKEN_SEPARATOR, 1)[0]);
     try {
         process.kill(pid, 0);
@@ -40,7 +40,7 @@ function assertAbandonedLock(current: FileCopy, path: string): void {
 function removeStaleLock(bounds: FilesState, path: string, target: string): void {
     const reclaim = `${target}${LOCK_RECOVERY_SUFFIX}`;
     try {
-        mkdirSync(reclaim, { mode: PRIVATE_DIRECTORY });
+        mkdirSync(reclaim, { mode: PRIVATE_FOLDER });
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
         throw new Error(

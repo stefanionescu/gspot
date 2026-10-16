@@ -15,7 +15,7 @@ import {
  * @param context the selected presets, rule printer, and scope settings.
  * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildAstroFragment(
+function buildAstroFragment(
     context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'configurations'>,
 ): EslintFragment {
     const { eslintPresets, eslintModule, configurations } = context;
@@ -56,3 +56,5 @@ export function buildAstroFragment(
     }
     return { imports: imports, blocks: serializeBlocks(eslintModule, blocks) + '\n' };
 }
+
+export { buildAstroFragment };

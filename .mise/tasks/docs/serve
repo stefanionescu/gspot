@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="Serve the docs site on your computer. It rebuilds a page when you save a file."
+#MISE dir="{{config_root}}/docs"
+set -euo pipefail
+
+bun --bun astro dev

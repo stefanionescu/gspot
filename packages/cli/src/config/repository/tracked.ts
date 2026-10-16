@@ -1,9 +1,11 @@
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
+
 export const NODE_MODULES = 'node_modules';
 
 export const INSTALLED_DEPENDENCY_FOLDERS: ReadonlySet<string> = new Set([
     NODE_MODULES,
     'bower_components',
-    '.venv',
+    PYTHON_ENVIRONMENT_FOLDER,
     'venv',
     'Pods',
     'DerivedData',
@@ -15,9 +17,5 @@ export const GIT_FOLDER = '.git';
 export const INDEX_FILES_ARGUMENTS = ['ls-files', '--stage', '-z'] as const;
 
 export const GITATTRIBUTES_FILE = '.gitattributes';
-
-export const LICENSE_CHECKER_ARGUMENTS = ['--json', '--excludePrivatePackages', '--start'] as const;
-export const UNKNOWN_LICENSE = 'UNKNOWN';
-export const LICENSE_CHOICE = ' OR ';
 
 export const UNTRACKED_FILES_ARGUMENTS = ['ls-files', '--others', '--exclude-standard', '-z'] as const;

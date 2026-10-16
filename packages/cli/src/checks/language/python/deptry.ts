@@ -1,15 +1,15 @@
 // Runs deptry over the imports declared by a Python project.
 
 import { z } from 'zod';
-import { parse } from 'smol-toml';
 import { join, posix } from 'node:path';
+import { parse } from '@decimalturn/toml-patch';
 import { GspotError } from '#cli/system/errors.ts';
-import { childScopes } from '#cli/planning/files.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
+import { listChildScopes } from '#cli/planning/files.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { buildUvRunCommand } from '#cli/tools/python/project.ts';
-import { type CheckResult } from '#cli/types/execution/check.ts';
+import { type CheckResult } from '#cli/types/checks/run/check.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
@@ -33,7 +33,7 @@ const deptrySchema = z.object({
  * @param planned the dependency check and its scope.
  * @returns the dependency findings, including undeclared application imports.
  */
-export async function deptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkDeptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const text = readText(session.root, posix.join(planned.scope.scope.path, PYPROJECT_TOML));
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
     const exclusions: string[] = deptrySchema.parse(parse(text)).tool.deptry.extend_exclude;
@@ -42,7 +42,7 @@ export async function deptry(session: Session, planned: PlannedCheck): Promise<C
             ...DEPTRY_COMMAND,
             ...[
                 String.raw`(^|.*[/\\])${RegExp.escape(DOT_GSPOT)}([/\\]|$)`,
-                ...childScopes(session, planned.scope).map((path) => {
+                ...listChildScopes(session, planned.scope).map((path) => {
                     const child = posix
                         .relative(planned.scope.scope.path, path)
                         .split('/')

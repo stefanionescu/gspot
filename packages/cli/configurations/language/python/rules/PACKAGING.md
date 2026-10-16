@@ -1,5 +1,7 @@
 # Python Packaging
 
+Read this rule when you change Python dependencies, lockfiles, or package layout.
+
 Deployment installs and lockfiles.
 
 ## Package installation security
@@ -10,8 +12,15 @@ Install from the uv lockfile:
 uv sync --frozen
 ```
 
-At level `all`, justify pip use with `gspot ignore python/pip-installs`. Update lockfiles only
+Update lockfiles only
 when the task includes dependency maintenance.
+
+### pip installs
+
+<!-- level: all -->
+
+`python/pip-installs` reports each `pip install`. Replace it with uv. When the project requires pip, follow the suppression
+rules.
 
 ## Import correctness
 

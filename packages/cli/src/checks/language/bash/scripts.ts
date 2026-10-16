@@ -3,8 +3,8 @@ import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { type ScriptFile } from '#cli/types/checks/language.ts';
-import { type CheckInput } from '#cli/types/execution/check.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/inventory.ts';
+import { type CheckInput } from '#cli/types/checks/run/check.ts';
 import { type ScriptFunction } from '#cli/types/parsers/bash.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 
@@ -52,7 +52,7 @@ export function readScripts(input: CheckInput): Promise<ScriptFile[]> {
  * @param line the one-based line.
  * @returns the function, or undefined at the top level.
  */
-export function functionAt(functions: ScriptFunction[], line: number): ScriptFunction | undefined {
+export function findEnclosingFunction(functions: ScriptFunction[], line: number): ScriptFunction | undefined {
     return functions
         .filter((entry) => entry.start <= line && line <= entry.end)
         .toSorted((left, right) => left.end - left.start - (right.end - right.start))[0];

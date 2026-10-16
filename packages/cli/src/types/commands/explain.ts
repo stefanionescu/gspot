@@ -1,6 +1,6 @@
 import type { FileKind } from '#cli/types/repository/inventory.ts';
-import type { CommandCheck, SettingEntry } from '#cli/types/settings/values.ts';
 import type { Manifest, ConfigurationCheck } from '#cli/types/configurations.ts';
+import type { CommandCheck, EffectiveSetting } from '#cli/types/settings/values.ts';
 
 export type Explanation = {
     kind: 'check' | 'lint-rule' | 'configuration' | 'setting' | 'path';
@@ -23,7 +23,7 @@ export type PathExplanation = {
     remedy?: string;
 };
 
-export type SettingScope = { scope: string; shipped: unknown; effective: SettingEntry | undefined };
+export type SettingScope = { scope: string; shipped: unknown; effective: EffectiveSetting | undefined };
 
 export type ConfigurationExplanation = {
     name: string;

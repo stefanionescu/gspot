@@ -2,14 +2,14 @@ import { Query, type Node } from 'web-tree-sitter';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/checks/run/check.ts';
 import type { SourceInput } from '#cli/types/parsers/tree-sitter.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { CountedLanguage, ConventionSource } from '#cli/types/checks/general.ts';
 import { CONVENTION_QUERIES, LANGUAGE_BY_EXTENSION } from '#cli/config/checks/general/structure.ts';
 
 // Keep the selected source files, including shell scripts without extensions.
-function sourceLanguage(file: TrackedFile): CountedLanguage | undefined {
+function detectLanguage(file: TrackedFile): CountedLanguage | undefined {
     for (const [extension, language] of Object.entries(LANGUAGE_BY_EXTENSION))
         if (file.path.endsWith(extension)) return language;
     return file.tags.includes('shell') ? 'bash' : undefined;
@@ -40,7 +40,7 @@ async function readConventionSources(
     const sources: ConventionSource[] = [];
     try {
         for (const file of input.files.filter((entry) => entry.kind === 'source' && !isInGspotFolder(entry.path))) {
-            const language = sourceLanguage(file);
+            const language = detectLanguage(file);
             if (language === undefined || !input.scope.view.configurations.includes(language)) continue;
             const tree = await parseSource(language, readCachedBytes(input.reads, file.path).toString('utf8'), input);
             const source = { path: file.path, language, tree, captures: new Map<string, Node[]>() };
@@ -49,7 +49,7 @@ async function readConventionSources(
         }
         return sources;
     } catch (error) {
-        disposeConventionSources(sources);
+        releaseConventionSources(sources);
         throw error;
     }
 }
@@ -58,9 +58,9 @@ async function readConventionSources(
  * Release syntax trees after all convention readers have finished.
  * @param sources the shared parsed observations.
  */
-function disposeConventionSources(sources: ConventionSource[]): void {
+function releaseConventionSources(sources: ConventionSource[]): void {
     for (const source of sources) source.tree.delete();
 }
 
 /** One identity shares parsed conventions across their checks. */
-export const CONVENTION_SOURCES = { read: readConventionSources, dispose: disposeConventionSources };
+export const CONVENTION_SOURCES = { read: readConventionSources, dispose: releaseConventionSources };

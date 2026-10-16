@@ -2,13 +2,13 @@ import type { JsonValue } from '#cli/types/parsers/json.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { WrittenSettings } from '#cli/types/settings/file.ts';
 import type { PathExpressions } from '#cli/types/repository/inventory.ts';
-import type { Level, Manifest, EslintAllRules } from '#cli/types/configurations.ts';
+import type { Manifest, EslintAllRules } from '#cli/types/configurations.ts';
 import type { Settings, ScopeView, ScopeSelection } from '#cli/types/settings/values.ts';
 
 /** The `[tools.eslint]` table of gspot.toml. */
 type EslintSettings = NonNullable<NonNullable<WrittenSettings['tools']>['eslint']>;
 
-/** Native file selectors used by the composed architecture and tRPC policies. */
+/** File selectors used by the composed architecture and tRPC policies. */
 type EslintBoundaryFile = {
     path?: string | readonly string[];
     categories?: string | { anyOf?: readonly string[]; noneOf?: readonly string[] };
@@ -27,6 +27,7 @@ export type EslintRuleOptions = PathExpressions & { scope: string; rules: NonNul
 
 /** Generated rule blocks retain their level, project paths, and your own options. */
 export type EslintModuleInput = {
+    source: string;
     allRules: EslintAllRules;
     isAll: boolean;
     codeFiles: string[];
@@ -61,7 +62,7 @@ export type EslintBoundaryPolicy = {
     };
 };
 
-/** Native classification data shared by the settings and dependency settings constructors. */
+/** Classification data shared by the settings and dependency settings constructors. */
 export type EslintBoundaryContext = {
     modules: NonNullable<NonNullable<ScopeView['values']['architecture']>['module']>;
     enforceTests: boolean;
@@ -69,7 +70,7 @@ export type EslintBoundaryContext = {
     trpcPaths: string[];
 };
 
-/** The parts of the ESLint configuration that the settings and the emitted scope decide. */
+/** The parts of the ESLint configuration that the settings and the selected scope decide. */
 export type EslintParts = {
     projects: string[];
     nodeFiles: string[];
@@ -110,7 +111,7 @@ export type EslintSettingsBlock = {
 
 /** The actual default blocks and an emitter bound to the owning scope. */
 export type EslintModule = {
-    block: (block: EslintSettingsBlock, runtime?: string, preset?: EslintRuleSource) => string;
+    block: (block: EslintSettingsBlock, runtime?: string, preset?: EslintRuleExpression) => string;
 };
 
 /** Selected component patterns, detected Node files, and your test or script patterns. */
@@ -168,7 +169,6 @@ export type EslintContext = {
     scopes: ScopeSelection[];
     selection: ScopeSelection;
     nodeFiles: string[];
-    pluginLevels: EslintRuleLevels;
     ruleOptions: EslintRuleOptions[];
     eslint: EslintParts;
     eslintModule: EslintModule;
@@ -189,10 +189,8 @@ export type EslintContext = {
     json: (value: unknown) => string;
 };
 
-export type EslintRuleLevels = Record<string, Level | 'none'>;
-
 /** The expression and captured values of rules supplied by a pinned preset. */
-export type EslintRuleSource = { expression: string; rules: Record<string, unknown> | undefined };
+export type EslintRuleExpression = { expression: string; rules: Record<string, unknown> | undefined };
 
 /** Rule values grouped by source language and runtime use. */
 export type EslintLevelRules = {
@@ -205,7 +203,7 @@ export type EslintLevelRules = {
 /** Imported plugin bindings paired with their package specifiers. */
 export type EslintPlugins = Record<string, readonly [string, string]>;
 
-/** A component file dialect, its parser, and native syntax allowances. */
+/** A component file dialect, its parser, and syntax allowances. */
 export type StylelintComponent = {
     files: readonly string[];
     customSyntax: string;
@@ -213,13 +211,14 @@ export type StylelintComponent = {
     functions?: readonly string[];
 };
 
-/** Imports and native configuration blocks produced by one selected ESLint fragment. */
+/** Imports and configuration blocks produced by one selected ESLint fragment. */
 export type EslintFragment = { imports: string[]; blocks: string };
 
+/** Relative-import enforcement with explicit project folders and import aliases. */
+export type EslintImportBoundaryRule = ['error', { folders: string[]; aliases: Record<string, string> }];
+
+/** Repository facts shared by ESLint selectors, boundaries, and rule blocks. */
 export type EslintFacts = Pick<
     EslintContext,
     'root' | 'reads' | 'scopes' | 'repositorySettings' | 'selection' | 'nodeFiles' | 'generatedPatterns'
 >;
-
-/** Relative-import enforcement with explicit project folders and import aliases. */
-export type EslintImportBoundaryRule = ['error', { folders: string[]; aliases: Record<string, string> }];

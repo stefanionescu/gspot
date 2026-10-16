@@ -14,7 +14,7 @@ import {
  * @param context the selected presets, rule printer, and scope settings.
  * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildTestingLibraryFragment(
+function buildTestingLibraryFragment(
     context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'scopeDependencies'>,
 ): EslintFragment {
     const { eslintPresets, eslintModule, eslintFiles, scopeDependencies } = context;
@@ -51,3 +51,5 @@ export function buildTestingLibraryFragment(
     output.push('\n');
     return { imports: imports, blocks: output.join('') };
 }
+
+export { buildTestingLibraryFragment };

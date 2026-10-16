@@ -1,20 +1,20 @@
 import { join, posix, relative } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/repository/inventory.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
-import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { TSCONFIG_FILE, TSCONFIG_NAME } from '#cli/config/parsers/tsconfig.ts';
-import { projectChecked, selectRequiredTsconfigOptions } from '#cli/checks/language/typescript/compiler.ts';
+import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
+import { isProjectChecked, selectRequiredTsconfigOptions } from '#cli/checks/language/typescript/compiler.ts';
 
 /**
  * One finding per required option a scope's tsconfig leaves off.
  * @param input the check input for the scope.
  * @returns the findings.
  */
-export function typescriptTsconfig(input: CheckInput): Finding[] {
+export function checkTypescriptTsconfig(input: CheckInput): Finding[] {
     const project = readTsconfigProject(
         input.root,
         input.scope.scope.path,
@@ -41,7 +41,7 @@ export function typescriptTsconfig(input: CheckInput): Finding[] {
     });
     const unchecked = projects.filter(
         ({ path }) =>
-            !projectChecked(input.reads, {
+            !isProjectChecked(input.reads, {
                 check: input.check.name,
                 path: join(input.root, path),
                 scope: input.scope.scope.path,
@@ -54,7 +54,7 @@ export function typescriptTsconfig(input: CheckInput): Finding[] {
         Object.keys(required)
             .filter((option) => parsed.options[option] !== true)
             .map((option) => ({
-                ...findingAt(input, { file: path }, option, `${option} is not on in this tsconfig.`),
+                ...buildFinding(input, { file: path }, option, `${option} is not on in this tsconfig.`),
                 help: 'Enable this compiler option in the TypeScript tool file.',
             })),
     );

@@ -1,37 +1,30 @@
-import { z } from 'zod';
 import { basename } from 'node:path/posix';
+import { listAssets } from '#cli/system/assets.ts';
 import type { MemoKey } from '#cli/types/system/files.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { readAsset, listAssets } from '#cli/system/assets.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
-import { generatedIgnores } from '#cli/generation/ignore-files.ts';
 import { readScopeAliases } from '#cli/generation/eslint/aliases.ts';
+import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { createBlockWriter } from '#cli/generation/eslint/block-writer.ts';
 import { buildBoundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
 import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
-import { LEVELS, CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
 import { getCachedValue, getCachedMapValue } from '#cli/system/files/cache.ts';
 import { listFragmentConfigurations } from '#cli/generation/eslint/fragments/build.ts';
 import { buildFilePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
 import { listScriptPaths, buildRuntimeBlocks } from '#cli/generation/eslint/runtimes.ts';
+import { globSections, ignoreSections, settingsSections } from '#cli/generation/ignore-files.ts';
+import type { EslintParts, EslintFacts, EslintPresets, EslintContext } from '#cli/types/generation/eslint.ts';
 
 import {
     buildImportStyleBlocks,
     buildScopeImportBlocks,
     buildImportBoundariesRule,
 } from '#cli/generation/eslint/imports.ts';
-import type {
-    EslintParts,
-    EslintFacts,
-    EslintPresets,
-    EslintContext,
-    EslintRuleLevels,
-} from '#cli/types/generation/eslint.ts';
 import {
     buildRuleOptions,
     buildIgnoreBlocks,
@@ -49,7 +42,6 @@ import {
     ESLINT_PRESETS_FILE,
     ESLINT_SETTINGS_TABLE,
     IMPORT_BOUNDARIES_RULE,
-    ESLINT_RULE_LEVELS_FILE,
 } from '#cli/config/generation/eslint.ts';
 
 // ESLint options and the separate reason you give for them.
@@ -62,6 +54,7 @@ function buildExtraBlock(context: Pick<EslintContext, 'repositorySettings' | 'se
         entries,
     };
 }
+// Keep source classification and shared ignore selectors consistent across all ESLint blocks.
 function buildEslintFacts({ session, selection }: ToolFileContext): EslintFacts {
     const recognized = buildPathMatcher([buildSourcePattern(...CODE_LANGUAGES)]);
     const nodeFiles = session.repository.files
@@ -74,27 +67,31 @@ function buildEslintFacts({ session, selection }: ToolFileContext): EslintFacts 
         repositorySettings: session.settingsFile.settings,
         selection,
         nodeFiles,
-        generatedPatterns: generatedIgnores(session),
+        generatedPatterns: globSections([
+            ...ignoreSections(session),
+            ...settingsSections(selection.view, 'javascript/eslint'),
+        ]),
     };
 }
 
+// Cache each pinned preset export once per run, including authored asset-backed presets.
 function readEslintPresets(session: ToolFileContext['session']): Map<string, EslintPresets> {
-    const { reads } = session;
-    const assets = getCachedValue(reads, presetAssets);
+    const assets = getCachedValue(session.reads, presetAssets);
     return new Map(
         [...session.manifests.values()]
             .filter(
                 (manifest) =>
                     Object.keys(manifest.eslint.presets).length > 0 ||
-                    assets.has(`${manifest.dir}/${ESLINT_PRESETS_FILE}`),
+                    assets.has(`${manifest.folder}/${ESLINT_PRESETS_FILE}`),
             )
             .map((manifest) => [
                 manifest.configuration.name,
-                getCachedMapValue(reads, presetInputs, manifest, () => readPresets(manifest)),
+                getCachedMapValue(session.reads, presetInputs, manifest, () => readPresets(manifest)),
             ]),
     );
 }
 
+// Derive project imports, runtime boundaries and your own ESLint options from the shared facts.
 function buildProjectOptions(session: ToolFileContext['session'], context: EslintFacts): EslintParts {
     const { root, reads, scopes, selection, nodeFiles, repositorySettings } = context;
     const { view } = selection;
@@ -142,15 +139,12 @@ function buildProjectOptions(session: ToolFileContext['session'], context: Eslin
 function buildEslintContext(input: ToolFileContext): EslintContext {
     const { session, selection, toolFile } = input;
     const context = buildEslintFacts(input);
-    const { reads, scopes, repositorySettings, nodeFiles } = context;
-    const repository = session.repository;
-    const pluginLevels = getCachedValue(reads, pluginRuleLevels);
-    const view = selection.view;
+    const { repositorySettings, scopes, nodeFiles } = context;
+    const { view } = selection;
     const options = buildRuleOptions(repositorySettings);
-    const allRules = new Set([
-        ...[...session.manifests.values()].flatMap((manifest) => [...manifest.eslint.all_level_rules]),
-        ...Object.entries(pluginLevels).flatMap(([name, level]) => (level === 'all' ? [`gspot/${name}`] : [])),
-    ]);
+    const allRules = new Set(
+        [...session.manifests.values()].flatMap((manifest) => [...manifest.eslint.all_level_rules]),
+    );
     const eslintFiles = buildFilePatterns({
         components: listFragmentConfigurations(scopes, selection, toolFile),
         nodeFiles,
@@ -159,7 +153,6 @@ function buildEslintContext(input: ToolFileContext): EslintContext {
     });
     return {
         ...context,
-        pluginLevels,
         ruleOptions: options,
         eslint: buildProjectOptions(session, context),
         settingsBlocks: [
@@ -170,6 +163,7 @@ function buildEslintContext(input: ToolFileContext): EslintContext {
         ],
         eslintAllRules: allRules,
         eslintModule: createBlockWriter({
+            source: 'JavaScript and repository settings',
             allRules,
             isAll: repositorySettings.level === 'all',
             codeFiles: eslintFiles.code,
@@ -182,24 +176,17 @@ function buildEslintContext(input: ToolFileContext): EslintContext {
         roles: view.roles,
         testFiles: view.test_files,
         scope: selection.scope.path,
-        scopeDependencies: Object.keys(getProjectDependencies(session.packageManifests, selection.scope.path)),
+        scopeDependencies: Object.keys(getProjectDependencies(session.dependencyFiles, selection.scope.path)),
         testRuleNames: TEST_RULE_NAMES,
         isAll: repositorySettings.level === 'all',
         files: (extension) =>
-            repository.files.flatMap((file) =>
+            session.repository.files.flatMap((file) =>
                 file.kind === 'source' && file.path.endsWith(extension) ? [file.path] : [],
             ),
         json: (value) => JSON.stringify(value, null, JSON_INDENT),
     };
 }
 
-const pluginRuleLevelsSchema = z.record(
-    z.string(),
-    z.enum(LEVELS).or(z.literal('none')),
-) satisfies z.ZodType<EslintRuleLevels>;
-const pluginRuleLevels: MemoKey<EslintRuleLevels> = {
-    create: () => pluginRuleLevelsSchema.parse(JSON.parse(readAsset(ESLINT_RULE_LEVELS_FILE))),
-};
 const presetInputs: MemoKey<Map<Manifest, EslintPresets>> = { create: () => new Map() };
 
 const presetAssets: MemoKey<Set<string>> = { create: () => new Set(listAssets(CONFIGURATIONS_FOLDER)) };

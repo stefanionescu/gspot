@@ -19,13 +19,13 @@ import {
 /**
  * The `[install]` keys gspot sets in each bunfig.toml beside a Bun lockfile, in scopes that select dependencies.
  *
- * @param root the repository root.
+ * @param repositoryRoot the base folder for Bun lockfile lookup and adjacent installation settings.
  * @param scopes every resolved scope.
  *
  * @returns each file path and its installation key changes.
  */
-export function buildBunfigEdits(root: string, scopes: ScopeSelection[]): FileEdit[] {
-    using files = openFiles(root);
+export function buildBunfigEdits(repositoryRoot: string, scopes: ScopeSelection[]): FileEdit[] {
+    using files = openFiles(repositoryRoot);
     const selected = scopes
         .filter((selection) =>
             selection.selected.some((manifest) => manifest.configuration.name === DEPENDENCIES_CONFIGURATION),
@@ -33,12 +33,12 @@ export function buildBunfigEdits(root: string, scopes: ScopeSelection[]): FileEd
         .map((selection) => ({ selection, prefix: joinScope(selection.scope.path, '') }))
         .filter(({ prefix }) =>
             LOCKFILES.filter((entry) => entry.client === 'bun').some(
-                ({ file: name }) => files.stat(`${prefix}${name}`) !== undefined,
+                ({ file: name }) => files.readStats(`${prefix}${name}`) !== undefined,
             ),
         );
     return selected.map(({ selection, prefix }) => {
         const path = `${prefix}${BUNFIG_FILE}`;
-        const source = readText(root, path);
+        const source = readText(repositoryRoot, path);
         const document = source === undefined ? {} : parseTomlFile({ path, source });
         const install = document['install'] as Record<string, unknown> | undefined;
         const { settings } = selection.view;

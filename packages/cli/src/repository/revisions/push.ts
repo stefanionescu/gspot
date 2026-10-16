@@ -1,4 +1,4 @@
-// Selects pushed revisions and their commit range.
+// Select pushed revisions and the commit ranges their checks read.
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
@@ -26,7 +26,7 @@ import {
     REMOTES_OPTION,
     REMOTE_ARGUMENTS,
     REV_LIST_ARGUMENTS,
-    COMMIT_DIFF_ARGUMENTS,
+    DIFF_NAMES_ARGUMENTS,
     SHALLOW_FILE_ARGUMENTS,
     ROOT_COMMITS_ARGUMENTS,
     MISSING_PUSH_REVISION_MESSAGE,
@@ -90,7 +90,7 @@ async function readComparison(context: PushSearch, hash: string, remoteHash: str
         const previous = context.commits.get(remoteHash);
         if (previous === undefined)
             return { base: await readPushBase(root, cancelSignal), changed: undefined, range: [hash] };
-        const changed = await readGitPaths(root, [...COMMIT_DIFF_ARGUMENTS, previous, hash, '--'], { cancelSignal });
+        const changed = await readGitPaths(root, [...DIFF_NAMES_ARGUMENTS, previous, hash, '--'], { cancelSignal });
         return { base: previous, changed, range: [hash, `^${previous}`] };
     }
     const range = [
@@ -120,7 +120,7 @@ async function buildRevision(context: PushSearch, line: PushLine, hash: string):
     };
 }
 
-// Share a check only for the same commit, comparison base, and changed paths.
+// Share a check only for matching commits, comparison bases, and changed paths.
 function recordRevision(result: PushSelection, revision: PushRevision): void {
     const duplicate = result.revisions.find(
         (entry) =>
@@ -155,14 +155,14 @@ async function selectLine(context: PushSearch, result: PushSelection, line: Push
 
 /**
  * Resolve the exact objects supplied by Git's pre-push protocol before running source checks.
- * @param root the repository root.
+ * @param repositoryRoot the folder used as the Git working directory.
  * @param input the lines Git hands the pre-push hook on standard input.
  * @param remote the remote name or address supplied to the hook.
  * @param cancelSignal cancellation for the Git commands.
  * @returns the pushed revisions with their commits, and the updates no check applies to.
  */
 export async function selectPush(
-    root: string,
+    repositoryRoot: string,
     input: string,
     remote?: string,
     cancelSignal?: AbortSignal,
@@ -171,14 +171,14 @@ export async function selectPush(
         .split('\n')
         .filter((row) => row.trim() !== '')
         .map((line) => parseLine(line));
-    const shallow = await isShallow(root, { cancelSignal });
-    const remotes = remote === undefined ? [] : await readGitLines(root, REMOTE_ARGUMENTS, { cancelSignal });
+    const shallow = await isShallow(repositoryRoot, { cancelSignal });
+    const remotes = remote === undefined ? [] : await readGitLines(repositoryRoot, REMOTE_ARGUMENTS, { cancelSignal });
     const context: PushSearch = {
-        root,
+        root: repositoryRoot,
         cancelSignal,
-        commits: await readPeeledCommits(root, lines, cancelSignal),
+        commits: await readPeeledCommits(repositoryRoot, lines, cancelSignal),
         remote: remotes.find((name) => name === remote),
-        boundaries: shallow ? await readShallowBoundaries(root, cancelSignal) : new Set<string>(),
+        boundaries: shallow ? await readShallowBoundaries(repositoryRoot, cancelSignal) : new Set<string>(),
     };
     const result: PushSelection = { revisions: [], skipped: [] };
     for (const line of lines) await selectLine(context, result, line);
@@ -187,33 +187,33 @@ export async function selectPush(
 
 /**
  * Compare a push with its upstream or remote default. Without either, start at the root commit.
- * @param root the repository root.
+ * @param repositoryRoot the folder used as the Git working directory.
  * @param cancelSignal cancellation for the Git commands.
  * @returns the commit the pushed range starts after.
  */
-export async function readPushBase(root: string, cancelSignal?: AbortSignal): Promise<string> {
-    const compared = await readDefaultRef(root, cancelSignal);
-    if (compared !== '') return readMergeBase(root, compared, cancelSignal);
-    const roots = await readGitLines(root, ROOT_COMMITS_ARGUMENTS, { cancelSignal });
+export async function readPushBase(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string> {
+    const compared = await readDefaultRef(repositoryRoot, cancelSignal);
+    if (compared !== '') return readMergeBase(repositoryRoot, compared, cancelSignal);
+    const roots = await readGitLines(repositoryRoot, ROOT_COMMITS_ARGUMENTS, { cancelSignal });
     return roots.at(-1) as string;
 }
 
 /**
  * The supplied pushed commits, or the commits after the push base.
- * @param root the repository root.
+ * @param repositoryRoot the folder used as the Git working directory.
  * @param commits the explicit selection when supplied.
  * @param cancelSignal cancellation for the Git commands.
  * @returns the exact selected commits or the Git selection error.
  */
 export async function readPushedCommits(
-    root: string,
+    repositoryRoot: string,
     commits: string[] | undefined,
     cancelSignal?: AbortSignal,
 ): Promise<CommitSelection> {
     if (commits !== undefined) return commits;
-    if ((await readHead(root, cancelSignal)) === undefined) return [];
-    const base = await readPushBase(root, cancelSignal);
-    const listed = await runGit(root, [...REV_LIST_ARGUMENTS, `${base}..HEAD`, '--'], {
+    if ((await readHead(repositoryRoot, cancelSignal)) === undefined) return [];
+    const base = await readPushBase(repositoryRoot, cancelSignal);
+    const listed = await runGit(repositoryRoot, [...REV_LIST_ARGUMENTS, `${base}..HEAD`, '--'], {
         cancelSignal,
     });
     if (listed.code !== 0) return { error: `Cannot select commit messages: ${listed.stderr.trim()}` };

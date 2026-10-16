@@ -1,15 +1,14 @@
 // Discovers project scopes and resolves paths within them.
-import { posix } from 'node:path';
 import picomatch from 'picomatch';
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { listNpmToolNames } from '#cli/configurations/tools.ts';
 import { isInstalledToolPath } from '#cli/repository/classify.ts';
-import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { isToolOnlyPackage } from '#cli/repository/dependency-files.ts';
+import type { ToolFileGeneration } from '#cli/types/generation/files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
+import type { Scope, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
-import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 import { GLOB_EXCLUDE, FOLDER_CONTENTS, WHOLE_TREE_GLOBS } from '#cli/config/system/paths.ts';
 
 /**
@@ -85,38 +84,34 @@ export function joinScope(scope: string, path: string): string {
  * The repository-relative path of a tool file generated for a scope.
  * @param scope the scope path, empty for the root.
  * @param toolFile the tool-file declaration.
- * @param generatedPaths the files emitted by this session.
+ * @param targets the emitted tool-file paths indexed by scope and file stem.
  * @returns the scopePath file or its emitted root fallback.
  */
 export function buildScopeTarget(
     scope: string,
     toolFile: ToolFileDeclaration,
-    generatedPaths: ReadonlySet<string>,
+    targets: ToolFileGeneration['targets'],
 ): string {
-    if (scope === '' || !toolFile.per_scope) return toolFile.target;
-    const scopePath = toolFile.target.startsWith(TOOL_FILE_PREFIX)
-        ? posix.join(TOOL_FILE_PREFIX, scope, toolFile.target.slice(TOOL_FILE_PREFIX.length))
-        : joinScope(scope, toolFile.target);
-    return !generatedPaths.has(scopePath) && generatedPaths.has(toolFile.target) ? toolFile.target : scopePath;
+    return toolFile.per_scope ? (targets.get(scope)?.get(toolFile.target) ?? toolFile.target) : toolFile.target;
 }
 
 /**
  * Find project scopes for initialization and execution. Omit the root and lint-only packages.
  * @param files the repository inventory.
- * @param packageManifests the parsed package manifests.
+ * @param dependencyFiles the parsed package manifests.
  * @param manifests the configuration manifests declaring project files and npm tools.
  * @returns project scopes in path order.
  */
 export function findScopes(
     files: TrackedFile[],
-    packageManifests: DependencyFile[],
+    dependencyFiles: DependencyFile[],
     manifests: Iterable<Manifest>,
-): ScopeEntry[] {
+): Scope[] {
     const configurations = [...manifests];
     const patterns = configurations.flatMap((manifest) => manifest.detect.project_files);
     const npmNames = listNpmToolNames(configurations);
     const toolOnlyPackages = new Set(
-        packageManifests.filter((fact) => isToolOnlyPackage(fact, npmNames)).map((fact) => fact.path),
+        dependencyFiles.filter((fact) => isToolOnlyPackage(fact, npmNames)).map((fact) => fact.path),
     );
     const folders = new Set<string>();
     const sources = files.filter(
@@ -130,7 +125,7 @@ export function findScopes(
     }
     return [...folders]
         .toSorted((left, right) => left.localeCompare(right))
-        .map((path): ScopeEntry => ({ path, configurations: [], source: 'project' }));
+        .map((path): Scope => ({ path, configurations: [], origin: 'project' }));
 }
 
 /**
@@ -161,11 +156,11 @@ export function findProjectFolder(path: string, pattern: string): string | undef
 /**
  * The scope a file belongs to: the deepest scope whose path contains it, else the root.
  * @param path the file path.
- * @param scopes the scopes.
- * @returns the scope.
+ * @param scopes the configured ownership boundaries to search.
+ * @returns the deepest matching owner, or the repository-wide fallback.
  */
-export function findScope(path: string, scopes: ScopeEntry[]): ScopeEntry {
-    const root: ScopeEntry = scopes.find((scope) => scope.path === '') ?? { ...ROOT_SCOPE, configurations: [] };
+export function findScope(path: string, scopes: Scope[]): Scope {
+    const root: Scope = scopes.find((scope) => scope.path === '') ?? { ...ROOT_SCOPE, configurations: [] };
     return (
         scopes
             .filter((scope) => scope.path !== '' && isInScope(path, scope.path))

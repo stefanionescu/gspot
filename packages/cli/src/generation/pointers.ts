@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { posix, dirname, relative } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -6,14 +7,12 @@ import type { FileEdit } from '#cli/types/ownership.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { type ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { buildPrettierOptions } from '#cli/generation/tool-files/prettier.ts';
-import { requiredToolNames, listPrettierPlugins } from '#cli/planning/needed-tools.ts';
 import { isInScope, joinScope, listNestedScopes, buildScopeTarget } from '#cli/repository/scopes.ts';
 import { convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
-import { type GeneratedFile, type ToolFileInputs, type PackageRedirectInputs } from '#cli/types/generation/files.ts';
+import { type GeneratedFile, type ToolFileInputs, type PointerFieldInputs } from '#cli/types/generation/files.ts';
 import { TARGET_PLACEHOLDER, TARGET_JSON_PLACEHOLDER, TARGET_MODULE_PLACEHOLDER } from '#cli/config/configurations.ts';
 
 /**
@@ -57,10 +56,10 @@ function deriveRelativeTarget(pointerPath: string, targetPath: string): string {
  * Emits a body pointer: the body with the target placeholder replaced, under the header.
  *
  * @param pointer the pointer declaration.
- * @param pointerPath the pointer's path.
+ * @param pointerPath the destination that determines the relative target and header.
  * @param targetPath the generated file's path.
  *
- * @returns the generated file.
+ * @returns a header and target-filled body written at the declared pointer path.
  */
 function buildBodyPointer(
     pointer: NonNullable<ToolFileDeclaration['pointer']>,
@@ -69,9 +68,12 @@ function buildBodyPointer(
 ): GeneratedFile {
     const body = fillTarget(pointer.body ?? '', pointerPath, targetPath);
     const ended = body.endsWith('\n') ? body : `${body}\n`;
+    const notes = [`The tool file is ${targetPath}.`];
+    if (pointerPath.endsWith('eslint.config.mjs'))
+        notes.push('Run gspot install before you use ESLint in your editor.');
     return {
         path: pointerPath,
-        content: `${formatHeader(pointerPath)}${ended}`,
+        content: `${formatHeader(pointerPath, notes)}${ended}`,
         kind: 'pointer',
     };
 }
@@ -97,12 +99,12 @@ function listPointerPaths(
     )
         return [];
     const scope = selection.scope.path;
-    if (pointer.directories === undefined) return [toolFile.per_scope ? joinScope(scope, pointer.path) : pointer.path];
+    if (pointer.folders === undefined) return [toolFile.per_scope ? joinScope(scope, pointer.path) : pointer.path];
     const children = listNestedScopes(
         context.scopes.map((entry) => entry.scope.path),
         scope,
     );
-    const matches = buildPathMatcher(pointer.directories);
+    const matches = buildPathMatcher(pointer.folders);
     const owned = listCoveredFiles(manifest.files, files, {
         selected: selection.selected,
         scope: '',
@@ -119,18 +121,25 @@ function listPointerPaths(
     return [...folders].map((folder) => `${folder}/${pointer.path}`);
 }
 
-function listPointerFieldTargets({ selection, manifest, tool, consumed, paths, scopePaths }: PackageRedirectInputs) {
+function listPointerFieldTargets({
+    selection,
+    manifest,
+    tool,
+    consumed,
+    paths,
+    targets,
+    scopePaths,
+}: PointerFieldInputs) {
     return (tool.replace_key ?? [])
         .filter((replacement) => replacement.redirect === true)
         .flatMap((replacement) =>
             manifest.toolFiles
-                .map((file) => ({ file, target: buildScopeTarget(selection.scope.path, file, paths) }))
+                .map((file) => ({ file, target: buildScopeTarget(selection.scope.path, file, targets) }))
                 .filter(
                     ({ file, target }) =>
                         !file.fragment &&
                         file.tool.includes(tool.name) &&
-                        paths.has(target) &&
-                        (!file.per_scope || consumed),
+                        (!file.per_scope || consumed || !paths.has(target)),
                 )
                 .map(({ file, target }) => {
                     let scope = '';
@@ -161,9 +170,14 @@ function listPointerFieldTargets({ selection, manifest, tool, consumed, paths, s
  * @param session the authored inventory and selected scopes.
  * @param generated the actual tool files emitted for applicable checks.
  *
+ * @param targets the final generated destination for each scope and declared target.
  * @returns changes to the declared package fields.
  */
-function buildPointerFieldEdits(session: Session, generated: GeneratedFile[]): FileEdit[] {
+function buildPointerFieldEdits(
+    session: Session,
+    generated: GeneratedFile[],
+    targets: PointerFieldInputs['targets'],
+): FileEdit[] {
     const { root, repository, scopes } = session;
     const paths = new Set(generated.map(({ path }) => path));
     const scopePaths = scopes.map(({ scope }) => scope.path);
@@ -171,13 +185,15 @@ function buildPointerFieldEdits(session: Session, generated: GeneratedFile[]): F
         const required = new Set(
             session.configuredChecks
                 .filter((check) => check.scope.scope.path === selection.scope.path || check.check.runs === 'once')
-                .flatMap((element) => requiredToolNames(element)),
+                .flatMap((element) => listRequiredTools(element)),
         );
         return selection.selected.flatMap((manifest) =>
             manifest.tools.map((tool) => ({ selection, manifest, tool, consumed: required.has(tool.name) })),
         );
     });
-    const declarations = tools.flatMap((selected) => listPointerFieldTargets({ ...selected, paths, scopePaths }));
+    const declarations = tools.flatMap((selected) =>
+        listPointerFieldTargets({ ...selected, paths, targets, scopePaths }),
+    );
     const redirects = new Map(
         declarations.map((row) => [JSON.stringify([row.file, row.key, row.scope, row.target]), row]),
     );
@@ -198,11 +214,18 @@ function buildPointerFieldEdits(session: Session, generated: GeneratedFile[]): F
                 (row) =>
                     Object.hasOwn(document, row.key) &&
                     isInScope(path, row.scope) &&
-                    row.children.every((child) => !isInScope(path, child)),
+                    row.children.every((child) => !isInScope(path, child)) &&
+                    (paths.has(row.target) ||
+                        isDeepStrictEqual(document[row.key], { extends: deriveRelativeTarget(path, row.target) })),
             )
             .map((row) => ({
                 path,
-                changes: [{ path: [row.key], value: { extends: deriveRelativeTarget(path, row.target) } }],
+                changes: [
+                    {
+                        path: [row.key],
+                        value: paths.has(row.target) ? { extends: deriveRelativeTarget(path, row.target) } : undefined,
+                    },
+                ],
             }));
     });
 }
@@ -217,16 +240,8 @@ function buildPointerFieldEdits(session: Session, generated: GeneratedFile[]): F
  */
 function buildPointerFiles(context: ToolFileInputs, toolFile: ToolFileDeclaration, target: string): GeneratedFile[] {
     const { pointer } = toolFile;
-    const { session, selection } = context;
     if (pointer === undefined) return [];
-    return listPointerPaths(context, toolFile).map((path) =>
-        toolFile.target.endsWith('/prettier.json')
-            ? {
-                  path,
-                  kind: 'pointer',
-                  content: `${formatHeader(path)}export default ${JSON.stringify(buildPrettierOptions({ settings: session.settingsFile.settings, format: selection.view.format, extra: selection.view.extra('prettier'), plugins: [...listPrettierPlugins(session.scopes.flatMap(({ selected }) => selected)).values()], targetPath: path }), null, JSON_INDENT)};\n`,
-              }
-            : buildBodyPointer(pointer, path, target),
-    );
+    return listPointerPaths(context, toolFile).map((path) => buildBodyPointer(pointer, path, target));
 }
-export { buildBodyPointer, listPointerPaths, buildPointerFiles, buildPointerFieldEdits };
+
+export { listPointerPaths, buildPointerFiles, buildPointerFieldEdits };

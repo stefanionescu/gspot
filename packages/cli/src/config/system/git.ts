@@ -13,10 +13,10 @@ export const GIT_PATH_VARIABLES = [
 /** Command-scope configuration may supply authentication and applies to both repositories. */
 export const GIT_COMMAND_CONFIGURATION: ReadonlySet<string> = new Set(['GIT_CONFIG_COUNT', 'GIT_CONFIG_PARAMETERS']);
 
-/** These native commands create metadata instead of using the invoking repository's metadata. */
+/** These commands create metadata instead of using the invoking repository's metadata. */
 export const GIT_CLONE_COMMAND = 'clone';
 
-/** Native Git executable names, including Windows. */
+/** Git executable names, including Windows. */
 export const GIT_EXECUTABLE = 'git';
 
 /** Git reports this exit code when repository discovery fails. */
@@ -35,7 +35,7 @@ export const GIT_PREFIX_ARGUMENTS = ['rev-parse', '--show-prefix'] as const;
 export const GIT_LOCAL_VARIABLES_ARGUMENTS = ['rev-parse', '--local-env-vars'] as const;
 export const GIT_SOURCE_ARGUMENTS = ['rev-parse', '--is-bare-repository', '--absolute-git-dir'] as const;
 export const GIT_TOP_LEVEL_ARGUMENTS = ['rev-parse', '--show-toplevel'] as const;
-export const GIT_DIRECTORY_ARGUMENTS = ['rev-parse', '--absolute-git-dir'] as const;
+export const GIT_FOLDER_ARGUMENTS = ['rev-parse', '--absolute-git-dir'] as const;
 
 export const ORIGIN_URL_SETTING = 'remote.origin.url';
 

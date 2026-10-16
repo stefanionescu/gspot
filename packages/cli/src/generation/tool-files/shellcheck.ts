@@ -4,7 +4,7 @@ import {
     SHELLCHECK_CHECKS,
     SHELLCHECK_OPTIONS,
     SHELLCHECK_ALL_LEVEL_CHECKS,
-} from '#cli/config/generation/tool-file-sources.ts';
+} from '#cli/config/generation/tool-files.ts';
 /**
  * Build shellcheck file from the selected settings.
  * @param context the repository, scope settings, tool declaration, and output path.
@@ -15,8 +15,8 @@ function buildShellcheckFile(context: ToolFileContext): string {
     const level = context.level;
 
     const isAll = level === 'all';
-    const native = extra('shellcheck');
-    const options = [...SHELLCHECK_OPTIONS, ...(native === undefined ? [] : Object.entries(native))];
+    const extraOptions = extra('shellcheck');
+    const options = [...SHELLCHECK_OPTIONS, ...(extraOptions === undefined ? [] : Object.entries(extraOptions))];
     const enable = [...SHELLCHECK_CHECKS, ...(isAll ? SHELLCHECK_ALL_LEVEL_CHECKS : [])];
     const disable = rulesOff('bash/shellcheck');
     return [

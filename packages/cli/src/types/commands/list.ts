@@ -1,11 +1,12 @@
-import type { SettingEntry } from '#cli/types/settings/values.ts';
+import type { LIST_KINDS } from '#cli/config/commands/list.ts';
+import type { EffectiveSetting } from '#cli/types/settings/values.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 
 type SettingRow = {
     key: string;
     value: unknown;
     source: string;
-    origin: SettingEntry['origin'];
+    origin: EffectiveSetting['origin'];
     originScope?: string;
     reason_needed: SettingDeclaration['reason_needed'];
     scope: string;
@@ -22,3 +23,5 @@ export type ConfigurationsListJson = {
 
 /** Effective settings and authored extra options printed by list settings. */
 export type SettingsListJson = { settings: SettingRow[]; extras: ExtraRow[] };
+
+export type ListKind = (typeof LIST_KINDS)[number];

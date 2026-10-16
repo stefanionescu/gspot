@@ -15,18 +15,18 @@ import {
 
 /**
  * Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.
- * @param root repository directory.
+ * @param repositoryRoot the folder used as the Git working directory.
  * @param source index or commit to inspect.
  * @param cancelSignal command cancellation.
  * @returns validated entries.
  */
 export async function listRevisionEntries(
-    root: string,
+    repositoryRoot: string,
     source: Revision,
     cancelSignal?: AbortSignal,
 ): Promise<GitEntry[]> {
-    if (source.kind === 'index') return stripIndexStages(await readIndexEntries(root, cancelSignal));
-    const read = await runGitForBytes(root, [...TREE_ENTRIES_ARGUMENTS, source.hash], { cancelSignal });
+    if (source.kind === 'index') return stripIndexStages(await readIndexEntries(repositoryRoot, cancelSignal));
+    const read = await runGitForBytes(repositoryRoot, [...TREE_ENTRIES_ARGUMENTS, source.hash], { cancelSignal });
     if (read.code !== 0)
         throw new GspotError(
             'git',
@@ -37,13 +37,13 @@ export async function listRevisionEntries(
 
 /**
  * Read raw blobs once, visiting each before allocating the next blob.
- * @param root repository directory.
+ * @param repositoryRoot the folder used as the Git working directory.
  * @param requested full blob object IDs.
  * @param visit the consumer of one validated object.
  * @param cancelSignal command cancellation.
  */
 export async function visitGitBlobs(
-    root: string,
+    repositoryRoot: string,
     requested: string[],
     visit: (blobs: AsyncIterable<readonly [string, Buffer]>) => Promise<void>,
     cancelSignal?: AbortSignal,
@@ -51,7 +51,7 @@ export async function visitGitBlobs(
     const blobs = [...new Set(requested)];
     if (blobs.length === 0) return;
     const result = await runGit(
-        root,
+        repositoryRoot,
         BLOBS_ARGUMENTS,
         {
             stdin: blobs.join('\n') + '\n',
@@ -67,15 +67,19 @@ export async function visitGitBlobs(
 
 /**
  * Collect the validated blobs required by a consumer that compares multiple objects.
- * @param root repository directory.
+ * @param repositoryRoot the folder used as the Git working directory.
  * @param requested full blob object IDs.
  * @param cancelSignal command cancellation.
  * @returns validated object bytes.
  */
-export async function readBlobs(root: string, requested: string[], cancelSignal?: AbortSignal): Promise<Buffer[]> {
+export async function readBlobs(
+    repositoryRoot: string,
+    requested: string[],
+    cancelSignal?: AbortSignal,
+): Promise<Buffer[]> {
     const blobs = new Map<string, Buffer>();
     await visitGitBlobs(
-        root,
+        repositoryRoot,
         requested,
         async (entries) => {
             for await (const [hash, bytes] of entries) blobs.set(hash, bytes);
@@ -87,28 +91,28 @@ export async function readBlobs(root: string, requested: string[], cancelSignal?
 
 /**
  * Read the current commit, distinguishing an unborn branch from failed Git reads.
- * @param root repository directory.
+ * @param repositoryRoot the folder used as the Git working directory.
  * @param cancelSignal command cancellation.
  * @returns current commit hash, or undefined for an unborn branch.
  */
-export async function readHead(root: string, cancelSignal?: AbortSignal): Promise<string | undefined> {
+export async function readHead(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string | undefined> {
     const options = { cancelSignal };
-    const head = await runGit(root, HEAD_ARGUMENTS, options);
+    const head = await runGit(repositoryRoot, HEAD_ARGUMENTS, options);
     if (head.code === 0) return head.stdout.trim();
     const failure = new GspotError('git', 'Cannot read committed Git history. Restore HEAD and check again.');
     if (head.code !== 1) throw failure;
-    const symbolic = await runGit(root, SYMBOLIC_HEAD_ARGUMENTS, options);
+    const symbolic = await runGit(repositoryRoot, SYMBOLIC_HEAD_ARGUMENTS, options);
     if (symbolic.code !== 0) throw failure;
     return undefined;
 }
 
 /**
  * Resolve committed entries, distinguishing an unborn branch from failed Git reads.
- * @param root repository directory.
+ * @param repositoryRoot the folder used as the Git working directory.
  * @param cancelSignal command cancellation.
  * @returns current commit entries, or an empty list for an unborn branch.
  */
-export async function listHeadEntries(root: string, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
-    const head = await readHead(root, cancelSignal);
-    return head === undefined ? [] : listRevisionEntries(root, { kind: 'commit', hash: head }, cancelSignal);
+export async function listHeadEntries(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
+    const head = await readHead(repositoryRoot, cancelSignal);
+    return head === undefined ? [] : listRevisionEntries(repositoryRoot, { kind: 'commit', hash: head }, cancelSignal);
 }

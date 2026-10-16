@@ -10,7 +10,7 @@ import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configuration
 import type { Skip, System, Session, ToolIgnore, PlanInputs, PlannedCheck, SettingsSkip } from '#cli/types/planning.ts';
 
 // Conditions belong to the planned check, so its declaration and scope cannot disagree.
-function conditionSkip(check: PlannedCheck, hasGit: boolean, projects: DependencyFile[]): Skip {
+function findConditionSkip(check: PlannedCheck, hasGit: boolean, projects: DependencyFile[]): Skip {
     const { configuration, git, dependencies } = { ...check.manifest?.configuration.when, ...check.check.when };
     if (configuration !== undefined && !check.scope.view.configurations.includes(configuration))
         return {
@@ -30,7 +30,7 @@ function conditionSkip(check: PlannedCheck, hasGit: boolean, projects: Dependenc
 }
 
 // The skip an ignore entry without a rule or paths imposes, which disables the whole check.
-function ignoreSkip(scope: ScopeSelection, check: CheckDeclaration): SettingsSkip | undefined {
+function findIgnoreSkip(scope: ScopeSelection, check: CheckDeclaration): SettingsSkip | undefined {
     const ignored = scope.view
         .ignoresFor(check.name)
         .find(
@@ -42,14 +42,14 @@ function ignoreSkip(scope: ScopeSelection, check: CheckDeclaration): SettingsSki
     return { cause: 'ignore', note: `disabled by gspot.toml${reason}` };
 }
 
-function waitingSetting(scope: ScopeSelection, check: CheckDeclaration): string | undefined {
+function findEmptySetting(scope: ScopeSelection, check: CheckDeclaration): string | undefined {
     const setting = check.when?.setting;
     if (setting === undefined) return undefined;
     return isSettingEmpty(scope.view.settings[setting]) ? setting : undefined;
 }
 
-// Native ignore syntax belongs to the check's authored or generated ignore file.
-function toolIgnore(session: Session, check: PlannedCheck): ToolIgnore | undefined {
+// Ignore syntax belongs to the check's authored or generated ignore file.
+function readToolIgnore(session: Session, check: PlannedCheck): ToolIgnore | undefined {
     const argument = check.check.command?.indexOf(TOOL_IGNORE_ARGUMENT) ?? -1;
     const file = argument < 0 ? undefined : check.check.command?.[argument + 1];
     if (file === undefined) return undefined;
@@ -75,17 +75,17 @@ export function isSettingEmpty(value: unknown): boolean {
  * @param tool the declared tool and its installation pin.
  * @param host the operating system and architecture.
  *
- * @returns the platform skip, or undefined when this host can run the check.
+ * @returns the system skip, or undefined when this host can run the check.
  */
-export function systemSkip(check: CheckDeclaration, tool: ToolDeclaration | undefined, host: System): Skip {
+export function findSystemSkip(check: CheckDeclaration, tool: ToolDeclaration | undefined, host: System): Skip {
     if (check.operating_systems && !(check.operating_systems as readonly string[]).includes(host.platform))
         return {
-            cause: 'platform',
+            cause: 'system',
             note: `runs on ${check.operating_systems.join(', ')} only; this is ${host.platform}`,
         };
     if (tool === undefined) return undefined;
     const missing = findMissingBuild(tool, host.platform, host.arch);
-    if (missing !== undefined) return { cause: 'platform', note: `${tool.name} has no ${missing} build` };
+    if (missing !== undefined) return { cause: 'system', note: `${tool.name} has no ${missing} build` };
     return undefined;
 }
 
@@ -96,16 +96,16 @@ export function systemSkip(check: CheckDeclaration, tool: ToolDeclaration | unde
  * @param scope the effective settings for the project.
  * @param check the declared check and project prerequisites.
  */
-export function settingsSkip(
+export function findSettingsSkip(
     settings: Settings,
     scope: ScopeSelection,
     check: CheckDeclaration,
 ): SettingsSkip | undefined {
     if (settings.level !== 'all' && check.level !== 'recommended')
         return { cause: 'level', note: 'disabled at level recommended' };
-    const ignored = ignoreSkip(scope, check);
+    const ignored = findIgnoreSkip(scope, check);
     if (ignored !== undefined) return ignored;
-    const setting = waitingSetting(scope, check);
+    const setting = findEmptySetting(scope, check);
     return setting === undefined
         ? undefined
         : { cause: 'setting', note: `requires project setting ${setting}`, setting };
@@ -115,23 +115,24 @@ export function settingsSkip(
  * Select the first applicable reason a planned check cannot run.
  *
  * @param check the planned check.
- * @param root0 the planning inputs.
- * @param root0.session the repository session.
- * @param root0.options the command options.
- * @param root0.platform the operating system name.
- * @param root0.projects the parsed dependency files.
+ * @param inputs the planning inputs.
+ * @param inputs.session the repository session.
+ * @param inputs.options the command options.
+ * @param inputs.platform the operating system name.
+ * @param inputs.projects the parsed dependency files.
  *
  * @returns the first skip, or undefined when the check can run.
  */
-export function skipFor(check: PlannedCheck, { session, options, platform, projects }: PlanInputs): Skip {
+export function findFirstSkip(check: PlannedCheck, inputs: PlanInputs): Skip {
+    const { session, options, platform, projects } = inputs;
     const settings = session.settingsFile.settings;
     const hasGit = session.repository.hasGit;
     const host = { platform, arch: process.arch };
-    const selected = settingsSkip(settings, check.scope, check.check);
+    const selected = findSettingsSkip(settings, check.scope, check.check);
     if (selected !== undefined) return selected;
-    const condition = conditionSkip(check, hasGit, projects);
+    const condition = findConditionSkip(check, hasGit, projects);
     if (condition !== undefined) return condition;
-    return options.includeUnsupported === true ? undefined : systemSkip(check.check, check.tool, host);
+    return options.includeUnsupported === true ? undefined : findSystemSkip(check.check, check.tool, host);
 }
 
 /**
@@ -142,12 +143,12 @@ export function skipFor(check: PlannedCheck, { session, options, platform, proje
  *
  * @returns the check with its files restricted.
  */
-export function restrictIgnoredPaths(session: Session, check: PlannedCheck): PlannedCheck {
+export function stripToolIgnoredFiles(session: Session, check: PlannedCheck): PlannedCheck {
     if (check.skip !== undefined || check.check.runs !== 'files' || check.files.length === 0) return check;
-    const native = toolIgnore(session, check);
-    if (native === undefined) return check;
-    const files = check.files.filter((file) => !native.matches(file.path));
+    const toolIgnore = readToolIgnore(session, check);
+    if (toolIgnore === undefined) return check;
+    const files = check.files.filter((file) => !toolIgnore.matches(file.path));
     return files.length === 0
-        ? { ...check, skip: { cause: 'ignore', note: `all selected paths are disabled by ${native.file}` } }
+        ? { ...check, skip: { cause: 'ignore', note: `all selected paths are disabled by ${toolIgnore.file}` } }
         : { ...check, files };
 }

@@ -4,9 +4,9 @@ import { realpathSync } from 'node:fs';
 import { posix, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { DRIVE_LETTER } from '#cli/config/system/paths.ts';
-import type { Finding } from '#cli/types/execution/check.ts';
+import type { Finding } from '#cli/types/checks/run/check.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseJsonFindings } from '#cli/parsers/output/json.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
@@ -107,7 +107,7 @@ export const outputFormats = {
 
 /**
  * The findings a tool's output holds, with every path relative to the root.
- * @param check the check.
+ * @param check the report format, lint rule metadata, and fallback help for the tool.
  * @param stdout the tool's standard output.
  * @param stderr the tool's standard error.
  * @param paths the repository root and tool working directory, for resolving reported source paths.
@@ -115,7 +115,7 @@ export const outputFormats = {
  */
 export function parseOutput(check: ParsingCheck, stdout: string, stderr: string, paths: OutputPaths): Finding[] {
     const { root, cwd } = paths;
-    const nativeRoot = isAbsolute(root) ? convertToPosixPath(root) : normalizeOutputPath(root);
+    const rootPath = isAbsolute(root) ? convertToPosixPath(root) : normalizeOutputPath(root);
     const output = check.output;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`);
@@ -134,7 +134,7 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
         const file = normalizeOutputPath(finding.file);
         const absolute =
             isAbsolute(file) || DRIVE_LETTER.test(file) ? file : posix.join(normalizeOutputPath(cwd), file);
-        formatted.file = stripRoot(nativeRoot, absolute);
+        formatted.file = stripRoot(rootPath, absolute);
         return formatted;
     });
 }

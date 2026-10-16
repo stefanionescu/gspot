@@ -13,7 +13,6 @@
         "**/node_modules/**",
         "**/bower_components/**",
         "docs/worker-configuration.d.ts",
-        "tests/worker-configuration.d.ts",
         "bun.lock",
         "bun.lockb",
         "pnpm-lock.yaml",
@@ -78,6 +77,7 @@
     "ignoreBinaries": [
         "actionlint",
         "astro-check",
+        "bash",
         "commitlint",
         "editorconfig-checker",
         "eslint",
@@ -96,6 +96,7 @@
         "purgecss",
         "semgrep",
         "shellcheck",
+        "shfmt",
         "stylelint",
         "svgo",
         "syncpack",
@@ -115,10 +116,8 @@
         ".": {
             "entry": [
                 "tests/setup/prepare-run.ts",
-                "scripts/build.ts",
                 "tests/setup/integration.ts",
                 "packages/cli/src/checks/framework/site/linkinator-process.ts",
-                "packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs",
                 "packages/cli/configurations/language/javascript/eslint-runtime.mjs",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
@@ -164,7 +163,6 @@
         "packages/cli": {
             "entry": [
                 "src/checks/framework/site/linkinator-process.ts",
-                "configurations/language/markdown/tool-files/markdownlint-cli2.mjs",
                 "configurations/language/javascript/eslint-runtime.mjs",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",

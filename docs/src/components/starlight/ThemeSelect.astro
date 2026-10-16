@@ -1,0 +1,68 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+---
+
+<theme-toggle>
+    <button type="button" class="theme-toggle" aria-label="Switch to light theme" title="Switch to light theme">
+        <span class="moon">
+            <Icon name="moon" size="1.25rem" />
+        </span>
+        <span class="sun">
+            <Icon name="sun" size="1.25rem" />
+        </span>
+    </button>
+</theme-toggle>
+
+<script>
+    import { THEME_STORAGE_KEY, THEME_SWITCH_LABELS } from '../../config/site.ts';
+
+    class ThemeToggle extends HTMLElement {
+        connectedCallback(): void {
+            const button = this.querySelector('button');
+            if (button === null) throw new Error('The theme toggle has no button.');
+            const root = document.documentElement;
+            const label = (): void => {
+                const text = THEME_SWITCH_LABELS[root.dataset['theme'] === 'light' ? 'light' : 'dark'];
+                button.setAttribute('aria-label', text);
+                button.title = text;
+            };
+            label();
+            button.addEventListener('click', () => {
+                const next = root.dataset['theme'] === 'light' ? 'dark' : 'light';
+                root.dataset['theme'] = next;
+                localStorage.setItem(THEME_STORAGE_KEY, next);
+                label();
+            });
+        }
+    }
+    customElements.define('theme-toggle', ThemeToggle);
+</script>
+
+<style>
+.theme-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--sl-color-gray-1);
+    cursor: pointer;
+}
+@media (hover: hover) {
+    .theme-toggle:hover {
+        background: var(--sl-color-gray-6);
+        color: var(--sl-color-white);
+    }
+}
+.moon,
+.sun {
+    display: contents;
+}
+:global([data-theme='light']) .moon,
+:global([data-theme='dark']) .sun {
+    display: none;
+}
+</style>

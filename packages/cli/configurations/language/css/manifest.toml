@@ -43,7 +43,7 @@ example = "The declaration `color: #ggg` uses an invalid hexadecimal color and r
 exit_codes = [2]
 files = { extensions = [".css", ".vue", ".svelte"] }
 fix = ["stylelint", "--config", "{tool_file:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
-help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore css/stylelint --rule `<name>` --reason \"`<why>`\"."
+help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore css/stylelint --rule <name> --reason \"<why>\"`."
 level = "recommended"
 name = "stylelint"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$" }

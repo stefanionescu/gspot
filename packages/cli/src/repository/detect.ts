@@ -12,16 +12,16 @@ import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers
 import type { TrackedFile, ScopeContents } from '#cli/types/repository/inventory.ts';
 import type { DetectionEvidence, ConfigurationEvidence } from '#cli/types/repository/selection.ts';
 
-function collectDependencies(packageManifests: DependencyFile[], scope: string): Map<string, string> {
+function collectDependencies(dependencyFiles: DependencyFile[], scope: string): Map<string, string> {
     const dependencies = new Map<string, string>();
-    for (const fact of packageManifests) {
+    for (const fact of dependencyFiles) {
         if (!isInScope(fact.path, scope)) continue;
         for (const name of Object.keys(fact.dependencies)) dependencies.set(name, fact.path);
     }
     return dependencies;
 }
 
-function buildScopeContents(files: TrackedFile[], packageManifests: DependencyFile[], scope: string): ScopeContents {
+function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFile[], scope: string): ScopeContents {
     const candidates = files.filter(
         (file) => file.kind === 'source' && !isInGspotFolder(file.path) && isInScope(file.path, scope),
     );
@@ -32,7 +32,7 @@ function buildScopeContents(files: TrackedFile[], packageManifests: DependencyFi
         ),
     );
     const paths = new Set(candidates.map((file) => file.path));
-    const scopeDependencyFiles = packageManifests.filter((fact) => paths.has(fact.path));
+    const scopeDependencyFiles = dependencyFiles.filter((fact) => paths.has(fact.path));
     const runtimes = new Map([
         ...candidates.flatMap((file) =>
             file.tags
@@ -155,32 +155,32 @@ function findTagEvidence(detect: Manifest['detect'], tree: ScopeContents): Detec
 
 /**
  * Proposes configurations from the tree, the manifests and the dependencies, with the evidence for each.
- * @param root the repository that supplies tracked source content.
+ * @param repositoryRoot the folder that supplies content for detection.
  * @param files the tracked files.
  * @param manifests every configuration manifest.
- * @param packageManifests the parsed package manifests.
+ * @param dependencyFiles the parsed package manifests.
  * @param scope the scope path, '' for the root.
  * @returns each matching configuration with its repository evidence.
  */
 export function detectConfigurations(
-    root: string,
+    repositoryRoot: string,
     files: TrackedFile[],
     manifests: Map<string, Manifest>,
-    packageManifests: DependencyFile[],
+    dependencyFiles: DependencyFile[],
     scope = '',
 ): ConfigurationEvidence[] {
     const npmNames = listNpmToolNames(manifests.values());
     const toolOnlyPackages = new Set(
-        packageManifests.filter((manifest) => isToolOnlyPackage(manifest, npmNames)).map((manifest) => manifest.path),
+        dependencyFiles.filter((manifest) => isToolOnlyPackage(manifest, npmNames)).map((manifest) => manifest.path),
     );
     const tree = buildScopeContents(
         files.filter((file) => !toolOnlyPackages.has(file.path)),
-        packageManifests.filter((manifest) => !toolOnlyPackages.has(manifest.path)),
+        dependencyFiles.filter((manifest) => !toolOnlyPackages.has(manifest.path)),
         scope,
     );
     return manifests
         .values()
-        .map((manifest) => findConfigurationEvidence(root, manifest, tree))
+        .map((manifest) => findConfigurationEvidence(repositoryRoot, manifest, tree))
         .filter((evidence) => evidence !== undefined)
         .toArray();
 }
@@ -189,15 +189,15 @@ export function detectConfigurations(
  * Selects conditional declarations using the shared file and dependency evidence.
  * @param conditions the detection conditions declared by selected manifests.
  * @param files the repository source inventory.
- * @param packageManifests the parsed package manifests.
+ * @param dependencyFiles the parsed package manifests.
  * @returns the matching condition objects.
  */
 export function detectConditions(
     conditions: Manifest['detect'][],
     files: TrackedFile[],
-    packageManifests: DependencyFile[],
+    dependencyFiles: DependencyFile[],
 ): Set<Manifest['detect']> {
-    const tree = buildScopeContents(files, packageManifests, '');
+    const tree = buildScopeContents(files, dependencyFiles, '');
     return new Set(
         conditions.filter(
             (condition) =>

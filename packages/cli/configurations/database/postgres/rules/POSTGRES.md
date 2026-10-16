@@ -1,5 +1,7 @@
 # Postgres
 
+Read this rule when you change Postgres migrations, policies, functions, grants, or database tests.
+
 Migrations, tables, row security, functions, grants, data migrations, and tests of a Postgres
 database. Use the roles and schemas the application declares.
 
@@ -14,7 +16,7 @@ database. Use the roles and schemas the application declares.
 
 - Use UUIDv7 keys when rows need time order.
 - Use `TIMESTAMPTZ` for timestamps. Mutable rows that need audit columns get `created_at` and
-  `updated_at`, which the declared timestamp trigger or write owner updates.
+  `updated_at`, which the declared timestamp trigger or the code that writes the row updates.
 - Index common filters, ordering columns, and frequent row security predicates.
 - Durable invariants live in the database as generated columns, uniqueness, and check
   constraints, not only in client validation.

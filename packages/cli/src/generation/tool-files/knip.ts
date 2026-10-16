@@ -9,7 +9,7 @@ import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
-import { generatedIgnores, selectedIgnorePaths } from '#cli/generation/ignore-files.ts';
+import { globSections, ignoreSections, settingsSections } from '#cli/generation/ignore-files.ts';
 
 import {
     KNIP_IGNORED,
@@ -17,7 +17,7 @@ import {
     KNIP_ENTRY_SETTING,
     KNIP_IGNORED_DEPENDENCIES,
     KNIP_JAVASCRIPT_ENTRY_FILES,
-} from '#cli/config/generation/tool-file-sources.ts';
+} from '#cli/config/generation/tool-files.ts';
 
 /**
  * Select your own and declared entry files for their effective scope.
@@ -53,17 +53,17 @@ function selectEntryFiles(settings: Settings, scopes: ScopeSelection[], scope: s
 }
 
 /**
- * Build native Knip workspace entries and scoped dependency exclusions.
+ * Build Knip workspace entries and scoped dependency exclusions.
  *
- * @param root the repository root.
+ * @param repositoryRoot the folder whose package manifests declare the workspace layout.
  * @param settings the validated settings.
  * @param scopes the selected project scopes.
  *
- * @returns the native workspace settings.
+ * @returns the workspace settings.
  */
-function buildWorkspaces(root: string, settings: Settings, scopes: ScopeSelection[]) {
+function buildWorkspaces(repositoryRoot: string, settings: Settings, scopes: ScopeSelection[]) {
     const selected = scopes.filter(({ view }) => view.configurations.includes('javascript'));
-    const paths = [...new Set(['', ...listWorkspaceFolders(root)])];
+    const paths = [...new Set(['', ...listWorkspaceFolders(repositoryRoot)])];
     return Object.fromEntries(
         paths.map((path) => {
             const workspace = selected.find((entry) => entry.scope.path === path);
@@ -86,13 +86,13 @@ function buildWorkspaces(root: string, settings: Settings, scopes: ScopeSelectio
 function buildKnipFile(context: ToolFileContext): string {
     const { selection, scopes, files, manifests } = context;
     const { settingsFile, root, startRunner } = context.session;
-    const { ignoresFor, extra } = selection.view;
+    const { extra } = selection.view;
     const options = selection.view.options('tools.knip');
-    const scanner = selection.view.options('dependencies').scanner;
-    const ignoredPaths = [
-        ...generatedIgnores(context.session),
-        ...selectedIgnorePaths(scopes).filter((path) => !path.endsWith('/')),
-    ];
+    const scanner = selection.view.options('dependencies').bun_scanner;
+    const ignoredPaths = globSections([
+        ...ignoreSections(context.session),
+        ...settingsSections(context.selection.view, 'javascript/knip'),
+    ]);
     const pointers = scopes.flatMap((selection) =>
         selection.selected.flatMap((manifest) =>
             manifest.toolFiles.flatMap((toolFile) =>
@@ -112,16 +112,7 @@ function buildKnipFile(context: ToolFileContext): string {
     return JSON.stringify(
         {
             $schema: KNIP_SCHEMA_URL,
-            ignore: [
-                ...new Set([
-                    ...KNIP_IGNORED,
-                    ...pointers,
-                    ...ignoresFor('javascript/knip')
-                        .filter((entry) => entry.rule === undefined)
-                        .flatMap((entry) => entry.paths),
-                    ...ignoredPaths,
-                ]),
-            ],
+            ignore: [...new Set([...KNIP_IGNORED, ...pointers, ...ignoredPaths])],
             ignoreDependencies: [
                 ...new Set([
                     ...KNIP_IGNORED_DEPENDENCIES,

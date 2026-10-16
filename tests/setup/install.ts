@@ -1,241 +1,103 @@
 // Packs packages, serves their registry, and installs sandbox tool projects.
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
-import { expect } from 'bun:test';
-import { testdir } from 'testdirs';
-import { createHash } from 'node:crypto';
 import { join, delimiter } from 'node:path';
-import { parse, stringify } from 'smol-toml';
-import { rejection } from '#tests/setup/matchers.ts';
+import { openSession } from '#cli/session.ts';
+import { isWindows } from '#tests/setup/system.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { parse, stringify } from '@decimalturn/toml-patch';
 import { installNpmTools } from '#cli/tools/npm/project.ts';
 import type { InstallContext } from '#cli/types/install.ts';
-import { isWindows } from '#tests/setup/operating-systems.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import type { SandboxSettings } from '#tests/types/sandbox.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
+import { runGspot, spawnGspot } from '#tests/setup/run-gspot.ts';
 import { installPythonTools } from '#cli/tools/python/project.ts';
 import { prepareLockfiles } from '#cli/tools/project-lockfiles.ts';
 import { selectLockfileName } from '#cli/tools/npm/tool-project.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { testModules, installedModules } from '#tests/setup/modules.ts';
-import type { LockedInputs, ToolProjectFiles } from '#tests/types/npm.ts';
 import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
-import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/e2e.ts';
+import type { LockedInputs, ToolProjectFiles } from '#tests/types/packages.ts';
 import { open, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
-
-import {
-    MISE_TRUST,
-    HTTP_REDIRECT,
-    REGISTRY_HOST,
-    NPM_PACK_FLAGS,
-    PINNED_TOOLS_FILE,
-    UPSTREAM_REGISTRY,
-    GSPOT_PACKAGE_SCOPE,
-    TEST_RUN_FOLDER_NAME,
-    PACKED_PACKAGES_FILE,
-} from '#tests/config/integration.ts';
-
-const npmPackSchema = z
-    .tuple([z.object({ filename: z.string() } satisfies SchemaShape<{ filename: string }>)])
-    .rest(z.unknown()) satisfies z.ZodType<[{ filename: string }, ...unknown[]]>;
-const packedPackagesSchema = z.array(
-    z.object({
-        name: z.string(),
-        version: z.string(),
-        filename: z.string(),
-        integrity: z.string(),
-        bin: z.record(z.string(), z.string()).optional(),
-        dependencies: z.record(z.string(), z.string()).optional(),
-        peerDependencies: z.record(z.string(), z.string()).optional(),
-    } satisfies SchemaShape<PackedPackage>),
-);
+import { MISE_TRUST, PINNED_TOOLS_FILE, TEST_RUN_FOLDER_NAME } from '#tests/data/test-setup.ts';
 
 /** Give real hook repositories the same authored runtime pins as this repository. */
-export async function installRuntimes(root: string): Promise<void> {
-    const runtimeSettings = parse(await readFile(join(import.meta.dir, '../..', PINNED_TOOLS_FILE), 'utf8'));
-    const tools = z.object({ bun: z.string(), node: z.string() }).parse(runtimeSettings['tools']);
+async function installRuntimes(root: string): Promise<void> {
+    const runtimeSettings: unknown = parse(await readFile(join(import.meta.dir, '../..', PINNED_TOOLS_FILE), 'utf8'));
+    const { tools } = z.object({ tools: z.object({ bun: z.string(), node: z.string() }) }).parse(runtimeSettings);
     await writeFile(join(root, PINNED_TOOLS_FILE), stringify({ tools }));
     const trusted = await runCommand([...MISE_TRUST, PINNED_TOOLS_FILE], { cwd: root });
     if (trusted.code !== 0) throw new Error(`Sandbox runtime trust failed: ${trusted.stdout}${trusted.stderr}`);
 }
 
 /** Resolve the installed test package executables before system tools. */
-export function toolsPath(): string {
+function buildToolsPath(): string {
     return [join(testModules, '.bin'), join(installedModules, '.bin'), readEnvironmentVariable('PATH') ?? ''].join(
         delimiter,
     );
 }
 
 /** Return the folder that holds the current test run's packages and tool paths. */
-export function testRunFolder(): string {
+function testRunFolder(): string {
     return join(tmpdir(), TEST_RUN_FOLDER_NAME);
 }
 
 /** Resolve the integration preload command before installed tools. */
-export function sandboxPath(): string {
+function buildSandboxPath(): string {
     const folder = testRunFolder();
-    return [join(folder, 'bin'), toolsPath()].join(delimiter);
+    return [join(folder, 'bin'), buildToolsPath()].join(delimiter);
 }
 
 /** Initialize a sandbox and install the tools selected for its integration tests. */
-export async function initRepository(
+async function installSandbox(
     root: string,
-    argv: string[],
+    commandArguments: string[],
     environment: Record<string, string>,
     settings: SandboxSettings = {},
+    prepare?: (root: string, environment: Record<string, string>) => void | Promise<void>,
 ): Promise<void> {
-    const initialized = await spawnGspot(root, argv, environment);
-    expect(initialized.code, `Sandbox init failed: ${initialized.stdout}${initialized.stderr}`).toBe(0);
-
-    if (settings.level !== undefined) {
-        const level = await spawnGspot(root, ['set', 'level', settings.level], environment);
-        if (level.code !== 0) throw new Error(`Sandbox level failed: ${level.stdout}${level.stderr}`);
-    }
+    await runSandboxStep(root, commandArguments, environment, 'init');
+    if (settings.level !== undefined)
+        await runSandboxStep(root, ['set', 'level', settings.level], environment, 'level');
     for (const configuration of settings.without ?? []) {
-        const removed = await spawnGspot(root, ['remove', configuration], environment);
-        if (removed.code !== 0) throw new Error(`Sandbox remove failed: ${removed.stdout}${removed.stderr}`);
+        await runSandboxStep(root, ['remove', configuration], environment, 'remove');
     }
+    await prepare?.(root, environment);
+    await runSandboxStep(root, ['install'], environment, 'install');
+}
 
-    await using registry = await createInstallationRegistry(root, runCommand);
-    Object.assign(environment, registry.environment);
-    const installed = await spawnGspot(root, ['install'], environment);
-    if (installed.code !== 0) throw new Error(`Sandbox install failed: ${installed.stdout}${installed.stderr}`);
+/** Run a public setup step and report its captured output when it fails. */
+async function runSandboxStep(
+    root: string,
+    commandArguments: string[],
+    environment: Record<string, string>,
+    step: string,
+): Promise<void> {
+    const result = await spawnGspot(root, commandArguments, environment);
+    if (result.code !== 0) throw new Error(`Sandbox ${step} failed: ${result.stdout}${result.stderr}`);
 }
 
 /** Generate the sandbox's tool files and install its tools through the public CLI commands. */
-export async function installToolProjects(root: string): Promise<void> {
+async function installToolProjects(root: string): Promise<void> {
     const applied = await spawnGspot(root, ['apply']);
     if (applied.code !== 0) throw new Error(`Sandbox apply failed: ${applied.stdout}${applied.stderr}`);
-    await using registry = await createInstallationRegistry(root, runCommand);
-    const installed = await spawnGspot(root, ['install'], registry.environment);
+    const installed = await spawnGspot(root, ['install']);
     if (installed.code !== 0) throw new Error(`Sandbox install failed: ${installed.stdout}${installed.stderr}`);
 }
 
-/** Pack the local npm packages once for the current integration run. */
-export async function packPackages(
-    work: string,
-    declarations: readonly RegistryPackage[],
-    execute: typeof runCommand,
-): Promise<string> {
-    const packages: PackedPackage[] = [];
-    for (const { source, ...declaration } of declarations) {
-        const result = await execute(['npm', 'pack', source, ...NPM_PACK_FLAGS, '--pack-destination', work], {
-            cwd: work,
-        });
-        if (result.code !== 0) throw new Error(`Package packing failed: ${result.stdout}${result.stderr}`);
-        const { filename } = npmPackSchema.parse(JSON.parse(result.stdout))[0];
-        const archive = await readFile(join(work, filename));
-        packages.push({
-            ...declaration,
-            filename: join(work, filename),
-            integrity: `sha512-${createHash('sha512').update(archive).digest('base64')}`,
-        });
-    }
-    const manifest = join(work, PACKED_PACKAGES_FILE);
-    await writeFile(manifest, JSON.stringify(packages));
-    return manifest;
-}
-
-/** Serve packed npm packages and the additional packages selected by a credential test. */
-export async function createNpmRegistry(
-    work: string,
-    options: { declarations: readonly RegistryPackage[]; execute: typeof runCommand; token?: string },
-): Promise<NpmRegistry> {
-    const folder = testRunFolder();
-    const files = [join(folder, PACKED_PACKAGES_FILE)];
-    if (options.declarations.length > 0) files.push(await packPackages(work, options.declarations, options.execute));
-
-    const packages = new Map<string, PackedPackage>();
-    for (const file of files)
-        for (const entry of packedPackagesSchema.parse(JSON.parse(await readFile(file, 'utf8'))))
-            packages.set(entry.name, entry);
-    let requests = 0;
-    const server = Bun.serve({
-        hostname: REGISTRY_HOST,
-        port: 0,
-        fetch(request) {
-            requests++;
-            if (options.token !== undefined && request.headers.get('authorization') !== `Bearer ${options.token}`)
-                return Response.json({ error: 'Authentication required' }, { status: 401 });
-            const url = new URL(request.url);
-            const pathname = decodeURIComponent(url.pathname.slice(1));
-            const name = pathname.split('/-/', 1).join('');
-            const entry = packages.get(name);
-            if (entry === undefined)
-                return name.startsWith(GSPOT_PACKAGE_SCOPE)
-                    ? Response.json({ error: 'Package not found' }, { status: 404 })
-                    : Response.redirect(new URL(url.pathname, UPSTREAM_REGISTRY), HTTP_REDIRECT);
-            const tarball = `${name}/-/${name.slice(name.lastIndexOf('/') + 1)}-${entry.version}.tgz`;
-            if (pathname.includes('/-/'))
-                return pathname === tarball
-                    ? new Response(Bun.file(entry.filename))
-                    : Response.json({ error: 'Package not found' }, { status: 404 });
-            const { filename: _filename, integrity, ...manifest } = entry;
-            return Response.json({
-                name,
-                'dist-tags': { latest: entry.version },
-                versions: {
-                    [entry.version]: { ...manifest, dist: { tarball: `${url.origin}/${tarball}`, integrity } },
-                },
-            });
-        },
-    });
-    const url = `http://${REGISTRY_HOST}:${String(server.port)}`;
-    const npmrc = join(work, '.npmrc');
-    await writeFile(npmrc, `@gspothq:registry=${url}/\n`, { mode: 0o600 });
-    return {
-        url,
-        npmrc,
-        get requests() {
-            return requests;
-        },
-        async [Symbol.asyncDispose]() {
-            await server.stop(true);
-        },
-    };
-}
-
-/** Give one installation its private npm settings while local packages remain unpublished. */
-export async function createInstallationRegistry(
-    root: string,
-    execute: typeof runCommand,
-): Promise<AsyncDisposable & { environment: Record<string, string> }> {
-    const resources = new AsyncDisposableStack();
-    try {
-        const environment: Record<string, string> = {};
-        if (await Bun.file(join(root, '.gspot/package.json')).exists()) {
-            const work = resources.use(await testdir());
-            const registry = resources.use(await createNpmRegistry(work.path, { declarations: [], execute }));
-            environment['NPM_CONFIG_USERCONFIG'] = registry.npmrc;
-        }
-        return {
-            environment,
-            async [Symbol.asyncDispose]() {
-                await resources.disposeAsync();
-            },
-        };
-    } catch (error) {
-        await resources.disposeAsync();
-        throw error;
-    }
-}
-
 /** Check that a refused install reports its reason before making another registry request. */
-export async function expectRefusedInstall(
+async function captureInstallRefusal(
     root: string,
     tools: Iterable<ToolDeclaration>,
-    diagnostic: string,
     registry: { readonly requests: number },
-): Promise<void> {
+): Promise<{ message: string; requests: number }> {
     using owner = openWriter(root);
     const session = await openSession(root);
     const requests = registry.requests;
@@ -243,17 +105,17 @@ export async function expectRefusedInstall(
         owner.files.read('.gspot/package.json') === undefined
             ? installPythonTools(buildInstallContext(session, owner), 'uv')
             : installNpmTools({ ...buildInstallContext(session, owner), tools: [...tools] });
-    expect(await rejection(installation)).toContain(diagnostic);
-    expect(registry.requests).toBe(requests);
+    return { message: await captureRejection(installation), requests: registry.requests - requests };
 }
 
 /** Resolve and write the selected project inputs before exercising locked installation. */
-export async function writeLockedInputs(root: string, suppliedLog?: Writer): Promise<LockedInputs> {
+async function writeLockedInputs(root: string, suppliedLog?: Writer): Promise<LockedInputs> {
     using resources = new DisposableStack();
-    const log = suppliedLog ?? resources.use(openWriter(root));
+    const applied = await runGspot(root, ['apply']);
+    if (applied.code !== 0) throw new Error(`Sandbox apply failed: ${applied.stdout}${applied.stderr}`);
     const session = await openSession(root);
     const generated = generate(session);
-    writeGeneratedFiles(session, generated, log);
+    const log = suppliedLog ?? resources.use(openWriter(root));
     if (log.files.read('.gspot/mise.toml') !== undefined) {
         const trusted = await runCommand(['mise', 'trust', '.gspot/mise.toml'], { cwd: root });
         if (trusted.code !== 0) throw new Error(`Sandbox tool trust failed: ${trusted.stdout}${trusted.stderr}`);
@@ -277,7 +139,7 @@ export async function writeLockedInputs(root: string, suppliedLog?: Writer): Pro
 }
 
 /** Link the installed TypeScript package and its executable launchers. */
-export async function installCompiler(root: string, folder = join(root, 'node_modules')): Promise<string> {
+async function installCompiler(root: string, folder = join(root, 'node_modules')): Promise<string> {
     await mkdir(folder, { recursive: true });
     const kind = isWindows ? 'junction' : 'dir';
     await symlink(await realpath(join(installedModules, 'typescript')), join(folder, 'typescript'), kind);
@@ -286,8 +148,8 @@ export async function installCompiler(root: string, folder = join(root, 'node_mo
 }
 
 /** Captures the generated manifest, lockfile, and ownership bytes before an installation journey. */
-export async function readToolProjectFiles(root: string, installer: PackageManager['name']): Promise<ToolProjectFiles> {
-    const lockfilePath = join(root, '.gspot', selectLockfileName(installer));
+async function readToolProjectFiles(root: string, packageManager: PackageManager['name']): Promise<ToolProjectFiles> {
+    const lockfilePath = join(root, '.gspot', selectLockfileName(packageManager));
     await using lockfile = await open(lockfilePath, 'r');
     const attributes = await lockfile.stat();
     return {
@@ -304,7 +166,7 @@ export async function readToolProjectFiles(root: string, installer: PackageManag
  * @param writer the locked sandbox writer.
  * @returns generated inputs, selected tools, and an empty install command log.
  */
-export function buildInstallContext(session: Session, writer: Writer): InstallContext {
+function buildInstallContext(session: Session, writer: Writer): InstallContext {
     return {
         session,
         writer,
@@ -314,3 +176,17 @@ export function buildInstallContext(session: Session, writer: Writer): InstallCo
         steps: [],
     };
 }
+
+export {
+    testRunFolder,
+    runSandboxStep,
+    installSandbox,
+    installRuntimes,
+    installCompiler,
+    buildSandboxPath,
+    writeLockedInputs,
+    installToolProjects,
+    buildInstallContext,
+    readToolProjectFiles,
+    captureInstallRefusal,
+};

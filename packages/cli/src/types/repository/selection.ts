@@ -24,7 +24,7 @@ export type FileMatch = {
 /** Configuration choices declared at the root and in project scopes. */
 export type ConfigurationSelection = {
     configurations: string[];
-    scope: Record<string, { configurations: string[]; removed_configurations: string[] }>;
+    scopes: Record<string, { configurations: string[]; removed_configurations: string[] }>;
     removed_configurations: string[];
 };
 

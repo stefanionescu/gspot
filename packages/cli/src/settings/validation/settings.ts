@@ -16,12 +16,11 @@ import { type Settings, type KnownSettings } from '#cli/types/settings/values.ts
 import { RECORD_FIELDS, SETTINGS_REFERENCE_URL } from '#cli/config/settings/file.ts';
 import { listCheckIds, readManifests, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import { validateScopePaths, validateExtraOptions, validateDisabledRules } from '#cli/settings/validation/values.ts';
-
 /**
- * Format a validation issue with the settings file and its declaration path.
- * @param path the settings file path.
- * @param issue the schema issue with its setting path.
- * @returns one diagnostic for each invalid setting.
+ * Name the invalid setting and retain the validator’s explanation.
+ * @param path the setting or field that the issue concerns.
+ * @returns the setting path and its validation failure
+ * @param issue the validation message supplied by the schema.
  */
 function formatSettingsIssue(path: string, issue: z.core.$ZodIssue): string[] {
     const branches = issue.code === 'invalid_union' ? issue.errors : [];
@@ -53,10 +52,6 @@ function formatSettingsIssue(path: string, issue: z.core.$ZodIssue): string[] {
     });
 }
 
-/**
- * Reject invalid settings with their file and key paths.
- * @param errors the settings errors to print.
- */
 function throwErrors(errors: SettingsError[]): never {
     throw new GspotError('settings', errors.map((error) => formatSettingsError(error, SETTINGS_FILE)).join('\n'));
 }
@@ -64,17 +59,16 @@ function throwErrors(errors: SettingsError[]): never {
 // Commands and check execution validate the same settings.
 
 /**
- * Collect selection, scope, and tool-setting errors through the shared validation path.
- * @param settings the parsed settings.
- * @param root the repository root when this run checks file paths.
- * @param reads the file reads for this validation run.
- * @returns the errors with their setting paths.
+ * Validate written selections, tool options, ignores, and paths before a command uses them.
+ * @param settings the settings to validate before execution.
+ * @param repositoryRoot the optional folder for checking declared scope paths.
+ * @param reads the file reads and parsed values shared by this run.
  */
-function validateSettings(settings: Settings, root: string | undefined, reads: ReadCache): void {
+function validateSettings(settings: Settings, repositoryRoot: string | undefined, reads: ReadCache): void {
     const manifests = readManifests(reads);
     const declarations: ConfigurationDeclaration[] = [
         ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
-        ...Object.values(settings.scope).flatMap((scope, scopeIndex) =>
+        ...Object.values(settings.scopes).flatMap((scope, scopeIndex) =>
             scope.configurations.map((name, index) => ({ name, path: ['scope', scopeIndex, 'configurations', index] })),
         ),
     ];
@@ -82,10 +76,10 @@ function validateSettings(settings: Settings, root: string | undefined, reads: R
     if (unknown.length > 0) throwErrors(unknown);
     const tools = listDistinctTools([...manifests.values()]);
     const bundledChecks = listCheckIds([], reads);
-    const checks = listCheckIds(Object.values(settings.check), reads);
+    const checks = listCheckIds(Object.values(settings.commandChecks), reads);
     const knownBySelection = new Map<string, KnownSettings>();
     const scopes = new Map(
-        ['', ...Object.keys(settings.scope)].map((scope) => {
+        ['', ...Object.keys(settings.scopes)].map((scope) => {
             const selected = selectForScope(settings, scope, manifests);
             const key = JSON.stringify(selected.map((manifest) => manifest.configuration.name));
             let known = knownBySelection.get(key);
@@ -100,7 +94,7 @@ function validateSettings(settings: Settings, root: string | undefined, reads: R
     scopes.delete('');
     const errors: SettingsError[] = [
         ...validateSettingReasons(settings),
-        ...Object.values(settings.check).flatMap((entry, index) =>
+        ...Object.values(settings.commandChecks).flatMap((entry, index) =>
             bundledChecks.includes(entry.name)
                 ? [
                       {
@@ -116,7 +110,7 @@ function validateSettings(settings: Settings, root: string | undefined, reads: R
                 : [{ path: ['ignore', index, 'check'], message: formatUnknownCheck(entry.check, checks) }],
         ),
         ...validateDisabledRules(settings, manifests),
-        ...(root === undefined ? [] : validateScopePaths(root, settings)),
+        ...(repositoryRoot === undefined ? [] : validateScopePaths(repositoryRoot, settings)),
         ...listSettingsTables(settings).flatMap(({ table, path }) =>
             validateExtraOptions(table, tools).map((error) => ({ ...error, path: [...path, ...error.path] })),
         ),
@@ -127,7 +121,7 @@ function validateSettings(settings: Settings, root: string | undefined, reads: R
 
 /**
  * A settings error as text that leads with its file, when given, and the key path it names.
- * @param error the error.
+ * @param error the refused value and its key path.
  * @param file the settings file, for a line that names it.
  * @returns the text.
  */

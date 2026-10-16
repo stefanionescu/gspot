@@ -1,6 +1,6 @@
 # Static Site
 
-Rules for a repository that produces HTML for a content delivery network (CDN) or an edge platform.
+Read this rule when you change a site that a build turns into static HTML.
 
 ## Build
 

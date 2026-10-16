@@ -1,7 +1,7 @@
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import { findDocstring, PYTHON_SOURCES } from '#cli/parsers/python.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { NON_WORD_RUN, PLACEHOLDERS } from '#cli/config/checks/language/python.ts';
 
 /**
@@ -9,7 +9,7 @@ import { NON_WORD_RUN, PLACEHOLDERS } from '#cli/config/checks/language/python.t
  * @param input the selected scope, files, and settings.
  * @returns the findings for that check.
  */
-export async function pythonPlaceholderDocstrings(input: CheckInput): Promise<Finding[]> {
+export async function checkPythonPlaceholderDocstrings(input: CheckInput): Promise<Finding[]> {
     const parsed = await parseCached(input, PYTHON_SOURCES);
     const { functions } = parsed;
     return functions.flatMap((definition) => {
@@ -19,7 +19,7 @@ export async function pythonPlaceholderDocstrings(input: CheckInput): Promise<Fi
         const isName = plain === definition.name.toLowerCase().replaceAll('_', ' ').trim();
         if (plain !== '' && !isName && !PLACEHOLDERS.has(plain)) return [];
         return [
-            findingAt(
+            buildFinding(
                 input,
                 { file: definition.path, line: definition.node.startPosition.row + 1 },
                 'placeholder-docstring',

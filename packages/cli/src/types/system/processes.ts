@@ -1,4 +1,5 @@
 import type { Result } from 'execa';
+import type { Readable } from 'node:stream';
 
 export type SpawnResult = {
     code: number;
@@ -46,3 +47,6 @@ export type ProcessTreeControl = {
     stop: () => void;
     release: (executionFailure: unknown) => Promise<void>;
 };
+
+/** Completion and stdout required by the shared piped-process reader. */
+export type RunningProcess = PromiseLike<SpawnCompletion> & { stdout: Readable };

@@ -1,3 +1,4 @@
+// Read and compare installed tool versions.
 import semver from 'semver';
 import { realpathSync } from 'node:fs';
 import { stripVTControlCharacters } from 'node:util';
@@ -29,22 +30,26 @@ function findVersionAbove(files: Files | undefined, root: string, start: string,
 /**
  * The version a package.json above the real file of an npm tool holds, for the package the pin names.
  *
- * @param root the repository root.
+ * @param repositoryRoot the boundary for validating managed package metadata reads.
  * @param path the executable.
  * @param name the package name, or undefined for tools outside npm.
  *
  * @returns the declared version, or undefined when no package.json above the file names the package.
  */
-function readPackageVersion(root: string, path: string, name: string | undefined): string | undefined {
+function readPackageVersion(repositoryRoot: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
-    using files = isInGspotFolder(convertToPosixPath(relative(root, path))) ? openFiles(root) : undefined;
+    using files = isInGspotFolder(convertToPosixPath(relative(repositoryRoot, path)))
+        ? openFiles(repositoryRoot)
+        : undefined;
     const folder = dirname(
-        files === undefined ? realpathSync(path) : files.realPath(convertToPosixPath(relative(root, path))),
+        files === undefined
+            ? realpathSync(path)
+            : files.readRealPath(convertToPosixPath(relative(repositoryRoot, path))),
     );
     // A Windows shim in node_modules/.bin has its own file, so find its package
     // found by name beside that folder.
     const start = basename(folder) === basename(NPM_BIN_FOLDER) ? join(dirname(folder), name) : folder;
-    return findVersionAbove(files, root, start, name);
+    return findVersionAbove(files, repositoryRoot, start, name);
 }
 
 function extractVersion(text: string, tool: ToolDeclaration): string | undefined {
@@ -79,7 +84,7 @@ function findVersionFailure(
  *
  * @returns ok, outdated below the floor, newer above the pin, or error for no version.
  */
-export function classifyToolVersion(
+function classifyToolVersion(
     found: string,
     want: string | undefined,
     floor: string | undefined,
@@ -95,23 +100,23 @@ export function classifyToolVersion(
 /**
  * Read version output, using installed npm metadata when the declared package supplies the executable.
  *
- * @param root the installation root.
+ * @param installationRoot the boundary for validating installed npm metadata before the version query.
  * @param cwd the project working folder.
  * @param path the resolved executable.
  * @param tool the declared version query and package.
- * @param timeoutSeconds the tool timeout in seconds.
+ * @param timeoutSeconds the maximum time allowed for the version query.
  *
  * @returns the version or the query failure.
  */
-export function readToolVersion(
-    root: string,
+function readToolVersion(
+    installationRoot: string,
     cwd: string,
     path: string,
     tool: ToolDeclaration,
     timeoutSeconds: number,
 ): ParsedToolVersion {
     const npm = tool.installers['npm'];
-    const installedVersion = readPackageVersion(root, path, npm?.name);
+    const installedVersion = readPackageVersion(installationRoot, path, npm?.name);
     const result = spawnProcessBlocking([path, ...(tool.version_command ?? [VERSION_FLAG])], {
         cwd,
         timeoutSeconds: timeoutSeconds,
@@ -128,7 +133,7 @@ export function readToolVersion(
  *
  * @returns whether the observed version falls below the floor.
  */
-export function isBelowFloor(found: string | undefined, floor: string | undefined): boolean {
+function isBelowFloor(found: string | undefined, floor: string | undefined): boolean {
     const version = semver.coerce(found);
     const lowest = semver.coerce(floor);
     return version !== null && lowest !== null && semver.lt(version, lowest);
@@ -143,11 +148,7 @@ export function isBelowFloor(found: string | undefined, floor: string | undefine
  *
  * @returns the parsed version or its inspection failure.
  */
-export function parseVersionOutput(
-    tool: ToolDeclaration,
-    result: SpawnResult,
-    installedVersion?: string,
-): ParsedToolVersion {
+function parseVersionOutput(tool: ToolDeclaration, result: SpawnResult, installedVersion?: string): ParsedToolVersion {
     const npm = tool.installers['npm'];
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
     // An npm tool reports the version its package declares.
@@ -158,3 +159,5 @@ export function parseVersionOutput(
         return { state: 'error', note: `${tool.name} did not report a valid version: ${text}` };
     return { version };
 }
+
+export { readToolVersion, parseVersionOutput, classifyToolVersion };

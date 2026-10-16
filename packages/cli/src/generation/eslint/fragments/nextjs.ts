@@ -13,7 +13,7 @@ import {
  * @param context the selected presets, rule printer, and scope settings.
  * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildNextjsFragment(
+function buildNextjsFragment(
     context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'scope' | 'files' | 'json'>,
 ): EslintFragment {
     const { eslintPresets, eslintModule, eslintFiles, scope, files, json } = context;
@@ -56,3 +56,5 @@ export function buildNextjsFragment(
     );
     return { imports: imports, blocks: output.join('') };
 }
+
+export { buildNextjsFragment };

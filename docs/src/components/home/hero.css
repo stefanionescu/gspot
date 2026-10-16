@@ -1,0 +1,66 @@
+/* Hero. Phone: logo above a centered column. From 50rem: text left, logo right, as today. */
+.hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 24px;
+    padding-block: 40px 32px;
+    text-align: center;
+}
+
+.hero-visual {
+    order: -1;
+    width: 128px;
+    aspect-ratio: 1;
+}
+
+.hero-visual img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.hero-copy {
+    display: grid;
+    justify-items: center;
+    width: 100%;
+}
+
+.hero h1 {
+    margin: 0;
+    color: var(--sl-color-white);
+    font-size: clamp(2.5rem, 1.6rem + 3.2vw, 4rem);
+    font-weight: 550;
+    line-height: 1.05;
+    letter-spacing: -0.045em;
+    text-wrap: balance;
+}
+
+.hero .lead {
+    margin-block: 20px 0;
+    max-width: 30rem;
+    font-size: 18px;
+    line-height: 1.5;
+    text-wrap: pretty;
+}
+
+@media (width >= 50rem) {
+    .hero {
+        grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+        place-items: center stretch;
+        gap: 48px;
+        padding-block: 88px 40px;
+        text-align: start;
+    }
+
+    .hero-copy {
+        justify-items: start;
+    }
+
+    .hero-visual {
+        order: 0;
+        width: 100%;
+        max-width: 400px;
+        justify-self: end;
+    }
+}

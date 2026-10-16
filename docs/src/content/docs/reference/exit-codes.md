@@ -1,41 +1,23 @@
 ---
 title: Exit codes and environment variables
-description: The meaning of the exit codes of gspot, and the environment variables it reads.
+description: Read command exit codes and the environment variables used by gspot.
 ---
 
 | Exit code      | Meaning                                                                                                  |
 | -------------- | -------------------------------------------------------------------------------------------------------- |
-| `0`            | The command completed. Every check that ran passed; skipped checks remain listed.                        |
-| `1`            | Findings remain.                                                                                         |
+| `0`            | The command finished.                                                                                    |
+| `1`            | `check` found findings, or `doctor` found a setup problem.                                               |
 | `2`            | The run did not finish: a tool is missing, a fixer failed, a report is invalid, or the input is invalid. |
-| `130` or `143` | `gspot check` was stopped by Ctrl-C or SIGTERM.                                                          |
+| `130` or `143` | `check` or `install` was stopped by Ctrl-C or SIGTERM.                                                   |
 
-Each [command page](/reference/commands/) lists its own exit codes.
+gspot keeps exit code `2` for failure and usage errors to preserve its established exit-code contract.
+Each [command page](/reference/commands/) lists its own exit codes. `gspot doctor` exits `1` for a tool or hook that needs setup.
 
-| Variable       | Purpose                                                                                                    |
-| -------------- | ---------------------------------------------------------------------------------------------------------- |
-| `GITHUB_TOKEN` | Lets gspot read a template from a private GitHub repository, Mise reads it for tool downloads from GitHub. |
-| `NO_COLOR`     | Any non-empty value turns color off.                                                                       |
+## Environment variables
 
-For examples, see [Troubleshooting](/guides/troubleshooting/#a-check-runs-slowly).
+| Variable       | Purpose                                                                                                         |
+| -------------- | --------------------------------------------------------------------------------------------------------------- |
+| `GITHUB_TOKEN` | Lets gspot read a template from a private GitHub repository. mise also reads it for tool downloads from GitHub. |
+| `NO_COLOR`     | Any nonempty value turns color off.                                                                             |
 
-## JSON errors
-
-Commands with `--json` report a failure with the fields `error` and `message`. `error` contains the code below. `message` describes the failure and the action to take.
-
-| Code           | What failed                                 |
-| -------------- | ------------------------------------------- |
-| `arguments`    | Command arguments or flags.                 |
-| `git`          | A Git operation.                            |
-| `files`        | Preparing files for a check.                |
-| `writing`      | Saving gspot.toml.                          |
-| `filesystem`   | Reading or accessing a file.                |
-| `settings`     | A setting or the gspot.toml format.         |
-| `manifest`     | A shipped configuration manifest.           |
-| `installation` | Installing tools.                           |
-| `tool`         | Finding or running a tool.                  |
-| `output`       | Reading a tool's output.                    |
-| `skip`         | A check lacks required files or conditions. |
-| `pin`          | The repository's version pin.               |
-| `template`     | Reading or using a template.                |
-| `prompt`       | Asking for a plan to be accepted.           |
+See [JSON output](/reference/json-report/) for report fields and error codes.

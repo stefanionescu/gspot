@@ -20,5 +20,3 @@ export const TOOL_STATE_COLORS = {
     newer: 'red',
     system: 'dim',
 } as const;
-
-/** Doctor reports stale choices without changing the saved setup. */

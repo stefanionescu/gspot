@@ -1,6 +1,6 @@
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { SAFETY_PATTERNS, ALL_LEVEL_SAFETY_PATTERNS } from '#cli/config/checks/language/bash.ts';
 
 /**
@@ -8,7 +8,7 @@ import { SAFETY_PATTERNS, ALL_LEVEL_SAFETY_PATTERNS } from '#cli/config/checks/l
  * @param input the check context.
  * @returns the findings.
  */
-export async function bashSafety(input: CheckInput): Promise<Finding[]> {
+export async function checkBashSafety(input: CheckInput): Promise<Finding[]> {
     const rules = [
         ...(input.settingsFile.settings.level === 'all' ? ALL_LEVEL_SAFETY_PATTERNS : []),
         ...SAFETY_PATTERNS,
@@ -21,7 +21,7 @@ export async function bashSafety(input: CheckInput): Promise<Finding[]> {
                 .filter(([pattern]) => pattern.test(code))
                 .filter(([, rule]) => rule !== 'recursive-remove' || !isCleanup)
                 .map(([, rule, text]) =>
-                    findingAt(input, { file: file.path, line: position + 1 }, rule, `Here ${text}.`),
+                    buildFinding(input, { file: file.path, line: position + 1 }, rule, `Here ${text}.`),
                 );
         }),
     );

@@ -1,15 +1,43 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { readSettings } from '#cli/settings/read.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { COMMENTED_SETTINGS } from '#tests/config/samples/settings.ts';
+import { COMMENTED_SETTINGS } from '#tests/data/settings/edits.ts';
+import { readSettings, parseSettings } from '#cli/settings/read.ts';
 import { link, stat, symlink, readFile, writeFile } from 'node:fs/promises';
 import { setKey, updateSettings, readSettingsEdit } from '#cli/settings/edit.ts';
 import { parseTomlText, writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 
-const written = COMMENTED_SETTINGS;
+test('parsing keeps only what was written, and the settings get the defaults', () => {
+    const settings = parseSettings('[hooks]\n[rules]\nenabled = false\n', undefined, createReadCache(process.cwd()));
+    expect(settings.written).toStrictEqual({ hooks: {}, rules: { enabled: false } });
+    expect(settings.level).toBe('recommended');
+    expect(settings.hooks).toStrictEqual({ enabled: false });
+    expect(settings.rules).toStrictEqual({ enabled: false, exclude: [] });
+});
+
+test('limits are split into root and language tables', () => {
+    const settings = parseSettings(
+        'configurations = ["bash"]\n[limits]\nfile_lines = 300\nfunction_lines = { value = 80, reason = "Route tables are one ordered list each." }\npython.file_lines = { value = 400, reason = "Python modules retain their project specific size allowance." }\n',
+        undefined,
+        createReadCache(process.cwd()),
+    );
+    expect(settings.limits['file_lines']).toBe(300);
+    expect(settings.limits['function_lines']).toBe(80);
+    expect(settings.limits['python']?.['file_lines']).toBe(400);
+});
+
+test('naming settings are split by language and category', () => {
+    const settings = parseSettings(
+        'configurations = ["naming"]\n[naming]\nbanned_words = ["dispatcher"]\npython.max_words = 4\npython.parameters.max_words = 3\n',
+        undefined,
+        createReadCache(process.cwd()),
+    );
+    expect(settings.naming.banned_words).toStrictEqual(['dispatcher']);
+    expect(settings.naming['python']?.max_words).toBe(4);
+    expect(settings.naming['python']?.['parameters']?.max_words).toBe(3);
+});
 
 test('a TOML syntax error names the file, line and column', () => {
     expect(() => parseTomlText('"🚦前言"=2026-04-31\n', 'https://example.com/team.toml', 'template')).toThrow(
@@ -22,7 +50,7 @@ test('a TOML syntax error names the file, line and column', () => {
 
 test('an edit of a file with invalid UTF-8 is refused and the file is unchanged', async () => {
     await using sandbox = await testdir();
-    const invalid = Buffer.concat([Buffer.from(written), Buffer.from([0xff])]);
+    const invalid = Buffer.concat([Buffer.from(COMMENTED_SETTINGS), Buffer.from([0xff])]);
     const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, invalid);
     expect(() => readSettingsEdit(sandbox.path)).toThrow('valid UTF-8');
@@ -33,17 +61,17 @@ test('an edit of a file with invalid UTF-8 is refused and the file is unchanged'
 test('an edit planned from old bytes is refused, and a new plan is written', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
-    await writeFile(path, written);
+    await writeFile(path, COMMENTED_SETTINGS);
     const input = readSettingsEdit(sandbox.path);
     const result = updateSettings(sandbox.path, input, (written) => {
         setKey(written, 'level', 'all');
     });
-    await writeFile(path, `${written}# Concurrent edit.\n`);
+    await writeFile(path, `${COMMENTED_SETTINGS}# Concurrent edit.\n`);
     using log = openWriter(sandbox.path);
     expect(() => {
         writeSettings(log, result.text, input.original);
     }).toThrow();
-    expect(await readFile(path, 'utf8')).toBe(`${written}# Concurrent edit.\n`);
+    expect(await readFile(path, 'utf8')).toBe(`${COMMENTED_SETTINGS}# Concurrent edit.\n`);
     const fresh = readSettingsEdit(sandbox.path);
     const next = updateSettings(sandbox.path, fresh, (written) => {
         setKey(written, 'level', 'all');
@@ -62,7 +90,7 @@ test('reading or editing a missing gspot.toml is refused and creates nothing', a
 test('writing an unchanged file does not touch it', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
-    await writeFile(path, written);
+    await writeFile(path, COMMENTED_SETTINGS);
     const input = readSettingsEdit(sandbox.path);
     const before = await stat(path);
     using log = openWriter(sandbox.path);
@@ -74,7 +102,10 @@ test.each(['symlink inside', 'symlink outside', 'hardlink'])(
     'an edit of a gspot.toml that is a link is refused and the link target is unchanged: %s',
     async (kind) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'project/source.toml': written, 'outside.toml': written });
+        await createFileTree(sandbox.path, {
+            'project/source.toml': COMMENTED_SETTINGS,
+            'outside.toml': COMMENTED_SETTINGS,
+        });
         const root = join(sandbox.path, 'project');
         const target = join(sandbox.path, kind === 'symlink outside' ? 'outside.toml' : 'project/source.toml');
         await (kind === 'hardlink'
@@ -87,6 +118,6 @@ test.each(['symlink inside', 'symlink outside', 'hardlink'])(
             }),
         ).toThrow('regular file with one link');
         expect(evaluated).toBe(false);
-        expect(await readFile(target, 'utf8')).toBe(written);
+        expect(await readFile(target, 'utf8')).toBe(COMMENTED_SETTINGS);
     },
 );

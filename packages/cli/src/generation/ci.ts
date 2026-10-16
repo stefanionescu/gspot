@@ -1,11 +1,13 @@
+// Build readable GitHub workflows and GitLab includes from selected checks.
+import type { Node, YAMLMap, YAMLSeq } from 'yaml';
 import { Scalar, Document, stringify } from 'yaml';
-import { systemSkip } from '#cli/planning/skips.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { name as cliName } from '../../package.json';
+import { findSystemSkip } from '#cli/planning/skips.ts';
+import { formatHeader } from '#cli/generation/header.ts';
 import { TOOL_BUILDS } from '#cli/config/configurations.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
-import { hashCommentHeader } from '#cli/generation/header.ts';
-import { requiredToolNames } from '#cli/planning/needed-tools.ts';
+import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 import { findMisePin, findMissingBuild } from '#cli/configurations/tools.ts';
@@ -13,9 +15,11 @@ import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.
 
 import {
     CI_PINS,
+    CI_NODE,
     ZERO_SHAS,
     GITLAB_RULES,
     CACHED_PATHS,
+    CI_STEP_NAMES,
     GITHUB_EVENTS,
     CI_CACHE_FILES,
     GITHUB_WORKFLOW,
@@ -44,7 +48,7 @@ function buildCheckScript(command: string): string {
         'case "${base}" in',
         `    '' | ${ZERO_SHAS.join(' | ')}) ${command} ;;`,
         '    *)',
-        `        ${command} --changed --base "\${base}"`,
+        `        ${command} --changed "\${base}"`,
         '        ;;',
         'esac',
     ].join('\n');
@@ -53,7 +57,7 @@ function buildCheckScript(command: string): string {
 // The selected package client shares the same mise invocation as Node and the published CLI.
 function buildGspotCommand(pipeline: Pipeline): string {
     const client = pipeline.npmClient;
-    const tools = ['node@24', `npm:${cliName}@${pipeline.version}`];
+    const tools = [CI_NODE, `npm:${cliName}@${pipeline.version}`];
     if (client !== undefined && client.name !== 'npm') tools.push(`${client.name}@${client.version}`);
     return `mise exec ${tools.map((tool) => quoteArgument(tool)).join(' ')} -- gspot`;
 }
@@ -61,9 +65,9 @@ function buildGspotCommand(pipeline: Pipeline): string {
 // Both providers select manual checks and their program builds for the machine that runs them.
 function selectManualChecks(pipeline: Pipeline, platform: Pipeline['operatingSystems'][number], arch: string) {
     const checks = pipeline.manualChecks.filter(
-        (planned) => systemSkip(planned.check, planned.tool, { platform, arch }) === undefined,
+        (planned) => findSystemSkip(planned.check, planned.tool, { platform, arch }) === undefined,
     );
-    const required = new Set(checks.flatMap((check) => requiredToolNames(check)));
+    const required = new Set(checks.flatMap((check) => listRequiredTools(check)));
     const tools = pipeline.manualTools.flatMap((tool) => {
         const pin = findMisePin(tool);
         return pin !== undefined && required.has(tool.name) && findMissingBuild(tool, platform, arch) === undefined
@@ -92,22 +96,44 @@ function buildJob(
         ...(check.condition === undefined ? {} : { if: check.condition }),
         defaults: { run: { shell: 'bash' } },
         steps: [
-            { uses: buildPinnedAction(CI_PINS.actions.checkout), with: CHECKOUT_OPTIONS },
+            { name: CI_STEP_NAMES.checkout, uses: buildPinnedAction(CI_PINS.actions.checkout), with: CHECKOUT_OPTIONS },
             {
+                name: CI_STEP_NAMES.cache,
                 uses: buildPinnedAction(CI_PINS.actions.cache),
                 with: {
                     key: `gspot-\${{ runner.os }}-\${{ runner.arch }}-\${{ hashFiles(${cacheFiles}) }}`,
                     path: `${CACHED_PATHS.join('\n')}\n`,
                 },
             },
-            { uses: buildPinnedAction(CI_PINS.actions.mise), with: { version: CI_PINS.mise.version, cache: false } },
+            {
+                name: CI_STEP_NAMES.mise,
+                uses: buildPinnedAction(CI_PINS.actions.mise),
+                with: { version: CI_PINS.mise.version, cache: false },
+            },
             ...(pipeline.setupCommand === undefined
                 ? []
-                : [{ run: pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' ') }]),
-            { run: `${command} install` },
+                : [
+                      {
+                          name: CI_STEP_NAMES.setup,
+                          run: pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' '),
+                      },
+                  ]),
+            { name: CI_STEP_NAMES.install, run: `${command} install` },
             structuredClone(check.step),
         ],
     };
+}
+
+// Keep provider job and step groups visually separate without changing their YAML values.
+function spaceWorkflowGroups(workflow: Document): void {
+    const root = workflow.contents as YAMLMap<Scalar, Node>;
+    for (const { key } of root.items.slice(1)) key.spaceBefore = true;
+    const jobs = workflow.get('jobs', true) as YAMLMap<Scalar, YAMLMap<Scalar, Node>>;
+    for (const { key } of jobs.items.slice(1)) key.spaceBefore = true;
+    for (const { value } of jobs.items) {
+        const steps = (value as YAMLMap<Scalar, Node>).get('steps') as YAMLSeq<Node>;
+        for (const step of steps.items.slice(1)) step.spaceBefore = true;
+    }
 }
 
 /**
@@ -117,11 +143,11 @@ function buildJob(
  *
  * @returns the GitHub workflow file.
  */
-export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
+function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
     const command = `${buildGspotCommand(pipeline)} check`;
     const check: GithubCheck = {
         step: {
-            name: 'Check',
+            name: CI_STEP_NAMES.check,
             env: {
                 [CI_BASE_VARIABLE]: GITHUB_BASE_EXPRESSION,
             },
@@ -129,43 +155,47 @@ export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
         },
     };
     const platforms = [...new Set([...pipeline.operatingSystems, ...(pipeline.hasSwift ? (['macos'] as const) : [])])];
-    const workflow = new Document({
-        name: 'gspot',
-        on: GITHUB_EVENTS,
-        permissions: { contents: 'read' },
-        concurrency: GITHUB_CONCURRENCY,
-        jobs: Object.fromEntries(
-            platforms.flatMap((platform) => {
-                const machine = CI_PINS.githubRunners[platform];
-                const manual = selectManualChecks(pipeline, platform, machine.arch);
-                const jobs: [string, Record<string, unknown>][] = [
-                    [`check-${platform}`, buildJob(pipeline, platform, check)],
-                ];
-                if (manual.checks.length > 0)
-                    jobs.push([
-                        `manual-${platform}`,
-                        buildJob(pipeline, platform, {
-                            condition: GITHUB_MANUAL_CONDITION,
-                            step: {
-                                name: 'Manual checks',
-                                run:
-                                    [
-                                        ...(manual.tools.length === 0
-                                            ? []
-                                            : [
-                                                  `(cd ${DOT_GSPOT} && mise install ${manual.tools.map((element) => quoteArgument(element)).join(' ')})`,
-                                              ]),
-                                        `${buildGspotCommand(pipeline)} check --only ${manual.checks.map((element) => quoteArgument(element)).join(' ')}`,
-                                    ].join('\n') + '\n',
-                            },
-                        }),
-                    ]);
-                return jobs;
-            }),
-        ),
-    });
+    const workflow = new Document(
+        {
+            name: 'gspot',
+            on: GITHUB_EVENTS,
+            permissions: { contents: 'read' },
+            concurrency: GITHUB_CONCURRENCY,
+            jobs: Object.fromEntries(
+                platforms.flatMap((platform) => {
+                    const machine = CI_PINS.githubRunners[platform];
+                    const manual = selectManualChecks(pipeline, platform, machine.arch);
+                    const jobs: [string, Record<string, unknown>][] = [
+                        [`check-${platform}`, buildJob(pipeline, platform, check)],
+                    ];
+                    if (manual.checks.length > 0)
+                        jobs.push([
+                            `manual-${platform}`,
+                            buildJob(pipeline, platform, {
+                                condition: GITHUB_MANUAL_CONDITION,
+                                step: {
+                                    name: CI_STEP_NAMES.manual,
+                                    run:
+                                        [
+                                            ...(manual.tools.length === 0
+                                                ? []
+                                                : [
+                                                      `(cd ${DOT_GSPOT} && mise install ${manual.tools.map((element) => quoteArgument(element)).join(' ')})`,
+                                                  ]),
+                                            `${buildGspotCommand(pipeline)} check --only ${manual.checks.map((element) => quoteArgument(element)).join(' ')}`,
+                                        ].join('\n') + '\n',
+                                },
+                            }),
+                        ]);
+                    return jobs;
+                }),
+            ),
+        },
+        { aliasDuplicateObjects: false },
+    );
+    spaceWorkflowGroups(workflow);
     const path = GITHUB_WORKFLOW;
-    const content = `${hashCommentHeader()}${workflow.toString({ lineWidth: 0 })}`;
+    const content = `${formatHeader(path)}${workflow.toString({ lineWidth: 0 })}`;
     return { path, content, kind: 'workflow' };
 }
 
@@ -176,7 +206,7 @@ export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
  *
  * @returns the GitLab include file.
  */
-export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
+function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
     const command = buildGspotCommand(pipeline);
     const setup = [
         ...(pipeline.setupCommand === undefined
@@ -207,7 +237,7 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
             : [
                   [
                       `if ${GITLAB_MANUAL_CONDITION}; then`,
-                      `    case "$(mise exec node@24 -- node -p 'process.platform + "/" + process.arch')" in`,
+                      `    case "$(mise exec ${CI_NODE} -- node -p 'process.platform + "/" + process.arch')" in`,
                       ...branches,
                       '    esac',
                       'fi',
@@ -223,5 +253,7 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
             script: ['set -euo pipefail', ...setup, `${command} install`, check, ...manual],
         },
     });
-    return { path, content: `${hashCommentHeader()}${content}`, kind: 'workflow' };
+    return { path, content: `${formatHeader(path)}${content}`, kind: 'workflow' };
 }
+
+export { buildGithubWorkflow, buildGitlabWorkflow };

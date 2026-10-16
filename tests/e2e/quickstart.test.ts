@@ -1,17 +1,17 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
+import { parse } from '@decimalturn/toml-patch';
 import { testdir, createFileTree } from 'testdirs';
+import { hasToolBuild } from '#tests/setup/system.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { listMisePins } from '#cli/configurations/tools.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { hasToolBuild } from '#tests/setup/operating-systems.ts';
-import { buildSpawnEnvironment } from '#cli/system/environment.ts';
-import { toolsPath, testRunFolder } from '#tests/setup/install.ts';
-import { TUTORIALS, QUICKSTART_COMMANDS } from '#tests/config/e2e.ts';
+import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
+import { testRunFolder, buildSandboxPath } from '#tests/setup/install.ts';
+import { TUTORIALS, QUICKSTART_COMMANDS } from '#tests/data/quickstart.ts';
 
 test.each(
     TUTORIALS.filter(
@@ -22,18 +22,22 @@ test.each(
     const root = join(sandbox.path, row.folder);
     await mkdir(root);
     const environment = {
-        PATH: toolsPath(),
+        PATH: buildSandboxPath(),
         MISE_CONFIG_DIR: join(sandbox.path, 'config'),
         MISE_DATA_DIR: join(sandbox.path, 'data'),
         MISE_STATE_DIR: join(sandbox.path, 'state'),
         MISE_CACHE_DIR: join(sandbox.path, 'cache'),
         MISE_CEILING_PATHS: dirname(root),
-        NPM_CONFIG_USERCONFIG: buildSpawnEnvironment()['GSPOT_TEST_NPMRC']!,
     };
 
+    const runtimePins = (
+        parse(await readFile(join(import.meta.dir, '../../mise.toml'), 'utf8')) as {
+            tools: Record<string, string>;
+        }
+    ).tools;
     await linkQuickstartTools(root, environment);
     for (const command of [
-        ['mise', 'use', 'node@24', `npm:@gspothq/cli@${packageManifest.version}`],
+        ['mise', 'use', `node@${runtimePins['node']!}`, `npm:@gspothq/cli@${packageManifest.version}`],
         ...row.projectCommands,
     ]) {
         const created = await runCommand([...command], { cwd: root, env: environment });
@@ -50,30 +54,35 @@ test.each(
     }
     const source = join(root, row.sourcePath);
     const original = await readFile(source);
-    gitOutput(root, ['add', '-A']);
-    expect(git(root, ['commit', '-qm', 'chore: Set up gspot'], environment).code).toBe(0);
+    readGitOutput(root, ['add', '-A']);
+    expect(runGit(root, ['commit', '-qm', 'chore: Set up gspot'], environment).code).toBe(0);
     await writeFile(source, row.invalidSource);
     const command = ['mise', 'exec', '--', 'gspot', 'check', '--only', row.check];
     const rejected = await runCommand(command, { cwd: root, env: environment });
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-    expect(rejected.stdout).toContain(row.diagnostic);
-    gitOutput(root, ['add', '-A']);
-    const refused = git(root, ['commit', '-qm', 'feat: Add invalid source'], environment);
-    expect(refused.code).not.toBe(0);
-    expect(refused.stdout + refused.stderr).toContain(row.rule);
-    gitOutput(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', row.sourcePath]);
+    expect(rejected.stdout).toContain(row.message);
+    rejectInvalidCommit();
+    readGitOutput(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', row.sourcePath]);
     expect(await readFile(source)).toStrictEqual(original);
     const corrected = await runCommand(command, { cwd: root, env: environment });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+
+    /** Check that the installed hook rejects the invalid staged source. */
+    function rejectInvalidCommit(): void {
+        readGitOutput(root, ['add', '-A']);
+        const refused = runGit(root, ['commit', '-qm', 'feat: Add invalid source'], environment);
+        expect(refused.code).not.toBe(0);
+        expect(refused.stdout + refused.stderr).toContain(row.rule);
+    }
 });
 
 /**
  * Link the installed pins into this tutorial's isolated mise directories.
- * @param root the tutorial repository.
+ * @param tutorialRoot the tutorial repository.
  * @param environment the tutorial's isolated mise paths.
  * @returns after linking every supported pin.
  */
-async function linkQuickstartTools(root: string, environment: Record<string, string>): Promise<void> {
+async function linkQuickstartTools(tutorialRoot: string, environment: Record<string, string>): Promise<void> {
     for (const pin of listMisePins(
         [...readManifests(createReadCache(process.cwd())).values()],
         createReadCache(process.cwd()),
@@ -88,9 +97,9 @@ async function linkQuickstartTools(root: string, environment: Record<string, str
         );
         expect(installed.code, `Quickstart tool lookup failed: ${installed.stdout}${installed.stderr}`).toBe(0);
         const location = installed.stdout.trim();
-        const directory = pin.name === 'uv' ? dirname(location) : location;
+        const folder = pin.name === 'uv' ? dirname(location) : location;
 
-        const linked = await runCommand(['mise', 'link', requirement, directory], { cwd: root, env: environment });
+        const linked = await runCommand(['mise', 'link', requirement, folder], { cwd: tutorialRoot, env: environment });
         expect(linked.code, `Quickstart tool linking failed: ${linked.stdout}${linked.stderr}`).toBe(0);
     }
 }

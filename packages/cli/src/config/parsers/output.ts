@@ -12,11 +12,11 @@ export const TRAILING_PAREN_RULE = /\((?<rule>[a-z0-9_:/@.-]+)\)$/u;
 
 export const DEFAULT_OUTPUT_FORMAT = { format: 'regex', pattern: DEFAULT_PATTERN, file_type: 'path' } as const;
 
-/** The native Semgrep source parsing diagnostic exit code. */
+/** The Semgrep source parsing diagnostic exit code. */
 export const SEMGREP_PARSE_EXIT = 3;
 
 /** Knip JSON categories and the meaning retained in every finding. */
-export const KNIP_ISSUE_CATEGORIES = [
+export const KNIP_ISSUE_TYPES = [
     'binaries',
     'catalog',
     'catalogReferences',

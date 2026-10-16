@@ -1,5 +1,7 @@
 # Security
 
+Read this rule when code handles input, authentication, redirects, or downloads.
+
 ## Input
 
 - Validate every value that enters from outside the program before use: request bodies, query strings,
@@ -43,7 +45,7 @@
 - Verify webhook signatures against the raw body before decoding, and handle replay with an
   idempotency key.
 - Cookies that carry sessions: `HttpOnly`, `Secure`, `SameSite`, explicit `Max-Age`, non-default
-  name. Writes never happen on `GET`. A cookie session needs CSRF protection on every
+  name. Writes never happen on `GET`. A cookie session needs cross-site request forgery (CSRF) protection on every
   state-changing request.
 
 ## Builds

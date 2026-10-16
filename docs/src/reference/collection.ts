@@ -1,86 +1,44 @@
 import type { Loader } from 'astro/loaders';
-import { commandPages } from './commands.ts';
-import { gspotTomlPage } from './gspot-toml.ts';
-import { checkPage, toolLabel } from './checks.ts';
-import { configurationPage } from './configurations.ts';
+import { buildCommandPages } from './commands.ts';
+import { referenceData } from '#cli/reference.ts';
+import { buildSettingsPages } from './settings.ts';
+import { buildPluginPages } from './eslint-plugin.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
-import { pluginReferencePages } from './eslint-plugin.ts';
 import type { ReferencePage } from '../types/reference.ts';
-import { GROUP_LABELS } from '#cli/config/configurations.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
-import { cell, table, section, referencePage } from './markdown.ts';
-import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
-import { PAGES_FOLDER, REFERENCE_FOLDERS, REFERENCE_IDS_KEY, REFERENCE_COLLECTION_NAME } from '../config/reference.ts';
+import { buildCheckPage, buildCheckIndex } from './checks.ts';
+import { buildConfigurationPages } from './configurations.ts';
 
-function configurationSections(manifests: Manifest[]): string {
-    const sections: string[] = [];
-    for (const [group, title] of Object.entries(GROUP_LABELS)) {
-        const entries = manifests
-            .filter((manifest) => manifest.configuration.group === group)
-            .map(
-                ({ configuration }) =>
-                    `- [${configuration.title}](/reference/${REFERENCE_FOLDERS.configurations}/${configuration.name}/): ${configuration.description}`,
-            );
-        sections.push(section(title, entries.join('\n')));
-    }
-    return sections.join('');
-}
+import {
+    PAGES_FOLDER,
+    SECTION_HEADING,
+    REFERENCE_FOLDERS,
+    REFERENCE_IDS_KEY,
+    REFERENCE_COLLECTION_NAME,
+} from '../config/reference.ts';
 
 /**
- * Every generated reference page, keyed by its Markdown path: commands, configurations, checks, plugin rules, settings, and gspot.toml.
- * @returns the pages by identity
+ * Assemble generated pages from one read of the CLI reference data.
+ * @returns pages keyed by their Markdown path
  */
-function referencePages(): Map<string, ReferencePage> {
-    const pages = new Map<string, ReferencePage>();
-    for (const [path, page] of commandPages()) pages.set(path, page);
-    const manifests = readManifests(createReadCache(process.cwd()))
-        .values()
-        .toArray()
-        .toSorted((a, b) => a.configuration.name.localeCompare(b.configuration.name));
-    pages.set(
-        `${REFERENCE_FOLDERS.configurations}/index.md`,
-        referencePage(
-            'Configuration reference',
-            'Choose configurations by the files and tools they check.',
-            configurationSections(manifests),
-        ),
-    );
-    for (const manifest of manifests)
-        pages.set(
-            `${REFERENCE_FOLDERS.configurations}/${manifest.configuration.name}.md`,
-            configurationPage(manifest, manifests),
-        );
-    const checks = listChecksById(readManifests(createReadCache(process.cwd())).values());
-    const checkRows = [...checks.values()]
-        .toSorted((a, b) => a.check.name.localeCompare(b.check.name))
-        .map(({ check, configuration }) => [
-            `[\`${check.name}\`](/reference/${REFERENCE_FOLDERS.checks}/${check.name}/)`,
-            `[${configuration.configuration.name}](/reference/${REFERENCE_FOLDERS.configurations}/${configuration.configuration.name}/)`,
-            check.stage,
-            check.level,
-            toolLabel(check),
-            cell(check.summary),
-        ]);
-    const index = table(['ID', 'Configuration', 'Stage', 'Level', 'Tool', 'Summary'], checkRows);
-    pages.set(
-        `${REFERENCE_FOLDERS.checks}/index.md`,
-        referencePage('Checks', `${String(checks.size)} checks declared by built-in configurations.`, index),
-    );
-
-    for (const { check, configuration } of checks.values())
-        pages.set(`${REFERENCE_FOLDERS.checks}/${check.name}.md`, checkPage(check, configuration));
-
-    pages.set('gspot-toml.md', gspotTomlPage(manifests));
-    for (const [path, page] of pluginReferencePages()) pages.set(path, page);
+function buildReferencePages(): Map<string, ReferencePage> {
+    const data = referenceData();
+    const pages = new Map([
+        ...buildCommandPages(data.commands),
+        ...buildConfigurationPages(data),
+        ...buildSettingsPages(data),
+        ...buildPluginPages(),
+        [`${REFERENCE_FOLDERS.checks}/index.md`, buildCheckIndex(data.checks, data.groups)],
+    ]);
+    for (const { check, configuration } of data.checks)
+        pages.set(`${REFERENCE_FOLDERS.checks}/${check.name}.md`, buildCheckPage(check, configuration));
     return pages;
 }
 
 /**
- * Load documentation and generated references into one Astro collection.
+ * Load hand-written and generated pages into Starlight's content collection.
  * @returns the Astro loader
  */
-export function referenceCollection(): Loader {
+export function buildReferenceCollection(): Loader {
     return {
         name: REFERENCE_COLLECTION_NAME,
         async load(context) {
@@ -88,11 +46,14 @@ export function referenceCollection(): Loader {
             for (const id of previous) context.store.delete(id);
             await docsLoader().load(context);
             const entries = [];
-            for (const [path, page] of referencePages()) {
+            for (const [path, page] of buildReferencePages()) {
                 const id = `reference/${path.slice(0, -'.md'.length)}`;
                 if (context.store.has(id)) throw new Error(`Duplicate reference identity: ${id}`);
                 const { body } = page;
-                const metadata = await context.parseData({ id, data: page.data });
+                const metadata = await context.parseData({
+                    id,
+                    data: { ...page.data, tableOfContents: SECTION_HEADING.test(body) ? undefined : false },
+                });
                 entries.push({
                     id,
                     filePath: `${PAGES_FOLDER}/${id}.md`,

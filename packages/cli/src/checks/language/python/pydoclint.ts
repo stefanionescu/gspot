@@ -1,15 +1,15 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
-import { parse } from 'smol-toml';
-import type { SchemaShape } from '#cli/types/objects.ts';
-import { type CheckResult } from '#cli/types/execution/check.ts';
+import { parse } from '@decimalturn/toml-patch';
+import type { SchemaShape } from '#cli/types/shapes.ts';
+import { type CheckResult } from '#cli/types/checks/run/check.ts';
 import { runCommandGroups } from '#cli/checks/run/command/check.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { readText, readCachedBytes } from '#cli/system/files/reads.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { findDocstring, parsePythonModule } from '#cli/parsers/python.ts';
-import { type PythonDocstringStyle, type DocstringConfiguration } from '#cli/types/checks/language.ts';
+import { type PydoclintOptions, type PythonDocstringStyle } from '#cli/types/checks/language.ts';
 
 import {
     NUMPY_DOCSTRING,
@@ -21,7 +21,7 @@ import {
     PYDOCLINT_DEFAULT_STYLE,
 } from '#cli/config/checks/language/python.ts';
 
-async function sourceStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
+async function detectDocstringStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
     const module = await parsePythonModule(path, readCachedBytes(session.reads, path).toString('utf8'), session);
     try {
         for (const node of module.tree.rootNode.descendantsOfType(['function_definition', 'class_definition'])) {
@@ -35,10 +35,14 @@ async function sourceStyle(session: Session, path: string): Promise<PythonDocstr
         module.tree.delete();
     }
 }
-async function docstringGroups(session: Session, files: TrackedFile[], declared: PythonDocstringStyle | undefined) {
+async function groupByDocstringStyle(
+    session: Session,
+    files: TrackedFile[],
+    declared: PythonDocstringStyle | undefined,
+) {
     const groups = new Map<PythonDocstringStyle | undefined, TrackedFile[]>();
     for (const file of files) {
-        const style = declared ?? (await sourceStyle(session, file.path));
+        const style = declared ?? (await detectDocstringStyle(session, file.path));
         const group = groups.get(style) ?? [];
         group.push(file);
         groups.set(style, group);
@@ -84,7 +88,7 @@ const docstringStyleSchema = z.object({
  * @param convention the scope's Ruff docstring convention.
  * @returns arguments and the declared style, when one exists.
  */
-function docstringConfiguration(text: string, convention: unknown): DocstringConfiguration {
+function parsePydoclintOptions(text: string, convention: unknown): PydoclintOptions {
     const { tool } = docstringStyleSchema.parse(parse(text));
     const inherited = tool.ruff.lint.pydocstyle.convention ?? convention;
     const style = tool.pydoclint.style ?? (inherited === 'google' || inherited === 'numpy' ? inherited : undefined);
@@ -101,12 +105,12 @@ function docstringConfiguration(text: string, convention: unknown): DocstringCon
  * @param planned the docstring check for one scope.
  * @returns findings across style batches, preserving earlier findings if a later command fails.
  */
-export async function pydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const configured = docstringConfiguration(
+export async function checkPydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+    const configured = parsePydoclintOptions(
         readText(session.root, posix.join(planned.scope.scope.path, PYPROJECT_TOML)) ?? '',
         planned.scope.view.values['tools.ruff']?.docstring_convention,
     );
-    const groups = await docstringGroups(session, planned.files, configured.style);
+    const groups = await groupByDocstringStyle(session, planned.files, configured.style);
     return runCommandGroups(
         session,
         planned,

@@ -1,17 +1,19 @@
 # Naming
 
+Read this rule when you name a file, folder, type, function, or variable.
+
 ## Casing across languages
 
 <!-- level: all -->
 
-Each language naming file states its own case table. These decisions hold across every language so
+Each language rule states its own case table. These decisions hold across every language so
 the same concept reads the same way throughout the program.
 
 | Concern               | Rule                                                                                                                                                                                                                                                                                                                                            |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Acronyms              | Follow the language: TypeScript, JavaScript treat them as words such as `parseHttpUrl`, `userId`; Swift keeps uppercase initialisms (`avatarURL`, `userID`, `apiClient` at the start of a name); Python, SQL, Bash lowercase them inside snake_case such as `http_url`, `user_id`. A platform name keeps its spelling such as `XMLHttpRequest`. |
 | Directories           | kebab-case for TypeScript, JavaScript, Bash, HTML, CSS, and static sites; snake_case for Python packages; PascalCase for Swift directories, which mirror type names.                                                                                                                                                                            |
-| On the wire           | Preserve existing external interfaces. For interfaces defined by the project, use camelCase JSON fields, kebab-case URL segments.                                                                                                                                                                                                               |
+| On the wire           | Preserve existing external interfaces. For interfaces defined by the project, use camelCase JSON fields, kebab-case URL segments. Log fields follow the logging rules.                                                                                                                                                                          |
 | Environment variables | `UPPER_SNAKE_CASE`, named by the external interface. No application prefix is required; names defined by the platform are kept verbatim.                                                                                                                                                                                                        |
 | Constants             | Module-level constants bound to a literal or a frozen object are `UPPER_SNAKE_CASE` in TypeScript, JavaScript, Python, and Bash, and lowerCamelCase in Swift.                                                                                                                                                                                   |
 
@@ -34,8 +36,14 @@ site, and add a qualifier only when the bare name has more than one meaning ther
 shorthand or drop letters from a word.
 
 Do not repeat context the enclosing type, module, directory, or package already supplies, and
-do not encode every implementation detail. One concept keeps one word across a feature. Use singular names for single values, plural names for collections, and
-named by their contents. A role word carries meaning where a primitive or weak type does not.
+do not encode every implementation detail.
+
+One concept keeps one word in the whole repository, and one word keeps one meaning. Before you give a word to a new
+concept, search the code for it. When the word already names another concept, choose another word. Add the synonyms
+you reject to `naming.banned_words`, so the naming check reports them. Use singular names for single values and
+plural names for collections. Name a collection by what it holds.
+
+A role word carries meaning where a primitive or weak type does not.
 
 | Avoid               | Prefer                        | Why                                 |
 | ------------------- | ----------------------------- | ----------------------------------- |
@@ -129,9 +137,8 @@ Preserve framework, SDK, generated, and external names exactly.
 | `mapUserRowToUserDomain` | `mapUser`                | The parameter type says row.   |
 
 Where external data enters, name the conversion for the operation and the concept, `decodeUserResponse`
-rather than `transform`. Shape suffixes such as `Row`, `DTO`, `Request`, and `Response` stay on
-the type that declares the shape and never travel onto domain entities, view models, or the
-functions that accept the shape.
+rather than `transform`. DTO means data transfer object. Shape suffixes such as `Row`, `DTO`, `Request`, and `Response` stay on the type that
+declares the shape. Never put those suffixes on domain entities, view models, or functions that accept the shape.
 
 ## Booleans and predicates
 
@@ -167,7 +174,7 @@ Name files and directories for the behavior or entity they contain, not for reus
   after the capability it implements. Prefer feature folders to top-level type buckets.
 - Move code to a shared place only for a repeated concept with one module that implements it, never for a caller
   that does not exist yet.
-- A file name avoids the banned terms identifiers avoid. Only a generated artifact may carry a
+- A file name avoids the banned words that identifiers avoid. Only a generated artifact may carry a
   timestamp in its name.
 
 | Avoid              | Prefer                        | Meaning                |

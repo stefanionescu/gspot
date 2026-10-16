@@ -1,7 +1,7 @@
 import { createTable } from '#cli/system/values.ts';
 import { isScopeCovered } from '#cli/repository/scopes.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import type { IgnoreEntry } from '#cli/types/settings/file.ts';
+import type { IgnoreRecord } from '#cli/types/settings/file.ts';
 import { ISO_DATE_LENGTH } from '#cli/config/settings/values.ts';
 import { SETTING_LANGUAGES } from '#cli/config/settings/schema.ts';
 import { tableValuesSchema } from '#cli/settings/schema/tables.ts';
@@ -14,17 +14,29 @@ import { listSettings, getSettingValue, getSettingTable, listApplicableTables } 
 import {
     type Settings,
     type ScopeView,
-    type SettingEntry,
     type KnownSettings,
     type ScopeSettings,
+    type EffectiveSetting,
 } from '#cli/types/settings/values.ts';
+
+function listNamingVariants(known: KnownSettings, settings: Settings, scope: string): EffectiveSetting[] {
+    return SETTING_LANGUAGES.flatMap((language) =>
+        Object.keys(namingCategorySchema.shape).flatMap((field) => [
+            `naming.${language}.${field}`,
+            ...NAMED_CATEGORIES.map((category) => `naming.${language}.${category}.${field}`),
+        ]),
+    )
+        .filter((key) => !known.declarations.has(key))
+        .map((key) => getSettingValue(known, settings, key, scope))
+        .filter((row) => row !== undefined);
+}
 
 /**
  * Select saved ignores whose expiry date has not arrived.
  * @param settings the repository settings, including inactive ignores.
  * @returns the ignores that apply today in UTC.
  */
-function listActiveIgnores(settings: Settings): IgnoreEntry[] {
+function listActiveIgnores(settings: Settings): IgnoreRecord[] {
     const today = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
     return settings.ignore.filter((entry) => entry.until === undefined || today < entry.until.toISOString());
 }
@@ -32,7 +44,7 @@ function listActiveIgnores(settings: Settings): IgnoreEntry[] {
 /**
  * Builds the merged view for a scope from the known settings, the settings and the scope's selection.
  * @param known the known settings of the selection.
- * @param settings the settings.
+ * @param settings the written root values and scoped overrides.
  * @param selected the selected manifests.
  * @param scope the scope path, '' for the root.
  * @returns the view the templates read.
@@ -88,18 +100,6 @@ function buildScopeView(known: KnownSettings, settings: Settings, selected: Mani
  * @param scopes the command's validated scope selections.
  * @returns the root scope's merged view.
  */
-
-function listNamingVariants(known: KnownSettings, settings: Settings, scope: string): SettingEntry[] {
-    return SETTING_LANGUAGES.flatMap((language) =>
-        Object.keys(namingCategorySchema.shape).flatMap((field) => [
-            `naming.${language}.${field}`,
-            ...NAMED_CATEGORIES.map((category) => `naming.${language}.${category}.${field}`),
-        ]),
-    )
-        .filter((key) => !known.declarations.has(key))
-        .map((key) => getSettingValue(known, settings, key, scope))
-        .filter((row) => row !== undefined);
-}
 
 /**
  * Resolve the selected known settings once into validated namespace values and numeric limits.
@@ -169,7 +169,7 @@ function buildScopeSettings(
  * @param namespaces the scope's execution tables.
  * @param rows the values already resolved through the selected declarations.
  */
-function fillTableValues(namespaces: Record<string, unknown>, rows: SettingEntry[]): void {
+function fillTableValues(namespaces: Record<string, unknown>, rows: EffectiveSetting[]): void {
     const entries = rows
         .filter((row) => Object.hasOwn(tableValuesSchema.in.shape, getSettingTable(row.key)))
         .map((row) => {

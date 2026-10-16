@@ -1,48 +1,46 @@
+// Split file arguments into command invocations within system limits.
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import { substitute, perFileCommands } from '#cli/checks/run/command/placeholders.ts';
-import type { Substitutions, CommandInvocation } from '#cli/types/execution/command.ts';
+import type { Substitutions, CommandInvocation } from '#cli/types/checks/run/command.ts';
+import { expandCommand, buildFileInvocations } from '#cli/checks/run/command/placeholders.ts';
 
 import {
     UNIX_COMMAND_LIMIT,
     WINDOWS_COMMAND_LIMIT,
     WINDOWS_ESCAPE_EXPANSION,
     WINDOWS_ARGUMENT_OVERHEAD,
-} from '#cli/config/execution/command.ts';
+} from '#cli/config/checks/run/command.ts';
 
-function argumentSize(argument: string, platform: NodeJS.Platform): number {
+function computeArgumentSize(argument: string, platform: NodeJS.Platform): number {
     return platform === 'win32'
         ? argument.length * WINDOWS_ESCAPE_EXPANSION + WINDOWS_ARGUMENT_OVERHEAD
         : Buffer.byteLength(argument) + 1;
 }
 
 /**
- * Fit command invocations within the argument budget.
- *
- * @param session the session.
- * @param planned the check.
- * @param command the authored arguments.
- * @param substitutions the files and values.
- * @param toolPath the executable path.
- *
- * @returns ordered invocations.
+ * Fit command invocations within the system argument budget.
+ * @param planned the selected check declaration.
+ * @param invocation the execution values.
+ * @param invocation.session the repository session.
+ * @param invocation.command the executable and authored arguments.
+ * @param invocation.substitutions the file paths and placeholder values.
+ * @param invocation.toolPath the resolved executable path.
+ * @returns the ordered command invocations.
  */
-export function batchedCommands(
-    session: Session,
+export function buildInvocations(
     planned: PlannedCheck,
-    command: string[],
-    substitutions: Substitutions,
-    toolPath: string,
+    invocation: { session: Session; command: string[]; substitutions: Substitutions; toolPath: string },
 ): CommandInvocation[] {
-    const fixed = substitute(session, planned, command, { ...substitutions, files: [] });
+    const { session, command, substitutions, toolPath } = invocation;
+    const fixed = expandCommand(session, planned, command, { ...substitutions, files: [] });
     fixed[0] = toolPath;
-    return fileBatches(
+    return splitFileArguments(
         substitutions.files,
         fixed.filter((part) => typeof part === 'string'),
         process.platform,
     ).flatMap((files) => {
-        const argv = substitute(session, planned, command, { ...substitutions, files });
-        argv[0] = toolPath;
-        return perFileCommands(argv, files);
+        const commandArguments = expandCommand(session, planned, command, { ...substitutions, files });
+        commandArguments[0] = toolPath;
+        return buildFileInvocations(commandArguments, files);
     });
 }
 
@@ -55,15 +53,15 @@ export function batchedCommands(
  *
  * @returns the batches, in order.
  */
-export function fileBatches(files: string[], fixed: string[], platform: NodeJS.Platform): string[][] {
+export function splitFileArguments(files: string[], fixed: string[], platform: NodeJS.Platform): string[][] {
     // Reserve space below cmd.exe's 8191-character limit for the npm wrapper.
     const limit = platform === 'win32' ? WINDOWS_COMMAND_LIMIT : UNIX_COMMAND_LIMIT;
-    const budget = limit - fixed.reduce((size, argument) => size + argumentSize(argument, platform), 0);
+    const budget = limit - fixed.reduce((size, argument) => size + computeArgumentSize(argument, platform), 0);
     if (budget < 0) throw new Error('Tool arguments exceed the command limit. Shorten the tool arguments.');
     const batches: string[][] = [[]];
     let used = 0;
     for (const file of files) {
-        const size = argumentSize(file, platform);
+        const size = computeArgumentSize(file, platform);
         if (size > budget) throw new Error(`${file} is too long for one command line. Shorten its path.`);
         const current = batches.at(-1) as string[];
         if (used + size > budget) {

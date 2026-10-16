@@ -1,7 +1,6 @@
 import { serializeBlocks } from '#cli/generation/eslint/print.ts';
-import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
 import { SVELTE_FILES, SVELTE_RULES } from '#cli/config/generation/eslint-fragments.ts';
-import { pickPresetFields, buildPresetBlocks } from '#cli/generation/eslint/presets.ts';
+import { promotePresetRules, buildArrayPresetBlocks } from '#cli/generation/eslint/presets.ts';
 import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 
 /**
@@ -23,20 +22,7 @@ function buildSvelteFragment(
     const presets = eslintPresets.get('svelte') as FragmentPresets;
     const typed = configurations.includes('typescript');
     output.push(
-        serializeBlocks(
-            eslintModule,
-            buildPresetBlocks(presets.recommended, 'sveltePlugin', (block, index, source) => [
-                {
-                    ...pickPresetFields(block),
-                    ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
-                },
-                `...${source}[${String(index)}]`,
-                {
-                    expression: `${source}[${String(index)}].rules`,
-                    rules: block.rules,
-                },
-            ]),
-        ),
+        serializeBlocks(eslintModule, buildArrayPresetBlocks(presets.recommended, 'sveltePlugin', promotePresetRules)),
         '\n',
         eslintModule.block(
             {

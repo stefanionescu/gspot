@@ -1,5 +1,7 @@
 # Bash Safety
 
+Read this rule when a shell script runs commands, handles paths, downloads files, or deletes files.
+
 ## Calling commands
 
 Use fixed command names with argument arrays, never strings built from input, and a script
@@ -138,11 +140,11 @@ Put downloaded, copied, or generated content in a temporary file, validate it wi
 parser, and replace the destination with `mv`. The file keeps the restrictive permissions
 `mktemp` gave it unless deployment needs others. Remove failed artifacts unless the script
 documents keeping them. Acquire locks atomically with a `mkdir` lock directory holding
-the owner `PID` or with `noclobber` redirection, never with a `test` followed by a create.
+the `PID` of the process that holds the lock or with `noclobber` redirection, never with a `test` followed by a create.
 
 Stop commands remove only what the script created. Validate a cleanup path from
 input or persistent state against its permitted root. Reject empty values, `/`,
-the repository root, `$HOME`, symlinks, and anything outside the owner. Keep a `mktemp -d` result
+the repository root, `$HOME`, symlinks, and anything outside the folder the script created. Keep a `mktemp -d` result
 exactly. Never widen the path to its neighbors. `|| true` never follows a destructive
 command or a required installation, publishing, build, or runtime command.
 
@@ -165,11 +167,12 @@ printf '%s\n' "$$" >"${lock_dir}/pid" || {
 trap 'rm -f -- "${lock_dir}/pid"; rmdir -- "${lock_dir}"' EXIT
 ```
 
-Put recursive deletes in one script, and accept that script with an `[[ignore]]` record for `bash/safety`.
-Validate its cleanup path against the owner root:
+Put recursive deletes in one script. To accept the `bash/safety` finding for that script, follow the suppression
+rules.
+Validate its cleanup path against the approved root folder:
 
 ```bash
-# remove_build_dir: Removes the build child of the approved owner directory.
+# remove_build_dir: Removes the build child of the approved root folder.
 remove_build_dir() {
   local owner_root build_dir
 

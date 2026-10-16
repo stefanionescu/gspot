@@ -1,7 +1,4 @@
-// Tokenize PostgreSQL literals and mask psql client syntax without shifting source positions.
-// Scans SQL tokens while preserving their source positions.
-// Tokenize PostgreSQL literals and mask psql client syntax without shifting source positions.
-// Scans SQL tokens while preserving their source positions.
+// Tokenize SQL and mask psql syntax without changing source positions.
 import type { SqlRange, SqlToken, PreparedSql } from '#cli/types/parsers/sql.ts';
 import { WORD_CHARACTER, IDENTIFIER_START, DOLLAR_TAG_BLOCKER } from '#cli/config/parsers/sql.ts';
 

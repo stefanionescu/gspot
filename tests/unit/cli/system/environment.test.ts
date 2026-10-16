@@ -1,19 +1,19 @@
 import { test, expect } from 'bun:test';
-import { useEnvironment } from '#tests/setup/environment.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
-import { useOperatingSystem } from '#tests/setup/operating-systems.ts';
+import { simulateOperatingSystem } from '#tests/setup/system.ts';
+import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { readCacheFolder, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 test.each(['linux', 'win32'] as const)('a relative cache folder setting is refused on %s', (operatingSystem) => {
-    using _operatingSystem = useOperatingSystem(operatingSystem);
+    using _operatingSystem = simulateOperatingSystem(operatingSystem);
     const name = operatingSystem === 'win32' ? 'LOCALAPPDATA' : 'XDG_CACHE_HOME';
-    using _environment = useEnvironment({ [name]: 'cache' });
+    using _environment = overrideEnvironment({ [name]: 'cache' });
     expect(() => readCacheFolder()).toThrow('must be absolute');
 });
 
 // Only the native Windows environment folds names; a plain record does not.
 test.if(process.platform === 'win32')('native environment reads ignore name case in Bun and Node', () => {
-    using _environment = useEnvironment({ GSPOT_TEST_NAME: 'native-case-folding' });
+    using _environment = overrideEnvironment({ GSPOT_TEST_NAME: 'native-case-folding' });
     expect(readEnvironmentVariable('gspot_test_name')).toBe('native-case-folding');
     const result = spawnProcessBlocking(['node', '--eval', 'process.stdout.write(process.env.gspot_test_name)'], {
         cwd: process.cwd(),

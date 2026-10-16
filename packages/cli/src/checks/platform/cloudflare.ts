@@ -1,22 +1,22 @@
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listSourcePaths } from '#cli/repository/coverage.ts';
-import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import type { HeaderBlock, HeaderBlocks } from '#cli/types/checks/platform.ts';
+import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 
 import {
     DETACH_PREFIX,
+    PATH_PREFIXES,
     REDIRECT_PARTS,
     REDIRECTS_FILE,
     FRAME_ANCESTORS,
-    SOURCE_PREFIXES,
     HTTP_HEADER_LINE,
     REQUIRED_HEADERS,
     REDIRECT_STATUS_CODES,
 } from '#cli/config/checks/platform/cloudflare.ts';
 
-function contentLines(text: string): NumberedLine[] {
+function splitContentLines(text: string): NumberedLine[] {
     return text
         .split('\n')
         .map((text, index) => ({ text, number: index + 1 }))
@@ -25,15 +25,15 @@ function contentLines(text: string): NumberedLine[] {
 
 /**
  * Read path blocks, their headers and syntax diagnostics with original line numbers.
- * @param text the headers file.
+ * @param text the complete _headers content before line parsing.
  * @returns the blocks and findings.
  */
 function parseHeadersFile(text: string): HeaderBlocks {
     const blocks: HeaderBlock[] = [];
-    const findings = contentLines(text).flatMap((line): NumberedLine[] => {
+    const findings = splitContentLines(text).flatMap((line): NumberedLine[] => {
         if (!/^\s/u.test(line.text)) {
             blocks.push({ path: line.text.trim(), line: line.number, headers: [] });
-            return SOURCE_PREFIXES.some((prefix) => line.text.startsWith(prefix))
+            return PATH_PREFIXES.some((prefix) => line.text.startsWith(prefix))
                 ? []
                 : [
                       {
@@ -63,14 +63,14 @@ function parseHeadersFile(text: string): HeaderBlocks {
  * @param text the asset contents.
  * @returns the findings, each with its line.
  */
-function redirectFindings(text: string): NumberedLine[] {
-    const entries = contentLines(text);
+function validateRedirects(text: string): NumberedLine[] {
+    const entries = splitContentLines(text);
     return entries.flatMap((line) => {
         const parts = line.text.trim().split(/\s+/u);
         const [source = '', , status] = parts;
         if (parts.length < REDIRECT_PARTS.least || parts.length > REDIRECT_PARTS.most)
             return [{ number: line.number, text: 'A redirect is a source, a destination, and an optional status.' }];
-        if (!SOURCE_PREFIXES.some((prefix) => source.startsWith(prefix)))
+        if (!PATH_PREFIXES.some((prefix) => source.startsWith(prefix)))
             return [{ number: line.number, text: 'Start the redirect source with / or https://.' }];
         if (status === undefined) return [];
         const isKnown = REDIRECT_STATUS_CODES.has(status);
@@ -82,35 +82,35 @@ function redirectFindings(text: string): NumberedLine[] {
 
 /**
  * The syntax findings of every redirects file.
- * @param input the check input.
+ * @param input the selected redirect paths and cached text reads.
  * @returns the findings.
  */
-export function cloudflareRedirects(input: CheckInput): Finding[] {
+export function checkCloudflareRedirects(input: CheckInput): Finding[] {
     return listSourcePaths(input.files, [REDIRECTS_FILE]).flatMap((path) =>
-        redirectFindings(readCachedBytes(input.reads, path).toString('utf8')).map((entry) =>
-            findingAt(input, { file: path, line: entry.number }, 'syntax', entry.text),
+        validateRedirects(readCachedBytes(input.reads, path).toString('utf8')).map((entry) =>
+            buildFinding(input, { file: path, line: entry.number }, 'syntax', entry.text),
         ),
     );
 }
 /**
  * The syntax findings of every headers file.
- * @param input the check input.
+ * @param input the selected header paths and cached text reads.
  * @returns the findings.
  */
-export function cloudflareHeaders(input: CheckInput): Finding[] {
+export function checkCloudflareHeaders(input: CheckInput): Finding[] {
     return listSourcePaths(input.files, ['_headers']).flatMap((path) =>
         parseHeadersFile(readCachedBytes(input.reads, path).toString('utf8')).findings.map((entry) =>
-            findingAt(input, { file: path, line: entry.number }, 'syntax', entry.text),
+            buildFinding(input, { file: path, line: entry.number }, 'syntax', entry.text),
         ),
     );
 }
 
 /**
  * The headers file sets the security headers for every path.
- * @param input the check input.
+ * @param input the header paths and file reads that supply the wildcard block.
  * @returns the findings.
  */
-export function cloudflareSecurityHeaders(input: CheckInput): Finding[] {
+export function checkCloudflareSecurityHeaders(input: CheckInput): Finding[] {
     return listSourcePaths(input.files, ['_headers']).flatMap((path) => {
         const { blocks } = parseHeadersFile(readCachedBytes(input.reads, path).toString('utf8'));
         const held = new Map(
@@ -125,7 +125,7 @@ export function cloudflareSecurityHeaders(input: CheckInput): Finding[] {
                     !pattern.test(held.get(name) ?? '') && !(name === 'x-frame-options' && hasFrameRule),
             )
             .map(([name]) =>
-                findingAt(
+                buildFinding(
                     input,
                     { file: path, line: 1 },
                     'missing-header',

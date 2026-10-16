@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter';
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { COMMENT_LINE, XCTEST_PREFIX, SKIP_REASON_ARGUMENT, SWIFT_STRING_LITERAL } from '#cli/config/checks/testing.ts';
 
 function hasReason(value: Node | undefined): boolean {
@@ -13,7 +13,7 @@ function hasReason(value: Node | undefined): boolean {
     return (literal[3] ?? '').replaceAll(whitespace, ' ').trim() !== '';
 }
 
-function skipReason(call: Node, position: number): Node | undefined {
+function findSkipReason(call: Node, position: number): Node | undefined {
     const argumentsNode = call.namedChildren
         .find((node) => node.type === 'call_suffix')
         ?.namedChildren.find((node) => node.type === 'value_arguments');
@@ -24,12 +24,12 @@ function skipReason(call: Node, position: number): Node | undefined {
     return positional[position]?.childForFieldName('value') ?? undefined;
 }
 
-function disabledNodes(root: Node, lines: string[]): Node[] {
+function listUnexplainedSkips(root: Node, lines: string[]): Node[] {
     const calls = root.descendantsOfType('call_expression').filter((call) => {
         const name = call.firstNamedChild?.text.replace(XCTEST_PREFIX, '') ?? '';
         const position = SKIP_REASON_ARGUMENT.get(name);
         if (position === undefined) return false;
-        return !hasReason(skipReason(call, position));
+        return !hasReason(findSkipReason(call, position));
     });
     const attributes = root.descendantsOfType('attribute').filter((attribute) => {
         if (
@@ -46,16 +46,16 @@ function disabledNodes(root: Node, lines: string[]): Node[] {
 
 /**
  * One finding for each skipped test without a reason argument or unavailable declaration without an explanation.
- * @param input the check input.
+ * @param input the selected Swift test sources and parser services.
  * @returns the findings.
  */
-export async function swiftTestsSkipReasons(input: CheckInput): Promise<Finding[]> {
+export async function checkSwiftSkipReasons(input: CheckInput): Promise<Finding[]> {
     const files = input.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
     const findings: Finding[] = [];
     await visitParsedSources({ ...input, files }, (source) => {
-        for (const node of disabledNodes(source.rootNode, source.text.split('\n')))
+        for (const node of listUnexplainedSkips(source.rootNode, source.text.split('\n')))
             findings.push(
-                findingAt(
+                buildFinding(
                     input,
                     { file: source.path, line: node.startPosition.row + 1 },
                     'disabled',

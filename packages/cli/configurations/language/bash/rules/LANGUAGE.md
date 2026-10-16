@@ -1,5 +1,7 @@
 # Bash Language
 
+Read this rule when you write Bash functions, variables, quoting, or loops.
+
 ## Functions
 
 Declare function-local variables with `local`, and separate the declaration from a command
@@ -12,7 +14,7 @@ output="$(some_command)" || return 1
 ```
 
 Preserve the documented status contract: a predicate may use status 1 for false, kept
-distinct from an execution error. At level `all`, every executable defines `main` and calls it last.
+distinct from an execution error.
 
 ```bash
 # report_unreadable_files: Reports each unreadable input and fails if any input is unreadable.
@@ -37,6 +39,8 @@ report_unreadable_files() {
 
 Use `name() { ... }` for a function that runs in the caller's shell, and a subshell body,
 `name() ( ... )`, for deliberate isolation of the caller's state and traps.
+
+Every executable defines `main` and calls it last.
 
 ## Variables and constants
 
@@ -142,8 +146,8 @@ done <"${file_list}"
 `IFS= read -r` prevents trimming and backslash handling. Do not save and restore `IFS` with
 `old_ifs="${IFS}"`, which loses the distinction between unset and empty; use a function-local
 `IFS` or a subshell. `read` treats `IFS` as a terminator, so a controlled delimited line
-keeps its trailing empty field only with an appended delimiter. Parse general CSV with
-application code with a real parser, never `IFS=, read`.
+keeps its trailing empty field only with an appended delimiter. Parse general CSV in
+application code with a real parser, never with `IFS=, read`.
 
 ```bash
 # join_path_parts: Joins the arguments with slashes.

@@ -1,17 +1,25 @@
 // Creates shared or isolated repositories for check samples.
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { afterAll, beforeAll } from 'bun:test';
-import { commitAll } from '#tests/setup/git.ts';
+import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { settingsText } from '#tests/setup/settings.ts';
-import { JSON_INDENT } from '#tests/config/formatting.ts';
-import { buildInitArguments } from '#tests/setup/init.ts';
+import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
+import { planReplacement } from '#cli/ownership/plans.ts';
+import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildInitArguments } from '#tests/setup/builders.ts';
+import type { FileContents } from '#cli/types/system/files.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import { runGspot, spawnGspot } from '#tests/setup/run-gspot.ts';
-import { sandboxPath, initRepository } from '#tests/setup/install.ts';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependency-files.ts';
-import { SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/config/sandbox.ts';
-import type { Sandbox, SandboxPlan, RuntimeDetectionRow, InstalledSandboxPlan } from '#tests/types/sandbox.ts';
+import { openWriter, writePlans } from '#cli/ownership/writer.ts';
+import { isOnDisk, encodeZipArchive } from '#tests/setup/files.ts';
+import { VALE_TOOL_FILE_PATH } from '#cli/config/system/locations.ts';
+import { runGit, commitAll, markExecutable } from '#tests/setup/git.ts';
+import { installSandbox, buildSandboxPath } from '#tests/setup/install.ts';
+import type { OriginalFile, SampleChanges } from '#tests/types/samples.ts';
+import { PROSE_SANDBOX, VALE_PACKAGE_FILES } from '#tests/data/checks/prose.ts';
+import type { Sandbox, SandboxPlan, SandboxFiles, InstalledSandboxPlan } from '#tests/types/sandbox.ts';
+import { JSON_INDENT, REGISTRY_HOST, SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/data/test-setup.ts';
+import { rm, open, chmod, lstat, mkdir, rmdir, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 
 /** Write the source and dependency declarations owned by a sandbox. */
 async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
@@ -32,118 +40,246 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
 }
 
 /** Build one isolated sandbox and run its checks in the current process. */
-export async function createSandbox(plan: SandboxPlan): Promise<Sandbox> {
-    const directory = await testdir();
-    try {
-        await writeSandbox(directory.path, plan);
-        await plan.before?.(directory.path);
-        commitAll(directory.path);
-        await Bun.write(
-            join(directory.path, 'gspot.toml'),
-            settingsText([...plan.configurations], { level: plan.level ?? 'all' }),
-        );
-        await plan.prepare?.(directory.path, {});
-        return {
-            root: directory.path,
-            environment: {},
-            run: runGspot,
-            [Symbol.asyncDispose]: directory[Symbol.asyncDispose].bind(directory),
-        };
-    } catch (error) {
-        await directory[Symbol.asyncDispose]();
-        throw error;
-    }
+async function createSandbox(plan: SandboxPlan): Promise<Sandbox> {
+    await using resources = new AsyncDisposableStack();
+    const folder = resources.use(await testdir());
+    await writeSandbox(folder.path, plan);
+    await plan.before?.(folder.path);
+    commitAll(folder.path);
+    await Bun.write(
+        join(folder.path, 'gspot.toml'),
+        buildSettingsText([...plan.configurations], { level: plan.level ?? 'all' }),
+    );
+    await plan.prepare?.(folder.path, {});
+    const owned = resources.move();
+    return {
+        root: folder.path,
+        environment: {},
+        run: runGspot,
+        [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned),
+    };
 }
 
 /** Initialize and install the tools used by one integration test file. */
-export async function prepareInstalledSandbox(
-    root: string,
-    plan: InstalledSandboxPlan,
-): Promise<Record<string, string>> {
+async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan): Promise<Record<string, string>> {
     await writeSandbox(root, plan);
     if (plan.dependencies !== undefined) await linkInstalledModules(join(root, 'node_modules'));
     await plan.before?.(root);
     commitAll(root);
-    const environment = { PATH: sandboxPath() };
-    await initRepository(root, buildInitArguments([...plan.configurations]), environment, {
-        without: [...(plan.without ?? [])],
-        level: plan.level ?? 'all',
-    });
-    await plan.prepare?.(root, environment);
+    const environment = { PATH: buildSandboxPath() };
+    await installSandbox(
+        root,
+        buildInitArguments([...plan.configurations]),
+        environment,
+        {
+            without: [...(plan.without ?? [])],
+            level: plan.level ?? 'all',
+        },
+        plan.prepare,
+    );
     return environment;
 }
 
 /** Share a sandbox after installing its tools once for the current test file. */
-export function shareInstalledSandbox(plan: InstalledSandboxPlan): () => Sandbox {
+function registerSharedSandbox(plan: InstalledSandboxPlan): () => Sandbox {
     const resources = new AsyncDisposableStack();
     let sandbox: Sandbox;
     beforeAll(async () => {
-        const directory = resources.use(await testdir());
-        const environment = await prepareInstalledSandbox(directory.path, plan);
+        const folder = resources.use(await testdir());
+        const environment = await prepareInstalledSandbox(folder.path, plan);
         sandbox = {
-            root: directory.path,
+            root: folder.path,
             environment,
-            run: spawnGspot,
-            [Symbol.asyncDispose]: directory[Symbol.asyncDispose].bind(directory),
+            run: async (cwd, commandArguments, environment) => {
+                const result = await spawnGspot(cwd, commandArguments, environment);
+                if (commandArguments[0] === 'apply' && result.code === 0) await plan.prepare?.(cwd, environment);
+                return result;
+            },
+            [Symbol.asyncDispose]: folder[Symbol.asyncDispose].bind(folder),
         };
     });
     afterAll(() => resources.disposeAsync());
     return () => sandbox;
 }
 
-export function runtimeDetectionRows(): RuntimeDetectionRow[] {
-    return [
-        ...JAVASCRIPT_RUNTIMES.flatMap((runtime) => [
-            {
-                name: `${runtime} engine`,
-                runtime,
-                package: { engines: { [runtime]: '>=1' } },
-                source: '',
-                detected: true,
-            },
-            {
-                name: `${runtime} script`,
-                runtime,
-                package: { scripts: { start: `${runtime} run entry.js` } },
-                source: '',
-                detected: true,
-            },
-            {
-                name: `${runtime} shebang`,
-                runtime,
-                package: {},
-                source: `#!/usr/bin/env ${runtime}\nconsole.log(1);\n`,
-                detected: true,
-            },
-            {
-                name: `${runtime} quoted script text`,
-                runtime,
-                package: { scripts: { start: `echo "${runtime} entry.js"` } },
-                source: '',
-                detected: false,
-            },
-            {
-                name: `${runtime} type dependency`,
-                runtime,
-                package: { devDependencies: { [`@types/${runtime}`]: '1.0.0' } },
-                source: '',
-                detected: false,
-            },
-            {
-                name: `${runtime} tool-project manifest`,
-                runtime,
-                package: {},
-                source: '',
-                toolProjectManifest: { engines: { [runtime]: '>=1' } },
-                detected: false,
-            },
-        ]),
-        {
-            name: 'JavaScript without a declared runtime',
-            runtime: 'node',
-            package: {},
-            source: 'console.log(1);\n',
-            detected: false,
+/**
+ * Returns the index entries of the paths to the last commit, undoing what marking them executable staged.
+ * @param cwd the sandbox.
+ * @param paths the repository-relative files.
+ */
+function resetIndex(cwd: string, paths: readonly string[]): void {
+    if (!isWindows || paths.length === 0) return;
+    const result = runGit(cwd, ['reset', '-q', '--', ...paths]);
+    if (result.code !== 0) throw new Error(`Resetting the index failed: ${result.stderr}${result.stdout}`);
+}
+
+async function readOriginalFile(path: string): Promise<OriginalFile | undefined> {
+    try {
+        const attributes = await lstat(path);
+        if (attributes.isSymbolicLink()) return { kind: 'symlink', target: await readlink(path) };
+        await using file = await open(path, 'r');
+        const fileAttributes = await file.stat();
+        return { kind: 'file', bytes: await file.readFile(), mode: fileAttributes.mode };
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        throw error;
+    }
+}
+
+async function listAbsentParents(cwd: string, paths: readonly string[]): Promise<string[]> {
+    const parents = new Set<string>();
+    for (const path of paths) {
+        let parent = dirname(join(cwd, path));
+        while (parent !== cwd && !(await isOnDisk(parent))) {
+            parents.add(parent);
+            parent = dirname(parent);
+        }
+    }
+    return [...parents].toSorted((a, b) => b.length - a.length);
+}
+
+async function restoreFiles(cwd: string, originals: Map<string, OriginalFile | undefined>): Promise<void> {
+    for (const [path, original] of originals) {
+        const full = join(cwd, path);
+        await rm(full, { force: true });
+        if (original?.kind === 'symlink') await symlink(original.target, full);
+        else if (original?.kind === 'file') {
+            await writeFile(full, original.bytes);
+            await chmod(full, original.mode);
+        }
+    }
+}
+
+async function removeParents(parents: string[]): Promise<void> {
+    for (const path of parents) {
+        try {
+            await rmdir(path);
+        } catch (error) {
+            // Keep generated and native files for their owners to remove after restoring the sample.
+            const code = (error as NodeJS.ErrnoException).code;
+            if (code !== 'ENOENT' && code !== 'ENOTEMPTY') throw error;
+        }
+    }
+}
+
+async function writeChanges(cwd: string, changes: SampleChanges, settings: string): Promise<void> {
+    const { removed = [], executable = [] } = changes;
+    for (const path of removed) await rm(join(cwd, path));
+    for (const [path, text] of Object.entries(changes.files)) {
+        const full = join(cwd, path);
+        await mkdir(dirname(full), { recursive: true });
+        const original = await readOriginalFile(full);
+        if (original?.kind === 'symlink') await unlink(full);
+        await writeFile(full, text);
+    }
+    for (const path of executable) await markExecutable(cwd, path);
+    await writeFile(join(cwd, 'gspot.toml'), settings);
+}
+
+// Preserve bytes and permissions before the first mutation, including setup that fails partway through.
+async function updateSandbox(sandbox: SandboxFiles, changes: SampleChanges): Promise<AsyncDisposable> {
+    const cwd = sandbox.root;
+    const tree = runGit(cwd, ['write-tree']).stdout.trim();
+    const head = runGit(cwd, ['rev-parse', 'HEAD']).stdout.trim();
+    const untracked = new Set(
+        runGit(cwd, ['ls-files', '--others', '--exclude-standard', '-z']).stdout.split('\0').filter(Boolean),
+    );
+    const settingsPath = join(cwd, 'gspot.toml');
+    const current = await readFile(settingsPath, 'utf8');
+    const base = changes.files['gspot.toml'] ?? current;
+    const settings = [base, changes.settings].filter((text) => text !== undefined).join('\n');
+    const gone = changes.removed ?? [];
+    const executables = changes.executable ?? [];
+    const paths = [...new Set(['gspot.toml', ...gone, ...executables, ...Object.keys(changes.files)])];
+    const originals = new Map<string, OriginalFile | undefined>();
+    for (const path of paths) originals.set(path, await readOriginalFile(join(cwd, path)));
+    for (const path of gone)
+        if (originals.get(path) === undefined) throw new Error(`The sandbox removal target ${path} is absent.`);
+    const parents = await listAbsentParents(cwd, paths);
+    const restore = async (): Promise<void> => {
+        await restoreFiles(cwd, originals);
+        await removeParents(parents);
+        resetIndex(cwd, executables);
+    };
+    try {
+        await writeChanges(cwd, changes, settings);
+    } catch (error) {
+        await restore();
+        throw error;
+    }
+    return {
+        async [Symbol.asyncDispose]() {
+            for (const path of runGit(cwd, ['ls-files', '--others', '--exclude-standard', '-z'])
+                .stdout.split('\0')
+                .filter(Boolean))
+                if (!untracked.has(path)) await rm(join(cwd, path), { force: true });
+            await restore();
+            const reset = runGit(cwd, ['reset', '--soft', head]);
+            if (reset.code !== 0) throw new Error(reset.stderr);
+            const restored = runGit(cwd, ['read-tree', tree]);
+            if (restored.code !== 0) throw new Error(restored.stderr);
+            const result = await sandbox.run(cwd, ['apply'], sandbox.environment);
+            if (result.code !== 0) throw new Error(`Sandbox restore failed: ${result.stdout}${result.stderr}`);
         },
-    ];
+    };
+}
+/** Share a prose sandbox whose Vale packages come from the local package server. */
+function shareProseSandbox(): () => Sandbox {
+    let server: ReturnType<typeof Bun.serve>;
+    beforeAll(() => {
+        const archive = encodeZipArchive(
+            Object.entries(VALE_PACKAGE_FILES).map(([path, content]) => [path, Buffer.from(content)] as const),
+        );
+        server = Bun.serve({ hostname: REGISTRY_HOST, port: 0, fetch: () => new Response(new Uint8Array(archive)) });
+    });
+    const sandbox = registerSharedSandbox({
+        ...PROSE_SANDBOX,
+        prepare: (root) => {
+            const packages = VALE_PACKAGES.map(
+                (name) => `http://${REGISTRY_HOST}:${String(server.port)}/${name}.zip`,
+            ).join(', ');
+            using writer = openWriter(root);
+            const file = writer.files.read(VALE_TOOL_FILE_PATH) as FileContents;
+            writePlans(writer, [
+                planReplacement(writer, {
+                    path: VALE_TOOL_FILE_PATH,
+                    next: {
+                        bytes: Buffer.from(
+                            file.bytes.toString('utf8').replace(/^Packages = .*$/mu, `Packages = ${packages}`),
+                        ),
+                        mode: 0o444,
+                    },
+                }),
+            ]);
+        },
+    });
+    afterAll(async () => {
+        await server.stop(true);
+    });
+    return sandbox;
+}
+
+export { createSandbox, updateSandbox, shareProseSandbox, registerSharedSandbox, prepareInstalledSandbox };
+
+/** Apply changed sample files and regenerate their tool files with one owned restoration. */
+export async function applySandboxChanges(sandbox: SandboxFiles, changes: SampleChanges): Promise<AsyncDisposable> {
+    await using resources = new AsyncDisposableStack();
+    resources.use(await updateSandbox(sandbox, changes));
+    const applied = await sandbox.run(sandbox.root, ['apply'], sandbox.environment);
+    if (applied.code !== 0) throw new Error(`Sandbox apply failed: ${applied.stdout}${applied.stderr}`);
+    return resources.move();
+}
+
+/** Stage changed sample inputs before generation. Retain their original index and files for restoration. */
+export async function applyStagedSandboxChanges(
+    sandbox: SandboxFiles,
+    changes: SampleChanges,
+): Promise<AsyncDisposable> {
+    await using resources = new AsyncDisposableStack();
+    resources.use(await updateSandbox(sandbox, changes));
+    const staged = runGit(sandbox.root, ['add', '--all']);
+    if (staged.code !== 0) throw new Error(`Staging sandbox inputs failed: ${staged.stderr}${staged.stdout}`);
+    const applied = await sandbox.run(sandbox.root, ['apply'], sandbox.environment);
+    if (applied.code !== 0) throw new Error(`Sandbox apply failed: ${applied.stdout}${applied.stderr}`);
+    return resources.move();
 }

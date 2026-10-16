@@ -1,8 +1,8 @@
 import { decodeHTMLAttribute } from 'entities';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { listElementAttributes } from '#cli/parsers/html.ts';
-import { nodePlace, findingAt } from '#cli/checks/finding.ts';
 import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import type { SourceTree, MarkupAttribute } from '#cli/types/parsers/tree-sitter.ts';
 
 import {
@@ -24,7 +24,7 @@ function isActiveResource(attribute: MarkupAttribute, url: URL, scriptType: stri
 }
 
 // Decode HTML character references before URL parsing removes embedded tabs and newlines.
-function scriptScheme(attribute: MarkupAttribute, scriptType: string): string | undefined {
+function findScriptScheme(attribute: MarkupAttribute, scriptType: string): string | undefined {
     if (!URL_ATTRIBUTES.has(attribute.name)) return undefined;
     const url = URL.parse(decodeHTMLAttribute(attribute.value), 'https://example.invalid');
     if (url === null) return undefined;
@@ -32,7 +32,7 @@ function scriptScheme(attribute: MarkupAttribute, scriptType: string): string | 
     return url.protocol === 'data:' && isActiveResource(attribute, url, scriptType) ? url.protocol : undefined;
 }
 
-function inlineFindings(input: CheckInput, source: SourceTree): Finding[] {
+function checkInlineScripts(input: CheckInput, source: SourceTree): Finding[] {
     return source.rootNode
         .descendantsOfType('script_element')
         .filter((element) =>
@@ -43,9 +43,13 @@ function inlineFindings(input: CheckInput, source: SourceTree): Finding[] {
             const scriptType = attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
             if (INERT_SCRIPT_TYPES.has(scriptType) || attributes.some((entry) => entry.name === 'src')) return [];
             return [
-                findingAt(
+                buildFinding(
                     input,
-                    nodePlace(source.path, element),
+                    {
+                        file: source.path,
+                        line: element.startPosition.row + 1,
+                        column: element.startPosition.column + 1,
+                    },
                     'inline-script',
                     'Move executable inline script to a script file.',
                 ),
@@ -53,26 +57,30 @@ function inlineFindings(input: CheckInput, source: SourceTree): Finding[] {
         });
 }
 
-function attributeFindings(input: CheckInput, source: SourceTree): Finding[] {
+function checkScriptAttributes(input: CheckInput, source: SourceTree): Finding[] {
     return source.rootNode.descendantsOfType(['element', 'script_element']).flatMap((element) => {
         const attributes = listElementAttributes(element);
         const scriptType = attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
         return attributes.flatMap((attribute) => {
-            const position = nodePlace(source.path, attribute.node);
+            const position = {
+                file: source.path,
+                line: attribute.node.startPosition.row + 1,
+                column: attribute.node.startPosition.column + 1,
+            };
             if (EVENT_ATTRIBUTE.test(attribute.name))
                 return [
-                    findingAt(
+                    buildFinding(
                         input,
                         position,
                         'handler-attribute',
                         `The ${attribute.name} attribute is inline script. Attach the handler from a script file.`,
                     ),
                 ];
-            const scheme = scriptScheme(attribute, scriptType);
+            const scheme = findScriptScheme(attribute, scriptType);
             return scheme === undefined
                 ? []
                 : [
-                      findingAt(
+                      buildFinding(
                           input,
                           position,
                           'script-link',
@@ -85,16 +93,14 @@ function attributeFindings(input: CheckInput, source: SourceTree): Finding[] {
 
 /**
  * Inline script, handler attributes and script links in every owned HTML file.
- * @param input the check input.
+ * @param input the selected source files and parsed markup services.
  * @returns the findings.
  */
-async function htmlScripts(input: CheckInput): Promise<Finding[]> {
+export async function checkHtmlScripts(input: CheckInput): Promise<Finding[]> {
     const files = input.files.map((file) => ({ path: file.path, grammar: 'html' as const }));
     const findings: Finding[] = [];
     await visitParsedSources({ ...input, files }, (source) =>
-        findings.push(...inlineFindings(input, source), ...attributeFindings(input, source)),
+        findings.push(...checkInlineScripts(input, source), ...checkScriptAttributes(input, source)),
     );
     return findings;
 }
-
-export { htmlScripts };

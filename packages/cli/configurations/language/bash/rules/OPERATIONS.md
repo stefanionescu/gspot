@@ -1,5 +1,7 @@
 # Bash Operations
 
+Read this rule when you write a deployment, publishing, or remote shell script.
+
 ## Module ownership and visibility
 
 <!-- level: all -->

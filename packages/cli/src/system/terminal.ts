@@ -1,8 +1,17 @@
-// Prints command results and failures with the selected output options.
 import pc from 'picocolors';
-import { RESULT_JSON_INDENT } from '#cli/config/terminal.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { CommanderError } from '@commander-js/extra-typings';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import type { CommandResult, OutputOptions, CommandFailureJson } from '#cli/types/terminal.ts';
+import type { CommandResult, OutputOptions, CommandFailureJson, CanceledCommandJson } from '#cli/types/terminal.ts';
+
+import {
+    EXIT_ERROR,
+    ROOT_SCOPE_LABEL,
+    SIGNAL_EXIT_CODES,
+    COMMAND_SUGGESTION,
+    RESULT_JSON_INDENT,
+    UNKNOWN_COMMAND_NAME,
+} from '#cli/config/terminal.ts';
 
 let options: OutputOptions = { json: false, color: false };
 
@@ -11,13 +20,19 @@ function printJson(record: unknown): void {
     process.stdout.write(`${JSON.stringify(record, null, RESULT_JSON_INDENT)}\n`);
 }
 
-export const colors = pc.createColors(false);
+/**
+ * Read the palette for the configured command output.
+ * @returns the enabled or disabled color functions.
+ */
+function colors(): ReturnType<typeof pc.createColors> {
+    return pc.createColors(options.color);
+}
 
 /**
  * True when both streams connect to terminals and NO_COLOR does not disable color.
  * @returns whether to paint
  */
-export function isColorAllowed(): boolean {
+function isColorAllowed(): boolean {
     const noColor = readEnvironmentVariable('NO_COLOR');
     if (noColor !== undefined && noColor !== '') return false;
     return process.stderr.isTTY && process.stdout.isTTY;
@@ -27,24 +42,23 @@ export function isColorAllowed(): boolean {
  * Sets the output mode for the process.
  * @param next JSON format and terminal color
  */
-export function setOutputOptions(next: OutputOptions): void {
+function setOutputOptions(next: OutputOptions): void {
     options = next;
-    Object.assign(colors, pc.createColors(next.color));
 }
 
 /**
  * A warning about the run, printed to stderr.
  * @param text the line
  */
-export function warn(text: string): void {
-    process.stderr.write(`${colors.yellow('[warn]')} ${text}\n`);
+function warn(text: string): void {
+    process.stderr.write(`${colors().yellow('[warn]')} ${text}\n`);
 }
 
 /**
  * Print a diagnostic to stderr, or a structured command failure to stdout under --json.
  * @param failure the diagnostic text or structured failure
  */
-export function printError(failure: string | CommandFailureJson): void {
+function printError(failure: string | CommandFailureJson): void {
     if (typeof failure !== 'string' && options.json) {
         printJson(failure);
         return;
@@ -57,17 +71,16 @@ export function printError(failure: string | CommandFailureJson): void {
  * Print the completed command in the selected format and retain its exit code.
  * @param result the command output
  */
-export function printResult(result: CommandResult): void {
+function printResult(result: CommandResult): void {
     if (options.json) printJson(result.json);
     else if (result.text !== '') print(result.text);
-    process.exitCode = result.exitCode;
 }
 
 /**
  * A human-readable record on stdout, suppressed when --json selects structured output.
- * @param text the text
+ * @param text the human-readable output, with a final newline added when absent.
  */
-export function print(text: string): void {
+function print(text: string): void {
     if (options.json) return;
     process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
 }
@@ -77,6 +90,105 @@ export function print(text: string): void {
  * @param notes the messages attached to the prepared command result
  * @returns the note lines, or no text when the list contains no notes
  */
-export function formatNotes(notes: string[]): string {
+function formatNotes(notes: string[]): string {
     return notes.map((note) => `note     ${note}\n`).join('');
 }
+
+/**
+ * Format Commander argument errors using the existing command suggestions.
+ * @param error the refused command arguments.
+ * @returns the message and any available correction.
+ */
+function formatArgumentError(error: CommanderError): string {
+    const { message } = error;
+    if (error.code === 'commander.unknownCommand') {
+        const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
+        const suggestion = COMMAND_SUGGESTION.exec(message)?.[1];
+        const correction = suggestion === undefined ? '' : ` Did you mean ${suggestion}?`;
+        return `Unknown command ${name}.${correction} Run gspot --help to see the commands.`;
+    }
+    if (error.code === 'commander.missingMandatoryOptionValue' && message.includes('--reason'))
+        return 'gspot ignore needs --reason "<why>".';
+    return message;
+}
+
+/**
+ * Print a command failure and select its process exit status.
+ * @param error the rejected command value.
+ * @param output the requested JSON output mode.
+ * @returns zero for Commander help, or the command error status.
+ */
+function printFailure(error: unknown, output: Pick<OutputOptions, 'json'>): number {
+    if (error instanceof CommanderError) {
+        if (error.exitCode === 0) return 0;
+        printError({ error: 'arguments', message: formatArgumentError(error) });
+        return EXIT_ERROR;
+    }
+    if (error instanceof GspotError) {
+        printError({ error: error.code, message: error.message });
+        return EXIT_ERROR;
+    }
+    const detail = (error instanceof Error ? error.message : String(error)).replaceAll(/\s+/gu, ' ').trim();
+    const message = `gspot stopped because of an internal error: ${detail}. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.`;
+    printError(output.json ? { error: 'failure', message } : message);
+    return EXIT_ERROR;
+}
+
+/**
+ * Name the root scope or return a child scope's path for command output.
+ * @param path the repository-relative scope path.
+ * @returns the root label or the supplied child path.
+ */
+function scopeLabel(path: string): string {
+    return path === '' ? ROOT_SCOPE_LABEL : path;
+}
+
+/**
+ * Run a command with termination signals and release each listener when it finishes.
+ * @param run the command receiving the shared cancellation signal
+ * @param canceledMessage the diagnostic when cancellation prevents a command result
+ * @returns the command result with the signal status when interrupted
+ */
+async function runCancelableCommand<Json extends object>(
+    run: (signal: AbortSignal) => Promise<CommandResult<Json>>,
+    canceledMessage: string,
+): Promise<CommandResult<Json | CanceledCommandJson>> {
+    const controller = new AbortController();
+    let canceledCode: number | undefined;
+    const cancellations = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) => {
+        const onSignal = (): void => {
+            canceledCode = code;
+            controller.abort();
+        };
+        process.on(signal, onSignal);
+        return { signal, onSignal };
+    });
+    let result: CommandResult<Json | CanceledCommandJson>;
+    try {
+        result = await run(controller.signal);
+    } catch (error) {
+        if (!controller.signal.aborted) throw error;
+        result = {
+            text: `${canceledMessage}\n`,
+            json: { error: 'canceled', message: canceledMessage, exitCode: EXIT_ERROR },
+            exitCode: EXIT_ERROR,
+        };
+    } finally {
+        for (const { signal, onSignal } of cancellations) process.removeListener(signal, onSignal);
+    }
+    if (canceledCode === undefined) return result;
+    return { ...result, exitCode: canceledCode, json: { ...result.json, exitCode: canceledCode } };
+}
+
+export {
+    warn,
+    print,
+    colors,
+    scopeLabel,
+    printResult,
+    formatNotes,
+    printFailure,
+    isColorAllowed,
+    setOutputOptions,
+    runCancelableCommand,
+};

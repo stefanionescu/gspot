@@ -1,10 +1,11 @@
 import type { JsonValue } from '#cli/types/parsers/json.ts';
-import type { Defined, Optional } from '#cli/types/objects.ts';
+import type { Defined, Optional } from '#cli/types/shapes.ts';
 import type { NamingOverride } from '#cli/types/checks/general.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { FileKind } from '#cli/types/repository/inventory.ts';
 import type { TOOL_FOLDER_KINDS } from '#cli/config/system/locations.ts';
 import type { OutputSpec, OutputInput } from '#cli/types/parsers/output.ts';
+import type { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 import type { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependency-files.ts';
 
 import type {
@@ -15,10 +16,10 @@ import type {
     CHECK_RUNS,
     TOOL_BUILDS,
     CHECK_NEEDS,
-    CHECK_WORKING_DIRECTORIES,
+    CHECK_WORKING_FOLDERS,
 } from '#cli/config/configurations.ts';
 
-type NativeInstaller = string | Defined<Required<Pick<InstallerPin, 'name' | 'version'>>>;
+type InstallerInput = string | Defined<Required<Pick<InstallerPin, 'name' | 'version'>>>;
 
 export type SelectionWalk = {
     manifests: Map<string, Manifest>;
@@ -80,7 +81,7 @@ export type ParsedManifest = {
             | {
                   path: string;
                   when?: { configuration: string } | undefined;
-                  directories?: string[] | undefined;
+                  folders?: string[] | undefined;
                   body?: string | undefined;
               }
             | undefined;
@@ -94,7 +95,7 @@ export type ParsedManifest = {
               source?: undefined;
               pointer: {
                   path: string;
-                  directories: string[];
+                  folders: string[];
                   body?: string | undefined;
                   when?: { configuration: string } | undefined;
               };
@@ -129,12 +130,12 @@ export type ParsedCheck = {
     when?: Optional<Pick<ConditionFields, 'configuration' | 'setting' | 'git' | 'dependencies'>> | undefined;
     crash_pattern?: string | undefined;
     needs?: (typeof CHECK_NEEDS)[number][] | undefined;
-    operating_systems?: ('macos' | 'linux' | 'windows')[] | undefined;
+    operating_systems?: (typeof OPERATING_SYSTEMS)[number]['name'][] | undefined;
     tool?: string | undefined;
     other_tools?: string[];
     files?: ParsedManifest['files'] | undefined;
     output: OutputSpec;
-    cwd?: (typeof CHECK_WORKING_DIRECTORIES)[number] | undefined;
+    cwd?: (typeof CHECK_WORKING_FOLDERS)[number] | undefined;
     summary: string;
     example: string;
     why: string;
@@ -143,7 +144,7 @@ export type ParsedCheck = {
 
 export type ManifestDeclaration = Omit<ParsedManifest, 'checks'> & {
     checks: CheckDeclaration[];
-    dir: string;
+    folder: string;
 };
 
 /** A registry entry with complete declarations for each named tool reference. */
@@ -159,9 +160,6 @@ export type ConfigurationDeclaration = { name: string; path: KeyPath };
 export type UnknownConfiguration<Declaration extends Pick<ConfigurationDeclaration, 'name'>> = Declaration & {
     message: string;
 };
-
-/** The configuration responsible for one declared installation version. */
-export type PinRequirement = { version: string; owner: string };
 
 /** A pinned package installed in the npm or Python tool project. */
 export type ToolProjectPackage = {
@@ -210,7 +208,7 @@ export type ToolDeclaration = {
     version_exit_code?: number;
     version_pattern?: string;
     crash_pattern?: string;
-    diagnostic_header_pattern?: string;
+    finding_header_pattern?: string;
     rule_url?: string;
     rule_prefix?: string;
     suppression?: {
@@ -237,27 +235,27 @@ export type ToolDeclaration = {
 };
 
 export type Stage = (typeof STAGES)[number];
-export type GeneratedPath = NonNullable<CheckDeclaration['generator_outputs']>[number];
+export type GeneratorOutput = NonNullable<CheckDeclaration['generator_outputs']>[number];
 
-/** Native manifest conditions before each consumer selects its supported fields. */
+/** Manifest conditions before each consumer selects its supported fields. */
 export type ConditionFields = Pick<
     ParsedManifest['detect'],
     'dependencies' | 'absent_dependencies' | 'filenames' | 'tags' | 'runtimes'
 > & { configuration: string; level: Level; setting: string; git: true };
 
-/** Native tool fields before consumers resolve installer names and omitted values. */
+/** Tool fields before consumers resolve installer names and omitted values. */
 export type ToolFields = Pick<ToolDeclaration, 'name' | 'kind'> &
     Optional<Omit<ToolDeclaration, 'name' | 'kind' | 'installers'>> &
-    Optional<Record<'npm' | 'pypi' | 'brew' | 'apt' | 'cargo' | 'github' | 'winget' | 'scoop', NativeInstaller>> & {
-        mise?: string | (Exclude<NativeInstaller, string> & Pick<InstallerPin, 'options'>) | undefined;
+    Optional<Record<'npm' | 'pypi' | 'brew' | 'apt' | 'cargo' | 'github' | 'winget' | 'scoop', InstallerInput>> & {
+        mise?: string | (Exclude<InstallerInput, string> & Pick<InstallerPin, 'options'>) | undefined;
     };
 
 /** File matcher keys before consumers fill empty lists and Boolean defaults. */
 export type FileMatchInput = Optional<ParsedManifest['files']>;
 /** Detection keys before consumers fill absent lists. */
 export type DetectionInput = Optional<ParsedManifest['detect']>;
-/** Native check paths before consumers write their discriminator and command defaults. */
-export type CheckInput = Omit<
+/** Check paths before consumers write their discriminator and command defaults. */
+export type CheckDeclarationInput = Omit<
     ParsedCheck,
     'runs' | 'tool' | 'other_tools' | 'generator_outputs' | 'files' | 'output'
 > & {
@@ -273,7 +271,7 @@ export type ToolFileInput = Pick<ToolFileDeclaration, 'target'> &
         tool?: string | string[] | undefined;
         check?: string | string[] | undefined;
     };
-/** Native manifest fields before consumers write defaults and public list names. */
+/** Manifest fields before consumers write defaults and public list names. */
 export type ManifestInput = Optional<
     Omit<
         ParsedManifest,
@@ -300,12 +298,12 @@ export type ManifestInput = Optional<
     files?: FileMatchInput | undefined;
     tool?: ({ name: string } | ToolInput)[] | undefined;
     tool_file?: ToolFileInput[] | undefined;
-    check?: CheckInput[] | undefined;
+    check?: CheckDeclarationInput[] | undefined;
     naming?: Optional<NonNullable<ParsedManifest['naming']>> | undefined;
     rules?: Record<string, Optional<Omit<ConditionFields, 'configuration' | 'level' | 'setting' | 'git'>>> | undefined;
     ruff?: Optional<ParsedManifest['ruff']> | undefined;
 };
-/** Native installer declarations before each installer receives a canonical name. */
+/** Installer declarations before each installer receives a canonical name. */
 export type ToolInput = Omit<ToolFields, 'kind' | 'prettier' | 'when'> & {
     kind?: ToolFields['kind'] | undefined;
     prettier?:

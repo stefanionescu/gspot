@@ -1,6 +1,7 @@
+import type { Optional } from '#cli/types/shapes.ts';
 import type { JsonValue } from '#cli/types/parsers/json.ts';
-import type { ReasonValue } from '#cli/types/settings/file.ts';
-import type { RULE_CONDITIONS, IMPORT_EXTENSIONS, DOCSTRING_CONVENTIONS } from '#cli/config/settings/schema.ts';
+import type { SettingValue } from '#cli/types/settings/file.ts';
+import type { RULE_CONDITIONS, DOCSTRING_CONVENTIONS, IMPORT_EXTENSION_STYLES } from '#cli/config/settings/schema.ts';
 
 type ParsedExtraOptions = { extra?: Record<string, unknown> | undefined };
 
@@ -13,34 +14,9 @@ type WrittenTools = {
     swiftlint?: { always_keep_imports?: string[] | undefined } | undefined;
     trivy?: { severity?: string[] | undefined } | undefined;
     eslint?:
-        | {
+        | (Optional<Omit<ParsedEslint, 'extra'>> & {
               extra?: { value: Record<string, unknown>; reason: string } | undefined;
-              import_extension?: (typeof IMPORT_EXTENSIONS)[number] | undefined;
-              restricted_imports?: { name: string; message: string }[] | undefined;
-              rules?:
-                  | Record<
-                        string,
-                        | unknown[]
-                        | [string | number | boolean | null | JsonValue[] | Record<string, JsonValue>, ...JsonValue[]]
-                    >
-                  | undefined;
-              override?:
-                  | {
-                        paths: string[];
-                        rules?:
-                            | Record<
-                                  string,
-                                  | unknown[]
-                                  | [
-                                        string | number | boolean | null | JsonValue[] | Record<string, JsonValue>,
-                                        ...JsonValue[],
-                                    ]
-                              >
-                            | undefined;
-                        runtime?: string | undefined;
-                    }[]
-                  | undefined;
-          }
+          })
         | undefined;
     commitlint?:
         | {
@@ -49,40 +25,9 @@ type WrittenTools = {
               rules?: Record<string, [(typeof RULE_CONDITIONS)[number], (JsonValue | undefined)?]> | undefined;
           }
         | undefined;
-    yamllint?:
-        | {
-              rules?:
-                  | {
-                        indentation?:
-                            | {
-                                  level?: 'error' | undefined;
-                                  ignore?: unknown;
-                                  'ignore-from-file'?: unknown;
-                                  spaces?: 'consistent' | undefined;
-                              }
-                            | undefined;
-                    }
-                  | undefined;
-          }
-        | undefined;
+    yamllint?: Optional<ParsedYamllint> | undefined;
     markdownlint?: { rules?: Record<string, Record<string, JsonValue>> | undefined } | undefined;
-    stylelint?:
-        | {
-              rules?:
-                  | Record<
-                        string,
-                        | true
-                        | string
-                        | number
-                        | { severity?: 'error' | undefined }
-                        | [
-                              true | string | number | { severity?: 'error' | undefined } | JsonValue[],
-                              ({ severity?: 'error' | undefined } | undefined)?,
-                          ]
-                    >
-                  | undefined;
-          }
-        | undefined;
+    stylelint?: Optional<ParsedStylelint> | undefined;
     squawk?: { assume_in_transaction?: boolean | undefined } | undefined;
     prettier?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
     'editorconfig-checker'?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
@@ -92,10 +37,10 @@ type WrittenTools = {
         | {
               extra?: { value: Record<string, unknown>; reason: string } | undefined;
               entry?: string[] | undefined;
-              ignore_dependencies?: ReasonValue<string[]> | undefined;
+              ignore_dependencies?: SettingValue<string[]> | undefined;
           }
         | undefined;
-    purgecss?: { safelist?: ReasonValue<string[]> | undefined } | undefined;
+    purgecss?: { safelist?: SettingValue<string[]> | undefined } | undefined;
     v8r?: { schema?: { paths: string[]; url: string }[] | undefined } | undefined;
     taplo?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
 };
@@ -116,7 +61,7 @@ type ParsedTrivy = { severity: string[] };
 
 type ParsedEslint = {
     extra?: Record<string, unknown> | undefined;
-    import_extension: (typeof IMPORT_EXTENSIONS)[number];
+    import_extension: (typeof IMPORT_EXTENSION_STYLES)[number];
     restricted_imports: { name: string; message: string }[];
     rules: Record<
         string,
@@ -124,13 +69,7 @@ type ParsedEslint = {
     >;
     override: {
         paths: string[];
-        rules?:
-            | Record<
-                  string,
-                  | unknown[]
-                  | [string | number | boolean | null | JsonValue[] | Record<string, JsonValue>, ...JsonValue[]]
-              >
-            | undefined;
+        rules?: ParsedEslint['rules'] | undefined;
         runtime?: string | undefined;
     }[];
 };

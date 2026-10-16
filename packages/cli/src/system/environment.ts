@@ -1,17 +1,8 @@
 // Reads host information and constructs command environments.
-import { isCI } from 'std-env';
 import envPaths from 'env-paths';
 import { isAbsolute } from 'node:path';
 import { CACHE_FOLDER_NAME } from '#cli/config/system/environment.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
-
-/**
- * True when a person can answer a prompt: both standard streams use terminals and no continuous integration runner reports its presence.
- * @returns whether to prompt.
- */
-export function isInteractive(): boolean {
-    return process.stdin.isTTY && process.stdout.isTTY && !isCI;
-}
 
 /**
  * The environment for spawning tools, with Windows identities merged without changing their spelling.
@@ -31,8 +22,8 @@ export function buildSpawnEnvironment(overrides?: Record<string, string | undefi
 }
 
 /**
- * Read one value from the native process environment.
- * @param name the variable name.
+ * Read one value from the process environment.
+ * @param name the exact process environment key to read.
  * @returns the value when present.
  */
 export function readEnvironmentVariable(name: string): string | undefined {

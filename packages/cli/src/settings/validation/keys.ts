@@ -4,14 +4,15 @@ import type { SettingsError } from '#cli/types/settings/file.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import { findSettingSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { ENVIRONMENT_READERS_ROLE } from '#cli/config/settings/values.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import { isLoosening, validateReason, isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 
 import type {
     Settings,
-    SettingEntry,
     KnownSettings,
     WrittenSetting,
+    EffectiveSetting,
     DeclarationMatch,
 } from '#cli/types/settings/values.ts';
 import {
@@ -79,7 +80,7 @@ function validateWrittenKey(
         known,
         match,
         scope ?? '',
-        (dependentKey) => (getSettingValue(known, settings, dependentKey, scope) as SettingEntry).value,
+        (dependentKey) => (getSettingValue(known, settings, dependentKey, scope) as EffectiveSetting).value,
     )?.value;
     if (written.reason !== undefined && !isLoosening(match.declaration, written.value, shipped))
         return [
@@ -117,8 +118,8 @@ function listUnsettledConflicts(
     const errors: SettingsError[] = [];
     const knownByScope = [
         { selected: known, scope: undefined, path: ['configurations'] as KeyPath },
-        ...Object.keys(settings.scope).map((scope, index) => ({
-            selected: scopeKnown.get(scope) ?? known,
+        ...[...scopeKnown].map(([scope, selected], index) => ({
+            selected,
             scope,
             path: ['scope', index, 'configurations'] as KeyPath,
         })),
@@ -220,14 +221,14 @@ function validateKeys(
         errors: known.errors,
     };
     const coverageLines = getSettingValue(everywhere, settings, 'coverage.lines')?.value;
-    const targetErrors = (settings.coverage?.target ?? [])
+    const targetErrors = (settings.coverage?.swift_target ?? [])
         .map((target, index) => ({ target, index }))
         .filter(
             ({ target }) =>
                 typeof coverageLines === 'number' && target.lines < coverageLines && target.reason === undefined,
         )
         .map(({ index }) => ({
-            path: ['coverage', 'target', index, 'reason'],
+            path: ['coverage', 'swift_target', index, 'reason'],
             message: 'A lower coverage target needs a reason.',
         }));
     errors.push(...targetErrors);
@@ -246,7 +247,7 @@ function validateKeys(
         const undeclaredRoles = Object.keys(isRecord(roles) ? roles : {}).filter(
             (role) =>
                 !roleKnown.declarations.has(`architecture.roles.${role}`) &&
-                !(role === 'environment_readers' && roleKnown.declarations.has('architecture.roles')),
+                !(role === ENVIRONMENT_READERS_ROLE && roleKnown.declarations.has('architecture.roles')),
         );
         const found = [
             ...undeclaredRoles.map((role) => ({

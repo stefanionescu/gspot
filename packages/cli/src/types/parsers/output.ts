@@ -1,5 +1,5 @@
-import type { Finding } from '#cli/types/execution/check.ts';
-import type { OUTPUT_FILE_TYPES, KNIP_ISSUE_CATEGORIES, MARKDOWNLINT_SEVERITIES } from '#cli/config/parsers/output.ts';
+import type { Finding } from '#cli/types/checks/run/check.ts';
+import type { KNIP_ISSUE_TYPES, OUTPUT_FILE_TYPES, MARKDOWNLINT_SEVERITIES } from '#cli/config/parsers/output.ts';
 
 export type ReportInput = OutputPaths & {
     check: string;
@@ -56,7 +56,7 @@ export type OutputSpec = Omit<OutputInput, 'format' | 'pattern' | 'file_pattern'
           }
     );
 
-export type MarkdownlintEntry = {
+export type MarkdownlintResult = {
     fileName: string;
     lineNumber: number;
     ruleNames: [string, ...string[]];
@@ -70,11 +70,11 @@ export type MarkdownlintEntry = {
 
 export type KnipReport = {
     issues: ({ file: string; owners?: { name: string }[] | undefined } & Partial<
-        Record<Exclude<(typeof KNIP_ISSUE_CATEGORIES)[number], 'cycles' | 'duplicates'>, KnipSymbol[] | undefined>
+        Record<Exclude<(typeof KNIP_ISSUE_TYPES)[number], 'cycles' | 'duplicates'>, KnipSymbol[] | undefined>
     > & { cycles?: KnipSymbol[][] | undefined; duplicates?: KnipSymbol[][] | undefined })[];
 };
 
-export type TypoEntry = {
+export type ReportedTypo = {
     type: 'typo';
     path: string;
     byte_offset: number;
@@ -93,8 +93,6 @@ export type ParsingCheck = { name: string; help: string; output: OutputSpec; fix
 
 /** Manifest field mappings and public metadata for one JSON finding. */
 export type JsonFindingSpec = { check: string; help: string; output: OutputSpec };
-
-/** A Vale diagnostic normalized to a repository path and one-based source location. */
 
 /** One format's parser, source-file checks and protection of captured output. */
 export type OutputDescriptor = {
@@ -148,7 +146,7 @@ export type SarifArtifactLocation = NonNullable<NonNullable<SarifRun['artifacts'
 
 export type SarifPhysicalLocation = NonNullable<SarifRun['results'][number]['locations']>[number]['physicalLocation'];
 
-/** Rule matches and scanner diagnostics emitted by native Semgrep. */
+/** Rule matches and scanner diagnostics emitted by Semgrep. */
 export type SemgrepReport = {
     results: { check_id: string; path: string; start: { line: number; col: number }; extra: { message: string } }[];
     errors: {

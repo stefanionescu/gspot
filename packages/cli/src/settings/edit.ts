@@ -18,18 +18,18 @@ function splitKey(key: string): SettingKey {
 
 /**
  * Validate a captured settings change.
- * @param root the repository root.
+ * @param repositoryRoot the folder against which the edited scope paths resolve.
  * @param input the captured table, text, and value snapshot.
  * @param mutate the change applied once.
  * @returns the new text, validated settings, and change status.
  */
-function updateSettings(root: string, input: SettingsEdit, mutate: Mutation): EditedSettings {
+function updateSettings(repositoryRoot: string, input: SettingsEdit, mutate: Mutation): EditedSettings {
     const { text, table, values } = input;
-    const reads = createReadCache(root);
+    const reads = createReadCache(repositoryRoot);
     mutate(table);
-    parseSettings(stringify(table), root, reads);
+    parseSettings(stringify(table), repositoryRoot, reads);
     const next = isDeepStrictEqual(structuredClone(table), values) ? text : formatSettingsText(text, table);
-    const settings = parseSettings(next, root, reads);
+    const settings = parseSettings(next, repositoryRoot, reads);
     return { text: next, settings, changed: next !== text, original: input.original };
 }
 
@@ -156,11 +156,11 @@ function findScopeTable(written: TomlTable, scope: string | undefined): TomlTabl
 
 /**
  * Capture the input bytes and mode before evaluating and validating a settings mutation.
- * @param root the repository root
+ * @param repositoryRoot the folder that contains the settings file to capture.
  * @returns the edit input with the original private file
  */
-function readSettingsEdit(root: string): SettingsEdit {
-    const { text, original } = readSettingsFile(root);
+function readSettingsEdit(repositoryRoot: string): SettingsEdit {
+    const { text, original } = readSettingsFile(repositoryRoot);
     const table = parseTomlText(text, SETTINGS_FILE, 'settings');
     return { text, table, values: structuredClone(table), original };
 }

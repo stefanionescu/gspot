@@ -2,7 +2,7 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import type { Level } from '#cli/types/configurations.ts';
-import { REPORT_PROGRAM } from '#tests/config/execution.ts';
+import { REPORT_PROGRAM } from '#tests/data/test-setup.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { WrittenSettings } from '#cli/types/settings/file.ts';
 
@@ -18,7 +18,7 @@ import type { WrittenSettings } from '#cli/types/settings/file.ts';
  * @param options.ignore.reason why to ignore these checks.
  * @returns the sandbox's gspot.toml bytes.
  */
-export function settingsText(
+export function buildSettingsText(
     configurations: readonly string[],
     options: {
         level?: Level;
@@ -47,12 +47,12 @@ export function settingsText(
 /**
  * Parses settings text and returns its errors, or none when it parses.
  * @param text the gspot.toml text.
- * @param root the repository the settings describe, when a problem depends on the tree.
+ * @param repositoryRoot the repository the settings describe, when a problem depends on the tree.
  * @returns the problem messages.
  */
-export function settingsErrors(text: string, root?: string): string[] {
+export function validateSettingsText(text: string, repositoryRoot?: string): string[] {
     try {
-        parseSettings(text, root, createReadCache(process.cwd()));
+        parseSettings(text, repositoryRoot, createReadCache(process.cwd()));
         return [];
     } catch (error) {
         if (error instanceof GspotError && error.code === 'settings') return error.message.split('\n');
@@ -65,7 +65,7 @@ export function settingsErrors(text: string, root?: string): string[] {
  * @param options the selected paths and check stage.
  * @returns the command and its line output.
  */
-export function reportingCheck(
+export function buildReportingCheck(
     options: Pick<NonNullable<WrittenSettings['command_check']>[number], 'paths' | 'stage'> & { name?: string },
 ): NonNullable<WrittenSettings['command_check']>[number] {
     return {

@@ -2,12 +2,12 @@
 import ts from 'typescript';
 import { CST, Lexer } from 'yaml';
 import { visit } from 'unist-util-visit';
-import { parse as parseToml } from 'smol-toml';
 import { extractExtension } from '#cli/system/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
 import { listSqlTokens } from '#cli/parsers/sql/lexer.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { GrammarName } from '#cli/types/parsers/tree-sitter.ts';
 import { convertToSpaces, computePosition } from '#cli/system/text.ts';
 import { getTomlRange, parseTomlSyntax } from '#cli/parsers/toml/comments.ts';
@@ -125,9 +125,9 @@ function extractMarkdownHtml(text: string): string {
     return pieces.join('');
 }
 
-// Native TOML comments retain the source positions of strings and multiline values.
+// TOML comments retain the source positions of strings and multiline values.
 function parseTomlComments(text: string): SourceComment[] {
-    return parseTomlSyntax(text, parseToml(text)).comments.map((comment) => {
+    return parseTomlSyntax(text, parseToml(text) as Record<string, unknown>).comments.map((comment) => {
         const [start, end] = getTomlRange(comment);
         return buildComment(text, start, end, comment.loc.start.line);
     });
@@ -136,14 +136,7 @@ function parseTomlComments(text: string): SourceComment[] {
 // The HTML parse of Markdown keeps original prose for standalone-comment classification.
 async function parseMarkdownComments(text: string): Promise<SourceComment[]> {
     const source = extractMarkdownHtml(text).replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->');
-    const tree = await parseSource('html', source);
-    try {
-        return tree.rootNode
-            .descendantsOfType([...COMMENT_NODES])
-            .map((node) => buildComment(text, node.startIndex, node.endIndex, node.startPosition.row + 1));
-    } finally {
-        tree.delete();
-    }
+    return parseSyntaxComments('html', source, text);
 }
 
 const COMMENT_READERS = new Map<string, CommentReader>([
@@ -174,6 +167,18 @@ const COMMENT_READERS = new Map<string, CommentReader>([
     ['.css', parseGrammarComments.bind(undefined, 'css')],
 ]);
 
+// Parse retained syntax while classifying each comment against its original text.
+async function parseSyntaxComments(grammar: GrammarName, source: string, text: string): Promise<SourceComment[]> {
+    const tree = await parseSource(grammar, source);
+    try {
+        return tree.rootNode
+            .descendantsOfType([...COMMENT_NODES])
+            .map((node) => buildComment(text, node.startIndex, node.endIndex, node.startPosition.row + 1));
+    } finally {
+        tree.delete();
+    }
+}
+
 /**
  * Read comments in one explicit grammar.
  * @param grammar the parser grammar.
@@ -183,14 +188,7 @@ const COMMENT_READERS = new Map<string, CommentReader>([
 export async function parseGrammarComments(grammar: GrammarName, text: string): Promise<SourceComment[]> {
     // Preserve offsets when the HTML grammar reads the alternate comment terminator.
     const parsed = grammar === 'html' ? text.replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->') : text;
-    const tree = await parseSource(grammar, parsed);
-    try {
-        return tree.rootNode
-            .descendantsOfType([...COMMENT_NODES])
-            .map((node) => buildComment(text, node.startIndex, node.endIndex, node.startPosition.row + 1));
-    } finally {
-        tree.delete();
-    }
+    return parseSyntaxComments(grammar, parsed, text);
 }
 
 /**

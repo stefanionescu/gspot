@@ -1,5 +1,5 @@
-import { emptyResult } from '#cli/checks/run/report.ts';
-import type { CheckResult } from '#cli/types/execution/check.ts';
+import { buildBaseResult } from '#cli/checks/run/report.ts';
+import type { CheckResult } from '#cli/types/checks/run/check.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 
@@ -10,7 +10,7 @@ import { readPushedCommits } from '#cli/repository/revisions/push.ts';
  * @returns the empty history result or its readiness refusal.
  */
 function historyResult(session: Session, planned: PlannedCheck): CheckResult {
-    const result = { ...emptyResult(planned), fileCount: 0 };
+    const result = { ...buildBaseResult(planned, session), fileCount: 0 };
     return session.repository.hasGit
         ? result
         : {

@@ -1,4 +1,4 @@
-import type { Defined } from '#cli/types/objects.ts';
+import type { Defined } from '#cli/types/shapes.ts';
 
 /**
  * Drops the undefined entries of an object, so exact optional types hold.
@@ -14,7 +14,7 @@ export function stripUndefined<T extends object>(value: T): Defined<T> {
 /**
  * Check whether a parsed value holds named fields without an array or date prototype.
  *
- * @param value the value.
+ * @param value the parsed input to distinguish from arrays, dates, and null.
  *
  * @returns whether the value holds keys.
  */

@@ -1,5 +1,7 @@
 # Zustand
 
+Read this rule when you change a Zustand store.
+
 Zustand holds client state that several components share when local or form state cannot serve them.
 Fetched server data stays in the query cache.
 
@@ -35,7 +37,7 @@ Fetched server data stays in the query cache.
   fresh empty callback.
 - Custom equality goes through `zustand/traditional` and its peer dependency; the standard `create`
   takes no equality argument.
-- Subscribe rows by entity ID. The list owner subscribes to ordering and paging instead of every
+- Subscribe rows by entity ID. The list component subscribes to ordering and paging instead of every
   record's content.
 - Derive values through selectors or computations over authoritative state, never synchronized counts,
   array copies, or flags that disagree after a deletion, rollback, or reset.
@@ -66,7 +68,7 @@ Fetched server data stays in the query cache.
   confirmed save. They live beside their state and keep its validation and related field changes.
 - Changes that form one invariant go in one `set` call. Two actions in sequence make two store
   transitions, and React render batching does not merge them.
-- Slices organize one cohesive store, with one owner for each field and action, so spreading slices
+- Slices organize one cohesive store, with each field and action in one slice, so spreading slices
   cannot silently overwrite names. Middleware wraps the completed store, not each slice, and slice
   creator types stay compatible with it.
 - Asynchronous actions keep request identity and cancellation explicit. A delayed action never
@@ -83,7 +85,7 @@ Fetched server data stays in the query cache.
 - In a server-rendered app, browser restoration stays apart from the first snapshot. Use
   `skipHydration` and an explicit `rehydrate()` when automatic restoration changes it.
 - Track hydration through the supported callbacks or subscriptions, not one read of
-  `hasHydrated()`, and release the listeners when their owner unmounts.
+  `hasHydrated()`, and release the listeners when the component that added them unmounts.
 - Sign-out and identity or tenant changes reset live private state and clear or partition its
   persisted copy. Clearing storage alone leaves the in-memory store unchanged.
 - A pending restoration never reapplies the previous identity's data.

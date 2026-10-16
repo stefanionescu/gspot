@@ -1,22 +1,22 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { runCheckSample } from '#tests/setup/fixes.ts';
+import { hasToolBuild } from '#tests/setup/system.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { settingsText } from '#tests/setup/settings.ts';
-import { installToolProjects } from '#tests/setup/install.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandbox.ts';
-import { hasToolBuild } from '#tests/setup/operating-systems.ts';
-import { SUPABASE_CASES, SUPABASE_SANDBOX } from '#tests/config/supabase.ts';
+import { runSandboxStep } from '#tests/setup/install.ts';
+import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxChanges } from '#tests/setup/builders.ts';
+import type { RunReport } from '#cli/types/checks/run/check.ts';
+import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { SUPABASE_CASES, SUPABASE_SANDBOX } from '#tests/data/checks/supabase.ts';
+import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 
 // The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))(
     'manual Supabase selection reports Deno secret logs in root and child scopes',
     async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': settingsText(['supabase', 'security'], {
+        const { root, environment } = installedSandbox();
+        const files = {
+            'gspot.toml': buildSettingsText(['supabase', 'security'], {
                 level: 'all',
                 tables: `[[scope]]
 path = "child"
@@ -29,12 +29,16 @@ path = "child"
                     'console.log(Deno.env.get("API_SECRET"));\n',
                 ]),
             ),
-        });
-        const applied = await spawnGspot(sandbox.path, ['apply']);
+        };
+        await using _sourceChange = await updateSandbox(
+            installedSandbox(),
+            buildSandboxChanges(SUPABASE_SANDBOX.files, files),
+        );
+        const applied = await spawnGspot(root, ['apply'], environment);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await installToolProjects(sandbox.path);
+        await runSandboxStep(root, ['install'], environment, 'install');
         const command = ['check', '--only', 'security/semgrep', '--json'];
-        const failed = await spawnGspot(sandbox.path, command);
+        const failed = await spawnGspot(root, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
         expect(
@@ -52,23 +56,22 @@ path = "child"
                 .toSorted((a, b) => a.file.localeCompare(b.file)),
         );
         for (const path of ['supabase/functions/source.js', 'child/source.js']) {
-            expect(await Bun.file(join(sandbox.path, path)).text()).toBe('console.log(Deno.env.get("API_SECRET"));\n');
-            await Bun.write(join(sandbox.path, path), 'console.log("Unable to load the record");\n');
+            expect(await Bun.file(join(root, path)).text()).toBe('console.log(Deno.env.get("API_SECRET"));\n');
+            await Bun.write(join(root, path), 'console.log("Unable to load the record");\n');
         }
-        const corrected = await spawnGspot(sandbox.path, command);
+        const corrected = await spawnGspot(root, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
     },
 );
 
-const installedSandbox = shareInstalledSandbox(SUPABASE_SANDBOX);
+const installedSandbox = registerSharedSandbox(SUPABASE_SANDBOX);
 
-for (const entry of SUPABASE_CASES) {
-    // The pinned deno tool has no build for some operating systems.
-    test.skipIf(!hasToolBuild('deno'))(
-        `${entry.check} reports ${entry.expected.file} and passes after the fix`,
-        async () => {
-            await runCheckSample(installedSandbox(), entry, SUPABASE_SANDBOX);
-        },
-    );
-}
+// The pinned deno tool has no build for some operating systems.
+test.skipIf(!hasToolBuild('deno')).each([...SUPABASE_CASES])(
+    '$check reports $expected.file and passes after the fix',
+    async (entry) => {
+        const result = await runCheckSample(installedSandbox(), entry, SUPABASE_SANDBOX);
+        expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+    },
+);

@@ -1,3 +1,4 @@
+// Run tools with the configured timeout and shared process options.
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { buildGitEnvironment } from '#cli/system/git.ts';
@@ -43,9 +44,9 @@ export async function runTool(command: readonly string[], options: ToolRunOption
 /**
  * Resolve the configured process timeout from effective check settings.
  *
- * @param view the effective check settings.
+ * @param view the scoped values containing the process timeout setting.
  *
- * @returns the timeout in seconds.
+ * @returns the numeric process limit selected for the current scope.
  */
 export function getToolTimeoutSeconds(view: Pick<ScopeView, 'settings'>): number {
     return Number(view.settings[TOOL_TIMEOUT_SETTING]);

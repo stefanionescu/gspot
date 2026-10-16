@@ -1,9 +1,11 @@
 # React Hook Form
 
+Read this rule when you change a form built with React Hook Form.
+
 ## Form ownership and validation
 
 - One `useForm` instance owns a form. Use `FormProvider` when nested fields need that instance;
-  never create a second form owner for the same submission.
+  never create a second `useForm` instance for the same submission.
 - The resolver owns schema validation. Keep coercion and validation in that path rather than
   maintaining competing rules in fields and submit handlers.
 - Initialize `defaultValues` with the form's complete starting values. Reset deliberately when the
@@ -17,12 +19,12 @@
 
 ## Field arrays
 
-- Give each field array one `useFieldArray` owner. Use `field.id` as the React key and the current
+- Give each field array one `useFieldArray` call. Use `field.id` as the React key and the current
   index in a registered path. Store database identity in a separate property.
 - Treat `fields` as row structure. Read live values through the form's value APIs.
 - Add complete rows. Use a leaf `setValue` when an update must preserve the mounted row's focus and
   widget state; `update` remounts the row.
-- Keep one form owner across wizard steps. Validate a step before advancing and the whole payload
+- Keep one `useForm` instance across wizard steps. Validate a step before advancing and the whole payload
   before the final submission.
 
 ## Submission and errors

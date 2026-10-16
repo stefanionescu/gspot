@@ -37,6 +37,13 @@ exceptions:
   - pinact
   - zizmor
   - GitHub
+  - shfmt
+  - bash
+  - zsh
+  - bats
+  - Bash
+  - ShellCheck
+  - tree\-sitter
   - commitlint
   - osv\-scanner
   - syncpack
@@ -102,6 +109,13 @@ exceptions:
   - LICENCE
   - next\-intl
   - udid
+  - NGINX
+  - Stylelint
+  - markdownlint
+  - React
+  - Native
+  - Simple
+  - Icons
   - API
   - CLI
   - HTTP

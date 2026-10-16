@@ -1,5 +1,7 @@
 # Python Design
 
+Read this rule when you write Python functions or classes.
+
 ## Functions
 
 I/O never hides in a helper that looks like a pure transformation. Declare an ordinary no-result case in the return type and return an explicit `None`; input that
@@ -15,8 +17,7 @@ its ordering stays visible.
 <!-- level: all -->
 
 A function owns one responsibility. Name it for its action and domain concept, except required framework callback names. Make side effects clear in its name or docstring. Plain
-functions and explicit data flow come before classes. When a function passes a limit, split
-out a step with a real name. If the limit does not fit the code, ask the user to raise it:
+functions and explicit data flow come before classes. When a function goes over a size limit, move one step into a function whose name says what the step does. If the limit does not fit the code, ask the user to raise it:
 
 ```python
 """Select recent message text under a validated nonnegative limit."""
@@ -80,8 +81,7 @@ alternate sources.
 
 Never use it to disguise a mutable global configuration object. A frozen dataclass
 expresses a value fixed after construction. A project on `attrs` applies the same principles
-through its factories, validators, and converters. Do not introduce `attrs` to avoid a
-small dataclass or a function.
+through its factories, validators, and converters. Do not add `attrs` in place of a small dataclass or a function.
 
 ```python
 """Represent an independently owned batch of prompt text."""
@@ -129,7 +129,7 @@ Do not put variants in one class with a type field and optional fields that appl
 Make invalid states unrepresentable. Behavior varying on more than one axis uses composition.
 Cross-cutting behavior such as tracking, caching, timing, or logging uses a wrapper that
 records completion only after the wrapped operation succeeds. An operation that varies by
-type without a clear owner may use `functools.singledispatch`. A class meant for subclassing
+type without one class that handles it may use `functools.singledispatch`. A class meant for subclassing
 documents its public API and its subclass API separately when the distinction matters.
 
 A decorator removes real repetition or expresses a framework contract. It behaves

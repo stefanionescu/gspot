@@ -1,30 +1,30 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { settingsText } from '#tests/setup/settings.ts';
-import { readTree, pathExists } from '#tests/setup/files.ts';
+import { isOnDisk, readTree } from '#tests/setup/files.ts';
+import { buildSettingsText } from '#tests/setup/settings.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
-import { NESTED_SCOPES_SETTINGS } from '#tests/config/settings/scopes.ts';
+import { LAYERED_SCOPE_SETTINGS } from '#tests/data/settings/scopes.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 test('list shows selected settings and available configurations while doctor keeps suggestions without writing', async () => {
-    await using directory = await testdir();
-    const settings = settingsText(['bash', 'nextjs'], {
+    await using folder = await testdir();
+    const settings = buildSettingsText(['bash', 'nextjs'], {
         tables: `[[ignore]]
 check = "bash/shfmt"
 reason = "Review this separately."
 `,
     });
-    await createFileTree(directory.path, {
+    await createFileTree(folder.path, {
         'gspot.toml': settings,
         'entry.sh': 'echo example\n',
         'query.sql': 'SELECT 1;\n',
     });
-    const before = await readTree(directory.path);
-    const listed = await runGspot(directory.path, ['list', 'configurations', '--json']);
+    const before = await readTree(folder.path);
+    const listed = await runGspot(folder.path, ['list', 'configurations', '--json']);
     expect(listed.code, listed.stdout + listed.stderr).toBe(0);
     const result = JSON.parse(listed.stdout) as ConfigurationsListJson;
     expect(Object.keys(result)).toStrictEqual(['selected', 'available']);
@@ -33,50 +33,50 @@ reason = "Review this separately."
     expect(checks).toContainEqual({ name: 'bash/shfmt', scope: '', state: 'off (ignore)' });
     expect(checks).toContainEqual({ name: 'structure/shared-prefixes', scope: '', state: 'off (level)' });
     expect(
-        listSuggestions(await openSession(directory.path)).detected.find(
+        listSuggestions(await openSession(folder.path)).detected.find(
             (configuration) => configuration.configuration === 'sql',
         )?.command,
     ).toBe('gspot add sql');
     expect(result.available.some((configuration) => configuration.name === 'sql')).toBe(true);
     expect(result.available.some((configuration) => configuration.name === 'python')).toBe(true);
-    const defaults = await runGspot(directory.path, ['list', '--json']);
+    const defaults = await runGspot(folder.path, ['list', '--json']);
     expect(defaults.code, defaults.stdout + defaults.stderr).toBe(0);
     expect(JSON.parse(defaults.stdout)).toStrictEqual(result);
-    const listedSettings = await runGspot(directory.path, ['list', 'settings', '--json']);
+    const listedSettings = await runGspot(folder.path, ['list', 'settings', '--json']);
     expect(listedSettings.code, listedSettings.stdout + listedSettings.stderr).toBe(0);
     const rows = (JSON.parse(listedSettings.stdout) as SettingsListJson).settings;
     expect(rows.find((row) => row.key === 'level')?.value).toBe('recommended');
-    const invalid = await runGspot(directory.path, ['list', 'unknown']);
+    const invalid = await runGspot(folder.path, ['list', 'unknown']);
     expect(invalid.code).toBe(2);
     expect(invalid.stdout + invalid.stderr).toContain('unknown');
-    expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe(settings);
-    expect(await pathExists(join(directory.path, '.gspot'))).toBe(false);
-    expect(await readTree(directory.path)).toStrictEqual(before);
+    expect(await readFile(join(folder.path, 'gspot.toml'), 'utf8')).toBe(settings);
+    expect(await isOnDisk(join(folder.path, '.gspot'))).toBe(false);
+    expect(await readTree(folder.path)).toStrictEqual(before);
 });
 
 test('the text configuration list shows the selected names of the JSON list', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, {
-        'gspot.toml': settingsText(['bash']),
+    await using folder = await testdir();
+    await createFileTree(folder.path, {
+        'gspot.toml': buildSettingsText(['bash']),
         'entry.sh': 'echo example\n',
     });
-    const before = await readTree(directory.path);
-    const structured = await runGspot(directory.path, ['list', 'configurations', '--json']);
+    const before = await readTree(folder.path);
+    const structured = await runGspot(folder.path, ['list', 'configurations', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const result = JSON.parse(structured.stdout) as ConfigurationsListJson;
-    const human = await runGspot(directory.path, ['list', 'configurations']);
+    const human = await runGspot(folder.path, ['list', 'configurations']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
     expect(human.stdout).toStartWith('selected\n');
     for (const configuration of result.selected) expect(human.stdout).toContain(`  ${configuration.name}\n`);
-    expect(await readTree(directory.path)).toStrictEqual(before);
+    expect(await readTree(folder.path)).toStrictEqual(before);
 });
 
 test('the text check list puts the states of all scopes in one row', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, {
-        'gspot.toml': settingsText(['bash'], {
+    await using folder = await testdir();
+    await createFileTree(folder.path, {
+        'gspot.toml': buildSettingsText(['bash'], {
             tables: `[[ignore]]
 check = "bash/shfmt"
 paths = ["api/**"]
@@ -91,8 +91,8 @@ path = "api/worker"
         'api/entry.sh': 'echo api\n',
         'api/worker/entry.sh': 'echo worker\n',
     });
-    const before = await readTree(directory.path);
-    const structured = await runGspot(directory.path, ['list', '--json']);
+    const before = await readTree(folder.path);
+    const structured = await runGspot(folder.path, ['list', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const { selected } = JSON.parse(structured.stdout) as ConfigurationsListJson;
@@ -102,24 +102,24 @@ path = "api/worker"
         { name: 'bash/shfmt', scope: 'api', state: 'off (ignore)' },
         { name: 'bash/shfmt', scope: 'api/worker', state: 'off (ignore)' },
     ]);
-    const human = await runGspot(directory.path, ['list']);
+    const human = await runGspot(folder.path, ['list']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
     expect(human.stdout).toContain('    bash/shfmt  root: on, api: off (ignore), api/worker: off (ignore)\n');
     for (const name of new Set(checks.map((check) => check.name)))
         expect(human.stdout.split('\n').filter((line) => line.trimStart().startsWith(`${name} `))).toHaveLength(1);
-    expect(await readTree(directory.path)).toStrictEqual(before);
+    expect(await readTree(folder.path)).toStrictEqual(before);
 });
 
 test('the text settings list shows scope values while JSON keeps inherited values', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, {
-        'gspot.toml': NESTED_SCOPES_SETTINGS.replace('["format"]', '["bash", "format"]'),
+    await using folder = await testdir();
+    await createFileTree(folder.path, {
+        'gspot.toml': LAYERED_SCOPE_SETTINGS.replace('["format"]', '["bash", "format"]'),
         'api/entry.sh': 'echo api\n',
         'api/worker/query.sql': 'SELECT 1;\n',
     });
-    const before = await readTree(directory.path);
-    const human = await runGspot(directory.path, ['list', 'settings']);
+    const before = await readTree(folder.path);
+    const human = await runGspot(folder.path, ['list', 'settings']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
     const limits = human.stdout.split('\n').filter((line) => line.startsWith('limits.file_lines '));
@@ -129,7 +129,7 @@ test('the text settings list shows scope values while JSON keeps inherited value
     expect(limits[1]).toContain('200');
     expect(limits[1]).toContain('[scope "api"]  [scope api]');
     expect(limits.join('\n')).not.toContain('[scope api/worker]');
-    const structured = await runGspot(directory.path, ['list', 'settings', '--json']);
+    const structured = await runGspot(folder.path, ['list', 'settings', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const { settings } = JSON.parse(structured.stdout) as SettingsListJson;
@@ -139,13 +139,13 @@ test('the text settings list shows scope values while JSON keeps inherited value
         value: 200,
         source: '[scope "api"]',
     });
-    expect(await readTree(directory.path)).toStrictEqual(before);
+    expect(await readTree(folder.path)).toStrictEqual(before);
 });
 
 test('the text settings list shortens long values and names extra tool options', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, {
-        'gspot.toml': settingsText(['bash'], {
+    await using folder = await testdir();
+    await createFileTree(folder.path, {
+        'gspot.toml': buildSettingsText(['bash'], {
             tables: `[naming]
 banned_words = ["generated-long-name-one/**", "generated-long-name-two/**"]
 [tools.shellcheck]
@@ -154,8 +154,8 @@ extra = { value = { external_sources = true }, reason = "ShellCheck follows the 
         }),
         'entry.sh': 'echo example\n',
     });
-    const before = await readTree(directory.path);
-    const human = await runGspot(directory.path, ['list', 'settings']);
+    const before = await readTree(folder.path);
+    const human = await runGspot(folder.path, ['list', 'settings']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
     expect(human.stdout).toMatch(/^naming\.banned_words\s+\["generated-long-name-one\/\*… /mu);
@@ -164,7 +164,7 @@ extra = { value = { external_sources = true }, reason = "ShellCheck follows the 
     expect(human.stdout).toContain(
         'tools.shellcheck.extra  external_sources  ShellCheck follows the authored external sources.',
     );
-    const structured = await runGspot(directory.path, ['list', 'settings', '--json']);
+    const structured = await runGspot(folder.path, ['list', 'settings', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const { settings, extras } = JSON.parse(structured.stdout) as SettingsListJson;
@@ -185,5 +185,5 @@ extra = { value = { external_sources = true }, reason = "ShellCheck follows the 
             scope: '',
         },
     ]);
-    expect(await readTree(directory.path)).toStrictEqual(before);
+    expect(await readTree(folder.path)).toStrictEqual(before);
 });

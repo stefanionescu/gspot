@@ -1,5 +1,7 @@
 # Xcode
 
+Read this rule when you change Xcode project settings, schemes, or build phases.
+
 ## Project settings
 
 - `SWIFT_STRICT_CONCURRENCY = complete`. Set the upcoming-feature flags the project adopts in

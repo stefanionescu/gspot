@@ -1,6 +1,6 @@
 # Vue
 
-These rules cover Vue 3 single-file components, reactivity, props and events, templates, and stores.
+Read this rule when you change Vue components, composables, or stores.
 
 ## Components
 

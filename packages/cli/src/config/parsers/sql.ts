@@ -22,8 +22,6 @@ export const SQL_QUALIFIED_NAME = new RegExp(
     'u',
 );
 
-/** Skip the creation command and its object keyword before a location-free name search. */
-
 export const SQL_DECLARATION_PREFIX =
     // eslint-disable-next-line sonarjs/regex-complexity -- reason: This PostgreSQL keyword list keeps declaration positions exact without accepting unrelated creation forms.
     /^\s*CREATE\s+(?:OR\s+REPLACE\s+)?(?:(?:UNIQUE|CONSTRAINT|MATERIALIZED|TEMPORARY|TEMP|UNLOGGED)\s+)?\w+(?:\s+IF\s+NOT\s+EXISTS)?/iu;

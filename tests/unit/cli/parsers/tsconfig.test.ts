@@ -2,14 +2,14 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/commands/session.ts';
-import { settingsText } from '#tests/setup/settings.ts';
+import { openSession } from '#cli/session.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { buildSettingsText } from '#tests/setup/settings.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 
 test('readTsconfigProject uses the nearest covering ancestor and refuses an excluded child', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': settingsText(['typescript'], {
+        'gspot.toml': buildSettingsText(['typescript'], {
             level: 'all',
             tables: '[[scope]]\npath = "app"\n[[scope]]\npath = "app/deep"\n[[scope]]\npath = "sibling"\n',
         }),
@@ -44,12 +44,12 @@ test('tsconfig reads share one read cache per run and keep folders apart', async
     const path = join(reads.root, 'tsconfig.json');
     const initial = readTsconfig(reads.root, path, reads)!;
     expect(initial.options.strict).toBe(true);
-    expect(readTsconfig(reads.root, path, reads)).toBe(initial);
+    expect(readTsconfig(reads.root, path, reads)).toStrictEqual(initial);
     const secondReads = createReadCache(second.path);
     expect(readTsconfig(second.path, join(second.path, 'tsconfig.json'), secondReads)?.options.strict).toBe(false);
     expect(() => readTsconfig(second.path, path, secondReads)).toThrow('is not a safe repository-relative path');
     await writeFile(join(first.path, 'base.json'), '{"compilerOptions":{"strict":false}}');
-    expect(readTsconfig(reads.root, path, reads)).toBe(initial);
+    expect(readTsconfig(reads.root, path, reads)).toStrictEqual(initial);
     const next = createReadCache(first.path);
     expect(readTsconfig(next.root, path, next)?.options.strict).toBe(false);
     await writeFile(join(first.path, 'base.json'), '{');

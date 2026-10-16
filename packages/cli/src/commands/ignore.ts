@@ -1,25 +1,22 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { LocalDate } from '@decimalturn/toml-patch';
 import { quoteArgument } from '#cli/system/text.ts';
-import { parseSettings } from '#cli/settings/read.ts';
-import { printResult } from '#cli/system/terminal.ts';
 import { stripUndefined } from '#cli/system/values.ts';
+import { mergeIgnore } from '#cli/settings/write/text.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
-import { type CommandResult } from '#cli/types/terminal.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { type TomlTable } from '#cli/types/settings/file.ts';
 import { type Settings } from '#cli/types/settings/values.ts';
+import { stringify, LocalDate } from '@decimalturn/toml-patch';
 import { calendarDateSchema } from '#cli/settings/schema/parts.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
-import { type IgnoreOptions } from '#cli/types/commands/save-settings.ts';
-import { mergeIgnore, formatSettingsText } from '#cli/settings/write/text.ts';
-import { saveSettings, startSettingsEdit } from '#cli/commands/save-settings.ts';
+import { type IgnoreOptions } from '#cli/types/commands/edit-settings.ts';
+import { saveSettings, startSettingsEdit } from '#cli/apply/save-settings.ts';
 import { listCheckIds, formatUnknownCheck } from '#cli/configurations/manifests.ts';
+import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
 function assertKnownCheck(checkName: string, settings: Settings, reads: ReadCache): void {
-    const known = listCheckIds(Object.values(settings.check), reads);
+    const known = listCheckIds(Object.values(settings.commandChecks), reads);
     if (known.includes(checkName)) return;
     throw new GspotError('arguments', formatUnknownCheck(checkName, known));
 }
@@ -36,13 +33,11 @@ function buildReasonHint(options: IgnoreOptions): string {
  * @param options the parsed flags
  * @returns the command result
  */
-async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
-    const { root, input } = await startSettingsEdit(options.cwd);
-    const reads = createReadCache(root);
-    const settings = parseSettings(input.text, root, reads);
+async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
+    const { root, input, settings, reads } = startSettingsEdit(options.cwd);
     assertKnownCheck(options.check, settings, reads);
-    const diagnostic = validateReason(`gspot ignore ${options.check}`, options.reason, buildReasonHint(options));
-    if (diagnostic !== undefined) throw new GspotError('settings', diagnostic);
+    const message = validateReason(`gspot ignore ${options.check}`, options.reason, buildReasonHint(options));
+    if (message !== undefined) throw new GspotError('settings', message);
     const list = (input.table['ignore'] as TomlTable[] | undefined) ?? [];
     let saved: TomlTable = {};
     const result = await saveSettings(root, {
@@ -60,17 +55,18 @@ async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
             );
             written['ignore'] = list;
         },
-        summary: `Saved the ignore for ${options.check}.`,
+        summary: `Ignored ${options.check}${options.paths === undefined ? '' : ' for ' + options.paths.join(' and ')}.`,
     });
-    const written = formatSettingsText('', { ignore: [saved] }).trimEnd();
+    const written = stringify({ ignore: [saved] }).trimEnd();
     return result.exitCode === 0 && result.json.changed ? { ...result, text: `${written}\n${result.text}` } : result;
 }
 
 /**
  * Register the ignore command.
  * @param program the command program
+ * @param onResult the sink that writes the completed command result.
  */
-function registerIgnore(program: Command): void {
+function registerIgnore(program: Command, onResult: CommandCompletion): void {
     program
         .command('ignore')
         .argument('<check>', COMMAND_HELP.ignore.arguments['check'])
@@ -81,8 +77,8 @@ function registerIgnore(program: Command): void {
         .option('--paths <glob...>', COMMAND_HELP.ignore.options['--paths <glob...>'])
         .option('--until <date>', COMMAND_HELP.ignore.options['--until <date>'])
         .action(async (check, flags) => {
-            printResult(
-                await ignoreCommand({
+            onResult(
+                await runIgnoreCommand({
                     cwd: process.cwd(),
                     check,
                     ...stripUndefined({
@@ -107,5 +103,4 @@ function parseExpiryDate(text: string): LocalDate {
     return new LocalDate(result.data);
 }
 
-export { parseExpiryDate };
 export { registerIgnore };

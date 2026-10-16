@@ -1,5 +1,7 @@
 # Python
 
+Read this rule when you change Python code.
+
 ## Python scope
 
 Write readable Python before clever Python: explicit data flow, clear names, small functions,
@@ -17,8 +19,7 @@ version requirements in examples whose syntax depends on them. Use `.py` for sou
 
 <!-- level: all -->
 
-Comments and docstrings use the project's declared language, and valid user content
-never restricts names to ASCII.
+Write comments and docstrings in the project's declared language. Accept valid user content outside ASCII.
 
 ## Environment and configuration
 
@@ -27,7 +28,7 @@ globally installed package. Imports resolve through project configuration, edita
 installs, `python -m`, or the configured environment. Virtual environments and package caches
 stay out of commits.
 
-The configuration owner takes the environment as a mapping, so a test passes its own:
+The module that reads the configuration takes the environment as a mapping, so a test passes its own:
 
 ```python
 
@@ -121,8 +122,7 @@ validation.
 
 <!-- level: all -->
 
-Avoid power features unless the project has a clear local pattern and the code needs that
-feature. That covers custom metaclasses, bytecode manipulation, dynamic inheritance, object
+Avoid power features unless the project already uses the feature and no plain alternative works. That covers custom metaclasses, bytecode manipulation, dynamic inheritance, object
 reparenting, import hooks, runtime monkeypatching, and reflection-heavy designs. It also
 covers interpreter internals, `__del__` cleanup, manual descriptors, and dynamic code
 generation. A power feature never makes code shorter or hides a dependency cycle; ordinary
@@ -133,6 +133,56 @@ functions, dataclasses, explicit imports, and explicit data structures come firs
 Built-in types and variable assignment do not synchronize threads: use `queue.Queue` for thread
 communication and locks or conditions for shared state, which stays small and explicit.
 
-## Tests
+## Naming
 
-Name Python test files `test_<behavior>.py`, grouped by behavior.
+### Command inputs and external names
+
+<!-- level: all -->
+
+- CLI flags use lowercase kebab case, such as `--account-name` and
+  `--output-dir`.
+- Avoid single-letter names except loop counters and math notation.
+- Preserve provider capitalization in external names such as `AWS_REGION` and
+  provider resource IDs.
+
+### Python modules and imports
+
+<!-- level: all -->
+
+- Name test files `test_<behavior>.py`, grouped by behavior.
+
+- Do not create package-level re-export layers only to preserve old names.
+- Keep `__all__` names accurate and ordered according to local lint rules.
+
+Import `AccountSettings` under its declared name. An alias such as `Thing`
+hides the contract and provides no collision information.
+
+### Python types and dataclasses
+
+<!-- level: all -->
+
+- Dataclass names describe the domain value they represent.
+- Field names describe the value inside the owning type without repeating the
+  type name.
+- Use `Path` variables with names that reveal whether they point to a directory,
+  file, report, output, or repository root.
+- Use `*_path` for filesystem paths and `*_dir` only for directories.
+- Use `*_id` only for real identifiers, not arbitrary names, or labels.
+- Use `*_name` for display or provider names.
+- Use `*_key` for dictionary keys and supported variant keys.
+
+| Avoid                    | Prefer           | Meaning             |
+| ------------------------ | ---------------- | ------------------- |
+| `Invoice.invoice_number` | `Invoice.number` | The invoice number. |
+| `Shipment.shipment_date` | `Shipment.date`  | The shipment date.  |
+
+### Python boundary names
+
+<!-- level: all -->
+
+- Keep raw provider or CLI names at the boundary.
+- Translate external names into domain names before passing values inward when
+  the external name differs from the domain concept.
+- Keep path construction with the code that owns the resource instead of repeating it in
+  unrelated operations.
+- Name functions that cross boundaries for the operation they perform.

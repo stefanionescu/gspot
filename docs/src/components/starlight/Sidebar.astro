@@ -1,0 +1,16 @@
+---
+import Default from '@astrojs/starlight/components/Sidebar.astro';
+---
+
+<Default />
+<script is:inline>
+    (() => {
+        // Starlight restores the sidebar position after a click inside it. On any other visit, show the current link.
+        if (!matchMedia('(min-width: 50em)').matches) return;
+        const pane = document.querySelector('#starlight__sidebar');
+        if (pane === null) throw new Error('Starlight rendered no sidebar pane.');
+        const current = pane.querySelector('a[aria-current="page"]');
+        if (current === null || pane.scrollTop > 0) return;
+        if (current.getBoundingClientRect().bottom > innerHeight) current.scrollIntoView({ block: 'center' });
+    })();
+</script>

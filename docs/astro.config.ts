@@ -1,10 +1,24 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
-import { purgeStyles } from './src/styles.ts';
-import { mkdir, copyFile } from 'node:fs/promises';
+import { referenceData } from '#cli/reference.ts';
+import starlightLlmsTxt from 'starlight-llms-txt';
+import { pruneUnusedStyles } from './src/styles.ts';
 import { SIDEBAR } from './src/config/navigation.ts';
+import { mkdir, copyFile, writeFile } from 'node:fs/promises';
+import { AGENT_STEPS, LLMS_DESCRIPTION } from './src/config/setup.ts';
 import { description } from '@gspothq/cli/package.json' with { type: 'json' };
-import { LOGO, SITE_URL, SOCIAL_IMAGE, FONT_PACKAGES, REPOSITORY_URL, SOCIAL_IMAGE_SIZE } from './src/config/site.ts';
+
+import {
+    LOGO,
+    EDIT_URL,
+    SITE_URL,
+    SOCIAL_IMAGE,
+    FONT_PACKAGES,
+    REPOSITORY_URL,
+    SOCIAL_IMAGE_ALT,
+    SOCIAL_IMAGE_SIZE,
+    FIRST_PAINT_TARGET,
+} from './src/config/site.ts';
 
 export default defineConfig({
     site: SITE_URL,
@@ -17,6 +31,15 @@ export default defineConfig({
         environments: { prerender: { resolve: { external: ['satteri'] } } },
     },
     integrations: [
+        {
+            name: 'settings-schema',
+            hooks: {
+                'astro:build:done': async ({ dir }) => {
+                    const { schema, schemaFile } = referenceData();
+                    await writeFile(new URL(schemaFile, dir), JSON.stringify(schema) + '\n');
+                },
+            },
+        },
         {
             name: 'font-licenses',
             hooks: {
@@ -35,6 +58,8 @@ export default defineConfig({
         starlight({
             title: 'gspot',
             favicon: LOGO,
+            // Writes /llms.txt with the steps for coding agents, and /llms-full.txt and /llms-small.txt with the docs.
+            plugins: [starlightLlmsTxt({ projectName: 'gspot', description: LLMS_DESCRIPTION, details: AGENT_STEPS })],
             head: [
                 {
                     tag: 'meta',
@@ -45,33 +70,43 @@ export default defineConfig({
                 },
                 { tag: 'meta', attrs: { property: 'og:image:width', content: String(SOCIAL_IMAGE_SIZE.width) } },
                 { tag: 'meta', attrs: { property: 'og:image:height', content: String(SOCIAL_IMAGE_SIZE.height) } },
-                { tag: 'meta', attrs: { property: 'og:image:alt', content: 'The gspot logo.' } },
+                { tag: 'meta', attrs: { property: 'og:image:alt', content: SOCIAL_IMAGE_ALT } },
+                // Wait for the browser to parse the article before painting a new page.
+                { tag: 'link', attrs: { rel: 'expect', href: FIRST_PAINT_TARGET, blocking: 'render' } },
             ],
             components: {
                 Header: './src/components/starlight/Header.astro',
-                Search: './src/components/starlight/Search.astro',
+                Footer: './src/components/starlight/Footer.astro',
                 SiteTitle: './src/components/starlight/SiteTitle.astro',
+                ThemeProvider: './src/components/starlight/ThemeProvider.astro',
+                ThemeSelect: './src/components/starlight/ThemeSelect.astro',
+                MobileMenuToggle: './src/components/starlight/MobileMenuToggle.astro',
+                Sidebar: './src/components/starlight/Sidebar.astro',
+                MarkdownContent: './src/components/starlight/MarkdownContent.astro',
                 Hero: './src/components/starlight/Hero.astro',
             },
-            expressiveCode: { defaultProps: { frame: 'code' } },
-            editLink: { baseUrl: 'https://github.com/stefanionescu/gspot/edit/main/docs/' },
+            expressiveCode: {
+                defaultProps: { frame: 'code', wrap: true, hangingIndent: 2 },
+                styleOverrides: {
+                    borderRadius: '0.5rem',
+                    codePaddingBlock: '0.875rem',
+                    frames: {
+                        editorTabBarBackground: 'var(--sl-color-gray-7, var(--sl-color-gray-6))',
+                        editorActiveTabForeground: 'var(--sl-color-gray-3)',
+                        editorActiveTabIndicatorTopColor: 'transparent',
+                        editorTabBarBorderBottomColor: 'var(--sl-color-gray-5)',
+                    },
+                },
+            },
+            editLink: { baseUrl: EDIT_URL },
             description,
             customCss: ['./src/theme.css'],
             social: [{ icon: 'github', label: 'GitHub', href: REPOSITORY_URL }],
-            sidebar: SIDEBAR.map((group) =>
-                'items' in group
-                    ? {
-                          ...group,
-                          items: group.items.map((item) =>
-                              'items' in item ? { ...item, items: [...item.items] } : item,
-                          ),
-                      }
-                    : group,
-            ),
+            sidebar: SIDEBAR,
         }),
         {
             name: 'styles',
-            hooks: { 'astro:build:done': ({ dir }) => purgeStyles(dir) },
+            hooks: { 'astro:build:done': ({ dir }) => pruneUnusedStyles(dir) },
         },
     ],
 });

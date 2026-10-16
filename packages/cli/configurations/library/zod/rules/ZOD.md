@@ -1,5 +1,7 @@
 # Zod
 
+Read this rule when you write or change a Zod schema.
+
 Check the installed release and its consumers before choosing an API. Put a runtime schema with
 the feature that owns the contract. Infer input and output types from it rather than keeping a
 second handwritten contract.

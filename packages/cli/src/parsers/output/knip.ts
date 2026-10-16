@@ -1,10 +1,10 @@
 // Reads Knip issue categories and source locations.
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
 import { parseReport } from '#cli/parsers/output/formats.ts';
-import type { Finding } from '#cli/types/execution/check.ts';
-import { KNIP_ISSUE_MESSAGES, KNIP_ISSUE_CATEGORIES } from '#cli/config/parsers/output.ts';
+import type { Finding } from '#cli/types/checks/run/check.ts';
+import { KNIP_ISSUE_TYPES, KNIP_ISSUE_MESSAGES } from '#cli/config/parsers/output.ts';
 import { type KnipReport, type KnipSymbol, type ReportInput } from '#cli/types/parsers/output.ts';
 
 const knipSymbolSchema = z.object({
@@ -59,7 +59,7 @@ export function parseKnipFindings(input: ReportInput): Finding[] {
     const report = parseReport('Knip', text, knipReportSchema);
     const findings: Finding[] = [];
     for (const row of report.issues) {
-        for (const category of KNIP_ISSUE_CATEGORIES) {
+        for (const category of KNIP_ISSUE_TYPES) {
             findings.push(
                 ...(row[category] ?? []).flatMap((issue) => {
                     const symbols = Array.isArray(issue) ? issue : [issue];

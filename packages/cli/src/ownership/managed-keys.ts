@@ -2,8 +2,8 @@ import { isDeepStrictEqual } from 'node:util';
 import { openJsonFile } from '#cli/parsers/json.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { normalizeTables } from '#cli/system/values.ts';
-import type { FileCopy } from '#cli/types/system/files.ts';
 import { openTomlFile } from '#cli/parsers/toml/document.ts';
+import type { FileContents } from '#cli/types/system/files.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
 import type { FileEdit, KeyChangePlan, KeyChangeRequest } from '#cli/types/ownership.ts';
@@ -34,7 +34,7 @@ function planKeyChanges(request: KeyChangeRequest): KeyChangePlan {
  *
  * @returns the document used by merge, inspection, and restoration.
  */
-function openKeysDocument(path: string, current: FileCopy | undefined): EditableFile {
+function openKeysDocument(path: string, current: FileContents | undefined): EditableFile {
     const text = current === undefined ? undefined : decodeUtf8(current.bytes);
     if (current !== undefined && text === undefined) throw new Error(`${path} is not UTF-8 text`);
     if (path.endsWith(TOML_EXTENSION)) return openTomlFile({ path, source: text ?? '' });
@@ -53,7 +53,7 @@ function openKeysDocument(path: string, current: FileCopy | undefined): Editable
  * @param current the existing file copy.
  * @returns whether the file holds every installed value.
  */
-function hasManagedKeys(output: FileEdit, current: FileCopy): boolean {
+function hasManagedKeys(output: FileEdit, current: FileContents): boolean {
     const document = openKeysDocument(output.path, current);
     return output.changes.every((field) =>
         isDeepStrictEqual(document.getValue(field.path), normalizeTables(field.value)),

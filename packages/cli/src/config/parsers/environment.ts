@@ -1,4 +1,4 @@
-export const JAVASCRIPT_ENVIRONMENT_OBJECTS: ReadonlySet<string> = new Set([
+export const JAVASCRIPT_ENVIRONMENT_FIELDS: ReadonlySet<string> = new Set([
     'process.env',
     'Bun.env',
     'import.meta.env',

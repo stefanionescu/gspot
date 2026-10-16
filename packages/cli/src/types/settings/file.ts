@@ -1,7 +1,9 @@
-import type { FileCopy } from '#cli/types/system/files.ts';
+import type { STAGES } from '#cli/config/configurations.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
-import type { Defined, Optional } from '#cli/types/objects.ts';
+import type { Defined, Optional } from '#cli/types/shapes.ts';
+import type { FileContents } from '#cli/types/system/files.ts';
 import type { ParsedSite } from '#cli/types/checks/framework.ts';
+import type { ParsedSwift } from '#cli/types/checks/language.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { ParsedPostgres } from '#cli/types/checks/database.ts';
 import type { REEXPORT_MODES } from '#cli/config/settings/schema.ts';
@@ -11,14 +13,17 @@ import type { ParsedXcode, ParsedOpenapi } from '#cli/types/checks/infrastructur
 import type { ParsedDrizzle, ParsedTranslations } from '#cli/types/checks/library.ts';
 import type { ParsedSupabase, ParsedCloudflare } from '#cli/types/checks/platform.ts';
 
-import type {
-    ParsedDocs,
-    NamedCategory,
-    ParsedSecrets,
-    ParsedCoverage,
-    ParsedLicenses,
-    ParsedSpelling,
-    ParsedDependencies,
+import {
+    type ParsedDocs,
+    type ParsedProse,
+    type NamedCategory,
+    type ParsedSecrets,
+    type ParsedCoverage,
+    type ParsedLicenses,
+    type ParsedSpelling,
+    type ParsedRepository,
+    type ParsedDuplication,
+    type ParsedDependencies,
 } from '#cli/types/checks/general.ts';
 import type {
     ParsedCi,
@@ -31,44 +36,55 @@ import type {
     ParsedLimits,
     ParsedNaming,
     ParsedFormat,
-    NamingLanguage,
+    SettingLanguage,
     ParsedStructure,
     ParsedArchitecture,
     NamingLanguageFields,
 } from '#cli/types/settings/tables.ts';
 
+type CommandCheckFields = {
+    name: string;
+    command: string[];
+    paths: string[];
+    stage: Exclude<(typeof STAGES)[number], 'message'>;
+    help?: string | undefined;
+    fix?: string[] | undefined;
+    exit_codes?: number[] | undefined;
+    summary?: string | undefined;
+};
+
 type TomlDate = { toISOString: () => string };
 
 type WrittenCoverage = Optional<Omit<ParsedCoverage, 'lines' | 'branches' | 'functions' | 'statements'>> & {
-    lines?: ReasonValue<number> | undefined;
-    branches?: ReasonValue<number> | undefined;
-    functions?: ReasonValue<number> | undefined;
-    statements?: ReasonValue<number> | undefined;
+    lines?: SettingValue<number> | undefined;
+    branches?: SettingValue<number> | undefined;
+    functions?: SettingValue<number> | undefined;
+    statements?: SettingValue<number> | undefined;
 };
 
 type WrittenDependencies = Optional<Omit<ParsedDependencies, 'min_release_age_days' | 'allowed_registries'>> & {
-    min_release_age_days?: ReasonValue<number> | undefined;
-    allowed_registries?: ReasonValue<string[]> | undefined;
+    min_release_age_days?: SettingValue<number> | undefined;
+    allowed_registries?: SettingValue<string[]> | undefined;
 };
 
-type WrittenDocs = Optional<Omit<ParsedDocs, 'allowed_urls'>> & { allowed_urls?: ReasonValue<string[]> | undefined };
+type WrittenDocs = Optional<Omit<ParsedDocs, 'allowed_urls'>> & { allowed_urls?: SettingValue<string[]> | undefined };
 
 type WrittenSite = Optional<Omit<ParsedSite, 'allowed_unlisted_pages'>> & {
-    allowed_unlisted_pages?: ReasonValue<string[]> | undefined;
+    allowed_unlisted_pages?: SettingValue<string[]> | undefined;
 };
 
-export type ReasonEnvelope<Value> = { value: Value; reason: string };
+export type ReasonedValue<Value> = { value: Value; reason: string };
 
-export type ReasonValue<Value> = Value | ReasonEnvelope<Value>;
+export type SettingValue<Value> = Value | ReasonedValue<Value>;
 
 export type WrittenLicenses = Optional<ParsedLicenses>;
 
-export type WrittenLimits = LimitFields<ReasonValue<number>> &
-    Optional<Record<NamingLanguage, LimitFields<ReasonValue<number>> | undefined>>;
+export type WrittenLimits = LimitFields<SettingValue<number>> &
+    Optional<Record<SettingLanguage, LimitFields<SettingValue<number>> | undefined>>;
 
 export type ParsedNamingOverride = {
     paths: string[];
-    languages?: NamingLanguage[] | undefined;
+    languages?: SettingLanguage[] | undefined;
     categories?: NamedCategory[] | undefined;
     ignored_prefix?: string | undefined;
     allow_digits: boolean;
@@ -80,9 +96,9 @@ export type ParsedNamingOverride = {
 
 export type WrittenNamingOverride = Optional<Omit<ParsedNamingOverride, 'reason'>> & { reason: string };
 
-export type WrittenNaming = NamingFields<ReasonValue<number>, ReasonValue<NamingCase[]>> &
+export type WrittenNaming = NamingFields<SettingValue<number>, SettingValue<NamingCase[]>> &
     Optional<
-        Record<NamingLanguage, NamingLanguageFields<ReasonValue<number>, ReasonValue<NamingCase[]>> | undefined>
+        Record<SettingLanguage, NamingLanguageFields<SettingValue<number>, SettingValue<NamingCase[]>> | undefined>
     > & {
         banned_words?: string[] | undefined;
         override?: WrittenNamingOverride[] | undefined;
@@ -124,6 +140,10 @@ export type WrittenSettings = Optional<
         | 'supabase'
         | 'translations'
         | 'xcode'
+        | 'swift'
+        | 'duplication'
+        | 'prose'
+        | 'repository'
     >
 > & {
     licenses?: WrittenLicenses | undefined;
@@ -136,7 +156,19 @@ export type WrittenSettings = Optional<
     supabase?: Optional<ParsedSupabase> | undefined;
     translations?: Optional<ParsedTranslations> | undefined;
     xcode?: Optional<ParsedXcode> | undefined;
-    allowed_words?: ReasonValue<string[]> | undefined;
+    swift?: Optional<ParsedSwift> | undefined;
+    duplication?:
+        | { min_lines?: SettingValue<number> | undefined; min_tokens?: SettingValue<number> | undefined }
+        | undefined;
+    prose?:
+        | {
+              max_sentence_words?: SettingValue<number> | undefined;
+              max_list_item_words?: SettingValue<number> | undefined;
+              max_paragraph_sentences?: SettingValue<number> | undefined;
+          }
+        | undefined;
+    repository?: { max_file_kilobytes?: SettingValue<number> | undefined } | undefined;
+    allowed_words?: SettingValue<string[]> | undefined;
     scope?: WrittenScope[] | undefined;
     coverage?: WrittenCoverage | undefined;
     dependencies?: WrittenDependencies | undefined;
@@ -147,20 +179,8 @@ export type WrittenSettings = Optional<
     architecture?: WrittenArchitecture | undefined;
     tools?: WrittenTools | undefined;
     format?: WrittenFormat | undefined;
-    command_check?:
-        | {
-              name: string;
-              command: string[];
-              paths: string[];
-              stage: 'commit' | 'push' | 'manual';
-              help?: string | undefined;
-              fix?: string[] | undefined;
-              exit_codes?: number[] | undefined;
-              summary?: string | undefined;
-              output?: OutputInput | undefined;
-          }[]
-        | undefined;
-    structure?: { reexports?: ReasonValue<(typeof REEXPORT_MODES)[number]> | undefined } | undefined;
+    command_check?: (CommandCheckFields & { output?: OutputInput | undefined })[] | undefined;
+    structure?: { reexports?: SettingValue<(typeof REEXPORT_MODES)[number]> | undefined } | undefined;
     hooks?: Optional<ParsedHooks> | undefined;
     ci?: Optional<ParsedCi> | undefined;
     rules?: Optional<ParsedRules> | undefined;
@@ -174,19 +194,23 @@ export type ParsedSettings = ParsedRoot & {
               removed_configurations: string[];
               test_files?: string[] | undefined;
               cloudflare?: ParsedCloudflare | undefined;
-              coverage?: Omit<ParsedCoverage, 'target'> | undefined;
+              coverage?: Omit<ParsedCoverage, 'swift_target'> | undefined;
               dependencies?: ParsedDependencies | undefined;
               docs?: Omit<ParsedDocs, 'banned_headings'> | undefined;
               drizzle?: ParsedDrizzle | undefined;
               licenses?: Omit<ParsedLicenses, 'allowed_package'> | undefined;
               openapi?: ParsedOpenapi | undefined;
               postgres?: ParsedPostgres | undefined;
+              duplication?: ParsedDuplication | undefined;
+              prose?: ParsedProse | undefined;
+              repository?: ParsedRepository | undefined;
               secrets?: ParsedSecrets | undefined;
               site?: Omit<ParsedSite, 'size_limit'> | undefined;
               spelling?: ParsedSpelling | undefined;
               supabase?: ParsedSupabase | undefined;
               translations?: ParsedTranslations | undefined;
               xcode?: ParsedXcode | undefined;
+              swift?: ParsedSwift | undefined;
               limits?: ParsedLimits | undefined;
               naming?: Omit<ParsedNaming, 'override'> | undefined;
               architecture?: Omit<ParsedArchitecture, 'module'> | undefined;
@@ -206,12 +230,16 @@ export type ParsedSettings = ParsedRoot & {
     licenses?: ParsedLicenses | undefined;
     openapi?: ParsedOpenapi | undefined;
     postgres?: ParsedPostgres | undefined;
+    duplication?: ParsedDuplication | undefined;
+    prose?: ParsedProse | undefined;
+    repository?: ParsedRepository | undefined;
     secrets?: ParsedSecrets | undefined;
     site?: ParsedSite | undefined;
     spelling?: ParsedSpelling | undefined;
     supabase?: ParsedSupabase | undefined;
     translations?: ParsedTranslations | undefined;
     xcode?: ParsedXcode | undefined;
+    swift?: ParsedSwift | undefined;
     limits?: ParsedLimits | undefined;
     naming?: ParsedNaming | undefined;
     architecture?: ParsedArchitecture | undefined;
@@ -226,19 +254,7 @@ export type ParsedSettings = ParsedRoot & {
               until?: TomlDate | undefined;
           }[]
         | undefined;
-    command_check?:
-        | {
-              name: string;
-              command: string[];
-              paths: string[];
-              stage: 'commit' | 'push' | 'manual';
-              help?: string | undefined;
-              fix?: string[] | undefined;
-              exit_codes?: number[] | undefined;
-              summary?: string | undefined;
-              output: OutputSpec;
-          }[]
-        | undefined;
+    command_check?: (CommandCheckFields & { output: OutputSpec })[] | undefined;
     structure?: ParsedStructure | undefined;
     hooks?: ParsedHooks | undefined;
     ci?: ParsedCi | undefined;
@@ -251,11 +267,11 @@ export type Template = { source: string; text: string; digest: string; tables: T
 
 export type ExportedTemplate = { text: string; leftOut: string[] };
 
-export type SettingsSource = { text: string; original: FileCopy };
+export type SettingsFileContents = { text: string; original: FileContents };
 
-export type SettingsEdit = { text: string; table: TomlTable; values: TomlTable; original: FileCopy };
+export type SettingsEdit = { text: string; table: TomlTable; values: TomlTable; original: FileContents };
 
-export type EditedSettings = { text: string; settings: Settings; changed: boolean; original: FileCopy };
+export type EditedSettings = { text: string; settings: Settings; changed: boolean; original: FileContents };
 
 export type Mutation = (written: TomlTable) => void;
 
@@ -266,7 +282,7 @@ export type LayoutSection = { path: KeyPath; table: TomlTable };
 
 export type ArchitectureModule = { name: string; paths: string[]; may_import: string[] };
 
-export type IgnoreEntry = NonNullable<ParsedSettings['ignore']>[number];
+export type IgnoreRecord = NonNullable<ParsedSettings['ignore']>[number];
 
 export type SettingsError = { path: KeyPath; message: string };
 
@@ -296,7 +312,7 @@ export type WrittenScope = Omit<
     | 'format'
 > & {
     path: string;
-    coverage?: Omit<WrittenCoverage, 'target'> | undefined;
+    coverage?: Omit<WrittenCoverage, 'swift_target'> | undefined;
     docs?: Omit<WrittenDocs, 'banned_headings'> | undefined;
     licenses?: Omit<WrittenLicenses, 'allowed_package'> | undefined;
     site?: Omit<WrittenSite, 'size_limit'> | undefined;

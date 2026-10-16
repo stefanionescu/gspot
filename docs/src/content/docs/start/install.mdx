@@ -1,0 +1,163 @@
+---
+title: Install gspot
+description: Choose an installation method for your repository and prepare its checks.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## What you need
+
+Use Git and Node.js 24.15 or newer. Bun can install and start gspot, but the checks run on Node.js.
+Use your package manager for a repository with `package.json`, or mise for another repository.
+
+Program tools such as Gitleaks, typos, and ShellCheck need mise on both paths.
+Without mise, `gspot install` installs npm tools and Python tools when `PATH` includes uv.
+It names each missing program, including uv, and exits 0. A check with a missing program exits 2;
+`gspot doctor` lists the missing tools.
+
+Run `gspot init --dry-run` to see which tools your repository needs. gspot installs only what its checks and fixers need. File types count too: Markdown files in a Python repository still need Node.js for the Markdown checks.
+
+| Tools                                                                        | What you need                                                                                           |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| npm tools, such as ESLint or markdownlint                                    | Node.js and the project's npm, pnpm, Yarn, or Bun package manager. With no declaration, gspot uses npm. |
+| Python tools, such as Ruff or yamllint                                       | uv; gspot installs its pinned Python version when needed.                                               |
+| Program tools: command-line programs such as ShellCheck, Gitleaks, and typos | mise, or the exact pinned tools on `PATH`. `gspot doctor` lists missing tools.                          |
+| Project commands, such as Jest, Vitest, Next.js, or Swift builds             | Your project's runtime, dependencies, and build tools.                                                  |
+
+### Operating system limits
+
+Swift needs its toolchain. SwiftFormat supports macOS and Linux. Xcode checks and XCTest coverage need macOS with Xcode selected by `xcode-select`. Container checks can need a running Docker daemon. Some scans and generators need network access. Each [check page](/reference/checks/) lists its operating systems and other requirements.
+
+:::note
+The Bash checks need Bash 4.4 or newer. macOS comes with Bash 3.2, so install a newer Bash.
+:::
+
+## Choose how to install
+
+| Your repository                    | Install gspot                                                                                                                             |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Has `package.json`                 | As a dev dependency, pinned to one version. Start later commands with `npx gspot`, `pnpm exec gspot`, `yarn exec gspot`, or `bunx gspot`. |
+| Any other, such as Python or Swift | As an npm package that mise pins in your `mise.toml`. Start later commands with `mise exec -- gspot`.                                     |
+
+The guides write commands as `gspot ...`. Add the start from this table.
+
+:::caution
+Install `@gspothq/cli` before you run `npx gspot`. Before installation, npx can download the separate npm package named `gspot`.
+:::
+
+## Repository with package.json
+
+<Tabs syncKey="package-manager">
+<TabItem label="npm">
+
+```shell
+npm i -D -E @gspothq/cli
+npx gspot init
+npx gspot install
+```
+
+</TabItem>
+<TabItem label="pnpm">
+
+```shell
+pnpm add -D -E @gspothq/cli
+pnpm exec gspot init
+pnpm exec gspot install
+```
+
+</TabItem>
+<TabItem label="Yarn">
+
+```shell
+yarn add -D -E @gspothq/cli
+yarn exec gspot init
+yarn exec gspot install
+```
+
+</TabItem>
+<TabItem label="Bun">
+
+```shell
+bun add -d -E @gspothq/cli
+bunx gspot init
+bunx gspot install
+```
+
+</TabItem>
+</Tabs>
+
+## Repository without package.json
+
+```shell
+mise use --pin node@24 --tool-option allow_low_downloads=true npm:@gspothq/cli
+mise exec -- gspot init
+mise exec -- gspot install
+```
+
+`--pin` writes exact Node.js and gspot versions to `mise.toml`. mise requires approval for a new npm package or
+one with few downloads; `allow_low_downloads=true` approves gspot.
+
+## Set up a clone
+
+Use the version recorded in `.gspot/version`. `gspot init` refuses to run where `gspot.toml` exists; use `gspot install`.
+Install the app dependencies from the committed lockfile first.
+
+<Tabs syncKey="package-manager">
+<TabItem label="npm">
+
+```shell
+npm ci
+npx gspot install
+npx gspot check
+```
+
+</TabItem>
+<TabItem label="pnpm">
+
+```shell
+pnpm install --frozen-lockfile
+pnpm exec gspot install
+pnpm exec gspot check
+```
+
+</TabItem>
+<TabItem label="Yarn">
+
+```shell
+yarn install --immutable
+yarn exec gspot install
+yarn exec gspot check
+```
+
+Yarn Classic installs with `yarn install --frozen-lockfile`.
+
+</TabItem>
+<TabItem label="Bun">
+
+```shell
+bun install --frozen-lockfile
+bunx gspot install
+bunx gspot check
+```
+
+</TabItem>
+<TabItem label="mise">
+
+```shell
+mise exec -- gspot install
+mise exec -- gspot check
+```
+
+</TabItem>
+</Tabs>
+
+`gspot install` installs the tools and turns on hooks in this clone. If it fails, fix the error and run it again.
+If `gspot install` changes a lockfile under `.gspot/`, commit that file.
+
+## Private registries
+
+The npm, pnpm, Yarn, and Bun installs of gspot use the registry settings of your repository and your environment. uv
+reads Python package indexes from `uv.toml` or `[tool.uv]` in `pyproject.toml`.
+
+Keep credentials in environment variables or your user settings, never in `gspot.toml` or a lockfile. Each
+teammate gives their own credentials when they run `gspot install`.

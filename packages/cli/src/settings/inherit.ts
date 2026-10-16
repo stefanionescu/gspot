@@ -11,13 +11,13 @@ import { ALL_LANGUAGES, CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/c
 
 import type {
     Settings,
-    SettingEntry,
     SettingState,
     KnownSettings,
-    SettingsTable,
     SettingDefault,
     WrittenSetting,
+    EffectiveSetting,
     DeclarationMatch,
+    WrittenScopeTable,
 } from '#cli/types/settings/values.ts';
 
 function findLanguageDeclaration(
@@ -65,7 +65,7 @@ function mergeTable(
     declaration: SettingDeclaration,
     key: string,
     current: SettingState,
-    table: SettingsTable,
+    table: WrittenScopeTable,
     candidates: string[],
 ): SettingState {
     let result = current;
@@ -118,13 +118,12 @@ function mergeValue(declaration: SettingDeclaration, current: unknown, found: un
  * @param settings the repository settings.
  * @returns the tables in written order, root first.
  */
-function listSettingsTables(settings: Settings): SettingsTable[] {
+function listSettingsTables(settings: Settings): WrittenScopeTable[] {
     return [
         { table: settings, path: [] },
-        ...Object.keys(settings.scope).flatMap<SettingsTable>((scope, index) => {
-            const table = settings.scopeTables[scope];
-            return table === undefined ? [] : [{ table, scope, path: ['scope', index] }];
-        }),
+        ...Object.entries(settings.scopes).map(
+            ([scope, table], index) => ({ table, scope, path: ['scope', index] }) satisfies WrittenScopeTable,
+        ),
     ];
 }
 
@@ -134,7 +133,7 @@ function listSettingsTables(settings: Settings): SettingsTable[] {
  * @param scope the scope path, '' or undefined for the root alone.
  * @returns the tables with their scope paths and reported names.
  */
-function listApplicableTables(settings: Settings, scope: string | undefined): SettingsTable[] {
+function listApplicableTables(settings: Settings, scope: string | undefined): WrittenScopeTable[] {
     return listSettingsTables(settings)
         .filter((entry) => entry.scope === undefined || isInScope(scope ?? '', entry.scope))
         .toSorted((left, right) => compareScopeDepth(left.scope ?? '', right.scope ?? ''));
@@ -230,7 +229,7 @@ function getSettingValue(
     settings: Settings,
     key: string,
     scope?: string,
-): SettingEntry | undefined {
+): EffectiveSetting | undefined {
     const match = findDeclaration(known, key);
     if (!match) return undefined;
     const { declaration } = match;
@@ -238,12 +237,16 @@ function getSettingValue(
         known,
         match,
         scope ?? '',
-        (dependentKey) => (getSettingValue(known, settings, dependentKey, scope) as SettingEntry).value,
+        (dependentKey) => (getSettingValue(known, settings, dependentKey, scope) as EffectiveSetting).value,
     );
     const tables = listApplicableTables(settings, scope);
+    let initialSource = 'unset';
+    if (shipped !== undefined)
+        initialSource =
+            shipped.configuration === 'gspot default' ? 'gspot default' : `configuration ${shipped.configuration}`;
     const start: SettingState = {
         value: shipped?.value,
-        source: shipped ? `configuration ${shipped.configuration}` : 'unset',
+        source: initialSource,
         origin: shipped ? 'configuration' : 'unset',
         reason: undefined,
     };
@@ -269,7 +272,7 @@ function getSettingValue(
  * @param scope the scope path whose table applies last, if any.
  * @returns the resolved settings in key order.
  */
-function listSettings(known: KnownSettings, settings: Settings, scope?: string): SettingEntry[] {
+function listSettings(known: KnownSettings, settings: Settings, scope?: string): EffectiveSetting[] {
     function listWrittenKeys(table: unknown, path: string[]): string[] {
         const key = path.join('.');
         if (findDeclaration(known, key) !== undefined) return [key];

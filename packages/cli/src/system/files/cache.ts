@@ -40,11 +40,11 @@ export function getCachedMapValue<Key, Value>(
 
 /**
  * Give source bytes and derived values to one repository root.
- * @param root the repository directory.
+ * @param repositoryRoot the folder to canonicalize before caching source reads.
  * @returns the session-owned read cache.
  */
-export function createReadCache(root: string): ReadCache {
-    return { root: realpathSync(root), sources: new Map(), memo: new Map() };
+export function createReadCache(repositoryRoot: string): ReadCache {
+    return { root: realpathSync(repositoryRoot), sources: new Map(), memo: new Map() };
 }
 
 /**

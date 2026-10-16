@@ -2,15 +2,14 @@ import { PurgeCSS } from 'purgecss';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { referenceData } from '#cli/reference.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { glob, rename, readFile, writeFile } from 'node:fs/promises';
 
 import {
     STYLESHEETS,
-    STYLE_TOKENS,
     STYLE_CONTENT,
     STYLE_FILE_HASH,
-    STYLE_TOKEN_END,
     STYLE_HASH_LENGTH,
     STYLE_ASSET_FOLDER,
     STYLE_HASH_ENCODING,
@@ -18,34 +17,34 @@ import {
     STYLE_FILE_REQUIRED,
     STYLESHEET_EXTENSION,
     STYLE_HASH_ALGORITHM,
-    STYLE_PSEUDO_CLASSES,
 } from './config/styles.ts';
-
-// Include utility class separators, but discard a JavaScript property's trailing colon.
-function styleTokens(content: string): string[] {
-    return [...content.matchAll(STYLE_TOKENS)]
-        .map(([token]) => {
-            let end = token.length;
-            while (end > 0 && token[end - 1] === STYLE_TOKEN_END) end--;
-            return token.slice(0, end);
-        })
-        .filter((token) => token !== '');
-}
 
 /**
  * Remove unused built styles and refresh their content hashes after all pages and scripts exist.
- * @param dir the completed site directory.
+ * @param siteFolder the completed site folder.
  * @returns after writing the styles and their references.
  */
-export async function purgeStyles(dir: URL): Promise<void> {
-    const folder = fileURLToPath(dir);
+export async function pruneUnusedStyles(siteFolder: URL): Promise<void> {
+    const { extractor, tokenEnd, pseudoClasses } = referenceData().styles;
+    // Include utility class separators, but discard a JavaScript property's trailing colon.
+    function extractStyleTokens(content: string): string[] {
+        return [...content.matchAll(extractor)]
+            .map(([token]) => {
+                let end = token.length;
+                while (end > 0 && token[end - 1] === tokenEnd) end--;
+                return token.slice(0, end);
+            })
+            .filter((token) => token !== '');
+    }
+
+    const folder = fileURLToPath(siteFolder);
     const documents: string[] = [];
     for await (const file of glob(STYLE_CONTENT, { cwd: folder })) documents.push(join(folder, file));
     const report = await new PurgeCSS().purge({
         content: documents,
         css: [join(folder, STYLESHEETS)],
-        defaultExtractor: styleTokens,
-        safelist: { standard: [STYLE_PSEUDO_CLASSES] },
+        defaultExtractor: extractStyleTokens,
+        safelist: { standard: [pseudoClasses] },
     });
     const styles = report.map(({ file, css }) => {
         assert.ok(file !== undefined, STYLE_FILE_REQUIRED);

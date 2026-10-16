@@ -1,24 +1,20 @@
+import { openSession } from '#cli/session.ts';
 import { resolve, relative } from 'node:path';
-import { hookStatus } from '#cli/install/hooks.ts';
+import { warn } from '#cli/system/terminal.ts';
+import { runChecks } from '#cli/checks/run/run.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { executeRun } from '#cli/checks/run/run.ts';
-import { formatCodeList } from '#cli/system/text.ts';
+import { readHookStatus } from '#cli/apply/hooks.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { warn, colors } from '#cli/system/terminal.ts';
 import { stripUndefined } from '#cli/system/values.ts';
-import { runText } from '#cli/commands/check/report.ts';
-import { type CommandResult } from '#cli/types/terminal.ts';
-import { assertVersionPin } from '#cli/apply/version-pin.ts';
+import type { CommandResult } from '#cli/types/terminal.ts';
+import type { Session, StageFilter } from '#cli/types/planning.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
-import { type Session, type StageFilter } from '#cli/types/planning.ts';
+import { fixLines, formatRunReport } from '#cli/commands/check/report.ts';
+import type { RunReport, RunOptions } from '#cli/types/checks/run/check.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
-import { type RunReport, type FixReport, type RunOptions } from '#cli/types/execution/check.ts';
-import { type RunFilters, type CheckOptions, type RevisionSource } from '#cli/types/commands/check.ts';
-// Selects positional repository paths and refuses unknown check IDs.
-// Checking one tree: the working tree, or a copy of the index or of a pushed commit.
+import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
 
 function buildRunOptions(
     options: CheckOptions,
@@ -53,6 +49,8 @@ function buildRunOptions(
     };
 }
 
+// Check a working tree, staged index, or pushed commit and return its report.
+
 function buildComparison(
     revision: RevisionSource | undefined,
     changed: RunFilters['changed'],
@@ -63,7 +61,7 @@ function buildComparison(
 }
 
 // The repository files a selector names: the file itself, or everything under a folder.
-function matchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
+function listMatchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
     const selector = convertToPosixPath(relative(session.root, resolve(options.cwd, path)));
     if (!isInside(selector)) throw new GspotError('arguments', `Path ${path} is outside this repository.`);
     const matches = candidates.filter((file) => isInScope(file, selector));
@@ -78,10 +76,10 @@ function matchingFiles(session: Session, options: CheckOptions, path: string, ca
  * @param changed the staged or changed paths, which can name deleted files
  * @returns the selected paths, or none when the caller gave no path
  */
-function pathArguments(session: Session, options: CheckOptions, changed: string[]): string[] {
+function selectArgumentPaths(session: Session, options: CheckOptions, changed: string[]): string[] {
     if (options.paths.length === 0) return [];
     const candidates = [...new Set([...session.repository.files.map((file) => file.path), ...changed])];
-    const selected = new Set(options.paths.flatMap((path) => matchingFiles(session, options, path, candidates)));
+    const selected = new Set(options.paths.flatMap((path) => listMatchingFiles(session, options, path, candidates)));
     return [...selected];
 }
 
@@ -95,34 +93,16 @@ function refuseUnknownChecks(session: Session, only: string[] | undefined): void
         ...session.scopes.flatMap((scope) =>
             scope.selected.flatMap((manifest) => manifest.checks.map((check) => check.name)),
         ),
-        ...Object.values(session.settingsFile.settings.check).map((check) => check.name),
+        ...Object.values(session.settingsFile.settings.commandChecks).map((check) => check.name),
     ]);
     const unknown = only?.find((check) => !known.has(check));
     if (unknown !== undefined) throw new GspotError('arguments', formatUnknownCheck(unknown, [...known]));
 }
 
-function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string {
-    const failures = fixes.results.filter((result) => result.status === 'failed');
-    for (const result of failures) warn(`a fixer failed: ${result.check}: ${result.note}`);
-    const count = fixes.changed.length;
-    const noun = count === 1 ? 'file' : 'files';
-    if (isDryRun) {
-        const verdict = count === 0 ? 'no fixer changes anything' : `${String(count)} ${noun} would change`;
-        return `${fixes.diffs.join('\n')}\n${verdict}\n\n${text}`;
-    }
-    if (count === 0) {
-        process.stderr.write(`${colors.cyan('[info]')} no fixer changed anything\n`);
-        return text;
-    }
-    const shown = formatCodeList(fixes.changed);
-    warn(`fixers changed ${String(count)} ${noun}; the changes are in the working tree and are not staged: ${shown}`);
-    return text;
-}
-
 // Warns when the clone receiving the report lacks the configured hooks.
 function warnAboutHooks(session: Session, revision: RevisionSource | undefined): void {
     if (revision?.content === 'commit') return;
-    const hooks = hookStatus({
+    const hooks = readHookStatus({
         runner: session.startRunner,
         settings: session.settingsFile.settings,
         repository: {
@@ -130,11 +110,11 @@ function warnAboutHooks(session: Session, revision: RevisionSource | undefined):
             hasGit: revision?.reportRoot !== undefined || session.repository.hasGit,
         },
     });
-    if (!hooks.ready) warn(`Configured hooks are not ready in this clone. ${hooks.text}`);
+    if (!hooks.ready) warn('The Git hooks are not installed in this clone. Run: gspot install');
 }
 
 // The changed set a run compares against: the revision's paths, the --changed ref, or nothing for a whole push.
-async function changedSet(
+async function readChangedSet(
     session: Session,
     options: CheckOptions,
     signal: AbortSignal,
@@ -145,7 +125,7 @@ async function changedSet(
 }
 
 // The staged set a run narrows to: the revision's, the index when asked, or nothing.
-async function stagedSet(
+async function readStagedSet(
     session: Session,
     options: CheckOptions,
     signal: AbortSignal,
@@ -162,49 +142,45 @@ async function runFilters(
     signal: AbortSignal,
     revision: RevisionSource | undefined,
 ): Promise<RunFilters> {
-    const changed = await changedSet(session, options, signal, revision);
-    const staging = await stagedSet(session, options, signal, revision);
+    const changed = await readChangedSet(session, options, signal, revision);
+    const staging = await readStagedSet(session, options, signal, revision);
     const stage: StageFilter = options.stage ?? 'all';
-    const paths = pathArguments(session, options, [...(staging.staged ?? []), ...(changed?.paths ?? [])]);
+    const paths = selectArgumentPaths(session, options, [...(staging.staged ?? []), ...(changed?.paths ?? [])]);
     return { changed, staging, stage, paths: paths.length === 0 ? undefined : paths };
-}
-
-// Runs the selected checks and formats their results.
-async function runSelected(
-    session: Session,
-    options: CheckOptions,
-    signal: AbortSignal,
-    revision: RevisionSource | undefined,
-    selections: RunFilters,
-): Promise<CommandResult<RunReport>> {
-    const outcome = await executeRun(session, buildRunOptions(options, selections, signal, revision));
-    const reportText = runText(outcome.report, options.verbose, options.hook);
-    const text = outcome.fixes ? reportFixes(outcome.fixes, options.isDryRun, reportText) : reportText;
-    return {
-        text: options.isDryRun ? `${text}Dry run: nothing was written.\n` : text,
-        json: { ...outcome.report, ...stripUndefined({ fixes: outcome.fixes }) },
-        exitCode: outcome.report.exitCode,
-    };
 }
 
 /**
  * Runs check and returns what to print.
- * @param root the tree to check: the repository, or a copy of a revision.
+ * @param treeFolder the checkout or scratch copy whose files the selected checks read.
  * @param options the parsed flags.
  * @param signal cancellation for the run.
  * @param revision what the copy stands for, when the root contains a copy.
  * @returns the text, the run report, and the exit code.
  */
 export async function checkTree(
-    root: string,
+    treeFolder: string,
     options: CheckOptions,
     signal: AbortSignal,
     revision?: RevisionSource,
 ): Promise<CommandResult<RunReport>> {
-    await assertVersionPin(root);
-    const session = await openSession(root, undefined, { installedRoot: revision?.installedRoot ?? root });
+    const session = await openSession(treeFolder, undefined, { installedRoot: revision?.installedRoot ?? treeFolder });
     refuseUnknownChecks(session, options.only);
     warnAboutHooks(session, revision);
-    const selections = await runFilters(session, options, signal, revision);
-    return runSelected(session, options, signal, revision, selections);
+    const { changed, staging, stage, paths } = await runFilters(session, options, signal, revision);
+    const result = await runChecks(
+        session,
+        buildRunOptions(options, { changed, staging, stage, paths }, signal, revision),
+    );
+    const reportText = formatRunReport(result.report, {
+        verbose: options.verbose,
+        ...stripUndefined({ hook: options.hook }),
+    });
+    const text = result.fixes
+        ? `${fixLines(result.fixes, { isDryRun: options.isDryRun, verbose: options.verbose }).join('\n')}\n${reportText}`
+        : reportText;
+    return {
+        text: options.isDryRun ? `${text}Dry run: nothing was written.\n` : text,
+        json: { ...result.report, ...stripUndefined({ fixes: result.fixes }) },
+        exitCode: result.report.exitCode,
+    };
 }

@@ -1,4 +1,4 @@
-// Opens confined file handles and walks files under their root.
+// Read and write contained files through verified directory paths.
 import { posix } from 'node:path';
 import { readContainedPath } from '#cli/system/files/reads.ts';
 import type { Files, FilesState } from '#cli/types/system/files.ts';
@@ -16,22 +16,22 @@ import {
 
 /**
  * Open a reader and writer confined to one root, with paths checked for this system.
- * @param root the folder containing every relative path.
+ * @param baseFolder the folder containing every relative path.
  * @returns the disposable file handle.
  */
-export function openFiles(root: string): Files {
-    const bounds: FilesState = { root: realpathSync(root), locks: new Map() };
+export function openFiles(baseFolder: string): Files {
+    const bounds: FilesState = { root: realpathSync(baseFolder), locks: new Map() };
     const files: Files = {
-        rmdir(path) {
+        deleteFolder(path) {
             rmdirSync(verifyPath(bounds, path));
         },
-        removeTree(path) {
-            const stat = files.stat(path);
+        deleteTree(path) {
+            const stat = files.readStats(path);
             if (stat === undefined) return;
             if (!stat.isDirectory()) throw new Error(`${path} is not a directory. Choose a directory.`);
             rmSync(verifyPath(bounds, path), { recursive: true, force: true });
         },
-        realPath: (path) => readContainedPath(bounds.root, path),
+        readRealPath: (path) => readContainedPath(bounds.root, path),
         list(path) {
             try {
                 const target = path === undefined ? bounds.root : verifyPath(bounds, path);
@@ -43,7 +43,7 @@ export function openFiles(root: string): Files {
                 throw error;
             }
         },
-        stat(path) {
+        readStats(path) {
             try {
                 const stat = lstatSync(verifyPath(bounds, path));
                 if (stat.isSymbolicLink()) throw new Error(`${path} is a link. gspot does not write through links.`);
@@ -56,12 +56,12 @@ export function openFiles(root: string): Files {
         read: (path) => readEntry(bounds, path),
         readKeepingLinks: (path) => readEntryKeepingLinks(bounds, path),
         write: replaceEntry.bind(undefined, bounds),
-        remove(path, expected) {
+        deleteFile(path, expected) {
             if (!isSameContents(readEntryKeepingLinks(bounds, path), expected))
                 throw new Error(`${path} changed before removal. Run the command again.`);
             unlinkSync(verifyPath(bounds, path));
         },
-        mkdir(path, mode) {
+        createFolder(path, mode) {
             const target = preparePath(bounds, path);
             try {
                 mkdirSync(target, { mode });
@@ -71,7 +71,7 @@ export function openFiles(root: string): Files {
             if (!lstatSync(target).isDirectory()) throw new Error(`${path} is not a directory. Choose a directory.`);
             chmodSync(target, mode);
         },
-        claim: lockForWriting.bind(undefined, bounds),
+        createLock: lockForWriting.bind(undefined, bounds),
         [Symbol.dispose]() {
             for (const path of releaseLocks(bounds)) removeEmptyFolders(files, path);
         },
@@ -87,7 +87,7 @@ export function openFiles(root: string): Files {
 export function removeEmptyFolders(files: Files, path: string): void {
     for (let folder = posix.dirname(path); folder !== '.'; folder = posix.dirname(folder)) {
         if (files.list(folder).length > 0) return;
-        files.rmdir(folder);
+        files.deleteFolder(folder);
     }
 }
 

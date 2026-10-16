@@ -1,9 +1,9 @@
 // Reads dependency declarations across supported package formats.
 import { z } from 'zod';
 import { posix } from 'node:path';
-import { parse as parseToml } from 'smol-toml';
 import { parseJsonFile } from '#cli/parsers/json.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
+import { parse as parseToml } from '@decimalturn/toml-patch';
 import { parseGrammarComments } from '#cli/parsers/comments.ts';
 
 import type {
@@ -28,7 +28,6 @@ import {
     LINE_CONTINUATION,
     SWIFT_PACKAGE_URL,
     JAVASCRIPT_RUNTIMES,
-    PYTHON_IDENTITY_NAME,
     REQUIREMENT_NAME_END,
     PYTHON_NAME_SEPARATORS,
 } from '#cli/config/parsers/dependency-files.ts';
@@ -42,7 +41,7 @@ function parseRequirementName(spec: string): string | undefined {
     return normalizePythonPackage(name);
 }
 
-function listPoetryDependencies(poetry: PoetrySettings): DependencyMap {
+function listPoetryDependencies(poetry: PoetrySettings | undefined): DependencyMap {
     const poetryGroups = [
         ...(poetry?.dependencies === undefined ? [] : [poetry.dependencies]),
         ...(poetry?.group === undefined ? [] : Object.values(poetry.group)).flatMap((entry) =>
@@ -259,15 +258,6 @@ const pyprojectSchema = z.object({
  */
 export function normalizePythonPackage(name: string): string {
     return name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-');
-}
-
-/**
- * Normalize the distribution name in a versioned Python package identity.
- * @param identity the distribution name and its exact version.
- * @returns the normalized name with the version unchanged.
- */
-export function normalizePythonIdentity(identity: string): string {
-    return identity.replace(PYTHON_IDENTITY_NAME, normalizePythonPackage);
 }
 
 /**

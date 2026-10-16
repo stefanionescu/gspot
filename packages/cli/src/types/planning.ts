@@ -1,14 +1,15 @@
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { ToolInspection } from '#cli/types/tools/find.ts';
-import type { StartRunner } from '#cli/types/generation/files.ts';
 import type { ParsedLicenses } from '#cli/types/checks/general.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts';
+import type { StartRunner, ToolFileGeneration } from '#cli/types/generation/files.ts';
 import type { PackageManager, DependencyFile } from '#cli/types/parsers/dependency-files.ts';
-import type { Manifest, ParsedCheck, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
+import type { Stage, Manifest, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
 /** Settings, repository inventory, and selected configurations shared by planning and generation. */
 export type Session = {
+    toolFiles: () => ToolFileGeneration;
     generatedPaths: () => ReadonlySet<string>;
     /** Settings-enabled checks across supported operating systems, planned once at session creation. */
     configuredChecks: PlannedCheck[];
@@ -31,7 +32,7 @@ export type Session = {
     manifests: Map<string, Manifest>;
     repository: Repository;
     /** Package manifests parsed from this session's source inventory. */
-    packageManifests: DependencyFile[];
+    dependencyFiles: DependencyFile[];
     scopes: ScopeSelection[];
 };
 
@@ -55,7 +56,7 @@ export type PlanOptions = {
 };
 
 /** One check to plan: its check declaration and the manifest it came from, none for a [[check]] entry. */
-export type PlanEntry = { check: CheckDeclaration; manifest?: Manifest };
+export type CheckCandidate = { check: CheckDeclaration; manifest?: Manifest };
 
 /** What planning one scope needs. */
 export type PlanInputs = {
@@ -67,8 +68,6 @@ export type PlanInputs = {
     children: string[];
     projects: DependencyFile[];
 };
-
-export type Stage = ParsedCheck['stage'];
 
 /** Saved selection state, with an enabling setting only when it must exist. */
 export type SettingsSkip =
@@ -86,7 +85,7 @@ export type PlannedCheck = {
     files: TrackedFile[];
     tool?: ToolDeclaration;
     skip?: {
-        cause: 'level' | 'flag' | 'platform' | 'replaced' | 'setting' | 'condition' | 'ignore' | 'inputs';
+        cause: 'level' | 'flag' | 'system' | 'replaced' | 'setting' | 'condition' | 'ignore' | 'inputs';
         note: string;
     };
     /** Changed paths absent from the readable tree that still trigger a project check. */

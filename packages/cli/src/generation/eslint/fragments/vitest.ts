@@ -6,7 +6,7 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
  * @param context the selected presets, rule printer, and scope settings.
  * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildVitestFragment(
+function buildVitestFragment(
     context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'testRuleNames'>,
 ): EslintFragment {
     const { eslintPresets, eslintModule, eslintFiles, testRuleNames } = context;
@@ -32,3 +32,5 @@ export function buildVitestFragment(
     );
     return { imports: imports, blocks: output.join('') };
 }
+
+export { buildVitestFragment };

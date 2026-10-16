@@ -8,7 +8,7 @@ function writeBatch(writer: Writer, plans: WritePlan[]): void {
     for (const { path, before, after } of plans) {
         if (after === undefined) {
             if (before !== undefined) {
-                writer.files.remove(path, before);
+                writer.files.deleteFile(path, before);
                 removeEmptyFolders(writer.files, path);
             }
         } else if (!isSameContents(before, after)) writer.files.write(path, after, before);
@@ -17,13 +17,13 @@ function writeBatch(writer: Writer, plans: WritePlan[]): void {
 
 /**
  * Take the repository writer lock until disposal.
- * @param root the repository root.
+ * @param repositoryRoot the boundary for confined writes and the writer lock.
  * @returns the locked file writer.
  */
-export function openWriter(root: string): Writer {
+export function openWriter(repositoryRoot: string): Writer {
     using resources = new DisposableStack();
-    const files = resources.use(openFiles(root));
-    files.claim(WRITER_LOCK_FILE);
+    const files = resources.use(openFiles(repositoryRoot));
+    files.createLock(WRITER_LOCK_FILE);
     resources.move();
     return { files, [Symbol.dispose]: files[Symbol.dispose] };
 }
@@ -35,21 +35,12 @@ export function openWriter(root: string): Writer {
  */
 export function writePlans(writer: Writer, plans: WritePlan[]): void {
     const conflict = plans.find((plan) => plan.status === 'preserved');
-    if (conflict !== undefined) throw notOverwrittenError([conflict.path], 'retry the command');
+    if (conflict !== undefined)
+        throw new Error(
+            `These files were not overwritten by gspot: ${conflict.path}. Move them aside, then retry the command.`,
+        );
     writeBatch(
         writer,
         plans.filter((plan) => plan.status === 'changed'),
-    );
-}
-
-/**
- * Explain which files need review before replacement.
- * @param paths the preserved paths.
- * @param command the command to retry.
- * @returns the refusal with its repair command.
- */
-export function notOverwrittenError(paths: string[], command: string): Error {
-    return new Error(
-        `These files were not overwritten by gspot: ${paths.join(', ')}. Move them aside, then ${command}.`,
     );
 }

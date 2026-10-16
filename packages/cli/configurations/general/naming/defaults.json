@@ -104,7 +104,7 @@
     },
     "reserved": {
         "config": [
-            "directories",
+            "folders",
             "packages",
             "files",
             "modules",
@@ -123,7 +123,7 @@
                 "files": {
                     "cases": ["kebab"]
                 },
-                "directories": {
+                "folders": {
                     "cases": ["kebab"]
                 },
                 "types": {
@@ -170,7 +170,7 @@
                 "files": {
                     "cases": ["kebab"]
                 },
-                "directories": {
+                "folders": {
                     "cases": ["kebab"]
                 },
                 "types": {
@@ -208,7 +208,7 @@
                 "files": {
                     "cases": ["snake"]
                 },
-                "directories": {
+                "folders": {
                     "cases": ["snake"]
                 },
                 "modules": {
@@ -240,7 +240,7 @@
                 "files": {
                     "cases": ["pascal", "pascal-extension"]
                 },
-                "directories": {
+                "folders": {
                     "cases": ["pascal"]
                 },
                 "functions": {
@@ -257,7 +257,7 @@
                 "files": {
                     "cases": ["kebab", "snake"]
                 },
-                "directories": {
+                "folders": {
                     "cases": ["kebab", "snake"]
                 },
                 "functions": {
@@ -277,7 +277,7 @@
                 "files": {
                     "cases": ["timestamp-snake", "snake"]
                 },
-                "directories": {
+                "folders": {
                     "cases": ["snake"]
                 },
                 "functions": {
@@ -363,7 +363,7 @@
         },
         {
             "paths": ["**"],
-            "categories": ["directories"],
+            "categories": ["folders"],
             "reason": "Tools name these directories.",
             "allowed_names": ["node_modules", "__pycache__", "__tests__", "__mocks__"]
         },
@@ -389,7 +389,7 @@
         },
         {
             "paths": ["**/e2e/**"],
-            "categories": ["directories", "files"],
+            "categories": ["folders", "files"],
             "allow_digits": true
         },
         {
@@ -407,17 +407,18 @@
         {
             "open": "(",
             "close": ")",
-            "category": "directories"
+            "category": "folders"
         },
         {
             "open": "@",
             "close": "",
-            "category": "directories"
+            "category": "folders"
         },
         {
             "open": "_",
             "close": "",
-            "category": "directories"
+            "category": "folders"
         }
-    ]
+    ],
+    "allowed_phrases": ["package manager"]
 }

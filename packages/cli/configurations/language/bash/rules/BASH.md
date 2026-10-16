@@ -1,5 +1,7 @@
 # Bash
 
+Read this rule when you write or change a shell script.
+
 ## Bash scope
 
 <!-- level: all -->
@@ -10,8 +12,7 @@ Treat every path, argument, environment value, command output, and user input as
 quoted, validated, or parsed by a structured tool. A script that builds, deploys, deletes, or
 publishes artifacts makes its inputs, effects, and failure behavior explicit.
 
-`set -euo pipefail` does not replace checks around dangerous commands. Keep CI YAML and package
-scripts short. Put longer logic in a script file the checks can lint.
+`set -euo pipefail` does not replace checks around dangerous commands.
 
 ## Bash tasks
 
@@ -47,9 +48,9 @@ prior checks establish success.
 
 ## Options
 
-Use `errexit` as a backstop rather than control flow: it has exceptions in
-conditionals, pipelines, command substitutions, subshells, and functions. Check `cd`, `rm`,
-builds, publishing, uploads, and destructive commands explicitly. Do not toggle
+Use `errexit` as a backstop, not as control flow. It does not stop the script inside conditionals, pipelines,
+command substitutions, subshells, and some functions. Check the status of `cd`, `rm`, builds, publishing, uploads,
+and destructive commands explicitly. Do not toggle
 options around a small operation without restoring the prior state. Do not change `IFS` as a
 strict-mode ritual; set it locally where reading or joining data requires it. Keep `set -x`
 out of committed code.
@@ -104,3 +105,64 @@ log_status() {
 
 A public, sourced, complex, or risky function carries the full header with `Globals`,
 `Arguments`, `Outputs`, and `Returns` sections.
+
+## Naming
+
+### Bash case rules
+
+<!-- level: all -->
+
+- Executable scripts use `.sh` when invoked through a task runner or build
+  rules.
+- Omit the extension on an executable script only when users invoke it
+  as a command on `PATH`.
+- Give sourced libraries the `.sh` extension and no executable permission.
+- Numbered pipeline steps use `NN-description.sh`, such as `01-install.sh`; the numeric prefix defines a
+  structural prefix the naming check strips before it matches the stem.
+- Functions and mutable variables use `lower_snake_case`.
+- Package-like function prefixes may use `::` only when a script family already
+  uses that convention.
+
+| Avoid              | Prefer                     | Meaning              |
+| ------------------ | -------------------------- | -------------------- |
+| `DeployScript.sh`  | `deploy-api.sh`            | API deployment.      |
+| `deploy_script.sh` | `upload-storage-assets.sh` | Storage upload.      |
+| `helpers.sh`       | `archive-reports`          | A command on `PATH`. |
+
+Name a deployment function `deploy_api` and its local target
+`target_environment`.
+
+### Bash variables
+
+<!-- level: all -->
+
+- Loop variables name each item in the loop.
+- Name a temporary path after what it holds, such as `download_file` or `work_dir`; `tmp` and
+  `temp` say nothing.
+- Avoid vague names when the domain provides a name.
+- Avoid shell-reserved and shell-special names for unrelated values.
+
+Use `migration_file` when iterating migration paths and `report_output` for
+captured report text. Check the report command's exit status before printing
+the captured output. A loop variable such as `i` does not describe a file.
+
+### Bash functions
+
+<!-- level: all -->
+
+- Function names use verb phrases when the function has side effects.
+- Name a function that prints to `stdout` for the data it prints.
+- Do not name scripts or functions after shell builtins or common commands.
+- Do not make function names so generic that logs and stack traces lose context.
+
+Name a port validator `validate_port`. Avoid `test`, which shadows a shell builtin, and
+generic names such as `run` or `process`.
+
+### Files
+
+<!-- level: all -->
+
+- Put a related script family in an owning subdirectory and give the contained
+  files role names such as `main.sh`, `state.sh`, `query.sh`, or `report.sh`.
+- External hook families may use a dynamic shared prefix when the external
+  interface owns those filenames.

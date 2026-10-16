@@ -1,8 +1,10 @@
 // Changes environment variables for a scope and restores them when it ends.
 
+import { mock } from 'bun:test';
+import * as systemEnvironment from 'std-env';
 /**
  * Sets or clears one environment variable for this process and the tools it spawns.
- * @param name the variable.
+ * @param name the key in process.env to set or remove.
  * @param value the new value, or undefined to clear it.
  */
 function setEnvironmentVariable(name: string, value: string | undefined): void {
@@ -15,7 +17,7 @@ function setEnvironmentVariable(name: string, value: string | undefined): void {
  * @param variables values to set or clear for this scope.
  * @returns the restoration resource.
  */
-export function useEnvironment(variables: Record<string, string | undefined>): Disposable {
+export function overrideEnvironment(variables: Record<string, string | undefined>): Disposable {
     const previous = Object.fromEntries(Object.keys(variables).map((name) => [name, process.env[name]]));
     for (const [name, value] of Object.entries(variables)) setEnvironmentVariable(name, value);
     return {
@@ -23,4 +25,23 @@ export function useEnvironment(variables: Record<string, string | undefined>): D
             for (const [name, value] of Object.entries(previous)) setEnvironmentVariable(name, value);
         },
     };
+}
+
+/** Restore the external CI reader and terminal descriptors after a prompt scenario. */
+export async function simulateInteractiveTerminal(): Promise<AsyncDisposable> {
+    const resources = new AsyncDisposableStack();
+    const previousEnvironment = { ...systemEnvironment };
+    await mock.module('std-env', () => ({ ...previousEnvironment, isCI: false }));
+    resources.defer(async () => {
+        await mock.module('std-env', () => previousEnvironment);
+    });
+    for (const stream of [process.stdin, process.stdout]) {
+        const descriptor = Object.getOwnPropertyDescriptor(stream, 'isTTY');
+        Object.defineProperty(stream, 'isTTY', { configurable: true, value: true });
+        resources.defer(() => {
+            if (descriptor === undefined) Reflect.deleteProperty(stream, 'isTTY');
+            else Object.defineProperty(stream, 'isTTY', descriptor);
+        });
+    }
+    return resources;
 }

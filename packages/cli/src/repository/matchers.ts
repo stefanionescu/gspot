@@ -8,7 +8,7 @@ const matcherCache = new Map<string, (path: string) => boolean>();
 /**
  * A picomatch matcher over root-relative posix paths, cached by pattern list.
  * @param patterns the globs, a leading `!` excludes.
- * @returns the matcher.
+ * @returns a predicate that includes positive globs and rejects excluded paths.
  */
 export function buildPathMatcher(patterns: string[]): (path: string) => boolean {
     const key = JSON.stringify(patterns);

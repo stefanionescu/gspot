@@ -1,18 +1,75 @@
 import { joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
-import { serializeBlock } from '#cli/generation/eslint/print.ts';
 import { buildScopeFiles } from '#cli/generation/eslint/files.ts';
-import type { EslintModule, EslintModuleInput, EslintSettingsBlock } from '#cli/types/generation/eslint.ts';
+import { serializeBlock, indentEslintBlock } from '#cli/generation/eslint/print.ts';
+
+import type {
+    EslintModule,
+    EslintModuleInput,
+    EslintSettingsBlock,
+    EslintRuleExpression,
+} from '#cli/types/generation/eslint.ts';
+
+// Your own options apply only to rules that this block already enables.
+function buildOptionBlocks(
+    block: EslintSettingsBlock & { rules: Record<string, unknown> },
+    input: EslintModuleInput,
+): EslintSettingsBlock[] {
+    return input.ruleOptions.flatMap((options): EslintSettingsBlock[] => {
+        const entries = Object.entries(block.rules).flatMap(([name, value]): [string, unknown][] => {
+            const chosen = options.rules[name];
+            const severity: unknown = Array.isArray(value) ? value[0] : value;
+            return chosen === undefined || severity === 'off' || severity === 0 ? [] : [[name, [severity, ...chosen]]];
+        });
+        if (entries.length === 0) return [];
+        return [
+            {
+                ...block,
+                files: buildScopeFiles(block.files ?? input.codeFiles, options.scope, options.includes),
+                ignores: [...(block.ignores ?? []), ...options.excludes],
+                rules: Object.fromEntries<unknown>(entries),
+            },
+        ];
+    });
+}
+
+// Preset syntax belongs to the first block; option blocks retain only their own rules.
+function formatBlocks(
+    blocks: EslintSettingsBlock[],
+    input: EslintModuleInput,
+    runtime: string | undefined,
+    preset: EslintRuleExpression | undefined,
+): string {
+    const level = input.isAll ? 'all' : 'recommended';
+    return blocks
+        .map((entry, index) => {
+            let runtimeText = '';
+            let selectedPreset: EslintRuleExpression | undefined;
+            let note = input.source;
+            if (index === 0) {
+                runtimeText = runtime ?? '';
+                selectedPreset = preset;
+                if (preset !== undefined) note += ': ' + preset.expression;
+            } else note += ': your own rule options';
+            const source = serializeBlock(
+                entry,
+                runtimeText,
+                selectedPreset,
+                input.scope === undefined ? level : undefined,
+            );
+            const value = input.scope === undefined ? source : `stripRuntimeGlobals(${source}, globals)`;
+            return indentEslintBlock(`// ${note}\n${value}`);
+        })
+        .join(',\n');
+}
 
 /**
  * Write ESLint blocks for the selected level and project scope.
- *
- * @param input the level, generated file selectors, your own options, and optional fragment scope.
- *
+ * @param input the level, file selectors, your own options, and optional fragment scope.
  * @returns the emitted blocks and their rule options in the same order.
  */
-export function createBlockWriter(input: EslintModuleInput): EslintModule {
-    const { allRules, isAll, codeFiles, ruleOptions, scope } = input;
+function createBlockWriter(input: EslintModuleInput): EslintModule {
+    const { allRules, isAll, codeFiles, scope } = input;
     return {
         block: (payload, runtime, preset) => {
             const rules: Record<string, unknown> = Object.fromEntries(
@@ -32,36 +89,7 @@ export function createBlockWriter(input: EslintModuleInput): EslintModule {
                           ignores: [...(payload.ignores ?? []), ...scope.excluded],
                       };
             const block = { ...payload, ...nested, rules };
-            const configured = ruleOptions.flatMap((options): EslintSettingsBlock[] => {
-                const entries = Object.entries(block.rules).flatMap(([name, value]): [string, unknown][] => {
-                    const chosen = options.rules[name];
-                    const severity: unknown = Array.isArray(value) ? value[0] : value;
-                    return chosen === undefined || severity === 'off' || severity === 0
-                        ? []
-                        : [[name, [severity, ...chosen]]];
-                });
-                if (entries.length === 0) return [];
-                const selectedRules: Record<string, unknown> = Object.fromEntries<unknown>(entries);
-                return [
-                    {
-                        ...block,
-                        files: buildScopeFiles(block.files ?? codeFiles, options.scope, options.includes),
-                        ignores: [...(block.ignores ?? []), ...options.excludes],
-                        rules: selectedRules,
-                    },
-                ];
-            });
-            const emitted = [block, ...configured];
-            return emitted
-                .map((entry, index) => {
-                    const source = serializeBlock(
-                        entry,
-                        index === 0 ? (runtime ?? '') : '',
-                        index === 0 ? preset : undefined,
-                    );
-                    return scope === undefined ? source : `stripRuntimeGlobals(${source}, globals)`;
-                })
-                .join(',\n');
+            return formatBlocks([block, ...buildOptionBlocks(block, input)], input, runtime, preset);
         },
     };
 }
@@ -73,7 +101,7 @@ export function createBlockWriter(input: EslintModuleInput): EslintModule {
  *
  * @returns error settings, with disabled rules retained.
  */
-export function convertWarningsToErrors(rules: Record<string, unknown>): Record<string, unknown> {
+function convertWarningsToErrors(rules: Record<string, unknown>): Record<string, unknown> {
     return Object.fromEntries(
         Object.entries(rules).map(([rule, entry]) => {
             const entries: unknown[] = Array.isArray(entry) ? entry : [entry];
@@ -82,3 +110,5 @@ export function convertWarningsToErrors(rules: Record<string, unknown>): Record<
         }),
     );
 }
+
+export { createBlockWriter, convertWarningsToErrors };

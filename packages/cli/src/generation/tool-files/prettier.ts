@@ -7,7 +7,7 @@ import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { listPrettierPlugins } from '#cli/planning/needed-tools.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
-import { NODE_MODULES_DIRECTORY } from '#cli/config/system/locations.ts';
+import { GSPOT_NODE_MODULES_PATH } from '#cli/config/system/locations.ts';
 import { PRETTIER_FIXED_OPTIONS } from '#cli/config/generation/formatting.ts';
 import { escapeGlob, includeFolderContents } from '#cli/repository/matchers.ts';
 import type { WrittenFormat, FormatSettings } from '#cli/types/settings/file.ts';
@@ -95,12 +95,15 @@ function formatSettingOverrides(settings: Settings, moveFromRoot: (pattern: stri
 // Prettier loads your plugins, then shipped plugins by paths relative to its tool file.
 function buildPluginsOption(
     plugins: PrettierPlugin[],
-    prefix: string,
+    targetPath: string,
     extras: Record<string, unknown>,
 ): PrettierPluginOptions {
     if (plugins.length === 0) return {};
-    const base = prefix === '' ? '.' : prefix;
-    const shipped = plugins.map((plugin) => `${base}/${NODE_MODULES_DIRECTORY}/${plugin.name}/${plugin.entry}`);
+    const base = convertToPosixPath(relative(dirname(targetPath), GSPOT_NODE_MODULES_PATH));
+    const shipped = plugins.map(
+        (plugin) =>
+            `${base.startsWith('./') || base.startsWith('../') ? base : './' + base}/${plugin.name}/${plugin.entry}`,
+    );
     return { plugins: [...((extras['plugins'] as string[] | undefined) ?? []), ...shipped] };
 }
 
@@ -144,7 +147,7 @@ function buildPrettierOptions(input: PrettierInput): Record<string, unknown> {
         ...convertFormatSettings(format),
         ...PRETTIER_FIXED_OPTIONS,
         ...extras,
-        ...buildPluginsOption(plugins, prefix, extras),
+        ...buildPluginsOption(plugins, targetPath, extras),
         ...(overrides.length === 0 ? {} : { overrides }),
     };
 }
@@ -165,4 +168,4 @@ function buildPrettierFile(context: ToolFileContext): string {
     return JSON.stringify(value, null, JSON_INDENT) + '\n';
 }
 
-export { listScopeFormats, buildPrettierFile, buildPrettierOptions };
+export { listScopeFormats, buildPrettierFile };

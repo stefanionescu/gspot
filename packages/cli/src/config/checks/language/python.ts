@@ -1,6 +1,6 @@
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 
-/** The pinned native tool reads unclassified docstrings as NumPy style. */
+/** The pinned tool reads unclassified docstrings as NumPy style. */
 export const PYDOCLINT_DEFAULT_STYLE = 'numpy';
 
 export const PYDOCLINT_COMMAND = ['pydoclint', '--allow-init-docstring', 'true', '--quiet', '{files}'] as const;
@@ -13,8 +13,6 @@ export const INSTALL_EXTENSIONS = ['.sh', '.bash', '.yml', '.yaml', '.toml', 'Do
 
 export const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'description', 'summary']);
 
-/** A comment that directs a tool rather than a reader, which must sit on the line it covers. */
-
 /** These checks repeat annotations in prose unless the project opts into them. */
 export const PYDOCLINT_TYPE_OPTIONS = [
     'arg-type-hints-in-docstring',
@@ -26,7 +24,7 @@ export const GOOGLE_DOCSTRING = /^[ \t]*(?:Args|Arguments|Keyword Args):[ \t]*$/
 
 export const NUMPY_DOCSTRING = /^[ \t]*Parameters[ \t]*\r?\n[ \t]*-{3,}[ \t]*$/mu;
 
-/** Native import-linter precedence: INI configurations first, then the Python project table. */
+/** Import-linter precedence: INI configurations first, then the Python project table. */
 export const IMPORT_LINTER_FILES = ['setup.cfg', '.importlinter', PYPROJECT_TOML] as const;
 
 export const DOCSTRING_STYLES = ['google', 'numpy', 'sphinx'] as const;

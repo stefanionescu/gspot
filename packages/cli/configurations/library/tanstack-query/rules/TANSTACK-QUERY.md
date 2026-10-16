@@ -1,5 +1,7 @@
 # TanStack Query
 
+Read this rule when you change TanStack Query queries, mutations, or cache keys.
+
 Use the integration and release the project has. Query data stays in its cache; do not copy it
 into a second store to share it with another component.
 

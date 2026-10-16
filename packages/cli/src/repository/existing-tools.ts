@@ -1,23 +1,20 @@
-// Finds existing lint commands, hooks, and tool files.
-// Finds existing lint commands, hooks, and tool files.
-// Finds existing lint commands, hooks, and tool files.
-// Finds existing lint commands, hooks, and tool files.
+// Find existing lint commands, hooks, and tool files.
 import { z } from 'zod';
 import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
-import { parse as parseToml } from 'smol-toml';
 import { isInside } from '#cli/system/paths.ts';
 import { isRecord } from '#cli/system/values.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
+import { parse as parseToml } from '@decimalturn/toml-patch';
+import { HOOKS_PATH } from '#cli/config/system/locations.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listNpmToolNames } from '#cli/configurations/tools.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { join, extname, dirname, basename, relative } from 'node:path';
@@ -28,14 +25,14 @@ import { readPackageJson, isToolOnlyPackage } from '#cli/repository/dependency-f
 import type { CiJob, TrackedFile, ExistingTools, FoundToolFile } from '#cli/types/repository/inventory.ts';
 
 import {
+    HUSKY_PATH,
+    HOOK_FOLDERS,
     LEFTHOOK_NAMES,
-    HUSKY_DIRECTORY,
     PRE_COMMIT_FILE,
-    HOOK_DIRECTORIES,
+    MISE_HOOKS_PATH,
     LEFTHOOK_PREFIXES,
     HOOKS_PATH_SETTING,
     LEFTHOOK_EXTENSIONS,
-    MISE_HOOK_DIRECTORY,
     SIMPLE_GIT_HOOKS_KEY,
 } from '#cli/config/repository/hooks.ts';
 import {
@@ -45,15 +42,15 @@ import {
     LINT_WORDS,
     AGENT_FILES,
     RUNNER_NAMES,
+    LINT_FOLDERS,
+    RULE_FOLDERS,
     KEPT_DOT_FILE,
     TASK_AFTER_RUN,
     GITLAB_CI_FILE,
     INI_EXTENSIONS,
     YAML_EXTENSIONS,
     FOREIGN_CI_FILES,
-    LINT_DIRECTORIES,
     GITLAB_CI_FOLDER,
-    RULES_DIRECTORIES,
     COMMAND_SEPARATORS,
     JOB_NAME_SEPARATORS,
     GITHUB_WORKFLOWS_FOLDER,
@@ -91,7 +88,7 @@ function detectHookFolder(root: string, folder: string, hooksPath: string): Exis
     const files = listFolder(root, folder);
     if (files.length === 0 && lstatSync(join(root, folder), { throwIfNoEntry: false })?.isSymbolicLink() !== true)
         return undefined;
-    return { kind: folder === HUSKY_DIRECTORY ? 'husky' : 'githooks', path: folder, files };
+    return { kind: folder === HUSKY_PATH ? 'husky' : 'githooks', path: folder, files };
 }
 
 const ciStepSchema = z.object({ run: z.string().optional() } satisfies SchemaShape<{ run?: string | undefined }>);
@@ -206,14 +203,14 @@ function hasToolSection(text: string, path: string, selector: Pick<FoundToolFile
 
 /**
  * The hooks a clone already runs: another hooks folder, a hook folder a tool keeps, and hook manager settings.
- * @param root the repository root.
+ * @param repositoryRoot the folder that contains tracked inputs and tool files.
  * @returns each set of hooks with where it lives.
  */
-export function readHooks(root: string): ExistingTools['hooks'] {
-    const manifest = readPackageJson(root, PACKAGE_JSON);
+export function readHooks(repositoryRoot: string): ExistingTools['hooks'] {
+    const manifest = readPackageJson(repositoryRoot, PACKAGE_JSON);
     const packageHooks = manifest !== undefined && Object.hasOwn(manifest, SIMPLE_GIT_HOOKS_KEY);
-    const hooksPath = readGitSetting(root, HOOKS_PATH_SETTING) ?? '';
-    const location = hooksPath === '' ? undefined : readHooksFolder(root);
+    const hooksPath = readGitSetting(repositoryRoot, HOOKS_PATH_SETTING) ?? '';
+    const location = hooksPath === '' ? undefined : readHooksFolder(repositoryRoot);
     const hookNames = [
         ...LEFTHOOK_NAMES.flatMap((name) =>
             LEFTHOOK_EXTENSIONS.flatMap((extension) =>
@@ -222,7 +219,9 @@ export function readHooks(root: string): ExistingTools['hooks'] {
         ),
         PRE_COMMIT_FILE,
     ];
-    const present = hookNames.filter((name) => lstatSync(join(root, name), { throwIfNoEntry: false }) !== undefined);
+    const present = hookNames.filter(
+        (name) => lstatSync(join(repositoryRoot, name), { throwIfNoEntry: false }) !== undefined,
+    );
     const lefthook = present.find((name) => name !== PRE_COMMIT_FILE);
     return [
         ...(location === undefined
@@ -234,8 +233,8 @@ export function readHooks(root: string): ExistingTools['hooks'] {
                       files: listFolder(dirname(location), basename(location)),
                   },
               ]),
-        ...HOOK_DIRECTORIES.filter((dir) => dir !== HOOKS_DIRECTORY && dir !== MISE_HOOK_DIRECTORY)
-            .map((dir) => detectHookFolder(root, dir, hooksPath))
+        ...HOOK_FOLDERS.filter((folder) => folder !== HOOKS_PATH && folder !== MISE_HOOKS_PATH)
+            .map((folder) => detectHookFolder(repositoryRoot, folder, hooksPath))
             .filter((hook) => hook !== undefined),
         ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
         ...(present.includes(PRE_COMMIT_FILE)
@@ -247,15 +246,15 @@ export function readHooks(root: string): ExistingTools['hooks'] {
 
 /**
  * Identify existing lint jobs before proposing another CI job.
- * @param root the repository root.
+ * @param repositoryRoot the folder that contains tracked inputs and tool files.
  * @param paths the CI files to read.
  * @returns the names of the jobs that already run a linter.
  */
-export function readLintJobs(root: string, paths: string[]): string[] {
+export function readLintJobs(repositoryRoot: string, paths: string[]): string[] {
     return paths
         .filter((path) => !FOREIGN_CI_FILES.has(path))
         .flatMap((path) => {
-            const source = readText(root, path);
+            const source = readText(repositoryRoot, path);
             if (source === undefined) return [];
             let document: unknown;
             try {
@@ -270,22 +269,22 @@ export function readLintJobs(root: string, paths: string[]): string[] {
 
 /**
  * Find tool files to replace, hooks, CI, agent files, and lint folders.
- * @param root the repository root.
+ * @param repositoryRoot the folder that contains tracked inputs and tool files.
  * @param files the tracked files.
- * @param packageManifests the parsed package manifests.
+ * @param dependencyFiles the parsed package manifests.
  * @param reads the cached file reads for this run.
  * @returns tool files, hooks, CI, agent files, and lint folders.
  */
 export function readExistingTools(
-    root: string,
+    repositoryRoot: string,
     files: TrackedFile[],
-    packageManifests: DependencyFile[],
-    reads = createReadCache(root),
+    dependencyFiles: DependencyFile[],
+    reads = createReadCache(repositoryRoot),
 ): ExistingTools {
     const paths = new Set(files.map((file) => file.path));
     const manifests = readManifests(reads);
     const npmNames = listNpmToolNames(manifests.values());
-    const lintOnlyManifests = packageManifests
+    const toolOnlyPackages = dependencyFiles
         .filter((fact) => fact.kind === 'package.json' && isToolOnlyPackage(fact, npmNames))
         .map((fact) => fact.path)
         .toSorted((a, b) => Number(a === PACKAGE_JSON) - Number(b === PACKAGE_JSON));
@@ -298,7 +297,7 @@ export function readExistingTools(
             [
                 ...(tool.replace ?? []).map((path) => ({ path, shared: false })),
                 ...(tool.replace_key ?? []).map(({ file, ...selector }) => ({ path: file, shared: true, ...selector })),
-            ].flatMap((replacement) => findReplacedToolFiles(root, inventory, tool.name, replacement)),
+            ].flatMap((replacement) => findReplacedToolFiles(repositoryRoot, inventory, tool.name, replacement)),
         ),
     );
     return {
@@ -310,7 +309,7 @@ export function readExistingTools(
                 ]),
             ).values(),
         ],
-        hooks: readHooks(root),
+        hooks: readHooks(repositoryRoot),
         ci: [...paths]
             .filter(
                 (path) =>
@@ -321,21 +320,21 @@ export function readExistingTools(
             )
             .toSorted((a, b) => a.localeCompare(b)),
         agentFiles: AGENT_FILES.filter((name) => paths.has(name)),
-        rulesDirectories: RULES_DIRECTORIES.filter(
+        ruleFolders: RULE_FOLDERS.filter(
             (name) =>
-                lstatSync(join(root, name), { throwIfNoEntry: false })?.isSymbolicLink() === true ||
-                listFolder(root, name).some((entry) => entry.endsWith(MARKDOWN_EXTENSION)),
+                lstatSync(join(repositoryRoot, name), { throwIfNoEntry: false })?.isSymbolicLink() === true ||
+                listFolder(repositoryRoot, name).some((entry) => entry.endsWith(MARKDOWN_EXTENSION)),
         ),
-        lintFolders: LINT_DIRECTORIES.filter((name) => listFolder(root, name).length > 0),
-        lintOnlyManifests,
+        lintFolders: LINT_FOLDERS.filter((name) => listFolder(repositoryRoot, name).length > 0),
+        toolOnlyPackages,
     };
 }
 
 /**
  * Identify one INI section or its colon-delimited subsections.
- * @param text the INI text.
- * @param section the section name.
- * @returns whether the file contains the section.
+ * @param text the complete configuration contents, including bracketed headings.
+ * @param section the INI heading to match, including colon-delimited subsections.
+ * @returns true when a matching bracketed heading starts a line.
  */
 export function hasIniSection(text: string, section: string): boolean {
     const header = new RegExp(String.raw`^\s*\[${RegExp.escape(section)}(?::[^\]]+)?\]\s*(?:[#;].*)?$`, 'mu');

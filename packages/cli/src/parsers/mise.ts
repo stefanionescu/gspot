@@ -1,8 +1,8 @@
 // Reads mise tasks and tool pins.
 import { z } from 'zod';
-import { parse } from 'smol-toml';
+import { parse } from '@decimalturn/toml-patch';
 import { isRecord } from '#cli/system/values.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 
 const miseTasksSchema = z.object({ tasks: z.record(z.string(), z.unknown()).default({}) } satisfies SchemaShape<{
     tasks: Record<string, unknown>;

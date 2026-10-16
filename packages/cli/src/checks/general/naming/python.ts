@@ -13,7 +13,7 @@ import {
 
 // The block that holds a definition: the body of a class, the body of a function, or the module.
 
-function holderOf(node: Node): string {
+function getHolderType(node: Node): string {
     const block = node.parent?.type === 'decorated_definition' ? node.parent.parent : node.parent;
     return block?.type === 'block' ? (block.parent?.type ?? 'module') : 'module';
 }
@@ -27,22 +27,22 @@ function addClasses(sink: ExtractSink, root: Node): void {
 }
 
 // The identifier inside a splat such as *verbatim or **flags, or the node itself.
-function unwrapped(node: Node | null): Node | null {
+function unwrapSplat(node: Node | null): Node | null {
     if (node === null || !PYTHON_SPLAT_NODES.has(node.type)) return node;
     return node.namedChildren[0] ?? null;
 }
 
-function parameterName(parameter: Node): Node | null {
+function findParameterName(parameter: Node): Node | null {
     if (parameter.type === 'identifier') return parameter;
     const inner = PYTHON_SPLAT_NODES.has(parameter.type) ? parameter : parameter.childForFieldName('name');
-    return unwrapped(inner ?? parameter.namedChildren[0] ?? null);
+    return unwrapSplat(inner ?? parameter.namedChildren[0] ?? null);
 }
 
 function addParameters(sink: ExtractSink, definition: Node): void {
     const parameters = definition.childForFieldName('parameters')?.namedChildren ?? [];
     const names = parameters
         .filter((parameter) => PYTHON_PARAMETER_NODES.has(parameter.type) || PYTHON_SPLAT_NODES.has(parameter.type))
-        .map((parameter) => parameterName(parameter));
+        .map((parameter) => findParameterName(parameter));
     for (const name of names)
         if (name?.type === 'identifier' && !PYTHON_IMPLICIT_PARAMETERS.has(name.text))
             addIdentifier(sink, name, 'parameters');
@@ -52,12 +52,13 @@ function addFunctions(sink: ExtractSink, root: Node): void {
     for (const node of root.descendantsOfType('function_definition')) {
         addParameters(sink, node);
         const name = node.childForFieldName('name');
-        if (name !== null) addIdentifier(sink, name, holderOf(node) === 'class_definition' ? 'methods' : 'functions');
+        if (name !== null)
+            addIdentifier(sink, name, getHolderType(node) === 'class_definition' ? 'methods' : 'functions');
     }
 }
 
-function bindingCategory(node: Node, name: string): NamedCategory {
-    const holder = holderOf(node.parent ?? node);
+function classifyDeclaredName(node: Node, name: string): NamedCategory {
+    const holder = getHolderType(node.parent ?? node);
     if (holder === 'class_definition') return 'attributes';
     return holder === 'module' && PYTHON_CONSTANT.test(name) ? 'constants' : 'variables';
 }
@@ -66,7 +67,7 @@ function addAssignments(sink: ExtractSink, root: Node): void {
     for (const node of root.descendantsOfType('assignment')) {
         const left = node.childForFieldName('left');
         if (left?.type !== 'identifier') continue;
-        addIdentifier(sink, left, bindingCategory(node, left.text));
+        addIdentifier(sink, left, classifyDeclaredName(node, left.text));
     }
     for (const node of root.descendantsOfType('type_alias_statement')) {
         const left = node.childForFieldName('left') ?? node.namedChildren[0] ?? null;
@@ -76,14 +77,14 @@ function addAssignments(sink: ExtractSink, root: Node): void {
 
 /**
  * The classes, exceptions, functions, methods, parameters, bindings and type aliases a parsed Python file declares.
- * @param root the root node.
+ * @param syntaxRoot the parsed module that provides declaration nodes.
  * @param file the file path.
- * @returns the identifiers.
+ * @returns names and categories with their line and column locations.
  */
-export function pythonIdentifiers(root: Node, file: string): Identifier[] {
+export function extractPythonIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
     const sink: ExtractSink = { file, language: 'python', out: [] };
-    addClasses(sink, root);
-    addFunctions(sink, root);
-    addAssignments(sink, root);
+    addClasses(sink, syntaxRoot);
+    addFunctions(sink, syntaxRoot);
+    addAssignments(sink, syntaxRoot);
     return sink.out;
 }

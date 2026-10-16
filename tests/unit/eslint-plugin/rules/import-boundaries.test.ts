@@ -1,7 +1,7 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import type { Options } from '#tests/types/eslint-plugin.ts';
 import { createRuleTester } from '#tests/setup/rule-tester.ts';
-import { FOLDERS, IMPORT_ALIASES } from '#tests/config/eslint-plugin.ts';
+import { IMPORT_ALIASES, IMPORT_BOUNDARY_FOLDERS } from '#tests/data/eslint-plugin.ts';
 
 createRuleTester().run<keyof (typeof plugin.rules)['import-boundaries']['meta']['messages'], Options>(
     'import-boundaries',
@@ -56,17 +56,17 @@ createRuleTester().run<keyof (typeof plugin.rules)['import-boundaries']['meta'][
             {
                 code: "import { a } from './a.js';",
                 filename: '/repo/api/src/b.ts',
-                options: [{ folders: FOLDERS }],
+                options: [{ folders: IMPORT_BOUNDARY_FOLDERS }],
             },
             {
                 code: "import { a } from '../types/a.js';",
                 filename: '/repo/api/src/b.ts',
-                options: [{ folders: FOLDERS }],
+                options: [{ folders: IMPORT_BOUNDARY_FOLDERS }],
             },
             {
                 code: "import { a } from '../../supabase/a.js';",
                 filename: '/repo/root/src/b.ts',
-                options: [{ folders: FOLDERS }],
+                options: [{ folders: IMPORT_BOUNDARY_FOLDERS }],
             },
             {
                 code: "import { a } from './a.js';",
@@ -123,17 +123,17 @@ createRuleTester().run<keyof (typeof plugin.rules)['import-boundaries']['meta'][
                     { messageId: 'escape', data: { source: '../../other/a.js', folder: 'apps/api', target: 'apps' } },
                 ],
             },
-            {
-                code: 'import(`../../supabase/src/a.js`);',
+            ...['import(`../../supabase/src/a.js`);', "import { a } from '../../supabase/src/a.js';"].map((code) => ({
+                code,
                 filename: '/repo/api/src/b.ts',
-                options: [{ folders: FOLDERS }],
+                options: [{ folders: IMPORT_BOUNDARY_FOLDERS }] satisfies Options,
                 errors: [
                     {
-                        messageId: 'escape',
+                        messageId: 'escape' as const,
                         data: { source: '../../supabase/src/a.js', folder: 'api', target: 'supabase' },
                     },
                 ],
-            },
+            })),
             {
                 code: 'import(`../turn/a.js`);',
                 filename: '/repo/src/other/b.ts',
@@ -144,7 +144,7 @@ createRuleTester().run<keyof (typeof plugin.rules)['import-boundaries']['meta'][
             {
                 code: "export { a } from '../../supabase/src/a.js';",
                 filename: '/repo/api/src/b.ts',
-                options: [{ folders: FOLDERS }],
+                options: [{ folders: IMPORT_BOUNDARY_FOLDERS }],
                 errors: [{ messageId: 'escape' }],
             },
             {
@@ -161,7 +161,7 @@ createRuleTester().run<keyof (typeof plugin.rules)['import-boundaries']['meta'][
             {
                 code: "import { a } from '../../quality/a.js';",
                 filename: '/repo/api/src/b.ts',
-                options: [{ folders: FOLDERS }],
+                options: [{ folders: IMPORT_BOUNDARY_FOLDERS }],
                 errors: [
                     {
                         messageId: 'escape',
@@ -180,21 +180,11 @@ createRuleTester().run<keyof (typeof plugin.rules)['import-boundaries']['meta'][
                     },
                 ],
             },
-            {
-                code: "import { a } from '../../supabase/src/a.js';",
-                filename: '/repo/api/src/b.ts',
-                options: [{ folders: FOLDERS }],
-                errors: [
-                    {
-                        messageId: 'escape',
-                        data: { source: '../../supabase/src/a.js', folder: 'api', target: 'supabase' },
-                    },
-                ],
-            },
+
             {
                 code: "export * from '../../ios/a.js';",
                 filename: '/repo/api/src/b.ts',
-                options: [{ folders: FOLDERS }],
+                options: [{ folders: IMPORT_BOUNDARY_FOLDERS }],
                 errors: [{ messageId: 'escape' }],
             },
         ],

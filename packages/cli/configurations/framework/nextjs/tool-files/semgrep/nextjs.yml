@@ -1,0 +1,35 @@
+rules:
+    - id: nextjs.checks-off
+      languages: [typescript, javascript]
+      severity: ERROR
+      message: $KEY true lets next build pass with errors. Remove it.
+      paths:
+          include: ['**/next.config.*']
+      patterns:
+          - pattern-either:
+                - pattern: |
+                      {..., $KEY: true, ...}
+                - pattern: |
+                      {..., $KEY: (true as $T), ...}
+                - pattern: |
+                      {..., $KEY: true satisfies $T, ...}
+          - metavariable-regex:
+                metavariable: $KEY
+                regex: ^["']?(ignoreBuildErrors|ignoreDuringBuilds)["']?$
+          - focus-metavariable: $KEY
+    - id: nextjs.env-secret
+      languages: [typescript, javascript]
+      severity: ERROR
+      message: $KEY under env is written into the client bundle. Read it on the server.
+      paths:
+          include: ['**/next.config.*']
+      patterns:
+          - pattern-either:
+                - pattern: |
+                      {..., env: {..., $KEY: $V, ...}, ...}
+                - pattern: |
+                      {..., env: {..., $KEY, ...}, ...}
+          - metavariable-regex:
+                metavariable: $KEY
+                regex: ^["']?(?=[A-Z\d_]*(?:SECRET|TOKEN|PASSWORD|PRIVATE_KEY|API_KEY))[A-Z][A-Z\d_]*["']?$
+          - focus-metavariable: $KEY

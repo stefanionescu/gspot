@@ -5,9 +5,9 @@ import { stringify } from '@decimalturn/toml-patch';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
+import { TOML_FORMAT } from '#cli/config/generation/tool-files.ts';
 import { findInstalledDependency } from '#cli/tools/npm/packages.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/generation/eslint.ts';
-import { TOOL_EMIT_FORMAT } from '#cli/config/generation/tool-file-sources.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { type GeneratedFile, type NpmProjectInputs } from '#cli/types/generation/files.ts';
 import { NPM_TOOL_PROJECT, NEXT_ESLINT_PLUGIN, PYTHON_TOOL_PROJECT } from '#cli/config/parsers/dependency-files.ts';
@@ -35,14 +35,16 @@ import {
  */
 export function buildMiseProject(manifests: Manifest[], reads: ReadCache): GeneratedFile {
     const tools = Object.fromEntries(
-        listMisePins(manifests, reads).map((pin) => [
-            pin.name,
-            pin.options === undefined ? pin.version : { version: pin.version, ...pin.options },
-        ]),
+        listMisePins(manifests, reads)
+            .toSorted((left, right) => left.name.localeCompare(right.name))
+            .map((pin) => [
+                pin.name,
+                pin.options === undefined ? pin.version : { version: pin.version, ...pin.options },
+            ]),
     );
     return {
         path: MISE_TOOL_PROJECT_FILE,
-        content: stringify({ tools }, { ...TOOL_EMIT_FORMAT, inlineTableStart: 1 }),
+        content: stringify({ tools }, { ...TOML_FORMAT, inlineTableStart: 1 }),
         kind: 'tool_file',
     };
 }
@@ -54,12 +56,12 @@ export function buildMiseProject(manifests: Manifest[], reads: ReadCache): Gener
  * @param inputs.root the repository root.
  * @param inputs.scopes the selected source scopes.
  * @param inputs.manifests the selected tool declarations.
- * @param inputs.installer the repository package manager, or undefined without one.
+ * @param inputs.packageManager the repository package manager, or undefined without one.
  *
  * @returns the tool project's files, or none without a package manager.
  */
-export function buildNpmProject({ root, scopes, manifests, installer }: NpmProjectInputs): GeneratedFile[] {
-    if (installer === undefined) return [];
+export function buildNpmProject({ root, scopes, manifests, packageManager }: NpmProjectInputs): GeneratedFile[] {
+    if (packageManager === undefined) return [];
     const pins = listToolProjectPins(manifests).npm;
     const nextVersions = scopes
         .filter(({ selected }) => selected.some(({ configuration }) => configuration.name === NEXTJS_CONFIGURATION))
@@ -89,7 +91,7 @@ export function buildNpmProject({ root, scopes, manifests, installer }: NpmProje
             kind: 'tool_file',
         },
     ];
-    if (isYarnBerry(installer))
+    if (isYarnBerry(packageManager))
         files.push({
             path: YARN_SETTINGS,
             content: YARN_TOOL_PROJECT_SETTINGS,
@@ -112,9 +114,9 @@ export function buildPythonProject(manifests: Manifest[]): GeneratedFile[] {
         {
             path: PYTHON_TOOL_PROJECT_FILE,
             content:
-                stringify({ project: { ...PYTHON_TOOL_PROJECT, dependencies } }, TOOL_EMIT_FORMAT) +
+                stringify({ project: { ...PYTHON_TOOL_PROJECT, dependencies } }, TOML_FORMAT) +
                 `\n${UV_PROJECT_TABLE}\n` +
-                stringify({ package: false }, TOOL_EMIT_FORMAT),
+                stringify({ package: false }, TOML_FORMAT),
             kind: 'tool_file',
         },
     ];

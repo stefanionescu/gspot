@@ -14,5 +14,5 @@ export const REDIRECTS_FILE = '_redirects';
 
 export const FRAME_ANCESTORS = /frame-ancestors/iu;
 
-export const SOURCE_PREFIXES = ['/', 'https://'] as const;
+export const PATH_PREFIXES = ['/', 'https://'] as const;
 export const DETACH_PREFIX = '! ';

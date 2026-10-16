@@ -28,7 +28,7 @@ function isLimitLoosening(direction: 'raising' | 'lowering', value: unknown, shi
  */
 function validateReason(where: string, reason: string | undefined, command?: string): string | undefined {
     if (reason === undefined)
-        return `${where} needs a reason. Add \`reason = "..."\` to this entry.${command === undefined ? '' : ' Or run: ' + command}`;
+        return `${where} needs a reason. Add \`reason = "..."\` to this record.${command === undefined ? '' : ' Or run: ' + command}`;
     if (isReasonAccepted(reason)) return undefined;
     const refused = reason.trim() === '' ? 'an empty reason' : `"${reason}"`;
     return `${where} needs a reason that says something: ${refused} is refused. Write one sentence saying why.`;

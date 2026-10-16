@@ -1,3 +1,4 @@
+// Check lockfiles for credentials and redact installer output.
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 
 import {
@@ -5,7 +6,7 @@ import {
     URL_CREDENTIALS,
     INSTALL_OUTPUT_LIMIT,
     LOCKFILE_URL_PASSWORD,
-} from '#cli/config/tools/diagnostics.ts';
+} from '#cli/config/tools/credentials.ts';
 
 /**
  * Reject a generated lockfile containing a configured credential in either URL representation.

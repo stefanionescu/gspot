@@ -1,6 +1,6 @@
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 
-export const SOURCE_GROUPS = ['language', 'framework'] as const;
+export const SOURCE_FILE_GROUPS = ['language', 'framework'] as const;
 export const MANIFEST_FILE = 'manifest.toml';
 export const CONFIGURATIONS_FOLDER = 'configurations';
 
@@ -84,16 +84,13 @@ export const LEVELS = ['recommended', 'all'] as const;
 
 export const STAGES = ['commit', 'push', 'manual', 'message'] as const;
 
-/** Numeric native floors allow an omitted minor or patch version. */
+/** Numeric floors allow an omitted minor or patch version. */
 export const VERSION_FLOOR = /^(?:\d+|\d+\.\d+|\d+\.\d+\.\d+)$/u;
 
 export const CHECK_RUNS = ['files', 'scope', 'once', 'history'] as const;
 export const CHECK_NEEDS = ['build', 'docker', 'network'] as const;
-export const CHECK_WORKING_DIRECTORIES = ['root', 'scope'] as const;
+export const CHECK_WORKING_FOLDERS = ['root', 'scope'] as const;
 export const TOOL_KINDS = ['program', 'library'] as const;
-
-/** Versions the shared build derives from package manifests. */
-export const TOOL_VERSIONS_FILE = 'dist/tool-versions.json';
 
 export const PYTHON_CONFIGURATION = 'python';
 export const NAME_PATTERN = /^[a-z0-9-]+$/u;
@@ -102,6 +99,6 @@ export const TOOL_BUILDS = OPERATING_SYSTEMS.flatMap(
 );
 export const EXTENSION_PATTERN = /^\.[a-z0-9]+$/u;
 
-export const TOOL_FILES_FOLDER = 'tool-files';
+export const SHIPPED_TOOL_FILES_FOLDER = 'tool-files';
 
 export const JAVASCRIPT_CONFIGURATION_FOLDER = 'configurations/language/javascript';

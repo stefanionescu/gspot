@@ -85,7 +85,7 @@ example = "The expression `eval(user_input)` reports S307 when that rule is sele
 exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
 fix = ["ruff", "check", "--no-cache", "--fix", "--quiet", "{files}"]
-help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore python/ruff --rule `<code>` --reason \"`<why>`\", and add --paths to limit it."
+help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore python/ruff --rule <code> --reason \"<why>\"`, and add `--paths` to limit it."
 level = "recommended"
 name = "ruff"
 output = { format = "json", fields = { file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message" } }
@@ -107,7 +107,7 @@ example = "The Python assignment `value=1` differs from Ruff formatting. Format 
 exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
 fix = ["ruff", "format", "--no-cache", "--quiet", "{files}"]
-help = "Run gspot check --fix."
+help = "Run `gspot check --fix`."
 level = "recommended"
 name = "ruff-format"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): unformatted: ", message = "This file is not formatted the way Ruff formats it." }
@@ -121,7 +121,7 @@ cwd = "scope"
 example = "The annotated assignment `count: int = \"one\"` reports an incompatible value type. Use `count: int = 1` when the value is a number, or correct the annotation if the contract requires text."
 exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
-help = "Fix the type, or narrow it where the value arrives. Accept a file that needs another dependency set with gspot ignore python/basedpyright --paths `<path>` --reason \"`<why>`\"."
+help = "Fix the type, or narrow it where the value arrives. Accept a file that needs another dependency set with `gspot ignore python/basedpyright --paths <path> --reason \"<why>\"`."
 level = "recommended"
 name = "basedpyright"
 output = { format = "json", items = "generalDiagnostics", line_base = 0, fields = { file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message" } }
@@ -168,7 +168,7 @@ cwd = "scope"
 env = { PYTHONDONTWRITEBYTECODE = "1" }
 example = "A module importing a third-party package absent from the project dependencies reports an undeclared dependency. Declare that dependency and update its lockfile with the project package manager, or remove the unused import."
 files = { extensions = [".py"], filenames = ["pyproject.toml"] }
-help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with gspot ignore python/deptry --rule `<code>` --reason \"`<why>`\"."
+help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with `gspot ignore python/deptry --rule <code> --reason \"<why>\"`."
 level = "recommended"
 name = "deptry"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<rule>DEP\\d+) (?<message>.*)$" }
@@ -188,7 +188,7 @@ files = { filenames = [
     "source",
     "generated",
 ] }
-help = "Export the requirements file from the lockfile and declare it generated, and replace pip install with the locked install. Accept a reviewed path with gspot ignore python/pip-installs --paths `<glob>` --reason \"`<why>`\"."
+help = "Export the requirements file from the lockfile and declare it generated, and replace `pip install` with the locked install. Accept a reviewed path with `gspot ignore python/pip-installs --paths <glob> --reason \"<why>\"`."
 level = "all"
 name = "pip-installs"
 runs = "scope"
@@ -429,6 +429,7 @@ all = [
     "TD",
     "TRY",
 ]
+
 
 [[naming.override]]
 allowed_names = ["__init__", "__main__"]

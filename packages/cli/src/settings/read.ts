@@ -12,16 +12,15 @@ import { type Settings, type SettingsFile } from '#cli/types/settings/values.ts'
 import { type TomlTable, type ParsedSettings } from '#cli/types/settings/file.ts';
 import { SCOPE_EMPTY_RECORDS, COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/values.ts';
 import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/settings.ts';
-
 /**
  * Parse and validate gspot.toml. Throw a GspotError with every settings error.
  *
  * @param text the file's text.
- * @param root the repository root, to check scopes against the file system.
+ * @param repositoryRoot the optional folder for validating declared scope paths.
  * @param reads the read cache for this run.
  * @returns the normalized settings.
  */
-function parseSettings(text: string, root: string | undefined, reads: ReadCache): Settings {
+function parseSettings(text: string, repositoryRoot: string | undefined, reads: ReadCache): Settings {
     const written = parseTomlText(text, SETTINGS_FILE, 'settings');
     const result = settingsSchema.safeParse(written);
     if (!result.success)
@@ -30,26 +29,26 @@ function parseSettings(text: string, root: string | undefined, reads: ReadCache)
             result.error.issues.flatMap((issue) => formatSettingsIssue(SETTINGS_FILE, issue)).join('\n'),
         );
     const settings = buildSettings(result.data, written);
-    validateSettings(settings, root, reads);
+    validateSettings(settings, repositoryRoot, reads);
     return settings;
 }
 
 /**
  * Reads gspot.toml from a repository root.
- * @param root the repository root.
+ * @param repositoryRoot the folder that contains gspot.toml.
  * @param reads the read cache for this run.
  * @returns the settings and the file's text.
  */
-function readSettings(root: string, reads: ReadCache): SettingsFile {
-    const { text } = readSettingsFile(root);
-    const settings = parseSettings(text, root, reads);
+function readSettings(repositoryRoot: string, reads: ReadCache): SettingsFile {
+    const { text } = readSettingsFile(repositoryRoot);
+    const settings = parseSettings(text, repositoryRoot, reads);
     return { settings, text };
 }
 
 function normalizeScopeTables(
     parsed: NonNullable<ParsedSettings['scope']>[number],
     written: TomlTable,
-): Settings['scopeTables'][string] {
+): Settings['scopes'][string] {
     const { architecture, tools, naming, coverage, docs, licenses, site, ...table } = parsed;
     const normalized = Object.fromEntries(
         SCOPE_EMPTY_RECORDS.flatMap(([name, field]) => {
@@ -85,7 +84,7 @@ function normalizeArchitecture(written: ParsedSettings['architecture']): Setting
     };
 }
 
-function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['check'] {
+function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {
     return Object.fromEntries(
         (checks ?? []).map((entry) => {
             const name = entry.name;
@@ -117,7 +116,7 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
  * Build the settings values from the parsed document.
  * @param parsed the validated document
  * @param written the raw authored table
- * @returns the settings
+ * @returns normalized tables with defaults and authored scope values preserved.
  */
 function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
     const { command_check: commandChecks, ...document } = parsed;
@@ -139,15 +138,6 @@ function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
         written,
         level: parsed.level,
         configurations: parsed.configurations,
-        scope: Object.fromEntries(
-            scopes.map(([path, scope]) => [
-                trimTrailingSlashes(path),
-                {
-                    configurations: scope.configurations,
-                    removed_configurations: scope.removed_configurations,
-                },
-            ]),
-        ),
         removed_configurations: parsed.removed_configurations,
         limits: parsed.limits ?? limitsSchema.parse({}),
         naming: parsed.naming ?? namingSchema.parse({}),
@@ -160,10 +150,10 @@ function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
         tools: stripUndefined({ ...parsed.tools }),
         test_files: parsed.test_files,
         ignore: (parsed.ignore ?? []).map((entry) => stripUndefined(entry)),
-        check: normalizeCommandChecks(commandChecks),
+        commandChecks: normalizeCommandChecks(commandChecks),
 
         ...tables,
-        scopeTables,
+        scopes: scopeTables,
     };
 }
 

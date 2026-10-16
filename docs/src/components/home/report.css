@@ -1,0 +1,143 @@
+.terminal {
+    padding: 12px 16px 16px;
+    font-size: 12.5px;
+    line-height: 1.6;
+}
+
+.terminal .muted {
+    margin-block: 0;
+    color: var(--sl-color-gray-3);
+}
+
+.check-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin-block-start: 14px;
+    color: var(--sl-color-gray-1);
+    font-family: var(--sl-font-mono);
+}
+
+.check-row .failed {
+    color: var(--sl-color-orange-high);
+}
+
+.findings {
+    display: grid;
+    gap: 10px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.findings li {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    column-gap: 10px;
+}
+
+.findings .badge {
+    grid-row: span 2;
+    align-self: start;
+    margin-block-start: 0;
+}
+
+.findings .where {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1ch;
+    color: var(--sl-color-gray-1);
+    font-family: var(--sl-font-mono);
+}
+
+.findings .where > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.findings .where .loc {
+    color: var(--sl-color-orange-high);
+}
+
+.findings .message {
+    color: var(--sl-color-gray-2);
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+
+.passed-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px 16px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--sl-font-mono);
+    color: var(--sl-color-gray-1);
+}
+
+.passed-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.passed-list .icon-16 {
+    color: var(--home-pass);
+}
+
+.summary {
+    margin-block-start: 16px;
+    padding-block-start: 12px;
+    border-top: 1px dashed var(--sl-color-gray-5);
+    font-family: var(--sl-font-mono);
+    color: var(--sl-color-gray-1);
+}
+
+.summary strong {
+    font-weight: 600;
+}
+
+.summary .failed {
+    color: var(--sl-color-orange-high);
+}
+
+.summary .passed {
+    color: var(--home-pass);
+}
+
+.footnote {
+    max-width: 44rem;
+    margin: 24px auto 0;
+    color: var(--sl-color-gray-3);
+    font-size: 14px;
+    line-height: 1.6;
+    text-align: center;
+    text-wrap: balance;
+}
+
+@media (width >= 50rem) {
+    .passed-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (width >= 50rem) {
+    .code {
+        font-size: 13px;
+    }
+
+    .line {
+        grid-template-columns: 20px 1ch minmax(0, 1fr);
+        column-gap: 10px;
+        padding-inline: 10px 16px;
+    }
+}
+
+@media (width >= 72rem) {
+    .example-grid {
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+        align-items: stretch;
+    }
+}

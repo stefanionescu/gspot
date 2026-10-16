@@ -1,5 +1,9 @@
 # Writing
 
+Read this rule when you write text that people read in files: documentation, comments, messages, and commit messages.
+
+TALKING.md covers what you say to the user.
+
 Write in plain language under `ISO 24495-1`: short sentences and common words. State the action or result early.
 Use familiar words and explain a technical term when the reader needs it.
 
@@ -10,7 +14,7 @@ A measurement does not guarantee future results. When evidence lacks required fa
 facts to the primary source; never invent behavior to complete a page.
 
 Preserve exact API identifiers, public messages, official product names, and legal license text.
-Keep private reasoning, temporary acceptance notes out of shipped content.
+Keep private reasoning and temporary notes out of shipped content.
 Examples use fictional people, safe values, and `example.com` addresses.
 
 ## Voice

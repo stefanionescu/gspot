@@ -1,4 +1,4 @@
-/** Native declarations and reads used by the two source convention checks. */
+/** Declarations and reads used by the two source convention checks. */
 export const CONVENTION_QUERIES = {
     bash: `(function_definition) @function
 (command) @import
@@ -100,3 +100,5 @@ export const SPEC_SUFFIX = /\.spec$/u;
 export const BASH_COMMAND_NODES: ReadonlySet<string> = new Set(['command', 'declaration_command']);
 export const BASH_SOURCE_COMMANDS: ReadonlySet<string> = new Set(['source', '.']);
 export const SWIFT_ACCESSOR_OWNERS: ReadonlySet<string> = new Set(['property_declaration', 'subscript_declaration']);
+
+export const EXPORTED_FUNCTION_EXTENSIONS = ['.ts', '.tsx', '.js', '.mjs', '.cjs'] as const;

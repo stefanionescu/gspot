@@ -1,1 +1,1 @@
-export const ROOT_SCOPE = { path: '', source: 'root' } as const;
+export const ROOT_SCOPE = { path: '', origin: 'root' } as const;

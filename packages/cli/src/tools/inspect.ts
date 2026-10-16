@@ -1,4 +1,4 @@
-// Inspects tool versions and reports installation guidance.
+// Inspect tool versions and report installation guidance.
 import which from 'which';
 import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
@@ -9,18 +9,18 @@ import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { findToolProjectPackage } from '#cli/configurations/tools.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
-import { DOT_GSPOT, NODE_MODULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import { locateCandidates, locateRepositoryCandidates } from '#cli/tools/locate.ts';
+import { DOT_GSPOT, GSPOT_NODE_MODULES_PATH } from '#cli/config/system/locations.ts';
+import type { Inspected, ToolSearch, ToolInspection } from '#cli/types/tools/find.ts';
 import { readToolProjectPackage, findInstalledDependency } from '#cli/tools/npm/packages.ts';
 import { MISE_PROGRAM, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/find.ts';
-import type { Inspected, ToolSearch, ToolInspection, AvailableToolInspection } from '#cli/types/tools/find.ts';
 
 /**
  * The install command for managed tools, or platform guidance for a host tool.
  *
  * @param tool the pin.
  *
- * @returns the hint.
+ * @returns the next installation step based on managed tools, mise availability, and host guidance.
  */
 function installHint(tool: ToolDeclaration): string {
     const installation = findToolProjectPackage(tool);
@@ -63,7 +63,7 @@ function inspectLibraryCommand(
 ): ToolInspection {
     const { root, cwd, tool, hint } = inputs;
     const program = command[0] as string;
-    const args = command.slice(1);
+    const commandArguments = command.slice(1);
     const [path] = locateCandidates(root, program, {
         search: 'mise',
         timeoutSeconds: context.timeoutSeconds,
@@ -77,7 +77,7 @@ function inspectLibraryCommand(
                   timeoutSeconds: context.timeoutSeconds,
                   root,
                   cwd,
-                  tool: { ...tool, version_command: args },
+                  tool: { ...tool, version_command: commandArguments },
                   path,
                   hint,
               },
@@ -96,7 +96,7 @@ function inspectLibrary(
         return inspectLibraryCommand(context, inputs, tool.version_command, want);
     const name = tool.installers['npm']?.name ?? tool.name;
     using files = openFiles(root);
-    const path = `${NODE_MODULES_DIRECTORY}/${name}/package.json`;
+    const path = `${GSPOT_NODE_MODULES_PATH}/${name}/package.json`;
     const installed =
         tool.system === true
             ? findInstalledDependency(root, join(relative(root, cwd), PACKAGE_JSON), name)
@@ -188,7 +188,7 @@ function inspectExecutable(
  *
  * @returns the actionable installation note.
  */
-function formatUnavailableNote(tool: ToolDeclaration, inspection: ToolInspection): string {
+export function formatUnavailableNote(tool: ToolDeclaration, inspection: ToolInspection): string {
     const hint = inspection.hint ?? installHint(tool);
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
     return inspection.state === 'outdated'
@@ -204,7 +204,7 @@ function formatUnavailableNote(tool: ToolDeclaration, inspection: ToolInspection
  *
  * @returns the tool path, version, and availability.
  */
-function inspectTool(context: ToolSearch, tool: ToolDeclaration): ToolInspection {
+export function inspectTool(context: ToolSearch, tool: ToolDeclaration): ToolInspection {
     const { root, inspections } = context;
     const cwd = context.cwd ?? root;
     const key = JSON.stringify([root, cwd, tool]);
@@ -226,17 +226,6 @@ function inspectTool(context: ToolSearch, tool: ToolDeclaration): ToolInspection
 }
 
 /**
- * Whether the inspected tool can run at a supported version.
- *
- * @param inspection the executable inspection.
- *
- * @returns whether inspection found a usable executable.
- */
-function isToolAvailable(inspection: ToolInspection): inspection is AvailableToolInspection {
-    return AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined;
-}
-
-/**
  * Resolve a usable executable or an actionable inspection failure.
  *
  * @param tool the selected pin.
@@ -244,11 +233,9 @@ function isToolAvailable(inspection: ToolInspection): inspection is AvailableToo
  *
  * @returns the executable path or its unavailable status and diagnostic.
  */
-function buildToolAvailability(tool: ToolDeclaration, inspection: ToolInspection): ToolAvailability {
-    if (isToolAvailable(inspection)) return { path: inspection.path };
+export function buildToolAvailability(tool: ToolDeclaration, inspection: ToolInspection): ToolAvailability {
+    if (AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined) return { path: inspection.path };
     if (inspection.state === 'error')
         return { status: 'error', note: inspection.note ?? `${tool.name} version inspection failed.` };
     return { status: 'missing', note: formatUnavailableNote(tool, inspection) };
 }
-
-export { inspectTool, isToolAvailable, formatUnavailableNote, buildToolAvailability };

@@ -1,5 +1,4 @@
-import type { Node } from 'web-tree-sitter';
-import type { Finding, CheckInput, FindingPlace } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput, FindingPlace } from '#cli/types/checks/run/check.ts';
 
 /**
  * A finding of a check: it names the check, points at a place, and has no automatic fix.
@@ -10,7 +9,7 @@ import type { Finding, CheckInput, FindingPlace } from '#cli/types/execution/che
  * @param options the help and automatic-fix status.
  * @returns the finding with the supplied location fields.
  */
-export function findingAt(
+export function buildFinding(
     input: Pick<CheckInput, 'check'>,
     at: FindingPlace,
     rule: string,
@@ -25,13 +24,4 @@ export function findingAt(
         fixable: false,
         ...options,
     };
-}
-/**
- * Locate a syntax node in the original source file.
- * @param file the original source path.
- * @param node the parsed syntax node.
- * @returns the file and one-based node position.
- */
-export function nodePlace(file: string, node: Node): FindingPlace {
-    return { file, line: node.startPosition.row + 1, column: node.startPosition.column + 1 };
 }

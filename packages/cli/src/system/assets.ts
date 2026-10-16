@@ -11,14 +11,14 @@ let cachedPackageFolder: string | undefined;
 
 // The nearest folder above the running code with a package.json and the configurations, or undefined.
 function findNearestPackage(): string | undefined {
-    let dir = dirname(fileURLToPath(import.meta.url));
+    let folder = dirname(fileURLToPath(import.meta.url));
     for (let index = 0; index < PACKAGE_SEARCH_DEPTH; index += 1) {
         if (
-            statSync(join(dir, 'package.json'), { throwIfNoEntry: false }) !== undefined &&
-            statSync(join(dir, 'configurations'), { throwIfNoEntry: false })?.isDirectory() === true
+            statSync(join(folder, 'package.json'), { throwIfNoEntry: false }) !== undefined &&
+            statSync(join(folder, 'configurations'), { throwIfNoEntry: false })?.isDirectory() === true
         )
-            return dir;
-        dir = dirname(dir);
+            return folder;
+        folder = dirname(folder);
     }
     return undefined;
 }
@@ -41,7 +41,7 @@ export function buildAssetPath(path: string): string {
 
 /**
  * Reads one asset by its path in the package, such as `configurations/language/bash/manifest.toml`.
- * @param path the asset path.
+ * @param path the package-relative location to decode as UTF-8.
  * @returns the text.
  */
 export function readAsset(path: string): string {
@@ -66,9 +66,9 @@ export function findWasmPath(name: string): string {
  * @returns the paths.
  */
 export function listAssets(prefix: string): string[] {
-    const dir = join(getPackageFolder(), prefix);
-    if (statSync(dir, { throwIfNoEntry: false }) === undefined) return [];
-    return listMatchingPaths(dir, ALL_FILES_GLOB)
+    const folder = join(getPackageFolder(), prefix);
+    if (statSync(folder, { throwIfNoEntry: false }) === undefined) return [];
+    return listMatchingPaths(folder, ALL_FILES_GLOB)
         .map((path) => convertToPosixPath(join(prefix, path)))
         .toSorted((a, b) => a.localeCompare(b));
 }

@@ -76,7 +76,7 @@ export function buildPathKey(path: string): string {
 
 /**
  * The directory of a path, '' at the root.
- * @param path the path.
+ * @param path the slash-separated location to split at its final slash.
  * @returns the directory.
  */
 export function extractParentFolder(path: string): string {
@@ -86,8 +86,8 @@ export function extractParentFolder(path: string): string {
 
 /**
  * The base name without its extension; a declaration extension such as `.d.mts` counts as one.
- * @param path a path.
- * @returns the stem.
+ * @param path the file location with its complete declaration or ordinary extension.
+ * @returns the file name after removing its extension and parent folders.
  */
 export function extractStem(path: string): string {
     const base = posix.basename(path);
@@ -130,7 +130,7 @@ export function buildVenvBinPath(folder: string): string {
 /**
  * Locate one Python interpreter or console script inside its virtual environment.
  * @param folder the environment directory.
- * @param name the executable name.
+ * @param name the Python program or console script inside the environment.
  * @returns the executable path with the system's Python launcher suffix.
  */
 export function buildVenvExecutablePath(folder: string, name: string): string {

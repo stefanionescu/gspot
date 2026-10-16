@@ -2,7 +2,6 @@
 # Editors and gspot checks use the same ordered ignore patterns.
 .gspot/**
 docs/worker-configuration.d.ts
-tests/worker-configuration.d.ts
 node_modules/
 bower_components/
 bun.lock

@@ -7,13 +7,11 @@ import {
     type TomlBlock,
     type TomlValue,
     type TomlSyntax,
-    type InlineArray,
-    type InlineTable,
     type SourceRange,
     type TomlComments,
     type TomlKeyValue,
+    type TomlPathNode,
     type TomlCommentNode,
-    type TomlSyntaxEntry,
     type TomlTablePositions,
     type TomlAnchoredComment,
     type TomlCommentPlacement,
@@ -40,15 +38,15 @@ function buildTablePath(
     return path;
 }
 
-function listNestedNodes(node: TomlValue, path: KeyPath): TomlSyntax['entries'] {
-    if (isInlineArray(node))
-        return node.items.flatMap(({ item }, index): TomlSyntax['entries'] => {
+function listNestedNodes(node: TomlValue, path: KeyPath): TomlSyntax['pathNodes'] {
+    if (isTomlKind(node, 'InlineArray'))
+        return node.items.flatMap(({ item }, index): TomlSyntax['pathNodes'] => {
             const value = item as TomlValue;
             const child = [...path, index];
             return [{ kind: 'item', path: child, node: value }, ...listNestedNodes(value, child)];
         });
-    if (isInlineTable(node))
-        return node.items.flatMap(({ item }): TomlSyntax['entries'] => {
+    if (isTomlKind(node, 'InlineTable'))
+        return node.items.flatMap(({ item }): TomlSyntax['pathNodes'] => {
             const child = [...path, ...item.key.value];
             return [{ kind: 'key', path: child, node: item }, ...listNestedNodes(item.value, child)];
         });
@@ -61,8 +59,8 @@ function listNestedNodes(node: TomlValue, path: KeyPath): TomlSyntax['entries'] 
  * @param comment a concrete comment token.
  * @returns its syntax entry, or no entry for a separate comment.
  */
-function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlSyntaxEntry | undefined {
-    const inline = syntax.entries
+function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlPathNode | undefined {
+    const inline = syntax.pathNodes
         .filter(
             ({ node }) =>
                 node.loc.end.line === comment.loc.start.line && node.loc.end.column <= comment.loc.start.column,
@@ -70,7 +68,7 @@ function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlSy
         .toSorted((left, right) => getTomlRange(left.node)[1] - getTomlRange(right.node)[1])
         .at(-1);
     if (inline !== undefined) return inline;
-    const next = syntax.entries.find(({ node }) => getTomlRange(node)[0] > getTomlRange(comment)[1]);
+    const next = syntax.pathNodes.find(({ node }) => getTomlRange(node)[0] > getTomlRange(comment)[1]);
     let end = comment.loc.end.line;
     while (
         syntax.comments.some(({ loc }) => loc.start.line === end + 1 && loc.start.column === comment.loc.start.column)
@@ -80,13 +78,17 @@ function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlSy
 }
 
 /**
- * Identify a comment.
- * @param node the syntax node.
- * @param node.type the TOML node kind.
- * @returns whether the node denotes a comment.
+ * Narrow a parsed TOML node by the library's serialized syntax kind.
+ * @param node the parsed syntax node.
+ * @param node.type its library enum value.
+ * @param kind the syntax kind to match.
+ * @returns whether the node has that kind.
  */
-function isComment(node: { type: unknown }): node is TomlCommentNode {
-    return String(node.type) === 'Comment';
+function isTomlKind<Kind extends string>(
+    node: { type: unknown },
+    kind: Kind,
+): node is Extract<TomlBlock | TomlValue, { type: Kind }> {
+    return String(node.type) === kind;
 }
 
 /**
@@ -99,16 +101,16 @@ function parseTomlSyntax(source: string, value: Record<string, unknown>): TomlSy
     const document = parseDocument(source);
     const comments: TomlSyntax['comments'] = [];
     const positions = { value, counts: new Map<string, number>(), active: new Map<string, number>() };
-    const entries = document.cst.flatMap((node): TomlSyntax['entries'] => {
-        if (isComment(node)) {
+    const entries = document.cst.flatMap((node): TomlSyntax['pathNodes'] => {
+        if (isTomlKind(node, 'Comment')) {
             comments.push(node);
             return [];
         }
-        if (isKeyValue(node))
+        if (isTomlKind(node, 'KeyValue'))
             return [{ kind: 'key', path: node.key.value, node }, ...listNestedNodes(node.value, node.key.value)];
         const path = buildTablePath(node, positions);
-        const children = node.items.flatMap((child): TomlSyntax['entries'] => {
-            if (isComment(child)) {
+        const children = node.items.flatMap((child): TomlSyntax['pathNodes'] => {
+            if (isTomlKind(child, 'Comment')) {
                 comments.push(child);
                 return [];
             }
@@ -126,7 +128,7 @@ function parseTomlSyntax(source: string, value: Record<string, unknown>): TomlSy
     return {
         document,
         value,
-        entries,
+        pathNodes: entries,
         comments: comments.toSorted((left, right) => getTomlRange(left)[0] - getTomlRange(right)[0]),
     };
 }
@@ -173,36 +175,6 @@ function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] {
 }
 
 /**
- * Identify a key assignment.
- * @param node the syntax node.
- * @param node.type the TOML node kind.
- * @returns whether the node assigns a key.
- */
-function isKeyValue(node: { type: unknown }): node is TomlKeyValue {
-    return String(node.type) === 'KeyValue';
-}
-
-/**
- * Identify an inline table.
- * @param node the syntax node.
- * @param node.type the TOML node kind.
- * @returns whether the node denotes an inline table.
- */
-function isInlineTable(node: { type: unknown }): node is InlineTable {
-    return String(node.type) === 'InlineTable';
-}
-
-/**
- * Identify an inline array.
- * @param node the syntax node.
- * @param node.type the TOML node kind.
- * @returns whether the node denotes an inline array.
- */
-function isInlineArray(node: { type: unknown }): node is InlineArray {
-    return String(node.type) === 'InlineArray';
-}
-
-/**
  * Retrieve the extent of a concrete syntax token produced by the parser.
  * @param node parsed syntax.
  * @returns the token's source extent.
@@ -230,13 +202,4 @@ function addTomlComment(comments: TomlComments, entry: TomlCommentPlacement): vo
     comments.set(id, block);
 }
 
-export {
-    isKeyValue,
-    getTomlRange,
-    isInlineTable,
-    isInlineArray,
-    addTomlComment,
-    parseTomlSyntax,
-    insertTomlComments,
-    listAnchoredComments,
-};
+export { isTomlKind, getTomlRange, addTomlComment, parseTomlSyntax, insertTomlComments, listAnchoredComments };

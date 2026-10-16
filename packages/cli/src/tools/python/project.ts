@@ -1,13 +1,16 @@
+// Prepare and install the Python tool project.
 import { z } from 'zod';
 import { join } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
-import { parse, TomlError } from 'smol-toml';
 import { isDeepStrictEqual } from 'node:util';
+import { parse } from '@decimalturn/toml-patch';
+import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { InstallContext } from '#cli/types/install.ts';
+import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
@@ -15,7 +18,6 @@ import { lockfileResult } from '#cli/tools/project-lockfiles.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { UV_LOCKFILE_NAME } from '#cli/config/parsers/lockfiles.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
@@ -44,7 +46,11 @@ import {
 
 // A temporary lockfile must not publish credentials supplied through repository index settings.
 function readPythonLockfile(work: string, credentials: string[], project: PythonToolProject): string {
-    const lockfile = readFileSync(join(work, UV_LOCKFILE_NAME), 'utf8');
+    const row = LOCKFILES.find(({ client }) => client === 'uv') as Extract<
+        (typeof LOCKFILES)[number],
+        { client: 'uv' }
+    >;
+    const lockfile = readFileSync(join(work, row.file), 'utf8');
     assertCredentialFreeLockfile(lockfile, credentials, new GspotError('installation', UV_LOCKFILE_CREDENTIAL_MESSAGE));
     if (!isPythonLockfileCurrent(project, lockfile))
         throw new GspotError(
@@ -57,17 +63,28 @@ function readPythonLockfile(work: string, credentials: string[], project: Python
 // uv runs inside the selected tool project and uses its exact Python requirement.
 async function runUv(
     context: InstallContext,
-    { work, args, executable, credentials, configFile = join(work, UV_SETTINGS_FILE) }: UvExecution,
+    { work, commandArguments, executable, credentials, configFile = join(work, UV_SETTINGS_FILE) }: UvExecution,
 ): Promise<SpawnResult> {
     const { steps } = context;
     const { timeoutSeconds } = context.session;
-    const command = [executable, ...args, '--project', work, '--directory', work, '--config-file', configFile];
+    const command = [
+        executable,
+        ...commandArguments,
+        '--project',
+        work,
+        '--directory',
+        work,
+        '--config-file',
+        configFile,
+    ];
     steps.push(command);
     const result = await runTool(command, {
+        cancelSignal: context.cancelSignal,
         cwd: work,
         timeoutSeconds,
         env: { UV_PROJECT_ENVIRONMENT: join(work, PYTHON_ENVIRONMENT_FOLDER) },
     });
+    context.cancelSignal?.throwIfAborted();
     if (result.missing)
         throw new GspotError(
             'tool',
@@ -79,7 +96,7 @@ async function runUv(
     if (result.code !== 0)
         throw new GspotError(
             'installation',
-            `UV ${String(args[0])} failed (exit ${String(result.code)}). Check Python downloads and index settings, then run: gspot install.\n${redactInstallOutput(result, credentials)}`,
+            `UV ${String(commandArguments[0])} failed (exit ${String(result.code)}). Check Python downloads and index settings, then run: gspot install.\n${redactInstallOutput(result, credentials)}`,
         );
     return result;
 }
@@ -116,7 +133,7 @@ const uvLockSchema = z.object({
 } satisfies SchemaShape<PythonToolLockfile>) satisfies z.ZodType<PythonToolLockfile>;
 
 /** Validate the generated Python tool project before matching or creating a lockfile. */
-export const pythonToolProjectSchema = z.object({
+const pythonToolProjectSchema = z.object({
     project: z.object({
         name: z.string(),
         version: z.string(),
@@ -136,7 +153,7 @@ export const pythonToolProjectSchema = z.object({
  *
  * @returns credential-free lockfile bytes.
  */
-export async function preparePythonLockfile(context: InstallContext, manifest: GeneratedFile): Promise<GeneratedFile> {
+async function preparePythonLockfile(context: InstallContext, manifest: GeneratedFile): Promise<GeneratedFile> {
     const { root, uvPath } = context.session;
     const owner = context.writer.files;
     const project = pythonToolProjectSchema.parse(parse(manifest.content));
@@ -162,7 +179,7 @@ export async function preparePythonLockfile(context: InstallContext, manifest: G
     const executable = uvPath;
     await runUv(context, {
         work,
-        args: UV_LOCKFILE_ARGUMENTS,
+        commandArguments: UV_LOCKFILE_ARGUMENTS,
         executable,
         credentials,
     });
@@ -177,7 +194,7 @@ export async function preparePythonLockfile(context: InstallContext, manifest: G
  *
  * @returns the installation summary.
  */
-export async function installPythonTools(context: InstallContext, executable: string): Promise<string> {
+async function installPythonTools(context: InstallContext, executable: string): Promise<string> {
     const { root } = context.session;
     const owner = context.writer.files;
     const manifest = owner.read(PYTHON_TOOL_PROJECT_FILE);
@@ -186,16 +203,17 @@ export async function installPythonTools(context: InstallContext, executable: st
 
     using settings = createScratchFolder();
     const credentials = writePythonSettings(root, settings.path);
-    for (const args of [UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS]) {
+    for (const commandArguments of [UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS]) {
         await runUv(context, {
             work,
-            args,
+            commandArguments,
             executable,
             credentials,
             configFile: join(settings.path, UV_SETTINGS_FILE),
         });
     }
-    return 'installed locked Python tools under .gspot/.venv';
+    const project = pythonToolProjectSchema.parse(parse(manifest.bytes.toString('utf8')));
+    return `installed ${formatCount(project.project.dependencies.length, 'Python tool')} in .gspot/.venv`;
 }
 
 /**
@@ -207,11 +225,7 @@ export async function installPythonTools(context: InstallContext, executable: st
  *
  * @returns the uv project command without synchronizing the project or its lockfile.
  */
-export function buildUvRunCommand(
-    selection: ScopeSelection,
-    scopeRoot: string,
-    command: [string, ...string[]],
-): string[] {
+function buildUvRunCommand(selection: ScopeSelection, scopeRoot: string, command: [string, ...string[]]): string[] {
     const tool = getToolDeclaration(selection.selected, command[0]);
     const packagePin = tool.installers['pypi'];
     if (packagePin?.version === undefined)
@@ -228,6 +242,15 @@ export function buildUvRunCommand(
 }
 
 /**
+ * Identify the structured syntax errors emitted by the TOML parser.
+ * @param error the failed lockfile parse.
+ * @returns whether the failure reports a TOML syntax location.
+ */
+function isTomlSyntaxError(error: unknown): boolean {
+    return error instanceof Error && 'line' in error && typeof error.line === 'number';
+}
+
+/**
  * Compare a Python tool project with the pins recorded in its uv lockfile.
  *
  * @param project the parsed generated pyproject.toml.
@@ -235,14 +258,14 @@ export function buildUvRunCommand(
  *
  * @returns whether both validated inputs describe the same requirements.
  */
-export function isPythonLockfileCurrent(project: PythonToolProject, lockfile: string | undefined): lockfile is string {
+function isPythonLockfileCurrent(project: PythonToolProject, lockfile: string | undefined): lockfile is string {
     if (lockfile === undefined) return false;
     const manifest = project.project;
     let document: unknown;
     try {
         document = parse(lockfile);
     } catch (error) {
-        if (!(error instanceof TomlError)) throw error;
+        if (!isTomlSyntaxError(error)) throw error;
         return false;
     }
     const validated = uvLockSchema.safeParse(document);
@@ -255,3 +278,11 @@ export function isPythonLockfileCurrent(project: PythonToolProject, lockfile: st
         .toSorted((left, right) => left.localeCompare(right));
     return isDeepStrictEqual(normalizeRequirements(projectEntry.metadata['requires-dist']), expected);
 }
+
+export {
+    buildUvRunCommand,
+    installPythonTools,
+    preparePythonLockfile,
+    pythonToolProjectSchema,
+    isPythonLockfileCurrent,
+};

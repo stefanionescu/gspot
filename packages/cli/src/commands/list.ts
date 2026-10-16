@@ -1,20 +1,19 @@
+import { openSession } from '#cli/session.ts';
 import { findRoot } from '#cli/repository/read.ts';
-import { settingsSkip } from '#cli/planning/skips.ts';
-import { printResult } from '#cli/system/terminal.ts';
-import { type Session } from '#cli/types/planning.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { scopeLabel } from '#cli/system/terminal.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { type CommandResult } from '#cli/types/terminal.ts';
-import { assertVersionPin } from '#cli/apply/version-pin.ts';
+import { planRun, isActive } from '#cli/planning/checks.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
+import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { KEY_GAP, LIST_KINDS, VALUE_WIDTH } from '#cli/config/commands/list.ts';
 import { type Settings, type ScopeSelection } from '#cli/types/settings/values.ts';
+import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { listSettings, getWrittenSetting, listSettingsTables } from '#cli/settings/inherit.ts';
-import { type SettingsListJson, type ConfigurationsListJson } from '#cli/types/commands/list.ts';
+import { type ListKind, type SettingsListJson, type ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
-function scopeTag(scope: string | undefined): string {
+function formatScopeTag(scope: string | undefined): string {
     return scope === undefined || scope === '' ? '' : `  [scope ${scope}]`;
 }
 
@@ -27,13 +26,14 @@ function buildSettingsResult(session: Session): CommandResult {
     const lines = displayed.map((row) => {
         const value = row.value === undefined ? 'unset' : JSON.stringify(row.value);
         const shortened = value.length > VALUE_WIDTH ? `${value.slice(0, VALUE_WIDTH - 1)}…` : value;
-        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${row.reason_needed ?? ''}  ${row.source}${scopeTag(row.scope)}`;
+        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${row.reason_needed ?? ''}  ${row.source}${formatScopeTag(row.scope)}`;
     });
+    lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} reason needed when  source`);
     if (extras.length > 0) {
         lines.push('', 'extra tool options (gspot passes them on unchecked)');
         for (const extra of extras)
             lines.push(
-                `  tools.${extra.tool}.extra  ${extra.keys.join(', ')}  ${extra.reason ?? ''}${scopeTag(extra.scope)}`,
+                `  tools.${extra.tool}.extra  ${extra.keys.join(', ')}  ${extra.reason ?? ''}${formatScopeTag(extra.scope)}`,
             );
     }
     return { text: `${lines.join('\n')}\n`, json: { settings: rows, extras } satisfies SettingsListJson, exitCode: 0 };
@@ -42,6 +42,9 @@ function buildSettingsResult(session: Session): CommandResult {
 function buildConfigurationsResult(session: Session): CommandResult {
     const manifests = listSelectedManifests(session.scopes);
     const names = new Set(manifests.map((manifest) => manifest.configuration.name));
+    const planned = new Map(
+        planRun(session, { stage: 'any' }).map((check) => [`${check.scope.scope.path}\0${check.check.name}`, check]),
+    );
     const selected = manifests.map((manifest) => ({
         name: manifest.configuration.name,
         checks: session.scopes.flatMap((scope) =>
@@ -49,7 +52,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
                 ? manifest.checks.map((check) => ({
                       name: check.name,
                       scope: scope.scope.path,
-                      state: statusLabel(settingsSkip(session.settingsFile.settings, scope, check)),
+                      state: formatCheckStatus(planned.get(`${scope.scope.path}\0${check.name}`)),
                   }))
                 : [],
         ),
@@ -63,7 +66,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
     for (const configuration of selected) {
         lines.push(`  ${configuration.name}`);
         for (const [name, checks] of Map.groupBy(configuration.checks, (check) => check.name)) {
-            const states = checks.map((check) => `${check.scope === '' ? 'root' : check.scope}: ${check.state}`);
+            const states = checks.map((check) => `${scopeLabel(check.scope)}: ${check.state}`);
             lines.push(`    ${name}  ${states.join(', ')}`);
         }
     }
@@ -114,27 +117,43 @@ function buildSettingRows(settings: Settings, scopes: ScopeSelection[]): Setting
     return { settings: rows, extras };
 }
 
-function statusLabel(status: ReturnType<typeof settingsSkip>): string {
-    if (status === undefined) return 'on';
-    return status.cause === 'setting' ? `waits for ${status.setting}` : `off (${status.cause})`;
+function formatCheckStatus(check: PlannedCheck | undefined): string {
+    if (check === undefined) return 'off (level)';
+    if (check.skip !== undefined)
+        return check.skip.cause === 'inputs' ? 'no matching files' : `off (${check.skip.cause})`;
+    return isActive(check) ? 'on' : 'no matching files';
 }
 
 /**
  * List configurations and effective settings without executing checks or mutating the project.
  * @param program the command-line program
+ * @param onResult the sink that writes the completed command result.
  */
-export function registerList(program: Command): void {
+function registerList(program: Command, onResult: CommandCompletion): void {
     program
         .command('list')
+        .usage('[options] [configurations|settings]')
         .summary(COMMAND_HELP.list.summary)
         .description(COMMAND_HELP.list.description)
         .addArgument(
             new Argument('[what]', COMMAND_HELP.list.arguments.what).choices(LIST_KINDS).default('configurations'),
         )
         .action(async (kind) => {
-            const root = findRoot(process.cwd());
-            await assertVersionPin(root);
-            const session = await openSession(root);
-            printResult(kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session));
+            onResult(await runListCommand(process.cwd(), kind));
         });
 }
+
+/**
+ * Run the list command and return its output.
+ * @param cwd the folder where the command starts.
+ * @param kind whether to list configurations or settings.
+ * @returns the selected list and its command exit code.
+ */
+async function runListCommand(cwd: string, kind: ListKind): Promise<CommandResult> {
+    const root = findRoot(cwd);
+
+    const session = await openSession(root);
+    return kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session);
+}
+
+export { registerList };

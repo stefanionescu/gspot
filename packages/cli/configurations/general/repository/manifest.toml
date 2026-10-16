@@ -5,7 +5,7 @@ title = "Repository"
 
 [[check]]
 example = "A tracked `notes/big.txt` containing 1,100 KiB exceeds the default 1,024 KiB ceiling and reports `size`. Remove accidental content or store a required large file through Git LFS. Generated and vendored classifications must describe the actual file ownership."
-help = "Track the file with Git LFS, classify it as generated or vendored in .gitattributes, or raise limits.file_kilobytes with a reason."
+help = "Track the file with Git LFS, classify it as generated or vendored in .gitattributes, or raise repository.max_file_kilobytes with a reason."
 level = "recommended"
 name = "large-files"
 runs = "once"
@@ -15,9 +15,9 @@ why = "A large file in plain git history stays in every clone for good."
 
 [[check]]
 example = "A tracked .env or node_modules/example/index.js reports tracked-file. Add its path to .gitignore and run git rm --cached on that file, preserving its local contents."
-help = "Add the reported file or folder to .gitignore and remove it from the index with git rm --cached."
+help = "Add the reported file or folder to .gitignore and remove it from the index with `git rm --cached`."
 level = "recommended"
-name = "tracked-files"
+name = "local-files"
 runs = "once"
 stage = "commit"
 summary = "Checks tracked files against the paths that selected configurations declare untracked."

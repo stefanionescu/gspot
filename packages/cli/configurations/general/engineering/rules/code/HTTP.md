@@ -1,7 +1,6 @@
 # HTTP
 
-Rules for any HTTP service, whatever framework serves it, on top of the security, error, and
-logging rules.
+Read this rule when you change an HTTP service.
 
 ## Requests
 

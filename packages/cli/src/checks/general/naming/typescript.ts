@@ -46,7 +46,7 @@ function addParameters(sink: ExtractSink, node: Node): void {
 
 // `const { existsSync } = require('node:fs')` and `const { default: X } = await import('x')` bind names another module
 // declared. Check the name of any other awaited value as a local declaration.
-function isImportBinding(node: Node): boolean {
+function isImportedName(node: Node): boolean {
     const value = node.childForFieldName('value');
     if (value === null) return false;
     const awaited = value.type === 'await_expression' ? value.namedChildren[0] : value;
@@ -79,18 +79,18 @@ function addEnumCases(sink: ExtractSink, root: Node): void {
 
 /**
  * The identifiers a parsed TypeScript or JavaScript file declares.
- * @param root the tree's root node.
+ * @param syntaxRoot the parsed program that provides bindings and callable nodes.
  * @param file the file path.
  * @param language `typescript` or `javascript`.
  * @returns the declarations found in the tree.
  */
-export function typescriptIdentifiers(root: Node, file: string, language: string): Identifier[] {
+export function extractTypescriptIdentifiers(syntaxRoot: Node, file: string, language: string): Identifier[] {
     const sink: ExtractSink = { file, language, out: [] };
-    addNamed(sink, root);
-    addEnumCases(sink, root);
-    const declarators = root.descendantsOfType('variable_declarator').filter((node) => !isImportBinding(node));
+    addNamed(sink, syntaxRoot);
+    addEnumCases(sink, syntaxRoot);
+    const declarators = syntaxRoot.descendantsOfType('variable_declarator').filter((node) => !isImportedName(node));
     for (const node of declarators) addPattern(sink, node.childForFieldName('name'), 'variables');
-    const callables = root.descendantsOfType([...TYPESCRIPT_CALLABLE_NODES]);
+    const callables = syntaxRoot.descendantsOfType([...TYPESCRIPT_CALLABLE_NODES]);
     for (const node of callables) addParameters(sink, node);
     return sink.out;
 }

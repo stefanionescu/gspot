@@ -1,7 +1,6 @@
 import { type KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { type TomlValue, type TomlComments } from '#cli/types/parsers/toml.ts';
-import { getTomlRange, isInlineArray, isInlineTable, insertTomlComments } from '#cli/parsers/toml/comments.ts';
-
+import { isTomlKind, getTomlRange, insertTomlComments } from '#cli/parsers/toml/comments.ts';
 /**
  * Retain comments while emitting nested TOML arrays and inline tables.
  * @param node the parsed value whose layout supplies the source ranges.
@@ -12,7 +11,7 @@ import { getTomlRange, isInlineArray, isInlineTable, insertTomlComments } from '
  * @returns TOML value text with its anchored comments.
  */
 function encodeValue(node: TomlValue, text: string, path: KeyPath, comments: TomlComments, indent: string): string {
-    if (isInlineArray(node)) {
+    if (isTomlKind(node, 'InlineArray')) {
         const items = node.items.map(({ item }, index) => {
             const keys = [...path, index];
             const notes = [...comments.values()]
@@ -42,7 +41,7 @@ function encodeValue(node: TomlValue, text: string, path: KeyPath, comments: Tom
                   .join('\n')}\n]`
             : `[${items.join(', ')}]`;
     }
-    if (isInlineTable(node))
+    if (isTomlKind(node, 'InlineTable'))
         return `{ ${node.items.map(({ item }) => text.slice(getTomlRange(item.key)[0], getTomlRange(item.value)[0]) + encodeValue(item.value, text, [...path, ...item.key.value], comments, indent)).join(', ')} }`;
     return text.slice(...getTomlRange(node));
 }

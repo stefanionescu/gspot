@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { listCodeLines, parseBashScript } from '#cli/parsers/bash.ts';
-import { BASH_COMMENT_CASES, MKTEMP_CLEANUP_CASES } from '#tests/config/bash/parsing.ts';
+import { BASH_COMMENT_CASES, MKTEMP_CLEANUP_CASES } from '#tests/data/parsers/bash.ts';
 
 test.each(BASH_COMMENT_CASES)(
     'Bash comments keep quoted and parameter hashes as code: %s',

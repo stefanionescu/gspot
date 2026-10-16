@@ -1,8 +1,8 @@
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { computePosition } from '#cli/system/text.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listSourcePaths } from '#cli/repository/coverage.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 
 import {
     PLIST_KEY,
@@ -16,10 +16,10 @@ import {
 
 /**
  * One finding for each invalid xcconfig line.
- * @param input the check input.
+ * @param input the configuration file paths and cached line reads.
  * @returns the findings.
  */
-export function xcconfig(input: CheckInput): Finding[] {
+export function checkXcconfig(input: CheckInput): Finding[] {
     return listSourcePaths(input.files, [XCCONFIG_SUFFIX]).flatMap((path) =>
         readCachedBytes(input.reads, path)
             .toString('utf8')
@@ -33,7 +33,7 @@ export function xcconfig(input: CheckInput): Finding[] {
                 return isValid
                     ? []
                     : [
-                          findingAt(
+                          buildFinding(
                               input,
                               { file: path, line: index + 1 },
                               'xcconfig-line',
@@ -46,10 +46,10 @@ export function xcconfig(input: CheckInput): Finding[] {
 
 /**
  * One finding for each entitlement outside xcode.allowed_entitlements. The planner requires a configured list.
- * @param input the check input.
+ * @param input the plist files and settings that list permitted keys.
  * @returns the findings.
  */
-export function xcodeEntitlements(input: CheckInput): Finding[] {
+export function checkXcodeEntitlements(input: CheckInput): Finding[] {
     const allowed = new Set(input.scope.view.options('xcode').allowed_entitlements);
     return listSourcePaths(input.files, [ENTITLEMENTS_SUFFIX]).flatMap((path) => {
         const text = readCachedBytes(input.reads, path).toString('utf8');
@@ -58,7 +58,7 @@ export function xcodeEntitlements(input: CheckInput): Finding[] {
             .filter((match) => !allowed.has(match.groups?.['name'] ?? ''))
             .map((match) => {
                 const line = computePosition(text, match.index).line;
-                return findingAt(
+                return buildFinding(
                     input,
                     { file: path, line },
                     'entitlement',
@@ -71,17 +71,17 @@ export function xcodeEntitlements(input: CheckInput): Finding[] {
 
 /**
  * One finding for each plist that turns App Transport Security off for every host.
- * @param input the check input.
+ * @param input the plist paths and file reads that expose global transport exceptions.
  * @returns the findings.
  */
-export function xcodeAppTransportSecurity(input: CheckInput): Finding[] {
+export function checkAppTransportSecurity(input: CheckInput): Finding[] {
     return listSourcePaths(input.files, [PLIST_SUFFIX]).flatMap((path): Finding[] => {
         const text = readCachedBytes(input.reads, path).toString('utf8');
         const found = ARBITRARY_LOADS.exec(text);
         if (found === null) return [];
         const line = computePosition(text, found.index).line;
         return [
-            findingAt(
+            buildFinding(
                 input,
                 { file: path, line },
                 'arbitrary-loads',

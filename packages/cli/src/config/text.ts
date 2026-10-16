@@ -10,7 +10,7 @@ export const LIST_LIMIT = 8;
 export const LINE_FEED = 10;
 
 export const DIGEST_ALGORITHM = 'sha256';
-export const PLAIN_ARGUMENT = /^[a-zA-Z0-9_./-]+$/u;
+export const PLAIN_ARGUMENT = /^[\w@:./-]+$/u;
 export const TRAILING_NEWLINE = /\n$/u;
 export const LEADING_NEWLINE = /^\r?\n/u;
 

@@ -1,5 +1,6 @@
 import type { ScriptSyntax } from '#cli/types/parsers/bash.ts';
 import { type Files, type ReadCache } from '#cli/types/system/files.ts';
+import type { DOCSTRING_STYLES } from '#cli/config/checks/language/python.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 import type { FENCE_PARSER_NAMES } from '#cli/config/checks/language/markdown.ts';
 
@@ -15,10 +16,8 @@ export type ScriptFile = ScriptSyntax & {
     references: Map<string, number[]>;
 };
 
-/** The shell scripts of one scope, with the function owners across them. */
-
-/** Native docstring arguments and the authored or inherited style, before source detection. */
-export type DocstringConfiguration = { command: string[]; style: PythonDocstringStyle | undefined };
+/** Docstring arguments and the authored or inherited style, before source detection. */
+export type PydoclintOptions = { command: string[]; style: PythonDocstringStyle | undefined };
 
 /** The build of one Swift scope. */
 export type SwiftBuildPlan = {
@@ -26,7 +25,7 @@ export type SwiftBuildPlan = {
     folder: string;
     /** The compiler log destination. */
     log: string;
-    argv: string[];
+    commandArguments: string[];
     /** The analyzer clears this folder so its log includes every compiler call. */
     scratch?: string;
 };
@@ -34,10 +33,10 @@ export type SwiftBuildPlan = {
 /** The read build status and its compiler output. */
 export type SwiftBuildOutput = { code: number; output: string; source: string };
 
-/** Independent build state for each native Swift consumer. */
+/** Independent build state for each Swift consumer. */
 export type SwiftBuildPurpose = 'compile' | 'analyze' | 'coverage' | 'periphery';
 
-/** Prepared source copy and its locked root, disposed by the native consumer. */
+/** Prepared source copy and its locked root, disposed by the consumer. */
 export type PreparedSwiftBuild = { files: Files; source: string };
 
 export type FenceParser = (typeof FENCE_PARSER_NAMES)[number];
@@ -45,13 +44,11 @@ export type FenceParser = (typeof FENCE_PARSER_NAMES)[number];
 /** The body and opening line of a language-tagged Markdown code fence. */
 export type FencedBlock = { line: number; language: string; body: string };
 
-/** One canonical syntax reader selected by the declared fence aliases. */
-
 /** A syntax diagnostic at a one-based line of a code body or Markdown source. */
 export type FenceSyntaxError = { line: number; message: string };
 
-/** The styles accepted by the native Python docstring checker. */
-export type PythonDocstringStyle = 'google' | 'numpy' | 'sphinx';
+/** The styles accepted by the Python docstring checker. */
+export type PythonDocstringStyle = (typeof DOCSTRING_STYLES)[number];
 
 /** Referenced compiler projects whose outputs stay inside the caller-owned scratch copy. */
 export type TypeScriptReferenceCopy = {
@@ -59,4 +56,10 @@ export type TypeScriptReferenceCopy = {
     scratchRoot: string;
     reads: ReadCache;
     projects: Map<string, TypeScriptConfiguration>;
+};
+
+export type ParsedSwift = {
+    xcode_project?: string | undefined;
+    xcode_scheme?: string | undefined;
+    xcode_destination: string;
 };

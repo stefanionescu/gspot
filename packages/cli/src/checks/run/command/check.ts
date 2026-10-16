@@ -1,57 +1,60 @@
+// Prepare and run tool commands and collect their findings.
 import { join, relative } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
-import { emptyResult } from '#cli/checks/run/report.ts';
 import { checkInput } from '#cli/checks/run/built-in.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { RAN_STATUSES } from '#cli/config/execution/run.ts';
-import { coverageArguments } from '#cli/planning/checks.ts';
+import { buildBaseResult } from '#cli/checks/run/report.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
+import { RAN_STATUSES } from '#cli/config/checks/run/run.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { checkCompanions } from '#cli/planning/needed-tools.ts';
 import type { ExecutionFailure } from '#cli/types/tools/run.ts';
+import { stripCoverageArguments } from '#cli/planning/checks.ts';
 import { copyIntoScratch } from '#cli/checks/run/copy/scratch.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import { batchedCommands } from '#cli/checks/run/command/batches.ts';
-import type { Finding, CheckResult, CheckRunOptions } from '#cli/types/execution/check.ts';
-import { findTool, runPlannedTool, companionEnvironment } from '#cli/checks/run/command/tool.ts';
-import { finishResult, commandOutcome, recordInvocation } from '#cli/checks/run/command/output.ts';
+import { buildInvocations } from '#cli/checks/run/command/batches.ts';
+import type { Finding, CheckResult, CheckRunOptions } from '#cli/types/checks/run/check.ts';
+import { findTool, runPlannedTool, buildCompanionEnvironment } from '#cli/checks/run/command/tool.ts';
+import { buildCheckResult, recordInvocation, parseCommandFindings } from '#cli/checks/run/command/output.ts';
 
 import {
-    substitute,
-    scratchFiles,
-    perFileCommands,
-    substituteValue,
-    commandToolFiles,
+    expandCommand,
+    listScratchFiles,
+    replacePlaceholders,
+    buildFileInvocations,
+    listCommandToolFiles,
 } from '#cli/checks/run/command/placeholders.ts';
 import type {
     CommandRun,
     CommandGroup,
-    CommandSource,
+    CommandInputs,
     Substitutions,
     PreparedScratch,
     CommandRunState,
     PreparedCommand,
     SubstitutionCheck,
     CommandEnvironment,
-} from '#cli/types/execution/command.ts';
+} from '#cli/types/checks/run/command.ts';
 
 async function runCommands(
-    session: Session,
     planned: PlannedCheck,
-    tool: ToolDeclaration,
-    prepared: PreparedCommand,
-    base: CheckResult,
+    {
+        session,
+        tool,
+        prepared,
+        base,
+    }: { session: Session; tool: ToolDeclaration; prepared: PreparedCommand; base: CheckResult },
 ): Promise<CheckResult> {
     const { check } = planned;
-    const { cwd, argv } = prepared;
+    const { cwd, commandArguments } = prepared;
     const state: CommandRunState = { root: prepared.root, cwd, findings: [], isFailed: false };
     const started = performance.now();
     for (const invocation of prepared.commands) {
         const { result, failure } = await runPlannedTool(
-            invocation.argv,
+            invocation.commandArguments,
             {
                 ...prepared,
                 cancelSignal: session.cancelSignal,
@@ -59,33 +62,36 @@ async function runCommands(
             planned.scope.view,
             tool.name,
         );
-        if (failure !== undefined) return { ...base, ...failure, duration: performance.now() - started, command: argv };
-        const parsed = commandOutcome(planned, result, { cwd, root: state.root });
+        if (failure !== undefined)
+            return { ...base, ...failure, duration: performance.now() - started, command: commandArguments };
+        const parsed = parseCommandFindings(planned, result, { cwd, root: state.root });
         if (parsed.findings === undefined)
             return {
                 ...base,
                 status: 'error',
                 duration: performance.now() - started,
                 note: parsed.note,
-                command: argv,
+                command: commandArguments,
             };
         recordInvocation(planned, tool, { invocation, result, findings: parsed.findings }, state);
     }
-    return finishResult(base, check, state, argv, started);
+    return buildCheckResult(check, { base, state, commandArguments, started });
 }
 
 // Report a missing tool file before a nested check runs.
-function missingToolFile(
-    session: Session,
+function findMissingToolFile(
     planned: PlannedCheck,
-    command: string[],
-    base: CheckResult,
-    options: CheckRunOptions,
+    {
+        session,
+        command,
+        base,
+        options,
+    }: { session: Session; command: string[]; base: CheckResult; options: CheckRunOptions },
 ): CheckResult | undefined {
     const paths = options.toolFiles?.(checkInput(session, planned));
     if (paths === undefined) return undefined;
     using files = openFiles(session.root);
-    const missing = [...paths, ...commandToolFiles(session, planned, command)].find((path) =>
+    const missing = [...paths, ...listCommandToolFiles(session, planned, command)].find((path) =>
         isInGspotFolder(path) ? files.read(path) === undefined : readCachedText(session.reads, path) === undefined,
     );
     if (missing === undefined) return undefined;
@@ -102,7 +108,7 @@ async function runInScratch(run: CommandRun, scratchCopyFolder: string | undefin
     const { session, planned, tool, command, toolPath, environment, base, options } = run;
     const created =
         scratchCopyFolder === undefined && planned.check.run_in_copy === true
-            ? await prepareInScratch(session, planned, command, toolPath, options)
+            ? await prepareInScratch(planned, { session, command, toolPath, options })
             : undefined;
     using copy = created?.copy;
     let root = scratchCopyFolder;
@@ -112,24 +118,33 @@ async function runInScratch(run: CommandRun, scratchCopyFolder: string | undefin
         let selectedEnvironment = environment;
         if (root !== undefined) {
             scratchSession = { ...session, root };
-            selectedEnvironment = commandEnvironment(scratchSession, planned, options);
+            selectedEnvironment = buildCommandEnvironment(scratchSession, planned, options);
         }
-        prepared = prepareCommand(scratchSession, planned, command, selectedEnvironment, toolPath);
+        prepared = prepareCommand(planned, {
+            session: scratchSession,
+            command,
+            environment: selectedEnvironment,
+            toolPath,
+        });
     } else {
         root = (copy as PreparedScratch['copy']).path;
         scratchSession = created.session;
         prepared = created.prepared;
     }
-    prepared.env = companionEnvironment(session, checkCompanions(planned.scope, planned.check, command), prepared.env);
-    const result = await runCommands(scratchSession, planned, tool, prepared, base);
+    prepared.env = buildCompanionEnvironment(
+        session,
+        checkCompanions(planned.scope, planned.check, command),
+        prepared.env,
+    );
+    const result = await runCommands(planned, { session: scratchSession, tool, prepared, base });
     if (root === undefined) return result;
-    const reported = substitute(session, planned, command, environment.substitutions);
+    const reported = expandCommand(session, planned, command, environment.substitutions);
     reported[0] = toolPath;
     return { ...result, command: reported.filter((part) => typeof part === 'string') };
 }
 
 // Resolve declared companion tools before this command runs.
-function unavailableCompanion(
+function findUnavailableCompanion(
     session: Session,
     planned: PlannedCheck,
     command: string[],
@@ -145,26 +160,23 @@ function unavailableCompanion(
 
 /**
  * Copy selected inputs and prepare the command against that scratch copy.
- *
- * @param session the repository session.
- * @param planned the selected check and its files.
- * @param command the executable and argument list.
- * @param toolPath the resolved executable path.
- * @param options the command options.
- *
- * @returns the disposable copy, its session, and the prepared command.
+ * @param planned the selected check declaration.
+ * @param commandRun the execution values.
+ * @param commandRun.session the repository session.
+ * @param commandRun.command the executable and authored arguments.
+ * @param commandRun.toolPath the resolved executable path.
+ * @param commandRun.options the command and scratch-copy options.
+ * @returns the disposable copy and prepared command.
  */
 export async function prepareInScratch(
-    session: Session,
     planned: PlannedCheck,
-    command: string[],
-    toolPath: string,
-    options: CheckRunOptions,
+    commandRun: { session: Session; command: string[]; toolPath: string; options: CheckRunOptions },
 ): Promise<PreparedScratch> {
+    const { session, command, toolPath, options } = commandRun;
     const copy = await copyIntoScratch({
         root: session.root,
         paths: [
-            ...scratchFiles(session, planned, command),
+            ...listScratchFiles(session, planned, command),
             ...(options.toolFiles?.(checkInput(session, planned)) ?? []),
         ],
         dependencies: [],
@@ -175,13 +187,12 @@ export async function prepareInScratch(
         return {
             copy,
             session: scratchSession,
-            prepared: prepareCommand(
-                scratchSession,
-                planned,
+            prepared: prepareCommand(planned, {
+                session: scratchSession,
                 command,
-                commandEnvironment(scratchSession, planned, options),
+                environment: buildCommandEnvironment(scratchSession, planned, options),
                 toolPath,
-            ),
+            }),
         };
     } catch (error) {
         copy[Symbol.dispose]();
@@ -194,11 +205,11 @@ export async function prepareInScratch(
  *
  * @param session the repository or scratch session.
  * @param planned the selected check and files.
- * @param options the command options.
+ * @param options the optional function that replaces file arguments for this invocation.
  *
  * @returns paths and environment shared by tool inspection and execution.
  */
-export function commandEnvironment(
+export function buildCommandEnvironment(
     session: Session,
     planned: PlannedCheck,
     options: CheckRunOptions,
@@ -206,13 +217,13 @@ export function commandEnvironment(
     const { check, scope } = planned;
     const runsInScope = check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root');
     const cwd = runsInScope ? join(session.root, scope.scope.path) : session.root;
-    const substitutions = commandSubstitutions(session, planned, cwd);
+    const substitutions = buildCommandSubstitutions(session, planned, cwd);
     const files = substitutions.files;
     if (options.arguments !== undefined) substitutions.files = options.arguments(checkInput(session, planned));
     const env = Object.fromEntries(
         Object.entries({ ...planned.tool?.env, ...planned.check.env }).map(([name, value]) => [
             name,
-            substituteValue(session, planned, value, substitutions),
+            replacePlaceholders(session, planned, value, substitutions),
         ]),
     );
     return { root: session.root, cwd, files, substitutions, env };
@@ -227,7 +238,11 @@ export function commandEnvironment(
  *
  * @returns effective settings and file paths relative to that directory.
  */
-export function commandSubstitutions(source: CommandSource, planned: SubstitutionCheck, cwd: string): Substitutions {
+export function buildCommandSubstitutions(
+    source: CommandInputs,
+    planned: SubstitutionCheck,
+    cwd: string,
+): Substitutions {
     const substitutions: Substitutions = {
         files: planned.files.map((file) => convertToPosixPath(relative(cwd, join(source.root, file.path)))),
         scope: planned.scope.scope.path,
@@ -240,29 +255,26 @@ export function commandSubstitutions(source: CommandSource, planned: Substitutio
 
 /**
  * Expand check and fix commands into bounded file batches.
- *
- * @param session the session rooted at the working copy.
- * @param planned the planned check.
- * @param command the command with placeholders.
- * @param environment resolved paths and tool environment.
- * @param toolPath the resolved executable.
- *
- * @returns the working directory and commands.
+ * @param planned the selected check declaration.
+ * @param commandRun the execution values.
+ * @param commandRun.session the repository session.
+ * @param commandRun.command the executable and authored arguments.
+ * @param commandRun.environment the working paths and tool environment.
+ * @param commandRun.toolPath the resolved executable path.
+ * @returns the working directory and bounded commands.
  */
 export function prepareCommand(
-    session: Session,
     planned: PlannedCheck,
-    command: string[],
-    environment: CommandEnvironment,
-    toolPath: string,
+    commandRun: { session: Session; command: string[]; environment: CommandEnvironment; toolPath: string },
 ): PreparedCommand {
+    const { session, command, environment, toolPath } = commandRun;
     const { root, cwd, files, substitutions, env } = environment;
-    const argv = substitute(session, planned, command, substitutions);
-    argv[0] = toolPath;
+    const commandArguments = expandCommand(session, planned, command, substitutions);
+    commandArguments[0] = toolPath;
     const commands = command.includes(FILES_PLACEHOLDER)
-        ? batchedCommands(session, planned, command, substitutions, toolPath)
-        : perFileCommands(argv, files);
-    return { root, cwd, argv: argv.filter((part) => typeof part === 'string'), commands, env };
+        ? buildInvocations(planned, { session, command, substitutions, toolPath })
+        : buildFileInvocations(commandArguments, files);
+    return { root, cwd, commandArguments: commandArguments.filter((part) => typeof part === 'string'), commands, env };
 }
 
 /**
@@ -279,16 +291,16 @@ export async function runCheckCommand(
     planned: PlannedCheck,
     options: CheckRunOptions = {},
 ): Promise<CheckResult> {
-    const command = coverageArguments(planned, options) as string[];
+    const command = stripCoverageArguments(planned, options) as string[];
     const tool = planned.tool as ToolDeclaration;
-    const base = emptyResult(planned);
-    const environment = commandEnvironment(session, planned, options);
+    const base = buildBaseResult(planned, session);
+    const environment = buildCommandEnvironment(session, planned, options);
     const { env, cwd } = environment;
-    const missing = missingToolFile(session, planned, command, base, options);
+    const missing = findMissingToolFile(planned, { session, command, base, options });
     if (missing !== undefined) return missing;
     const availability = findTool(session, cwd, tool, env);
     if ('status' in availability) return { ...base, ...availability };
-    const companion = unavailableCompanion(session, planned, command, cwd);
+    const companion = findUnavailableCompanion(session, planned, command, cwd);
     if (companion !== undefined) return { ...base, ...companion };
     return runInScratch(
         { session, planned, tool, command, toolPath: availability.path, environment, base, options },
@@ -301,7 +313,7 @@ export async function runCheckCommand(
  *
  * @param session the repository and tools.
  * @param planned the planned check.
- * @param groups source files and argv for each invocation.
+ * @param groups source files and command arguments for each invocation.
  *
  * @returns the combined findings and the failing invocation when one stops the check.
  */
@@ -311,7 +323,7 @@ export async function runCommandGroups(
     groups: CommandGroup[],
 ): Promise<CheckResult> {
     const findings: Finding[] = [];
-    const report = { ...emptyResult(planned), findings };
+    const report = { ...buildBaseResult(planned, session), findings };
     for (const { files, command } of groups) {
         const result = await runCheckCommand(session, { ...planned, files }, { command });
         report.duration += result.duration;

@@ -14,14 +14,7 @@
     "devDependencies": {
         "@socketsecurity/bun-security-scanner": "1.1.2",
         "@types/bun": "1.4.2",
-        "@types/node": "24.19.2",
-        "@types/semver": "7.7.1",
-        "@types/which": "3.0.4",
-        "prettier": "3.8.1",
-        "semver": "7.8.5",
-        "smol-toml": "1.9.0",
-        "typescript": "5.9.3",
-        "zod": "4.6.2"
+        "@types/node": "24.19.2"
     },
     "overrides": {
         "handlebars": "4.7.10",

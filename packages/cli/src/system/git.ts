@@ -8,7 +8,7 @@ import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/p
 import type { StdoutRead, SpawnResult, SpawnOptions, ByteSpawnResult } from '#cli/types/system/processes.ts';
 
 import type {
-    GitSource,
+    GitLookup,
     GitOptions,
     GitRepository,
     GitEnvironment,
@@ -26,11 +26,11 @@ import {
     WORK_TREE_ARGUMENTS,
     GIT_SOURCE_ARGUMENTS,
     GIT_PREFIX_ARGUMENTS,
+    GIT_FOLDER_ARGUMENTS,
     GIT_SETTING_ARGUMENTS,
     GIT_SHALLOW_ARGUMENTS,
     GIT_WORK_TREE_VARIABLE,
     NOT_REPOSITORY_MESSAGE,
-    GIT_DIRECTORY_ARGUMENTS,
     GIT_TOP_LEVEL_ARGUMENTS,
     GIT_COMMAND_CONFIGURATION,
     GIT_LOCAL_VARIABLES_ARGUMENTS,
@@ -43,7 +43,7 @@ function parseLocalEnvironment(text: string): string[] {
 }
 
 // The hook's original working directory owns relative paths and Git's implicit worktree root.
-function readInheritedGitEnvironment(origin: string): GitSource {
+function readInheritedGitEnvironment(origin: string): GitLookup {
     const env = Object.fromEntries(
         GIT_PATH_VARIABLES.flatMap((name) => {
             const value = readEnvironmentVariable(name);
@@ -57,7 +57,7 @@ function readInheritedGitEnvironment(origin: string): GitSource {
     if (source.code !== 0) return { failure: source };
     const line = source.stdout.indexOf('\n');
     const isBare = source.stdout.slice(0, line) === 'true';
-    const directory = trimGitLine(source.stdout.slice(line + 1));
+    const folder = trimGitLine(source.stdout.slice(line + 1));
     if (
         !isBare &&
         readEnvironmentVariable(GIT_DIR_VARIABLE) !== undefined &&
@@ -70,7 +70,7 @@ function readInheritedGitEnvironment(origin: string): GitSource {
         if (worktree.code !== 0) return { failure: worktree };
         env[GIT_WORK_TREE_VARIABLE] = trimGitLine(worktree.stdout);
     }
-    return { directory, env };
+    return { folder: folder, env };
 }
 
 // The target's own metadata decides whether inherited repository-local variables remain valid.
@@ -80,32 +80,41 @@ function readTargetGitEnvironment(
     environment: GitTargetEnvironment,
 ): GitEnvironment {
     const { isolated, overrides, explicit } = environment;
-    const target = spawnProcessBlocking(['git', ...GIT_DIRECTORY_ARGUMENTS], {
+    const target = spawnProcessBlocking(['git', ...GIT_FOLDER_ARGUMENTS], {
         cwd: root,
         env: { ...isolated, ...overrides, ...GIT_LOCALE },
     });
     if (isOutsideGit(target)) return { env: { ...isolated, ...explicit } };
     if (target.code !== 0) return { failure: target };
-    const isSameRepository = realpathSync(source.directory) === realpathSync(trimGitLine(target.stdout));
+    const isSameRepository = realpathSync(source.folder) === realpathSync(trimGitLine(target.stdout));
     return { env: { ...(isSameRepository ? source.env : isolated), ...explicit } };
 }
 
-let sourceMetadata: { metadata: string[]; source?: GitSource } | undefined;
+/**
+ * Distinguishes an absent work tree from broken Git metadata after a failed command.
+ * @param inspection the work-tree probe result.
+ * @returns true when Git reports that no repository exists.
+ */
+function isOutsideGit(inspection: SpawnResult): boolean {
+    return inspection.code === NOT_REPOSITORY_CODE && inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE);
+}
+
+let sourceMetadata: { metadata: string[]; source?: GitLookup } | undefined;
 
 /**
  * Git identifies local variables and worktree-specific metadata. Explicit caller settings apply last.
- * @param root the repository directory.
- * @param argv the literal Git command arguments.
+ * @param workingFolder the repository directory.
+ * @param commandArguments the literal Git command arguments.
  * @param explicit the environment overrides for this command.
  * @returns the environment for the requested Git command.
  */
-function buildGitEnvironment(
-    root: string,
-    argv: readonly string[],
+export function buildGitEnvironment(
+    workingFolder: string,
+    commandArguments: readonly string[],
     explicit: Record<string, string | undefined>,
 ): GitEnvironment {
     if (
-        // eslint-disable-next-line n/no-process-env -- reason: Git scans native variable names to isolate repository-local settings.
+        // eslint-disable-next-line n/no-process-env -- reason: Git scans variable names to isolate repository-local settings.
         !Object.keys(process.env).some((key) => {
             const name = environmentKey(key);
             return name.startsWith(GIT_VARIABLE_PREFIX) && !GIT_NONLOCAL_ENVIRONMENT_NAME.test(name);
@@ -122,73 +131,68 @@ function buildGitEnvironment(
     const { metadata } = sourceMetadata;
     if (!metadata.some((name) => readEnvironmentVariable(name) !== undefined)) return { env: explicit };
     const isolated = Object.fromEntries(metadata.map((name) => [name, undefined]));
-    if ([GIT_EXECUTABLE, GIT_CLONE_COMMAND].every((part, index) => argv[index] === part))
+    if ([GIT_EXECUTABLE, GIT_CLONE_COMMAND].every((part, index) => commandArguments[index] === part))
         return { env: { ...isolated, ...explicit } };
     const overrides = Object.fromEntries(
         Object.entries(explicit).filter(([name]) => !metadata.includes(environmentKey(name))),
     );
     const source = (sourceMetadata.source ??= readInheritedGitEnvironment(origin));
     if ('failure' in source) return source;
-    return readTargetGitEnvironment(root, source, { isolated, overrides, explicit });
-}
-
-/**
- * Distinguishes an absent work tree from broken Git metadata after a failed command.
- * @param inspection the work-tree probe result.
- * @returns true when Git reports that no repository exists.
- */
-function isOutsideGit(inspection: SpawnResult): boolean {
-    return inspection.code === NOT_REPOSITORY_CODE && inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE);
+    return readTargetGitEnvironment(workingFolder, source, { isolated, overrides, explicit });
 }
 
 /**
  * Run Git without a time limit and wait for its result.
- * @param root the working directory.
- * @param argv the arguments after git.
+ * @param workingFolder the working directory.
+ * @param commandArguments the arguments after git.
  * @param options the other spawn options, such as the environment.
  * @returns what Git printed and how it exited.
  */
-function runGitBlocking(
-    root: string,
-    argv: readonly string[],
+export function runGitBlocking(
+    workingFolder: string,
+    commandArguments: readonly string[],
     options: Omit<SpawnOptions, 'cwd' | 'timeoutSeconds'> = {},
 ): SpawnResult {
-    const selected = buildGitEnvironment(root, ['git', ...argv], { ...options.env });
+    const selected = buildGitEnvironment(workingFolder, ['git', ...commandArguments], { ...options.env });
     if ('failure' in selected) return selected.failure;
-    return spawnProcessBlocking(['git', ...argv], { ...options, env: selected.env, cwd: root });
+    return spawnProcessBlocking(['git', ...commandArguments], { ...options, env: selected.env, cwd: workingFolder });
 }
 
 /**
  * Runs Git with cancellation.
- * @param root the working directory.
- * @param argv the arguments after git.
+ * @param workingFolder the working directory.
+ * @param commandArguments the arguments after git.
  * @param options spawn settings for standard input and optional cancellation.
  * @param output the declared output format.
  * @returns what Git printed and how it exited.
  */
-async function runGit(
-    root: string,
-    argv: readonly string[],
+export async function runGit(
+    workingFolder: string,
+    commandArguments: readonly string[],
     options: GitOptions,
     output: StdoutRead = 'utf8',
 ): Promise<SpawnResult> {
-    const selected = buildGitEnvironment(root, ['git', ...argv], { ...options.env });
+    const selected = buildGitEnvironment(workingFolder, ['git', ...commandArguments], { ...options.env });
     if ('failure' in selected) return selected.failure;
-    const command = ['git', ...argv];
-    const prepared = { ...options, env: selected.env, cwd: root };
+    const command = ['git', ...commandArguments];
+    const prepared = { ...options, env: selected.env, cwd: workingFolder };
     return output === 'utf8' ? spawnProcess(command, prepared) : streamProcess(command, prepared, output);
 }
 
 /**
  * Runs Git with cancellation and keeps output bytes for paths and objects.
- * @param root the working directory.
- * @param argv the arguments after git.
+ * @param workingFolder the working directory.
+ * @param commandArguments the arguments after git.
  * @param options spawn settings for standard input and optional cancellation.
  * @returns the bytes Git printed and how it exited.
  */
-async function runGitForBytes(root: string, argv: readonly string[], options: GitOptions): Promise<ByteSpawnResult> {
+export async function runGitForBytes(
+    workingFolder: string,
+    commandArguments: readonly string[],
+    options: GitOptions,
+): Promise<ByteSpawnResult> {
     const chunks: Buffer[] = [];
-    const result = await runGit(root, argv, options, async (output) => {
+    const result = await runGit(workingFolder, commandArguments, options, async (output) => {
         for await (const chunk of output) chunks.push(chunk);
     });
     return { ...result, stdout: Buffer.concat(chunks) };
@@ -196,89 +200,101 @@ async function runGitForBytes(root: string, argv: readonly string[], options: Gi
 
 /**
  * Reads a Git configuration value, distinguishing an unset key from a failed command.
- * @param root the working directory.
+ * @param workingFolder the working directory.
  * @param key the configuration key.
  * @returns the exact value, or undefined for an unset key.
  */
-function readGitSetting(root: string, key: string): string | undefined {
-    const result = runGitBlocking(root, [...GIT_SETTING_ARGUMENTS, key]);
+export function readGitSetting(workingFolder: string, key: string): string | undefined {
+    const result = runGitBlocking(workingFolder, [...GIT_SETTING_ARGUMENTS, key]);
     if (result.code === 0) return result.stdout.slice(0, -1);
     if (result.code === 1 && result.stdout === '' && result.stderr === '') return undefined;
     throw new Error(
-        `Git configuration ${key} failed in ${root} (exit ${String(result.code)}): ${result.stderr.trim()}`,
+        `Git configuration ${key} failed in ${workingFolder} (exit ${String(result.code)}): ${result.stderr.trim()}`,
     );
 }
 
 /**
  * The folder Git runs hooks from: core.hooksPath when set, otherwise the hooks folder of the Git directory.
- * @param root the repository root.
+ * @param workingFolder the repository root.
  * @returns the absolute path.
  */
-function readHooksFolder(root: string): string {
-    const result = runGitBlocking(root, GIT_HOOKS_ARGUMENTS);
+export function readHooksFolder(workingFolder: string): string {
+    const result = runGitBlocking(workingFolder, GIT_HOOKS_ARGUMENTS);
     if (result.code !== 0) throw new Error(`Cannot read the Git hooks folder: ${result.stderr.trim()}`);
-    return resolve(root, trimGitLine(result.stdout));
+    return resolve(workingFolder, trimGitLine(result.stdout));
 }
 
 /**
  * What a Git command prints, or the selection error it failed with.
- * @param root the repository root.
- * @param argv the arguments after git.
+ * @param workingFolder the repository root.
+ * @param commandArguments the arguments after git.
  * @param options cancellation and input.
  * @returns the standard output as printed.
  */
-async function readGitText(root: string, argv: readonly string[], options: GitOptions): Promise<string> {
-    const result = await runGit(root, argv, options);
+export async function readGitText(
+    workingFolder: string,
+    commandArguments: readonly string[],
+    options: GitOptions,
+): Promise<string> {
+    const result = await runGit(workingFolder, commandArguments, options);
     if (result.code !== 0)
         throw new GspotError(
             'git',
-            `Git ${argv[0] ?? ''} failed in ${root} (exit ${String(result.code)}): ${result.stderr.trim()}`,
+            `Git ${commandArguments[0] ?? ''} failed in ${workingFolder} (exit ${String(result.code)}): ${result.stderr.trim()}`,
         );
     return result.stdout;
 }
 
 /**
  * A Git command's output as its non-empty lines.
- * @param root the repository root.
- * @param argv the arguments after git.
+ * @param workingFolder the repository root.
+ * @param commandArguments the arguments after git.
  * @param options cancellation and input.
  * @returns the lines, in order.
  */
-async function readGitLines(root: string, argv: readonly string[], options: GitOptions): Promise<string[]> {
-    const text = await readGitText(root, argv, options);
+export async function readGitLines(
+    workingFolder: string,
+    commandArguments: readonly string[],
+    options: GitOptions,
+): Promise<string[]> {
+    const text = await readGitText(workingFolder, commandArguments, options);
     return text.split('\n').filter((line) => line !== '');
 }
 
 /**
  * The paths a null-separated Git listing names.
- * @param root the repository root.
- * @param argv the arguments after git, which must include -z.
+ * @param workingFolder the repository root.
+ * @param commandArguments the arguments after git, which must include -z.
  * @param options cancellation and input.
  * @returns the paths, in order.
  */
-async function readGitPaths(root: string, argv: readonly string[], options: GitOptions): Promise<string[]> {
-    const text = await readGitText(root, argv, options);
+export async function readGitPaths(
+    workingFolder: string,
+    commandArguments: readonly string[],
+    options: GitOptions,
+): Promise<string[]> {
+    const text = await readGitText(workingFolder, commandArguments, options);
     return text.split('\0').filter((path) => path !== '');
 }
 
 /**
  * Whether a shallow clone cuts repository history.
- * @param root the repository root.
+ * @param workingFolder the repository root.
  * @param options cancellation and input.
  * @returns true for a shallow repository.
  */
-async function isShallow(root: string, options: GitOptions): Promise<boolean> {
-    const answer = await readGitText(root, GIT_SHALLOW_ARGUMENTS, options);
+export async function isShallow(workingFolder: string, options: GitOptions): Promise<boolean> {
+    const answer = await readGitText(workingFolder, GIT_SHALLOW_ARGUMENTS, options);
     return answer.trim() === 'true';
 }
 
 /**
  * The path from Git's top level to the project root, with a trailing slash.
- * @param root the repository directory.
+ * @param workingFolder the repository directory.
  * @returns the repository-relative prefix for this directory.
  */
-function readGitPrefix(root: string): string {
-    const result = runGitBlocking(root, GIT_PREFIX_ARGUMENTS);
+export function readGitPrefix(workingFolder: string): string {
+    const result = runGitBlocking(workingFolder, GIT_PREFIX_ARGUMENTS);
     if (result.code !== 0) throw new GspotError('git', `Cannot read the Git path prefix: ${result.stderr.trim()}`);
     return trimGitLine(result.stdout);
 }
@@ -288,38 +304,21 @@ function readGitPrefix(root: string): string {
  * @param text Git's printed value.
  * @returns the value without its final newline.
  */
-function trimGitLine(text: string): string {
+export function trimGitLine(text: string): string {
     return text.replace(TRAILING_NEWLINE, '');
 }
 
 /**
  * True when a Git work tree contains the root.
- * @param root the directory.
+ * @param workingFolder the directory.
  * @returns whether Git confirms a work tree.
  * @throws when Git cannot establish the repository state.
  */
-function isGitRepository(root: string): boolean {
-    const inspection = runGitBlocking(root, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
+export function isGitRepository(workingFolder: string): boolean {
+    const inspection = runGitBlocking(workingFolder, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
     if (inspection.code === 0 && inspection.stdout.trim() === 'true') return true;
     if (isOutsideGit(inspection)) return false;
     throw new Error(
-        `Git work-tree discovery failed in ${root} (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
+        `Git work-tree discovery failed in ${workingFolder} (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
     );
 }
-
-export {
-    runGit,
-    isShallow,
-    readGitText,
-    trimGitLine,
-    isOutsideGit,
-    readGitLines,
-    readGitPaths,
-    readGitPrefix,
-    runGitBlocking,
-    runGitForBytes,
-    readGitSetting,
-    readHooksFolder,
-    isGitRepository,
-    buildGitEnvironment,
-};

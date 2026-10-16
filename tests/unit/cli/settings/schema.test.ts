@@ -1,0 +1,117 @@
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { stringify } from '@decimalturn/toml-patch';
+import { parseTomlText } from '#cli/settings/file.ts';
+import { parseSettings } from '#cli/settings/read.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
+import { buildSettingsText } from '#tests/setup/settings.ts';
+import { formatSettingsText } from '#cli/settings/write/text.ts';
+import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { REFUSED_RULE_OPTIONS } from '#tests/data/settings/errors.ts';
+import { UNSAFE_FOLDERS, UNTIL_DATE_CASES } from '#tests/data/settings/schema.ts';
+
+describe('architecture', () => {
+    test('module import edges name declared module and preserve authored absence', () => {
+        const text = `[[architecture.module]]
+name = "app"
+paths = ["app/**"]
+may_import = ["storage"]
+
+[[architecture.module]]
+name = "storage"
+paths = ["storage/**"]
+`;
+        const settings = parseSettings(text, undefined, createReadCache(process.cwd()));
+        expect(settings.architecture.module).toStrictEqual([
+            { name: 'app', paths: ['app/**'], may_import: ['storage'] },
+            { name: 'storage', paths: ['storage/**'], may_import: [] },
+        ]);
+        expect(settings.written).toMatchObject({ architecture: { module: [{ name: 'app' }, { name: 'storage' }] } });
+        expect(settings.written).not.toHaveProperty('architecture.module.1.may_import');
+        expect(() =>
+            parseSettings(
+                text.replace('may_import = ["storage"]', 'may_import = ["missing"]'),
+                undefined,
+                createReadCache(process.cwd()),
+            ),
+        ).toThrow('architecture.module.0.may_import.0');
+        expect(() =>
+            parseSettings(text.replace('paths = ["app/**"]', 'paths = [3]'), undefined, createReadCache(process.cwd())),
+        ).toThrow('architecture.module.0.paths.0');
+    });
+});
+describe('parts', () => {
+    test.each([...UNTIL_DATE_CASES])('$name: the until date of an ignore must be a TOML date', (row) => {
+        const source = `configurations = ["bash"]\n[[ignore]]\ncheck="bash/shellcheck"\nreason="Reviewed in tests."\nuntil=${row.literal}\n`;
+        const written = parseTomlText(source, 'dates.toml', 'settings');
+        expect(settingsSchema.safeParse(written).success).toBe(row.valid);
+        if (!row.valid) return;
+        const settings = parseSettings(source, undefined, createReadCache(process.cwd()));
+        expect(settings.ignore[0]?.until?.toISOString()).toBe(row.date);
+        const output = formatSettingsText(source, written);
+        expect(output).toContain(`until = ${row.date}`);
+        expect(formatSettingsText(output, parseTomlText(output, 'dates.toml', 'settings'))).toBe(output);
+    });
+
+    test.each([...UNSAFE_FOLDERS])('scope refuses the path %s', (path) => {
+        expect(() =>
+            parseSettings(stringify({ scope: [{ path }] }), undefined, createReadCache(process.cwd())),
+        ).toThrow('Use a relative path with forward slashes, without parent traversal or a drive prefix.');
+    });
+
+    test('relative folders with spaces, percent signs and Unicode are accepted', async () => {
+        const path = 'apps/café 100%';
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { [`${path}/source.ts`]: 'export const count = 1;\n' });
+        expect(
+            Object.keys(
+                parseSettings(stringify({ scope: [{ path }] }), sandbox.path, createReadCache(process.cwd())).scopes,
+            ),
+        ).toStrictEqual([path]);
+    });
+});
+describe('tools', () => {
+    test('zero and false tool options are kept as values', () => {
+        const settings = parseSettings(
+            stringify({
+                configurations: ['css', 'files'],
+                tools: {
+                    stylelint: { rules: { 'max-nesting-depth': 0 } },
+                    taplo: { extra: { value: { reorder_keys: false }, reason: 'Reviewed in tests.' } },
+                },
+            }),
+            undefined,
+            createReadCache(process.cwd()),
+        );
+        expect(settings.tools).toMatchObject({
+            stylelint: { rules: { 'max-nesting-depth': 0 } },
+            taplo: { extra: { reorder_keys: false } },
+        });
+    });
+
+    test.each(['ordinary', 'constructor', 'prototype', 'toString'])(
+        'rule keys named like object properties are checked like any other key (%j)',
+        (key) => {
+            expect(() =>
+                parseSettings(
+                    `configurations = ["commits"]\n[tools.commitlint.rules]\n"${key}" = ["invalid"]\n`,
+                    undefined,
+                    createReadCache(process.cwd()),
+                ),
+            ).toThrow(`tools.commitlint.rules.${key}: Unknown commitlint rule. Accepted rules:`);
+        },
+    );
+
+    test.each([...REFUSED_RULE_OPTIONS])(
+        '$tool rule settings cannot turn rules on or off: $toml',
+        ({ configuration, toml, message }) => {
+            expect(() =>
+                parseSettings(
+                    buildSettingsText([configuration], { rules: true, tables: toml }),
+                    undefined,
+                    createReadCache(process.cwd()),
+                ),
+            ).toThrow(message);
+        },
+    );
+});

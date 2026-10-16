@@ -1,19 +1,19 @@
 import { z } from 'zod';
 import { realpathSync } from 'node:fs';
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { FULL_PERCENTAGE } from '#cli/config/units.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { type Files } from '#cli/types/system/files.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
 import { join, posix, resolve, relative } from 'node:path';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { type CoverageReport } from '#cli/types/checks/testing.ts';
 import type { TableSettings } from '#cli/types/settings/tables.ts';
 import { type SwiftBuildPlan } from '#cli/types/checks/language.ts';
-import { toolOutputDetail } from '#cli/checks/run/command/output.ts';
+import { formatOutputTail } from '#cli/checks/run/command/output.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
-import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
-import { buildPlan, prepareBuild } from '#cli/checks/language/swift/build-folder.ts';
+import { buildPlan, prepareBuild } from '#cli/checks/language/swift/cache.ts';
+import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { SWIFT_PROGRAM, SCRATCH_PATH_FLAG } from '#cli/config/checks/language/swift.ts';
 
 import {
@@ -27,37 +27,37 @@ import {
     SWIFT_DESCRIBE_COMMAND,
 } from '#cli/config/checks/testing.ts';
 
-async function packageCoverage(
+async function measurePackageCoverage(
     input: CheckInput,
     plan: SwiftBuildPlan,
     files: Files,
     cwd: string,
 ): Promise<CoverageReport> {
-    const tested = await runCheckTool(input, plan.argv, { cwd });
-    if (tested.code !== 0) throw new Error(toolOutputDetail(tested, 'Swift tests failed'));
-    const scratch = plan.argv.slice(plan.argv.indexOf(SCRATCH_PATH_FLAG));
+    const tested = await runCheckTool(input, plan.commandArguments, { cwd });
+    if (tested.code !== 0) throw new Error(formatOutputTail(tested, 'Swift tests failed'));
+    const scratch = plan.commandArguments.slice(plan.commandArguments.indexOf(SCRATCH_PATH_FLAG));
     const reported = await runCheckTool(input, [...SWIFT_CODECOV_COMMAND, ...scratch], { cwd });
-    if (reported.code !== 0) throw new Error(toolOutputDetail(reported, 'Swift did not report its coverage path'));
+    if (reported.code !== 0) throw new Error(formatOutputTail(reported, 'Swift did not report its coverage path'));
     const described = await runCheckTool(input, SWIFT_DESCRIBE_COMMAND, { cwd });
     if (described.code !== 0)
-        throw new Error(toolOutputDetail(described, 'Swift could not describe its package targets'));
+        throw new Error(formatOutputTail(described, 'Swift could not describe its package targets'));
     const coverage = files.read(relative(plan.folder, reported.stdout.trim()));
     const text = coverage === undefined ? undefined : decodeUtf8(coverage.bytes);
     if (text === undefined) throw new Error('Swift produced no UTF-8 coverage report at its reported path.');
     return parseSwiftCoverage(text, described.stdout, cwd);
 }
 
-async function xcodeCoverage(input: CheckInput, plan: SwiftBuildPlan, cwd: string): Promise<CoverageReport> {
+async function measureXcodeCoverage(input: CheckInput, plan: SwiftBuildPlan, cwd: string): Promise<CoverageReport> {
     const bundle = join(plan.folder, COVERAGE_BUNDLE);
-    const tested = await runCheckTool(input, [...plan.argv, ...XCODE_COVERAGE_FLAGS, bundle], { cwd });
+    const tested = await runCheckTool(input, [...plan.commandArguments, ...XCODE_COVERAGE_FLAGS, bundle], { cwd });
     if (tested.code !== 0)
         throw new Error(
-            `Cannot measure coverage because the test run exited ${String(tested.code)}: ${toolOutputDetail(tested, 'The test runner printed no diagnostic.')}`,
+            `Cannot measure coverage because the test run exited ${String(tested.code)}: ${formatOutputTail(tested, 'The test runner printed no diagnostic.')}`,
         );
     const viewed = await runCheckTool(input, [...XCCOV_COMMAND, bundle], { cwd });
     if (viewed.code !== 0)
         throw new Error(
-            `The test run wrote no coverage report: ${toolOutputDetail(viewed, 'The coverage viewer printed no diagnostic.')}`,
+            `The test run wrote no coverage report: ${formatOutputTail(viewed, 'The coverage viewer printed no diagnostic.')}`,
         );
     return xccovSchema.parse(JSON.parse(viewed.stdout));
 }
@@ -72,10 +72,10 @@ async function measureCoverage(input: CheckInput): Promise<CoverageReport> {
     const prepared = prepareBuild(input, plan.folder);
     using files = prepared.files;
     const cwd = join(prepared.source, input.scope.scope.path);
-    files.removeTree(COVERAGE_BUNDLE);
-    return plan.argv[0] === SWIFT_PROGRAM
-        ? await packageCoverage(input, plan, files, cwd)
-        : await xcodeCoverage(input, plan, cwd);
+    files.deleteTree(COVERAGE_BUNDLE);
+    return plan.commandArguments[0] === SWIFT_PROGRAM
+        ? await measurePackageCoverage(input, plan, files, cwd)
+        : await measureXcodeCoverage(input, plan, cwd);
 }
 
 /** The source targets and exact source paths reported by Swift Package Manager. */
@@ -93,7 +93,7 @@ const swiftPackageCoverageSchema = z.object({
     targets: { name: string; path: string; type: string; module_type: string; sources: string[] }[];
 }>);
 
-/** Native compiler coverage export with source line counts. */
+/** The compiler's coverage export with source line counts. */
 const swiftCoverageSchema = z.object({
     data: z.array(
         z.object({
@@ -122,16 +122,16 @@ const swiftCoverageSchema = z.object({
  * @param settings the common limit and target overrides of the settings.
  * @returns one line of text for each target under its limit, or missing from the report.
  */
-function coverageShortfalls(
+function listCoverageShortfalls(
     report: CoverageReport,
-    settings: Pick<TableSettings<'coverage'>, 'lines' | 'target'>,
+    settings: Pick<TableSettings<'coverage'>, 'lines' | 'swift_target'>,
 ): string[] {
     const limits = [
-        ...settings.target,
+        ...settings.swift_target,
         ...report.targets
             .filter(
                 (target) =>
-                    !settings.target.some(
+                    !settings.swift_target.some(
                         (limit) => target.name === limit.name || target.name === `${limit.name}${APP_TARGET_SUFFIX}`,
                     ),
             )
@@ -151,17 +151,19 @@ function coverageShortfalls(
 
 /**
  * Runs the tests with coverage and compares each named target with its limit. Uses the common line limit and explicit target overrides.
- * @param input the check input.
+ * @param input the Swift project scope and configured coverage limits.
  * @returns the findings.
  */
-async function swiftTestsCoverage(input: CheckInput): Promise<Finding[]> {
+async function checkSwiftTestsCoverage(input: CheckInput): Promise<Finding[]> {
     const settings = input.scope.view.options('coverage');
     const report = await measureCoverage(input);
-    return coverageShortfalls(report, settings).map((text) =>
-        findingAt(
+    return listCoverageShortfalls(report, settings).map((text) =>
+        buildFinding(
             input,
             {
-                file: input.scope.view.options('xcode').project ?? posix.join(input.scope.scope.path, PACKAGE_SWIFT),
+                file:
+                    input.scope.view.options('swift').xcode_project ??
+                    posix.join(input.scope.scope.path, PACKAGE_SWIFT),
                 line: 1,
             },
             'coverage',
@@ -209,4 +211,4 @@ const xccovSchema = z.object({
     ),
 } satisfies SchemaShape<CoverageReport>);
 
-export { swiftTestsCoverage, parseSwiftCoverage };
+export { checkSwiftTestsCoverage };

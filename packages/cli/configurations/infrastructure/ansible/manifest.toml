@@ -23,7 +23,7 @@ tool = "ansible-lint"
 command = ["ansible-lint", "-c", "{tool_file:ansible-lint}", "--offline", "--nocolor", "-f", "pep8", "--profile", "{level:moderate:production}"]
 example = "A task using `ansible.builtin.command: systemctl restart nginx` reports `command-instead-of-module`. Use `ansible.builtin.systemd` with `name: nginx` and `state: restarted` to express the intended service operation."
 files = { extensions = [".yml", ".yaml", ".cfg", ".j2"] }
-help = "Change the task the way the rule says. Turn one rule off with gspot ignore ansible/ansible-lint --rule `<id>` --reason \"`<why>`\"."
+help = "Change the task the way the rule says. Turn one rule off with `gspot ignore ansible/ansible-lint --rule <id> --reason \"<why>\"`."
 level = "recommended"
 name = "ansible-lint"
 runs = "scope"

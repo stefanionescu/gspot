@@ -6,7 +6,7 @@ import type { ToolFileContext } from '#cli/types/generation/files.ts';
 
 import {
     MISE_SCHEMA,
-    TOOL_EMIT_FORMAT,
+    TOML_FORMAT,
     TAPLO_FORMATTING,
     PURGECSS_EXTRACTOR,
     PURGECSS_TOKEN_END,
@@ -14,7 +14,7 @@ import {
     TRIVY_SKIPPED_FOLDERS,
     SPECTRAL_RECOMMENDED_OFF,
     PURGECSS_PSEUDO_CLASS_PATTERN,
-} from '#cli/config/generation/tool-file-sources.ts';
+} from '#cli/config/generation/tool-files.ts';
 /**
  * Build ansible lint file from the selected settings.
  * @param context the repository, scope settings, tool declaration, and output path.
@@ -45,7 +45,7 @@ function buildLycheeFile(context: ToolFileContext): string {
     const { options } = context.selection.view;
 
     const exclude = options('docs').allowed_urls;
-    return stringifyToml(exclude.length === 0 ? {} : { exclude }, TOOL_EMIT_FORMAT).trimEnd();
+    return stringifyToml(exclude.length === 0 ? {} : { exclude }, TOML_FORMAT).trimEnd();
 }
 /**
  * Build osv scanner file from the selected settings.
@@ -55,7 +55,7 @@ function buildLycheeFile(context: ToolFileContext): string {
 function buildOsvScannerFile(context: ToolFileContext): string {
     const { ignoresFor } = context.selection.view;
 
-    const entries = ignoresFor('dependencies/osv').filter(
+    const entries = ignoresFor('dependencies/osv-scanner').filter(
         (entry) => entry.rule !== undefined && entry.paths.length === 0,
     );
     return stringifyToml(
@@ -68,7 +68,7 @@ function buildOsvScannerFile(context: ToolFileContext): string {
                       reason: entry.reason,
                   })),
               },
-        TOOL_EMIT_FORMAT,
+        TOML_FORMAT,
     ).trimEnd();
 }
 /**
@@ -79,8 +79,8 @@ function buildOsvScannerFile(context: ToolFileContext): string {
 function buildPeripheryFile(context: ToolFileContext): string {
     const { settings } = context.selection.view;
 
-    const project = settings['xcode.project'];
-    const scheme = settings['xcode.scheme'];
+    const project = settings['swift.xcode_project'];
+    const scheme = settings['swift.xcode_scheme'];
     return stringifyYaml({
         ...(project === undefined ? {} : { project }),
         ...(scheme === undefined ? {} : { schemes: [scheme] }),
@@ -132,7 +132,7 @@ function buildTaploFile(context: ToolFileContext): string {
                 ...extra('taplo'),
             },
         },
-        TOOL_EMIT_FORMAT,
+        TOML_FORMAT,
     ).trimEnd();
 }
 /**

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#MISE description="Build the ESLint plugin into dist/plugin.js, and copy the license."
+#MISE dir="{{config_root}}/packages/eslint-plugin"
+set -euo pipefail
+
+bun build src/plugin.ts --outdir dist --target node --format esm --packages external
+cp ../../LICENSE.md LICENSE.md

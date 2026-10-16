@@ -1,5 +1,7 @@
 # Logging
 
+Read this rule when you add or change logging.
+
 ## One logger
 
 <!-- level: all -->
@@ -38,9 +40,8 @@ Use `lower_snake_case` for new event names and field keys unless an existing log
 
 ## Sensitive values
 
-Follow the secrets rules for values that must never reach logs.
-
-- Personal data, raw user content, full request or response bodies, provider payloads, database rows.
+Follow the secrets rules. Never log secrets, personal data, raw user content, full request or response bodies,
+provider payloads, or database rows.
 
 Redaction lives in the logging module. When a new sensitive key can reach logs, update the redaction list; do not filter at one call site.
 
@@ -49,7 +50,7 @@ Redaction lives in the logging module. When a new sensitive key can reach logs, 
 logger.info({ headers: req.headers }, 'Incoming request');
 
 // Good.
-logger.info({ path: req.path, method: req.method, requestId }, 'Incoming request');
+logger.info({ path: req.path, method: req.method, request_id: requestId }, 'Incoming request');
 ```
 
 A logging test asserts the fields and redaction, not that the logger ran.

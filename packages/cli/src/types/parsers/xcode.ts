@@ -1,6 +1,6 @@
-type ProjectRoot = ProjectEntry & { mainGroup: string };
+type ProjectRoot = PbxElement & { mainGroup: string };
 
-export type ProjectEntry = {
+export type PbxElement = {
     isa: string;
     buildSettings?: { SDKROOT?: string | undefined; SWIFT_VERSION?: string | undefined } | undefined;
     name?: string | undefined;
@@ -20,10 +20,10 @@ export type ProjectEntry = {
     projectDirPath?: string | undefined;
 };
 
-export type ProjectMetadata = { objects: Record<string, ProjectEntry>; root: ProjectEntry };
+export type ProjectMetadata = { objects: Record<string, PbxElement>; root: PbxElement };
 
 export type XcodeProject = {
-    objects: Record<string, ProjectEntry>;
+    objects: Record<string, PbxElement>;
     root: ProjectRoot;
     folder: string;
     parents: Map<string, string>;
@@ -35,7 +35,7 @@ export type Folder = { path: string; excluded: Set<string> };
 /** Source membership and synchronized folder exclusions read from project targets. */
 export type ProjectSources = { sources: Set<string>; folders: Folder[] };
 
-/** Native compiler and SDK choices authored in Xcode build configurations. */
+/** Compiler and SDK choices authored in Xcode build configurations. */
 export type ProjectBuildSettings = { sdkRoot: string | undefined; swiftVersion: string | undefined };
 
 /** Token stream for the UTF-8 project property-list reader. */

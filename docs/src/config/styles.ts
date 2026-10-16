@@ -1,8 +1,5 @@
 export const STYLE_CONTENT = ['**/*.html', '**/*.js'];
 export const STYLESHEETS = '**/*.css';
-export const STYLE_TOKENS = /[\w/:-]+/gu;
-export const STYLE_TOKEN_END = ':';
-export const STYLE_PSEUDO_CLASSES = /^:[\w-]+$/u;
 export const STYLE_ASSET_FOLDER = '_astro';
 export const STYLE_FILE_HASH = /\.[^.]+\.css$/u;
 export const STYLE_HASH_ALGORITHM = 'sha256';

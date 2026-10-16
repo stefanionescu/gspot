@@ -2,10 +2,9 @@ import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { relative } from 'node:path/posix';
 import { stringify } from '@decimalturn/toml-patch';
-import { generatedIgnores } from '#cli/generation/ignore-files.ts';
+import { TOML_FORMAT } from '#cli/config/generation/tool-files.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
-import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
-import { TOOL_EMIT_FORMAT } from '#cli/config/generation/tool-file-sources.ts';
+import { globSections, ignoreSections } from '#cli/generation/ignore-files.ts';
 import { type PythonInputs, type ToolFileContext } from '#cli/types/generation/files.ts';
 import { RUFF_ISORT, RUFF_IGNORED_RULES, BASEDPYRIGHT_OPTIONS } from '#cli/config/generation/python.ts';
 
@@ -18,8 +17,8 @@ import { RUFF_ISORT, RUFF_IGNORED_RULES, BASEDPYRIGHT_OPTIONS } from '#cli/confi
 function buildPythonInputs(context: ToolFileContext): PythonInputs {
     const { session, selection, level } = context;
     const root = session.installedRoot;
-    const base = posix.relative(posix.join(TOOL_FILE_DIRECTORY, selection.scope.path), '.');
-    const exclusions = generatedIgnores(session);
+    const base = posix.relative(posix.dirname(context.targetPath), '.');
+    const exclusions = globSections(ignoreSections(session));
     return {
         ruffRules: selection.selected.flatMap((manifest) => [
             ...manifest.ruff.recommended,
@@ -75,17 +74,17 @@ function buildRuffFile(context: ToolFileContext): string {
             mccabe: { 'max-complexity': limit('cyclomatic_complexity', 'python') },
             ...(convention === undefined ? {} : { pydocstyle: { convention } }),
             pylint: {
-                'max-statements': limit('statements', 'python'),
+                'max-statements': limit('function_statements', 'python'),
                 'max-args': limit('function_parameters', 'python'),
                 'max-positional-args': limit('function_parameters', 'python'),
-                'max-branches': limit('branches', 'python'),
-                'max-returns': limit('returns', 'python'),
+                'max-branches': limit('function_branches', 'python'),
+                'max-returns': limit('function_returns', 'python'),
             },
             ...(byPath.size === 0 ? {} : { 'per-file-ignores': Object.fromEntries(byPath) }),
         },
     };
 
-    return `${stringify(document, TOOL_EMIT_FORMAT).trimEnd()}\n`;
+    return `${stringify(document, TOML_FORMAT).trimEnd()}\n`;
 }
 /**
  * Build basedpyright file from the selected settings.
@@ -94,11 +93,11 @@ function buildRuffFile(context: ToolFileContext): string {
  */
 function buildBasedpyrightFile(context: ToolFileContext): string {
     const { pythonVenv, pythonScopePath, pythonExcludes } = buildPythonInputs(context);
-    const isAll = context.level === 'all';
     return (
         JSON.stringify(
             {
-                ...BASEDPYRIGHT_OPTIONS[isAll ? 'all' : 'recommended'],
+                ...BASEDPYRIGHT_OPTIONS,
+                typeCheckingMode: context.level,
                 ...(pythonVenv === undefined ? {} : { venvPath: pythonScopePath, venv: pythonVenv }),
                 include: [pythonScopePath],
                 extraPaths: [pythonScopePath],

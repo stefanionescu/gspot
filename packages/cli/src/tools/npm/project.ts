@@ -1,7 +1,9 @@
+// Prepare and install the npm tool project.
 import which from 'which';
 import semver from 'semver';
 import { join } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
+import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
@@ -12,7 +14,7 @@ import { readContainedPath } from '#cli/system/files/reads.ts';
 import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
 import { lockfileResult } from '#cli/tools/project-lockfiles.ts';
-import { REINSTALL_HINT } from '#cli/config/tools/diagnostics.ts';
+import { REINSTALL_HINT } from '#cli/config/tools/credentials.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
@@ -30,7 +32,7 @@ import {
     DOT_GSPOT,
     YARN_SETTINGS_FILE,
     NPM_TOOL_PROJECT_FILE,
-    NODE_MODULES_DIRECTORY,
+    GSPOT_NODE_MODULES_PATH,
 } from '#cli/config/system/locations.ts';
 import {
     type NpmToolProject,
@@ -46,7 +48,7 @@ import {
     LOCKFILE_ARGUMENTS,
     NPM_SETTING_PREFIX,
     YARN_INSTALL_SETTINGS_FILE,
-    NPM_CONFIG_DIRECTORY_VARIABLE,
+    NPM_CONFIG_FOLDER_VARIABLE,
 } from '#cli/config/tools/npm.ts';
 
 // Resolve in a disposable directory; keep repository credentials out of the portable result.
@@ -104,10 +106,12 @@ async function assertNpmToolVersion(
     const command = [executable, ...(tool.version_command ?? [VERSION_FLAG])];
     steps.push(command);
     const result = await runTool(command, {
+        cancelSignal: context.cancelSignal,
         cwd: work,
         timeoutSeconds,
         ...(tool.env === undefined ? {} : { env: tool.env }),
     });
+    context.cancelSignal?.throwIfAborted();
     const read = parseVersionOutput(tool, result);
     if (!('version' in read)) throw new GspotError('installation', read.note);
     const want = tool.version ?? read.version;
@@ -138,7 +142,7 @@ async function prepareNpmTools(
 }
 
 /**
- * The resolution and immutable-install argv for the selected package manager.
+ * The resolution and immutable-install arguments for the selected package manager.
  *
  * @param packageManager the declared package manager and major.
  *
@@ -146,11 +150,11 @@ async function prepareNpmTools(
  */
 function selectPackageManagerArguments(packageManager: PackageManager): PackageManagerArguments {
     const yarn = isYarnBerry(packageManager) ? YARN_ARGUMENTS.berry : YARN_ARGUMENTS.classic;
-    const args =
+    const commandArguments =
         packageManager.name === 'yarn'
             ? yarn
             : { lockfile: LOCKFILE_ARGUMENTS[packageManager.name], install: INSTALL_ARGUMENTS[packageManager.name] };
-    return { lockfile: [...args.lockfile], install: [...args.install] };
+    return { lockfile: [...commandArguments.lockfile], install: [...commandArguments.install] };
 }
 
 /**
@@ -174,7 +178,7 @@ async function runPackageManager(
     try {
         writeNpmrc(settings.path, env);
         env[`${NPM_SETTING_PREFIX}userconfig`] = join(settings.path, NPMRC_FILE);
-        env[NPM_CONFIG_DIRECTORY_VARIABLE] = settings.path;
+        env[NPM_CONFIG_FOLDER_VARIABLE] = settings.path;
         const berry = isYarnBerry(packageManager);
         if (berry) delete env['YARN_REGISTRY'];
         if (berry) {
@@ -182,7 +186,13 @@ async function runPackageManager(
             env['YARN_RC_FILENAME'] = YARN_INSTALL_SETTINGS_FILE;
         }
         steps.push(commandArguments);
-        const result = await runTool(commandArguments, { cwd: work, env, timeoutSeconds });
+        const result = await runTool(commandArguments, {
+            cancelSignal: context.cancelSignal,
+            cwd: work,
+            env,
+            timeoutSeconds,
+        });
+        context.cancelSignal?.throwIfAborted();
         if (result.code !== 0) {
             throw new GspotError(
                 'installation',
@@ -217,6 +227,22 @@ function assertPackageManagerVersion(packageManager: PackageManager, version: Sp
             'tool',
             `The tool project requires ${packageManager.name}@${requirement}. Install that package manager version first.`,
         );
+}
+
+/**
+ * Verify the selected package-manager executable before installation changes any tool inputs.
+ * @param context the session, shared cancellation signal, and attempted command list.
+ */
+async function verifyPackageManagerVersion(context: InstallContext): Promise<void> {
+    const { session, steps } = context;
+    const packageManager = session.getPackageManager();
+    if (packageManager === undefined) return;
+    const { root, timeoutSeconds } = session;
+    const versionCommand = [packageManager.name, VERSION_FLAG];
+    steps.push(versionCommand);
+    const version = await runTool(versionCommand, { cancelSignal: context.cancelSignal, cwd: root, timeoutSeconds });
+    context.cancelSignal?.throwIfAborted();
+    assertPackageManagerVersion(packageManager, version);
 }
 
 /**
@@ -266,8 +292,8 @@ async function prepareNpmLockfile(
  * @returns the installation summary.
  */
 async function installNpmTools(context: InstallContext): Promise<string> {
-    const { session, steps } = context;
-    const { root, timeoutSeconds } = session;
+    const { session } = context;
+    const { root } = session;
     const owner = context.writer.files;
     const manifest = owner.read(NPM_TOOL_PROJECT_FILE);
     if (manifest === undefined) return '';
@@ -276,11 +302,7 @@ async function installNpmTools(context: InstallContext): Promise<string> {
     const lockfile = owner.read(project.lockfilePath)?.bytes.toString('utf8');
     if (lockfile === undefined || !isLockfileCurrent(packageManager.name, lockfile, project.dependencies))
         throw new GspotError('installation', 'Run: gspot install');
-    const versionCommand = [packageManager.name, VERSION_FLAG];
-    steps.push(versionCommand);
-    const version = await runTool(versionCommand, { cwd: root, timeoutSeconds });
-    assertPackageManagerVersion(packageManager, version);
-    owner.removeTree(NODE_MODULES_DIRECTORY);
+    owner.deleteTree(GSPOT_NODE_MODULES_PATH);
     const work = join(root, DOT_GSPOT);
     await runPackageManager(context, {
         work,
@@ -289,7 +311,7 @@ async function installNpmTools(context: InstallContext): Promise<string> {
         failure: 'installation failed',
     });
     await prepareNpmTools(context, work, project.dependencies);
-    return `installed locked npm tools under .gspot/node_modules with ${packageManager.name}@${packageManager.version}`;
+    return `installed ${formatCount(Object.keys(project.dependencies).length, 'npm tool')} in .gspot/node_modules (${packageManager.name} ${packageManager.version})`;
 }
 
-export { installNpmTools, prepareNpmLockfile };
+export { installNpmTools, prepareNpmLockfile, verifyPackageManagerVersion };

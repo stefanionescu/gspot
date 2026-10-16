@@ -1,22 +1,30 @@
 import { join } from 'node:path';
 import { lstatSync } from 'node:fs';
 import { isInside } from '#cli/system/paths.ts';
-import { AGENTS_FILE } from '#cli/config/rules.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { AGENTS_FILE, CLAUDE_FILE } from '#cli/config/rules.ts';
 import { planKeyChanges } from '#cli/ownership/managed-keys.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
-import type { Files, FileCopy } from '#cli/types/system/files.ts';
+import type { Files, FileContents } from '#cli/types/system/files.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
 import { isInGspotFolder, hasGeneratedHeader } from '#cli/repository/classify.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readBlock, replaceBlock, findBlockSpan } from '#cli/system/managed-blocks.ts';
 import type { Writer, FileEdit, WritePlan, ReplacementRequest } from '#cli/types/ownership.ts';
-import { DOT_GSPOT, STATE_DIRECTORY, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
+import { DOT_GSPOT, STATE_PATH, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
+
+function buildBlockText(path: string, text: string, body: string, style: BlockStyle): string {
+    const span = path === CLAUDE_FILE ? findBlockSpan(text, { path, style }) : undefined;
+    const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
+    if (path !== CLAUDE_FILE || span?.start === 0) return replaceBlock(text, body, { path, style });
+    const suffix = authored === '' ? '' : '\n' + authored;
+    return replaceBlock('', body, { path, style }) + suffix;
+}
 
 /**
  * Remove only the marked block and its separating blank line.
@@ -24,7 +32,7 @@ import { DOT_GSPOT, STATE_DIRECTORY, INSTALLED_TOOL_FOLDERS } from '#cli/config/
  * @param current its current bytes.
  * @returns the remaining copy, or absence when nothing remains.
  */
-function removeBlock(path: string, current: FileCopy): FileCopy | undefined {
+function removeBlock(path: string, current: FileContents): FileContents | undefined {
     const text = decodeUtf8(current.bytes);
     if (text === undefined) throw new Error(`${path} is not UTF-8 text`);
     const span = findBlockSpan(text, { path, style: path.endsWith('.md') ? 'markdown' : 'hash' });
@@ -64,14 +72,9 @@ export function listStrayPaths(
     expected: ReadonlySet<string>,
 ): string[] {
     using disk = openFiles(session.root);
-    const blockPaths = new Set([
-        AGENTS_FILE,
-        GITIGNORE_FILE,
-        GITATTRIBUTES_FILE,
-        ...session.settingsFile.settings.rules.instruction_files,
-    ]);
-    const installations = [STATE_DIRECTORY, ...Object.values(INSTALLED_TOOL_FOLDERS)];
-    const ownFolder = disk.stat(DOT_GSPOT);
+    const blockPaths = new Set([AGENTS_FILE, GITIGNORE_FILE, GITATTRIBUTES_FILE, CLAUDE_FILE]);
+    const installations = [STATE_PATH, ...Object.values(INSTALLED_TOOL_FOLDERS)];
+    const ownFolder = disk.readStats(DOT_GSPOT);
     const ownPaths: string[] = [];
     if (ownFolder !== undefined) {
         walkFiles(disk, DOT_GSPOT, (path) => {
@@ -103,7 +106,7 @@ export function listStrayPaths(
  * Replace owned or explicitly reviewed bytes and preserve other authored files.
  * @param writer the locked file writer.
  * @param request the next bytes and any reviewed copy.
- * @returns the replacement plan.
+ * @returns the prior and next bytes with an unchanged, changed, or preserved status.
  */
 export function planReplacement(writer: Writer, request: ReplacementRequest): WritePlan {
     const { path, next, expected } = request;
@@ -135,8 +138,9 @@ export function planBlock(writer: Writer, path: string, body: string, style: Blo
     const current = writer.files.read(path);
     const text = current === undefined ? '' : decodeUtf8(current.bytes);
     if (text === undefined) throw new Error(`${path} is not UTF-8 text`);
+    const nextText = buildBlockText(path, text, body, style);
     const next = {
-        bytes: Buffer.from(replaceBlock(text, body, { path, style })),
+        bytes: Buffer.from(nextText),
         mode: current?.mode ?? OWNER_WRITABLE_FILE,
     };
     return { path, before: current, after: next, status: isSameContents(current, next) ? 'unchanged' : 'changed' };
@@ -161,7 +165,7 @@ export function planManagedKeys(writer: Writer, path: string, changes: FileEdit[
  * @param expected the reviewed copy.
  * @returns the removal plan.
  */
-export function planDeletion(path: string, expected: FileCopy): WritePlan {
+export function planDeletion(path: string, expected: FileContents): WritePlan {
     return { path, before: expected, status: 'changed' };
 }
 
@@ -169,7 +173,7 @@ export function planDeletion(path: string, expected: FileCopy): WritePlan {
  * Remove an owned file or its managed block while retaining authored text.
  * @param writer the locked file writer.
  * @param path the obsolete generated destination.
- * @returns the removal plan.
+ * @returns the previous bytes and any authored text left after removing the managed block.
  */
 export function planRemoval(writer: Writer, path: string): WritePlan {
     const current = writer.files.readKeepingLinks(path);

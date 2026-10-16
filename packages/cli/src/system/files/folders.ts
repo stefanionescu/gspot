@@ -37,7 +37,6 @@ export function createScratchFolder(): ScratchFolder {
  * @param patterns one glob or several, with ! patterns excluding matches.
  * @returns matching paths relative to cwd, each once in scan order.
  */
-// eslint-disable-next-line complexity, sonarjs/cognitive-complexity -- reason: Glob traversal keeps fixed folder roots and exclusions together; splitting it repeats filesystem and match state.
 export function listMatchingPaths(cwd: string, patterns: string | string[]): string[] {
     const list = [patterns].flat();
     for (const pattern of list) assertInsideFolder(pattern);
@@ -51,7 +50,11 @@ export function listMatchingPaths(cwd: string, patterns: string | string[]): str
             .map((pattern) => pattern.slice(0, -FOLDER_CONTENTS.length)),
     );
     const found = new Set<string>();
-    for (const pattern of positive) {
+    const addMatchedFile = (absolute: string): void => {
+        const file = convertToPosixPath(relative(cwd, absolute));
+        if (matches(file) && !isExcluded(file)) found.add(file);
+    };
+    const roots = positive.values().flatMap((pattern) => {
         const { base, glob } = picomatch.scan(pattern);
         const parts = base.split('/').filter((part) => part !== '' && part !== '.');
         if (
@@ -61,22 +64,23 @@ export function listMatchingPaths(cwd: string, patterns: string | string[]): str
                     true,
             )
         )
-            continue;
-        const start = join(cwd, base);
-        const stat = lstatSync(start, { throwIfNoEntry: false });
-        if (stat === undefined) continue;
-        if (glob === '' && !stat.isDirectory()) {
-            const file = convertToPosixPath(relative(cwd, start));
-            if (matches(file) && !isExcluded(file)) found.add(file);
+            return [];
+        const path = join(cwd, base);
+        const stat = lstatSync(path, { throwIfNoEntry: false });
+        if (stat === undefined) return [];
+        if (!stat.isDirectory()) return glob === '' ? [{ path, isFolder: false }] : [];
+        return isPruned(base) ? [] : [{ path, isFolder: true }];
+    });
+    for (const { path: start, isFolder } of roots) {
+        if (!isFolder) {
+            addMatchedFile(start);
             continue;
         }
-        if (!stat.isDirectory() || isPruned(base)) continue;
         using files = openFiles(start);
         walkFiles(files, '', (path) => {
             const absolute = join(start, path);
-            const file = convertToPosixPath(relative(cwd, absolute));
-            if (lstatSync(absolute).isDirectory()) return !isPruned(file);
-            if (matches(file) && !isExcluded(file)) found.add(file);
+            if (lstatSync(absolute).isDirectory()) return !isPruned(convertToPosixPath(relative(cwd, absolute)));
+            addMatchedFile(absolute);
             return false;
         });
     }

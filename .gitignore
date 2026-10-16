@@ -12,12 +12,12 @@ node_modules/
 # Local environment
 .env
 .env.*
-/.sandboxes/
 
 # Logs and crash output
 *.log
 
 # Build output
+/.wrangler/
 /packages/*/dist/
 /packages/*/LICENSE.md
 /packages/cli/grammars/

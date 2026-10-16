@@ -1,16 +1,15 @@
 import { z } from 'zod';
-import { type SchemaShape } from '#cli/types/objects.ts';
+import { type SchemaShape } from '#cli/types/shapes.ts';
+import { SCHEMA_URL } from '#cli/config/settings/file.ts';
 import { namingSchema } from '#cli/settings/schema/naming.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
-import { SETTINGS_DESCRIPTIONS } from '#cli/config/settings/values.ts';
+import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
 import { buildPathKey, trimTrailingSlashes } from '#cli/system/paths.ts';
 import { architectureSchema } from '#cli/settings/schema/architecture.ts';
-import { SCHEMA_FILE, SCHEMA_URL_PREFIX } from '#cli/config/settings/file.ts';
+import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/settings/schema/tools.ts';
 import { levelSchema, commandCheckFields } from '#cli/configurations/schema/parts.ts';
-import { DEFAULT_VALUES, RECORD_DESCRIPTIONS } from '#cli/config/settings/defaults.ts';
-import { ciSchema, hooksSchema, rulesSchema } from '#cli/settings/schema/integrations.ts';
+import { ciSchema, rulesSchema, hooksSchema } from '#cli/settings/schema/integrations.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/settings/schema/tables.ts';
 
 import {
@@ -26,12 +25,13 @@ import {
     SETTINGS_EXAMPLES,
     JSON_SCHEMA_DIALECT,
     DEFAULT_TEST_PATTERNS,
+    INTERNAL_SCHEMA_METADATA,
 } from '#cli/config/settings/schema.ts';
 import {
     formatSchema,
     relativePath,
-    nonemptyPaths,
     relativePaths,
+    nonemptyPaths,
     localDateSchema,
     allowReasonedValue,
     calendarDateSchema,
@@ -39,12 +39,12 @@ import {
 } from '#cli/settings/schema/parts.ts';
 
 const ignoreSchema = z.strictObject({
-    check: z.string().describe(RECORD_DESCRIPTIONS.ignore_check),
-    rule: z.string().optional().describe(RECORD_DESCRIPTIONS.ignore_rule),
-    paths: relativePaths.optional().describe(RECORD_DESCRIPTIONS.ignore_paths),
+    check: z.string().describe(SETTING_DECLARATIONS['ignore.check'].description),
+    rule: z.string().optional().describe(SETTING_DECLARATIONS['ignore.rule'].description),
+    paths: relativePaths.optional().describe(SETTING_DECLARATIONS['ignore.paths'].description),
     reason: z
         .string({ error: 'needs a reason. Add `reason = "..."` to this entry.' })
-        .describe(RECORD_DESCRIPTIONS.ignore_reason),
+        .describe(SETTING_DECLARATIONS['ignore.reason'].description),
     until: localDateSchema
         .optional()
         .meta({ description: 'Stop applying this ignore on this date, in YYYY-MM-DD format (UTC).' }),
@@ -52,7 +52,7 @@ const ignoreSchema = z.strictObject({
 
 const commandCheckSchema = z.strictObject({
     ...commandCheckFields,
-    name: z.string().min(1).describe(RECORD_DESCRIPTIONS.command_check_name),
+    name: z.string().min(1).describe(SETTING_DECLARATIONS['command_check.name'].description),
     command: commandCheckFields.command.unwrap().describe('The executable and arguments to run on selected files.'),
     paths: nonemptyPaths.meta({ description: 'Repository-relative glob patterns selecting inputs.' }),
     stage: commandCheckFields.stage
@@ -141,13 +141,13 @@ const scopeBody = {
 
 /** One scope record: its path, configuration choices, and settings tables. */
 const scopeSchema = z.strictObject({
-    path: relativePath.describe(SETTINGS_DESCRIPTIONS['scope.path']),
-    configurations: z.array(z.string()).default([]).describe(SETTINGS_DESCRIPTIONS['scope.configurations']),
+    path: relativePath.describe(SETTING_DECLARATIONS['scope.path'].description),
+    configurations: z.array(z.string()).default([]).describe(SETTING_DECLARATIONS['scope.configurations'].description),
     removed_configurations: z
         .array(z.string())
         .default([])
-        .describe(SETTINGS_DESCRIPTIONS['scope.removed_configurations']),
-    test_files: z.array(relativePath).optional().describe(SETTINGS_DESCRIPTIONS['scope.test_files']),
+        .describe(SETTING_DECLARATIONS['scope.removed_configurations'].description),
+    test_files: z.array(relativePath).optional().describe(SETTING_DECLARATIONS['scope.test_files'].description),
     ...scopeBody,
 } satisfies SchemaShape<NonNullable<ParsedSettings['scope']>[number], WrittenScope>) satisfies z.ZodType<
     NonNullable<ParsedSettings['scope']>[number],
@@ -171,7 +171,7 @@ const rootSettingSchemas = {
         .number()
         .int()
         .positive()
-        .default(DEFAULT_VALUES.tool_timeout_seconds)
+        .default(SETTING_DEFAULTS.tool_timeout_seconds)
         .describe(
             'The time limit in seconds for every tool command, including installation and version reads. Root only.',
         ),
@@ -186,8 +186,11 @@ const rootSettingSchemas = {
 const settingsSchema = z
     .strictObject({
         ...rootSettingSchemas,
-        configurations: z.array(z.string()).default([]).describe(SETTINGS_DESCRIPTIONS.configurations),
-        removed_configurations: z.array(z.string()).default([]).describe(SETTINGS_DESCRIPTIONS.removed_configurations),
+        configurations: z.array(z.string()).default([]).describe(SETTING_DECLARATIONS['configurations'].description),
+        removed_configurations: z
+            .array(z.string())
+            .default([])
+            .describe(SETTING_DECLARATIONS['removed_configurations'].description),
         scope: z.array(scopeSchema).optional(),
         ...rootBody,
         ignore: z.array(ignoreSchema).optional(),
@@ -232,7 +235,7 @@ const settingsSchema = z
 function buildJsonSchema(): Record<string, unknown> {
     return {
         $schema: JSON_SCHEMA_DIALECT,
-        $id: `${SCHEMA_URL_PREFIX}${packageManifest.version}/${SCHEMA_FILE}`,
+        $id: SCHEMA_URL,
         title: SETTINGS_FILE,
         description: 'The settings of gspot for one repository.',
         ...convertToJsonSchema(settingsSchema),
@@ -267,6 +270,12 @@ const templateSchema = settingsSchema.safeExtend({ scope: z.never().optional() }
     Pick<ParsedSettings, 'scope'>,
     Pick<WrittenSettings, 'scope'>
 >) satisfies z.ZodType<Omit<ParsedSettings, 'scope'>, TemplateTables>;
+function buildDateJsonSchema(): z.core.JSONSchema.JSONSchema {
+    const date = z.toJSONSchema(calendarDateSchema);
+    Reflect.deleteProperty(date, '$schema');
+    return date;
+}
+
 /**
  * Publish settings input schemas while retaining written defaults and declaration metadata.
  * @param schema the authoritative runtime validator.
@@ -275,9 +284,12 @@ const templateSchema = settingsSchema.safeExtend({ scope: z.never().optional() }
 function convertToJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
     return z.toJSONSchema(schema, {
         io: 'input',
-        unrepresentable: ({ zodSchema }) =>
-            zodSchema === localDateSchema ? z.toJSONSchema(calendarDateSchema) : 'throw',
+        reused: 'ref',
+        unrepresentable: ({ zodSchema }) => (zodSchema === localDateSchema ? buildDateJsonSchema() : 'throw'),
         override: ({ zodSchema, jsonSchema }) => {
+            for (const key of INTERNAL_SCHEMA_METADATA) Reflect.deleteProperty(jsonSchema, key);
+            if (zodSchema instanceof z.ZodDefault && zodSchema.def.innerType instanceof z.ZodUnion)
+                jsonSchema.default = zodSchema.def.defaultValue;
             const metadata = z.globalRegistry.get(zodSchema);
             if (metadata && Object.hasOwn(metadata, 'examples'))
                 Object.assign(jsonSchema, { examples: metadata['examples'] });
@@ -285,12 +297,4 @@ function convertToJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
     });
 }
 
-export {
-    scopeSchema,
-    settingsSchema,
-    templateSchema,
-    buildJsonSchema,
-    findSettingSchema,
-    rootSettingSchemas,
-    convertToJsonSchema,
-};
+export { scopeSchema, settingsSchema, templateSchema, buildJsonSchema, findSettingSchema, rootSettingSchemas };

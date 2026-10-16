@@ -1,7 +1,4 @@
-// Reads PostgreSQL statements and their parse trees.
-// SQL payloads use PostgreSQL's node union; procedural output has a separate external shape.
-// Reads PostgreSQL statements and their parse trees.
-// SQL payloads use PostgreSQL's node union; procedural output has a separate external shape.
+// Read PostgreSQL statements and their parse trees.
 import type { Parsed } from '#cli/types/errors.ts';
 import { computePosition } from '#cli/system/text.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
@@ -20,7 +17,7 @@ function buildStatementViews(bytes: Buffer, statement: RawStmt): SqlStatementVie
 
 /**
  * Parses a file as Postgres reads it.
- * @param text the SQL text.
+ * @param text the original source before replacing psql commands and variables.
  * @returns the statements, or the parse error with its position.
  */
 async function parseSqlText(text: string): Promise<SqlFile> {
@@ -59,11 +56,10 @@ async function parseSqlText(text: string): Promise<SqlFile> {
  * @param text the SQL.
  * @returns the tree, or its zero-based Unicode diagnostic offset.
  */
-export async function parsePostgres(text: string): Promise<Parsed<ParseResult, { text: string; offset: number }>> {
+async function parsePostgres(text: string): Promise<Parsed<ParseResult, { text: string; offset: number }>> {
     const { SqlError, parse: parseSql } = await import('libpg-query');
     try {
-        // PostgreSQL accepts empty function bodies; the public API refuses an empty string.
-        return { value: await parseSql(text === '' ? ' ' : text) };
+        return { value: await parseSql(text) };
     } catch (error) {
         if (!(error instanceof SqlError) || error.sqlDetails === undefined) throw error;
         return { error: { text: error.message, offset: error.sqlDetails.cursorPosition } };
@@ -104,16 +100,18 @@ export function listNodeFields<Kind extends keyof SqlNodeFields>(
  * Dispatches a correlated statement to its typed reader.
  * @param statement the parsed statement and source offset.
  * @param readers the readers indexed by kind.
- * @param args the required reader context.
+ * @param readerArguments the required reader context.
  * @returns the reader result, or nothing for a kind without a reader.
  */
 export function readStatement<Result, Arguments extends unknown[]>(
     statement: SqlStatementView,
     readers: SqlStatementReaders<Result, Arguments>,
-    ...args: Arguments
+    ...readerArguments: Arguments
 ): Result | undefined {
-    const read = readers[statement.kind] as ((statement: SqlStatementView, ...args: Arguments) => Result) | undefined;
-    return read?.(statement, ...args);
+    const read = readers[statement.kind] as
+        | ((statement: SqlStatementView, ...readerArguments: Arguments) => Result)
+        | undefined;
+    return read?.(statement, ...readerArguments);
 }
 
 /**

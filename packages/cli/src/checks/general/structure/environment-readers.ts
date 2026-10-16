@@ -1,12 +1,13 @@
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import { readBashEnvironment } from '#cli/parsers/bash.ts';
 import { readSwiftEnvironment } from '#cli/parsers/swift.ts';
 import { readPythonEnvironment } from '#cli/parsers/python.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { ENV_NAME } from '#cli/config/checks/general/structure.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
+import { ENVIRONMENT_READERS_ROLE } from '#cli/config/settings/values.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { CONVENTION_SOURCES } from '#cli/checks/general/structure/convention-sources.ts';
 
 /**
@@ -14,12 +15,12 @@ import { CONVENTION_SOURCES } from '#cli/checks/general/structure/convention-sou
  * @param input the selected sources and effective architecture roles.
  * @returns findings on the original reading lines.
  */
-async function envReads(input: CheckInput): Promise<Finding[]> {
-    const readerPaths = input.scope.view.roles['environment_readers'];
+export async function checkEnvironmentReaders(input: CheckInput): Promise<Finding[]> {
+    const readerPaths = input.scope.view.roles[ENVIRONMENT_READERS_ROLE];
     if (readerPaths.length === 0) return [];
     const isReader = buildPathMatcher(readerPaths);
     const readers = input.scope.view.configurations.includes('secrets')
-        ? input.scope.view.options('secrets').reader_functions
+        ? input.scope.view.options('secrets').environment_functions
         : [];
     const parsed = await parseCached(input, CONVENTION_SOURCES);
     const owned = new Set(
@@ -47,9 +48,7 @@ async function envReads(input: CheckInput): Promise<Finding[]> {
                 source.language === 'bash'
                     ? `${read.key as string} is read here. Read environment variables only in the files that architecture.roles.environment_readers lists, and pass the value in.`
                     : 'Read environment variables only in the files that architecture.roles.environment_readers lists, and pass the value in.';
-            return findingAt(input, { file: source.path, line }, 'read-outside-owner', message);
+            return buildFinding(input, { file: source.path, line }, 'read-outside-owner', message);
         });
     });
 }
-
-export { envReads };

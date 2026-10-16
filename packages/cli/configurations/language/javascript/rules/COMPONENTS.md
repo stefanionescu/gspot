@@ -1,6 +1,6 @@
 # Components
 
-These rules cover components in Astro, Svelte, Vue, and React.
+Read this rule when you change an Astro, Svelte, Vue, or React component.
 
 ## Props and tests
 

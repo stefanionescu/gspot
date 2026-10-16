@@ -11,8 +11,8 @@ import { readBytes, decodeUtf8 } from '#cli/system/files/reads.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/system/locations.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { EXECUTABLE_BITS, EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
-import { ENTRY_MODES, GITLINK_MODE } from '#cli/config/repository/revisions.ts';
-import type { FileEntry, PathIgnore, PendingDirectory, DirectoryContents } from '#cli/types/repository/inventory.ts';
+import { GITLINK_MODE, ENTRY_FILE_MODES } from '#cli/config/repository/revisions.ts';
+import type { ListedFile, PathIgnore, PendingFolder, FolderListing } from '#cli/types/repository/inventory.ts';
 
 import {
     GIT_FOLDER,
@@ -24,7 +24,7 @@ import {
 
 // A link to a folder, or one that leaves the repository, stays out of the inventory, so checks cannot read past it. A dangling link remains
 // listed with no size.
-function readSymlinkFile(root: string, path: string): FileEntry | undefined {
+function readSymlinkFile(root: string, path: string): ListedFile | undefined {
     const link = { path, size: 0, executable: false, symlink: true };
     let target: string;
     try {
@@ -43,7 +43,7 @@ function readListedFile(
     root: string,
     path: string,
     executables: ReadonlySet<string> | undefined,
-): FileEntry | undefined {
+): ListedFile | undefined {
     const stat = lstatSync(join(root, path), { throwIfNoEntry: false });
     if (stat === undefined) return undefined;
     if (stat.isSymbolicLink()) {
@@ -63,7 +63,7 @@ function readListedFile(
     return { path, size: stat.size, executable: isExecutable, symlink: false };
 }
 
-function readFolderListing(root: string, folder: string, inherited: PathIgnore[]): DirectoryContents {
+function readFolderListing(root: string, folder: string, inherited: PathIgnore[]): FolderListing {
     const entries = readdirSync(join(root, folder), { withFileTypes: true });
     const ignores = [...inherited];
     if (entries.some((entry) => entry.name === GITIGNORE_FILE && entry.isFile())) {
@@ -87,7 +87,7 @@ function isIgnored(candidate: string, ignores: PathIgnore[]): boolean {
 
 function walkPaths(root: string): string[] {
     const paths: string[] = [];
-    const pending: PendingDirectory[] = [{ folder: '', ignores: [] }];
+    const pending: PendingFolder[] = [{ folder: '', ignores: [] }];
     for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
         const { folder } = next;
         const { entries, ignores } = readFolderListing(root, folder, next.ignores);
@@ -126,12 +126,12 @@ async function listGitFiles(
 
 /**
  * Read a Git index once for paths, executable bits, and gitlinks.
- * @param root the repository root.
+ * @param repositoryRoot the folder used as the Git working directory.
  * @param cancelSignal command cancellation.
  * @returns validated entries, retaining stages of conflicted working files.
  */
-export async function readIndexEntries(root: string, cancelSignal?: AbortSignal): Promise<GitIndexEntry[]> {
-    const listed = await listGitFiles(root, INDEX_FILES_ARGUMENTS, cancelSignal);
+export async function readIndexEntries(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<GitIndexEntry[]> {
+    const listed = await listGitFiles(repositoryRoot, INDEX_FILES_ARGUMENTS, cancelSignal);
     return parseIndexEntries(listed);
 }
 
@@ -150,21 +150,21 @@ export function listSubmodulePaths(entries: GitIndexEntry[]): string[] {
  * List tracked and new files as sorted, root-relative paths.
  * Outside Git, walk files according to the ignore rules.
  *
- * @param root the repository root.
+ * @param repositoryRoot the folder used as the Git working directory.
  * @param index the repository-owned index.
  * @param options the repository state.
  * @param options.hasGit whether the directory belongs to a Git repository.
  * @returns the entries with size, executable bit, and symlink flag.
  */
 export async function listTrackedFiles(
-    root: string,
+    repositoryRoot: string,
     index: GitIndexEntry[],
     { hasGit }: { hasGit: boolean },
-): Promise<FileEntry[]> {
-    const listed = hasGit ? await listGitFiles(root, UNTRACKED_FILES_ARGUMENTS) : undefined;
+): Promise<ListedFile[]> {
+    const listed = hasGit ? await listGitFiles(repositoryRoot, UNTRACKED_FILES_ARGUMENTS) : undefined;
     const paths =
         listed === undefined
-            ? walkPaths(root)
+            ? walkPaths(repositoryRoot)
             : [...index.map((entry) => entry.path), ...listed.split('\0').filter(Boolean)];
     const submodules = listSubmodulePaths(index);
     // Windows file systems keep no executable bit, so the same index listing supplies it.
@@ -172,7 +172,9 @@ export async function listTrackedFiles(
         process.platform === 'win32'
             ? new Set(
                   index
-                      .filter((entry) => entry.mode !== GITLINK_MODE && ENTRY_MODES[entry.mode] === EXECUTABLE_FILE)
+                      .filter(
+                          (entry) => entry.mode !== GITLINK_MODE && ENTRY_FILE_MODES[entry.mode] === EXECUTABLE_FILE,
+                      )
                       .map((entry) => entry.path),
               )
             : undefined;
@@ -183,6 +185,6 @@ export async function listTrackedFiles(
                 !submodules.some((module) => isInScope(path, module)),
         )
         .toSorted((a, b) => a.localeCompare(b))
-        .map((path) => readListedFile(root, path, executables))
+        .map((path) => readListedFile(repositoryRoot, path, executables))
         .filter((entry) => entry !== undefined);
 }

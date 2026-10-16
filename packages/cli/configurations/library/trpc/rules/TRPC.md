@@ -1,5 +1,7 @@
 # tRPC
 
+Read this rule when you change tRPC procedures or their client.
+
 Use the client integration the project has. Do not mix the classic and TanStack-native clients.
 Check the installed release before using a version-specific API.
 
@@ -22,7 +24,7 @@ and [server callers](https://trpc.io/docs/server/server-side-calls).
 Use generated query options and keys. A mutation key identifies a write, not the queries to
 invalidate. Server rendering and browser consumption use the same QueryClient and serialization
 contract; private results stay out of dehydration. A rendered server total and client-query rows
-need one data owner or coordinated refresh.
+need one source of the data or coordinated refresh.
 
 Cookie-setting operations use a transport that can finish headers before streaming. Configure
 serialization at both ends and preserve transformer metadata. Bound batch sizes and expensive
@@ -33,7 +35,7 @@ and [links](https://trpc.io/docs/client/links).
 
 ## Cancellation and events
 
-Forward cancellation to the work owner and release listeners and streams. A disconnected client
+Forward cancellation to the code that does the work and release listeners and streams. A disconnected client
 does not prove that a write failed; recover its state by operation identity before retrying.
 Late responses must not update another resource or session.
 

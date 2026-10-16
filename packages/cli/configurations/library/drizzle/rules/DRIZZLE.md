@@ -1,5 +1,7 @@
 # Drizzle
 
+Read this rule when you change Drizzle schemas, queries, or migrations.
+
 These decisions cover Drizzle with PostgreSQL. Use the adapter and APIs of the installed release.
 Supabase connection and identity decisions remain in the Supabase rules.
 

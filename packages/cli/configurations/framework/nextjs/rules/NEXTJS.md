@@ -1,5 +1,7 @@
 # Next.js
 
+Read this rule when you change a Next.js application.
+
 Preserve the project's router, installed Next.js and React versions, runtime, and deployment
 adapter. App Router guidance applies only to App Router routes.
 

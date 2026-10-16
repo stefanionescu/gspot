@@ -37,13 +37,13 @@ tool = "syncpack"
 example = "A locked dependency version affected by a published OSV advisory reports the package and advisory. Upgrade to a reviewed fixed version and update the lockfile, then rescan."
 files = { filenames = ["bun.lock", "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "go.mod", "Cargo.lock", "Gemfile.lock", "gems.locked", "requirements.txt", "Pipfile.lock", "poetry.lock", "pdm.lock", "pylock.toml", "uv.lock", "pom.xml", "gradle.lockfile", "buildscript-gradle.lockfile", "conan.lock", "pubspec.lock", "mix.lock", "cabal.project.freeze", "stack.yaml.lock", "composer.lock", "renv.lock", "packages.config", "packages.lock.json", "*.deps.json"], paths = ["**/gradle/verification-metadata.xml", "gradle/verification-metadata.xml"], kinds = ["source", "generated"] }
 level = "recommended"
-name = "osv"
+name = "osv-scanner"
 needs = ["network"]
 runs = "once"
 stage = "push"
 # The tool project lockfiles under .gspot stay out: a repository cannot upgrade a package that a gspot tool pins.
 command = ["osv-scanner", "scan", "source", "--config", "{tool_file:osv-scanner}", "--format", "json", "--allow-no-lockfiles", "--recursive", "--experimental-exclude", ".gspot", "{root}"]
-help = "Upgrade the package the finding names. When no fix exists, accept the advisory with `gspot ignore dependencies/osv --rule <advisory-id> --reason \"<why>\" --until <YYYY-MM-DD>`. Recheck it before that date."
+help = "Upgrade the package the finding names. When no fix exists, accept the advisory with `gspot ignore dependencies/osv-scanner --rule <advisory-id> --reason \"<why>\" --until <YYYY-MM-DD>`. Recheck it before that date."
 output = { format = "json", items = "results", children = "packages.vulnerabilities", fields = { file = "source.path", rule = "id", message = "package.name package.version summary" } }
 summary = "Looks up every locked dependency in the Open Source Vulnerabilities (OSV) advisory database."
 why = "An advisory identifies a vulnerability in a dependency version."
@@ -52,7 +52,7 @@ why = "An advisory identifies a vulnerability in a dependency version."
 command = ["syncpack", "lint", "--config", "{tool_file:syncpack}"]
 example = "Two workspace manifests declaring different versions of a dependency governed by the same version group report a mismatch. Align both declarations to the reviewed version and update the lockfile."
 files = { filenames = ["package.json"] }
-help = "Run syncpack fix --config .gspot/config/syncpack.json, or align the versions by hand."
+help = "Run `syncpack fix --config .gspot/config/syncpack.json`, or align the versions by hand."
 level = "all"
 name = "syncpack"
 output = { format = "lines" }
@@ -63,22 +63,22 @@ tool = "syncpack"
 why = "Two versions of one dependency in a workspace mean two behaviors, and a bug that appears in one package only."
 
 [[check]]
-example = "A repository with both `bun.lock` and `package-lock.json` reports a second lockfile. Delete the lockfile of the package manager the repository does not use."
+example = "A root package.json without packageManager reports a finding. Declare the package manager and its exact version."
 files = { filenames = ["package.json"] }
-help = "Name one packageManager in the root package.json, and delete the other lockfile."
+help = "Name one packageManager in the root package.json."
 level = "all"
 name = "package-json"
 runs = "once"
 stage = "commit"
-summary = "Checks that the root package.json names a packageManager and that only one kind of lockfile exists."
-why = "Two package managers install two different trees."
+summary = "Checks that the root package.json names a packageManager."
+why = "A declared package manager keeps installs and the lockfile format consistent."
 
 [[check]]
 example = "A locked package URL pointing to a host outside `dependencies.allowed_registries` reports that host. Resolve the package again from the approved registry, or review and explicitly allow the required host."
-files = { filenames = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock"], kinds = ["source", "generated"] }
+files = { filenames = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"], kinds = ["source", "generated"] }
 help = "Install the package from the registry again, or add the host to dependencies.allowed_registries."
 level = "recommended"
-name = "lockfile-hosts"
+name = "lockfiles"
 runs = "scope"
 stage = "commit"
 summary = "Checks that npm, pnpm, Yarn, and text Bun lockfile downloads in each project scope use HTTPS and allowed registry hosts."

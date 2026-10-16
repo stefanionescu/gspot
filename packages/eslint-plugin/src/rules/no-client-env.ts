@@ -1,11 +1,11 @@
-import { createRule, optionsSchema } from '../create-rule.ts';
+import { createRule, buildOptionsSchema } from '../create-rule.ts';
 import type { RuleContext, ClientEnvOptions } from '../types/rules.ts';
 import { PUBLIC_PREFIXES, CLIENT_DIRECTIVE } from '../config/nextjs.ts';
 import { ENVIRONMENT_HOSTS, ENVIRONMENT_ALLOWED } from '../config/environment.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 // Undeclared hosts have no local binding; direct member reads and destructuring use the same property test.
-function directEnvironmentAccess(identifier: TSESTree.Identifier): TSESTree.Node[] {
+function listDirectEnvironmentReads(identifier: TSESTree.Identifier): TSESTree.Node[] {
     const hosts: readonly string[] = ENVIRONMENT_HOSTS;
     if (!hosts.includes(identifier.name)) return [];
     const { parent } = identifier;
@@ -22,7 +22,10 @@ function directEnvironmentAccess(identifier: TSESTree.Identifier): TSESTree.Node
  * @param inspect the rule's decision for each environment access.
  * @returns listeners that find environment access once.
  */
-function environmentListeners(context: RuleContext, inspect: (node: TSESTree.Node) => void): TSESLint.RuleListener {
+function buildEnvironmentListeners(
+    context: RuleContext,
+    inspect: (node: TSESTree.Node) => void,
+): TSESLint.RuleListener {
     return {
         MemberExpression(node) {
             if (
@@ -37,7 +40,7 @@ function environmentListeners(context: RuleContext, inspect: (node: TSESTree.Nod
             const scope = context.sourceCode.getScope(node);
             for (const reference of scope.through) {
                 if (reference.resolved !== null) continue;
-                for (const access of directEnvironmentAccess(reference.identifier as TSESTree.Identifier))
+                for (const access of listDirectEnvironmentReads(reference.identifier as TSESTree.Identifier))
                     inspect(access);
             }
             const tracker = new ASTUtils.ReferenceTracker(scope);
@@ -54,7 +57,7 @@ function environmentListeners(context: RuleContext, inspect: (node: TSESTree.Nod
  * @param node the environment access.
  * @returns variable names used directly or through destructuring.
  */
-function environmentNames(node: TSESTree.Node): (string | null)[] {
+function listEnvironmentNames(node: TSESTree.Node): (string | null)[] {
     const { parent } = node;
     if (parent?.type === AST_NODE_TYPES.MemberExpression && parent.object === node)
         return [ASTUtils.getPropertyName(parent)];
@@ -80,7 +83,7 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
             fix: 'Keep private configuration and the work that needs it in a server-only module. Pass only public results to client code, or use NEXT_PUBLIC_ variables for values intended for the browser.',
         },
         schema: [
-            optionsSchema({
+            buildOptionsSchema({
                 isClient: {
                     description: 'Treat selected files as client code without a use-client directive.',
                     type: 'boolean',
@@ -108,9 +111,9 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
         const publicText = [...prefixes.map((prefix) => `${prefix}*`), ...allowed].join(', ');
         let isClient = options.isClient;
         return {
-            ...environmentListeners(context, (node) => {
+            ...buildEnvironmentListeners(context, (node) => {
                 if (!isClient) return;
-                const names = environmentNames(node);
+                const names = listEnvironmentNames(node);
                 if (
                     names.length > 0 &&
                     names.every(

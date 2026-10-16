@@ -1,10 +1,16 @@
 // Starts test commands and limits them to the current test timeout.
+import executables from 'which';
 import { spyOn, type Mock } from 'bun:test';
-import * as processes from '#cli/system/processes.ts';
-import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
-import type { CapturedChild, CapturedProcess } from '#tests/types/processes.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
-import { EXIT_POLL_MS, READY_POLL_MS, MS_PER_SECOND, TEST_TIMEOUT_MS } from '#tests/config/processes.ts';
+import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
+import type { CapturedChild, ProcessBackend, CapturedProcess } from '#tests/types/processes.ts';
+
+import {
+    EXIT_POLL_MILLISECONDS,
+    MILLISECONDS_PER_SECOND,
+    READY_POLL_MILLISECONDS,
+    TEST_TIMEOUT_MILLISECONDS,
+} from '#tests/data/test-setup.ts';
 
 // Bun runs each file's tests serially; the preload opens and disposes one timeout for each test.
 let timeoutAt: number | undefined;
@@ -19,13 +25,15 @@ function prepareCommand(
     command: readonly string[],
     options: AsyncSpawnOptions,
 ): { options: AsyncSpawnOptions & { timeoutSeconds: number }; context: string } {
-    const remaining = timeLeft();
+    const remaining = computeTimeLeft();
     const context = `Command: ${command.join(' ')}\nWorking directory: ${options.cwd}`;
     if (remaining <= 0)
         throw new Error(`The test timeout has elapsed.\n${context}\nOutput: the command was not started.`);
     const timeoutSeconds =
-        Math.min((options.timeoutSeconds ?? TEST_TIMEOUT_MS / MS_PER_SECOND) * MS_PER_SECOND, remaining) /
-        MS_PER_SECOND;
+        Math.min(
+            (options.timeoutSeconds ?? TEST_TIMEOUT_MILLISECONDS / MILLISECONDS_PER_SECOND) * MILLISECONDS_PER_SECOND,
+            remaining,
+        ) / MILLISECONDS_PER_SECOND;
     return { options: { ...options, timeoutSeconds }, context };
 }
 
@@ -35,7 +43,7 @@ function prepareCommand(
  */
 function startTestTimeout(): Disposable {
     const previous = timeoutAt;
-    timeoutAt = performance.now() + TEST_TIMEOUT_MS;
+    timeoutAt = performance.now() + TEST_TIMEOUT_MILLISECONDS;
     return {
         [Symbol.dispose]() {
             timeoutAt = previous;
@@ -44,17 +52,17 @@ function startTestTimeout(): Disposable {
 }
 
 /** Return the time left for a test or the shared limit outside a test. */
-function timeLeft(): number {
-    return timeoutAt === undefined ? TEST_TIMEOUT_MS : Math.ceil(timeoutAt - performance.now());
+function computeTimeLeft(): number {
+    return timeoutAt === undefined ? TEST_TIMEOUT_MILLISECONDS : Math.ceil(timeoutAt - performance.now());
 }
 
-function commandTimeoutError(
-    timeoutMs: number,
+function buildTimeoutError(
+    timeoutMilliseconds: number,
     context: string,
     result: Pick<SpawnResult, 'stdout' | 'stderr'>,
 ): Error {
     return new Error(
-        `The test command timed out after ${String(timeoutMs)} ms.\n${context}\n${result.stdout}${result.stderr}`,
+        `The test command timed out after ${String(timeoutMilliseconds)} ms.\n${context}\n${result.stdout}${result.stderr}`,
     );
 }
 
@@ -66,9 +74,9 @@ function commandTimeoutError(
  */
 async function runCommand(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
     const prepared = prepareCommand(command, options);
-    const result = await spawnProcess([...command], prepared.options);
+    const result = await spawnProcess(command, prepared.options);
     if (result.isTimedOut === true)
-        throw commandTimeoutError(prepared.options.timeoutSeconds * MS_PER_SECOND, prepared.context, result);
+        throw buildTimeoutError(prepared.options.timeoutSeconds * MILLISECONDS_PER_SECOND, prepared.context, result);
     return result;
 }
 
@@ -80,23 +88,10 @@ async function runCommand(command: readonly string[], options: AsyncSpawnOptions
  */
 function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptions): SpawnResult {
     const prepared = prepareCommand(command, options);
-    const result = spawnProcessBlocking([...command], prepared.options);
+    const result = spawnProcessBlocking(command, prepared.options);
     if (result.isTimedOut === true)
-        throw commandTimeoutError(prepared.options.timeoutSeconds * MS_PER_SECOND, prepared.context, result);
+        throw buildTimeoutError(prepared.options.timeoutSeconds * MILLISECONDS_PER_SECOND, prepared.context, result);
     return result;
-}
-
-/**
- * Replace one child command and run the others normally.
- * @param name the executable to replace.
- * @param result the replacement command result calculation.
- * @returns a spy whose disposal restores command execution.
- */
-function fakeCommand(name: string, result: typeof spawnProcess): Mock<typeof spawnProcess> {
-    const runProcess = processes.spawnProcess;
-    return spyOn(processes, 'spawnProcess').mockImplementation((command, options) =>
-        command[0] === name ? result(command, options) : runProcess(command, options),
-    );
 }
 
 /**
@@ -105,7 +100,7 @@ function fakeCommand(name: string, result: typeof spawnProcess): Mock<typeof spa
  */
 async function waitForExit(pid: number): Promise<void> {
     if (!Number.isSafeInteger(pid) || pid <= 0) throw new Error(`Invalid child PID: ${String(pid)}.`);
-    const deadline = performance.now() + timeLeft();
+    const deadline = performance.now() + computeTimeLeft();
     while (performance.now() < deadline) {
         try {
             process.kill(pid, 0);
@@ -113,7 +108,7 @@ async function waitForExit(pid: number): Promise<void> {
             if ((error as NodeJS.ErrnoException).code === 'ESRCH') return;
             throw error;
         }
-        await Bun.sleep(EXIT_POLL_MS);
+        await Bun.sleep(EXIT_POLL_MILLISECONDS);
     }
     process.kill(pid, 'SIGKILL');
     throw new Error(`Owned child ${String(pid)} remained alive after supervision ended.`);
@@ -121,8 +116,8 @@ async function waitForExit(pid: number): Promise<void> {
 
 /** Polls a child-written readiness marker until its bounded startup deadline. */
 async function waitForFile(path: string): Promise<boolean> {
-    const deadline = performance.now() + timeLeft();
-    while (!(await Bun.file(path).exists()) && performance.now() < deadline) await Bun.sleep(READY_POLL_MS);
+    const deadline = performance.now() + computeTimeLeft();
+    while (!(await Bun.file(path).exists()) && performance.now() < deadline) await Bun.sleep(READY_POLL_MILLISECONDS);
     return await Bun.file(path).exists();
 }
 
@@ -146,7 +141,7 @@ function captureChild(child: CapturedProcess): CapturedChild {
 function startCommand(
     command: readonly string[],
     options: AsyncSpawnOptions,
-): CapturedChild & { child: CapturedProcess } {
+): CapturedChild & { child: CapturedProcess & Pick<Bun.Subprocess, 'pid'> } {
     const prepared = prepareCommand(command, options);
     const child = Bun.spawn([...command], {
         cwd: prepared.options.cwd,
@@ -154,26 +149,56 @@ function startCommand(
         ...(prepared.options.stdin === undefined ? {} : { stdin: Buffer.from(prepared.options.stdin) }),
         stdout: 'pipe',
         stderr: 'pipe',
-        timeout: prepared.options.timeoutSeconds * MS_PER_SECOND,
+        timeout: Math.ceil(prepared.options.timeoutSeconds * MILLISECONDS_PER_SECOND),
         killSignal: 'SIGKILL',
     });
     return { child, ...captureChild(child) };
 }
-
-/** Construct the external process result used by check tests. */
-function processResult(overrides: Partial<SpawnResult> = {}): SpawnResult {
-    return { code: 0, stdout: '', stderr: '', missing: false, duration: 1, ...overrides };
-}
-
 export {
     runCommand,
-    fakeCommand,
     waitForExit,
     waitForFile,
     captureChild,
     startCommand,
-    processResult,
     prepareCommand,
     startTestTimeout,
     runCommandBlocking,
 };
+
+/** Replace executable lookup while a unit test owns its executable path. */
+export function useExecutable(path: string | null): Mock<typeof executables.sync> {
+    return spyOn(executables, 'sync').mockImplementation(((_name: string, options?: executables.Options) =>
+        options?.all === true
+            ? [path].filter((entry): entry is string => entry !== null)
+            : path) as typeof executables.sync);
+}
+
+/** Capture a command as text or bytes through the same test process timeout. */
+export async function captureProcess(
+    capture: 'text' | 'bytes',
+    command: string[],
+    options: AsyncSpawnOptions,
+): Promise<Omit<SpawnResult, 'stdout'> & { stdout: string | Buffer }> {
+    if (capture === 'text') return spawnProcess(command, prepareCommand(command, options).options);
+    const chunks: Buffer[] = [];
+    const result = await streamProcess(command, prepareCommand(command, options).options, async (output) => {
+        for await (const chunk of output) chunks.push(chunk);
+    });
+    return { ...result, stdout: Buffer.concat(chunks) };
+}
+
+/** Exercise both native process implementations with the shared test timeout. */
+export function buildProcessBackends(): ProcessBackend[] {
+    return [
+        {
+            name: 'asynchronous',
+            execute: async (command: string[], options: AsyncSpawnOptions) =>
+                await spawnProcess(command, prepareCommand(command, options).options),
+        },
+        {
+            name: 'synchronous',
+            execute: (command: string[], options: AsyncSpawnOptions) =>
+                spawnProcessBlocking(command, prepareCommand(command, options).options),
+        },
+    ];
+}

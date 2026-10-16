@@ -1,232 +1,230 @@
+@import './hero.css';
+@import './setup.css';
+@import './example.css';
+@import './report.css';
+
+.content-panel:has(.landing),
+main:has(.landing) {
+    padding-block: 0;
+}
+
+.sl-container > .sl-markdown-content:has(.landing) {
+    margin-block-start: 0;
+}
+
 .landing {
-    max-width: 1200px;
     min-width: 0;
 }
 
-.landing > *,
-.landing :is(section, ul, li, nav, footer) {
-    margin-block: 0;
+.landing a {
+    color: var(--sl-color-text-accent);
+    text-underline-offset: 3px;
 }
 
-.landing .tool-strip {
-    border-block: 1px solid var(--sl-color-gray-5);
-    padding-block: 24px;
-    display: grid;
-    gap: 24px;
+.landing code,
+.landing pre {
+    font-family: var(--sl-font-mono);
 }
 
-.landing .tool-strip p {
-    font-size: 0.75rem;
-    white-space: nowrap;
-    color: var(--sl-color-gray-3);
-    margin: 0;
-}
-
-.landing .tool-strip ul {
-    padding: 0;
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 24px;
-    margin: 0;
-}
-
-.landing .tool-strip li {
-    display: grid;
-    grid-template-columns: 32px minmax(0, 1fr);
-    justify-content: start;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-    font-size: 0.9375rem;
-    font-weight: 500;
-    margin: 0;
-}
-
-.landing .tool-strip img {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-    justify-self: center;
-    filter: invert(1);
-    opacity: 0.8;
-}
-
-.landing .tool-strip img.colored {
-    filter: none;
-}
-
-[data-theme='light'] .landing .tool-strip img {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-    justify-self: center;
-    filter: none;
-}
-
-.landing .demonstration,
-.landing .setup {
-    padding-block: 72px;
+/* Sections. */
+.section {
+    padding-block: var(--home-section-space);
     border-top: 1px solid var(--sl-color-gray-5);
 }
 
-.landing h2 {
-    font-size: clamp(1.75rem, 3vw, 2.5rem);
-    font-weight: 500;
-    margin: 0 0 12px;
-    border: 0;
-    padding: 0;
+.intro {
+    max-width: 44rem;
+    margin-inline: auto;
+    text-align: center;
 }
 
-.landing .demonstration > p {
-    max-width: 72ch;
-    margin-block: 20px 0;
-    color: var(--sl-color-gray-2);
-}
-
-.landing .setup-note {
-    margin-top: 24px;
-    max-width: 80ch;
-}
-
-.landing .section-heading {
-    display: flex;
-    justify-content: space-between;
-    gap: 24px;
-    align-items: center;
-}
-
-.landing .section-heading p {
-    color: var(--sl-color-gray-2);
+.section h2 {
     margin: 0;
-}
-
-.landing .section-heading .eyebrow {
-    color: var(--sl-color-text-accent);
-    font-size: 0.75rem;
-    margin-bottom: 12px;
-}
-
-.landing .pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    border: 1px solid var(--sl-color-gray-4);
-    padding: 8px 20px;
-    min-height: 44px;
-    border-radius: 999px;
-    text-decoration: none;
-    font-size: 0.875rem;
     color: var(--sl-color-white);
+    font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+    font-weight: 550;
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
 }
 
-.landing .pill:hover {
-    background: var(--sl-color-gray-6);
+.intro .lead {
+    margin-inline: 0;
+    margin-block: 16px 0;
+    font-size: 17px;
+    line-height: 1.6;
+    text-wrap: pretty;
 }
 
-.landing .primary {
-    background: var(--sl-color-white);
-    color: var(--sl-color-black);
+.inline-code,
+.problems code,
+.card > p:where(:not(.tool-names)) code {
+    padding: 1px 5px;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 4px;
+    color: var(--sl-color-gray-1);
+    font-size: 0.875em;
+    white-space: nowrap;
 }
 
-.landing .primary:hover {
-    background: var(--sl-color-gray-1);
+/* Tools. Equal tiles in a grid: 3 per row on phones, 6 on tablets, 12 on desktops. */
+.tools {
+    padding-block: 32px 56px;
+    border-top: 1px solid var(--sl-color-gray-5);
+    text-align: center;
 }
 
-.landing .setup-grid {
+.tools-label {
+    margin: 0;
+    color: var(--sl-color-gray-3);
+    font-size: 13px;
+}
+
+.tools ul {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 24px;
-    margin-top: 32px;
+    gap: 20px 8px;
+    margin-block-start: 24px;
+    padding: 0;
+    list-style: none;
 }
 
-.landing .setup-grid > div {
-    min-width: 0;
-    display: grid;
-    grid-template-rows: 1fr auto;
-    gap: 16px;
-}
-
-.landing .setup-grid p,
-.landing .setup-note {
-    font-size: 0.875rem;
-    color: var(--sl-color-gray-2);
-}
-
-.landing .setup-grid .expressive-code {
-    margin: 0;
-    min-width: 0;
-    height: 100%;
-}
-
-.landing .setup-grid .frame {
-    height: 100%;
+.tools li {
     display: flex;
     flex-direction: column;
-}
-
-.landing .setup-grid pre {
-    flex: 1;
-    overflow-x: auto;
-}
-
-.landing .setup-grid p {
-    margin: 0;
-}
-
-.landing .closing {
-    border-top: 1px solid var(--sl-color-gray-5);
-    display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    padding-block: 72px;
+    gap: 8px;
+    min-width: 0;
+    color: var(--sl-color-gray-1);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
-.landing .closing nav {
+.tool-icon {
+    display: block;
+    width: 28px;
+    height: 28px;
+    background: currentcolor;
+    mask: var(--icon) center / contain no-repeat;
+}
+
+@media (width >= 50rem) {
+    .tools ul {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 24px 8px;
+    }
+}
+
+@media (width >= 72rem) {
+    .tools ul {
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+}
+
+/* What gspot checks: three equal cards. */
+.cards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    margin: 40px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.card {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 12px;
+    padding: 24px;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: var(--home-radius);
 }
 
-.landing .home-footer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 24px;
-    padding-block: 24px;
+.card h3 {
+    margin: 0;
+    color: var(--sl-color-white);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+}
+
+.card p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.card .tool-names {
+    margin-block-start: auto;
+    padding-block-start: 12px;
     border-top: 1px solid var(--sl-color-gray-5);
-    font-size: 0.75rem;
     color: var(--sl-color-gray-3);
+    font-size: 13px;
 }
 
-.landing .home-footer span {
-    margin-right: auto;
+.card .tool-names code {
+    font-size: 12px;
 }
 
-@media (width <= 49.99rem) {
-    .landing .tool-strip ul {
+@media (width >= 72rem) {
+    .cards {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .landing .section-heading,
-    .landing .closing {
-        flex-direction: column;
-        align-items: start;
+    .card {
+        display: grid;
+        grid-row: span 3;
+        grid-template-rows: subgrid;
+        row-gap: 12px;
     }
 
-    .landing .setup-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .landing .demonstration,
-    .landing .setup {
-        padding-block: 48px;
+    .card .tool-names {
+        margin-block-start: 0;
+        align-self: end;
     }
 }
 
-@media (width <= 39.99rem) {
-    .landing .tool-strip ul {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+.more {
+    margin-block-start: 24px;
+    color: var(--sl-color-gray-3);
+    font-size: 14px;
+    text-align: center;
+    text-wrap: balance;
+}
+
+.more a {
+    white-space: nowrap;
+}
+
+/* Footer: the same width as the header and the page. */
+.home-footer {
+    border-top: 1px solid var(--sl-color-gray-5);
+}
+
+.home-footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding-block: 32px;
+    color: var(--sl-color-gray-3);
+    font-size: 14px;
+}
+
+.home-footer nav {
+    display: flex;
+    gap: 24px;
+}
+
+.home-footer a {
+    color: var(--sl-color-gray-2);
+}
+
+@media (width >= 50rem) {
+    .home-footer-content {
+        flex-direction: row;
+        justify-content: space-between;
     }
 }

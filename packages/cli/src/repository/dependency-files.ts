@@ -42,12 +42,12 @@ export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]
 
 /**
  * Read and validate the package fields used by repository and check consumers.
- * @param root the repository root.
+ * @param repositoryRoot the base folder for resolving the manifest path.
  * @param path the repository-relative package.json path.
  * @returns the validated package fields, or undefined when the file does not exist.
  */
-export function readPackageJson(root: string, path: string): PackageJson | undefined {
-    const text = readText(root, path);
+export function readPackageJson(repositoryRoot: string, path: string): PackageJson | undefined {
+    const text = readText(repositoryRoot, path);
     if (text === undefined) return undefined;
     return parseJsonFile(path, text, packageJsonSchema);
 }
@@ -74,7 +74,7 @@ export function isToolOnlyPackage(dependencyFile: DependencyFile, npmNames: Read
 export function getProjectDependencies(dependencyFiles: DependencyFile[], scope: string): DependencyMap {
     const owner = dependencyFiles
         .filter((manifest) => {
-            if (manifest.kind !== 'package.json') return false;
+            if (manifest.kind !== PACKAGE_JSON) return false;
             const folder = manifest.path === PACKAGE_JSON ? '' : posix.dirname(manifest.path);
             return folder === '' || scope === folder || scope.startsWith(`${folder}/`);
         })

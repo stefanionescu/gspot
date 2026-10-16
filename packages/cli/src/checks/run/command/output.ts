@@ -1,3 +1,4 @@
+// Read tool output and build check results.
 import { statSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
@@ -5,13 +6,13 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import { normalizeOutputPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { TAIL_LINES } from '#cli/config/execution/command.ts';
+import { TAIL_LINES } from '#cli/config/checks/run/command.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import type { OutputPaths } from '#cli/types/parsers/output.ts';
 import type { ExecutionFailure } from '#cli/types/tools/run.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import type { Finding, CheckResult } from '#cli/types/execution/check.ts';
+import type { Finding, CheckResult } from '#cli/types/checks/run/check.ts';
 import { parseOutput, outputFormats } from '#cli/parsers/output/formats.ts';
 import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
@@ -21,15 +22,15 @@ import type {
     CommandRunState,
     InvocationOutput,
     CommandInvocation,
-} from '#cli/types/execution/command.ts';
+} from '#cli/types/checks/run/command.ts';
 
-function prefixScope(findings: Finding[], scopePath: string): void {
+function joinScopePaths(findings: Finding[], scopePath: string): void {
     for (const finding of findings)
         if (finding.file !== '' && !isAbsolute(finding.file) && !finding.file.startsWith(`${scopePath}/`))
             finding.file = joinScope(scopePath, finding.file);
 }
 
-function unexplainedFailure(
+function buildUnexplainedFailure(
     check: CheckDeclaration,
     tool: ToolDeclaration,
     result: SpawnResult,
@@ -37,11 +38,11 @@ function unexplainedFailure(
 ): Finding {
     const placeholder = `${tool.name} exited ${String(result.code)}`;
     let text: string;
-    if (file === undefined) text = toolOutputDetail(result, placeholder);
+    if (file === undefined) text = formatOutputTail(result, placeholder);
     else {
         const output = result.stderr.trim() === '' ? result.stdout.trim() : result.stderr.trim();
         const header =
-            tool.diagnostic_header_pattern === undefined ? undefined : new RegExp(tool.diagnostic_header_pattern, 'u');
+            tool.finding_header_pattern === undefined ? undefined : new RegExp(tool.finding_header_pattern, 'u');
         text = output.split('\n').find((line) => line.trim() !== '' && header?.test(line) !== true) ?? placeholder;
     }
     const { name, help } = check;
@@ -56,18 +57,20 @@ function unexplainedFailure(
 
 function markFailure(
     check: CheckDeclaration,
-    tool: ToolDeclaration,
-    result: SpawnResult,
-    parsed: Finding[],
-    state: CommandRunState,
+    {
+        tool,
+        result,
+        parsed,
+        state,
+    }: { tool: ToolDeclaration; result: SpawnResult; parsed: Finding[]; state: CommandRunState },
 ): void {
     if (result.code === 0) return;
     state.isFailed = true;
-    if (parsed.length === 0) state.findings.push(unexplainedFailure(check, tool, result, undefined));
+    if (parsed.length === 0) state.findings.push(buildUnexplainedFailure(check, tool, result, undefined));
 }
 
 // Gives every finding without a path the file the command ran over, when the format attributes them that way.
-function attributeFile(parsed: Finding[], invocation: CommandInvocation, check: CheckDeclaration): void {
+function setFindingFiles(parsed: Finding[], invocation: CommandInvocation, check: CheckDeclaration): void {
     if (invocation.file === undefined) return;
     // Regex file groups can name a rule or another identifier instead of a path.
     if (check.output.format === 'regex' && check.output.file_type !== 'path') return;
@@ -81,7 +84,7 @@ function isOnDisk(file: string, roots: string[]): boolean {
     );
 }
 
-function redactedFindings(
+function parseRedactedFindings(
     check: CheckDeclaration,
     result: SpawnResult,
     paths: OutputPaths,
@@ -101,22 +104,22 @@ function redactedFindings(
     return findings;
 }
 
-function parsedFindings(check: CheckDeclaration, result: SpawnResult, paths: OutputPaths, broken: boolean): Finding[] {
-    if (outputFormats[check.output.format].redactsOutput) return redactedFindings(check, result, paths, broken);
+function parseFindings(check: CheckDeclaration, result: SpawnResult, paths: OutputPaths, broken: boolean): Finding[] {
+    if (outputFormats[check.output.format].redactsOutput) return parseRedactedFindings(check, result, paths, broken);
     if (broken) return [];
     return parseOutput(check, result.stdout, result.stderr, paths);
 }
 
-function outputFailure(planned: OutputCheck, result: SpawnResult): never {
+function failBrokenTool(planned: OutputCheck, result: SpawnResult): never {
     const name = planned.tool?.name ?? planned.check.name;
-    const detail = toolOutputDetail(result, `${name} exited ${String(result.code)}`);
+    const detail = formatOutputTail(result, `${name} exited ${String(result.code)}`);
     throw new GspotError('output', `${name} broke: exit ${String(result.code)}\n${detail}`);
 }
 
 /**
  * Whether a command crashed: it exited nonzero, its format names files, it runs over many files, and none of its findings names a real file. This rule applies to shipped checks and authored checks.
  *
- * @param check the check.
+ * @param check the output format and command placeholders that determine crash detection.
  * @param result what the command returned.
  * @param parsed the findings read from its output.
  * @param paths the working directory and repository root.
@@ -139,32 +142,29 @@ function isToolBroken(check: CheckDeclaration, result: SpawnResult, parsed: Find
  *
  * @returns structured findings.
  */
-function checkedFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): Finding[] {
+function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): Finding[] {
     const { check } = planned;
     const broken = hasToolError(check, planned.tool, result);
-    const parsed = parsedFindings(check, result, paths, broken);
-    if (broken || isToolBroken(check, result, parsed, paths)) outputFailure(planned, result);
+    const parsed = parseFindings(check, result, paths, broken);
+    if (broken || isToolBroken(check, result, parsed, paths)) failBrokenTool(planned, result);
     return parsed;
 }
 
 /**
- * Collect the status and findings.
- *
- * @param base the initial result.
- * @param check the output declaration.
- * @param state the collected findings and failure state.
- * @param argv the command.
- * @param started the start time.
- *
- * @returns the completed result.
+ * Collect command status and attributed findings.
+ * @param check the selected check declaration.
+ * @param completion the execution values.
+ * @param completion.base the initial check result.
+ * @param completion.state the collected findings and failure state.
+ * @param completion.commandArguments the expanded command arguments.
+ * @param completion.started the monotonic start time.
+ * @returns the completed command result.
  */
-export function finishResult(
-    base: CheckResult,
+export function buildCheckResult(
     check: CheckDeclaration,
-    state: CommandRunState,
-    argv: string[],
-    started: number,
+    completion: { base: CheckResult; state: CommandRunState; commandArguments: string[]; started: number },
 ): CheckResult {
+    const { base, state, commandArguments, started } = completion;
     const output = check.output;
     const descriptor = outputFormats[output.format];
     const isEveryFindingKept = state.isFailed || descriptor.redactsOutput || descriptor.namesFiles(output);
@@ -173,7 +173,7 @@ export function finishResult(
         ? state.findings
         : state.findings.filter((finding) => finding.file !== '' || finding.line !== undefined);
     const status = state.isFailed || findings.length > 0 ? 'failed' : 'passed';
-    return { ...base, status, duration: performance.now() - started, findings, command: argv };
+    return { ...base, status, duration: performance.now() - started, findings, command: commandArguments };
 }
 
 /**
@@ -185,9 +185,9 @@ export function finishResult(
  *
  * @returns findings or a refusal note.
  */
-export function commandOutcome(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): ParsedFindings {
+export function parseCommandFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): ParsedFindings {
     try {
-        return { findings: checkedFindings(planned, result, paths) };
+        return { findings: parseVerifiedFindings(planned, result, paths) };
     } catch (error) {
         if (error instanceof GspotError && error.code === 'output') return { note: error.message };
         throw error;
@@ -212,12 +212,12 @@ export function recordInvocation(
     const { check, scope } = planned;
     const parsed =
         findings.length === 0 && result.code !== 0 && invocation.file !== undefined
-            ? [unexplainedFailure(check, tool, result, invocation.file)]
+            ? [buildUnexplainedFailure(check, tool, result, invocation.file)]
             : findings.map((finding) => ({ ...finding }));
-    attributeFile(parsed, invocation, check);
-    if (scope.scope.path !== '' && state.cwd !== state.root) prefixScope(parsed, scope.scope.path);
+    setFindingFiles(parsed, invocation, check);
+    if (scope.scope.path !== '' && state.cwd !== state.root) joinScopePaths(parsed, scope.scope.path);
     state.findings.push(...parsed);
-    markFailure(check, tool, result, parsed, state);
+    markFailure(check, { tool, result, parsed, state });
 }
 
 /**
@@ -229,7 +229,7 @@ export function recordInvocation(
  *
  * @returns the execution failure, or undefined for interpretable output.
  */
-export function executionFailure(
+export function findExecutionFailure(
     result: SpawnResult,
     name: string,
     view: Pick<ScopeView, 'settings'>,
@@ -272,7 +272,7 @@ export function hasToolError(check: CheckDeclaration, tool: ToolDeclaration | un
  *
  * @returns the bounded diagnostic.
  */
-export function toolOutputDetail(
+export function formatOutputTail(
     result: Pick<SpawnResult, 'stdout' | 'stderr'>,
     placeholder = 'The tool printed no diagnostic.',
 ): string {
@@ -291,12 +291,12 @@ export function toolOutputDetail(
  *
  * @returns the parsed findings.
  */
-export function toolFindings(
+export function assertToolFindings(
     result: Pick<SpawnResult, 'code' | 'stdout' | 'stderr'>,
     findings: Finding[],
     toolName: string,
 ): Finding[] {
     if (result.code !== 0 && findings.length === 0)
-        throw new Error(`The ${toolName} command failed (exit ${String(result.code)}): ${toolOutputDetail(result)}`);
+        throw new Error(`The ${toolName} command failed (exit ${String(result.code)}): ${formatOutputTail(result)}`);
     return findings;
 }

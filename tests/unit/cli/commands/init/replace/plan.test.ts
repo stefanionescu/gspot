@@ -1,25 +1,28 @@
-import { test, expect } from 'bun:test';
-import { join, posix } from 'node:path';
-import { TYPO } from '#tests/config/spelling.ts';
-import { SQL_CHECK } from '#tests/config/sql.ts';
-import { pathExists } from '#tests/setup/files.ts';
+import { join } from 'node:path';
+import { openSession } from '#cli/session.ts';
+import { test, spyOn, expect } from 'bun:test';
+import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { parseTemplate } from '#cli/settings/templates.ts';
-import { commitAll, gitOutput } from '#tests/setup/git.ts';
-import { initCommand } from '#cli/commands/init/command.ts';
+import { TYPO } from '#tests/data/checks/spelling.ts';
+import { SQL_CHECK } from '#tests/data/checks/sql.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { buildInitArguments } from '#tests/setup/builders.ts';
+import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
-import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
-import { INIT_FILES, REPLACED_TOOL_FILES } from '#tests/config/init.ts';
-import { containingAll, textContaining } from '#tests/setup/matchers.ts';
-import { buildInitOptions, buildInitArguments } from '#tests/setup/init.ts';
+import { matchItems, matchSubstring } from '#tests/setup/matchers.ts';
 import { stat, chmod, symlink, readFile, readlink } from 'node:fs/promises';
-import { PYPROJECT, PYDOCLINT_GOOGLE } from '#tests/config/python/project.ts';
-import { INACTIVE_CONFIGURATIONS, REPLACED_PYPROJECT_TABLES } from '#tests/config/replace.ts';
+import { PYPROJECT, PYDOCLINT_GOOGLE } from '#tests/data/checks/python/project.ts';
+import { runGspot, checkReport, runRegisteredCommand } from '#tests/setup/run-gspot.ts';
+
+import {
+    INIT_FILES,
+    REPLACED_TOOL_FILES,
+    INACTIVE_CONFIGURATIONS,
+    REPLACED_PYPROJECT_TABLES,
+} from '#tests/data/commands/init.ts';
 
 test.each(['', 'hooks', '.husky'])(
     'the init plan tells hook scripts in the source apart from the hooks folder Git uses (%s)',
@@ -29,8 +32,8 @@ test.each(['', 'hooks', '.husky'])(
             'hooks/use-thing.ts': 'export function useThing() { return true; }\n',
             ...(hooksPath === '' ? {} : { [`${hooksPath}/pre-commit`]: '#!/bin/sh\nexit 0\n' }),
         });
-        gitOutput(sandbox.path, ['init', '-q']);
-        if (hooksPath !== '') gitOutput(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
+        readGitOutput(sandbox.path, ['init', '-q']);
+        if (hooksPath !== '') readGitOutput(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
         const result = await runGspot(sandbox.path, [
             ...buildInitArguments(['bash', 'javascript', 'spelling', 'markdown']),
             '--dry-run',
@@ -39,7 +42,7 @@ test.each(['', 'hooks', '.husky'])(
         for (const token of hooksPath === '' ? ['none'] : [`${hooksPath}/`, 'pre-commit'])
             expect(result.stdout).toContain(token);
         expect(await readFile(join(sandbox.path, 'hooks/use-thing.ts'), 'utf8')).toContain('useThing');
-        expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
+        expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
     },
 );
 
@@ -55,21 +58,21 @@ test('the init plan deletes the replaced tool files and lists the lint folder', 
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan!;
     for (const path of Object.keys(REPLACED_TOOL_FILES))
-        expect(plan.delete).toContainEqual({ path, note: textContaining('replaced by the generated') });
-    expect(plan.noLongerRuns).toContainEqual({ path: 'quality/', note: textContaining('lint scripts') });
-    expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
+        expect(plan.delete).toContainEqual({ path, note: matchSubstring('replaced by the generated') });
+    expect(plan.noLongerRuns).toContainEqual({ path: 'quality/', note: matchSubstring('lint scripts') });
+    expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
     const initialized = await runGspot(sandbox.path, [
         ...buildInitArguments(['bash', 'javascript', 'spelling', 'markdown']),
         '--json',
     ]);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    for (const path of Object.keys(REPLACED_TOOL_FILES)) expect(await pathExists(join(sandbox.path, path))).toBe(false);
+    for (const path of Object.keys(REPLACED_TOOL_FILES)) expect(await isOnDisk(join(sandbox.path, path))).toBe(false);
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     for (const carried of ['udid', 'SC2086', 'MD013']) expect(settings).not.toContain(carried);
     expect(await readFile(join(sandbox.path, 'eslint.config.mjs'), 'utf8')).toContain(
         'export { default } from "./.gspot/config/eslint.config.mjs";\n',
     );
-    expect(await pathExists(join(sandbox.path, 'quality/lint.sh'))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, 'quality/lint.sh'))).toBe(true);
 });
 
 test.each(['setup.cfg', 'tox.ini'])('init leaves a shared %s in place and names its SQLFluff section', async (path) => {
@@ -86,13 +89,7 @@ exclude_rules = LT01, RF01
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(readSettings(sandbox.path, createReadCache(process.cwd())).settings.ignore).toStrictEqual([]);
     expect((JSON.parse(initialized.stdout) as InitJson).plan!.delete.some((entry) => entry.path === path)).toBe(false);
-    expect((JSON.parse(initialized.stdout) as InitJson).plan!.retained).toContainEqual({
-        path,
-        note: textContaining('Delete the section when ready'),
-    });
-    expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
-    const attributes = await stat(join(sandbox.path, path));
-    expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
+    await assertRetainedFile(sandbox.path, path, original, JSON.parse(initialized.stdout) as InitJson);
 });
 
 test('init replaces an ignore file inside a scope, and the scope check runs', async () => {
@@ -105,12 +102,12 @@ test('init replaces an ignore file inside a scope, and the scope check runs', as
     });
     await Bun.write(join(sandbox.path, 'template.toml'), 'configurations = []\n' + SQL_CHECK);
     commitAll(sandbox.path);
-    const argv = [...buildInitArguments([]), '--from', 'template.toml'];
-    const initialized = await runGspot(sandbox.path, argv);
+    const commandArguments = [...buildInitArguments([]), '--from', 'template.toml'];
+    const initialized = await runGspot(sandbox.path, commandArguments);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const settings = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
     expect(settings).not.toContain('templates');
-    expect(await pathExists(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
     const selected = await runGspot(sandbox.path, ['set', 'level', 'all']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const dialect = await runGspot(sandbox.path, ['set', 'tools.sqlfluff.dialect', 'postgres', '--scope', 'db']);
@@ -145,23 +142,23 @@ exclude_rules = LT01
         const plan = (JSON.parse(initialized.stdout) as InitJson).plan!;
         expect(plan.retained).toContainEqual({
             path: 'setup.cfg',
-            note: textContaining('Delete the section when ready'),
+            note: matchSubstring('Delete the section when ready'),
         });
         expect(plan.delete.some((entry) => entry.path === 'setup.cfg')).toBe(false);
         expect(await readlink(join(sandbox.path, 'setup.cfg'))).toBe(join('settings', 'shared.cfg'));
         expect(await readFile(target, 'utf8')).toBe(original);
         const attributes = await stat(target);
         expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
-        expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(!isDryRun);
-        expect(await pathExists(join(sandbox.path, '.gspot/config/sqlfluff.cfg'))).toBe(!isDryRun);
+        expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(!isDryRun);
+        expect(await isOnDisk(join(sandbox.path, '.gspot/config/sqlfluff.cfg'))).toBe(!isDryRun);
     },
 );
 
-test.each(REPLACED_PYPROJECT_TABLES.map((row) => ({ ...row, scope: '' })))(
+test.each([...REPLACED_PYPROJECT_TABLES])(
     'init names the $table table it leaves in pyproject.toml',
-    async ({ configuration, table, text, source, generated, scope }) => {
+    async ({ configuration, table, text, source, generated }) => {
         await using sandbox = await testdir();
-        const path = posix.join(scope, 'pyproject.toml');
+        const path = 'pyproject.toml';
         const original =
             PYPROJECT +
             '\n' +
@@ -173,82 +170,100 @@ keep = true
             text;
         await createFileTree(sandbox.path, {
             [path]: original,
-            [join(scope, source.file)]: source.text,
+            [source.file]: source.text,
         });
         await chmod(join(sandbox.path, path), 0o640);
-        const args = buildInitArguments([configuration]);
-        const preview = await runGspot(sandbox.path, [...args, '--dry-run', '--json']);
+        const commandArguments = buildInitArguments([configuration]);
+        const preview = await runGspot(sandbox.path, [...commandArguments, '--dry-run', '--json']);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
         expect((JSON.parse(preview.stdout) as InitJson).plan!.retained).toContainEqual({
             path,
-            note: textContaining(table),
+            note: matchSubstring(table),
         });
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
-        const initialized = await runGspot(sandbox.path, [...args, '--json']);
+        const initialized = await runGspot(sandbox.path, [...commandArguments, '--json']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        expect((JSON.parse(initialized.stdout) as InitJson).plan!.retained).toContainEqual({
-            path,
-            note: textContaining('Delete the section when ready'),
-        });
-        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
-        const attributes = await stat(join(sandbox.path, path));
-        expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
-        expect(await pathExists(join(sandbox.path, generated.folder, scope, generated.file))).toBe(true);
+        await assertRetainedFile(sandbox.path, path, original, JSON.parse(initialized.stdout) as InitJson);
+        expect(await isOnDisk(join(sandbox.path, generated.folder, generated.file))).toBe(true);
     },
 );
 
 test('init replaces a nested spelling configuration and deletes the original', async () => {
-    await using directory = await testdir();
+    using _output = spyOn(process.stdout, 'write').mockReturnValue(true);
+
+    await using folder = await testdir();
     const original = `[default]
 locale = "en-gb"
 [default.extend-words]
 ${TYPO.the} = "${TYPO.the}"
 `;
-    await createFileTree(directory.path, {
+    await createFileTree(folder.path, {
         'nested/typos.toml': original,
         'nested/sample.txt': `${TYPO.color} ${TYPO.the}\n`,
     });
-    const options = buildInitOptions(directory.path, {
-        isDryRun: true,
-        configurations: ['spelling'],
-    });
-    const preview = await initCommand(options);
+
+    const preview = await runRegisteredCommand(folder.path, [
+        'init',
+        '--yes',
+        '--dry-run',
+        '--configurations',
+        'spelling',
+    ]);
     expect(preview.exitCode).toBe(0);
     expect(preview.json).toMatchObject({
         plan: {
-            delete: containingAll([{ path: 'nested/typos.toml', note: 'replaced by the generated typos tool file' }]),
+            delete: matchItems([{ path: 'nested/typos.toml', note: 'replaced by the generated typos tool file' }]),
         },
     });
-    expect(await readFile(join(directory.path, 'nested/typos.toml'), 'utf8')).toBe(original);
-    expect(await pathExists(join(directory.path, 'gspot.toml'))).toBe(false);
-    const installed = await initCommand({ ...options, isDryRun: false });
+    expect(await readFile(join(folder.path, 'nested/typos.toml'), 'utf8')).toBe(original);
+    expect(await isOnDisk(join(folder.path, 'gspot.toml'))).toBe(false);
+    const installed = await runRegisteredCommand(folder.path, ['init', '--yes', '--configurations', 'spelling']);
     expect(installed.exitCode).toBe(0);
-    expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).not.toContain('en-gb');
-    expect(await pathExists(join(directory.path, 'nested/typos.toml'))).toBe(false);
+    expect(await readFile(join(folder.path, 'gspot.toml'), 'utf8')).not.toContain('en-gb');
+    expect(await isOnDisk(join(folder.path, 'nested/typos.toml'))).toBe(false);
 });
 
 test('at level recommended, init keeps the tool files of checks that are off', async () => {
+    using _output = spyOn(process.stdout, 'write').mockReturnValue(true);
+
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, INACTIVE_CONFIGURATIONS);
     commitAll(sandbox.path);
-    const options = buildInitOptions(sandbox.path, {
-        configurations: [],
-        template: parseTemplate('level = "recommended"\n', 'coverage.template.toml'),
-    });
-    const preview = await initCommand({ ...options, isDryRun: true });
-    const plan = preview.json.plan!;
+    await Bun.write(join(sandbox.path, 'coverage.template.toml'), 'level = "recommended"\n');
+    const preview = await runRegisteredCommand(sandbox.path, [
+        'init',
+        '--yes',
+        '--dry-run',
+        '--no-configurations',
+        '--from',
+        'coverage.template.toml',
+    ]);
+    const plan = (preview.json as InitJson).plan!;
     expect(plan.delete).toStrictEqual([]);
     expect(plan.change.some((row) => row.path === 'package.json')).toBe(false);
     expect(plan.write.some((row) => /commitlint|syncpack/u.test(row.path))).toBe(false);
-    const written = await initCommand(options);
+    const written = await runRegisteredCommand(sandbox.path, [
+        'init',
+        '--yes',
+        '--no-configurations',
+        '--from',
+        'coverage.template.toml',
+    ]);
     expect(written.exitCode, written.text).toBe(0);
     for (const [path, source] of Object.entries(INACTIVE_CONFIGURATIONS))
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(source);
-    const awaitedSession = await openSession(sandbox.path);
+    const session = await openSession(sandbox.path);
     const project = parseToolProject(
         await Bun.file(join(sandbox.path, '.gspot/package.json')).text(),
-        awaitedSession.requirePackageManager().name,
+        session.requirePackageManager().name,
     );
     expect(project.dependencies).not.toHaveProperty('@commitlint/cli');
     expect(project.dependencies).not.toHaveProperty('syncpack');
 });
+
+async function assertRetainedFile(root: string, path: string, original: string, initialized: InitJson): Promise<void> {
+    expect(initialized.plan!.retained).toContainEqual({ path, note: matchSubstring('Delete the section when ready') });
+    expect(await readFile(join(root, path), 'utf8')).toBe(original);
+    const attributes = await stat(join(root, path));
+    expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
+}

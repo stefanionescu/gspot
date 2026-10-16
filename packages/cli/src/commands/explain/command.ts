@@ -1,50 +1,42 @@
-// Explain a check, rule, configuration, setting, or file path.
+import { openSession } from '#cli/session.ts';
 import { readAsset } from '#cli/system/assets.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { quoteArgument } from '#cli/system/text.ts';
-import { findScope } from '#cli/repository/scopes.ts';
+import { scopeLabel } from '#cli/system/terminal.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { printResult } from '#cli/system/terminal.ts';
 import { type Session } from '#cli/types/planning.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { type Command } from '@commander-js/extra-typings';
+import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { explainPath } from '#cli/commands/explain/path.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { assertVersionPin } from '#cli/apply/version-pin.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { listCoveredFiles } from '#cli/repository/coverage.ts';
-import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
+import { listConfigurationSettings } from '#cli/settings/known.ts';
 import { REASON_NEEDED_TEXTS } from '#cli/config/commands/explain.ts';
-import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { checkStageSchema } from '#cli/configurations/schema/parts.ts';
-import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
-import { coveredInputs, configuredChecks } from '#cli/planning/checks.ts';
-import { formatUnknownConfiguration } from '#cli/configurations/select.ts';
 import { ruleNamesFileSchema } from '#cli/generation/tool-files/stylelint.ts';
 import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
 import { JAVASCRIPT_CONFIGURATION_FOLDER } from '#cli/config/configurations.ts';
+import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { ESLINT_TOOL, ESLINT_RULE_NAMES_FILE } from '#cli/config/generation/eslint.ts';
-import { buildKnownSettings, listConfigurationSettings } from '#cli/settings/known.ts';
-import { getSettingValue, findDeclaration, listCandidateKeys } from '#cli/settings/inherit.ts';
-import { listCheckIds, listRuleFiles, readManifests, formatUnknownCheck } from '#cli/configurations/manifests.ts';
-
-import {
-    type Explanation,
-    type SettingScope,
-    type PathExplanation,
-    type ConfigurationExplanation,
-} from '#cli/types/commands/explain.ts';
+import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
+import { listCheckIds, listRuleFiles, readManifests } from '#cli/configurations/manifests.ts';
+import { listSettings, getSettingValue, findDeclaration, listCandidateKeys } from '#cli/settings/inherit.ts';
+import { type Explanation, type SettingScope, type ConfigurationExplanation } from '#cli/types/commands/explain.ts';
+// Explain a check, rule, configuration, setting, or file path.
 
 function formatList(label: string, items: string[]): string[] {
     return items.length === 0 ? [] : [`${label}: ${items.join(', ')}`];
 }
 
-function explainConfiguration(configurationName: string, reads: ReadCache): Explanation | undefined {
+function explainConfiguration(
+    configurationName: string,
+    reads: ReadCache,
+    session: Session | undefined,
+): Explanation | undefined {
     const manifest = readManifests(reads).get(configurationName);
     if (manifest === undefined) return undefined;
     const row: ConfigurationExplanation = {
@@ -56,7 +48,9 @@ function explainConfiguration(configurationName: string, reads: ReadCache): Expl
         tools: manifest.tools.map((tool) => (tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`)),
         checks: manifest.checks.map((check) => ({ check: check.name, stage: check.stage })),
         settings: listConfigurationSettings(manifest.configuration.name).map((setting) => setting.name),
-        rules: listRuleFiles(manifest).map((file) => file.path),
+        rules: (session === undefined ? [] : selectRuleFiles(session))
+            .filter((file) => listRuleFiles(manifest).some((rule) => rule.path === file.path))
+            .map((file) => file.path),
         alwaysSelected: manifest.configuration.always_selected,
     };
     const { detect, files } = manifest;
@@ -89,13 +83,13 @@ function explainConfiguration(configurationName: string, reads: ReadCache): Expl
 }
 
 // The lines about one scope: its default, its current value and source, and how to change it.
-function scopeLines(key: string, declaration: SettingDeclaration, entry: SettingScope): string[] {
+function formatSettingScope(key: string, declaration: SettingDeclaration, entry: SettingScope): string[] {
     const { scope, shipped, effective } = entry;
     const { value, source, reason } = effective ?? { value: undefined, source: 'unset', reason: undefined };
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
     return [
         '',
-        `Scope: ${scope === '' ? 'root' : scope}`,
+        `Scope: ${scopeLabel(scope)}`,
         `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
         `Current value: ${JSON.stringify(value)} (from ${source})`,
         ...(value !== undefined && isLoosening(declaration, value, shipped)
@@ -136,7 +130,7 @@ function explainSetting(session: Session | undefined, key: string): Explanation 
         ...(first.declaration.reason_needed === undefined
             ? []
             : [`Reason: ${REASON_NEEDED_TEXTS[first.declaration.reason_needed]}`]),
-        ...scopes.flatMap((entry) => scopeLines(key, first.declaration, entry)),
+        ...scopes.flatMap((entry) => formatSettingScope(key, first.declaration, entry)),
     ];
     return {
         kind: 'setting',
@@ -156,22 +150,17 @@ function explainSetting(session: Session | undefined, key: string): Explanation 
     };
 }
 
-function buildUnknownSubjectDiagnostic(session: Session | undefined, subject: string, reads: ReadCache): string {
-    if (subject.includes('/'))
-        return formatUnknownCheck(
-            subject,
-            listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.check), reads),
-        );
-    if (subject.includes('.'))
-        return formatUnknownSetting(
-            buildKnownSettings(
-                session?.scopes.flatMap((scope) => scope.selected) ?? [],
-                session?.settingsFile.settings.level,
-                reads,
-            ),
-            subject,
-        );
-    return formatUnknownConfiguration(subject, readManifests(reads).keys().toArray());
+function formatUnknownSubject(session: Session | undefined, subject: string, reads: ReadCache): string {
+    const candidates = [
+        ...listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.commandChecks), reads),
+        ...readManifests(reads).keys(),
+        ...(session?.scopes.flatMap((scope) =>
+            listSettings(scope.known, session.settingsFile.settings, scope.scope.path).map((setting) => setting.key),
+        ) ?? []),
+    ];
+    const near = selectSimilarNames(subject, [...new Set(candidates)]);
+    const suggestion = near.length === 0 ? '' : ` Did you mean ${formatCodeList(near)}?`;
+    return `gspot cannot explain ${subject}. Give a check (python/ruff), a lint rule (eslint/no-var), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).${suggestion}`;
 }
 
 // A check retains its meaning; a tracked path precedes a rule with the same first folder.
@@ -189,98 +178,12 @@ function explainSlashed(
 }
 
 function explainNamed(session: Session | undefined, subject: string, reads: ReadCache): Explanation | undefined {
-    const named = explainSetting(session, subject) ?? explainConfiguration(subject, reads);
+    const named = explainSetting(session, subject) ?? explainConfiguration(subject, reads, session);
     if (named !== undefined) return named;
     const ruleNamesPath = `${JAVASCRIPT_CONFIGURATION_FOLDER}/${ESLINT_RULE_NAMES_FILE}`;
     const names = ruleNamesFileSchema.parse(JSON.parse(readAsset(ruleNamesPath)));
     if (!names.rules.includes(subject)) return undefined;
     return explainLintRule(ESLINT_TOOL, subject, reads);
-}
-
-function uncheckedNote(file: TrackedFile): string | undefined {
-    if (file.kind === 'binary') return 'binary: eligible for secrets and size checks';
-    if (file.kind === 'generated') return 'generated: eligible for secret checks and checks for stale generated files';
-    if (file.kind === 'vendored') return 'vendored: eligible for secrets, license, and security checks';
-    return undefined;
-}
-
-/**
- * Explains one file.
- * @param session the session.
- * @param file the inventoried file.
- * @returns selected configurations, checks, and recorded ignores.
- */
-function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
-    const { path } = file;
-    const scope = findScope(path, session.repository.scopes);
-    const selection = session.scopes.find((entry) => entry.scope.path === scope.path) as ScopeSelection;
-    const configurations = selection.selected.filter(
-        (manifest) =>
-            listCoveredFiles(manifest.files, [file], {
-                selected: selection.selected,
-                scope: selection.scope.path,
-                view: selection.view,
-            }).length > 0,
-    );
-    const report: PathExplanation = {
-        path,
-        scope: scope.path === '' ? 'root' : scope.path,
-        fileKind: file.kind,
-        tags: file.tags,
-        configurations: configurations.map((manifest) => manifest.configuration.name),
-        checks: configuredChecks(session)
-            .filter((check) => coveredInputs(session, check).some((entry) => entry.path === file.path))
-            .map((check) => ({
-                check: check.check.name,
-                stage: check.check.stage,
-                ...(check.manifest === undefined ? {} : { configuration: check.manifest.configuration.name }),
-            })),
-        ignores: session.settingsFile.settings.ignore
-            .filter(
-                (entry) => entry.paths === undefined || entry.paths.length === 0 || buildPathMatcher(entry.paths)(path),
-            )
-            .map((entry) => ({
-                check: entry.check,
-                ...(entry.rule === undefined ? {} : { rule: entry.rule }),
-                reason: entry.reason,
-            })),
-    };
-    if (file.kindSource !== undefined) report.fileKindSource = file.kindSource;
-    const unchecked = uncheckedNote(file);
-    if (unchecked !== undefined) report.unchecked = unchecked;
-    if (report.checks.length === 0 && file.kind === 'source') {
-        report.unchecked = 'no selected check reads this file';
-        report.remedy =
-            'Mark generated or copied files linguist-generated or linguist-vendored in .gitattributes, or run gspot add <configuration>.';
-    }
-    return report;
-}
-
-/**
- * The report as text.
- * @param report the report.
- * @returns the text for stdout.
- */
-function formatPathReport(report: PathExplanation): string {
-    const by = report.fileKindSource === undefined ? '' : ` by ${report.fileKindSource}`;
-    const checks = report.checks.map(
-        (check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? 'repository command'})`,
-    );
-    const ignores = report.ignores.map((entry) => {
-        const rule = entry.rule === undefined ? '' : ` ${entry.rule}`;
-        const reason = entry.reason === undefined ? '' : `  ${entry.reason}`;
-        return `  ${entry.check}${rule}${reason}`;
-    });
-    const lines = [
-        `${report.path}  (scope ${report.scope}, ${report.fileKind}${by})`,
-        '',
-        ...(report.unchecked === undefined ? [] : [report.unchecked]),
-        ...(report.configurations.length === 0 ? [] : [`checked by: ${report.configurations.join(', ')}`]),
-        ...(checks.length === 0 ? [] : ['checks:', ...checks]),
-        ...(ignores.length === 0 ? [] : ['ignores:', ...ignores]),
-        ...(report.remedy === undefined ? [] : ['', `to change this: ${report.remedy}`]),
-    ];
-    return `${lines.join('\n')}\n`;
 }
 
 /**
@@ -300,49 +203,42 @@ function explain(session: Session | undefined, subject: string, reads: ReadCache
     else explanation = explainNamed(session, subject, reads);
     if (explanation !== undefined) return explanation;
     if (file !== undefined) return file;
-    throw new GspotError('arguments', buildUnknownSubjectDiagnostic(session, subject, reads));
+    throw new GspotError('arguments', formatUnknownSubject(session, subject, reads));
 }
 
 /**
  * Register the explain command.
  * @param program the command program
+ * @param onResult the sink that writes the completed command result.
  */
-function registerExplain(program: Command): void {
+function registerExplain(program: Command, onResult: CommandCompletion): void {
     program
         .command('explain')
         .argument('<subject>', COMMAND_HELP.explain.arguments['subject'])
         .summary(COMMAND_HELP.explain.summary)
         .description(COMMAND_HELP.explain.description)
         .action(async (subject) => {
-            const root = findRoot(process.cwd());
-            await assertVersionPin(root);
-            const session = readText(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
-            const result = explain(session, subject, session?.reads ?? createReadCache(root));
-            printResult({
-                text: result.text,
-                json: { ...result.data, kind: result.kind, subject: result.subject },
-                exitCode: 0,
-            });
+            onResult(await runExplainCommand(process.cwd(), subject));
         });
 }
 
 /**
- * Explains a repository file or an explicitly requested path.
- * @param session the repository session, or undefined outside a configured repository.
- * @param subject the file path or another explanation subject.
- * @returns the file explanation, or undefined for another subject.
- * @throws GspotError when an explicitly requested path does not exist.
+ * Run the explain command and return its output.
+ * @param cwd the folder where the command starts.
+ * @param subject the check, rule, configuration, setting, or path to explain.
+ * @returns the explanation and its command exit code.
  */
-function explainPath(session: Session | undefined, subject: string): Explanation | undefined {
-    if (session === undefined) return undefined;
-    const path = subject.startsWith('./') ? subject.slice('./'.length) : subject;
-    const file = session.repository.files.find((entry) => entry.path === path);
-    if (file === undefined) {
-        if (subject.startsWith('./')) throw new GspotError('arguments', `${path} is not a file in this repository.`);
-        return undefined;
-    }
-    const report = buildPathReport(session, file);
-    return { kind: 'path', subject: path, text: formatPathReport(report), data: report };
+async function runExplainCommand(cwd: string, subject: string): Promise<CommandResult> {
+    const root = findRoot(cwd);
+
+    const session = readText(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
+
+    const result = explain(session, subject, session?.reads ?? createReadCache(root));
+    return {
+        text: result.text,
+        json: { ...result.data, kind: result.kind, subject: result.subject },
+        exitCode: 0,
+    };
 }
 
-export { explain, registerExplain };
+export { registerExplain };

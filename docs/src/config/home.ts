@@ -1,63 +1,45 @@
-export const WORKFLOW = [
-    {
-        title: 'Choose your checks',
-        description:
-            'Choose configurations and settings in gspot.toml. Apply those choices to generate configuration for the selected tools.',
-        image: '/brand/home/policy.svg',
-        href: '/guides/gspot-toml/',
-        link: 'Choose checks and exceptions',
-    },
-    {
-        title: 'Run pinned tool versions',
-        description:
-            'Run selected tools with pinned versions. ESLint, Ruff, Prettier, and other tools keep their own diagnostic rules.',
-        image: '/brand/home/toolchain.svg',
-        href: '/reference/configurations/',
-        link: 'Browse the configuration reference',
-    },
-    {
-        title: 'Find the code to fix',
-        description:
-            'Find the file, check, and correction advice in the report. Rerun the check after correcting the code.',
-        image: '/brand/home/finding.svg',
-        href: '/guides/findings/',
-        link: 'Read and resolve findings',
-    },
-] as const;
-export const REPOSITORY = [
-    {
-        title: 'Generate agent instructions',
-        description:
-            'Generate rule guides and agent entry points from your selected configurations. Keep instructions aligned with repository choices.',
-        image: '/brand/home/agents.svg',
-        href: '/guides/agents/',
-        link: 'Configure agent instructions',
-    },
-    {
-        title: 'Configure nested projects',
-        description:
-            'Use scopes for projects with different languages and settings. Run staged or changed-file checks for the work you are reviewing.',
-        image: '/brand/home/scopes.svg',
-        href: '/guides/monorepos/',
-        link: 'Work with scopes',
-    },
-    {
-        title: 'Review configuration changes',
-        description:
-            'Preview configuration changes, adopt supported existing settings, and inspect recovery copies when generated files have local edits.',
-        image: '/brand/home/preservation.svg',
-        href: '/guides/install/',
-        link: 'Adopt an existing repository',
-    },
-] as const;
-
+export const HOME_TITLE = 'Lint the code your AI agent writes';
+export const HOME_DESCRIPTION =
+    'gspot installs linters and agent rules for your repository, then runs them on every commit.';
+export const HOME_AGENT_INSTRUCTIONS =
+    'To set up gspot in a repository, read https://generativespotting.com/llms.txt and follow its steps for coding agents. Show the user the plan of `gspot init --dry-run` before you run `gspot init --yes`.';
 export const TOOLS = [
-    { image: '/tools/eslint.svg', name: 'ESLint', colored: false },
-    { image: '/tools/prettier.svg', name: 'Prettier', colored: false },
-    { image: '/tools/ruff.svg', name: 'Ruff', colored: false },
-    { image: '/tools/stylelint.svg', name: 'Stylelint', colored: false },
-    { image: '/tools/shellcheck.png', name: 'ShellCheck', colored: true },
-    { image: '/tools/semgrep.svg', name: 'Semgrep', colored: true },
+    { name: 'ESLint', icon: '/tools/eslint.svg' },
+    { name: 'Prettier', icon: '/tools/prettier.svg' },
+    { name: 'Ruff', icon: '/tools/ruff.svg' },
+    { name: 'Stylelint', icon: '/tools/stylelint.svg' },
+    { name: 'ShellCheck', icon: '/tools/shellcheck-line.png' },
+    { name: 'Semgrep', icon: '/tools/semgrep.svg' },
+    { name: 'TypeScript', icon: '/tools/typescript.svg' },
+    { name: 'Vitest', icon: '/tools/vitest.svg' },
+    { name: 'Jest', icon: '/tools/jest.svg' },
+    { name: 'pytest', icon: '/tools/pytest.svg' },
+    { name: 'Knip', icon: '/tools/knip.svg' },
+    { name: 'Trivy', icon: '/tools/trivy.svg' },
 ] as const;
+export const CHECK_AREAS = [
+    {
+        title: 'Linters and formatters',
+        text: 'Lint, format, and type checks for TypeScript, JavaScript, Python, Swift, CSS, HTML, Bash, SQL, and Markdown, with rules for React, Next.js, Vue, Svelte, Astro, FastAPI, and more.',
+        tools: 'ESLint · Prettier · Ruff · SwiftLint · ShellCheck',
+    },
+    {
+        title: 'Secrets and dependencies',
+        text: 'Leaked keys, vulnerable dependencies, licenses, broken links, spelling, and security patterns.',
+        tools: 'Gitleaks · TruffleHog · Semgrep · Lychee · typos',
+    },
+    {
+        title: 'Agent rules',
+        text: '`AGENTS.md` and one rule file per language and topic, so your agent writes code that passes the checks.',
+        tools: '`AGENTS.md` · `.gspot/rules/`',
+    },
+] as const;
+export const CODE_TOKENS =
+    /(?<string>'[^']*')|(?<keyword>\b(?:import type|import|from|export async function|try|catch|await)\b)|(?<type>\bCart\b)|(?<function>\b(?:pay|charge)\b)/gu;
+export const PASSED_CHECK = /^\S+(?=\s+passed\s)/gmu;
+export const REPORT_SUMMARY =
+    /^Failed: \d+ checks? with \d+ findings?\. Passed: \d+ checks?\. Skipped: \d+ checks?\./gmu;
+export const PASSED_CHECK_LIMIT = 10;
+export const COMMIT_RECORD = '[main 066501e] feat: Add checkout';
 
-export const SEARCH_BUTTONS = 'site-search button[data-open-modal]';
+export const INLINE_CODE_SPAN = /(`[^`]+`)/u;

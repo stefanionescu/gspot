@@ -1,19 +1,24 @@
 import ts from 'typescript';
 import { chmodSync, writeFileSync } from 'node:fs';
-import { join, dirname, relative } from 'node:path';
 import { findScope } from '#cli/repository/scopes.ts';
-import { emptyResult } from '#cli/checks/run/report.ts';
-import { coveredInputs } from '#cli/planning/checks.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { checkInput } from '#cli/checks/run/built-in.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { buildBaseResult } from '#cli/checks/run/report.ts';
+import { listCoveredInputs } from '#cli/planning/checks.ts';
+import { extractToolFileName } from '#cli/planning/files.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { type CheckResult } from '#cli/types/execution/check.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import { type CheckResult } from '#cli/types/checks/run/check.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
+import type { WholeToolFile } from '#cli/types/generation/files.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
+import { buildJsconfig } from '#cli/generation/tool-files/jsconfig.ts';
+import { join, dirname, extname, basename, relative } from 'node:path';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { type TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
+import { readToolFileDeclaration } from '#cli/checks/run/command/placeholders.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/checks/run/copy/scratch.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { readTsconfig, listSourceFiles, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
@@ -37,10 +42,13 @@ import {
  * @param projects the project scopes and parsed configurations.
  * @returns repository-relative compiler inputs for the scratch copy.
  */
-function compilerInputs(session: Session, projects: Iterable<readonly [string, TypeScriptConfiguration]>): string[] {
+function listCompilerInputs(
+    session: Session,
+    projects: Iterable<readonly [string, TypeScriptConfiguration]>,
+): string[] {
     return [...projects]
         .flatMap(([scope, config]) => [
-            ...config.configurationFiles,
+            ...config.tsconfigFiles,
             ...listSourceFiles(session.root, scope, session.reads, config).map((source) => source.fileName),
         ])
         .map((path) => convertToPosixPath(relative(session.root, path)))
@@ -54,7 +62,7 @@ function compilerInputs(session: Session, projects: Iterable<readonly [string, T
  * @param config the compiler options.
  * @returns the scope-owned compiler project.
  */
-function scopeCompilerProject(
+function buildScopeCompilerProject(
     session: Session,
     scope: string,
     config: TypeScriptConfiguration,
@@ -83,16 +91,55 @@ function selectReferenceProject(project: ReturnType<typeof readTsconfigProject>)
 }
 
 /**
+ * Locate one scope's generated project without parsing another scope's authored options.
+ * @param session the repository inventory, settings, and generated files.
+ * @param planned the JavaScript check and its owning scope.
+ * @returns the existing generated project with this scope's content.
+ */
+function findJavascriptProject(session: Session, planned: PlannedCheck): string {
+    const toolFile = readToolFileDeclaration(session, planned, extractToolFileName(JSCONFIG_FILE)) as WholeToolFile;
+    const paths = new Set([
+        toolFile.target,
+        ...session.scopes.map(({ scope }) =>
+            join(
+                dirname(toolFile.target),
+                basename(toolFile.target, extname(toolFile.target)),
+                scope.path,
+                basename(toolFile.target),
+            ),
+        ),
+    ]);
+    using files = openFiles(session.root);
+    for (const path of paths) {
+        const written = files.read(path);
+        if (written === undefined) continue;
+        const expected = buildJsconfig({
+            session,
+            selection: planned.scope,
+            manifest: planned.manifest as Manifest,
+            scopes: session.scopes,
+            files: session.repository.files,
+            manifests: session.neededToolManifests,
+            toolFile,
+            targetPath: path,
+            level: session.settingsFile.settings.level,
+        });
+        if (written.bytes.toString('utf8') === expected) return path;
+    }
+    throw new Error(`Missing JavaScript tool file: ${toolFile.target}`);
+}
+
+/**
  * Checks ordinary projects and every project named by a solution configuration.
  * @param session the repository session.
  * @param planned the compiler check for one scope.
  * @returns compiler findings and the shared tool execution status.
  */
-export async function tsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const project = readTsconfigProject(
         session.root,
         planned.scope.scope.path,
-        coveredInputs(session, planned)
+        listCoveredInputs(session, planned)
             .filter((file) => file.tags.includes('typescript'))
             .map((file) => file.path),
         session.reads,
@@ -101,7 +148,7 @@ export async function tsc(session: Session, planned: PlannedCheck): Promise<Chec
     const prerequisites =
         references === undefined
             ? []
-            : compilerInputs(
+            : listCompilerInputs(
                   session,
                   [...references.projects].map(([path, config]) => [
                       convertToPosixPath(relative(session.root, dirname(path))),
@@ -139,18 +186,18 @@ export async function tsc(session: Session, planned: PlannedCheck): Promise<Chec
  * @param planned the JavaScript compiler check.
  * @returns compiler diagnostics with source paths and the command status.
  */
-export async function javascriptTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkJavascriptTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.scope.scope.path;
-    if (coveredInputs(session, planned).length === 0) return { ...emptyResult(planned), fileCount: 0 };
-    const target = convertToPosixPath(join(TOOL_FILE_DIRECTORY, scope, JSCONFIG_FILE));
+    if (listCoveredInputs(session, planned).length === 0) return { ...buildBaseResult(planned, session), fileCount: 0 };
+    const target = findJavascriptProject(session, planned);
     const generated = readTsconfig(session.root, join(session.root, target), session.reads);
     if (generated === undefined) throw new Error(`Missing JavaScript tool file: ${target}`);
     const project = {
         ...generated,
-        ...scopeCompilerProject(session, scope, generated),
+        ...buildScopeCompilerProject(session, scope, generated),
     };
-    if (project.fileNames.length === 0) return { ...emptyResult(planned), fileCount: 0 };
-    const prerequisites = compilerInputs(session, [[scope, project]]);
+    if (project.fileNames.length === 0) return { ...buildBaseResult(planned, session), fileCount: 0 };
+    const prerequisites = listCompilerInputs(session, [[scope, project]]);
     using folder = await copyIntoScratch(checkCopyInputs(checkInput(session, planned), [target, ...prerequisites]));
     const scratch = folder.path;
     const generatedPath = join(scratch, target);
@@ -170,7 +217,7 @@ export async function javascriptTsc(session: Session, planned: PlannedCheck): Pr
             exclude: [],
         }),
     );
-    const command = [...JAVASCRIPT_TSC_COMMAND, ...TSC_PLAIN_OUTPUT];
+    const command = [...JAVASCRIPT_TSC_COMMAND, generatedPath, ...TSC_PLAIN_OUTPUT];
     appendBuildMetadata(command, project.options, scratch, JSCONFIG_TSBUILDINFO);
     const result = await runCheckCommand(session, planned, {
         command: command,

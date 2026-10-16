@@ -1,7 +1,6 @@
 # React Native
 
-These rules cover React Native and Expo apps: components, lists, styles, navigation, native data, and releases.
-The React rules apply first. These add what a phone changes.
+Read this rule when you change a React Native or Expo app. Read the React rule first.
 
 ## Components and touch
 
@@ -28,7 +27,6 @@ The React rules apply first. These add what a phone changes.
 
 - Type the route parameters of every screen, and pass ids through them, not whole objects.
 - A screen loads its own data from the id it receives.
-- Do not keep server data in a global store by hand. Use a query cache that knows about refetching and staleness.
 - Stop a subscription, a timer, and a listener when the screen loses focus or unmounts.
 
 ## Native data and secrets

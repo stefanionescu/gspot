@@ -7,3 +7,5 @@ export const TSC_CONFIG_INPUT_PATHS = ['extends', 'files', 'include', 'exclude']
 export const TSC_COMPILER_INPUT_PATHS = ['baseUrl', 'rootDir', 'rootDirs', 'typeRoots'] as const;
 export const TSC_PATHS_BASE_REQUIRED = 'The compiler did not supply the TypeScript paths base.';
 export const TSC_CONFIGURATION_REQUIRED = 'A captured TypeScript configuration is missing.';
+
+export const TYPESCRIPT_TSCONFIG_CHECK = 'typescript/tsconfig';

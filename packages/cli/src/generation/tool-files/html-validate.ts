@@ -21,7 +21,7 @@ function buildHtmlValidateFile(context: ToolFileContext): string {
     const rules: Record<string, unknown> = { ...HTML_RULES, ...(isBuilt ? HTML_BUILT_OVERRIDES : {}) };
     for (const rule of [
         ...(isAll ? [] : HTML_ALL_RULES),
-        ...rulesOff(isBuilt ? 'site/html-validate' : 'html/validate'),
+        ...rulesOff(isBuilt ? 'site/html-validate' : 'html/html-validate'),
     ])
         rules[rule] = 'off';
     const document = {

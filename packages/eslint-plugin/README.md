@@ -1,28 +1,44 @@
-# gspot ESLint Plugin
+# @gspothq/eslint-plugin
 
-ESLint rules for private environment reads in client code, trivial files and functions,
-and the layout of imports and files. The
-[gspot](https://github.com/stefanionescu/gspot) CLI sets this plugin up for you. You can also
-use it on its own with Node.js 22.12 or newer and ESLint 9.38.0 or newer.
+The ESLint plugin checks code that AI coding agents often write. It finds files and functions that only
+forward a call, exports that only rename a value, and imports through index files. It also finds comments
+mixed into import blocks and private environment variables read in client code.
+
+The [gspot CLI](https://www.npmjs.com/package/@gspothq/cli) sets this plugin up for you. Install it yourself
+only when you run ESLint without gspot.
+
+**Documentation:** [rule reference](https://generativespotting.com/reference/eslint-plugin/)
 
 ## Contents
 
+- [Requirements](#requirements)
 - [Install](#install)
-- [Configure](#configure)
-- [Example](#example-a-private-variable-in-client-code)
-- [Rule reference](#rule-reference)
+- [Use the recommended rules](#use-the-recommended-rules)
+- [Use all rules](#use-all-rules)
 - [Check TypeScript](#check-typescript)
+- [Rules](#rules)
 - [License](#license)
+
+## Requirements
+
+- Node.js 22.12 or newer.
+- ESLint 9.38.0 or newer, with a flat configuration file such as `eslint.config.mjs`. ESLint 10 works too.
+- For TypeScript files: TypeScript 4.8.4 or newer and older than 6.1.0, and `@typescript-eslint/parser`.
 
 ## Install
 
-```shell
-npm install --save-dev --save-exact @gspothq/eslint-plugin
-```
+Install the plugin and ESLint as development dependencies:
 
-## Configure
+| Package manager | Command                                                |
+| --------------- | ------------------------------------------------------ |
+| npm             | `npm install --save-dev @gspothq/eslint-plugin eslint` |
+| pnpm            | `pnpm add --save-dev @gspothq/eslint-plugin eslint`    |
+| Yarn            | `yarn add --dev @gspothq/eslint-plugin eslint`         |
+| Bun             | `bun add --dev @gspothq/eslint-plugin eslint`          |
 
-Add the recommended configuration to `eslint.config.mjs`:
+## Use the recommended rules
+
+Add the `recommended` configuration to `eslint.config.mjs`:
 
 ```javascript
 import gspot from '@gspothq/eslint-plugin';
@@ -30,71 +46,166 @@ import gspot from '@gspothq/eslint-plugin';
 export default [gspot.configs.recommended];
 ```
 
-`recommended` turns on `gspot/no-client-env` as an error.
-
-`gspot.configs.all` also turns on the house-style rules: header-first, import-boundaries,
-no-alias-exports, no-index-imports, no-trivial-files and no-trivial-functions.
-
-## Example: a private variable in client code
-
-The rule detects direct environment reads without declared globals. Declare runtime globals
-only to detect aliases such as `const host = process`.
-
-This client module reads a private environment variable:
+`recommended` turns on one rule, `gspot/no-client-env`, as an error. This client module, `search.js`, reads a
+private environment variable:
 
 ```javascript
 "use client";
 export const endpoint = process.env.PRIVATE_API_URL;
 ```
 
-`gspot/no-client-env` reports the read at line 2, column 25. Keep the private work on
-the server, and let the client call a public route:
+Run ESLint:
+
+```shell
+npx eslint search.js
+```
+
+ESLint exits with `1` and reports the finding. ESLint prints the full path of each file; the examples here
+shorten it.
+
+```text
+search.js
+  2:25  error  A client module may read only public environment variables (NEXT_PUBLIC_*, NODE_ENV). Keep private configuration in a server-only module  gspot/no-client-env
+```
+
+Keep the private read on the server, and let `search.js` call a route of your server:
 
 ```javascript
 "use client";
 export const endpoint = "/api/search";
 ```
 
-The corrected module has no finding. Your server still needs to answer `/api/search`.
+ESLint now reports nothing. Your server must still answer `/api/search`.
 
-## Rule reference
+## Use all rules
 
-The [generated rule reference](https://generativespotting.com/reference/eslint-plugin/) lists each
-rule's level, options, defaults, and examples.
-
-`import-boundaries` reads folder paths from the repository root. Paths start at `settings.gspot.root`, or at the working directory of
-ESLint when you omit the setting:
+`gspot.configs.all` turns on every rule except `gspot/require-server-only`:
 
 ```javascript
-{
-    settings: { gspot: { root: process.cwd() } },
-}
+import gspot from '@gspothq/eslint-plugin';
+
+export default [gspot.configs.all];
 ```
+
+The `all` configuration reports four findings in these two modules. The orders module contains this code:
+
+```javascript title="src/orders.js"
+import { calculateTotal } from './prices.js';
+// Order totals for the receipt page.
+import { formatPrice } from './format.js';
+
+function getItems(order) {
+    return order.items;
+}
+
+export function orderTotal(order) {
+    const subtotal = calculateTotal(getItems(order));
+    const total = subtotal + order.shipping;
+    return formatPrice(total);
+}
+
+export const getOrderTotal = orderTotal;
+```
+
+The formatting module contains this export:
+
+```javascript title="src/format.js"
+export { formatPrice } from './money.js';
+```
+
+ESLint exits with `1`:
+
+```text
+src/format.js
+  1:1  error  This file has only forwarding code, aliases, or small functions. Move that code to the module that uses it and delete this file  gspot/no-trivial-files
+
+src/orders.js
+   2:1   error  Put the comment above the imports or beside the code it explains                             gspot/no-comments-in-imports
+   5:1   error  This function has 1 statement. Inline it into its callers and delete it                      gspot/no-trivial-functions
+  15:14  error  getOrderTotal only renames orderTotal. Export the source value directly instead of an alias  gspot/no-alias-exports
+```
+
+To fix them, import `formatPrice` from the money module and delete the formatting module, move the comment above the
+first import, use `order.items` in place of `getItems(order)` and delete `getItems`, and delete `getOrderTotal`.
+`eslint --fix` moves the comment for you. ESLint then reports nothing.
 
 ## Check TypeScript
 
-The plugin brings no TypeScript parser. Install `@typescript-eslint/parser`, then select your
-TypeScript files:
+The plugin brings no TypeScript parser. Install the parser and TypeScript:
+
+```shell
+npm install --save-dev @typescript-eslint/parser typescript
+```
+
+Then select your TypeScript files:
 
 ```javascript
 import gspot from '@gspothq/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 
-export default [{
-    ...gspot.configs.all,
-    files: ['**/*.ts', '**/*.tsx'],
-    languageOptions: {
-        parser: tsParser,
-        parserOptions: { projectService: true },
+export default [
+    {
+        ...gspot.configs.all,
+        files: ['**/*.ts', '**/*.tsx'],
+        languageOptions: {
+            parser: tsParser,
+            parserOptions: { projectService: true },
+        },
     },
-}];
+];
 ```
 
-`projectService` provides the type information that `no-trivial-functions` needs to exempt
-methods declared by an interface or base class. `gspot.configs.all` includes that rule.
+`projectService` reads your `tsconfig.json`. `no-trivial-functions` needs that type information to leave
+alone a method that an interface or a base class declares.
 
-The package ships ECMAScript modules with
-TypeScript declarations, and `gspot.rules` holds each rule.
+## Rules
+
+| Rule                           | In          | What it finds                                                                                       |
+| ------------------------------ | ----------- | --------------------------------------------------------------------------------------------------- |
+| `gspot/no-client-env`          | recommended | Private environment reads in client modules.                                                        |
+| `gspot/no-comments-in-imports` | all         | Comments inside or right after the import block.                                                    |
+| `gspot/import-boundaries`      | all         | Relative imports that leave the nearest boundary folder.                                            |
+| `gspot/no-alias-exports`       | all         | Exported constants that only rename another value.                                                  |
+| `gspot/no-index-imports`       | all         | Imports that name an index file instead of the module that declares the value.                      |
+| `gspot/no-trivial-files`       | all         | Files with only forwarding code, aliases, re-exports, or small functions.                           |
+| `gspot/no-trivial-functions`   | all         | Named functions of two statements or fewer that are not exported and are used in at most one place. |
+| `gspot/require-server-only`    | none        | Selected server modules that do not import `server-only` or declare `use server`.                   |
+
+Each rule's page in the [rule reference](https://generativespotting.com/reference/eslint-plugin/) lists its
+options, defaults, and examples.
+
+### Turn on require-server-only
+
+No configuration turns on `gspot/require-server-only`, because only you know which files contain server code.
+Select them with `files`:
+
+```javascript
+import gspot from '@gspothq/eslint-plugin';
+
+export default [
+    {
+        files: ['src/server/**/*.js'],
+        plugins: { gspot },
+        rules: { 'gspot/require-server-only': 'error' },
+    },
+];
+```
+
+A selected file passes when it imports `server-only` or declares `"use server"`.
+
+### Set the root for import-boundaries
+
+`gspot/import-boundaries` reads boundary folders relative to the repository root. It uses the working folder
+of ESLint, unless you set the root:
+
+```javascript
+import gspot from '@gspothq/eslint-plugin';
+
+export default [
+    gspot.configs.all,
+    { settings: { gspot: { root: import.meta.dirname } } },
+];
+```
 
 ## License
 

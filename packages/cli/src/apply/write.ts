@@ -1,52 +1,60 @@
-import { expectedPaths } from '#cli/apply/stale.ts';
-import { type Writer } from '#cli/types/ownership.ts';
-import { type Session } from '#cli/types/planning.ts';
-import { readSettingsFile } from '#cli/settings/file.ts';
-import { writeVersionPin } from '#cli/apply/version-pin.ts';
+import { writePlans } from '#cli/ownership/writer.ts';
+import type { Session } from '#cli/types/planning.ts';
+import type { ApplyReport } from '#cli/types/apply.ts';
+import { listExpectedPaths } from '#cli/apply/stale.ts';
+import type { FileContents } from '#cli/types/system/files.ts';
+import type { Writer, WritePlan } from '#cli/types/ownership.ts';
 import { listStaleLockfiles } from '#cli/tools/project-lockfiles.ts';
-import type { ApplyReport, WriteRequest } from '#cli/types/apply.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { writePlans, notOverwrittenError } from '#cli/ownership/writer.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { planBlock, planRemoval, listStrayPaths, planManagedKeys, planReplacement } from '#cli/ownership/plans.ts';
 
 import {
-    VALE_CONFIG,
-    HOOKS_DIRECTORY,
+    HOOKS_PATH,
+    VALE_TOOL_FILE_PATH,
     NPM_TOOL_PROJECT_FILE,
     INSTALLED_TOOL_FOLDERS,
     PYTHON_TOOL_PROJECT_FILE,
 } from '#cli/config/system/locations.ts';
 
-// An installation no selected configuration needs any more goes whole, and so do the Vale packages once nothing checks prose.
-function pruneToolFolders(log: Writer, retained: WriteRequest['retained']): void {
-    for (const [kind, keep] of [
-        ['npm', retained.packages],
-        ['python', retained.python],
-        ['vale', retained.prose],
+/**
+ * Explain which files need review before replacement.
+ * @param paths the destinations that contain unreviewed authored files.
+ * @returns the refusal with the apply command to retry.
+ */
+function buildPreservedFilesError(paths: string[]): Error {
+    return new Error(
+        `These files were not overwritten by gspot: ${paths.join(', ')}. Move them aside, then run gspot apply.`,
+    );
+}
+
+function removeUnusedToolFolders(log: Writer, paths: ReadonlySet<string>): void {
+    for (const [path, keep] of [
+        [INSTALLED_TOOL_FOLDERS.npm, paths.has(NPM_TOOL_PROJECT_FILE)],
+        [INSTALLED_TOOL_FOLDERS.python, paths.has(PYTHON_TOOL_PROJECT_FILE)],
+        [INSTALLED_TOOL_FOLDERS.vale, paths.has(VALE_TOOL_FILE_PATH)],
     ] as const) {
-        if (keep) continue;
-        log.files.removeTree(INSTALLED_TOOL_FOLDERS[kind]);
+        if (!keep) log.files.deleteTree(path);
     }
 }
 
-/**
- * Writes generated files and removes recorded files no configuration needs. Plans precede writes.
- *
- * @param session the current settings and file inventory.
- * @param log the locked file writer.
- * @param request generated files, pruning settings, and reviewed originals.
- */
-function writeGenerated(session: Session, log: Writer, request: WriteRequest): void {
-    const { generated, expectedPaths: expected, report, retained, reviewedOriginals } = request;
-    const toolFiles = generated.fileEdits.map((output) => {
-        const plan = planManagedKeys(log, output.path, output.changes);
-        return reviewedOriginals?.has(output.path) === true
-            ? { ...plan, before: reviewedOriginals.get(output.path) }
-            : plan;
-    });
+function addInstallationNote(session: Session, generated: GenerationResult, report: ApplyReport): void {
+    const dependenciesChanged = generated.files.some(
+        (file) =>
+            report.written.includes(file.path) &&
+            (file.kind === 'lock' || [NPM_TOOL_PROJECT_FILE, PYTHON_TOOL_PROJECT_FILE].includes(file.path)),
+    );
+    const hasDrift = listStaleLockfiles(session, generated.files).some((lockfile) => lockfile.kind !== undefined);
+    if (dependenciesChanged || hasDrift) report.notes.push('Tool dependencies need installation. Run: gspot install');
+}
+
+function buildReplacementPlans(
+    generated: GenerationResult,
+    log: Writer,
+    reviewedOriginals: ReadonlyMap<string, FileContents | undefined> | undefined,
+): WritePlan[] {
     const authorized = new Map(reviewedOriginals);
-    const replacements = generated.files.map((file) => {
+    return generated.files.map((file) => {
         // Replace reviewed originals and files with merge conflict markers.
         const read = file.kind === 'lock' ? file.read : authorized.get(file.path);
         const replacement = {
@@ -61,50 +69,25 @@ function writeGenerated(session: Session, log: Writer, request: WriteRequest): v
         });
         return authorized.has(file.path) ? { ...plan, before: authorized.get(file.path) } : plan;
     });
-    const blocks = generated.blocks.map((block) => planBlock(log, block.path, block.block, block.style));
-    const generatedPlans = [...replacements, ...blocks, ...toolFiles];
-    // Pruning restores only recorded files no selected owner needs.
-    const pruning = listStrayPaths(session, expected).map((path) => planRemoval(log, path));
-    const plans = [...generatedPlans, ...pruning];
-    const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
-    if (reviewedOriginals !== undefined && conflicts.length > 0)
-        throw notOverwrittenError(conflicts, 'run gspot apply');
-    writePlans(
-        log,
-        plans.filter((plan) => plan.status !== 'preserved'),
-    );
-    pruneToolFolders(log, retained);
-    report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
-    report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
-    report.updated.push(
-        ...[...blocks, ...toolFiles].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
-    );
-    report.removed.push(...pruning.filter((plan) => plan.status !== 'preserved').map(({ path }) => path));
-    if ([...report.removed, ...report.written].some((path) => path.startsWith(`${HOOKS_DIRECTORY}/`)))
-        report.notes.push('Git hooks changed. Run: gspot install');
-    if (conflicts.length > 0) throw notOverwrittenError(conflicts, 'run gspot apply');
 }
 
 /**
- * Apply generated plans through the repository's ownership log.
+ * Plan, write, and report generated file changes under the repository writer lock.
  *
  * @param session the configuration and repository reads.
  * @param generated the generated files with resolved lockfiles.
- * @param log the command's locked ownership log.
+ * @param log the file writer for this command.
  * @param options reviewed originals authorized for replacement.
  *
+ * @param options.reviewedOriginals the file contents reviewed before the command asked for approval.
  * @returns generated changes.
  */
 export function writeGeneratedFiles(
     session: Session,
     generated: GenerationResult,
     log: Writer,
-    options?: Pick<WriteRequest, 'reviewedOriginals'>,
+    options?: { reviewedOriginals?: ReadonlyMap<string, FileContents | undefined> | undefined },
 ): ApplyReport {
-    // Generation requires a valid settings. Refuse errors before writing proposed files.
-
-    if (readSettingsFile(session.root).text !== session.settingsFile.text)
-        throw new Error('The gspot.toml file changed while gspot was running. Run the command again.');
     const reviewedOriginals = options?.reviewedOriginals;
     const report: ApplyReport = {
         written: [],
@@ -113,29 +96,39 @@ export function writeGeneratedFiles(
         updated: [],
         notes: [...generated.notes],
     };
-    const paths = expectedPaths(session, generated);
-    writeGenerated(session, log, {
-        generated,
-        expectedPaths: paths,
-        report,
-        retained: {
-            prose: paths.has(VALE_CONFIG),
-            packages: paths.has(NPM_TOOL_PROJECT_FILE),
-            python: paths.has(PYTHON_TOOL_PROJECT_FILE),
-        },
-        reviewedOriginals,
+    const paths = listExpectedPaths(session, generated);
+    const fileEditPlans = generated.fileEdits.map((output) => {
+        const plan = planManagedKeys(log, output.path, output.changes);
+        return reviewedOriginals?.has(output.path) === true
+            ? { ...plan, before: reviewedOriginals.get(output.path) }
+            : plan;
     });
-    const dependenciesChanged = generated.files.some(
-        (file) =>
-            report.written.includes(file.path) &&
-            (file.kind === 'lock' || [NPM_TOOL_PROJECT_FILE, PYTHON_TOOL_PROJECT_FILE].includes(file.path)),
+    const replacements = buildReplacementPlans(generated, log, reviewedOriginals);
+    const blocks = generated.blocks.map((block) => planBlock(log, block.path, block.block, block.style));
+    const generatedPlans = [...replacements, ...blocks, ...fileEditPlans];
+    // Remove generated destinations that no selected configuration needs.
+    const pruning = listStrayPaths(session, paths).map((path) => planRemoval(log, path));
+    const plans = [...generatedPlans, ...pruning];
+    const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
+    if (reviewedOriginals !== undefined && conflicts.length > 0) throw buildPreservedFilesError(conflicts);
+    writePlans(
+        log,
+        plans.filter((plan) => plan.status !== 'preserved'),
     );
-    const hasDrift = listStaleLockfiles(session, generated.files).some((lockfile) => lockfile.kind !== undefined);
-    if (dependenciesChanged || hasDrift) report.notes.push('Tool dependencies need installation. Run: gspot install');
+    removeUnusedToolFolders(log, paths);
+    report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
+    report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
+    report.updated.push(
+        ...[...blocks, ...fileEditPlans].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
+    );
+    report.removed.push(...pruning.filter((plan) => plan.status !== 'preserved').map(({ path }) => path));
+    if ([...report.removed, ...report.written].some((path) => path.startsWith(`${HOOKS_PATH}/`)))
+        report.notes.push('Git hooks changed. Run: gspot install');
+    if (conflicts.length > 0) throw buildPreservedFilesError(conflicts);
+    addInstallationNote(session, generated, report);
     if (generated.fileEdits.length > 0)
         report.notes.push(
             'Keys that gspot no longer manages stay in your files. Review shared tool files after removing a configuration.',
         );
-    writeVersionPin(log);
     return report;
 }

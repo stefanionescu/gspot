@@ -37,7 +37,7 @@ export const JAVASCRIPT_EXCLUSIONS = ['**/eslint.config.mjs', '**/eslint.config.
 
 export const JAVASCRIPT_EXTENSIONS = ['js', 'mjs', 'cjs', 'jsx'] as const;
 
-/** Standalone source projects use native Node resolution and leave JSX for the project runtime. */
+/** Standalone source projects use Node resolution and leave JSX for the project runtime. */
 export const TYPESCRIPT_DEFAULTS = {
     target: 'ES2022',
     module: 'NodeNext',

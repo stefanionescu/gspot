@@ -82,21 +82,7 @@ export type Pyproject = {
         | undefined;
 };
 
-export type PoetrySettings =
-    | {
-          dependencies?: Record<string, string | Record<string, unknown> | Record<string, unknown>[]> | undefined;
-          group?:
-              | Record<
-                    string,
-                    {
-                        dependencies?:
-                            | Record<string, string | Record<string, unknown> | Record<string, unknown>[]>
-                            | undefined;
-                    }
-                >
-              | undefined;
-      }
-    | undefined;
+export type PoetrySettings = NonNullable<NonNullable<Pyproject['tool']>['poetry']>;
 
 /** A Python dependency version or its package-manager options. */
 export type PythonDependency = string | Record<string, unknown> | Record<string, unknown>[];

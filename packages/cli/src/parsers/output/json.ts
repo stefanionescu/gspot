@@ -4,7 +4,7 @@ import { getValueAt } from '#cli/system/values.ts';
 import { JSON_START } from '#cli/config/parsers/output.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
 import { parseReport } from '#cli/parsers/output/formats.ts';
-import type { Finding } from '#cli/types/execution/check.ts';
+import type { Finding } from '#cli/types/checks/run/check.ts';
 import { type ReportInput, type JsonFindingSpec } from '#cli/types/parsers/output.ts';
 
 // Findings from a tool that prints JSON: the manifest names the list location and the field for each value.

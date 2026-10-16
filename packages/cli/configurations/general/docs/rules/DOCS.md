@@ -1,5 +1,7 @@
 # Documentation
 
+Read this rule when you write or change documentation.
+
 ## Before you write
 
 Read the implementation and existing pages. Identify the reader, their task, starting state,
@@ -43,6 +45,11 @@ Keep authentication, retries, and advanced variants outside minimal examples unl
 
 Start troubleshooting with the observable symptom and common causes. Diagnose before a reset or
 other destructive recovery. Preserve exact public errors and remove private data from examples.
+
+Do not write the current release number in prose or examples. Write `<version>` and say once where to find the
+number, or generate the text from the package manifest.
+
+A test runs or parses each command and each settings file that a page shows.
 
 ## Reference pages
 

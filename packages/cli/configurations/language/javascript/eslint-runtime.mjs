@@ -51,7 +51,7 @@ function stripRuntimeGlobals(block, library) {
 }
 
 /**
- * Select the last runtime declaration that covers each native file path.
+ * Select the last runtime declaration that covers each file path.
  * @param {number} index the position of the runtime declaration represented by this matcher.
  * @param {{scope: string, includes: string[], excludes: string[]}[]} declarations the ordered runtime declarations.
  * @returns {function(string): boolean} whether a file belongs to this declaration after later overrides.

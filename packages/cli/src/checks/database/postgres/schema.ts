@@ -12,7 +12,7 @@ import type {
     SchemaAlterations,
 } from '#cli/types/checks/database.ts';
 
-function qualifyRelation(relation: RangeVar | undefined): string {
+function buildRelationName(relation: RangeVar | undefined): string {
     const schema = relation?.schemaname ?? '';
     return `${schema === '' ? PUBLIC_SCHEMA : schema}.${relation?.relname ?? ''}`;
 }
@@ -24,12 +24,12 @@ function forgetTable(state: SchemaState, table: string): void {
     state.indexes = state.indexes.filter((index) => index.table !== table);
 }
 
-function qualifyParts(parts: string[]): string {
+function joinNameParts(parts: string[]): string {
     return `${parts.at(SCHEMA_PART_INDEX) ?? PUBLIC_SCHEMA}.${parts.at(-1) ?? ''}`;
 }
 
 // The name Postgres gives an unnamed constraint: the table, the key columns except for a primary key, and a suffix.
-function constraintName(node: Constraint, table: string, kind: string, keys: string[]): string {
+function deriveConstraintName(node: Constraint, table: string, kind: string, keys: string[]): string {
     const declared = node.conname ?? '';
     if (declared !== '') return declared;
     const tableName = table.slice(table.indexOf('.') + 1);
@@ -61,7 +61,7 @@ function recordConstraint(state: SchemaState, at: Location, node: Constraint, co
             ? { keys: listNameParts(node.keys), columns: listNameParts(node.fk_attrs) }
             : { keys: [column], columns: [column] };
     const isForeign = kind === 'CONSTR_FOREIGN';
-    const name = constraintName(node, at.table, kind, isForeign ? columns : keys);
+    const name = deriveConstraintName(node, at.table, kind, isForeign ? columns : keys);
     const [first] = keys;
     if (!isForeign && first !== undefined)
         state.indexes.push({ table: at.table, name, column: first, constraint: name });
@@ -69,7 +69,7 @@ function recordConstraint(state: SchemaState, at: Location, node: Constraint, co
 }
 
 const readCreateTable: StatementReader<'CreateStmt'> = (statement, state, migration) => {
-    const table = qualifyRelation(statement.fields.relation);
+    const table = buildRelationName(statement.fields.relation);
     if (state.tables.has(table) && statement.fields.if_not_exists === true) return;
     forgetTable(state, table);
     const at = { migration, statement, table };
@@ -99,7 +99,7 @@ const ALTERATIONS: SchemaAlterations = {
 };
 
 const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, state, migration) => {
-    const at: Location = { migration, statement, table: qualifyRelation(statement.fields.relation) };
+    const at: Location = { migration, statement, table: buildRelationName(statement.fields.relation) };
     for (const command of listNodeFields(statement.fields.cmds, 'AlterTableCmd'))
         if (command.subtype !== undefined) ALTERATIONS[command.subtype]?.(state, at, command);
 };
@@ -110,11 +110,11 @@ const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
         const parts = listNameParts(item.items);
         switch (statement.fields.removeType) {
             case 'OBJECT_TABLE': {
-                forgetTable(state, qualifyParts(parts));
+                forgetTable(state, joinNameParts(parts));
                 break;
             }
             case 'OBJECT_INDEX': {
-                const name = qualifyParts(parts);
+                const name = joinNameParts(parts);
                 state.indexes = state.indexes.filter(
                     (index) => `${index.table.slice(0, index.table.indexOf('.'))}.${index.name}` !== name,
                 );
@@ -135,7 +135,7 @@ const READERS: SqlStatementReaders<void, [SchemaState, Migration]> = {
         const [first] = listNodeFields(statement.fields.indexParams, 'IndexElem');
         const column = first?.name ?? '';
         if (column === '') return;
-        const table = qualifyRelation(statement.fields.relation);
+        const table = buildRelationName(statement.fields.relation);
         state.indexes.push({ table, name: statement.fields.idxname ?? '', column, constraint: '' });
     },
 };

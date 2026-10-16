@@ -1,38 +1,38 @@
+import { openSession } from '#cli/session.ts';
+import { formatCount } from '#cli/system/text.ts';
 import { findRoot } from '#cli/repository/read.ts';
-import { findStaleFiles } from '#cli/apply/stale.ts';
+import { listStaleFiles } from '#cli/apply/stale.ts';
 import { type StaleFile } from '#cli/types/apply.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
+import { formatNotes } from '#cli/system/terminal.ts';
 import { type Session } from '#cli/types/planning.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { readVersionPin } from '#cli/apply/version-pin.ts';
-import { reportText } from '#cli/commands/save-settings.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { type CommandResult } from '#cli/types/terminal.ts';
-import { formatNotes, printResult } from '#cli/system/terminal.ts';
-import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/save-settings.ts';
+import { formatApplyReport } from '#cli/apply/save-settings.ts';
+import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/edit-settings.ts';
 
-function staleFilesText(drift: StaleFile[]): string {
-    const noun = drift.length === 1 ? 'file' : 'files';
-    const lines = [`${String(drift.length)} generated ${noun} need updating:`, ''];
+function formatStaleFiles(drift: StaleFile[]): string {
+    const lines = [`${formatCount(drift.length, 'generated file')} need updating:`, ''];
     for (const entry of drift) {
         const differences = (entry.diff ?? '').split('\n').map((line) => `    ${line}`);
         lines.push(`  ${entry.path}  ${entry.kind}`);
         if ((entry.diff ?? '') !== '') lines.push(...differences);
     }
-    lines.push(
-        '',
-        'Run gspot apply to write these files. apply keeps a generated file you edited; move it aside to get the new version.',
-    );
+    lines.push('', 'Run gspot apply to write these files.');
     return `${lines.join('\n')}\n`;
 }
 
 function planApply(session: Session): CommandResult {
     const generated = generate(session);
-    const drift = findStaleFiles(session, generated);
-    const summary = drift.length === 0 ? 'every generated file is up to date\n' : staleFilesText(drift);
+    const drift = listStaleFiles(session, generated);
+    const summary =
+        drift.length === 0
+            ? `No change: the ${formatCount(generated.files.length, 'generated file')} are up to date.\n`
+            : formatStaleFiles(drift);
     const text = summary + formatNotes(generated.notes);
     const pin = { from: readVersionPin(session.root), to: session.version };
     const json: DryRunJson = { dryRun: true, pin, drift, notes: generated.notes };
@@ -43,16 +43,17 @@ function planApply(session: Session): CommandResult {
 /**
  * Register the apply command.
  * @param program the command program
+ * @param onResult the sink that writes the completed command result.
  */
-export function registerApply(program: Command): void {
+function registerApply(program: Command, onResult: CommandCompletion): void {
     program
         .command('apply')
         .summary(COMMAND_HELP.apply.summary)
         .description(COMMAND_HELP.apply.description)
         .option('--dry-run', COMMAND_HELP.apply.options['--dry-run'])
         .action(async (flags) => {
-            printResult(
-                await applyCommand({
+            onResult(
+                await runApplyCommand({
                     cwd: process.cwd(),
                     isDryRun: flags.dryRun === true,
                 }),
@@ -65,7 +66,7 @@ export function registerApply(program: Command): void {
  * @param options the parsed flags
  * @returns the command result
  */
-export async function applyCommand(options: ApplyOptions): Promise<CommandResult> {
+async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
     const session = await openSession(root);
     if (options.isDryRun) {
@@ -74,5 +75,7 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
     }
     using log = openWriter(root);
     const report = writeGeneratedFiles(session, generate(session), log);
-    return { text: reportText(report), json: report, exitCode: 0 };
+    return { text: formatApplyReport(report), json: report, exitCode: 0 };
 }
+
+export { registerApply };

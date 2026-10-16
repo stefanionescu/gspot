@@ -1,8 +1,16 @@
 import { PYTHON_VERSION } from '#cli/config/parsers/dependency-files.ts';
 
+export const PYTHON_ENVIRONMENT_FOLDER = '.venv';
+
 /** Arguments shared by uv execution and its installation preview. */
 export const UV_LOCKFILE_ARGUMENTS = ['lock'] as const;
-export const UV_VENV_ARGUMENTS = ['venv', '--python', PYTHON_VERSION, '--allow-existing', '.venv'] as const;
+export const UV_VENV_ARGUMENTS = [
+    'venv',
+    '--python',
+    PYTHON_VERSION,
+    '--allow-existing',
+    PYTHON_ENVIRONMENT_FOLDER,
+] as const;
 export const UV_INSTALL_ARGUMENTS = ['sync', '--locked', '--no-install-project'] as const;
 export const INDEX_SETTINGS = new Set([
     'index',
@@ -18,7 +26,6 @@ export const INDEX_SETTINGS = new Set([
 ]);
 export const URL_SCHEME = /^[a-z][a-z0-9+.-]*:/iu;
 
-export const PYTHON_ENVIRONMENT_FOLDER = '.venv';
 export const UV_TOOL = 'uv';
 export const UV_SETTINGS_FILE = 'uv.toml';
 export const UV_RUN_ARGUMENTS = ['run', '--no-sync'] as const;

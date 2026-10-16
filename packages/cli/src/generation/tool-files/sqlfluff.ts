@@ -4,7 +4,7 @@ import {
     SQL_FILE_EXTENSIONS,
     SQLFLUFF_CAPITALISATION,
     SQLFLUFF_RECOMMENDED_OFF,
-} from '#cli/config/generation/tool-file-sources.ts';
+} from '#cli/config/generation/tool-files.ts';
 /**
  * Build sqlfluff file from the selected settings.
  * @param context the repository, scope settings, tool declaration, and output path.

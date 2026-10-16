@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { emptyResult } from '#cli/checks/run/report.ts';
+import { buildBaseResult } from '#cli/checks/run/report.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
-import { type CheckResult } from '#cli/types/execution/check.ts';
+import { type CheckResult } from '#cli/types/checks/run/check.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { SEMGREP_TOOL } from '#cli/config/checks/general/security.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
@@ -12,14 +12,13 @@ import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
  * @param planned the selected scope and its authored rules.
  * @returns the required rule paths, relative to the repository.
  */
-function semgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
+function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
     const { selected, scope, view } = planned.scope;
-    const generatedPaths = session.generatedPaths();
     const declared = selected.flatMap((manifest) =>
         manifest.toolFiles
             .filter((file) => file.tool.includes(SEMGREP_TOOL) && file.target.endsWith('.yml'))
             .filter((file) => file.level !== 'all' || session.settingsFile.settings.level === 'all')
-            .map((file) => buildScopeTarget(scope.path, file, generatedPaths)),
+            .map((file) => buildScopeTarget(scope.path, file, session.toolFiles().targets)),
     );
     return [...new Set([...declared, ...view.options('tools.semgrep').rule_files])];
 }
@@ -30,12 +29,12 @@ function semgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
  * @param planned the check for one scope and its required rules.
  * @returns findings and execution failures.
  */
-export async function semgrep(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkSemgrep(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const command = planned.check.command as string[];
-    const rules = semgrepRuleFiles(session, planned);
+    const rules = listSemgrepRuleFiles(session, planned);
     if (rules.length === 0)
         return {
-            ...emptyResult(planned),
+            ...buildBaseResult(planned, session),
             status: 'skipped',
             note: 'No selected configuration or tools.semgrep.rule_files supplies local rules.',
         };

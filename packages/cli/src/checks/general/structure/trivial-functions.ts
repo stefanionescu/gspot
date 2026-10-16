@@ -1,10 +1,11 @@
 import type { Node } from 'web-tree-sitter';
-import { findingAt } from '#cli/checks/finding.ts';
 import { isDocstring } from '#cli/parsers/python.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import type { IsSubstantial, CountedLanguage } from '#cli/types/checks/general.ts';
 import { CONVENTION_SOURCES } from '#cli/checks/general/structure/convention-sources.ts';
+import { checkExportedFunctions } from '#cli/checks/general/structure/exported-functions.ts';
 
 import {
     BARE_NAME_NODES,
@@ -20,8 +21,8 @@ import {
     COUNTED_FUNCTION_NODES,
 } from '#cli/config/checks/general/structure.ts';
 
-// Native executable bodies exclude Python docstrings and Swift declarations without bodies.
-function functionBody(node: Node, language: CountedLanguage): Node[] {
+// Executable bodies exclude Python docstrings and Swift declarations without bodies.
+function extractFunctionBody(node: Node, language: CountedLanguage): Node[] {
     const body = node.childForFieldName('body') ?? node;
     const siblings =
         language === 'swift'
@@ -58,7 +59,7 @@ function isSubstantialFunction(node: Node, language: CountedLanguage, limit: num
     const body = node.childForFieldName('body') ?? node;
     const siblings = body.namedChildren;
     const children = siblings.filter((child) => !(language === 'python' && isDocstring(child, siblings)));
-    return executableStatements(children, language) > limit;
+    return countExecutableStatements(children, language) > limit;
 }
 
 // Whether an assignment does more than forward a name: it declares a type, or it holds a substantial value.
@@ -125,9 +126,9 @@ function isSubstantial(node: Node, language: CountedLanguage, limit: number): bo
  * Count executable statements, excluding nested function bodies and type-only declarations.
  * @param nodes the body nodes.
  * @param language the parsing language.
- * @returns the count.
+ * @returns executable totals for this body while nested declarations contribute at most one.
  */
-function executableStatements(nodes: Node[], language: CountedLanguage): number {
+function countExecutableStatements(nodes: Node[], language: CountedLanguage): number {
     let count = 0;
     for (const node of nodes) {
         if (node.type.includes('comment') || TYPE_ALIAS_NODES.has(node.type)) continue;
@@ -135,27 +136,27 @@ function executableStatements(nodes: Node[], language: CountedLanguage): number 
             if (!node.type.startsWith('lambda')) count += 1;
             continue;
         }
-        count += STATEMENT_COUNTS[language](node) + executableStatements(node.namedChildren, language);
+        count += STATEMENT_COUNTS[language](node) + countExecutableStatements(node.namedChildren, language);
     }
     return count;
 }
 
 /**
  * Whether all declarations contain only imports, aliases, forwarding statements, or trivial functions.
- * @param root the file's syntax tree.
+ * @param syntaxRoot the parsed document whose top-level statements determine substance.
  * @param language the parsing language.
  * @param limit the statement count at or under which a function counts as trivial.
  * @returns whether the file holds nothing substantial.
  */
-function isTrivialFile(root: Node, language: CountedLanguage, limit: number): boolean {
-    const siblings = root.namedChildren;
+function isTrivialFile(syntaxRoot: Node, language: CountedLanguage, limit: number): boolean {
+    const siblings = syntaxRoot.namedChildren;
     const statements = siblings.filter(
         (node) => !node.type.includes('comment') && !(language === 'python' && isDocstring(node, siblings)),
     );
     return statements.length > 0 && !statements.some((child) => isSubstantial(child, language, limit));
 }
 
-function accessorName(node: Node, label: string): string {
+function formatAccessorName(node: Node, label: string): string {
     let declaration = node.parent;
     while (declaration !== null) {
         const type = declaration.type;
@@ -173,12 +174,12 @@ function accessorName(node: Node, label: string): string {
  * @param node the body declaration.
  * @returns its existing finding label.
  */
-function swiftFunctionName(node: Node): string {
+function formatSwiftFunctionName(node: Node): string {
     const name =
         node.childForFieldName('name')?.text ??
         (SWIFT_FUNCTION_LABELS as Readonly<Record<string, string>>)[node.type] ??
         'function';
-    return SWIFT_ACCESSOR_NODES.has(node.type) ? accessorName(node, name) : name;
+    return SWIFT_ACCESSOR_NODES.has(node.type) ? formatAccessorName(node, name) : name;
 }
 
 /**
@@ -186,24 +187,24 @@ function swiftFunctionName(node: Node): string {
  * @param input the selected source files and their language-specific statement limits.
  * @returns findings with the original statement counts and locations.
  */
-async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
+async function checkTrivialFunctions(input: CheckInput): Promise<Finding[]> {
     const parsed = await parseCached(input, CONVENTION_SOURCES);
     const files: Finding[] = [];
     const functions = parsed.flatMap((source) => {
-        const limit = input.scope.view.limit('min_function_statements', source.language);
+        const limit = input.scope.view.limit('trivial_function_statements', source.language);
         const findings = (source.captures.get('function') ?? []).flatMap((node) => {
-            const body = functionBody(node, source.language);
-            const count = executableStatements(body, source.language);
+            const body = extractFunctionBody(node, source.language);
+            const count = countExecutableStatements(body, source.language);
             return count > limit
                 ? []
                 : [
-                      findingAt(
+                      buildFinding(
                           input,
                           { file: source.path, line: node.startPosition.row + 1 },
                           'trivial-function',
-                          trivialText(
+                          formatTrivialFunction(
                               source.language === 'swift'
-                                  ? swiftFunctionName(node)
+                                  ? formatSwiftFunctionName(node)
                                   : (node.childForFieldName('name')?.text ?? 'function'),
                               count,
                               limit,
@@ -218,7 +219,7 @@ async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
                     : (source.tree.rootNode.namedChildren.find((node) => !node.type.includes('comment'))?.startPosition
                           .row ?? 0) + 1;
             files.push(
-                findingAt(
+                buildFinding(
                     input,
                     { file: source.path, line },
                     'trivial-file',
@@ -228,7 +229,7 @@ async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
         }
         return findings;
     });
-    return [...functions, ...files];
+    return [...checkExportedFunctions(input), ...functions, ...files];
 }
 
 /**
@@ -238,9 +239,9 @@ async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
  * @param limit the statement limit.
  * @returns the message.
  */
-function trivialText(name: string, count: number, limit: number): string {
+function formatTrivialFunction(name: string, count: number, limit: number): string {
     const statements = count === 1 ? '1 statement' : `${String(count)} statements`;
     return `${name} has ${statements}. Functions with ${String(limit)} or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.`;
 }
 
-export { trivialFunctions };
+export { checkTrivialFunctions };

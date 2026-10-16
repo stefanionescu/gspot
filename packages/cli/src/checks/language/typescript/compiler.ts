@@ -1,25 +1,32 @@
 import ts from 'typescript';
 import assert from 'node:assert/strict';
 import { findScope } from '#cli/repository/scopes.ts';
-import { emptyResult } from '#cli/checks/run/report.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { buildBaseResult } from '#cli/checks/run/report.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
-import { type CheckResult } from '#cli/types/execution/check.ts';
+import { type CheckResult } from '#cli/types/checks/run/check.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
-import { type ScopeSelection } from '#cli/types/settings/values.ts';
+import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { type Level, type Manifest } from '#cli/types/configurations.ts';
 import { type TsconfigInput } from '#cli/types/generation/typescript.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
-import { type TypeScriptReferenceCopy } from '#cli/types/checks/language.ts';
-import { DOT_GSPOT, TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
+import type { TypeScriptReferenceCopy } from '#cli/types/checks/language.ts';
+import { DOT_GSPOT, TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import { type TypeScriptProject, type TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
+import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 
+import {
+    TSCONFIG_FILE,
+    TSC_PLAIN_OUTPUT,
+    TSC_BUILD_COMMAND,
+    TSC_PROJECT_COMMAND,
+    TSCONFIG_TSBUILDINFO,
+} from '#cli/config/parsers/tsconfig.ts';
 import {
     COMPILER_OPTIONS,
     RECOMMENDED_OPTIONS,
@@ -28,19 +35,12 @@ import {
     NESTJS_COMPILER_OPTIONS,
 } from '#cli/config/generation/typescript.ts';
 import {
-    TSCONFIG_FILE,
-    TSC_PLAIN_OUTPUT,
-    TSC_BUILD_COMMAND,
-    TSC_PROJECT_COMMAND,
-    TSCONFIG_TSBUILDINFO,
-    TYPESCRIPT_TSCONFIG_CHECK,
-} from '#cli/config/parsers/tsconfig.ts';
-import {
     TSBUILDINFO_FLAG,
     TSC_REFERENCE_BUNDLE,
     TSC_CONFIG_INPUT_PATHS,
     TSC_PATHS_BASE_REQUIRED,
     TSC_COMPILER_INPUT_PATHS,
+    TYPESCRIPT_TSCONFIG_CHECK,
     TSC_CONFIGURATION_REQUIRED,
     TSC_REFERENCE_OUTPUT_FOLDER,
 } from '#cli/config/checks/language/typescript.ts';
@@ -53,8 +53,8 @@ const CHECKED_PROJECTS = { create: () => new Map<string, string>() };
  * @param input the source and scratch roots.
  * @returns the updated paths.
  */
-function copiedCompilerPath(value: unknown, input: TypeScriptReferenceCopy): unknown {
-    if (Array.isArray(value)) return value.map((path: unknown) => copiedCompilerPath(path, input));
+function convertToScratchPath(value: unknown, input: TypeScriptReferenceCopy): unknown {
+    if (Array.isArray(value)) return value.map((path: unknown) => convertToScratchPath(path, input));
     if (typeof value !== 'string' || !isAbsolute(value) || !isInside(relative(input.root, value))) return value;
     return join(input.scratchRoot, relative(input.root, value));
 }
@@ -62,9 +62,9 @@ function copiedCompilerPath(value: unknown, input: TypeScriptReferenceCopy): unk
 /**
  * Preserve compiler inputs while keeping reference resolution and outputs in the owned tree.
  * @param input the captured configuration and its source and scratch roots.
- * @returns the configuration for the native compiler in the scratch copy.
+ * @returns the configuration for the TypeScript compiler in the scratch copy.
  */
-function referenceTsconfig(
+function buildReferenceTsconfig(
     input: TypeScriptReferenceCopy & { path: string; config: TypeScriptConfiguration },
 ): Record<string, unknown> {
     const { root, scratchRoot, path, config } = input;
@@ -76,13 +76,13 @@ function referenceTsconfig(
                   Object.entries(config.options.paths).map(([name, aliases]) => {
                       const base = config.options.baseUrl ?? config.options['pathsBasePath'];
                       assert.ok(typeof base === 'string', TSC_PATHS_BASE_REQUIRED);
-                      return [name, aliases.map((alias) => copiedCompilerPath(resolve(base, alias), input))];
+                      return [name, aliases.map((alias) => convertToScratchPath(resolve(base, alias), input))];
                   }),
               );
     return {
         ...config.raw,
         ...Object.fromEntries(
-            TSC_CONFIG_INPUT_PATHS.map((name) => [name, copiedCompilerPath(config.raw[name], input)]),
+            TSC_CONFIG_INPUT_PATHS.map((name) => [name, convertToScratchPath(config.raw[name], input)]),
         ),
         references: config.projectReferences?.map((reference) => ({
             ...reference,
@@ -91,7 +91,7 @@ function referenceTsconfig(
         compilerOptions: {
             ...config.raw.compilerOptions,
             ...Object.fromEntries(
-                TSC_COMPILER_INPUT_PATHS.map((name) => [name, copiedCompilerPath(config.options[name], input)]),
+                TSC_COMPILER_INPUT_PATHS.map((name) => [name, convertToScratchPath(config.options[name], input)]),
             ),
             ...(paths === undefined ? {} : { paths }),
             outDir: output,
@@ -104,7 +104,7 @@ function referenceTsconfig(
 
 /**
  * Keep incremental metadata inside the caller's scratch folder.
- * @param command the compiler argv.
+ * @param command the compiler command arguments.
  * @param options the resolved options.
  * @param scratch the owned metadata directory.
  * @param name the metadata basename.
@@ -123,31 +123,32 @@ function appendBuildMetadata(
  * Restore source paths in a compiler run in a scratch copy.
  * @param result the result, which may have no launched command.
  * @param scratch the scratch copy root.
- * @param root the source root.
+ * @param sourceRoot the original checkout path that replaces scratch-copy prefixes.
  * @returns the result with source command paths.
  */
-function restoreCommandPaths(result: CheckResult, scratch: string, root: string): CheckResult {
+function restoreCommandPaths(result: CheckResult, scratch: string, sourceRoot: string): CheckResult {
     if (result.command === undefined) return result;
     return {
         ...result,
-        command: result.command.map((part) => part.replaceAll(scratch, () => root)),
+        command: result.command.map((part) => part.replaceAll(scratch, () => sourceRoot)),
     };
 }
 
 /**
  * Share ancestor checks without suppressing another invocation for the same scope.
  * @param reads the run cache.
- * @param check the project check identity.
- * @param check.check the compiler or option check identifier.
- * @param check.path the tsconfig location that identifies a compiled project.
- * @param check.scope the invoking scope.
- * @param check.required the compiler flags for this invocation.
+ * @param projectCheck the project check identity.
+ * @param projectCheck.check the check identifier.
+ * @param projectCheck.path the tsconfig location that identifies a compiled project.
+ * @param projectCheck.scope the invoking scope.
+ * @param projectCheck.required the compiler flags for one scope.
  * @returns whether another scope already checks this project with these flags.
  */
-function projectChecked(
+function isProjectChecked(
     reads: ReadCache,
-    { check, path, scope, required }: { check: string; path: string; scope: string; required: Record<string, boolean> },
+    projectCheck: { check: string; path: string; scope: string; required: Record<string, boolean> },
 ): boolean {
+    const { check, path, scope, required } = projectCheck;
     const checked = getCachedValue(reads, CHECKED_PROJECTS);
     const key = JSON.stringify([
         check,
@@ -177,19 +178,23 @@ async function runTsc(
     const required = checkedTsconfigOptions(session.settingsFile.settings.level, planned.scope);
     const target = project === undefined ? join(session.root, planned.scope.scope.path, TSCONFIG_FILE) : project.path;
     if (
-        projectChecked(session.reads, {
+        isProjectChecked(session.reads, {
             check: planned.check.name,
             path: target,
             scope: planned.scope.scope.path,
             required: required,
         })
     )
-        return { ...emptyResult(planned), status: 'skipped', note: 'An ancestor compiler check covers this project.' };
+        return {
+            ...buildBaseResult(planned, session),
+            status: 'skipped',
+            note: 'An ancestor compiler check covers this project.',
+        };
     const command: string[] = [];
     if (project !== undefined && (project.config.projectReferences ?? []).length > 0) {
         command.push(...TSC_BUILD_COMMAND, project.path);
     } else {
-        const generatedPath = join(metadataRoot, TOOL_FILE_DIRECTORY, planned.scope.scope.path, TSCONFIG_FILE);
+        const generatedPath = join(metadataRoot, TOOL_FILES_FOLDER, planned.scope.scope.path, TSCONFIG_FILE);
         writeScopeTsconfig(session, planned.scope, generatedPath);
         command.push(...TSC_PROJECT_COMMAND, generatedPath);
         appendBuildMetadata(command, project?.config.options, metadataRoot, TSCONFIG_TSBUILDINFO);
@@ -230,7 +235,7 @@ function writeReferenceProjects(input: TypeScriptReferenceCopy): void {
     for (const [path, config] of configurations) {
         const target = join(scratchRoot, relative(root, path));
         chmodSync(target, PRIVATE_FILE);
-        writeFileSync(target, JSON.stringify(referenceTsconfig({ ...input, path, config })));
+        writeFileSync(target, JSON.stringify(buildReferenceTsconfig({ ...input, path, config })));
     }
 }
 
@@ -242,7 +247,7 @@ function writeReferenceProjects(input: TypeScriptReferenceCopy): void {
  * @returns the compiler configuration.
  */
 function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
-    const { root, typeRootsFolder, reads, target, scope, files, scopeEntries, options } = input;
+    const { root, typeRootsFolder, reads, target, scope, files, scopes, options } = input;
     const authored = readTsconfigProject(
         root,
         scope,
@@ -251,7 +256,7 @@ function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
                 (file) =>
                     (file.tags.includes('typescript') ||
                         DECLARATION_EXTENSIONS.includes(extractExtension(file.path))) &&
-                    findScope(file.path, scopeEntries).path === scope,
+                    findScope(file.path, scopes).path === scope,
             )
             .map((file) => file.path),
         reads,
@@ -278,12 +283,11 @@ function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
         (file) =>
             file.kind === 'source' &&
             (file.tags.includes('typescript') || DECLARATION_EXTENSIONS.includes(extractExtension(file.path))) &&
-            findScope(file.path, scopeEntries).path === scope,
+            findScope(file.path, scopes).path === scope,
     );
     // Svelte reads these extra extensions through include; tsc ignores them as unsupported sources.
     const components = files.filter(
-        (file) =>
-            file.kind === 'source' && file.tags.includes('svelte') && findScope(file.path, scopeEntries).path === scope,
+        (file) => file.kind === 'source' && file.tags.includes('svelte') && findScope(file.path, scopes).path === scope,
     );
     return {
         compilerOptions: {
@@ -348,15 +352,14 @@ function writeScopeTsconfig(
         target: convertToPosixPath(relative(session.root, target)),
         scope: scope.scope.path,
         files: session.repository.files,
-        scopeEntries: session.repository.scopes,
+        scopes: session.repository.scopes,
         options: checkedTsconfigOptions(session.settingsFile.settings.level, scope),
     });
 }
 
 export {
     runTsc,
-    buildTsconfig,
-    projectChecked,
+    isProjectChecked,
     writeScopeTsconfig,
     appendBuildMetadata,
     restoreCommandPaths,

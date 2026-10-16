@@ -1,13 +1,13 @@
 import { z } from 'zod';
-import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { parse } from '@decimalturn/toml-patch';
 import { isRecord } from '#cli/system/values.ts';
 import { join, posix, relative } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
 import type { Parsed } from '#cli/types/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { walkSqlTree } from '#cli/parsers/sql/postgres.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -15,8 +15,8 @@ import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { readCachedText, readCachedBytes } from '#cli/system/files/reads.ts';
-import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
-import { toolFindings, toolOutputDetail } from '#cli/checks/run/command/output.ts';
+import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
+import { formatOutputTail, assertToolFindings } from '#cli/checks/run/command/output.ts';
 import type { DenoLintReport, SupabaseConfiguration } from '#cli/types/checks/platform.ts';
 
 import {
@@ -34,7 +34,7 @@ import {
     SUPABASE_CONFIG_TOML,
 } from '#cli/config/checks/platform/supabase.ts';
 
-function denoConfigArguments(root: string, folder: string): string[] {
+function buildDenoJsonArguments(root: string, folder: string): string[] {
     const path = DENO_CONFIG_FILES.map((name) => join(root, folder, name)).find(
         (entry) => statSync(entry, { throwIfNoEntry: false }) !== undefined,
     );
@@ -48,12 +48,12 @@ function normalizeDenoPath(root: string, locator: string): string {
 }
 
 // The first error from `deno check` with its reported file and line.
-function firstError(input: CheckInput, folder: string, stderr: string): Finding {
+function parseDenoCheckError(input: CheckInput, folder: string, stderr: string): Finding {
     const output = stripVTControlCharacters(stderr);
     const place = DENO_LOCATION.exec(output)?.groups;
     const file = place?.['file'] === undefined ? `${folder}/index.ts` : normalizeDenoPath(input.root, place['file']);
     const first = output.split('\n').find((line) => line.trim() !== '') ?? 'The deno check command failed.';
-    return findingAt(input, { file, line: Number(place?.['line'] ?? 1) }, 'type-error', first.trim());
+    return buildFinding(input, { file, line: Number(place?.['line'] ?? 1) }, 'type-error', first.trim());
 }
 
 /**
@@ -61,7 +61,7 @@ function firstError(input: CheckInput, folder: string, stderr: string): Finding 
  * @param input the selected project scope.
  * @returns the parsed configuration or its diagnostic.
  */
-function readConfigToml(input: CheckInput): Parsed<SupabaseConfiguration> | undefined {
+function readProjectFile(input: CheckInput): Parsed<SupabaseConfiguration> | undefined {
     const local = posix.join(input.scope.scope.path, SUPABASE_CONFIG_TOML);
     const text = readCachedText(input.reads, local);
     if (text === undefined) return undefined;
@@ -126,11 +126,11 @@ function listFunctionEntries(input: CheckInput): string[] {
 
 /**
  * Every storage bucket of the project file has a policy on storage.objects that names it, in some migration.
- * @param input the check input.
+ * @param input the project settings and migrations that declare buckets and their access policies.
  * @returns the findings.
  */
-export async function supabaseStoragePolicies(input: CheckInput): Promise<Finding[]> {
-    const read = readConfigToml(input);
+export async function checkSupabaseStoragePolicies(input: CheckInput): Promise<Finding[]> {
+    const read = readProjectFile(input);
     const at = { file: posix.join(input.scope.scope.path, SUPABASE_CONFIG_TOML), line: 1 };
     if (read === undefined || 'error' in read) return []; // supabase/project-file reports project syntax errors.
     const { value: config } = read;
@@ -155,7 +155,7 @@ export async function supabaseStoragePolicies(input: CheckInput): Promise<Findin
     return (config.storage?.buckets === undefined ? [] : Object.keys(config.storage.buckets))
         .filter((bucket) => !policed.has(bucket))
         .map((bucket) =>
-            findingAt(
+            buildFinding(
                 input,
                 at,
                 'bucket-policy',
@@ -166,23 +166,27 @@ export async function supabaseStoragePolicies(input: CheckInput): Promise<Findin
 
 /**
  * The deno lint findings of every edge function.
- * @param input the check input.
+ * @param input the edge-function entries and configured Deno tool environment.
  * @returns the findings.
  */
-export async function supabaseDenoLint(input: CheckInput): Promise<Finding[]> {
+export async function checkSupabaseDenoLint(input: CheckInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const entry of listFunctionEntries(input)) {
         const folder = posix.dirname(entry);
-        const argv = [...DENO_LINT_COMMAND, ...denoConfigArguments(input.root, folder), join(input.root, folder)];
-        const result = await runCheckTool(input, argv, { cwd: join(input.root, input.scope.scope.path) });
+        const commandArguments = [
+            ...DENO_LINT_COMMAND,
+            ...buildDenoJsonArguments(input.root, folder),
+            join(input.root, folder),
+        ];
+        const result = await runCheckTool(input, commandArguments, { cwd: join(input.root, input.scope.scope.path) });
         let report: DenoLintReport;
         try {
             report = denoLintReportSchema.parse(JSON.parse(result.stdout));
         } catch (error) {
-            throw new Error(toolOutputDetail(result, 'Deno lint returned invalid JSON diagnostics'), { cause: error });
+            throw new Error(formatOutputTail(result, 'Deno lint returned invalid JSON diagnostics'), { cause: error });
         }
         const broken = report.errors.map((entry) =>
-            findingAt(
+            buildFinding(
                 input,
                 { file: normalizeDenoPath(input.root, entry.file_path), line: 1 },
                 'syntax',
@@ -190,40 +194,44 @@ export async function supabaseDenoLint(input: CheckInput): Promise<Finding[]> {
             ),
         );
         const found = report.diagnostics.map((entry) =>
-            findingAt(
+            buildFinding(
                 input,
                 { file: normalizeDenoPath(input.root, entry.filename), line: entry.range.start.line },
                 entry.code,
                 entry.message,
             ),
         );
-        findings.push(...toolFindings(result, [...broken, ...found], 'deno lint'));
+        findings.push(...assertToolFindings(result, [...broken, ...found], 'deno lint'));
     }
     return findings;
 }
 
 /**
  * The first type error of every edge function, from deno check over its entry file.
- * @param input the check input.
+ * @param input the edge-function entries and project import settings.
  * @returns the findings.
  */
-export async function supabaseDenoCheck(input: CheckInput): Promise<Finding[]> {
+export async function checkSupabaseDenoTypes(input: CheckInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const entry of listFunctionEntries(input)) {
         const folder = posix.dirname(entry);
-        const argv = [...DENO_CHECK_COMMAND, ...denoConfigArguments(input.root, folder), join(input.root, entry)];
-        const result = await runCheckTool(input, argv, { cwd: join(input.root, input.scope.scope.path) });
-        if (result.code !== 0) findings.push(firstError(input, folder, result.stderr));
+        const commandArguments = [
+            ...DENO_CHECK_COMMAND,
+            ...buildDenoJsonArguments(input.root, folder),
+            join(input.root, entry),
+        ];
+        const result = await runCheckTool(input, commandArguments, { cwd: join(input.root, input.scope.scope.path) });
+        if (result.code !== 0) findings.push(parseDenoCheckError(input, folder, result.stderr));
     }
     return findings;
 }
 
 /**
  * Reports privileged Supabase keys outside edge functions and the configured test paths.
- * @param input the check input.
+ * @param input the source paths, edge-function folder, and permitted test patterns.
  * @returns the findings.
  */
-export function supabaseServiceRoleKey(input: CheckInput): Finding[] {
+export function checkServiceRoleKey(input: CheckInput): Finding[] {
     const folder = input.scope.view.options('supabase').functions_folder;
     const tests = input.scope.view.test_files;
     const isAllowed = buildPathMatcher([`${folder}/**`, ...tests]);
@@ -240,9 +248,9 @@ export function supabaseServiceRoleKey(input: CheckInput): Finding[] {
             .split('\n')
             .flatMap((text, index): Finding[] => {
                 if (ADMIN_KEY_NAMES.every((name) => !text.includes(name))) return [];
-                const diagnostic =
+                const message =
                     'This file names a privileged Supabase key, which bypasses row level security, outside the paths allowed to hold it.';
-                return [findingAt(input, { file: file.path, line: index + 1 }, 'admin-key', diagnostic)];
+                return [buildFinding(input, { file: file.path, line: index + 1 }, 'admin-key', message)];
             }),
     );
 }

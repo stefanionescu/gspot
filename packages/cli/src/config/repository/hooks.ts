@@ -1,6 +1,6 @@
-import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
+import { HOOKS_PATH } from '#cli/config/system/locations.ts';
 
-export const HUSKY_DIRECTORY = '.husky';
+export const HUSKY_PATH = '.husky';
 
 export const LEFTHOOK_NAMES = ['lefthook', 'lefthook-local'] as const;
 export const LEFTHOOK_PREFIXES = ['', '.', '.config/'] as const;
@@ -9,16 +9,10 @@ export const LEFTHOOK_EXTENSIONS = ['yml', 'yaml', 'toml', 'json', 'jsonc'] as c
 /** Hook managers can own tooling-only packages without gspot installing them. */
 export const HOOK_PACKAGES: ReadonlySet<string> = new Set(['husky', 'lefthook', 'lint-staged']);
 
-export const MISE_HOOK_DIRECTORY = '.mise/tasks/hook';
+export const MISE_HOOKS_PATH = '.mise/tasks/hook';
 
 /** Hook scripts keep their runner's names, including scripts nested beneath these folders. */
-export const HOOK_DIRECTORIES = [
-    HOOKS_DIRECTORY,
-    MISE_HOOK_DIRECTORY,
-    '.githooks',
-    HUSKY_DIRECTORY,
-    '.git-hooks',
-] as const;
+export const HOOK_FOLDERS = [HOOKS_PATH, MISE_HOOKS_PATH, '.githooks', HUSKY_PATH, '.git-hooks'] as const;
 
 /** Git's configured hook folder. */
 export const HOOKS_PATH_SETTING = 'core.hooksPath';

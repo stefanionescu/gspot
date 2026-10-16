@@ -3,10 +3,10 @@ import type { Template } from '#cli/types/settings/file.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { type FileCopy, type ReadCache } from '#cli/types/system/files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
+import { type ReadCache, type FileContents } from '#cli/types/system/files.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/selection.ts';
-import type { Repository, ScopeEntry, TrackedFile, ExistingTools } from '#cli/types/repository/inventory.ts';
+import type { Scope, Repository, TrackedFile, ExistingTools } from '#cli/types/repository/inventory.ts';
 
 type InitPlanInputs = {
     reads: ReadCache;
@@ -35,7 +35,7 @@ type InitPlan = {
 /** The authored configuration init replaces: what it read, what it deletes, and what stays for the developer. */
 type ReplacedFiles = {
     changed: InitFileRow[];
-    read: Map<string, FileCopy | undefined>;
+    read: Map<string, FileContents | undefined>;
     deleted: InitFileRow[];
     retained: InitFileRow[];
 };
@@ -43,7 +43,7 @@ type ReplacedFiles = {
 type SettingsDraft = InitAnswers & {
     template?: Template;
     configurations: string[];
-    scopes: ScopeEntry[];
+    scopes: Scope[];
     commitScopes?: string[];
 };
 
@@ -56,12 +56,13 @@ type InitAnswers = {
 
 /** Everything init computes before it asks to continue. */
 type InitPrepared = {
+    detection: DetectionSummary;
     session: Session;
     generated: GenerationResult;
     plan: InitPlan;
     settingsText: string;
     deleted: { path: string }[];
-    read: Map<string, FileCopy | undefined>;
+    read: Map<string, FileContents | undefined>;
 };
 
 /** The JSON the init command prints: the plan and the settings it wrote or showed in a dry run. */
@@ -76,7 +77,7 @@ type InitJson = {
 type DetectionSummary = {
     files: TrackedFile[];
     detected: ConfigurationEvidence[];
-    scopes: ScopeEntry[];
+    scopes: Scope[];
     tooling: ExistingTools;
     owned: string[];
     unowned: string[];
@@ -106,7 +107,7 @@ type InitDetection = {
     root: string;
     manifests: Map<string, Manifest>;
     files: TrackedFile[];
-    packageManifests: DependencyFile[];
+    dependencyFiles: DependencyFile[];
     options: Pick<InitOptions, 'configurations' | 'template'>;
     /** Whether the folder contains a Git repository; a configuration whose checks all read git stays out otherwise. */
     hasGit: boolean;
@@ -114,7 +115,7 @@ type InitDetection = {
 
 /** The configurations init selects: at the root, per scope, and the closure of both. */
 type InitSelection = {
-    scopes: ScopeEntry[];
+    scopes: Scope[];
     rootIds: string[];
     scopeConfigurations: Map<string, string[]>;
     selectedIds: Set<string>;
@@ -125,9 +126,9 @@ type InitSelection = {
 /** The inputs to init selection. */
 type InitInputs = {
     root: string;
-    repo: Repository;
-    packageManifests: DependencyFile[];
-    scopes: ScopeEntry[];
+    repository: Repository;
+    dependencyFiles: DependencyFile[];
+    scopes: Scope[];
     manifests: Map<string, Manifest>;
     options: Pick<InitOptions, 'configurations' | 'template'>;
 };

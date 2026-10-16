@@ -80,7 +80,7 @@ cwd = "scope"
 example = "The forced cast `value as! NSString` reports `force_cast`. Use a conditional cast and handle the failed conversion, or change the input contract so no cast is required."
 files = { extensions = [".swift"] }
 fix = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
-help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore swift/swiftlint --rule `<id>` --reason \"`<why>`\"."
+help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore swift/swiftlint --rule <id> --reason \"<why>\"`."
 level = "recommended"
 name = "swiftlint"
 output = { format = "json", fields = { file = "file", line = "line", column = "character", rule = "rule_id", message = "reason" } }
@@ -95,7 +95,7 @@ example = "A declaration beginning `func   greeting` reports `consecutiveSpaces`
 exit_codes = [1]
 files = { extensions = [".swift"] }
 fix = ["swiftformat", "--quiet", "--config", "{tool_file:swiftformat}", "{files}"]
-help = "Run gspot check --fix."
+help = "Run `gspot check --fix`."
 level = "recommended"
 name = "swiftformat"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?:error|warning): \\((?<rule>\\w+)\\) (?<message>.*)$" }

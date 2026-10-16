@@ -94,7 +94,7 @@ export function listCoveredFiles(
  * The root selection and each ancestor scope selection, deduplicated in order.
  * @param settings the declared selections.
  * @param settings.configurations the configurations the root selects.
- * @param settings.scope the keyed scopes, each with its written configuration choices.
+ * @param settings.scopes the keyed scopes, each with its written configuration choices.
  * @param settings.removed_configurations the manually removed configurations.
  * @param scope the scope path.
  * @param manifests every configuration manifest.
@@ -118,7 +118,7 @@ export function selectForScope(
     const choices = new Set<string>();
     const tables = [
         settings,
-        ...Object.entries(settings.scope)
+        ...Object.entries(settings.scopes)
             .filter(([ancestor]) => isInScope(scope, ancestor))
             .toSorted(([left], [right]) => compareScopeDepth(left, right))
             .map(([, entry]) => entry),

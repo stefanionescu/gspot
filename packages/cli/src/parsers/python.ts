@@ -16,8 +16,8 @@ import {
 
 /**
  * Every function of a module, nested ones included.
- * @param module the module.
- * @returns the functions.
+ * @param module the parsed syntax tree and its repository-relative filename.
+ * @returns declarations and lambdas with source nodes and executable body statements.
  */
 function listFunctions(module: PythonModule): PythonFunction[] {
     return module.tree.rootNode
@@ -113,20 +113,20 @@ function deletePythonTrees(parsed: PythonFiles): void {
 const PYTHON_SOURCES = { read: readPython, dispose: deletePythonTrees };
 
 // Bindings inside a function or class belong to that lexical scope.
-function bindingScope(node: Node): Node {
+function findDeclarationScope(node: Node): Node {
     let scope = node.parent ?? node;
     while (scope.parent !== null && !PYTHON_SCOPE_NODES.has(scope.type)) scope = scope.parent;
     return scope;
 }
 
 // Import aliases retain the actual module or member identity.
-function importName(node: Node) {
+function readImportName(node: Node) {
     if (node.type !== 'aliased_import') return { name: node.text, target: node.text };
     return { name: node.childForFieldName('alias')?.text, target: node.childForFieldName('name')?.text };
 }
 
-// Native parameters declare names rather than the names used by their default expressions.
-function bindingNames(node: Node): string[] {
+// Parameters declare names rather than the names used by their default expressions.
+function listDeclaredNames(node: Node): string[] {
     if (node.type === 'parameters')
         return node.namedChildren.flatMap((parameter) => {
             const name =
@@ -150,7 +150,7 @@ function importNames(node: Node): EnvironmentScope {
     if (node.type === 'import_statement') members = { [OS_MODULE]: OS_MODULE };
     else if (node.childForFieldName('module_name')?.text === OS_MODULE) members = OS_ENVIRONMENT_MEMBERS;
     for (const item of node.childrenForFieldName('name')) {
-        const { name, target } = importName(item);
+        const { name, target } = readImportName(item);
         if (name !== undefined && target !== undefined) entries.set(name, members[target]);
     }
     return entries;
@@ -170,11 +170,11 @@ function pythonNames(root: Node): EnvironmentNames {
         ]),
     ];
     for (const node of nodes) {
-        const scope = bindingScope(node).id;
+        const scope = findDeclarationScope(node).id;
         const names = entries.get(scope) ?? new Map<string, EnvironmentKind>();
         const declared = PYTHON_IMPORT_NODES.has(node.type)
             ? importNames(node)
-            : new Map<string, EnvironmentKind>(bindingNames(node).map((name) => [name, undefined]));
+            : new Map<string, EnvironmentKind>(listDeclaredNames(node).map((name) => [name, undefined]));
         for (const [name, kind] of declared) names.set(name, kind);
         entries.set(scope, names);
     }
@@ -184,9 +184,9 @@ function pythonNames(root: Node): EnvironmentNames {
 // Resolve lexical imports before applying the environment read rule.
 function environmentKind(node: Node, name: string, entries: EnvironmentNames): EnvironmentKind {
     for (
-        let scope: Node | null = bindingScope(node);
+        let scope: Node | null = findDeclarationScope(node);
         scope !== null;
-        scope = scope.parent === null ? null : bindingScope(scope)
+        scope = scope.parent === null ? null : findDeclarationScope(scope)
     ) {
         const names = entries.get(scope.id);
         if (names?.has(name) === true) return names.get(name);
@@ -194,7 +194,7 @@ function environmentKind(node: Node, name: string, entries: EnvironmentNames): E
     return undefined;
 }
 
-// Native reads name an object or call target, never the text inside a string.
+// Reads name an object or call target, never the text inside a string.
 function readReceiver(node: Node): Node | null {
     if (node.type === 'attribute') return node.childForFieldName('object');
     if (node.type === 'call') {
@@ -242,13 +242,13 @@ function readEnvironmentLiteral(node: Node): Node | null | undefined {
 
 /**
  * Read Python environment access and configured reader calls through lexical import aliases.
- * @param root the parsed Python source.
+ * @param syntaxRoot the parsed Python source.
  * @param readers the configured environment reader functions.
  * @returns the environment reads and their source positions.
  */
-function readPythonEnvironment(root: Node, readers: readonly string[]): EnvironmentRead[] {
-    const entries = pythonNames(root);
-    const nodes = root.descendantsOfType(['attribute', 'call', 'identifier']);
+function readPythonEnvironment(syntaxRoot: Node, readers: readonly string[]): EnvironmentRead[] {
+    const entries = pythonNames(syntaxRoot);
+    const nodes = syntaxRoot.descendantsOfType(['attribute', 'call', 'identifier']);
     const environment = new Set(
         nodes
             .filter((node) =>

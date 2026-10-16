@@ -34,7 +34,7 @@ async function buildParser(name: GrammarName): Promise<Parser> {
 /**
  * The parser for a grammar, built on first use.
  * @param name the grammar.
- * @returns the parser.
+ * @returns the shared promise, including a pending grammar load.
  */
 function getParser(name: GrammarName): Promise<Parser> {
     let parser = state.parsers.get(name);

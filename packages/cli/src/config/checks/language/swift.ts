@@ -10,7 +10,7 @@ export const MACOS_PRIVATE_PATH = /(?<before>^|[\s=])\/private\/(?<folder>tmp|va
 export const RULE_SUFFIX = /^(?<text>.*\S)\s+\((?<rule>[a-z_]+)\)$/u;
 
 /** Selected source copies shared by the compiler, analyzer, Periphery, and coverage. */
-export const BUILD_SOURCE_DIRECTORY = 'source';
+export const BUILD_SOURCE_FOLDER = 'source';
 
 /** Package commands for each Swift build task. */
 export const PACKAGE_COMMANDS = {
@@ -19,7 +19,7 @@ export const PACKAGE_COMMANDS = {
     coverage: ['test', '--enable-code-coverage'],
 } as const;
 
-/** Native Xcode operations for each independent Swift consumer. */
+/** Xcode operations for each independent Swift consumer. */
 export const XCODE_COMMANDS = {
     compile: ['build-for-testing'],
     analyze: ['clean', 'build-for-testing'],

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { pathContainerSchema } from '#cli/configurations/schema/parts.ts';
 import type { NamedCategory, NamingDefaults, NamingOverride } from '#cli/types/checks/general.ts';
 import { CASE_NAMES, ACRONYM_STYLES, NAMED_CATEGORIES } from '#cli/config/checks/general/naming.ts';
@@ -9,7 +9,7 @@ const identifierCategory = z.enum(NAMED_CATEGORIES) satisfies z.ZodType<NamedCat
 const reservedCategories = z
     .array(identifierCategory)
     .min(1)
-    .meta({ description: 'Identifier categories where the term is permitted, such as properties or directories.' });
+    .meta({ description: 'Identifier categories where the term is permitted, such as properties or folders.' });
 
 const namingGroupSchema = z.strictObject({ terms: z.array(z.string()) } satisfies SchemaShape<
     NamingDefaults['groups'][string]
@@ -45,6 +45,7 @@ export const namingDefaultsSchema = z.strictObject({
         .catchall(namingGroupSchema),
     reserved: z.record(z.string(), reservedCategories),
     allowed_names: z.array(z.string()),
+    allowed_phrases: z.array(z.string()),
     languages: z.record(
         z.string(),
         z.strictObject({

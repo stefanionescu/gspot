@@ -6,7 +6,7 @@ import { expect } from 'bun:test';
  * @param promise the promise expected to reject.
  * @returns the message of the error it rejected with.
  */
-export async function rejection(promise: Promise<unknown>): Promise<string> {
+export async function captureRejection(promise: Promise<unknown>): Promise<string> {
     try {
         await promise;
     } catch (error) {
@@ -22,7 +22,7 @@ export async function rejection(promise: Promise<unknown>): Promise<string> {
  * @returns the matcher.
  */
 
-export function containing<T>(shape: NoInfer<Partial<T>>): T {
+export function matchFields<T>(shape: NoInfer<Partial<T>>): T {
     return expect.objectContaining(shape) as T;
 }
 
@@ -32,7 +32,7 @@ export function containing<T>(shape: NoInfer<Partial<T>>): T {
  * @returns the matcher.
  */
 
-export function containingAll<T>(items: NoInfer<T[]>): T[] {
+export function matchItems<T>(items: NoInfer<T[]>): T[] {
     return expect.arrayContaining(items) as T[];
 }
 
@@ -42,6 +42,6 @@ export function containingAll<T>(items: NoInfer<T[]>): T[] {
  * @returns the matcher.
  */
 
-export function textContaining(part: string): string {
+export function matchSubstring(part: string): string {
     return expect.stringContaining(part) as string;
 }

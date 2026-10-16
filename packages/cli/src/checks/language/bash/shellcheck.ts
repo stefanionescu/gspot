@@ -1,5 +1,5 @@
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { type CheckResult } from '#cli/types/execution/check.ts';
+import { type CheckResult } from '#cli/types/checks/run/check.ts';
 import { runCommandGroups } from '#cli/checks/run/command/check.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { BATS_TAG, DEFAULT_DIALECT, SHELLCHECK_DIALECT_FLAG } from '#cli/config/repository/inventory.ts';
@@ -10,7 +10,7 @@ import { BATS_TAG, DEFAULT_DIALECT, SHELLCHECK_DIALECT_FLAG } from '#cli/config/
  * @param planned the ShellCheck command and selected files.
  * @returns findings from every dialect group, with shared failure handling.
  */
-export async function shellcheck(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkShellcheck(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const groups = Map.groupBy(planned.files, (file) => {
         if (file.path.endsWith(`.${BATS_TAG}`) || file.path.endsWith(`.${DEFAULT_DIALECT}`)) return undefined;
         if (readCachedBytes(session.reads, file.path).toString('utf8').startsWith('#!')) return undefined;

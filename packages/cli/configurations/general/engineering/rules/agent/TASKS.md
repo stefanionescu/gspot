@@ -1,6 +1,6 @@
 # Task Runner
 
-Rules for `mise` tasks, `package.json` scripts, `Makefile` targets, or the project's runner.
+Read this rule when you change `mise` tasks, `package.json` scripts, a `Makefile`, or another task runner.
 
 ## Task behavior
 
@@ -17,3 +17,7 @@ Rules for `mise` tasks, `package.json` scripts, `Makefile` targets, or the proje
 - Use the runner's declarative commands and dependency ordering. Keep substantial parsing,
   branching, and process control in the code that implements that behavior.
 - Give each task a concise description in the runner's task list.
+- Do not compute a task argument by running code inside the task definition, such as a template `exec()` that
+  evaluates a source file. Put the value where the tool reads it, or in the task script.
+- Write a command line once. When tasks differ in one part, write one task with an argument for that part.
+- A task script runs commands. It does not import the internals of a workspace package.

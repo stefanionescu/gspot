@@ -8,7 +8,7 @@ languages = true
 
 [[check]]
 example = "With the TypeScript configuration at level `all`, `feature/only.ts` reports `lone-file` when it is the folder's only code file. Move it beside related files and update references, or keep the folder when a second substantial file belongs to that feature. Adding `feature/second.ts` makes this folder contain two code files."
-help = "Move the file up beside its neighbors, or use gspot ignore structure/lone-files with paths and a reason."
+help = "Move the file up beside its neighbors, or use `gspot ignore structure/lone-files` with paths and a reason."
 level = "all"
 name = "lone-files"
 runs = "scope"
@@ -41,7 +41,7 @@ example = "A Python, Bash, or SQL source file above its language's code-line cei
 files = { extensions = [".sh", ".bash", ".zsh", ".bats", ".py", ".pyi", ".sql", ".pgsql", ".psql"], tags = ["shebang:shell"], kinds = ["source"] }
 help = "Split the file by its responsibility, or raise its limits.`<language>`.file_lines with a reason."
 level = "all"
-name = "file-lines"
+name = "long-files"
 runs = "scope"
 stage = "commit"
 summary = "Checks source code lines against each language's ceiling."
@@ -49,7 +49,7 @@ why = "A long file hides independent responsibilities from the reader."
 
 [[check]]
 example = "A Bash function that only calls another function reports its declaration. Inline that call into its callers and remove the forwarding function."
-files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
+files = { extensions = [".ts", ".tsx", ".js", ".mjs", ".cjs", ".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
 help = "Inline a forwarding function at its calls and delete it. Split independent statements into the files that use them."
 level = "all"
 name = "trivial-functions"
@@ -63,7 +63,7 @@ example = "A Python file outside architecture.roles.environment_readers that rea
 files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
 help = "Move the environment read into a file listed in architecture.roles.environment_readers, then pass the value to callers."
 level = "all"
-name = "env-reads"
+name = "environment-readers"
 runs = "scope"
 stage = "commit"
 summary = "Finds environment reads outside the files listed in architecture.roles.environment_readers."

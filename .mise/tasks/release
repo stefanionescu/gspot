@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#MISE description="Publish both npm packages from a tested main commit, deploy the docs site, then tag the CLI version and create its GitHub release."
+#MISE depends=["build"]
+set -euo pipefail
+
+branch=$(git branch --show-current)
+changes=$(git status --porcelain)
+if [[ ${branch} != main || -n ${changes} ]]; then
+    printf 'Run the release on main with no changes.\n' >&2
+    exit 1
+fi
+commit=$(git rev-parse HEAD)
+for workflow in ci.yml gspot.yml; do
+    conclusion=$(gh run list --workflow "${workflow}" --commit "${commit}" --json conclusion --jq '.[0].conclusion')
+    if [[ ${conclusion} != success ]]; then
+        printf '%s has not passed on %s.\n' "${workflow}" "${commit}" >&2
+        exit 1
+    fi
+done
+
+# The plugin goes first, because the CLI pins its version. npm pkg get prints JSON strings, so the quotes go.
+for package in packages/eslint-plugin packages/cli; do
+    name=$(npm pkg get name --prefix "${package}")
+    version=$(npm pkg get version --prefix "${package}")
+    spec="${name//\"/}@${version//\"/}"
+    if npm view "${spec}" version >/dev/null 2>&1; then
+        printf '%s is already on npm.\n' "${spec}"
+    else
+        npm publish "./${package}"
+    fi
+done
+
+# The site shows the commit that was just published.
+mise run docs:deploy
+
+cli_version=$(npm pkg get version --prefix packages/cli)
+tag="v${cli_version//\"/}"
+git tag "${tag}"
+git push origin "${tag}"
+gh release create "${tag}" --verify-tag --title "${tag}" --generate-notes

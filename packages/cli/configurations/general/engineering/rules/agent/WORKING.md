@@ -1,5 +1,7 @@
 # Working in a Repository
 
+Read this rule before you change anything in the repository.
+
 ## Running processes
 
 Check for a running instance before you start a dev server, a build watcher, an emulator, or a
@@ -30,13 +32,16 @@ the behavior. When you add a file, tell the user why that module needs it.
 
 ## Verification and tests
 
-A check reports what it finds as a finding, and `gspot explain <check>` describes the check.
-
 Do not run verification broader than the change. Run no full test suite, build, scan, or Docker
 check unless the user asks for it or the checks of the repository include it.
 
 Write tests when the user asks or a check requires them. When your change breaks a test, fix the
 test. Language and framework instructions say how to write a test, not when.
+
+## Rules and checks
+
+Run `gspot explain <check>` to see what a check checks and how to fix its findings. When a rule and a check
+disagree, follow the check, and tell the user which rule and which check disagree.
 
 ## No defensive logic
 
@@ -48,21 +53,22 @@ permissions, and external services. Trust an internal invariant once the public 
 
 <!-- level: all -->
 
-Keep one implementation for each concept in the module that implements it. Extract shared behavior only
-when real callers need the same behavior and the extraction removes complexity. Do not add
-forwarding wrappers, one-caller helpers, or abstractions for hypothetical reuse. Prefer local
-duplication when callers have different responsibilities. Remove abstractions whose cost exceeds their benefit.
+Keep one implementation of each concept, and one copy of each table of values, in the module that uses it.
+Extract shared code only when two or more callers need the same behavior now.
 
-- An abstraction that gains flags, modes, optional branches, or caller-specific conditions needs a different design. Do not box loosely related behavior into one function with a parameter that
-  picks the behavior.
-- Inline a wrong abstraction into each caller, delete the branches each caller does not need,
-  and extract only the common behavior that remains.
-- You can prepare the code to support the requested change: first keep the
-  behavior, then change it, in separate commits.
-- Replace positional booleans and ambiguous arguments with an options parameter using named fields.
-- Pass a function in only when it replaces several option flags across real callers.
-- Prefer plain functions, data structures, and explicit data flow to classes, factories,
-  strategies, and inheritance. Push state and I/O outward, and keep the core close to pure.
+- Delete a function whose body only calls another function or returns one expression. Call the other function
+  directly. Keep a callback that an API needs.
+- Keep a helper with one caller when it names a step and holds real logic. Do not split code into helpers only
+  to pass a size or complexity limit. Split it by the steps it performs.
+- An abstraction that gains flags, modes, or caller-specific branches needs a different design. Do not combine
+  loosely related behavior in one function with a parameter that picks the behavior.
+- A function takes at most four parameters, and no positional boolean. Pass other values as named fields: an
+  options object, keyword-only parameters, or argument labels.
+- To remove a wrong abstraction, inline it into each caller, delete the branches each caller does not need, and
+  extract only the common behavior that remains.
+- Pass data, not a callback, unless the callback replaces several flags across real callers.
+- Prefer plain functions, data, and explicit data flow to classes, factories, strategies, and inheritance. Push state
+  and I/O outward, and keep the core close to pure.
 
 ## No backward compatibility
 
@@ -79,5 +85,4 @@ When you replace or rename something:
 
 <!-- level: all -->
 
-Group constants, types, and schemas by the behavior they belong to. Do not mirror the source
-tree in tests.
+Group constants, types, and schemas by the behavior they belong to.

@@ -1,173 +1,198 @@
-import { vale } from '#cli/checks/general/prose.ts';
-import { semgrep } from '#cli/checks/general/security.ts';
-import { expoDoctor } from '#cli/checks/framework/expo.ts';
-import { jscpd } from '#cli/checks/general/duplication.ts';
-import { htmlScripts } from '#cli/checks/language/html.ts';
-import { svelteCheck } from '#cli/checks/framework/svelte.ts';
-import { deptry } from '#cli/checks/language/python/deptry.ts';
-import { siteBuild } from '#cli/checks/framework/site/build.ts';
-import { bashSafety } from '#cli/checks/language/bash/safety.ts';
-import { commitlintPushed } from '#cli/checks/general/commits.ts';
-import { allowedLicenses } from '#cli/checks/general/licenses.ts';
+import { checkVale } from '#cli/checks/general/prose.ts';
+import { checkSemgrep } from '#cli/checks/general/security.ts';
+import { checkExpoDoctor } from '#cli/checks/framework/expo.ts';
+import { checkJscpd } from '#cli/checks/general/duplication.ts';
+import { checkHtmlScripts } from '#cli/checks/language/html.ts';
+import { checkNextjsTsc } from '#cli/checks/framework/nextjs.ts';
+import { runSvelteCheck } from '#cli/checks/framework/svelte.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
-import { translationsMessages } from '#cli/checks/translations.ts';
-import { ansibleLint } from '#cli/checks/infrastructure/ansible.ts';
-import { shellcheck } from '#cli/checks/language/bash/shellcheck.ts';
-import { pydoclint } from '#cli/checks/language/python/pydoclint.ts';
-import { swiftTestsCoverage } from '#cli/checks/testing/coverage.ts';
-import { nginxConfigTest } from '#cli/checks/infrastructure/nginx.ts';
-import { bashWrappers } from '#cli/checks/language/bash/forwarders.ts';
-import { nextjsTsc, nextConfig } from '#cli/checks/framework/nextjs.ts';
-import { fileLines } from '#cli/checks/general/structure/file-lines.ts';
-import { loneFiles } from '#cli/checks/general/structure/lone-files.ts';
-import { suppressions } from '#cli/checks/general/gspot/suppressions.ts';
-import { missingPaths, requiredFiles } from '#cli/checks/general/docs.ts';
-import { dockerignore } from '#cli/checks/infrastructure/dockerignore.ts';
-import { actionlint } from '#cli/checks/infrastructure/github-actions.ts';
-import { type CheckImplementations } from '#cli/types/execution/check.ts';
-import { unusedAssets } from '#cli/checks/framework/site/unused-assets.ts';
-import { swiftTestsSkipReasons } from '#cli/checks/testing/swift-tests.ts';
-import { unusedEntries } from '#cli/checks/general/gspot/unused-entries.ts';
-import { bashDocComments } from '#cli/checks/language/bash/doc-comments.ts';
+import { checkDeptry } from '#cli/checks/language/python/deptry.ts';
+import { checkSiteBuild } from '#cli/checks/framework/site/build.ts';
+import { checkBashSafety } from '#cli/checks/language/bash/safety.ts';
+import { checkCommitlintPushed } from '#cli/checks/general/commits.ts';
+import { checkAllowedLicenses } from '#cli/checks/general/licenses.ts';
+import { checkNginxSyntax } from '#cli/checks/infrastructure/nginx.ts';
+import { checkTranslationMessages } from '#cli/checks/translations.ts';
+import { checkAnsibleLint } from '#cli/checks/infrastructure/ansible.ts';
+import { checkShellcheck } from '#cli/checks/language/bash/shellcheck.ts';
+import { checkPydoclint } from '#cli/checks/language/python/pydoclint.ts';
+import { checkSwiftTestsCoverage } from '#cli/checks/testing/coverage.ts';
+import { checkSwiftSkipReasons } from '#cli/checks/testing/swift-tests.ts';
+import { type CheckImplementations } from '#cli/types/checks/run/check.ts';
 import { importLinter } from '#cli/checks/language/python/import-linter.ts';
-import { tsc, javascriptTsc } from '#cli/checks/language/typescript/tsc.ts';
-import { largeFiles, trackedFiles } from '#cli/checks/general/repository.ts';
-import { lockfileHosts } from '#cli/checks/general/dependencies/lockfiles.ts';
-import { generatedFiles } from '#cli/checks/general/gspot/generated-files.ts';
-import { bashFunctionSize } from '#cli/checks/language/bash/function-size.ts';
-import { bashScriptLayout } from '#cli/checks/language/bash/script-layout.ts';
-import { packageJson } from '#cli/checks/general/dependencies/package-json.ts';
-import { envReads } from '#cli/checks/general/structure/environment-readers.ts';
-import { bashInlineScripts } from '#cli/checks/language/bash/inline-scripts.ts';
-import { pythonPipInstalls } from '#cli/checks/language/python/pip-installs.ts';
-import { trivyImage, dockerCompose } from '#cli/checks/infrastructure/docker.ts';
-import { typescriptTsconfig } from '#cli/checks/language/typescript/tsconfig.ts';
-import { sharedPrefixes } from '#cli/checks/general/structure/shared-prefixes.ts';
-import { bashUnreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
-import { bashUnusedFunctions } from '#cli/checks/language/bash/unused-functions.ts';
-import { trivialFunctions } from '#cli/checks/general/structure/trivial-functions.ts';
-import { xcodeFilesWithoutTarget } from '#cli/checks/infrastructure/xcode/project.ts';
-import { trufflehog, envExamples, gitleaksPushed } from '#cli/checks/general/secrets.ts';
-import { fileFolderClashes } from '#cli/checks/general/structure/file-folder-clashes.ts';
-import { markdownFences, markdownlintArguments } from '#cli/checks/language/markdown.ts';
-import { postgresForeignKeyIndexes } from '#cli/checks/database/postgres/foreign-keys.ts';
-import { pythonPlaceholderDocstrings } from '#cli/checks/language/python/placeholder-docstrings.ts';
-import { namingPaths, namingSettings, namingIdentifiers } from '#cli/checks/general/naming/checks.ts';
-import { xcstrings, xcodeAssets, xcodeUnusedAssets } from '#cli/checks/infrastructure/xcode/resources.ts';
-import { postgresMigrationOrder, postgresEditedMigrations } from '#cli/checks/database/postgres/history.ts';
-import { sitemap, purgecss, siteSize, htmlValidate, checkSiteLinkinator } from '#cli/checks/framework/site/pages.ts';
-import { xcconfig, xcodeEntitlements, xcodeAppTransportSecurity } from '#cli/checks/infrastructure/xcode/settings.ts';
-import { cloudflareHeaders, cloudflareRedirects, cloudflareSecurityHeaders } from '#cli/checks/platform/cloudflare.ts';
+import { checkLoneFiles } from '#cli/checks/general/structure/lone-files.ts';
+import { checkLongFiles } from '#cli/checks/general/structure/long-files.ts';
+import { checkSuppressions } from '#cli/checks/general/gspot/suppressions.ts';
+import { checkBashForwarders } from '#cli/checks/language/bash/forwarders.ts';
+import { checkLockfiles } from '#cli/checks/general/dependencies/lockfiles.ts';
+import { checkDockerignore } from '#cli/checks/infrastructure/dockerignore.ts';
+import { checkActionlint } from '#cli/checks/infrastructure/github-actions.ts';
+import { checkBashDocComments } from '#cli/checks/language/bash/doc-comments.ts';
+import { checkGeneratedFiles } from '#cli/checks/general/gspot/generated-files.ts';
+import { checkBashFunctionSize } from '#cli/checks/language/bash/function-size.ts';
+import { checkBashScriptLayout } from '#cli/checks/language/bash/script-layout.ts';
+import { checkSiteUnusedAssets } from '#cli/checks/framework/site/unused-assets.ts';
+import { checkPackageJson } from '#cli/checks/general/dependencies/package-json.ts';
+import { checkBashInlineScripts } from '#cli/checks/language/bash/inline-scripts.ts';
+import { checkPythonPipInstalls } from '#cli/checks/language/python/pip-installs.ts';
+import { checkTsc, checkJavascriptTsc } from '#cli/checks/language/typescript/tsc.ts';
+import { checkTypescriptTsconfig } from '#cli/checks/language/typescript/tsconfig.ts';
+import { checkForeignKeyIndexes } from '#cli/checks/database/postgres/foreign-keys.ts';
+import { checkSharedPrefixes } from '#cli/checks/general/structure/shared-prefixes.ts';
+import { checkXcodeUntargetedFiles } from '#cli/checks/infrastructure/xcode/project.ts';
+import { checkUnmatchedPatterns } from '#cli/checks/general/gspot/unmatched-patterns.ts';
+import { checkBashUnreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
+import { checkBashUnusedFunctions } from '#cli/checks/language/bash/unused-functions.ts';
+import { checkTrivialFunctions } from '#cli/checks/general/structure/trivial-functions.ts';
+import { checkDocsMissingPaths, checkDocsRequiredFiles } from '#cli/checks/general/docs.ts';
+import { checkLargeFiles, checkIgnoredFilesTracked } from '#cli/checks/general/repository.ts';
+import { checkFileFolderClashes } from '#cli/checks/general/structure/file-folder-clashes.ts';
+import { checkEnvironmentReaders } from '#cli/checks/general/structure/environment-readers.ts';
+import { checkDockerCompose, checkDockerTrivyImage } from '#cli/checks/infrastructure/docker.ts';
+import { checkMarkdownFences, buildMarkdownlintArguments } from '#cli/checks/language/markdown.ts';
+import { checkPythonPlaceholderDocstrings } from '#cli/checks/language/python/placeholder-docstrings.ts';
+import { checkPostgresMigrationOrder, checkPostgresEditedMigrations } from '#cli/checks/database/postgres/history.ts';
 
 import {
-    postgresGrants,
-    postgresRowLevelSecurity,
-    postgresDefinerSearchPath,
+    checkNamingPaths,
+    checkNamingIdentifiers,
+    checkNamingAllowedNames,
+} from '#cli/checks/general/naming/checks.ts';
+import {
+    checkXcstrings,
+    checkXcodeAssets,
+    checkXcodeUnusedAssets,
+} from '#cli/checks/infrastructure/xcode/resources.ts';
+import {
+    checkPostgresGrants,
+    checkRowLevelSecurity,
+    checkDefinerSearchPath,
 } from '#cli/checks/database/postgres/access.ts';
 import {
-    swiftBuild,
-    swiftPeriphery,
-    swiftlintAnalyze,
-    swiftlintConfigurationFiles,
+    checkXcconfig,
+    checkXcodeEntitlements,
+    checkAppTransportSecurity,
+} from '#cli/checks/infrastructure/xcode/settings.ts';
+import {
+    checkSecretsEnvExamples,
+    checkSecretsGitleaksPushed,
+    checkSecretsTrufflehogPushed,
+} from '#cli/checks/general/secrets.ts';
+import {
+    checkCloudflareHeaders,
+    checkCloudflareRedirects,
+    checkCloudflareSecurityHeaders,
+} from '#cli/checks/platform/cloudflare.ts';
+import {
+    checkSwiftBuild,
+    checkSwiftPeriphery,
+    checkSwiftlintAnalyze,
+    listSwiftlintToolFiles,
 } from '#cli/checks/language/swift/build.ts';
 import {
-    supabaseDenoLint,
-    supabaseDenoCheck,
-    supabaseServiceRoleKey,
-    supabaseStoragePolicies,
+    checkServiceRoleKey,
+    checkSupabaseDenoLint,
+    checkSupabaseDenoTypes,
+    checkSupabaseStoragePolicies,
 } from '#cli/checks/platform/supabase.ts';
+import {
+    checkSiteSize,
+    checkSiteSitemap,
+    checkSitePurgecss,
+    checkSiteLinkinator,
+    checkSiteHtmlValidate,
+} from '#cli/checks/framework/site/pages.ts';
 
 /** Every execution callback, keyed by its check ID. */
 export const CHECK_IMPLEMENTATIONS = {
-    'gspot/unused-entries': { check: unusedEntries },
-    'expo/doctor': { check: expoDoctor },
-    'svelte/svelte-check': { check: svelteCheck },
-    'translations/messages': { check: translationsMessages },
-    'ansible/ansible-lint': { check: ansibleLint },
-    'nginx/config-test': { check: nginxConfigTest },
-    'structure/trivial-functions': { check: trivialFunctions },
-    'structure/env-reads': { check: envReads },
-    'structure/file-lines': { check: fileLines },
-    'gspot/suppressions': { check: suppressions },
-    'repository/large-files': { check: largeFiles },
-    'typescript/tsconfig': { check: typescriptTsconfig },
-    'docs/missing-paths': { check: missingPaths },
-    'docs/required-files': { check: requiredFiles },
-    'markdown/fences': { check: markdownFences },
-    'duplication/jscpd': { check: jscpd },
-    'secrets/env-examples': { check: envExamples },
-    'repository/tracked-files': { check: trackedFiles },
-    'dependencies/package-json': { check: packageJson },
-    'licenses/allowed': { check: allowedLicenses },
-    'dependencies/lockfile-hosts': { check: lockfileHosts },
-    'nextjs/next-config': { check: nextConfig },
-    'cloudflare/headers': { check: cloudflareHeaders },
-    'cloudflare/redirects': { check: cloudflareRedirects },
-    'site/build': { check: siteBuild },
-    'site/html-validate': { check: htmlValidate },
-    'site/purgecss': { check: purgecss },
+    'gspot/unmatched-patterns': { check: checkUnmatchedPatterns },
+    'expo/expo-doctor': { check: checkExpoDoctor },
+    'svelte/svelte-check': { check: runSvelteCheck },
+    'translations/messages': { check: checkTranslationMessages },
+    'ansible/ansible-lint': { check: checkAnsibleLint },
+    'nginx/config-test': { check: checkNginxSyntax },
+    'structure/trivial-functions': { check: checkTrivialFunctions },
+    'structure/environment-readers': { check: checkEnvironmentReaders },
+    'structure/long-files': { check: checkLongFiles },
+    'gspot/suppressions': { check: checkSuppressions },
+    'repository/large-files': { check: checkLargeFiles },
+    'typescript/tsconfig': { check: checkTypescriptTsconfig },
+    'docs/missing-paths': { check: checkDocsMissingPaths },
+    'docs/required-files': { check: checkDocsRequiredFiles },
+    'markdown/fences': { check: checkMarkdownFences },
+    'duplication/jscpd': { check: checkJscpd },
+    'secrets/env-examples': { check: checkSecretsEnvExamples },
+    'repository/local-files': { check: checkIgnoredFilesTracked },
+    'dependencies/package-json': { check: checkPackageJson },
+    'licenses/allowed': { check: checkAllowedLicenses },
+    'dependencies/lockfiles': { check: checkLockfiles },
+    'cloudflare/headers': { check: checkCloudflareHeaders },
+    'cloudflare/redirects': { check: checkCloudflareRedirects },
+    'site/build': { check: checkSiteBuild },
+    'site/html-validate': { check: checkSiteHtmlValidate },
+    'site/purgecss': { check: checkSitePurgecss },
     'site/linkinator': { check: checkSiteLinkinator },
-    'site/size': { check: siteSize },
-    'site/sitemap': { check: sitemap },
-    'site/unused-assets': { check: unusedAssets },
-    'cloudflare/security-headers': { check: cloudflareSecurityHeaders },
-    'html/scripts': { check: htmlScripts },
-    'python/placeholder-docstrings': { check: pythonPlaceholderDocstrings },
+    'site/size': { check: checkSiteSize },
+    'site/sitemap': { check: checkSiteSitemap },
+    'site/unused-assets': { check: checkSiteUnusedAssets },
+    'cloudflare/security-headers': { check: checkCloudflareSecurityHeaders },
+    'html/scripts': { check: checkHtmlScripts },
+    'python/placeholder-docstrings': { check: checkPythonPlaceholderDocstrings },
     'python/import-linter': { check: importLinter },
-    'python/pip-installs': { check: pythonPipInstalls },
-    'swift-tests/skip-reasons': { check: swiftTestsSkipReasons },
-    'swift-tests/coverage': { check: swiftTestsCoverage },
-    'xcode/xcconfig': { check: xcconfig },
-    'xcode/entitlements': { check: xcodeEntitlements },
-    'xcode/app-transport-security': { check: xcodeAppTransportSecurity },
-    'xcode/xcstrings': { check: xcstrings },
-    'xcode/assets': { check: xcodeAssets },
-    'xcode/unused-assets': { check: xcodeUnusedAssets },
-    'xcode/files-without-target': { check: xcodeFilesWithoutTarget },
-    'swift/build': { check: swiftBuild },
-    'swift/swiftlint-analyze': { check: swiftlintAnalyze },
-    'swift/periphery': { check: swiftPeriphery },
-    'supabase/storage-policies': { check: supabaseStoragePolicies },
-    'supabase/deno-lint': { check: supabaseDenoLint },
-    'supabase/deno-check': { check: supabaseDenoCheck },
-    'supabase/service-role-key': { check: supabaseServiceRoleKey },
-    'postgres/row-level-security': { check: postgresRowLevelSecurity },
-    'postgres/grants': { check: postgresGrants },
-    'postgres/definer-search-path': { check: postgresDefinerSearchPath },
-    'postgres/foreign-key-indexes': { check: postgresForeignKeyIndexes },
-    'postgres/migration-order': { check: postgresMigrationOrder },
-    'postgres/edited-migrations': { check: postgresEditedMigrations },
-    'docker/dockerignore': { check: dockerignore },
-    'docker/trivy-image': { check: trivyImage },
-    'structure/lone-files': { check: loneFiles },
-    'structure/shared-prefixes': { check: sharedPrefixes },
-    'structure/file-folder-clashes': { check: fileFolderClashes },
-    'bash/function-size': { check: bashFunctionSize },
-    'bash/doc-comments': { check: bashDocComments },
-    'bash/unused-functions': { check: bashUnusedFunctions },
-    'bash/unread-arguments': { check: bashUnreadArguments },
-    'bash/script-layout': { check: bashScriptLayout },
-    'bash/wrappers': { check: bashWrappers },
-    'bash/inline-scripts': { check: bashInlineScripts },
-    'bash/safety': { check: bashSafety },
-    'prose/vale': { check: vale },
-    'naming/identifiers': { check: namingIdentifiers },
-    'naming/paths': { check: namingPaths },
-    'naming/settings': { check: namingSettings },
-    'markdown/markdownlint': { run: runCheckCommand, arguments: markdownlintArguments },
-    'swift/swiftlint': { run: runCheckCommand, toolFiles: swiftlintConfigurationFiles },
-    'gspot/generated-files': { run: generatedFiles },
-    'security/semgrep': { run: semgrep },
-    'nextjs/tsc': { run: nextjsTsc },
-    'docker/compose': { run: dockerCompose },
-    'secrets/trufflehog': { run: trufflehog },
-    'secrets/gitleaks-pushed': { run: gitleaksPushed },
-    'commits/commitlint-pushed': { run: commitlintPushed },
-    'vue/vue-tsc': { run: tsc },
-    'typescript/tsc': { run: tsc },
-    'javascript/tsc': { run: javascriptTsc },
-    'bash/shellcheck': { run: shellcheck },
-    'python/pydoclint': { run: pydoclint },
-    'python/deptry': { run: deptry },
-    'github-actions/actionlint': { run: actionlint },
+    'python/pip-installs': { check: checkPythonPipInstalls },
+    'swift-tests/skip-reasons': { check: checkSwiftSkipReasons },
+    'swift-tests/coverage': { check: checkSwiftTestsCoverage },
+    'xcode/xcconfig': { check: checkXcconfig },
+    'xcode/entitlements': { check: checkXcodeEntitlements },
+    'xcode/app-transport-security': { check: checkAppTransportSecurity },
+    'xcode/xcstrings': { check: checkXcstrings },
+    'xcode/assets': { check: checkXcodeAssets },
+    'xcode/unused-assets': { check: checkXcodeUnusedAssets },
+    'xcode/files-without-target': { check: checkXcodeUntargetedFiles },
+    'swift/build': { check: checkSwiftBuild },
+    'swift/swiftlint-analyze': { check: checkSwiftlintAnalyze },
+    'swift/periphery': { check: checkSwiftPeriphery },
+    'supabase/storage-policies': { check: checkSupabaseStoragePolicies },
+    'supabase/deno-lint': { check: checkSupabaseDenoLint },
+    'supabase/deno-check': { check: checkSupabaseDenoTypes },
+    'supabase/service-role-key': { check: checkServiceRoleKey },
+    'postgres/row-level-security': { check: checkRowLevelSecurity },
+    'postgres/grants': { check: checkPostgresGrants },
+    'postgres/definer-search-path': { check: checkDefinerSearchPath },
+    'postgres/foreign-key-indexes': { check: checkForeignKeyIndexes },
+    'postgres/migration-order': { check: checkPostgresMigrationOrder },
+    'postgres/edited-migrations': { check: checkPostgresEditedMigrations },
+    'docker/dockerignore': { check: checkDockerignore },
+    'docker/trivy-image': { check: checkDockerTrivyImage },
+    'structure/lone-files': { check: checkLoneFiles },
+    'structure/shared-prefixes': { check: checkSharedPrefixes },
+    'structure/file-folder-clashes': { check: checkFileFolderClashes },
+    'bash/function-size': { check: checkBashFunctionSize },
+    'bash/doc-comments': { check: checkBashDocComments },
+    'bash/unused-functions': { check: checkBashUnusedFunctions },
+    'bash/unread-arguments': { check: checkBashUnreadArguments },
+    'bash/script-layout': { check: checkBashScriptLayout },
+    'bash/forwarders': { check: checkBashForwarders },
+    'bash/inline-scripts': { check: checkBashInlineScripts },
+    'bash/safety': { check: checkBashSafety },
+    'prose/vale': { check: checkVale },
+    'naming/identifiers': { check: checkNamingIdentifiers },
+    'naming/paths': { check: checkNamingPaths },
+    'naming/allowed-names': { check: checkNamingAllowedNames },
+    'markdown/markdownlint': { run: runCheckCommand, arguments: buildMarkdownlintArguments },
+    'swift/swiftlint': { run: runCheckCommand, toolFiles: listSwiftlintToolFiles },
+    'gspot/generated-files': { run: checkGeneratedFiles },
+    'security/semgrep': { run: checkSemgrep },
+    'nextjs/tsc': { run: checkNextjsTsc },
+    'docker/compose': { run: checkDockerCompose },
+    'secrets/trufflehog-pushed': { run: checkSecretsTrufflehogPushed },
+    'secrets/gitleaks-pushed': { run: checkSecretsGitleaksPushed },
+    'commits/commitlint-pushed': { run: checkCommitlintPushed },
+    'vue/vue-tsc': { run: checkTsc },
+    'typescript/tsc': { run: checkTsc },
+    'javascript/tsc': { run: checkJavascriptTsc },
+    'bash/shellcheck': { run: checkShellcheck },
+    'python/pydoclint': { run: checkPydoclint },
+    'python/deptry': { run: checkDeptry },
+    'github-actions/actionlint': { run: checkActionlint },
 } satisfies CheckImplementations;

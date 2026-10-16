@@ -1,26 +1,38 @@
 // Creates test commits and reads Git output.
 import { join } from 'node:path';
 import { createFileTree } from 'testdirs';
-import { settingsText } from '#tests/setup/settings.ts';
-import { EXECUTABLE_BITS } from '#tests/config/files.ts';
+import { isWindows } from '#tests/setup/system.ts';
 import { stat, chmod, writeFile } from 'node:fs/promises';
-import { isWindows } from '#tests/setup/operating-systems.ts';
-import type { SpawnOutcome } from '#tests/types/processes.ts';
+import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
+import type { ProcessOutput } from '#tests/types/processes.ts';
+import { runRegisteredCommand } from '#tests/setup/run-gspot.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
-import { PUSH_CONTENT, GIT_TEST_CONFIG, GIT_TEST_ENVIRONMENT, SANDBOX_COMMIT_STEPS } from '#tests/config/git.ts';
+import { NESTED_SCOPE_FILES } from '#tests/data/runs/scratch-copies.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
+
+import {
+    PUSH_CONTENT,
+    EXECUTABLE_BITS,
+    GIT_TEST_ARGUMENTS,
+    GIT_TEST_ENVIRONMENT,
+    SANDBOX_COMMIT_STEPS,
+} from '#tests/data/test-setup.ts';
 
 /**
  * Runs git with a throwaway identity, keeping the line endings the sandbox specifies.
  * @param cwd the sandbox.
- * @param argv the command line after git.
+ * @param commandArguments the command line after git.
  * @param environment verbatim variables.
  * @returns the exit code and both streams.
  */
 
-export function git(cwd: string, argv: readonly string[], environment: Record<string, string> = {}): SpawnOutcome {
-    const result = runCommandBlocking(['git', ...GIT_TEST_CONFIG, ...argv], {
+export function runGit(
+    cwd: string,
+    commandArguments: readonly string[],
+    environment: Record<string, string> = {},
+): ProcessOutput {
+    const result = runCommandBlocking(['git', ...GIT_TEST_ARGUMENTS, ...commandArguments], {
         cwd,
         env: { ...buildSpawnEnvironment(), ...GIT_TEST_ENVIRONMENT, ...environment },
     });
@@ -30,12 +42,13 @@ export function git(cwd: string, argv: readonly string[], environment: Record<st
 /**
  * Runs git and returns what it printed, for a command a test needs the answer of.
  * @param cwd the sandbox.
- * @param argv the command line after git.
+ * @param commandArguments the command line after git.
  * @returns the trimmed standard output.
  */
-export function gitOutput(cwd: string, argv: readonly string[]): string {
-    const result = git(cwd, argv);
-    if (result.code !== 0) throw new Error(`Git ${argv.join(' ')} failed: ${result.stderr}${result.stdout}`);
+export function readGitOutput(cwd: string, commandArguments: readonly string[]): string {
+    const result = runGit(cwd, commandArguments);
+    if (result.code !== 0)
+        throw new Error(`Git ${commandArguments.join(' ')} failed: ${result.stderr}${result.stdout}`);
     return result.stdout.trim();
 }
 
@@ -44,8 +57,8 @@ export function gitOutput(cwd: string, argv: readonly string[]): string {
  * @param cwd the sandbox.
  */
 export function commitAll(cwd: string): void {
-    for (const args of SANDBOX_COMMIT_STEPS) {
-        const result = git(cwd, args);
+    for (const commandArguments of SANDBOX_COMMIT_STEPS) {
+        const result = runGit(cwd, commandArguments);
         if (result.code !== 0) throw new Error(`Sandbox Git setup failed: ${result.stderr}${result.stdout}`);
     }
 }
@@ -61,40 +74,75 @@ export async function markExecutable(cwd: string, path: string): Promise<void> {
     const attributes = await stat(full);
     await chmod(full, attributes.mode | EXECUTABLE_BITS);
     if (!isWindows) return;
-    for (const argv of [
+    for (const commandArguments of [
         ['add', '--', path],
         ['update-index', '--chmod=+x', '--', path],
     ]) {
-        const result = git(cwd, argv);
+        const result = runGit(cwd, commandArguments);
         if (result.code !== 0) throw new Error(`Marking ${path} executable failed: ${result.stderr}${result.stdout}`);
     }
 }
 
 /**
  * Creates committed source and conflicting working-tree bytes for built-in and command push selection.
- * @param root the sandbox.
+ * @param sandboxRoot the directory that holds the reviewed commit and conflicting working files.
  * @returns the commit objects and the zero object for a new ref.
  */
 export async function preparePushRepository(
-    root: string,
+    sandboxRoot: string,
 ): Promise<{ base: string; reviewed: string; broken: string; zero: string }> {
-    await createFileTree(root, {
-        'gspot.toml': settingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
+    await createFileTree(sandboxRoot, {
+        'gspot.toml': buildSettingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'changed.sh': PUSH_CONTENT.base,
         'legacy.sh': PUSH_CONTENT.broken,
     });
-    commitAll(root);
-    const base = gitOutput(root, ['rev-parse', 'HEAD']);
-    await writeFile(join(root, 'changed.sh'), PUSH_CONTENT.reviewed);
-    gitOutput(root, ['add', 'changed.sh']);
-    gitOutput(root, ['commit', '-qm', 'reviewed']);
-    const reviewed = gitOutput(root, ['rev-parse', 'HEAD']);
-    gitOutput(root, ['branch', 'reviewed', reviewed]);
-    await writeFile(join(root, 'changed.sh'), PUSH_CONTENT.broken);
-    gitOutput(root, ['add', 'changed.sh']);
-    gitOutput(root, ['commit', '-qm', 'unreviewed']);
-    const broken = gitOutput(root, ['rev-parse', 'HEAD']);
-    await writeFile(join(root, 'changed.sh'), PUSH_CONTENT.working);
-    await writeFile(join(root, 'gspot.toml'), PUSH_CONTENT.settings);
+    commitAll(sandboxRoot);
+    const base = readGitOutput(sandboxRoot, ['rev-parse', 'HEAD']);
+    await writeFile(join(sandboxRoot, 'changed.sh'), PUSH_CONTENT.reviewed);
+    readGitOutput(sandboxRoot, ['add', 'changed.sh']);
+    readGitOutput(sandboxRoot, ['commit', '-qm', 'reviewed']);
+    const reviewed = readGitOutput(sandboxRoot, ['rev-parse', 'HEAD']);
+    readGitOutput(sandboxRoot, ['branch', 'reviewed', reviewed]);
+    await writeFile(join(sandboxRoot, 'changed.sh'), PUSH_CONTENT.broken);
+    readGitOutput(sandboxRoot, ['add', 'changed.sh']);
+    readGitOutput(sandboxRoot, ['commit', '-qm', 'unreviewed']);
+    const broken = readGitOutput(sandboxRoot, ['rev-parse', 'HEAD']);
+    await writeFile(join(sandboxRoot, 'changed.sh'), PUSH_CONTENT.working);
+    await writeFile(join(sandboxRoot, 'gspot.toml'), PUSH_CONTENT.settings);
     return { base, reviewed, broken, zero: '0'.repeat(base.length) };
+}
+
+/** Create nested settings with committed, staged, and working source bytes for revision selection tests. */
+export async function prepareNestedRepository(
+    root: string,
+): Promise<{ project: string; base: string; commitId: string }> {
+    await createFileTree(root, NESTED_SCOPE_FILES);
+    const project = join(root, 'nested settings');
+    readGitOutput(root, ['init']);
+    readGitOutput(root, ['add', '.']);
+    readGitOutput(root, ['commit', '-m', 'Fixture']);
+    const base = readGitOutput(root, ['rev-parse', 'HEAD']);
+    await Bun.write(join(project, 'source.txt'), 'pushed');
+    await Bun.write(join(root, 'outside.txt'), 'changed context');
+    readGitOutput(root, ['add', '.']);
+    readGitOutput(root, ['commit', '-m', 'Change']);
+    const commitId = readGitOutput(root, ['rev-parse', 'HEAD']);
+    await Bun.write(join(project, 'source.txt'), 'indexed');
+    readGitOutput(root, ['add', '.']);
+    await Bun.write(join(project, 'source.txt'), 'working');
+    return { project, base, commitId };
+}
+
+/** Create and commit the generated files used by the fresh-clone command cases.
+ * @param sourceRoot the source repository to initialize.
+ */
+export async function prepareAppliedBashRepository(sourceRoot: string): Promise<void> {
+    await createFileTree(sourceRoot, {
+        'gspot.toml': buildSettingsText(['bash']),
+        'entry.sh': 'echo example\n',
+    });
+    readGitOutput(sourceRoot, ['init', '-q']);
+    const applied = await runRegisteredCommand(sourceRoot, ['apply']);
+    if (applied.exitCode !== 0) throw new Error(`Sandbox apply failed: ${applied.text}`);
+    commitAll(sourceRoot);
 }

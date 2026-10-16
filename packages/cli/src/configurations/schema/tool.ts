@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { stripUndefined } from '#cli/system/values.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { ToolInput, ToolFields, InstallerPin, ToolDeclaration } from '#cli/types/configurations.ts';
 import { regexSchema, commandSchema, conditionSchema, versionFloorSchema } from '#cli/configurations/schema/parts.ts';
 
@@ -73,7 +73,7 @@ const toolSchema = z
         // Output that means the tool fell over rather than found something, for every check that runs it.
         crash_pattern: regexSchema.optional(),
         // Header lines omitted when a per-file command reports an unstructured failure.
-        diagnostic_header_pattern: regexSchema.optional(),
+        finding_header_pattern: regexSchema.optional(),
         // Where the tool documents one rule; explain prints it with the rule name in place of `{rule}`.
         rule_url: z.string().includes(RULE_PLACEHOLDER, { message: 'A rule page names where {rule} goes.' }).optional(),
         rule_prefix: z.string().min(1).optional(),

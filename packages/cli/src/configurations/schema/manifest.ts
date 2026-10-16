@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { RULE_FILE_PATTERN } from '#cli/config/rules.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import type { EslintPresets } from '#cli/types/generation/eslint.ts';
 import { toolDeclarationSchema } from '#cli/configurations/schema/tool.ts';
@@ -13,8 +13,8 @@ import {
     CHECK_RUNS,
     CHECK_NEEDS,
     NAME_PATTERN,
-    TOOL_FILES_FOLDER,
-    CHECK_WORKING_DIRECTORIES,
+    CHECK_WORKING_FOLDERS,
+    SHIPPED_TOOL_FILES_FOLDER,
 } from '#cli/config/configurations.ts';
 import {
     levelSchema,
@@ -25,17 +25,17 @@ import {
     operatingSystemSchema,
 } from '#cli/configurations/schema/parts.ts';
 import type {
-    CheckInput,
     ParsedCheck,
-    GeneratedPath,
     ManifestInput,
     ToolFileInput,
     EslintAllRules,
     ParsedManifest,
     FileMatchInput,
     DetectionInput,
+    GeneratorOutput,
     ConditionFields,
     ToolFileDeclaration,
+    CheckDeclarationInput,
 } from '#cli/types/configurations.ts';
 
 const optionalStringList = z.array(z.string()).default([]);
@@ -63,7 +63,7 @@ const selectorSchema = z.strictObject({
 const pointerSchema = z.strictObject({
     path: z.string(),
     when: conditionSchema.pick({ configuration: true }).optional(),
-    directories: z.array(z.string().min(1)).min(1).optional(),
+    folders: z.array(z.string().min(1)).min(1).optional(),
     body: z.string().optional(),
 } satisfies SchemaShape<NonNullable<ToolFileDeclaration['pointer']>>);
 
@@ -94,17 +94,17 @@ const toolFileSchema = z
     // Copied files use the same relative path beneath tool-files and the generated configuration folder.
     .transform((toolFile) => {
         if (toolFile.fragment) return { ...toolFile, fragment: true as const };
-        if (toolFile.pointer?.directories !== undefined)
+        if (toolFile.pointer?.folders !== undefined)
             return {
                 ...toolFile,
                 fragment: false as const,
-                pointer: { ...toolFile.pointer, directories: toolFile.pointer.directories },
+                pointer: { ...toolFile.pointer, folders: toolFile.pointer.folders },
             };
         return {
             ...toolFile,
             fragment: false as const,
             source: posix.join(
-                TOOL_FILES_FOLDER,
+                SHIPPED_TOOL_FILES_FOLDER,
                 toolFile.target.startsWith(TOOL_FILE_PREFIX)
                     ? toolFile.target.slice(TOOL_FILE_PREFIX.length)
                     : posix.basename(toolFile.target),
@@ -126,20 +126,20 @@ const checkFields = z.strictObject({
                 z
                     .strictObject({ path: z.string() } satisfies SchemaShape<{ path: string }>)
                     .transform(({ path }) => ({ kind: 'path' as const, path })) satisfies z.ZodType<
-                    GeneratedPath,
-                    Extract<NonNullable<CheckInput['generator_outputs']>[number], { path: string }>
+                    GeneratorOutput,
+                    Extract<NonNullable<CheckDeclarationInput['generator_outputs']>[number], { path: string }>
                 >,
                 z
                     .strictObject({ pattern: z.string().min(1) } satisfies SchemaShape<{ pattern: string }>)
                     .transform(({ pattern }) => ({ kind: 'pattern' as const, path: pattern })) satisfies z.ZodType<
-                    GeneratedPath,
-                    Extract<NonNullable<CheckInput['generator_outputs']>[number], { pattern: string }>
+                    GeneratorOutput,
+                    Extract<NonNullable<CheckDeclarationInput['generator_outputs']>[number], { pattern: string }>
                 >,
                 z
                     .strictObject({ stdout: z.string() } satisfies SchemaShape<{ stdout: string }>)
                     .transform(({ stdout }) => ({ kind: 'stdout' as const, path: stdout })) satisfies z.ZodType<
-                    GeneratedPath,
-                    Extract<NonNullable<CheckInput['generator_outputs']>[number], { stdout: string }>
+                    GeneratorOutput,
+                    Extract<NonNullable<CheckDeclarationInput['generator_outputs']>[number], { stdout: string }>
                 >,
             ]),
         )
@@ -160,14 +160,14 @@ const checkFields = z.strictObject({
     operating_systems: z.array(operatingSystemSchema).optional(),
     tool: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]).optional(),
     files: filesSchema.optional(),
-    cwd: z.enum(CHECK_WORKING_DIRECTORIES).optional(),
+    cwd: z.enum(CHECK_WORKING_FOLDERS).optional(),
     summary: sentence,
     example: z.string().trim().min(1),
     why: sentence,
     help: sentence,
 } satisfies SchemaShape<
     Omit<ParsedCheck, 'tool' | 'other_tools'> & { tool?: string | string[] | undefined },
-    CheckInput
+    CheckDeclarationInput
 >);
 
 // A check runs its command, or gspot runs it itself when the check registry names its ID. A list of tools names the
@@ -180,7 +180,7 @@ const checkSchema = checkFields.transform(({ tool, ...check }) => {
         ...(executable === undefined ? {} : { tool: executable }),
         ...(others.length === 0 ? {} : { other_tools: others }),
     };
-}) satisfies z.ZodType<ParsedCheck, CheckInput>;
+}) satisfies z.ZodType<ParsedCheck, CheckDeclarationInput>;
 
 // A path-scoped naming rule a configuration ships, in the shape gspot.toml writes under [[naming.override]].
 const manifestNamingOverride = namingOverrideSchema.extend({ reason: z.string().min(1) } satisfies SchemaShape<{

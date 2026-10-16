@@ -1,6 +1,6 @@
 # Astro
 
-These rules cover Astro components, islands, markup, routing, and the data a page loads.
+Read this rule when you change Astro components, pages, or content collections.
 
 ## Components
 

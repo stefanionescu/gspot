@@ -1,4 +1,6 @@
-# `nginx`
+# NGINX
+
+Read this rule when you change NGINX configuration.
 
 ## Edge responsibilities
 

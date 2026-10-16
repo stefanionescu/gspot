@@ -1,21 +1,15 @@
+import type { LEVELS } from '#cli/config/configurations.ts';
 import type { ParsedSite } from '#cli/types/checks/framework.ts';
+import type { ParsedSwift } from '#cli/types/checks/language.ts';
 import type { ParsedPostgres } from '#cli/types/checks/database.ts';
 import type { ParsedTools } from '#cli/types/settings/tool-tables.ts';
 import type { CASE_NAMES } from '#cli/config/checks/general/naming.ts';
+import type { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 import type { ParsedXcode, ParsedOpenapi } from '#cli/types/checks/infrastructure.ts';
 import type { ParsedDrizzle, ParsedTranslations } from '#cli/types/checks/library.ts';
 import type { ParsedSupabase, ParsedCloudflare } from '#cli/types/checks/platform.ts';
 import type { ArchitectureModule, ParsedNamingOverride } from '#cli/types/settings/file.ts';
-import type { PATH_ROLES, REASON_NEEDED, SETTING_TYPES } from '#cli/config/settings/values.ts';
 
-import type {
-    ParsedDocs,
-    ParsedSecrets,
-    ParsedCoverage,
-    ParsedLicenses,
-    ParsedSpelling,
-    ParsedDependencies,
-} from '#cli/types/checks/general.ts';
 import type {
     CI_PROVIDERS,
     LINE_ENDINGS,
@@ -26,19 +20,30 @@ import type {
     FORMAT_INDENT_STYLES,
     NAMING_TABLE_CATEGORIES,
 } from '#cli/config/settings/schema.ts';
+import {
+    type ParsedDocs,
+    type ParsedProse,
+    type ParsedSecrets,
+    type ParsedCoverage,
+    type ParsedLicenses,
+    type ParsedSpelling,
+    type ParsedRepository,
+    type ParsedDuplication,
+    type ParsedDependencies,
+} from '#cli/types/checks/general.ts';
 
 type SettingDeclaration = {
     name: string;
-    type: (typeof SETTING_TYPES)[number];
-    path_role?: (typeof PATH_ROLES)[number];
+    type: 'number' | 'string' | 'path' | 'boolean' | 'list' | 'table';
+    path_role?: 'source' | 'destination' | 'build';
     default?: unknown;
     default_all?: unknown;
     language_defaults?: Record<string, unknown>;
-    reason_needed?: (typeof REASON_NEEDED)[number];
+    reason_needed?: 'raising' | 'lowering' | 'adding';
     summary: string;
     languages?: string[];
     categories?: string[];
-    offValues?: (string | number | boolean)[];
+    off_values?: (string | number | boolean)[];
 };
 
 type TableValues = {
@@ -54,6 +59,10 @@ type TableValues = {
     naming?: ParsedNaming | undefined;
     openapi?: ParsedOpenapi | undefined;
     postgres?: ParsedPostgres | undefined;
+    repository?: ParsedRepository | undefined;
+    prose?: ParsedProse | undefined;
+    duplication?: ParsedDuplication | undefined;
+    swift?: ParsedSwift | undefined;
     secrets?: ParsedSecrets | undefined;
     site?: ParsedSite | undefined;
     spelling?: ParsedSpelling | undefined;
@@ -87,17 +96,9 @@ type TableValues = {
 type TableName = keyof TableValues;
 type TableSettings<Name extends TableName> = NonNullable<TableValues[Name]>;
 
-// Zod reads the path role from schema metadata.
-declare module 'zod/v4/core' {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- reason: Zod reads extra metadata types only from an interface.
-    interface GlobalMeta {
-        pathRole?: (typeof PATH_ROLES)[number];
-    }
-}
-
 type NamingCase = (typeof CASE_NAMES)[number];
 
-type NamingLanguage = (typeof SETTING_LANGUAGES)[number];
+type SettingLanguage = (typeof SETTING_LANGUAGES)[number];
 
 type NamingCategory = (typeof NAMING_TABLE_CATEGORIES)[number];
 
@@ -110,69 +111,35 @@ type NamingFields<NumberValue, CaseValue> = {
 type NamingLanguageFields<NumberValue, CaseValue> = NamingFields<NumberValue, CaseValue> &
     Partial<Record<NamingCategory, NamingFields<NumberValue, CaseValue> | undefined>>;
 
-type LimitFields<NumberValue> = Partial<
-    Record<
-        | 'file_lines'
-        | 'function_lines'
-        | 'function_parameters'
-        | 'statements'
-        | 'nesting'
-        | 'callback_nesting'
-        | 'cognitive_complexity'
-        | 'cyclomatic_complexity'
-        | 'branches'
-        | 'returns'
-        | 'assignments'
-        | 'closure_lines'
-        | 'type_lines'
-        | 'index_exports'
-        | 'min_function_statements'
-        | 'prefix_collisions'
-        | 'file_kilobytes'
-        | 'sentence_words'
-        | 'list_item_words'
-        | 'paragraph_sentences'
-        | 'min_duplicate_lines'
-        | 'min_duplicate_tokens'
-        | 'duplicate_percent',
-        NumberValue | undefined
-    >
->;
+type LimitFields<NumberValue> = Partial<Record<keyof ParsedLimitFields, NumberValue | undefined>>;
 
 type ParsedLimitFields = {
     file_lines: number;
     function_lines: number;
     function_parameters: number;
-    statements: number;
-    nesting: number;
+    function_statements: number;
+    block_nesting: number;
     callback_nesting: number;
     cognitive_complexity: number;
     cyclomatic_complexity: number;
-    branches: number;
-    returns: number;
-    assignments: number;
+    function_branches: number;
+    function_returns: number;
+    function_assignments: number;
     closure_lines: number;
     type_lines: number;
     index_exports: number;
-    min_function_statements: number;
-    prefix_collisions: number;
-    file_kilobytes: number;
-    sentence_words: number;
-    list_item_words: number;
-    paragraph_sentences: number;
-    min_duplicate_lines: number;
-    min_duplicate_tokens: number;
-    duplicate_percent: number;
+    trivial_function_statements: number;
+    shared_prefix_files: number;
 };
 
-type ParsedLimits = ParsedLimitFields & Partial<Record<NamingLanguage, ParsedLimitFields | undefined>>;
+type ParsedLimits = ParsedLimitFields & Partial<Record<SettingLanguage, ParsedLimitFields | undefined>>;
 
 type ParsedNamingFields = { max_characters: number; max_words: number; cases: NamingCase[] };
 
 type ParsedNamingLanguageFields = ParsedNamingFields & Partial<Record<NamingCategory, ParsedNamingFields | undefined>>;
 
 type ParsedNaming = ParsedNamingFields &
-    Partial<Record<NamingLanguage, ParsedNamingLanguageFields | undefined>> & {
+    Partial<Record<SettingLanguage, ParsedNamingLanguageFields | undefined>> & {
         banned_words: string[];
         override: ParsedNamingOverride[];
     };
@@ -205,7 +172,7 @@ type ParsedFormat = {
 };
 
 type ParsedRoot = {
-    level: 'recommended' | 'all';
+    level: (typeof LEVELS)[number];
     allowed_words: string[];
     removed_configurations: string[];
     tool_timeout_seconds: number;
@@ -221,10 +188,10 @@ type ParsedCi = {
     enabled: boolean;
     provider: (typeof CI_PROVIDERS)[number];
     setup_command?: string[] | undefined;
-    operating_systems: ('macos' | 'linux' | 'windows')[];
+    operating_systems: (typeof OPERATING_SYSTEMS)[number]['name'][];
 };
 
-type ParsedRules = { enabled: boolean; exclude: string[]; instruction_files: string[] };
+type ParsedRules = { enabled: boolean; exclude: string[] };
 
 export type {
     ParsedCi,
@@ -240,8 +207,8 @@ export type {
     ParsedNaming,
     ParsedFormat,
     TableSettings,
-    NamingLanguage,
     NamingCategory,
+    SettingLanguage,
     ParsedStructure,
     SettingDeclaration,
     ParsedNamingFields,

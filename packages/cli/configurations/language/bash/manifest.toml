@@ -62,7 +62,7 @@ command = ["shellcheck", "--rcfile", "{tool_file:shellcheckrc}", "--severity=sty
 example = "In a Bash script, `printf \"%s\\n\" $name` reports SC2086 because the expansion permits word splitting and globbing. Use `printf \"%s\\n\" \"$name\"` to pass the value as one argument."
 exit_codes = [1]
 files = { tags = ["bash", "sh", "bats"] }
-help = "Read the SC code in the finding; gspot explain shellcheck/SC2086 links to its page. Turn one code off with gspot ignore bash/shellcheck --rule SC2086 --reason \"`<why>`\"."
+help = "Read the SC code in the finding; `gspot explain shellcheck/SC2086` links to its page. Turn one code off with `gspot ignore bash/shellcheck --rule SC2086 --reason \"<why>\"`."
 level = "recommended"
 name = "shellcheck"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$" }
@@ -75,7 +75,7 @@ command = ["shfmt", "-d", "-i", "{indent}", "-ci", "-s", "{files}"]
 example = "In a script, `if true;then echo hello;fi` differs from shfmt output. Run the configured formatter to add the required spacing and block layout, then rerun the check."
 files = { tags = ["bash", "sh", "bats"] }
 fix = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]
-help = "Run gspot check --fix to format every script, or shfmt -w on one file."
+help = "Run `gspot check --fix` to format every script, or `shfmt -w` on one file."
 level = "recommended"
 name = "shfmt"
 output = { format = "regex", pattern = "^(?:--- )?(?<file>.+?)(?:\\.orig$|:(?<line>\\d+):(?<column>\\d+): (?<message>.+)$)", message = "This script is not formatted the way shfmt formats it.", fixable = "^--- " }
@@ -85,7 +85,7 @@ why = "One formatter means diffs show what changed, not how someone's editor ind
 
 [[check]]
 example = "An executable Bash script without `set -euo pipefail` reports a strict-mode finding. Put strict mode before the first command and, when the script defines functions, call the documented `main` function last."
-help = "Open with the shebang and run set -euo pipefail first. When an executable defines functions, end it with a call to main."
+help = "Open with the shebang and run `set -euo pipefail` first. When an executable defines functions, end it with a call to main."
 level = "all"
 name = "script-layout"
 stage = "commit"
@@ -122,7 +122,7 @@ summary = "Finds shell functions called with arguments they never read."
 why = "A caller that passes an argument expects it to affect the result. An unread argument misleads the caller."
 
 [[check]]
-example = "A function over `limits.bash.function_lines`, `limits.bash.branches`, `limits.bash.nesting`, or `limits.bash.assignments` reports the count and the ceiling under `function-lines`, `branches`, `nesting`, or `assignments`. Split the function by the job, then rerun."
+example = "A function over `limits.bash.function_lines`, `limits.bash.function_branches`, `limits.bash.block_nesting`, or `limits.bash.function_assignments` reports the count and the ceiling under `function-lines`, `branches`, `nesting`, or `assignments`. Split the function by the job, then rerun."
 help = "Split the script or the function, or raise the named limits.bash setting with a reason."
 level = "all"
 name = "function-size"
@@ -134,7 +134,7 @@ why = "A long script holds more than one job, and a function with many branches 
 example = "A short launcher containing only `exec bash scripts/build.sh` reports a forwarding-wrapper finding. Invoke `scripts/build.sh` directly and remove the redundant launcher."
 help = "Call the target script directly and delete the redundant launcher or alias."
 level = "all"
-name = "wrappers"
+name = "forwarders"
 stage = "commit"
 summary = "Finds forwarding wrappers and compatibility aliases in shell scripts."
 why = "A wrapper is a second entry point that drifts from the first."
@@ -150,7 +150,7 @@ why = "Code inside a heredoc is checked by nothing."
 
 [[check]]
 example = "A `killall worker` command reports broad-kill. Target the specific process, or ignore that rule for the owning script with a reason."
-help = "Handle the failure. For required cleanup, use gspot ignore bash/safety with --rule, --paths and --reason."
+help = "Handle the failure. For required cleanup, use `gspot ignore bash/safety` with `--rule`, `--paths` and `--reason`."
 level = "recommended"
 name = "safety"
 stage = "commit"

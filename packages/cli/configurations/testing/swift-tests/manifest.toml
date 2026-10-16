@@ -13,7 +13,7 @@ paths = ["**/*Tests/**/*.swift"]
 
 [[tool_file]]
 per_scope = true
-pointer = { path = ".swiftlint.yml", directories = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n" }
+pointer = { path = ".swiftlint.yml", folders = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n" }
 target = ".gspot/config/swiftlint.yml"
 tool = "swiftlint"
 
@@ -37,5 +37,5 @@ needs = ["build"]
 operating_systems = ["macos", "linux"]
 runs = "scope"
 stage = "push"
-summary = "Measures Xcode projects and Swift packages, holding each source target against coverage.lines and its coverage.target floor."
+summary = "Measures Xcode projects and Swift packages, holding each source target against coverage.lines and its coverage.swift_target floor."
 why = "A target-specific coverage floor exposes Swift code that its test target has not exercised."

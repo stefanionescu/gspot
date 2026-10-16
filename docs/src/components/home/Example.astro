@@ -1,90 +1,214 @@
 ---
-import { Code } from '@astrojs/starlight/components';
-import example from '../../config/client-environment.json';
+import assert from 'node:assert/strict';
+import InlineText from './InlineText.astro';
+import example from '../../config/example.json';
+import { version } from '@gspothq/cli/package.json';
+import { Icon } from '@astrojs/starlight/components';
+import { CODE_TOKENS, PASSED_CHECK, COMMIT_RECORD, REPORT_SUMMARY, PASSED_CHECK_LIMIT } from '../../config/home.ts';
 
-const diagnostic = example.findings.map(({ ruleId, message }) => `search.js:2:25  ${ruleId}\n${message}`).join('\n');
+type ExampleToken = { text: string; kind: string };
+type ExampleLine = { number: number; tokens: ExampleToken[] };
+
+function tokenizeExampleLine(text: string): ExampleToken[] {
+    if (text.trimStart().startsWith('//')) return [{ text, kind: 'comment' }];
+    const tokens: ExampleToken[] = [];
+    let offset = 0;
+    for (const token of text.matchAll(CODE_TOKENS)) {
+        tokens.push({ text: text.slice(offset, token.index), kind: '' });
+        assert.ok(token.groups !== undefined, 'The syntax pattern must name its token groups.');
+        const kind = Object.entries(token.groups).find(([, value]) => value === token[0])?.[0];
+        assert.ok(kind !== undefined, 'The syntax token must have a token group.');
+        tokens.push({ text: token[0], kind });
+        offset = token.index + token[0].length;
+    }
+    tokens.push({ text: text === '' ? ' ' : text.slice(offset), kind: '' });
+    return tokens;
+}
+
+function buildExampleLines(code: string): ExampleLine[] {
+    return code
+        .trimEnd()
+        .split('\n')
+        .map((text, index) => ({
+            number: index + 1,
+            tokens: tokenizeExampleLine(text),
+        }));
+}
+
+const beforeLines = example.agent.files
+    .flatMap(({ content }) => buildExampleLines(content))
+    .map((line) => ({
+        ...line,
+        problem: example.problems.findIndex(({ lines }) => lines.includes(line.number)) + 1,
+    }));
+const afterLines = example.fix.files
+    .flatMap(({ content }) => buildExampleLines(content))
+    .map((line) => ({
+        ...line,
+        inserted: line.tokens.some(({ text }) => text === 'await'),
+    }));
+const failedChecks = [...new Set(example.findings.map(({ check }) => check))].map((check) => ({
+    name: check,
+    findings: example.findings
+        .filter((finding) => finding.check === check)
+        .map((finding) => ({
+            ...finding,
+            problem: example.problems.findIndex(({ rules }) => rules.includes(finding.rule)) + 1,
+            location: [finding.file, finding.line, 'column' in finding ? finding.column : undefined]
+                .filter((part) => part !== undefined)
+                .join(':'),
+        })),
+}));
+const passedChecks = [...example.accepted.matchAll(PASSED_CHECK)].map((match) => match[0]);
+const visiblePassedChecks = passedChecks.slice(0, PASSED_CHECK_LIMIT);
+const remainingPassedChecks = passedChecks.length - visiblePassedChecks.length;
+const rejectedSummary = [...example.rejected.matchAll(REPORT_SUMMARY)].map((match) => match[0]).join('');
 ---
 
-<div class="comparison">
-    <section aria-labelledby="client-defect">
-        <p class="label">Before</p>
-        <h3 id="client-defect">Read a private variable</h3>
-        <Code code={example.broken.trimEnd()} lang="js" title="search.js" />
-        <p>ESLint reports this private environment read at line 2, column 25.</p>
-    </section>
-    <section aria-labelledby="client-correction">
-        <p class="label">After</p>
-        <h3 id="client-correction">Call an API route</h3>
-        <Code code={example.corrected.trimEnd()} lang="js" title="search.js" />
-        <p>This rule reports no finding. Implement the route on the server, where private configuration belongs.</p>
-    </section>
+<div class="example-grid">
+    <figure class="panel before">
+        <figcaption class="panel-head">
+            <span>Before: what the agent wrote</span>
+            <span class="file">{example.agent.files.map(({ path }) => path)}</span>
+        </figcaption>
+        <div class="panel-body">
+            <code class="code">
+                {beforeLines.map(({ number, problem, tokens }) => (
+                    <span class:list={['line', { 'is-marked': problem > 0 }]}>
+                        {problem > 0 ? (
+                            <span class="badge">
+                                <span class="visually-hidden">Problem </span>
+                                {problem}
+                            </span>
+                        ) : (
+                            <span></span>
+                        )}
+                        <span class="number" aria-hidden="true">
+                            {number}
+                        </span>
+                        <span>
+                            {tokens.map(({ text, kind }) => (
+                                <span class:list={[kind]}>{text}</span>
+                            ))}
+                        </span>
+                    </span>
+                ))}
+            </code>
+        </div>
+        <ol class="problems">
+            {example.problems.map(({ title, text }, index) => (
+                <li>
+                    <span class="badge" aria-hidden="true">
+                        {index + 1}
+                    </span>
+                    <span>
+                        <strong>{title}</strong> <InlineText text={text} />
+                    </span>
+                </li>
+            ))}
+        </ol>
+    </figure>
+    <figure class="panel blocked">
+        <figcaption class="panel-head">
+            <span class="run">
+                <span class="prompt">$ </span>git commit
+            </span>
+            <span class="status failed">Blocked</span>
+        </figcaption>
+        <div class="panel-body terminal">
+            <p class="muted">Checked the staged files.</p>
+            {failedChecks.map(({ name, findings }) => (
+                <>
+                    <p class="check-row">
+                        <span>{name}</span>
+                        <span class="failed">failed</span>
+                    </p>
+                    <ol class="findings">
+                        {findings.map(({ problem, location, rule, message }) => (
+                            <li>
+                                <span class="badge">
+                                    <span class="visually-hidden">Problem </span>
+                                    {problem}
+                                </span>
+                                <span class="where">
+                                    <span class="loc">{location}</span>
+                                    <span>{rule}</span>
+                                </span>
+                                <span class="message">{message}</span>
+                            </li>
+                        ))}
+                    </ol>
+                </>
+            ))}
+            <p class="summary">
+                {rejectedSummary.split(',').map((part, index) => (
+                    <>
+                        {index > 0 && ','}
+                        {part.includes('failed') || part.includes('findings') ? (
+                            <strong class="failed">{part}</strong>
+                        ) : (
+                            part
+                        )}
+                    </>
+                ))}
+            </p>
+        </div>
+    </figure>
+    <figure class="panel after">
+        <figcaption class="panel-head">
+            <span>After: the fix</span>
+            <span class="file">{example.fix.files.map(({ path }) => path)}</span>
+        </figcaption>
+        <div class="panel-body">
+            <code class="code">
+                {afterLines.map(({ number, inserted, tokens }) => (
+                    <span class:list={['line', { 'is-inserted': inserted }]}>
+                        <span></span>
+                        <span class="number" aria-hidden="true">
+                            {number}
+                        </span>
+                        <span>
+                            {tokens.map(({ text, kind }) => (
+                                <span class:list={[kind]}>{text}</span>
+                            ))}
+                        </span>
+                    </span>
+                ))}
+            </code>
+        </div>
+        <p class="panel-note">
+            <code class="inline-code">pay</code> now waits for the charge, and a failed payment reaches the caller. With
+            no suppression left, ESLint checks every line again.
+        </p>
+    </figure>
+    <figure class="panel passed">
+        <figcaption class="panel-head">
+            <span class="run">
+                <span class="prompt">$ </span>git commit
+            </span>
+            <span class="status passed">Committed</span>
+        </figcaption>
+        <div class="panel-body terminal">
+            <p class="muted">Checked the staged files.</p>
+            <ul class="passed-list" aria-label="Passed checks">
+                {visiblePassedChecks.map((name) => (
+                    <li>
+                        <Icon name="approve-check" size="1rem" class="icon-16" />
+                        {name}
+                    </li>
+                ))}
+                <li class="muted">and {remainingPassedChecks} more</li>
+            </ul>
+            <p class="summary">
+                {example.passed.split(',').map((part, index) => (
+                    <>
+                        {index > 0 && ','}
+                        {index === 0 || part.includes('findings') ? <strong class="passed">{part}</strong> : part}
+                    </>
+                ))}
+            </p>
+            <p class="muted">{COMMIT_RECORD}</p>
+        </div>
+    </figure>
 </div>
-<details>
-    <summary>See the ESLint diagnostic</summary>
-    <p>gspot plugin {example.version}, ESLint 9.39.5, JavaScript module, default rule options.</p>
-    <Code code={diagnostic} lang="text" />
-    <p>
-        The corrected module produces zero findings from this rule. The application still needs an implementation for
-        the API route.
-    </p>
-</details>
-<style>
-.comparison {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px;
-    margin-top: 32px;
-}
-.comparison section {
-    min-width: 0;
-    display: grid;
-    grid-template-rows: auto auto auto 1fr;
-    align-content: start;
-    gap: 16px;
-    padding: 28px;
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 8px;
-    margin: 0;
-}
-.comparison .label {
-    color: var(--sl-color-text-accent);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    margin: 0;
-}
-.comparison h3 {
-    font-size: 1.25rem;
-    margin: 0;
-}
-.comparison p {
-    margin: 0;
-    color: var(--sl-color-gray-2);
-    font-size: 0.9375rem;
-}
-.comparison :global(.expressive-code) {
-    min-width: 0;
-    margin: 8px 0;
-}
-.comparison :global(pre) {
-    overflow-x: auto;
-}
-details {
-    margin-block: 24px;
-}
-details > p {
-    margin-block: 16px;
-}
-details :global(.expressive-code) {
-    margin-block: 20px;
-}
-
-@media (width <= 49.99rem) {
-    .comparison {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 24px;
-    }
-    .comparison section {
-        padding: 20px;
-    }
-}
-</style>
+<p class="footnote">Recorded with gspot {version}. The first report leaves out passed checks, times, and help lines.</p>

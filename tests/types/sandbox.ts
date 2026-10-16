@@ -1,8 +1,8 @@
 import type { Level } from '#cli/types/configurations.ts';
-import type { GspotCall, SampleFix, CheckSample } from '#tests/types/checks.ts';
+import type { GspotCall, SampleFix, CheckSample } from '#tests/types/samples.ts';
 
 /** Settings choices computed before a sandbox installs applicable tools. */
-export type SandboxSettings = { without?: string[]; level?: Level };
+export type SandboxSettings = Pick<InstalledSandboxPlan, 'without' | 'level'>;
 
 /** Settings and files owned by one isolated sandbox. */
 export type SandboxPlan = {
@@ -19,7 +19,6 @@ export type SandboxPlan = {
 /** A sandbox with tools installed for its integration tests. */
 export type InstalledSandboxPlan = SandboxPlan & {
     without?: readonly string[];
-    tools?: readonly string[];
 };
 
 /** A sandbox whose disposal removes its files. */
@@ -42,3 +41,6 @@ export type RuntimeDetectionRow = {
     detected: boolean;
     toolProjectManifest?: { engines: Record<string, string> };
 };
+
+/** The file mutation and command capabilities needed to restore an installed sandbox. */
+export type SandboxFiles = Pick<Sandbox, 'root' | 'environment' | 'run'>;

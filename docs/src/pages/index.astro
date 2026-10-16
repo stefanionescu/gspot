@@ -1,116 +1,96 @@
 ---
-import { Code } from '@astrojs/starlight/components';
+import { REPOSITORY_URL } from '../config/site.ts';
 import Example from '../components/home/Example.astro';
-import Features from '../components/home/Features.astro';
-import { TOOLS, WORKFLOW, REPOSITORY } from '../config/home.ts';
-import '../components/home/page.css';
+import InlineText from '../components/home/InlineText.astro';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import '../components/home/page.css';
+import { TOOLS, HOME_TITLE, CHECK_AREAS, HOME_DESCRIPTION, HOME_AGENT_INSTRUCTIONS } from '../config/home.ts';
 ---
 
 <StarlightPage
     frontmatter={{
-        title: 'Lint AI generated code',
-        description:
-            'gspot configures linters, runs checks, and generates instructions for coding agents from one configuration file.',
-        hero: { title: 'Lint AI generated code' },
+        title: HOME_TITLE,
+        description: HOME_DESCRIPTION,
+        hero: { title: HOME_TITLE },
         template: 'splash',
         editUrl: false,
         lastUpdated: false,
+        prev: false,
+        next: false,
+        head: [
+            {
+                tag: 'link',
+                attrs: {
+                    rel: 'alternate',
+                    type: 'text/plain',
+                    href: '/llms.txt',
+                    title: 'Instructions for coding agents',
+                },
+            },
+            { tag: 'script', attrs: { type: 'text/llms.txt' }, content: HOME_AGENT_INSTRUCTIONS },
+        ],
     }}
 >
-    <div class="landing">
-        <section class="tool-strip" aria-label="Selected tools supported by gspot">
-            <p>Works with these tools</p>
+    <div class="landing not-content">
+        <section class="tools" aria-labelledby="tools-label">
+            <p class="tools-label" id="tools-label">
+                Works with these tools
+            </p>
             <ul>
-                {TOOLS.map(({ image, name, colored }) => (
+                {TOOLS.map(({ name, icon }) => (
                     <li>
-                        <img src={image} class:list={{ colored }} alt="" width="24" height="24" />
-                        <span>{name}</span>
+                        <span class="tool-icon" style={`--icon: url(${icon})`} aria-hidden="true"></span>
+                        {name}
                     </li>
                 ))}
             </ul>
         </section>
-        <Features
-            title="Configure tools and check code"
-            description="Choose checks in gspot.toml, generate tool configuration, and run them against your code."
-            features={WORKFLOW}
-        />
-        <section class="demonstration" aria-labelledby="finding">
-            <div class="section-heading">
-                <div>
-                    <p class="eyebrow">JavaScript example</p>
-                    <h2 id="finding">Check a JavaScript module</h2>
-                </div>
-                <a class="pill" href="/guides/client-environment/">
-                    Run this example ↗
-                </a>
+        <section class="section example" aria-labelledby="example-title">
+            <div class="intro">
+                <h2 id="example-title">gspot stops the commit and names each problem</h2>
+                <p class="lead">
+                    An agent added a checkout function to a TypeScript project. It forgot{' '}
+                    <code class="inline-code">await</code>, turned off the linter for one line, and left the{' '}
+                    <code class="inline-code">catch</code> empty. The pre-commit hook found all three.
+                </p>
             </div>
-            <p>
-                The gspot ESLint plugin flags this <code>process.env</code> access in a client module. Change the client
-                to call an API route, then run the check again.
-            </p>
             <Example />
         </section>
-        <Features
-            title="Configure the whole repository"
-            description="Use the same configuration for agent instructions, nested projects, and generated files."
-            features={REPOSITORY}
-        />
-        <section class="setup" aria-labelledby="setup">
-            <div class="section-heading">
-                <div>
-                    <h2 id="setup">Set up a repository</h2>
-                    <p>Install from source, select the JavaScript configuration, and run your first checks.</p>
-                </div>
-                <a class="pill" href="/guides/install/">
-                    Get started ↗
-                </a>
+        <section class="section handles" aria-labelledby="handles-title">
+            <div class="intro">
+                <h2 id="handles-title">What gspot checks</h2>
+                <p class="lead">
+                    <code class="inline-code">gspot init</code> reads your files and turns on the checks they need. Each
+                    check runs a tool you know, pinned to one version on every machine and in CI.
+                </p>
             </div>
-            <div class="setup-grid">
-                <div>
-                    <Code
-                        code={'version = 1\nconfigurations = ["javascript"]\nlevel = "recommended"'}
-                        lang="toml"
-                        title="gspot.toml"
-                    />
-                    <p>1. Select a configuration in your repository policy.</p>
-                </div>
-                <div>
-                    <Code
-                        code={'gspot apply --dry-run\ngspot apply\ngspot install'}
-                        lang="sh"
-                        title="Repository root"
-                    />
-                    <p>2. Preview, generate, and install selected tools.</p>
-                </div>
-                <div>
-                    <Code
-                        code={'gspot check\ngspot explain javascript/eslint\ngspot doctor'}
-                        lang="sh"
-                        title="Repository root"
-                    />
-                    <p>3. Check code and diagnose findings or setup.</p>
-                </div>
-            </div>
-            <p class="setup-note">
-                For a new configuration, <code>gspot init</code> proposes configurations and integrations before
-                applying them. Initialization runs no checks.
+            <ul class="cards">
+                {CHECK_AREAS.map(({ title, text, tools }) => (
+                    <li class="card">
+                        <h3>{title}</h3>
+                        <p>
+                            <InlineText text={text} />
+                        </p>
+                        <p class="tool-names">
+                            <InlineText text={tools} />
+                        </p>
+                    </li>
+                ))}
+            </ul>
+            <p class="more">
+                Also Gitleaks, typos, Vale, SwiftLint, Hadolint, Lychee, and more.{' '}
+                <a href="/reference/checks/">All checks →</a>
             </p>
         </section>
-        <section class="closing" aria-label="Next steps">
-            <h2>Start linting your code.</h2>
-            <nav>
-                <a class="pill primary" href="/guides/install/">
-                    Get started ↗
-                </a>
-                <a class="pill" href="/reference/commands/check/">
-                    View commands
-                </a>
-            </nav>
-        </section>
         <footer class="home-footer">
-            <span>gspot · Apache-2.0</span>
-            <a href="https://github.com/stefanionescu/gspot">Contribute</a>
+            <div class="home-footer-content">
+                <span>gspot · Apache-2.0</span>
+                <nav aria-label="Footer">
+                    <a href="/start/overview/">Docs</a>
+                    <a href="https://www.npmjs.com/package/@gspothq/cli">npm</a>
+                    <a href={REPOSITORY_URL}>GitHub</a>
+                </nav>
+            </div>
         </footer>
     </div>
 </StarlightPage>

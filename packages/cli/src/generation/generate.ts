@@ -1,4 +1,3 @@
-import { AGENTS_FILE } from '#cli/config/rules.ts';
 import { buildPathKey } from '#cli/system/paths.ts';
 import type { RuleFile } from '#cli/types/rules.ts';
 import type { Session } from '#cli/types/planning.ts';
@@ -11,18 +10,18 @@ import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
-import { requiredToolNames } from '#cli/planning/needed-tools.ts';
+import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/generation/ci.ts';
 import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
+import { AGENTS_FILE, CLAUDE_FILE, CLAUDE_BLOCK } from '#cli/config/rules.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
 import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { listSelectedManifests, isConfigurationSelected } from '#cli/configurations/select.ts';
-import { buildToolFiles, removeDuplicateToolFiles } from '#cli/generation/tool-files/generate.ts';
 import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/projects.ts';
-import { DOT_GSPOT, STATE_DIRECTORY, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
+import { DOT_GSPOT, STATE_PATH, VERSION_PIN_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
 
 import {
     LF_ATTRIBUTES,
@@ -41,7 +40,7 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
     } = session;
     if (settings.ci?.enabled !== true) return;
     const manual = session.configuredChecks.filter((planned) => planned.check.stage === 'manual');
-    const required = new Set(manual.flatMap((element) => requiredToolNames(element)));
+    const required = new Set(manual.flatMap((element) => listRequiredTools(element)));
     generated.files.push(
         (settings.ci.provider === 'github' ? buildGithubWorkflow : buildGitlabWorkflow)({
             version,
@@ -77,10 +76,10 @@ function buildAttributesBlock(files: GenerationResult['files'], authored: string
               .join('\n')
         : GIT_ATTRIBUTES_BLOCK;
     const outside = files.map(({ path }) => path).filter((path) => !isInGspotFolder(path));
-    const lineEndings = inheritsLineEndings ? '' : ` ${LF_ATTRIBUTES}`;
+    const suffix = inheritsLineEndings ? '' : ` ${LF_ATTRIBUTES}`;
     const lines = outside
         .toSorted((left, right) => left.localeCompare(right))
-        .map((path) => `${formatAttributePattern(path)} linguist-generated${lineEndings}`);
+        .map((path) => `${formatAttributePattern(path)} linguist-generated${suffix}`);
     return [block, ...lines].join('\n');
 }
 
@@ -110,16 +109,20 @@ function addManagedBlocks(
     }
     if (!settings.rules.enabled) return;
     const block = buildAgentsBlock({
-        generatedPaths: [...generated.files, ...generated.fileEdits]
-            .map(({ path }) => path)
-            .filter((path) => !isInGspotFolder(path)),
+        generatedPaths: generated.files.map(({ path }) => path).filter((path) => !isInGspotFolder(path)),
+        fileEdits: generated.fileEdits.map(({ path, changes }) => ({
+            path,
+            keys: changes.map((change) => change.path.join('.')),
+        })),
         startCommand: session.startRunner.command,
         files: rules,
         level: settings.level,
         hasChecks: manifests.some((manifest) => manifest.checks.length > 0),
     });
-    for (const path of new Set([AGENTS_FILE, ...settings.rules.instruction_files]))
-        generated.blocks.push({ path, block, style: 'markdown' });
+    generated.blocks.push(
+        { path: AGENTS_FILE, block, style: 'markdown' },
+        { path: CLAUDE_FILE, block: CLAUDE_BLOCK, style: 'markdown' },
+    );
 }
 
 function mergeFileEdits(generated: GenerationResult): void {
@@ -150,8 +153,8 @@ function assertDistinctPaths(generated: GenerationResult): void {
  * The managed .gitignore block for tool projects and generated files.
  * @returns the paths that Git must leave untracked.
  */
-export function buildGitignoreBlock(): string {
-    const toolProjectPaths = [...Object.values(INSTALLED_TOOL_FOLDERS), STATE_DIRECTORY].map((path) => `${path}/`);
+function buildGitignoreBlock(): string {
+    const toolProjectPaths = [...Object.values(INSTALLED_TOOL_FOLDERS), STATE_PATH].map((path) => `${path}/`);
     return [...toolProjectPaths, `${DOT_GSPOT}/${NPMRC_FILE}`, `${DOT_GSPOT}/${YARN_INSTALL_SETTINGS_FILE}`].join('\n');
 }
 
@@ -162,48 +165,36 @@ export function buildGitignoreBlock(): string {
  *
  * @returns the files, managed blocks, authored config-file edits, and notes.
  */
-export function generate(session: Session): GenerationResult {
+function generate(session: Session): GenerationResult {
     const {
         settingsFile: { settings },
         repository,
         scopes,
     } = session;
-    const { root, files } = repository;
-    const npmClient = session.getPackageManager();
+    const { root } = repository;
+    const packageManager = session.getPackageManager();
     const manifests = session.neededToolManifests;
-    const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
-    const checks = session.configuredChecks;
-    const repositoryConsumers = { tools, checks: new Set(checks.map((check) => check.check.name)) };
-    const generated: GenerationResult = { notes: [], files: [], blocks: [], fileEdits: [] };
-    for (const selection of scopes) {
-        const scopeChecks = checks.filter(
-            (check) => check.scope.scope.path === selection.scope.path || check.check.runs === 'once',
-        );
-        const scopeConsumers = {
-            tools: new Set(scopeChecks.flatMap((check) => requiredToolNames(check))),
-            checks: new Set(scopeChecks.map((check) => check.check.name)),
-        };
-        generated.files.push(
-            ...buildToolFiles(
-                { session, files, scopes, manifests, selection },
-                {
-                    repository: repositoryConsumers,
-                    scope: scopeConsumers,
-                },
-            ),
-        );
-    }
-    generated.files = removeDuplicateToolFiles(session, generated.files);
-    generated.fileEdits.push(...buildBunfigEdits(root, scopes), ...buildPointerFieldEdits(session, generated.files));
+    const generated: GenerationResult = {
+        notes: [],
+        files: [{ path: VERSION_PIN_FILE, content: session.version + '\n' }],
+        blocks: [],
+        fileEdits: [],
+    };
+    const toolFiles = session.toolFiles();
+    generated.files.push(...toolFiles.files);
+    generated.fileEdits.push(
+        ...buildBunfigEdits(root, scopes),
+        ...buildPointerFieldEdits(session, generated.files, toolFiles.targets),
+    );
     generated.files.push(
         ...buildHookFiles(root, settings, session.startRunner),
-        ...buildNpmProject({ root, scopes, manifests, installer: npmClient }),
+        ...buildNpmProject({ root, scopes, manifests, packageManager }),
         ...buildPythonProject(manifests),
         buildMiseProject(manifests, session.reads),
     );
     buildWorkflow(session, generated);
     const selected = listSelectedManifests(scopes);
-    const rules = selectRuleFiles(settings.rules, selected, repository, settings.level, session.packageManifests);
+    const rules = selectRuleFiles(session);
     generated.files.push(
         ...rules.map((file) => ({
             path: file.target,
@@ -217,3 +208,5 @@ export function generate(session: Session): GenerationResult {
     assertDistinctPaths(generated);
     return generated;
 }
+
+export { generate };

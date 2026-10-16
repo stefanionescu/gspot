@@ -13,10 +13,6 @@ export type TomlKeyValue = Extract<TomlBlock, { type: 'KeyValue' }>;
 
 export type TomlValue = TomlKeyValue['value'];
 
-export type InlineTable = Extract<TomlValue, { type: 'InlineTable' }>;
-
-export type InlineArray = Extract<TomlValue, { type: 'InlineArray' }>;
-
 export type TomlCommentNode = Extract<TomlBlock, { type: 'Comment' }>;
 
 /** Source extent of a parsed concrete syntax node. */
@@ -29,7 +25,7 @@ export type TomlInput = { path: string; source: string };
 export type TomlTableOptions = { filePath: string; keys: KeyPath; create: boolean };
 
 /** A key or header that can retain its own physical comment block. */
-export type TomlSyntaxEntry = { path: KeyPath } & (
+export type TomlPathNode = { path: KeyPath } & (
     | { kind: 'key'; node: TomlKeyValue }
     | { kind: 'item'; node: TomlValue }
     | { kind: 'header'; node: Exclude<TomlBlock, TomlKeyValue | TomlCommentNode>['key'] }
@@ -39,14 +35,14 @@ export type TomlSyntaxEntry = { path: KeyPath } & (
 export type TomlSyntax = {
     document: ReturnType<typeof parseDocument>;
     value: Record<string, unknown>;
-    entries: TomlSyntaxEntry[];
+    pathNodes: TomlPathNode[];
     comments: TomlCommentNode[];
 };
 
 /** Source owners and target owners use the same semantic key paths. */
 export type TomlComments = Map<string, TomlCommentBlock>;
 
-/** Native table paths track array-of-table positions while reading one document. */
+/** Table paths track array-of-table positions while reading one document. */
 export type TomlTablePositions = {
     value: Record<string, unknown>;
     counts: Map<string, number>;
@@ -56,11 +52,11 @@ export type TomlTablePositions = {
 /** A concrete syntax owner before mapping its path through your own edit. */
 export type TomlCommentAnchor = { kind: string; path: KeyPath };
 
-/** A native syntax chunk inserted, retained, or omitted around its semantic owner. */
+/** A syntax chunk inserted, retained, or omitted around its semantic owner. */
 export type TomlTextChunk = { start: number; end: number; text: string };
 
 /** Original comment identity distinguishes repeated physical text with different owners. */
-export type TomlAnchoredComment = { comment: TomlCommentNode; anchor: TomlSyntaxEntry | undefined; identity: string };
+export type TomlAnchoredComment = { comment: TomlCommentNode; anchor: TomlPathNode | undefined; identity: string };
 
 /** One original TOML comment and its retained syntax entry. */
 export type TomlCommentPlacement = {

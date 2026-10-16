@@ -9,11 +9,11 @@ test('the writer holds the lock until disposal', async () => {
     await using sandbox = await testdir();
     {
         using writer = openWriter(sandbox.path);
-        expect(writer.files.stat('.gspot/state/writer.lock')?.isFile()).toBe(true);
+        expect(writer.files.readStats('.gspot/state/writer.lock')?.isFile()).toBe(true);
         expect(() => openWriter(sandbox.path)).toThrow();
     }
     using next = openWriter(sandbox.path);
-    expect(next.files.stat('.gspot/state/writer.lock')?.isFile()).toBe(true);
+    expect(next.files.readStats('.gspot/state/writer.lock')?.isFile()).toBe(true);
 });
 
 test('one batch writes the planned binary bytes and removes an obsolete file', async () => {
@@ -30,6 +30,6 @@ test('one batch writes the planned binary bytes and removes an obsolete file', a
     writePlans(writer, [
         { path: '.gspot/first.bin', before: writer.files.read('.gspot/first.bin'), status: 'changed' },
     ]);
-    expect(writer.files.stat('.gspot/first.bin')).toBeUndefined();
+    expect(writer.files.readStats('.gspot/first.bin')).toBeUndefined();
     expect(await readFile(join(sandbox.path, '.gspot/second.bin'))).toStrictEqual(second);
 });

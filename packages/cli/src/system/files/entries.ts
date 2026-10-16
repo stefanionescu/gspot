@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { splitSystemPath } from '#cli/system/files/names.ts';
-import { type FileCopy, type FilesState } from '#cli/types/system/files.ts';
+import { type FilesState, type FileContents } from '#cli/types/system/files.ts';
 import { TEMPORARY_FILE_PREFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files.ts';
 
 import {
@@ -45,14 +45,14 @@ function prepareParentFolder(folder: string): Stats {
 }
 
 // The copy of a symbolic link: its target text and its own mode.
-function readSymbolicLink(target: string, stat: Stats): FileCopy {
+function readSymbolicLink(target: string, stat: Stats): FileContents {
     const bytes = Buffer.from(readlinkSync(target));
     const mode = normalizeFileMode({ mode: stat.mode & MODE_BITS, isLink: true });
     return { bytes, mode, isLink: true };
 }
 
 // The bytes and mode of a private regular file.
-function readRegularFile(target: string, stat: Stats, path: string): FileCopy {
+function readRegularFile(target: string, stat: Stats, path: string): FileContents {
     if (!stat.isFile() || stat.nlink !== 1)
         throw new Error(`${path} is not a regular file with one link. Use a regular file without extra hard links.`);
     const bytes = readFileSync(target);
@@ -73,7 +73,7 @@ function walkParentFolders(bounds: FilesState, path: string, statParent: (path: 
 }
 
 // A synchronous replacement must finish its flush before the caller continues.
-function writeStagedFile(temporary: string, value: FileCopy): void {
+function writeStagedFile(temporary: string, value: FileContents): void {
     const file = openSync(temporary, 'wx', PRIVATE_FILE);
     try {
         writeFileSync(file, value.bytes);
@@ -89,7 +89,7 @@ function writeStagedFile(temporary: string, value: FileCopy): void {
 
 // Windows cannot rename over a read-only file, so it goes first. The owner's recovery treats an absent target of an
 // interrupted replacement as not written.
-function isRenameBlocked(expected: FileCopy | undefined): boolean {
+function isRenameBlocked(expected: FileContents | undefined): boolean {
     if (process.platform !== 'win32' || expected === undefined || expected.isLink === true) return false;
     return (expected.mode & OWNER_WRITE_BIT) === 0;
 }
@@ -99,7 +99,7 @@ function isRenameBlocked(expected: FileCopy | undefined): boolean {
  * @param file the copy's mode and whether it holds a link.
  * @returns the mode the system can represent.
  */
-export function normalizeFileMode(file: Pick<FileCopy, 'mode' | 'isLink'>): number {
+export function normalizeFileMode(file: Pick<FileContents, 'mode' | 'isLink'>): number {
     if (file.isLink) return PERMISSION_BITS;
     if (process.platform !== 'win32') return file.mode;
     if ((file.mode & OWNER_WRITE_BIT) !== 0) return WRITABLE_FILE;
@@ -112,7 +112,7 @@ export function normalizeFileMode(file: Pick<FileCopy, 'mode' | 'isLink'>): numb
  * @param expected the copy the caller expects there.
  * @returns true when both do not exist or both match.
  */
-export function isSameContents(found: FileCopy | undefined, expected: FileCopy | undefined): boolean {
+export function isSameContents(found: FileContents | undefined, expected: FileContents | undefined): boolean {
     if (found === undefined || expected === undefined) return found === expected;
     const read = { ...found, mode: normalizeFileMode(found) };
     const requested = { ...expected, mode: normalizeFileMode(expected) };
@@ -145,7 +145,7 @@ export function preparePath(bounds: FilesState, path: string): string {
  * @param path the root-relative path.
  * @returns the file copy.
  */
-export function readEntry(bounds: FilesState, path: string): FileCopy | undefined {
+export function readEntry(bounds: FilesState, path: string): FileContents | undefined {
     try {
         const target = verifyPath(bounds, path);
         return readRegularFile(target, lstatSync(target), path);
@@ -161,7 +161,7 @@ export function readEntry(bounds: FilesState, path: string): FileCopy | undefine
  * @param path the root-relative path.
  * @returns the entry copy.
  */
-export function readEntryKeepingLinks(bounds: FilesState, path: string): FileCopy | undefined {
+export function readEntryKeepingLinks(bounds: FilesState, path: string): FileContents | undefined {
     try {
         const target = verifyPath(bounds, path);
         const stat = lstatSync(target);
@@ -179,7 +179,12 @@ export function readEntryKeepingLinks(bounds: FilesState, path: string): FileCop
  * @param value the copy to write.
  * @param expected the copy the caller last saw there, or undefined for a new file.
  */
-export function replaceEntry(bounds: FilesState, path: string, value: FileCopy, expected: FileCopy | undefined): void {
+export function replaceEntry(
+    bounds: FilesState,
+    path: string,
+    value: FileContents,
+    expected: FileContents | undefined,
+): void {
     const target = preparePath(bounds, path);
     const temporary = join(dirname(target), `${TEMPORARY_FILE_PREFIX}${randomUUID()}${TEMPORARY_FILE_SUFFIX}`);
     let staged = false;

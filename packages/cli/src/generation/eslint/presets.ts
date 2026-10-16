@@ -5,6 +5,7 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint.ts';
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { eslintPresetSchema } from '#cli/configurations/schema/manifest.ts';
+import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
 
 import {
     type EslintModule,
@@ -20,11 +21,9 @@ const eslintPresetsSchema = z.record(z.string(), eslintPresetSchema) satisfies z
  *
  * @param block the captured preset metadata.
  *
- * @returns the native rule and file properties.
+ * @returns the rule and file properties.
  */
-export function pickPresetFields(
-    block: EslintSettingsBlock | EslintPresets[string]['blocks'][number],
-): EslintSettingsBlock {
+function pickPresetFields(block: EslintSettingsBlock | EslintPresets[string]['blocks'][number]): EslintSettingsBlock {
     return {
         ...(block.files === undefined ? {} : { files: block.files }),
         ...(block.ignores === undefined ? {} : { ignores: block.ignores }),
@@ -40,8 +39,8 @@ export function pickPresetFields(
  *
  * @returns preset blocks without executable plugin or parser objects.
  */
-export function readPresets(manifest: Manifest): EslintPresets {
-    const parsed = eslintPresetsSchema.parse(JSON.parse(readAsset(`${manifest.dir}/${ESLINT_PRESETS_FILE}`)));
+function readPresets(manifest: Manifest): EslintPresets {
+    const parsed = eslintPresetsSchema.parse(JSON.parse(readAsset(`${manifest.folder}/${ESLINT_PRESETS_FILE}`)));
     return Object.fromEntries(
         Object.entries(parsed).map(([name, preset]) => [
             name,
@@ -57,7 +56,7 @@ export function readPresets(manifest: Manifest): EslintPresets {
  * @param transform the transformation that retains each block and its runtime source expression.
  * @returns the transformed preset blocks with their runtime source expressions.
  */
-export function buildPresetBlocks(
+function buildPresetBlocks(
     preset: Pick<FragmentPreset, 'source'> & { blocks: readonly FragmentPreset['blocks'][number][] },
     importName: string,
     transform: (
@@ -69,3 +68,36 @@ export function buildPresetBlocks(
     const source = serializePresetAccess(importName, preset.source);
     return preset.blocks.map((block, index) => transform(block, index, source));
 }
+
+/**
+ * Retain each array preset block's runtime spread while applying its component-specific fields.
+ * @param preset the pinned array preset.
+ * @param importName the imported plugin identifier.
+ * @param transform the component's rule or file-field transformation.
+ * @returns the blocks with their installed preset expressions.
+ */
+function buildArrayPresetBlocks(
+    preset: FragmentPreset,
+    importName: string,
+    transform: (block: FragmentPreset['blocks'][number]) => EslintSettingsBlock,
+): Parameters<EslintModule['block']>[] {
+    return buildPresetBlocks(preset, importName, (block, index, source) => [
+        transform(block),
+        `...${source}[${String(index)}]`,
+        { expression: `${source}[${String(index)}].rules`, rules: block.rules },
+    ]);
+}
+
+/**
+ * Keep component preset fields and raise warning rules to errors.
+ * @param block the captured component preset block.
+ * @returns its emitted fields with warning severities promoted.
+ */
+function promotePresetRules(block: FragmentPreset['blocks'][number]): EslintSettingsBlock {
+    return {
+        ...pickPresetFields(block),
+        ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
+    };
+}
+
+export { readPresets, pickPresetFields, buildPresetBlocks, promotePresetRules, buildArrayPresetBlocks };

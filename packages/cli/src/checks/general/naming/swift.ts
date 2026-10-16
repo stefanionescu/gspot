@@ -42,7 +42,7 @@ function addFunctions(sink: ExtractSink, root: Node): void {
     }
 }
 
-function bindingCategory(node: Node): NamedCategory {
+function classifyDeclaredName(node: Node): NamedCategory {
     const parent = node.parent?.type ?? '';
     if (SWIFT_MEMBER_PARENTS.has(parent)) return 'properties';
     const isConstant = node.namedChildren.some(
@@ -53,7 +53,7 @@ function bindingCategory(node: Node): NamedCategory {
 
 function addNames(sink: ExtractSink, root: Node): void {
     for (const node of root.descendantsOfType('property_declaration')) {
-        const category = bindingCategory(node);
+        const category = classifyDeclaredName(node);
         for (const pattern of node.childrenForFieldName('name')) {
             const bound = pattern.childForFieldName('bound_identifier');
             if (bound) addIdentifier(sink, bound, category, bound.text.replaceAll(SWIFT_NAME_QUOTE, ''));
@@ -70,15 +70,15 @@ function addCases(sink: ExtractSink, root: Node): void {
 
 /**
  * The types, functions, methods, parameters, properties, bindings and enum cases a parsed Swift file declares.
- * @param root the root node.
+ * @param syntaxRoot the parsed compilation unit that provides named declarations.
  * @param file the file path.
- * @returns the identifiers.
+ * @returns named declarations with their categories and source positions.
  */
-export function swiftIdentifiers(root: Node, file: string): Identifier[] {
+export function extractSwiftIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
     const sink: ExtractSink = { file, language: 'swift', out: [] };
-    addTypes(sink, root);
-    addFunctions(sink, root);
-    addNames(sink, root);
-    addCases(sink, root);
+    addTypes(sink, syntaxRoot);
+    addFunctions(sink, syntaxRoot);
+    addNames(sink, syntaxRoot);
+    addCases(sink, syntaxRoot);
     return sink.out;
 }

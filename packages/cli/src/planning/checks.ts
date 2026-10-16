@@ -4,13 +4,13 @@ import { isOutsideChildren } from '#cli/repository/scopes.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { skipFor, restrictIgnoredPaths } from '#cli/planning/skips.ts';
-import { filesFor, runsAtRoot, childScopes } from '#cli/planning/files.ts';
+import type { Stage, CheckDeclaration } from '#cli/types/configurations.ts';
+import { findFirstSkip, stripToolIgnoredFiles } from '#cli/planning/skips.ts';
 import { getToolName, getToolDeclaration } from '#cli/configurations/tools.ts';
 import { FLAG_VALUE, COVERAGE_FLAGS, COVERAGE_DIMENSIONS } from '#cli/config/planning.ts';
-import type { Stage, Session, PlanEntry, PlanInputs, PlanOptions, PlannedCheck } from '#cli/types/planning.ts';
+import { isRootOnlyCheck, listChildScopes, selectCheckFiles } from '#cli/planning/files.ts';
+import type { Session, PlanInputs, PlanOptions, PlannedCheck, CheckCandidate } from '#cli/types/planning.ts';
 
 function isStageWanted(filter: PlanOptions['stage'], stage: Stage): boolean {
     if (filter === 'any') return true;
@@ -18,15 +18,15 @@ function isStageWanted(filter: PlanOptions['stage'], stage: Stage): boolean {
     return filter === stage;
 }
 
-function entriesFor(session: Session, scope: ScopeSelection): PlanEntry[] {
+function listCheckCandidates(session: Session, scope: ScopeSelection): CheckCandidate[] {
     const isRoot = scope.scope.path === '';
     const entries = scope.selected.flatMap((manifest) =>
         manifest.checks
             .map((check) => ({ check, manifest }))
-            .filter((entry) => isRoot || !runsAtRoot(manifest, entry.check)),
+            .filter((entry) => isRoot || !isRootOnlyCheck(manifest, entry.check)),
     );
     if (!isRoot) return entries;
-    const own = Object.values(session.settingsFile.settings.check).map((entry) => ({ check: entry }));
+    const own = Object.values(session.settingsFile.settings.commandChecks).map((entry) => ({ check: entry }));
     return [...entries, ...own];
 }
 
@@ -37,9 +37,10 @@ function isWanted(check: CheckDeclaration, options: PlanOptions): boolean {
     return (options.only !== undefined && options.stage === 'all') || isStageWanted(options.stage, check.stage);
 }
 
-function planOne(context: PlanInputs, entry: PlanEntry, isRootCheck: boolean): PlannedCheck {
+function planOne(context: PlanInputs, entry: CheckCandidate): PlannedCheck {
     const { session, scope, options } = context;
     const { check, manifest } = entry;
+    const isRootCheck = check.runs === 'once' || check.runs === 'history';
     // Repository inventory always places the root scope first.
     const rootScope = session.scopes[0] as ScopeSelection;
     const name = getToolName(check);
@@ -47,7 +48,7 @@ function planOne(context: PlanInputs, entry: PlanEntry, isRootCheck: boolean): P
     const planned: PlannedCheck = {
         scope: isRootCheck ? rootScope : scope,
         check,
-        ...filesFor(context, entry, isRootCheck),
+        ...selectCheckFiles(context, entry),
         ...stripUndefined({
             manifest,
             tool,
@@ -56,11 +57,11 @@ function planOne(context: PlanInputs, entry: PlanEntry, isRootCheck: boolean): P
             messageFile: options.messageFile,
         }),
     };
-    const skip = skipFor(planned, context);
-    return restrictIgnoredPaths(session, skip === undefined ? planned : { ...planned, skip });
+    const skip = findFirstSkip(planned, context);
+    return stripToolIgnoredFiles(session, skip === undefined ? planned : { ...planned, skip });
 }
 
-function narrowSet(options: PlanOptions): Set<string> | undefined {
+function buildNarrowedPaths(options: PlanOptions): Set<string> | undefined {
     const changed = options.staged ?? options.changed;
     if (options.paths === undefined) return changed === undefined ? undefined : new Set(changed);
     return new Set(options.paths.filter((path) => changed === undefined || changed.includes(path)));
@@ -84,13 +85,13 @@ function skipReplacedChecks(planned: PlannedCheck[]): PlannedCheck[] {
 
 function planScope(context: PlanInputs, wholeSeen: Set<string>): PlannedCheck[] {
     const planned: PlannedCheck[] = [];
-    const entries = entriesFor(context.session, context.scope).filter((entry) =>
+    const entries = listCheckCandidates(context.session, context.scope).filter((entry) =>
         isWanted(entry.check, context.options),
     );
     for (const entry of entries) {
         const isRootCheck = entry.check.runs === 'once' || entry.check.runs === 'history';
         if (isRootCheck && wholeSeen.has(entry.check.name)) continue;
-        const check = planOne(context, entry, isRootCheck);
+        const check = planOne(context, entry);
         if (check.skip?.cause === 'level') continue;
         if (isRootCheck) wholeSeen.add(entry.check.name);
         planned.push(check);
@@ -101,7 +102,7 @@ function planScope(context: PlanInputs, wholeSeen: Set<string>): PlannedCheck[] 
 function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const wholeSeen = new Set<string>();
     const platform = getOperatingSystem();
-    const narrow = narrowSet(options);
+    const narrow = buildNarrowedPaths(options);
     return session.scopes.map((scope) => {
         const context: PlanInputs = {
             session,
@@ -109,8 +110,8 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
             options,
             platform,
             narrow,
-            children: childScopes(session, scope),
-            projects: session.packageManifests,
+            children: listChildScopes(session, scope),
+            projects: session.dependencyFiles,
         };
         return planScope(context, wholeSeen);
     });
@@ -139,22 +140,9 @@ export function isActive(check: PlannedCheck): boolean {
  *
  * @returns every check the settings turns on, in each scope it applies to.
  */
-export function configuredChecks(session: Session): PlannedCheck[] {
+export function listConfiguredChecks(session: Session): PlannedCheck[] {
     return planScopes(session, { stage: 'any' })
         .flatMap((planned) => skipReplacedChecks(planned))
-        .filter((check) => isActive(check) && check.skip === undefined);
-}
-
-/**
- * The enabled checks, including requirements for other operating systems.
- *
- * @param session the repository session.
- *
- * @returns the active checks across supported operating systems.
- */
-export function configuredSystemChecks(session: Session): PlannedCheck[] {
-    return planScopes(session, { stage: 'any', includeUnsupported: true })
-        .flatMap((element) => skipReplacedChecks(element))
         .filter((check) => isActive(check) && check.skip === undefined);
 }
 
@@ -166,9 +154,9 @@ export function configuredSystemChecks(session: Session): PlannedCheck[] {
  *
  * @returns the files the check's owners select.
  */
-export function coveredInputs(session: Session, check: PlannedCheck): TrackedFile[] {
+export function listCoveredInputs(session: Pick<Session, 'scopes'>, check: PlannedCheck): TrackedFile[] {
     const owners = check.check.files ?? check.manifest?.files;
-    const children = check.check.runs === 'scope' ? childScopes(session, check.scope) : [];
+    const children = check.check.runs === 'scope' ? listChildScopes(session, check.scope) : [];
     const files = check.files.filter((file) => isOutsideChildren(file.path, children));
     return owners === undefined
         ? []
@@ -182,7 +170,7 @@ export function coveredInputs(session: Session, check: PlannedCheck): TrackedFil
 /**
  * Plans every check for the run.
  *
- * @param session the session.
+ * @param session the installed manifests, repository reads, and selected scopes.
  * @param options stage, paths, only, skips, and the staged or ref-relative file sets.
  *
  * @returns the planned checks in scope order.
@@ -208,7 +196,7 @@ export function planRun(session: Session, options: PlanOptions): PlannedCheck[] 
  *
  * @returns the command with coverage enabled only when a floor requires it.
  */
-export function coverageArguments(
+export function stripCoverageArguments(
     planned: Pick<PlannedCheck, 'check' | 'scope' | 'manifest'>,
     options: Pick<CheckDeclaration, 'command'>,
 ): string[] | undefined {

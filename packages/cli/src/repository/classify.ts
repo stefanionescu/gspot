@@ -1,23 +1,22 @@
 // Classifies repository files, tags, and generated declarations.
-
 import { posix } from 'node:path';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { MARKERS } from '#cli/config/system/managed-blocks.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Lockfile } from '#cli/types/parsers/lockfiles.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependency-files.ts';
-import { DOT_GSPOT, VALE_PACKAGE_DIRECTORY } from '#cli/config/system/locations.ts';
+import { DOT_GSPOT, VALE_PACKAGES_PATH } from '#cli/config/system/locations.ts';
+import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { HEADER_LINES_CHECKED, GENERATED_HEADER_LINE } from '#cli/config/generation/header.ts';
 import { GITATTRIBUTES_FILE, INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { ENV_SPLIT_FLAG, SHEBANG_PREFIX, ENV_EXECUTABLE_SUFFIX } from '#cli/config/parsers/shebang.ts';
 
 import {
     type Tagged,
-    type FileEntry,
+    type ListedFile,
     type TrackedFile,
     type FileDeclaration,
     type FileClassification,
@@ -43,9 +42,9 @@ import {
     EXTENSION_TAGS,
     DEFAULT_DIALECT,
     DOCKERFILE_NAME,
+    BUILD_LAUNCHERS,
     FILTER_ATTRIBUTE,
     VENDORED_FOLDERS,
-    GENERATED_BANNERS,
     BINARY_EXTENSIONS,
     VENDORED_ATTRIBUTE,
     MARKDOWN_EXTENSION,
@@ -54,7 +53,7 @@ import {
     DOCKERFILE_EXTENSION,
     INTERPRETER_DIALECTS,
     SHEBANG_INTERPRETERS,
-    GENERATED_BUILD_WRAPPERS,
+    GENERATOR_OUTPUT_BANNERS,
 } from '#cli/config/repository/inventory.ts';
 
 // Every tracked path has one kind: source, generated, vendored, binary.
@@ -85,17 +84,17 @@ function isLicenseFile(path: string): boolean {
 
 // Tool paths and banners identify generated files; downloaded Vale styles belong to another party.
 function findGeneratedKind(path: string, prefix: Buffer): FileClassification | undefined {
-    if (path.startsWith(`${VALE_PACKAGE_DIRECTORY}/`)) return { kind: 'vendored', origin: 'gspot' };
+    if (path.startsWith(`${VALE_PACKAGES_PATH}/`)) return { kind: 'vendored', origin: 'gspot' };
     if (isInGspotFolder(path)) return { kind: 'generated', origin: 'gspot' };
-    if (GENERATED_BUILD_WRAPPERS.has(posix.basename(path))) return { kind: 'generated', origin: 'build wrapper' };
+    if (BUILD_LAUNCHERS.has(posix.basename(path))) return { kind: 'generated', origin: 'build wrapper' };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
-    if (hasGeneratedHeader(start) || GENERATED_BANNERS.some((banner) => banner.test(start)))
+    if (hasGeneratedHeader(start) || GENERATOR_OUTPUT_BANNERS.some((banner) => banner.test(start)))
         return { kind: 'generated', origin: 'banner' };
     return undefined;
 }
 
 // Higher-priority kinds take precedence; only a wholly managed instruction document makes remaining content generated.
-function classifyManagedDocument(root: string, entry: FileEntry, prefix: Buffer): FileClassification {
+function classifyManagedDocument(root: string, entry: ListedFile, prefix: Buffer): FileClassification {
     if (entry.symlink || !entry.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
         return SOURCE_KIND;
     const text = readBytes(root, entry.path).toString('utf8');
@@ -115,7 +114,7 @@ function classifyManagedDocument(root: string, entry: FileEntry, prefix: Buffer)
  * @returns the kind and where it came from.
  */
 function classifyKind(
-    file: { root: string; entry: FileEntry; prefix: Buffer; isBinary: boolean },
+    file: { root: string; entry: ListedFile; prefix: Buffer; isBinary: boolean },
     rules: ClassificationInputs,
 ): FileClassification {
     const { root, entry, isBinary, prefix } = file;
@@ -157,13 +156,28 @@ function tagTextFile(tags: Set<string>, firstLine: string): Tagged {
     for (const tag of listShebangTags(firstLine)) tags.add(tag);
     if (Object.values(INTERPRETER_DIALECTS).some((dialect) => tags.has(dialect))) tags.delete('bash');
     tags.add(TEXT_TAG);
-    return { tags: [...tags], binary: false };
+    return { tags: [...tags], isBinary: false };
 }
 
 function stripTrailingVersion(word: string): string {
     let end = word.length;
     while (end > 0 && VERSION_CHARACTERS.includes(word[end - 1] ?? '')) end -= 1;
     return word.slice(0, end);
+}
+
+/**
+ * Resolve pointer paths that selected tool files generate outside their internal tool project.
+ * @param path the selected scope.
+ * @param files the selected tool-file declarations.
+ * @returns the pointer paths and declared folder patterns.
+ */
+function listPointerDeclarations(path: string, files: ToolFileDeclaration[]): string[] {
+    return files.flatMap((file) => {
+        const pointer = file.pointer;
+        if (pointer === undefined) return [];
+        const scope = file.per_scope ? path : '';
+        return (pointer.folders ?? ['']).map((folder) => posix.join(scope, folder, pointer.path));
+    });
 }
 
 /**
@@ -202,19 +216,24 @@ function findLockfile(path: string): Lockfile | undefined {
 
 /**
  * Determine a tracked file's kind and the source of that classification.
- * @param root the repository directory.
+ * @param repositoryRoot the base folder for resolving tracked entries.
  * @param entry the tracked file entry.
  * @param prefix the initial file bytes.
  * @param rules the file declarations used for classification.
  * @returns the file kind and its classification source.
  */
-function classifyFile(root: string, entry: FileEntry, prefix: Buffer, rules: ClassificationInputs): TrackedFile {
+function classifyFile(
+    repositoryRoot: string,
+    entry: ListedFile,
+    prefix: Buffer,
+    rules: ClassificationInputs,
+): TrackedFile {
     const tagged = tagFile(entry, prefix);
-    const verdict = classifyKind({ root, entry, prefix, isBinary: tagged.binary }, rules);
+    const verdict = classifyKind({ root: repositoryRoot, entry, prefix, isBinary: tagged.isBinary }, rules);
     return {
         path: entry.path,
         kind: verdict.kind,
-        kindSource: verdict.origin,
+        kindOrigin: verdict.origin,
         tags: tagged.tags,
         executable: entry.executable,
         size: entry.size,
@@ -227,7 +246,7 @@ function classifyFile(root: string, entry: FileEntry, prefix: Buffer, rules: Cla
  * @param prefix the captured first bytes.
  * @returns the path and content tags, and whether the file contains binary bytes.
  */
-function tagFile(entry: FileEntry, prefix: Buffer): Tagged {
+function tagFile(entry: ListedFile, prefix: Buffer): Tagged {
     const extension = extractExtension(entry.path);
     const base = posix.basename(entry.path);
     const flags: [boolean, string][] = [
@@ -242,7 +261,7 @@ function tagFile(entry: FileEntry, prefix: Buffer): Tagged {
         ...(FILENAME_TAGS[base] ?? []),
         ...flags.filter(([isSet]) => isSet).map(([, tag]) => tag),
     ]);
-    if (BINARY_EXTENSIONS.has(extension) || prefix.includes(0)) return { tags: [BINARY_TAG, ...tags], binary: true };
+    if (BINARY_EXTENSIONS.has(extension) || prefix.includes(0)) return { tags: [BINARY_TAG, ...tags], isBinary: true };
     const text = prefix.toString('utf8');
     const newline = text.indexOf('\n');
     return tagTextFile(tags, newline === -1 ? text : text.slice(0, newline));
@@ -255,7 +274,7 @@ function tagFile(entry: FileEntry, prefix: Buffer): Tagged {
  */
 function listTaggedExtensions(...tags: string[]): string[] {
     return Object.entries(EXTENSION_TAGS)
-        .filter(([, owned]) => tags.some((tag) => new Set<string>(owned).has(tag)))
+        .filter(([, owned]) => owned.some((tag) => tags.includes(tag)))
         .map(([extension]) => extension);
 }
 
@@ -268,17 +287,21 @@ function listFileDeclarations(selected: Map<string, Manifest[]>): FileDeclaratio
     return selected
         .entries()
         .flatMap(([path, manifests]) =>
-            manifests.flatMap(({ generated, configuration }) =>
-                generated.length === 0
+            manifests.flatMap(({ generated, configuration, toolFiles }) => {
+                const paths = [
+                    ...generated.map((file) => posix.join(path, file)),
+                    ...listPointerDeclarations(path, toolFiles),
+                ];
+                return paths.length === 0
                     ? []
                     : [
                           {
                               kind: 'generated' as const,
                               configuration: configuration.name,
-                              paths: generated.map((file) => posix.join(path, file)),
+                              paths,
                           },
-                      ],
-            ),
+                      ];
+            }),
         )
         .toArray();
 }

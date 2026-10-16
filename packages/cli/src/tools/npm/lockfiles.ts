@@ -1,4 +1,4 @@
-// Matches dependency pins and removes registry URLs from npm tool-project lockfiles.
+// Check pinned dependencies and remove registry URLs from tool-project lockfiles.
 import { z } from 'zod';
 import semver from 'semver';
 import { writeFileSync } from 'node:fs';
@@ -9,8 +9,8 @@ import { isDeepStrictEqual } from 'node:util';
 import { parseJsonc } from '#cli/parsers/json.ts';
 import { modify, applyEdits } from 'jsonc-parser';
 import { GspotError } from '#cli/system/errors.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
-import { HTTP_URL } from '#cli/config/tools/diagnostics.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
+import { HTTP_URL } from '#cli/config/tools/credentials.ts';
 import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
 import { selectLockfileName } from '#cli/tools/npm/tool-project.ts';
 import { PNPM_ROOT_IMPORTER } from '#cli/config/parsers/lockfiles.ts';
@@ -221,15 +221,12 @@ export function isLockfileCurrent(name: PackageManager['name'], content: string,
  *
  * @param work the tool project directory.
  * @param packageManager the selected package manager.
- * @param root0 the values for this generated file.
- * @param root0.env the environment for the tool process.
- * @param root0.lockfile the resolved lockfile bytes.
+ * @param options the lockfile bytes and package manager environment.
+ * @param options.env the environment for the tool process.
+ * @param options.lockfile the resolved lockfile bytes.
  */
-export function stripRegistryUrls(
-    work: string,
-    packageManager: PackageManager,
-    { env, lockfile }: PackageCommandResult,
-): void {
+export function stripRegistryUrls(work: string, packageManager: PackageManager, options: PackageCommandResult): void {
+    const { env, lockfile } = options;
     const lockfilePath = join(work, selectLockfileName(packageManager.name));
     if (packageManager.name === 'bun') writeFileSync(lockfilePath, stripBunRegistryUrls(lockfile, env));
     if (packageManager.name !== 'yarn' || isYarnBerry(packageManager)) return;

@@ -36,7 +36,7 @@ command = ["sqlfluff", "lint", "--config", "{tool_file:sqlfluff}", "--ignore-loc
 example = "The query `select id from user_accounts;` reports CP01 under the configured uppercase keyword policy. Format it as `SELECT id FROM user_accounts;` and rerun using the project dialect."
 exit_codes = [1]
 fix = ["sqlfluff", "fix", "--config", "{tool_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
-help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule `<code>` --reason \"`<why>`\"."
+help = "Run `gspot check --fix`. Turn one rule off with `gspot ignore sql/sqlfluff --rule <code> --reason \"<why>\"`."
 level = "recommended"
 name = "sqlfluff"
 output = { format = "json", children = "violations", fields = { file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description" } }

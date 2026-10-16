@@ -1,0 +1,141 @@
+import { parse } from 'yaml';
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
+import { openSession } from '#cli/session.ts';
+import { chmod, readFile } from 'node:fs/promises';
+import { testdir, createFileTree } from 'testdirs';
+import { quoteArgument } from '#cli/system/text.ts';
+import { runCommand } from '#tests/setup/processes.ts';
+import { type Pipeline } from '#cli/types/generation/ci.ts';
+import { buildSettingsText } from '#tests/setup/settings.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
+import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
+
+import {
+    SETUP_CASES,
+    MISE_PROGRAM,
+    GSPOT_PROGRAM,
+    SETUP_PROGRAM,
+    LINUX_PIPELINE,
+    SETUP_ARGUMENTS,
+} from '#tests/data/ci.ts';
+
+test('the GitHub workflow has a check job and a manual job per operating system, and no manual job without manual checks', async () => {
+    await using resources = new AsyncDisposableStack();
+    const pipeline = await buildPipeline(resources);
+
+    const file = buildGithubWorkflow({
+        ...pipeline,
+        manualChecks: pipeline.manualChecks.filter(({ check }) => check.name === 'docs/lychee-external'),
+    });
+    const workflow = parse(file.content) as GithubWorkflow;
+    expect(Object.keys(workflow.jobs)).toStrictEqual(['check-linux', 'manual-linux']);
+    const none = parse(buildGithubWorkflow({ ...pipeline, manualChecks: [] }).content) as GithubWorkflow;
+    expect(Object.keys(none.jobs)).toStrictEqual(['check-linux']);
+});
+
+test.each(['docs/lychee-external', 'project/audit'])(
+    'the manual job runs %s by name and the check job runs every check',
+    async (name) => {
+        await using resources = new AsyncDisposableStack();
+        const pipeline = await buildPipeline(resources);
+
+        const workflow = parse(
+            buildGithubWorkflow({
+                ...pipeline,
+                manualChecks: pipeline.manualChecks.filter(({ check }) => check.name === name),
+                manualTools: name === 'docs/lychee-external' ? pipeline.manualTools : [],
+            }).content,
+        ) as GithubWorkflow;
+        const runs = workflow.jobs['manual-linux']!.steps.map((step) => step.run ?? '');
+        const cli = quoteArgument(`npm:@gspothq/cli@${pipeline.version}`);
+        expect(
+            runs.some((run) =>
+                run.includes(
+                    `mise exec ${quoteArgument('node@24')} ${cli} -- gspot check --only ${quoteArgument(name)}`,
+                ),
+            ),
+        ).toBe(true);
+        expect(workflow.jobs['check-linux']!.steps.some((step) => step.run?.includes('--only') === true)).toBe(false);
+    },
+);
+
+test('a Swift scope adds the macOS jobs', async () => {
+    await using resources = new AsyncDisposableStack();
+    const pipeline = await buildPipeline(resources);
+
+    const workflow = parse(buildGithubWorkflow({ ...pipeline, hasSwift: true }).content) as GithubWorkflow;
+    expect(Object.keys(workflow.jobs)).toContain('check-macos');
+    expect(Object.keys(workflow.jobs)).toContain('manual-macos');
+});
+
+test.each(SETUP_CASES)(
+    'the %s job keeps setup exit %s and literal arguments before gspot',
+    async (provider, setupExit) => {
+        await using resources = new AsyncDisposableStack();
+        const selectedPipeline = await buildPipeline(resources);
+
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'bin/mise': MISE_PROGRAM,
+            'bin/gspot': GSPOT_PROGRAM,
+            'bin/project setup': SETUP_PROGRAM,
+        });
+        for (const name of ['mise', 'gspot', 'project setup']) await chmod(join(sandbox.path, 'bin', name), 0o755);
+        const commands = join(sandbox.path, 'commands.log');
+        const argumentsPath = join(sandbox.path, 'arguments.log');
+        const pipeline = {
+            ...selectedPipeline,
+            manualChecks: [],
+            manualTools: [],
+            setupCommand: [join(sandbox.path, 'bin', 'project setup'), ...SETUP_ARGUMENTS],
+        };
+        const script =
+            provider === 'github'
+                ? (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['check-linux']!.steps.flatMap(
+                      (step) => (step.run === undefined ? [] : [step.run]),
+                  )
+                : (parse(buildGitlabWorkflow(pipeline).content) as GitlabPipeline).gspot.script;
+        const result = await runCommand(['bash', '-e', '-c', script.join('\n')], {
+            cwd: sandbox.path,
+            env: {
+                PATH: `${join(sandbox.path, 'bin')}${delimiter}${readEnvironmentVariable('PATH') ?? ''}`,
+                GSPOT_COMMAND_LOG: commands,
+                GSPOT_SETUP_ARGUMENTS: argumentsPath,
+                GSPOT_SETUP_EXIT: String(setupExit),
+            },
+        });
+        expect(result.code, result.stdout + result.stderr).toBe(setupExit);
+        expect(result.stdout).toBe('setup out\n');
+        expect(result.stderr).toBe('setup err\n');
+        expect(await readFile(commands, 'utf8')).toBe(setupExit === 0 ? 'setup\ninstall\ncheck\n' : 'setup\n');
+        expect(await readFile(argumentsPath, 'utf8')).toBe(`${SETUP_ARGUMENTS.join('\n')}\n`);
+        expect(await Bun.file(join(sandbox.path, 'unexpected')).exists()).toBe(false);
+    },
+);
+
+/** Build each test's pipeline from its own prepared session and keep the sandbox alive for that test. */
+async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline> {
+    const sandbox = resources.use(
+        await testdir({
+            'gspot.toml': buildSettingsText(['docs'], {
+                tables: '[[command_check]]\nname = "project/audit"\npaths = ["**/*"]\nstage = "manual"\ncommand = ["echo", "sample"]\n',
+            }),
+            'README.md': '# Example\n',
+            'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
+        }),
+    );
+    const session = await openSession(sandbox.path);
+    const client = session.getPackageManager();
+    const pipeline: Pipeline = {
+        ...LINUX_PIPELINE,
+        operatingSystems: [...LINUX_PIPELINE.operatingSystems],
+        manualChecks: session.configuredChecks.filter(({ check }) =>
+            ['docs/lychee-external', 'project/audit'].includes(check.name),
+        ),
+        manualTools: session.manifests.get('docs')!.tools.filter((tool) => tool.name === 'lychee'),
+        ...(client === undefined ? {} : { npmClient: client }),
+    };
+    return pipeline;
+}

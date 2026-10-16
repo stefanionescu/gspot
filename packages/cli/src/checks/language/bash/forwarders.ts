@@ -1,7 +1,7 @@
-import { findingAt } from '#cli/checks/finding.ts';
 import { listCodeLines } from '#cli/parsers/bash.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 
 import {
     DEPRECATED_ALIAS,
@@ -15,7 +15,7 @@ import {
  * @param input the check context.
  * @returns the findings.
  */
-export async function bashWrappers(input: CheckInput): Promise<Finding[]> {
+export async function checkBashForwarders(input: CheckInput): Promise<Finding[]> {
     const index = await readScripts(input);
     return index.flatMap((file) => {
         const findings = [];
@@ -23,7 +23,7 @@ export async function bashWrappers(input: CheckInput): Promise<Finding[]> {
         const alias = file.lines.findIndex((line) => DEPRECATED_ALIAS.test(line));
         if (alias !== -1)
             findings.push(
-                findingAt(
+                buildFinding(
                     input,
                     { file: file.path, line: alias + 1 },
                     'deprecated-alias',
@@ -35,7 +35,7 @@ export async function bashWrappers(input: CheckInput): Promise<Finding[]> {
         );
         if (forwarding.length === 1 && code.length <= FORWARDER_MAX_LINES)
             findings.push(
-                findingAt(
+                buildFinding(
                     input,
                     { file: file.path, line: forwarding[0]?.number ?? 1 },
                     'forwarding-wrapper',

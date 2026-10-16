@@ -9,12 +9,12 @@ export type PathIgnore = { base: string; matcher: Ignore };
 
 export type PathExpressions = { includes: string[]; excludes: string[] };
 
-export type FileEntry = { path: string; size: number; executable: boolean; symlink: boolean };
+export type ListedFile = { path: string; size: number; executable: boolean; symlink: boolean };
 
 export type TrackedFile = {
     path: string;
     kind: FileKind;
-    kindSource?: string;
+    kindOrigin?: string;
     tags: string[];
     executable: boolean;
     size: number;
@@ -27,10 +27,10 @@ export type Repository = {
     index: GitIndexEntry[];
     files: TrackedFile[];
     dependencyFiles: DependencyFile[];
-    scopes: ScopeEntry[];
+    scopes: Scope[];
 };
 
-export type Tagged = { tags: string[]; binary: boolean };
+export type Tagged = { tags: string[]; isBinary: boolean };
 
 export type FileKind = (typeof FILE_KINDS)[number];
 
@@ -48,15 +48,15 @@ export type ExistingTools = {
     }[];
     ci: string[];
     agentFiles: string[];
-    rulesDirectories: string[];
+    ruleFolders: string[];
     lintFolders: string[];
-    lintOnlyManifests: string[];
+    toolOnlyPackages: string[];
 };
 
-export type ScopeEntry = {
+export type Scope = {
     path: string;
     configurations: string[];
-    source: 'root' | typeof SETTINGS_FILE | 'project';
+    origin: 'root' | typeof SETTINGS_FILE | 'project';
 };
 
 export type FoundToolFile = {
@@ -67,11 +67,10 @@ export type FoundToolFile = {
     key?: string;
 };
 
-/** Content evidence for classifying a tracked file prefix. */
 /** Directory entries together with inherited and locally authored ignore rules. */
-export type DirectoryContents = { entries: Dirent[]; ignores: PathIgnore[] };
+export type FolderListing = { entries: Dirent[]; ignores: PathIgnore[] };
 /** A directory waiting for a read with its inherited ignore rules. */
-export type PendingDirectory = { folder: string; ignores: PathIgnore[] };
+export type PendingFolder = { folder: string; ignores: PathIgnore[] };
 
 /** Authored declarations and effective Git attributes used for classification. */
 export type ClassificationInputs = { declarations: FileDeclaration[]; attributes: Repository['attributes'] };

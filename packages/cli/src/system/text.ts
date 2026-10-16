@@ -64,7 +64,7 @@ export function hashContent(content: string | Uint8Array): string {
 /**
  * Quote one argument for a POSIX shell command shown to the reader.
  *
- * @param value the argument.
+ * @param value the command token to display without shell expansion.
  *
  * @returns the argument with any required shell quoting.
  */
@@ -76,10 +76,10 @@ export function quoteArgument(value: string): string {
 /**
  * The line and column of an offset into a text, both from one.
  *
- * @param text the text.
+ * @param text the source for counting line breaks before the offset.
  * @param offset the index into it.
  *
- * @returns the position.
+ * @returns one-based line and column numbers for the supplied offset.
  */
 export function computePosition(text: string, offset: number): TextPosition {
     const before = text.slice(0, offset);
@@ -96,4 +96,14 @@ export function computePosition(text: string, offset: number): TextPosition {
  */
 export function convertToSpaces(text: string): string {
     return text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
+}
+
+/**
+ * Print a count with its singular or plural noun.
+ * @param value the quantity that selects the noun ending.
+ * @param noun the singular noun.
+ * @returns the count and the noun with the matching ending.
+ */
+export function formatCount(value: number, noun: string): string {
+    return `${String(value)} ${noun}${value === 1 ? '' : 's'}`;
 }

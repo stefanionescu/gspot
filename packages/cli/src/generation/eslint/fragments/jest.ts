@@ -6,7 +6,7 @@ import { type EslintContext, type EslintFragment } from '#cli/types/generation/e
  * @param context the selected presets, rule printer, and scope settings.
  * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildJestFragment(
+function buildJestFragment(
     context: Pick<EslintContext, 'eslintModule' | 'eslintFiles' | 'testRuleNames'>,
 ): EslintFragment {
     const { eslintModule, eslintFiles, testRuleNames } = context;
@@ -29,3 +29,5 @@ export function buildJestFragment(
     ];
     return { imports: imports, blocks: output.join('') };
 }
+
+export { buildJestFragment };

@@ -1,5 +1,5 @@
 import { defineCollection } from 'astro:content';
 import { docsSchema } from '@astrojs/starlight/schema';
-import { referenceCollection } from './reference/collection.ts';
+import { buildReferenceCollection } from './reference/collection.ts';
 
-export const collections = { docs: defineCollection({ loader: referenceCollection(), schema: docsSchema() }) };
+export const collections = { docs: defineCollection({ loader: buildReferenceCollection(), schema: docsSchema() }) };

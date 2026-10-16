@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
-import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
-import { toolFindings } from '#cli/checks/run/command/output.ts';
-import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
+import { assertToolFindings } from '#cli/checks/run/command/output.ts';
+import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 
 import {
     FAILED_CHECK,
@@ -53,10 +53,10 @@ function parseExpoDoctor(stdout: string): string[] {
 
 /**
  * Runs Expo Doctor in a scope that depends on expo.
- * @param input the check input.
+ * @param input the project scope and installed tool environment.
  * @returns one finding for each check Doctor reports as failed.
  */
-export async function expoDoctor(input: CheckInput): Promise<Finding[]> {
+export async function checkExpoDoctor(input: CheckInput): Promise<Finding[]> {
     const path = joinScope(input.scope.scope.path, 'package.json');
     // Doctor exits 0 without reading a project whose expo package does not exist, so check the project first.
     if (!hasInstalledExpo(join(input.root, input.scope.scope.path)))
@@ -67,8 +67,8 @@ export async function expoDoctor(input: CheckInput): Promise<Finding[]> {
     const result = await runCheckTool(input, EXPO_DOCTOR_COMMAND, {
         cwd: join(input.root, input.scope.scope.path),
     });
-    const findings = parseExpoDoctor(result.stdout).map((diagnostic) =>
-        findingAt(input, { file: path, line: 1 }, 'failed-check', diagnostic),
+    const findings = parseExpoDoctor(result.stdout).map((message) =>
+        buildFinding(input, { file: path, line: 1 }, 'failed-check', message),
     );
-    return toolFindings(result, findings, 'expo-doctor');
+    return assertToolFindings(result, findings, 'expo-doctor');
 }

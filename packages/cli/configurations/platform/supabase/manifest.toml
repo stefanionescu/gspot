@@ -43,7 +43,7 @@ why = "A bucket with no policy is closed to everyone or, when it is public, open
 
 [[check]]
 example = "A client source reading a Supabase secret or service-role key reports an administrative-key boundary finding. Move privileged operations and the key read to a server-only path, exposing only the required server operation to the client."
-help = "Move code to edge functions or tests, or run gspot ignore supabase/service-role-key with a reason."
+help = "Move code to edge functions or tests, or run `gspot ignore supabase/service-role-key` with a reason."
 level = "recommended"
 name = "service-role-key"
 runs = "scope"
@@ -53,7 +53,7 @@ why = "Secret and service role keys bypass row level security, so a client bundl
 
 [[check]]
 example = "An Edge Function declaring `var greeting = \"hello\";` reports `no-var`. Use `const greeting = \"hello\";` when the value does not change, then rerun with the pinned Deno tool available."
-help = "Change the code the way the rule says; deno lint --rules explains each one."
+help = "Change the code the way the rule says; `deno lint --rules` explains each one."
 level = "recommended"
 name = "deno-lint"
 runs = "scope"
@@ -77,7 +77,7 @@ why = "The project compiler does not resolve the import map of a function, so on
 command = ["supabase", "gen", "types", "typescript", "--local", "{each:--schema:supabase.schemas}"]
 example = "A database types file that differs from the configured local Supabase schema reports drift. With the local database ready, regenerate using `supabase gen types typescript --local`, write the output to the configured file, and rerun."
 generator_outputs = [{ stdout = "{setting:supabase.types_file}" }]
-help = "Run supabase gen types typescript --local and write the output to the file."
+help = "Run `supabase gen types typescript --local` and write the output to the file."
 level = "recommended"
 name = "stale-types"
 needs = ["docker"]

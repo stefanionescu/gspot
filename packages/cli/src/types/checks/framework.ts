@@ -1,3 +1,5 @@
+import type { LINKINATOR_STATES } from '#cli/config/checks/framework/site.ts';
+
 /** The result of one isolated static-site build. */
 export type SiteBuild = {
     cwd: string;
@@ -7,7 +9,7 @@ export type SiteBuild = {
     outputTail: string;
 };
 
-/** The selected native package's public LinkChecker API with native CLI option delivery. */
+/** The selected package's public LinkChecker API with CLI option delivery. */
 export type LinkinatorConstructor = new () => {
     on(event: 'pagestart', listener: (url: string) => void): unknown;
     check(options: {
@@ -21,7 +23,7 @@ export type LinkinatorConstructor = new () => {
         {
             links: {
                 url: string;
-                state: 'BROKEN' | 'OK' | 'SKIPPED';
+                state: (typeof LINKINATOR_STATES)[number];
                 status?: number | null;
                 parent?: string | null;
             }[];

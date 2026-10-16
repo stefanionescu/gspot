@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+#MISE description="Build both npm packages: the CLI and the ESLint plugin."
+#MISE depends=["packages:cli:build", "packages:eslint-plugin:build"]
+set -euo pipefail

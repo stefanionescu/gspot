@@ -1,5 +1,7 @@
 # Express
 
+Read this rule when you change routes, middleware, or error handling in an Express service.
+
 Routes, middleware, errors, and body parsing in an Express service, on top of the HTTP rules.
 
 ## Routes and middleware

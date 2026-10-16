@@ -1,6 +1,6 @@
 # Bun
 
-Rules that hold because the code runs on Bun.
+Read this rule when code runs on Bun.
 
 ## Module resolution
 

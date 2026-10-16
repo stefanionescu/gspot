@@ -1,31 +1,32 @@
 import type { Session } from '#cli/types/planning.ts';
 import type { FileEdit } from '#cli/types/ownership.ts';
-import type { HOOK_ARGS } from '#cli/config/generation/hooks.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
-import { type FileCopy, type ReadCache } from '#cli/types/system/files.ts';
 import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
+import type { RUNNERS, HOOK_ARGUMENTS } from '#cli/config/generation/hooks.ts';
+import { type ReadCache, type FileContents } from '#cli/types/system/files.ts';
 import type { Level, Manifest, ToolDeclaration, ToolFileDeclaration } from '#cli/types/configurations.ts';
-
-/** Applicable checks and their required tools at one generation boundary. */
-type ToolFileConsumers = { tools: Set<string>; checks: Set<string> };
 
 type ManagedBlock = { path: string; block: string; style: BlockStyle };
 
 type SemgrepRule = Record<string, unknown> & { id: string; paths?: { include: string[] } };
 
-type WholeToolFile = Extract<ToolFileDeclaration, { source: string }>;
-
-/** Repository-wide consumers and the consumers of the current scope. */
-export type GenerationConsumers = { repository: ToolFileConsumers; scope: ToolFileConsumers };
+/** The repository and resolved scope for building tool files. */
+type GenerationInputs = {
+    session: Session;
+    manifests: Manifest[];
+    files: TrackedFile[];
+    scopes: ScopeSelection[];
+    selection: ScopeSelection;
+};
 
 export type GeneratedFile = {
     path: string;
     content: string;
     executable?: boolean;
-    read?: FileCopy;
-    kind: 'lock' | 'tool_file' | 'pointer' | 'hook' | 'workflow' | 'rules';
+    read?: FileContents;
+    kind?: 'lock' | 'tool_file' | 'pointer' | 'hook' | 'workflow' | 'rules';
 };
 
 export type GenerationResult = {
@@ -35,29 +36,18 @@ export type GenerationResult = {
     fileEdits: FileEdit[];
 };
 
-/** The repository and resolved scope for emit tool files. */
-export type GenerationInputs = {
-    session: Session;
-    manifests: Manifest[];
-    files: TrackedFile[];
-    scopes: ScopeSelection[];
-    selection: ScopeSelection;
-};
-
-/** The configuration owner within a scope's generation inputs. */
+/** The declaring configuration and the inputs of its scope. */
 export type ToolFileInputs = GenerationInputs & { manifest: Manifest };
 
-/** One proposed scoped output and its declaring configuration. */
-export type ToolFileTarget = {
-    toolFile: ToolFileDeclaration;
-    target: string;
-    owner: ToolFileInputs;
-    pointers: GeneratedFile[];
+/** Generated tool files and the chosen target for each scope and declaration. */
+export type ToolFileGeneration = {
+    files: GeneratedFile[];
+    targets: ReadonlyMap<string, ReadonlyMap<string, string>>;
 };
 
 /** The start command chosen from this repository's gspot dependency. */
 export type StartRunner = {
-    name: 'npm' | 'pnpm' | 'yarn' | 'bun' | 'mise';
+    name: keyof typeof RUNNERS;
     command: string;
     missing: string;
     pin: string;
@@ -74,7 +64,7 @@ export type ProseInputs = { words: string[]; rules: string[] };
 
 export type SemgrepDocument = { rules: SemgrepRule[] };
 
-/** Native typos dictionaries, whose values replace each declared word or identifier. */
+/** Typos dictionaries, whose values replace each declared word or identifier. */
 export type TyposDictionary = {
     locale?: string;
     'extend-glob'?: string[];
@@ -82,19 +72,21 @@ export type TyposDictionary = {
     'extend-words'?: Record<string, string>;
 };
 
-/** Native typos extension tables. */
+/** Typos extension tables. */
 export type TyposSettings = { default?: TyposDictionary; type?: Record<string, TyposDictionary> };
 
-export type HookName = keyof typeof HOOK_ARGS;
+export type HookName = keyof typeof HOOK_ARGUMENTS;
 
 export type NpmProjectInputs = {
     root: string;
     scopes: ScopeSelection[];
     manifests: Manifest[];
-    installer: PackageManager | undefined;
+    packageManager: PackageManager | undefined;
 };
 
 export type SwiftVersionInput = { root: string; scope: string; reads: ReadCache };
+
+export type WholeToolFile = Extract<ToolFileDeclaration, { source: string }>;
 
 /** The repository, scope, declaration, and destination for one whole tool file. */
 export type ToolFileContext = ToolFileInputs & { targetPath: string; level: Level; toolFile: WholeToolFile };
@@ -103,11 +95,27 @@ export type ToolFileContext = ToolFileInputs & { targetPath: string; level: Leve
 export type ToolFileBuilder = (context: ToolFileContext) => string;
 
 /** A selected tool and the generated destinations that can replace package fields. */
-export type PackageRedirectInputs = {
+export type PointerFieldInputs = {
     selection: ScopeSelection;
     manifest: Manifest;
     tool: ToolDeclaration;
     consumed: boolean;
     paths: ReadonlySet<string>;
+    targets: ToolFileGeneration['targets'];
     scopePaths: string[];
 };
+
+/** One ignore group and the reason shown above its paths. */
+export type IgnoreSection = { title: string; patterns: string[] };
+
+/** A declaration paired with the repository and scope that own it. */
+export type ToolFileSelection = { toolFile: ToolFileDeclaration; owner: ToolFileInputs };
+
+/** A whole-file declaration with the text built for one selected scope. */
+export type ToolFileOutput = ToolFileSelection & { toolFile: WholeToolFile; file: GeneratedFile };
+
+/** The mutable destinations and output files collected during one generation. */
+export type ToolFileGenerationState = { targets: Map<string, Map<string, string>>; files: Map<string, GeneratedFile> };
+
+/** The check and program names that make a tool-file declaration applicable. */
+export type NeededToolFiles = { tools: Set<string>; checks: Set<string> };

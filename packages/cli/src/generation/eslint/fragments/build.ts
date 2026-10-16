@@ -83,7 +83,7 @@ function buildSelectedFragments(
     inputs: EslintContext,
     scopes: ScopeSelection[],
 ): EslintFragment[] {
-    const emitted: EslintFragment[] = [];
+    const blockText: EslintFragment[] = [];
     for (const { manifest } of fragments) {
         for (const selection of scopes.filter((entry) => entry.selected.includes(manifest))) {
             const scope = selection.scope.path;
@@ -95,6 +95,7 @@ function buildSelectedFragments(
                 .files('')
                 .filter((path) => isInScope(path, scope) && children.every((child) => !isInScope(path, child)));
             const module = createBlockWriter({
+                source: manifest.configuration.name,
                 allRules: inputs.eslintAllRules,
                 isAll: inputs.isAll,
                 codeFiles: inputs.eslintFiles.code,
@@ -106,7 +107,7 @@ function buildSelectedFragments(
                 ...selection.view,
                 scope,
                 testFiles: selection.view.test_files,
-                scopeDependencies: Object.keys(getProjectDependencies(session.packageManifests, scope)),
+                scopeDependencies: Object.keys(getProjectDependencies(session.dependencyFiles, scope)),
                 eslintModule: module,
                 eslintFiles: {
                     ...inputs.eslintFiles,
@@ -116,10 +117,10 @@ function buildSelectedFragments(
                 },
                 files: (extension: string) => selectedFiles.filter((path) => path.endsWith(extension)),
             });
-            emitted.push(fragment);
+            blockText.push(fragment);
         }
     }
-    return emitted;
+    return blockText;
 }
 
 /**
@@ -149,9 +150,9 @@ function collectFragments(
             .filter((toolFile) => toolFile.fragment && toolFile.target === target.target)
             .map((toolFile) => ({ manifest, toolFile })),
     );
-    const emitted = buildSelectedFragments(session, fragments, inputs, scopes);
-    const imports = emitted.flatMap((fragment) => fragment.imports);
-    const bodies = emitted.map((fragment) => fragment.blocks);
+    const blockText = buildSelectedFragments(session, fragments, inputs, scopes);
+    const imports = blockText.flatMap((fragment) => fragment.imports);
+    const bodies = blockText.map((fragment) => fragment.blocks);
     return {
         fragmentParts: bodies,
         fragmentImports: [...new Set(imports)].join('\n'),

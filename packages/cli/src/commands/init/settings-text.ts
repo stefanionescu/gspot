@@ -8,14 +8,14 @@ import { detectDefaults } from '#cli/settings/known.ts';
 import { parseBuildSettings } from '#cli/parsers/xcode.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
-import { type TomlTable } from '#cli/types/settings/file.ts';
+import type { TomlTable } from '#cli/types/settings/file.ts';
 import { CI_FILE_LABELS } from '#cli/config/generation/ci.ts';
 import { ORIGIN_URL_SETTING } from '#cli/config/system/git.ts';
 import { readLintJobs } from '#cli/repository/existing-tools.ts';
 import { formatSettingsText } from '#cli/settings/write/text.ts';
 import { PBXPROJ, PBXPROJ_NAME } from '#cli/config/parsers/xcode.ts';
 import { TEMPLATE_COMMENT_PREFIX } from '#cli/config/settings/file.ts';
-import { type ConfigurationSelection } from '#cli/types/repository/selection.ts';
+import type { ConfigurationSelection } from '#cli/types/repository/selection.ts';
 import { type Repository, type ExistingTools } from '#cli/types/repository/inventory.ts';
 import { PREFACE_BODY, REMOTE_URL_USER, REMOTE_URL_SCHEME } from '#cli/config/commands/init.ts';
 import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/existing-tools.ts';
@@ -52,16 +52,16 @@ function buildOpenapiTables(
 
 /**
  * Choose the CI provider from existing files and the origin host.
- * @param root the repository root
+ * @param repositoryRoot the folder whose origin remote supplies the host when no CI files exist.
  * @param tooling the discovered tool and CI files
  * @returns the provider to propose, or none when the repository needs no workflow
  */
-function proposeCi(root: string, tooling: ExistingTools): InitAnswers['ci'] {
-    if (readLintJobs(root, tooling.ci).length > 0) return 'none';
+function detectCiProvider(repositoryRoot: string, tooling: ExistingTools): InitAnswers['ci'] {
+    if (readLintJobs(repositoryRoot, tooling.ci).length > 0) return 'none';
     let existing: InitAnswers['ci'] | undefined;
     if (tooling.ci.includes(GITLAB_CI_FILE)) existing = 'gitlab';
     else if (tooling.ci.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) existing = 'github';
-    const remote = existing === undefined ? (readGitSetting(root, ORIGIN_URL_SETTING) ?? '') : '';
+    const remote = existing === undefined ? (readGitSetting(repositoryRoot, ORIGIN_URL_SETTING) ?? '') : '';
     const host = remote.replace(REMOTE_URL_SCHEME, '').replace(REMOTE_URL_USER, '');
     if (existing !== undefined) return existing;
     return (
@@ -77,31 +77,31 @@ function headTables(
     manifests: Map<string, Manifest>,
     formats: Map<string, TomlTable>,
 ): TomlTable {
-    const selection = draftSelection(draft);
-    const swift = draft.template?.tables.xcode;
+    const selection = buildDraftSelection(draft);
+    const swift = draft.template?.tables.swift;
     const projectFiles = repository.files.filter((entry) => entry.path.endsWith(PBXPROJ));
     const scopes = ['', ...draft.scopes.map((entry) => entry.path)];
     const selections = scopes.map((scope) => ({ scope, selected: selectForScope(selection, scope, manifests) }));
     const swiftFiles = selections.flatMap(({ scope, selected }) => {
-        if (swift?.destination !== undefined || !selected.some((entry) => entry.configuration.name === 'swift'))
+        if (swift?.xcode_destination !== undefined || !selected.some((entry) => entry.configuration.name === 'swift'))
             return [];
         const file =
-            swift?.project === undefined
+            swift?.xcode_project === undefined
                 ? projectFiles.find((entry) => findScope(entry.path, draft.scopes).path === scope)?.path
-                : posix.join(swift.project, PBXPROJ_NAME);
+                : posix.join(swift.xcode_project, PBXPROJ_NAME);
         return file === undefined ? [] : [{ scope, file }];
     });
     const projects = new Map(
         swiftFiles.map(({ scope, file }) => {
             const text = readText(repository.root, file);
             const sdkRoot = text === undefined ? undefined : parseBuildSettings(text).sdkRoot;
-            const destination = detectDefaults(sdkRoot === undefined ? {} : { sdkRoot }).get('xcode.destination');
-            const xcode = {
+            const destination = detectDefaults(sdkRoot === undefined ? {} : { sdkRoot }).get('swift.xcode_destination');
+            const swiftSettings = {
                 ...(scope === '' ? swift : {}),
-                project: posix.dirname(file),
-                ...stripUndefined({ destination }),
+                xcode_project: posix.dirname(file),
+                ...stripUndefined({ xcode_destination: destination }),
             };
-            return [scope, { xcode }];
+            return [scope, { swift: swiftSettings }];
         }),
     );
     const openapiTables = buildOpenapiTables(selections, draft, repository);
@@ -125,7 +125,7 @@ function headTables(
  * @param formats formatting values for each scope
  * @returns TOML with its schema line and preface
  */
-function initSettingsText(
+function buildInitSettings(
     draft: SettingsDraft,
     repository: Repository,
     manifests: Map<string, Manifest>,
@@ -154,9 +154,9 @@ function initSettingsText(
  * Drafts the repository settings from configuration choices and initialization answers.
  * @param selection the selected configurations and scopes
  * @param answers the integration choices
- * @returns the settings draft
+ * @returns root and scoped selections with integration answers and inferred commit scopes.
  */
-function draftSettings(selection: InitSelection, answers: InitAnswers): SettingsDraft {
+function buildSettingsDraft(selection: InitSelection, answers: InitAnswers): SettingsDraft {
     const scopes = selection.scopes.filter((scope) => scope.path !== '');
     const commitScopes =
         scopes.length > 0 && selection.selectedIds.has('commits')
@@ -180,12 +180,12 @@ function draftSettings(selection: InitSelection, answers: InitAnswers): Settings
  * @param draft the configuration choices and template
  * @returns the root and scope configuration choices
  */
-function draftSelection(draft: SettingsDraft): ConfigurationSelection {
+function buildDraftSelection(draft: SettingsDraft): ConfigurationSelection {
     return {
         configurations: draft.configurations,
         removed_configurations: [],
-        scope: Object.fromEntries(draft.scopes.map((scope) => [scope.path, { ...scope, removed_configurations: [] }])),
+        scopes: Object.fromEntries(draft.scopes.map((scope) => [scope.path, { ...scope, removed_configurations: [] }])),
     };
 }
 
-export { proposeCi, draftSettings, draftSelection, initSettingsText };
+export { detectCiProvider, buildInitSettings, buildSettingsDraft, buildDraftSelection };

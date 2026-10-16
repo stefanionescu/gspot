@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { runGit } from '#cli/system/git.ts';
-import { emptyResult } from '#cli/checks/run/report.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
-import { type CheckResult } from '#cli/types/execution/check.ts';
+import { buildBaseResult } from '#cli/checks/run/report.ts';
+import { type CheckResult } from '#cli/types/checks/run/check.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
@@ -13,10 +13,10 @@ import { MESSAGE_FILE, COMMITLINT_CHECK, COMMIT_MESSAGE_ARGUMENTS } from '#cli/c
 /**
  * Check every selected commit message, including empty commits with identical source trees.
  * @param session the open session.
- * @param planned the planned check.
+ * @param planned the selected commit range and command declaration.
  * @returns the check result.
  */
-export async function commitlintPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkCommitlintPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     using folder = createScratchFolder();
     const commitFile = join(folder.path, MESSAGE_FILE);
     let count = 0;
@@ -26,7 +26,7 @@ export async function commitlintPushed(session: Session, planned: PlannedCheck):
         });
         if (read.code !== 0)
             return {
-                ...emptyResult(planned),
+                ...buildBaseResult(planned, session),
                 status: 'error',
                 note: `Cannot read commit ${commit}: ${read.stderr.trim()}`,
             };

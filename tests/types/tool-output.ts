@@ -1,12 +1,12 @@
 import type { Linter } from 'eslint';
-import type { Finding } from '#cli/types/execution/check.ts';
+import type { Finding } from '#cli/types/checks/run/check.ts';
 
 /** A native ESLint diagnostic projected onto its repository-relative source location. */
 export type LintFinding = { rule: Linter.LintMessage['ruleId']; file: string; line: Linter.LintMessage['line'] };
 /** The native link failure expected in one independently configured project. */
 export type LinkFailure = { scope: string; file: string; rule: string };
 
-export type TypecheckOutcome = { code: number; output: string; findings: Finding[] };
+export type TypecheckResult = { code: number; output: string; findings: Finding[] };
 export type ParameterFinding = {
     code?: string;
     rule_id?: string;
@@ -28,3 +28,10 @@ export type FindingRow = { file: string; line: number | undefined; rule: string 
 
 /** Source text and native findings for one retained ESLint case. */
 export type SourceRuleCase = { name?: string; source: string; rule: string; count: number };
+
+/** Expected native lint messages for a source sample at each supported level. */
+export type ScriptFindingCase = {
+    file: string;
+    recommended: readonly { ruleId: string | null; line: number }[];
+    all?: readonly { ruleId: string | null; line: number }[];
+};

@@ -2,10 +2,10 @@ import { posix } from 'node:path';
 import { normalizePath } from '../paths.ts';
 import { INDEX_BASENAMES } from '../config/paths.ts';
 import type { TrivialFilesOptions } from '../types/rules.ts';
-import { createRule, optionsSchema } from '../create-rule.ts';
+import { createRule, buildOptionsSchema } from '../create-rule.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { ContentCheck, ImplementedFunction } from '../types/syntax.ts';
-import { unwrap, totalStatements, ownsCalculation, hasConstructorState } from '../syntax.ts';
+import { unwrap, hasCalculation, countStatements, hasConstructorState } from '../syntax.ts';
 
 import {
     SHEBANG,
@@ -17,7 +17,7 @@ import {
     STRUCTURED_EXPRESSIONS,
 } from '../config/syntax.ts';
 
-function ownsTypeShape(annotation: TSESTree.TypeNode): boolean {
+function hasOwnTypeShape(annotation: TSESTree.TypeNode): boolean {
     if (annotation.type !== AST_NODE_TYPES.TSTypeReference) return true;
     const typeArguments = annotation.typeArguments;
     if (typeArguments === undefined) return false;
@@ -25,7 +25,7 @@ function ownsTypeShape(annotation: TSESTree.TypeNode): boolean {
 }
 
 // Declarations own their schemas, implementations, or wrapped expressions.
-function implementationContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {
+function hasDeclarationContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {
     switch (node.type) {
         case AST_NODE_TYPES.ExportNamedDeclaration: {
             return inspect(node.declaration);
@@ -41,16 +41,16 @@ function implementationContent(node: TSESTree.Node, inspect: ContentCheck): bool
             return node.body.body.length > 0;
         }
         case AST_NODE_TYPES.TSTypeAliasDeclaration: {
-            return ownsTypeShape(node.typeAnnotation);
+            return hasOwnTypeShape(node.typeAnnotation);
         }
         default: {
-            return expressionContent(node, inspect);
+            return hasOperandContent(node, inspect);
         }
     }
 }
 
 // Expression wrappers retain the content of their operand or exported value.
-function expressionContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {
+function hasOperandContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {
     switch (node.type) {
         case AST_NODE_TYPES.ExportDefaultDeclaration: {
             return inspect(node.declaration);
@@ -72,7 +72,7 @@ function expressionContent(node: TSESTree.Node, inspect: ContentCheck): boolean 
 }
 
 // Calls own inline schemas and substantive arguments.
-function callContent(node: TSESTree.CallExpression | TSESTree.NewExpression, inspect: ContentCheck): boolean {
+function hasCallContent(node: TSESTree.CallExpression | TSESTree.NewExpression, inspect: ContentCheck): boolean {
     if (
         node.typeArguments?.params.some(
             (parameter) => parameter.type === AST_NODE_TYPES.TSTypeLiteral && parameter.members.length > 0,
@@ -96,7 +96,7 @@ function callContent(node: TSESTree.CallExpression | TSESTree.NewExpression, ins
 }
 
 // Factories own the structure they construct, including structures passed to schema builders.
-function ownsStructuredValue(expression: TSESTree.Node | null): boolean {
+function hasStructuredValue(expression: TSESTree.Node | null): boolean {
     const node = unwrap(expression);
     if (node === null) return false;
     if (STRUCTURED_EXPRESSIONS.has(node.type)) return true;
@@ -105,14 +105,14 @@ function ownsStructuredValue(expression: TSESTree.Node | null): boolean {
             return node.expressions.length > 0;
         }
         case AST_NODE_TYPES.ConditionalExpression: {
-            return ownsStructuredValue(node.consequent) || ownsStructuredValue(node.alternate);
+            return hasStructuredValue(node.consequent) || hasStructuredValue(node.alternate);
         }
         case AST_NODE_TYPES.CallExpression:
         case AST_NODE_TYPES.NewExpression: {
-            return callContent(node, ownsStructuredValue);
+            return hasCallContent(node, hasStructuredValue);
         }
         default: {
-            return expressionContent(node, ownsStructuredValue) === true;
+            return hasOperandContent(node, hasStructuredValue) === true;
         }
     }
 }
@@ -132,7 +132,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
             fix: 'Import re-exported values from the modules that define them. Move aliases and small functions into the modules that use them, then delete the forwarding file.',
         },
         schema: [
-            optionsSchema({
+            buildOptionsSchema({
                 trivialStatements: {
                     description: 'Functions with this many statements or fewer are reported.',
                     type: 'integer',
@@ -155,15 +155,15 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
             return {};
         const max = options.trivialStatements;
         let hasImplementation = false;
-        const substantial: ContentCheck = (expression) => {
+        const isSubstantial: ContentCheck = (expression) => {
             const node = unwrap(expression);
             if (node === null) return false;
-            if (ownsCalculation(node, context.sourceCode.visitorKeys)) return true;
+            if (hasCalculation(node, context.sourceCode.visitorKeys)) return true;
             if (FORWARDING_NODES.has(node.type)) return false;
-            const content = implementationContent(node, substantial);
+            const content = hasDeclarationContent(node, isSubstantial);
             if (content !== undefined) return content;
             if (node.type !== AST_NODE_TYPES.CallExpression && node.type !== AST_NODE_TYPES.NewExpression) return true;
-            return callContent(node, substantial);
+            return hasCallContent(node, isSubstantial);
         };
         return {
             [MODULE_CALL_SELECTOR](node: TSESTree.CallExpression) {
@@ -185,17 +185,16 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
                 if (
                     node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate ||
                     hasConstructorState(node) ||
-                    ownsCalculation(node.body, context.sourceCode.visitorKeys) ||
-                    totalStatements(node, context.sourceCode.visitorKeys) > max ||
-                    (node.body.type !== AST_NODE_TYPES.BlockStatement && ownsStructuredValue(node.body))
+                    hasCalculation(node.body, context.sourceCode.visitorKeys) ||
+                    countStatements(node, context.sourceCode.visitorKeys) > max ||
+                    (node.body.type !== AST_NODE_TYPES.BlockStatement && hasStructuredValue(node.body))
                 )
                     hasImplementation = true;
             },
             ReturnStatement(node) {
                 if (
                     node.argument !== null &&
-                    (ownsStructuredValue(node.argument) ||
-                        ownsCalculation(node.argument, context.sourceCode.visitorKeys))
+                    (hasStructuredValue(node.argument) || hasCalculation(node.argument, context.sourceCode.visitorKeys))
                 )
                     hasImplementation = true;
             },
@@ -203,7 +202,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
                 if (
                     !hasImplementation &&
                     node.body.some((statement) => statement.type !== AST_NODE_TYPES.EmptyStatement) &&
-                    !node.body.some((statement) => substantial(statement))
+                    !node.body.some((statement) => isSubstantial(statement))
                 )
                     context.report({ node, messageId: 'trivial' });
             },

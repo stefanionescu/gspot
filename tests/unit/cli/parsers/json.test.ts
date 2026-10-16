@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { NON_RECORD_JSON } from '#tests/config/formatting.ts';
+import { NON_RECORD_JSON } from '#tests/data/checks/format.ts';
 import { parseJsonc, parseJsonFile } from '#cli/parsers/json.ts';
 
 test.each(NON_RECORD_JSON)('JSON configuration rejects a non-object root %s', (text) => {

@@ -1,11 +1,11 @@
 import { posix } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { MIGRATION_VERSION } from '#cli/config/parsers/sql.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/checks/run/check.ts';
 import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
 import { type Migration, type MigrationRead } from '#cli/types/checks/database.ts';
 import { MIGRATION_DOWN, DOWN_MIGRATION_SUFFIX } from '#cli/config/checks/database.ts';
@@ -32,34 +32,12 @@ async function parseMigrations(input: CheckInput, paths: string[]): Promise<Migr
 }
 
 /**
- * Select forward SQL migration paths from the effective folder or configuration-owned defaults.
- * @param input the input for one scope.
- * @returns root-relative migration paths without parsing their SQL.
- */
-function migrationPaths(input: CheckInput): string[] {
-    const migrations = input.scope.selected.flatMap((manifest) =>
-        manifest.checks
-            .filter((check) => check.name === 'postgres/squawk')
-            .flatMap((check) =>
-                listCoveredFiles(check.files ?? manifest.files, input.files, {
-                    selected: input.scope.selected,
-                    scope: input.scope.scope.path,
-                    view: input.scope.view,
-                }),
-            ),
-    );
-    return migrations
-        .filter((file) => file.path.endsWith(SQL_EXTENSION) && !file.path.endsWith(DOWN_MIGRATION_SUFFIX))
-        .map((file) => file.path);
-}
-
-/**
  * Reads and parses every tracked migration in version order.
  * @param input the check input.
  * @returns the migrations, empty when the repository has no migrations folder.
  */
 async function readMigrations(input: CheckInput): Promise<MigrationRead> {
-    const paths = migrationPaths(input);
+    const paths = listMigrationPaths(input);
     if (paths.length === 0) return { migrations: [], findings: [] };
     const key = JSON.stringify(paths);
     const migrations = await getCachedMapValue(input.reads, MIGRATION_MEMO, key, () =>
@@ -82,9 +60,31 @@ async function readMigrations(input: CheckInput): Promise<MigrationRead> {
         findings: migrations.flatMap(({ path, error }) =>
             error === undefined
                 ? []
-                : [findingAt(input, { file: path, line: error.line, column: error.column }, 'syntax', error.text)],
+                : [buildFinding(input, { file: path, line: error.line, column: error.column }, 'syntax', error.text)],
         ),
     };
+}
+
+/**
+ * Select forward SQL migration paths from the effective folder or configuration-owned defaults.
+ * @param input the input for one scope.
+ * @returns root-relative migration paths without parsing their SQL.
+ */
+function listMigrationPaths(input: CheckInput): string[] {
+    const migrations = input.scope.selected.flatMap((manifest) =>
+        manifest.checks
+            .filter((check) => check.name === 'postgres/squawk')
+            .flatMap((check) =>
+                listCoveredFiles(check.files ?? manifest.files, input.files, {
+                    selected: input.scope.selected,
+                    scope: input.scope.scope.path,
+                    view: input.scope.view,
+                }),
+            ),
+    );
+    return migrations
+        .filter((file) => file.path.endsWith(SQL_EXTENSION) && !file.path.endsWith(DOWN_MIGRATION_SUFFIX))
+        .map((file) => file.path);
 }
 
 export { readMigrations };

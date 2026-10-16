@@ -1,5 +1,7 @@
 # Translations
 
+Read this rule when you change translated text, locales, or language switching.
+
 Internationalization, or i18n, lets an application support different languages and regional formats.
 A locale names the language and formatting conventions, message catalogs hold the translated text,
 and International Components for Unicode (ICU) MessageFormat adds placeholders, plurals, and selection to messages.
@@ -48,8 +50,7 @@ the catalog loader for the application's format and namespace layout.
 
 Translations land in the same change as their call sites; an incomplete locale leaves the
 supported list instead. Checks validate catalog structure. List the locales and screens for the
-user to check for linguistic accuracy, dynamic keys, and untranslated UI text. Show missing
-keys during development, and make a production fallback intentional and observable, never
+user to check for linguistic accuracy, dynamic keys, and untranslated UI text. Show missing keys during development. Make the production fallback deliberate and visible in the logs, never
 a silent `catch` that hides a missing catalog.
 
 ## Rendering and formatting
@@ -66,14 +67,12 @@ a silent `catch` that hides a missing catalog.
 
 ## Changing the language
 
-1. Keep the current resource, relevant search parameters, and hash where the routing supports them.
-2. Persist the preference through the validated write owner when the product promises persistence.
-3. Navigate through the locale-aware routing, so server-rendered content, client labels, and
-   metadata agree.
-4. Refresh locale-dependent query keys and results instead of keeping translated data under an
-   identity without the locale.
-5. Keep focus and scroll position sensible.
-6. Report a failed preference write; never show a completed selection that reverts on refresh.
+1. Keep the current resource, the relevant search parameters, and the hash where the routing supports them.
+2. Save the preference through the code that validates and saves it, when the product promises to keep it.
+3. Navigate through the locale-aware routing, so that server-rendered content, client labels, and metadata agree.
+4. Refresh locale-dependent query keys and results. Do not keep translated data under a key without the locale.
+5. Keep the focus and the scroll position.
+6. Report a failed preference write. Never show a selection that reverts on refresh.
 
 A language menu names each language with a clear label, commonly its native name, not a flag.
 Treat region and currency as separate choices when the product offers them.
@@ -83,7 +82,7 @@ Treat region and currency as separate choices when the product offers them.
 Set the document's `lang` and `dir` for the selected locale. List supported right-to-left (RTL)
 locales and affected screens for the user to check. Use logical spacing and alignment properties, and mirror an icon or image only when
 its meaning requires it. Focus order and horizontal scrolling follow the direction, and record data
-never reverses to display RTL text. Include identifiers and URLs inside translated sentences in that list because their directions mix.
+never reverses to display RTL text. Add translated sentences that hold identifiers or URLs to that list, because their text directions mix.
 
 ## Verification
 

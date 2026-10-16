@@ -1,19 +1,19 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { convertToSystemPath } from '#cli/system/paths.ts';
-import { type PlannedCheck } from '#cli/types/planning.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { extractToolFileName } from '#cli/planning/files.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
-import { type ToolFileDeclaration } from '#cli/types/configurations.ts';
+import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 
-import {
-    type CommandPart,
-    type CommandSource,
-    type Substitutions,
-    type SubstitutionCheck,
-    type CommandInvocation,
-} from '#cli/types/execution/command.ts';
+import type {
+    CommandPart,
+    CommandInputs,
+    Substitutions,
+    SubstitutionCheck,
+    CommandInvocation,
+} from '#cli/types/checks/run/command.ts';
 import {
     EACH_PLACEHOLDER,
     FILE_PLACEHOLDER,
@@ -31,8 +31,8 @@ import {
     WHOLE_SETTING_PLACEHOLDER,
 } from '#cli/config/configurations.ts';
 
-// Use native list values in argument splicing and each-flag expansion.
-function commandItems(value: unknown, name: string): string[] {
+// Use list values in argument splicing and each-flag expansion.
+function assertArgumentList(value: unknown, name: string): string[] {
     if (!Array.isArray(value) || !value.every((item) => typeof item === 'string'))
         throw new Error(`Command setting ${name} must contain only string arguments.`);
     return value;
@@ -46,33 +46,33 @@ function commandItems(value: unknown, name: string): string[] {
  *
  * @returns the expanded arguments.
  */
-function listArguments(planned: SubstitutionCheck, part: string): string[] | undefined {
+function expandEachPlaceholder(planned: SubstitutionCheck, part: string): string[] | undefined {
     const groups = EACH_PLACEHOLDER.exec(part)?.groups;
     if (groups === undefined) return undefined;
     const name = groups['setting'] ?? '';
     const held = planned.scope.view.settings[name];
     const items = held ?? [];
-    return commandItems(items, name).flatMap((item) => [groups['flag'] ?? '', convertToSystemPath(item)]);
+    return assertArgumentList(items, name).flatMap((item) => [groups['flag'] ?? '', convertToSystemPath(item)]);
 }
 
 /**
  * Expands {existing:<flag>:<path>}: the flag and the absolute path when the file exists, and nothing when it does not.
  *
- * @param root the repository root.
+ * @param repositoryRoot the directory against which manifest paths resolve.
  * @param part one part of the manifest command.
  *
  * @returns the arguments, or undefined for another part kind.
  */
-function existingFileArguments(root: string, part: string): string[] | undefined {
+function expandExistingPlaceholder(repositoryRoot: string, part: string): string[] | undefined {
     const groups = EXISTING_PLACEHOLDER.exec(part)?.groups;
     if (groups === undefined) return undefined;
-    const path = join(root, groups['path'] ?? '');
+    const path = join(repositoryRoot, groups['path'] ?? '');
     return statSync(path, { throwIfNoEntry: false }) === undefined
         ? []
         : [groups['flag'] ?? '', convertToSystemPath(path)];
 }
 
-function allToolFiles(session: CommandSource, planned: SubstitutionCheck): ToolFileDeclaration[] {
+function listToolFiles(session: CommandInputs, planned: SubstitutionCheck): ToolFileDeclaration[] {
     // A check's own targets come first because toolFilePath selects the first matching target.
     const own = planned.scope.selected
         .filter((manifest) => manifest.checks.some((check) => check.name === planned.check.name))
@@ -84,14 +84,14 @@ function allToolFiles(session: CommandSource, planned: SubstitutionCheck): ToolF
     return [...own, ...every];
 }
 
-function pointerFilePath(session: CommandSource, scope: string, name: string): string {
+function selectPointerPath(session: CommandInputs, scope: string, name: string): string {
     const path = posix.join(scope, name);
     const generated = session.generatedPaths();
     return !generated.has(path) && generated.has(name) ? name : path;
 }
 
-function plainPart(
-    session: CommandSource,
+function expandPlainPart(
+    session: CommandInputs,
     planned: SubstitutionCheck,
     part: string,
     substitutions: Substitutions,
@@ -107,25 +107,41 @@ function plainPart(
             return [];
         return [workspace, substitutions.scope];
     }
-    return [substituteValue(session, planned, part, substitutions)];
+    return [replacePlaceholders(session, planned, part, substitutions)];
 }
 
 /**
- * Tool file path.
+ * Read the tool-file declaration selected by this check.
  *
  * @param session the repository session.
  * @param planned the selected check and its files.
  * @param name the tool or setting name.
  *
- * @returns the selected generated tool-file path.
+ * @returns the selected whole-file declaration.
  */
-export function toolFilePath(session: CommandSource, planned: SubstitutionCheck, name: string): string {
-    const target = allToolFiles(session, planned).find(
-        (config) => !config.fragment && extractToolFileName(config.target) === name,
+export function readToolFileDeclaration(
+    session: CommandInputs,
+    planned: SubstitutionCheck,
+    name: string,
+): ToolFileDeclaration {
+    const target = listToolFiles(session, planned).find(
+        (toolFile) => !toolFile.fragment && extractToolFileName(toolFile.target) === name,
     );
     if (!target)
         throw new Error(`Check ${planned.check.name} names {tool_file:${name}} and no configuration writes it.`);
-    return buildScopeTarget(planned.scope.scope.path, target, session.generatedPaths());
+    return target;
+}
+
+/**
+ * Resolve the declared tool file through the generated scope groups.
+ * @param session the repository session and generated targets.
+ * @param planned the selected check and scope.
+ * @param name the declared tool-file name.
+ * @returns the generated path for this scope.
+ */
+export function selectToolFilePath(session: CommandInputs, planned: SubstitutionCheck, name: string): string {
+    const target = readToolFileDeclaration(session, planned, name);
+    return buildScopeTarget(planned.scope.scope.path, target, session.toolFiles().targets);
 }
 
 /**
@@ -137,8 +153,8 @@ export function toolFilePath(session: CommandSource, planned: SubstitutionCheck,
  *
  * @returns the tool file paths, relative to the root.
  */
-export function commandToolFiles(
-    session: CommandSource,
+export function listCommandToolFiles(
+    session: CommandInputs,
     planned: SubstitutionCheck,
     command: readonly string[],
 ): string[] {
@@ -150,11 +166,11 @@ export function commandToolFiles(
                 const configured = [...part.matchAll(TOOL_FILE_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
-                    .map((name) => toolFilePath(session, planned, name));
+                    .map((name) => selectToolFilePath(session, planned, name));
                 const pointed = [...part.matchAll(POINTER_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
-                    .map((name) => pointerFilePath(session, scope, name));
+                    .map((name) => selectPointerPath(session, scope, name));
                 const existing = EXISTING_PLACEHOLDER.exec(part)?.groups?.['path'];
                 return [...configured, ...pointed, ...(existing === undefined ? [] : [existing])];
             }),
@@ -171,19 +187,19 @@ export function commandToolFiles(
  *
  * @returns repository-relative paths for the scratch copy.
  */
-export function scratchFiles(
-    session: CommandSource,
+export function listScratchFiles(
+    session: CommandInputs,
     planned: SubstitutionCheck & Pick<PlannedCheck, 'manifest'>,
     command: string[],
 ): string[] {
     const scope = planned.scope.scope.path;
     const owned = (planned.manifest?.toolFiles ?? [])
-        .filter((config) => !config.fragment)
-        .map((config) => buildScopeTarget(scope, config, session.generatedPaths()));
+        .filter((toolFile) => !toolFile.fragment)
+        .map((toolFile) => buildScopeTarget(scope, toolFile, session.toolFiles().targets));
     return [
         ...new Set([
             ...planned.files.map(({ path }) => path),
-            ...commandToolFiles(session, planned, command),
+            ...listCommandToolFiles(session, planned, command),
             ...owned,
         ]),
     ];
@@ -199,8 +215,8 @@ export function scratchFiles(
  *
  * @returns the expanded value.
  */
-export function substituteValue(
-    session: CommandSource,
+export function replacePlaceholders(
+    session: CommandInputs,
     planned: SubstitutionCheck,
     part: string,
     substitutions: Substitutions,
@@ -217,10 +233,10 @@ export function substituteValue(
                 : '';
         })
         .replaceAll(TOOL_FILE_PLACEHOLDER, (_match, name: string) =>
-            convertToSystemPath(join(session.root, toolFilePath(session, planned, name))),
+            convertToSystemPath(join(session.root, selectToolFilePath(session, planned, name))),
         )
         .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) =>
-            convertToSystemPath(pointerFilePath(session, substitutions.scope, name)),
+            convertToSystemPath(selectPointerPath(session, substitutions.scope, name)),
         )
         .replaceAll(SCOPE_PLACEHOLDER, () => (substitutions.scope === '' ? '.' : substitutions.scope))
         .replaceAll(ROOT_PLACEHOLDER, () => substitutions.root)
@@ -238,8 +254,8 @@ export function substituteValue(
  *
  * @returns argument text and file markers.
  */
-export function substitute(
-    session: CommandSource,
+export function expandCommand(
+    session: CommandInputs,
     planned: SubstitutionCheck,
     command: string[],
     substitutions: Substitutions,
@@ -248,11 +264,11 @@ export function substitute(
         const name = WHOLE_SETTING_PLACEHOLDER.exec(part)?.groups?.['name'];
         if (name !== undefined) {
             const value = planned.scope.view.settings[name];
-            if (Array.isArray(value)) return commandItems(value, name);
+            if (Array.isArray(value)) return assertArgumentList(value, name);
         }
 
-        const settingsPart = listArguments(planned, part) ?? existingFileArguments(session.root, part);
-        return settingsPart ?? plainPart(session, planned, part, substitutions);
+        const settingsPart = expandEachPlaceholder(planned, part) ?? expandExistingPlaceholder(session.root, part);
+        return settingsPart ?? expandPlainPart(session, planned, part, substitutions);
     });
 }
 
@@ -264,10 +280,10 @@ export function substitute(
  *
  * @returns one command per file, or one command when no file marker exists.
  */
-export function perFileCommands(parts: CommandPart[], files: string[]): CommandInvocation[] {
+export function buildFileInvocations(parts: CommandPart[], files: string[]): CommandInvocation[] {
     const hasFile = parts.some((part) => typeof part !== 'string');
     return (hasFile ? files : ['']).map((file) => ({
-        argv: parts.map((part) => (typeof part === 'string' ? part : file)),
+        commandArguments: parts.map((part) => (typeof part === 'string' ? part : file)),
         ...(hasFile ? { file } : {}),
     }));
 }

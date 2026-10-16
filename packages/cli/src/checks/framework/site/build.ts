@@ -1,6 +1,6 @@
 import { join, relative } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
@@ -8,7 +8,7 @@ import { type SiteBuild } from '#cli/types/checks/framework.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { OUTPUT_TAIL_LINES } from '#cli/config/checks/framework/site.ts';
-import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
+import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/checks/run/copy/scratch.ts';
 
 const SITE_BUILD_MEMO = { create: () => new Map<string, Promise<SiteBuild>>() };
@@ -36,9 +36,9 @@ async function runSiteBuild(input: CheckInput, scratch: string): Promise<SiteBui
 /**
  * The build of the scope, run the first time a check asks and shared after that.
  * @param input the check input.
- * @returns the build.
+ * @returns the shared pending or completed site build for this scope.
  */
-function cachedBuild(input: CheckInput): Promise<SiteBuild> {
+function getSiteBuild(input: CheckInput): Promise<SiteBuild> {
     const key = join(input.root, input.scope.scope.path);
     const scopeBuilds = getCachedValue(input.reads, SITE_BUILD_MEMO);
     const held = scopeBuilds.get(key);
@@ -55,10 +55,10 @@ function cachedBuild(input: CheckInput): Promise<SiteBuild> {
 
 /**
  * Every file under a folder, relative to it, sorted.
- * @param folder the folder.
+ * @param folder the output directory to enumerate without following directory links.
  * @returns the relative paths.
  */
-export function filesUnder(folder: string): string[] {
+export function listBuiltFiles(folder: string): string[] {
     const root = realpathSync.native(folder);
     using files = openFiles(root);
     const found: string[] = [];
@@ -79,7 +79,7 @@ export function filesUnder(folder: string): string[] {
  * Locate a built file in the original repository's normalized build folder.
  * @param input the settings view owning the build.
  * @param build the build's scratch copy.
- * @param absolute the built file's absolute path.
+ * @param absolute the file location within the build's scratch copy.
  * @returns a confined repository-relative path.
  */
 export function deriveBuiltFilePath(
@@ -97,22 +97,22 @@ export function deriveBuiltFilePath(
  * @param input the check input.
  * @returns the successful build, or a skipped-check error.
  */
-export async function requireBuild(input: CheckInput): Promise<SiteBuild> {
-    const build = await cachedBuild(input);
+export async function getSuccessfulBuild(input: CheckInput): Promise<SiteBuild> {
+    const build = await getSiteBuild(input);
     if (!build.isBuilt) throw new GspotError('skip', 'The site did not build.');
     return build;
 }
 
 /**
  * One finding when the build command fails or writes no build folder.
- * @param input the check input.
+ * @param input the site scope, build command, and output-folder settings.
  * @returns the findings.
  */
-export async function siteBuild(input: CheckInput): Promise<Finding[]> {
-    const build = await cachedBuild(input);
+export async function checkSiteBuild(input: CheckInput): Promise<Finding[]> {
+    const build = await getSiteBuild(input);
     if (build.isBuilt) return [];
     return [
-        findingAt(
+        buildFinding(
             input,
             { file: '', line: 1 },
             'build',

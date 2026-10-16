@@ -5,20 +5,17 @@ import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { isGitRepository } from '#cli/system/git.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { printResult } from '#cli/system/terminal.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { type CommandResult } from '#cli/types/terminal.ts';
-import { assertVersionPin } from '#cli/apply/version-pin.ts';
+import { exportTemplate } from '#cli/settings/templates.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readIndexEntries } from '#cli/repository/tracked.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { dirname, resolve, basename, relative } from 'node:path';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
-import { parseTemplate, exportTemplate } from '#cli/settings/templates.ts';
 import { type ExportJson, type ExportOptions } from '#cli/types/commands/export.ts';
-
+import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 /**
  * Writes a template from the settings of this repository.
  * @param options the export destination.
@@ -26,14 +23,12 @@ import { type ExportJson, type ExportOptions } from '#cli/types/commands/export.
  * @param options.file the destination path, relative to cwd
  * @returns the command result, with the omitted entries.
  */
-export async function exportCommand(options: ExportOptions): Promise<CommandResult<ExportJson>> {
+async function runExportCommand(options: ExportOptions): Promise<CommandResult<ExportJson>> {
     const { cwd, file } = options;
     const parentPath = dirname(resolve(cwd, file));
     const root = findRoot(cwd);
-    await assertVersionPin(root);
     const settingsFile = readSettings(root, createReadCache(root));
     const saved = exportTemplate(settingsFile.text);
-    const template = parseTemplate(saved.text, file);
     let parent;
     try {
         parent = realpathSync(parentPath);
@@ -50,7 +45,7 @@ export async function exportCommand(options: ExportOptions): Promise<CommandResu
         throw new GspotError('template', `gspot writes ${path} itself. Choose another file name.`);
     const index = isGitRepository(root) ? await readIndexEntries(root) : [];
     const tracked = new Set(index.map((entry) => entry.path));
-    const checks = template.tables.command_check ?? [];
+    const checks = Object.values(settingsFile.settings.commandChecks);
     const warnings = checks.flatMap((entry) => {
         const check = entry.name;
         const executable = entry.command[0] as string;
@@ -71,14 +66,17 @@ export async function exportCommand(options: ExportOptions): Promise<CommandResu
 /**
  * Register the export command.
  * @param program the command program
+ * @param onResult the sink that writes the completed command result.
  */
-export function registerExport(program: Command): void {
+function registerExport(program: Command, onResult: CommandCompletion): void {
     program
         .command('export')
         .argument('<file>', COMMAND_HELP.export.arguments['file'])
         .summary(COMMAND_HELP.export.summary)
         .description(COMMAND_HELP.export.description)
         .action(async (file) => {
-            printResult(await exportCommand({ cwd: process.cwd(), file }));
+            onResult(await runExportCommand({ cwd: process.cwd(), file }));
         });
 }
+
+export { registerExport };

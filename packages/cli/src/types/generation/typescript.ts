@@ -1,5 +1,5 @@
 import type { ReadCache } from '#cli/types/system/files.ts';
-import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { Scope, TrackedFile } from '#cli/types/repository/inventory.ts';
 
 /** Project inputs and required options for a TypeScript tool file. */
 export type TsconfigInput = {
@@ -10,6 +10,6 @@ export type TsconfigInput = {
     target: string;
     scope: string;
     files: TrackedFile[];
-    scopeEntries: ScopeEntry[];
+    scopes: Scope[];
     options: Record<string, boolean>;
 };

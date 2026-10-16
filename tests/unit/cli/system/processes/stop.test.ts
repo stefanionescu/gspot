@@ -4,26 +4,14 @@ import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
-import { CLI_SOURCE } from '#tests/setup/run-gspot.ts';
-import { spawnProcess, streamProcess } from '#cli/system/processes.ts';
-import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
-import { waitForExit, prepareCommand } from '#tests/setup/processes.ts';
-import { isWindows, useOperatingSystem } from '#tests/setup/operating-systems.ts';
-
-const captures = {
-    text: (command: string[], options: AsyncSpawnOptions) =>
-        spawnProcess(command, prepareCommand(command, options).options),
-    bytes: async (command: string[], options: AsyncSpawnOptions) => {
-        const chunks: Buffer[] = [];
-        const result = await streamProcess(command, { ...prepareCommand(command, options).options }, async (output) => {
-            for await (const chunk of output) chunks.push(chunk);
-        });
-        return { ...result, stdout: Buffer.concat(chunks) };
-    },
-};
+import { streamProcess } from '#cli/system/processes.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { CLI_SOURCE_PATH } from '#tests/setup/run-gspot.ts';
+import { isWindows, simulateOperatingSystem } from '#tests/setup/system.ts';
+import { waitForExit, waitForFile, captureProcess, prepareCommand } from '#tests/setup/processes.ts';
 
 // What the supervisor leaves on a child it stopped: a signal on a POSIX host, an exit code on Windows.
-function terminated(child: childProcess.ChildProcess | undefined): boolean {
+function isStopped(child: childProcess.ChildProcess | undefined): boolean {
     if (child === undefined) return false;
     if (isWindows) return child.exitCode !== null;
     return child.signalCode !== null;
@@ -34,7 +22,7 @@ test.each(['text', 'bytes'] as const)('a failed %s stream read stops the child',
     using children = spyOn(childProcess, 'spawn');
     let child: childProcess.ChildProcess | undefined;
     try {
-        const running = captures[capture]([process.execPath, '-e', 'setInterval(() => {}, 1000)'], {
+        const running = captureProcess(capture, [process.execPath, '-e', 'setInterval(() => {}, 1000)'], {
             cwd: sandbox.path,
         });
         const launched = children.mock.results[0];
@@ -43,8 +31,8 @@ test.each(['text', 'bytes'] as const)('a failed %s stream read stops the child',
             child.stdout?.emit('error', new Error('Test stream failure.'));
         }
         if (capture === 'bytes') {
-            expect(running).rejects.toThrow('Test stream failure');
-            expect(terminated(child)).toBe(true);
+            expect(await captureRejection(running)).toContain('Test stream failure');
+            expect(isStopped(child)).toBe(true);
             return;
         }
         const result = await running;
@@ -53,7 +41,7 @@ test.each(['text', 'bytes'] as const)('a failed %s stream read stops the child',
         expect(result.code).not.toBe(0);
         expect(result.missing).toBe(false);
         expect(result.stderr).toContain('Test stream failure');
-        expect(terminated(child)).toBe(true);
+        expect(isStopped(child)).toBe(true);
     } finally {
         if (child?.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
     }
@@ -61,7 +49,8 @@ test.each(['text', 'bytes'] as const)('a failed %s stream read stops the child',
 
 test('byte capture keeps invalid UTF-8 bytes and the error output', async () => {
     await using sandbox = await testdir();
-    const result = await captures.bytes(
+    const result = await captureProcess(
+        'bytes',
         [
             process.execPath,
             '-e',
@@ -69,7 +58,7 @@ test('byte capture keeps invalid UTF-8 bytes and the error output', async () => 
         ],
         { cwd: sandbox.path },
     );
-    expect([...result.stdout]).toStrictEqual([0, 255, 128, 10]);
+    expect([...(result.stdout as Buffer)]).toStrictEqual([0, 255, 128, 10]);
     expect(result.stderr).toBe('diagnostic\n');
     expect(result.code).toBe(0);
 });
@@ -84,12 +73,17 @@ test.each([
         const marker = join(sandbox.path, 'descendant-survived');
         const descendant = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); console.log("descendant-ready"); setInterval(() => {}, 1000);`;
         const parent = `Bun.spawn([process.execPath, "-e", ${JSON.stringify(descendant)}], {stdout:"inherit", stderr:"inherit"}); await Bun.sleep(10000);`;
-        const running = captures[capture]([process.execPath, '-e', parent], {
+        const controller = new AbortController();
+        const running = captureProcess(capture, [process.execPath, '-e', parent], {
             cwd: sandbox.path,
             ...(termination === 'timeout' ? { timeoutSeconds: 1.5 } : {}),
-            ...(termination === 'canceled' ? { cancelSignal: AbortSignal.timeout(1500) } : {}),
+            ...(termination === 'canceled' ? { cancelSignal: controller.signal } : {}),
         });
-        if (capture === 'bytes') expect(running).rejects.toThrow('The operation timed out');
+        if (termination === 'canceled') {
+            expect(await waitForFile(marker)).toBe(true);
+            controller.abort();
+        }
+        if (capture === 'bytes') expect(await captureRejection(running)).toBeString();
         else {
             const result = await running;
             expect(Buffer.from(result.stdout).toString('utf8')).toContain('descendant-ready');
@@ -105,7 +99,7 @@ test.each([
 test('an exiting CLI stops its running process group', async () => {
     await using sandbox = await testdir();
     const descendant = 'console.log(process.pid); setInterval(() => {}, 1000);';
-    const sourceUrl = pathToFileURL(join(CLI_SOURCE, 'system/processes.ts')).href;
+    const sourceUrl = pathToFileURL(join(CLI_SOURCE_PATH, 'system/processes.ts')).href;
     const script = `import {spawnProcess} from ${JSON.stringify(sourceUrl)}; void spawnProcess([process.execPath,"-e",${JSON.stringify(descendant)}],{cwd:process.cwd(),onStdout(chunk){process.stdout.write(chunk);process.exit(19);}});`;
     const command = [process.execPath, '-e', script];
     const prepared = prepareCommand(command, { cwd: sandbox.path });
@@ -140,21 +134,19 @@ test('live output arrives before the process ends while capture keeps the output
     const release = join(sandbox.path, 'release');
     const child = `console.log('ready'); console.error('diagnostic'); while (!(await Bun.file(${JSON.stringify(release)}).exists())) await Bun.sleep(10); process.exitCode = 7;`;
     let completed = false;
-    const running = captures
-        .text([process.execPath, '-e', child], {
-            cwd: sandbox.path,
-            onStdout: (chunk) => {
-                stdout.push(chunk);
-                ready.resolve();
-            },
-            onStderr: (chunk) => {
-                stderr.push(chunk);
-            },
-        })
-        .then((result) => {
-            completed = true;
-            return result;
-        });
+    const running = captureProcess('text', [process.execPath, '-e', child], {
+        cwd: sandbox.path,
+        onStdout: (chunk) => {
+            stdout.push(chunk);
+            ready.resolve();
+        },
+        onStderr: (chunk) => {
+            stderr.push(chunk);
+        },
+    }).then((result) => {
+        completed = true;
+        return result;
+    });
     try {
         await Promise.race([
             ready.promise,
@@ -181,7 +173,7 @@ test.each(['text', 'bytes'] as const)(
         const marker = join(sandbox.path, 'orphan-survived');
         const descendant = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); console.log('ready'); setInterval(() => {}, 1000);`;
         const parent = `const child = Bun.spawn([process.execPath, '-e', ${JSON.stringify(descendant)}], {stdout:'pipe', stderr:'inherit'}); for await (const chunk of child.stdout) { process.stdout.write(chunk); process.exit(7); }`;
-        const result = await captures[capture]([process.execPath, '-e', parent], {
+        const result = await captureProcess(capture, [process.execPath, '-e', parent], {
             cwd: sandbox.path,
         });
         expect(result.code).toBe(7);
@@ -206,9 +198,9 @@ test('the stop after a normal exit accepts the macOS refusal to signal an exited
             return signal(pid, kind);
         }),
     );
-    using _operatingSystem = useOperatingSystem('darwin');
+    using _operatingSystem = simulateOperatingSystem('darwin');
 
-    const result = await captures.text([process.execPath, '-e', 'process.exit(0)'], {
+    const result = await captureProcess('text', [process.execPath, '-e', 'process.exit(0)'], {
         cwd: sandbox.path,
     });
     expect(result.code, result.stderr).toBe(0);
@@ -240,16 +232,16 @@ test('a stream reader that throws stops and drains its child', async () => {
     const failure = new Error('Consumer refused the bytes.');
     const command = [process.execPath, '-e', 'process.stdout.write("ready"); setInterval(() => {}, 1000);'];
     expect(
-        streamProcess(command, { ...prepareCommand(command, { cwd: sandbox.path }).options }, async (chunks) => {
+        await streamProcess(command, { ...prepareCommand(command, { cwd: sandbox.path }).options }, async (chunks) => {
             for await (const chunk of chunks) {
                 expect(chunk.length).toBeGreaterThan(0);
                 throw failure;
             }
-        }),
-    ).rejects.toBe(failure);
+        }).catch((error: unknown) => error),
+    ).toBe(failure);
     const launched = children.mock.results[0];
     expect(launched?.type).toBe('return');
-    if (launched?.type === 'return') expect(terminated(launched.value)).toBe(true);
+    if (launched?.type === 'return') expect(isStopped(launched.value)).toBe(true);
 });
 
 test('stream cancellation stops the child and keeps the cancellation reason', async () => {
@@ -263,7 +255,7 @@ test('stream cancellation stops the child and keeps the cancellation reason', as
         'process.stdout.write(String(process.pid)); setInterval(() => process.stdout.write("pending"), 1000);',
     ];
     expect(
-        streamProcess(
+        await streamProcess(
             command,
             {
                 ...prepareCommand(command, { cwd: sandbox.path }).options,
@@ -276,8 +268,8 @@ test('stream cancellation stops the child and keeps the cancellation reason', as
                     controller.abort(reason);
                 }
             },
-        ),
-    ).rejects.toBe(reason);
+        ).catch((error: unknown) => error),
+    ).toBe(reason);
     expect(controller.signal.aborted).toBe(true);
     await waitForExit(pid);
 });
@@ -287,9 +279,9 @@ test('a finished stream keeps the reader error after cleanup', async () => {
     const refusal = new Error('Invalid native stream');
     const command = [process.execPath, '-e', 'process.stdout.write("invalid");'];
     expect(
-        streamProcess(command, { ...prepareCommand(command, { cwd: sandbox.path }).options }, async (chunks) => {
+        await streamProcess(command, { ...prepareCommand(command, { cwd: sandbox.path }).options }, async (chunks) => {
             for await (const chunk of chunks) expect(chunk.toString()).toBe('invalid');
             throw refusal;
-        }),
-    ).rejects.toBe(refusal);
+        }).catch((error: unknown) => error),
+    ).toBe(refusal);
 });

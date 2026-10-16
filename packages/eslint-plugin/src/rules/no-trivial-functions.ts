@@ -1,7 +1,7 @@
-import { createRule, optionsSchema } from '../create-rule.ts';
 import type { TrivialFunctionsOptions } from '../types/rules.ts';
+import { createRule, buildOptionsSchema } from '../create-rule.ts';
 import type { NamedFunction, ImplementedFunction } from '../types/syntax.ts';
-import { totalStatements, ownsCalculation, hasConstructorState } from '../syntax.ts';
+import { hasCalculation, countStatements, hasConstructorState } from '../syntax.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -41,7 +41,7 @@ const VALUE_HOLDERS: [AST_NODE_TYPES, (parent: TSESTree.Node, value: TSESTree.No
 ];
 
 // The names callers can use for a function: its own name and the variable that holds it.
-function callableVariables(node: ImplementedFunction, source: TSESLint.SourceCode): TSESLint.Scope.Variable[] {
+function listCallableVariables(node: ImplementedFunction, source: TSESLint.SourceCode): TSESLint.Scope.Variable[] {
     const owners: NamedFunction[] = [];
     if (node.type !== AST_NODE_TYPES.ArrowFunctionExpression && node.id !== null) owners.push({ node, id: node.id });
     if (node.parent.type === AST_NODE_TYPES.VariableDeclarator) owners.push({ node: node.parent, id: node.parent.id });
@@ -57,7 +57,7 @@ function callableVariables(node: ImplementedFunction, source: TSESLint.SourceCod
  * @param node the expression or declaration
  * @returns the value as observed by its parent expression
  */
-function outermostValue(node: TSESTree.Expression): TSESTree.Expression {
+function findOutermostValue(node: TSESTree.Expression): TSESTree.Expression {
     let value = node;
     while (isTransparentExpression(value.parent)) {
         const parent = value.parent;
@@ -74,7 +74,7 @@ function outermostValue(node: TSESTree.Expression): TSESTree.Expression {
  */
 function isInlineValue(node: ImplementedFunction): boolean {
     if (node.type === AST_NODE_TYPES.FunctionDeclaration) return false;
-    const value = outermostValue(node);
+    const value = findOutermostValue(node);
     const parent = value.parent;
     if (parent.type === AST_NODE_TYPES.ArrayExpression || VALUE_PARENTS.has(parent.type)) return true;
     return VALUE_HOLDERS.find(([type]) => type === parent.type)?.[1](parent, value) ?? false;
@@ -87,7 +87,7 @@ function isInlineValue(node: ImplementedFunction): boolean {
  * @returns whether a reference to the function sits inside its own body
  */
 function isRecursive(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
-    return callableVariables(node, source)
+    return listCallableVariables(node, source)
         .flatMap((variable) => variable.references)
         .some(
             (reference) =>
@@ -106,7 +106,7 @@ function isSharedFunction(node: ImplementedFunction, source: TSESLint.SourceCode
         owner.parent.type === AST_NODE_TYPES.ExportDefaultDeclaration
     )
         return true;
-    const variables = callableVariables(node, source);
+    const variables = listCallableVariables(node, source);
     return variables.some((variable) => {
         const reads = variable.references.filter(
             (reference) => reference.isRead() && reference.identifier.parent.type !== AST_NODE_TYPES.TSTypeQuery,
@@ -129,10 +129,10 @@ function isRedundantConstructor(node: TSESTree.FunctionExpression): boolean {
         statement.expression.callee.type !== AST_NODE_TYPES.Super
     )
         return false;
-    const args = statement.expression.arguments;
+    const callArguments = statement.expression.arguments;
     return (
-        args.length === node.params.length &&
-        args.every(
+        callArguments.length === node.params.length &&
+        callArguments.every(
             (argument, index) =>
                 argument.type === AST_NODE_TYPES.Identifier &&
                 node.params[index]?.type === AST_NODE_TYPES.Identifier &&
@@ -175,7 +175,7 @@ function isInheritedMethod(node: ImplementedFunction, source: TSESLint.SourceCod
 // Each exemption identifies a language contract or an existing shared API.
 function isRequiredFunction(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
     if (node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate) return true;
-    if (ownsCalculation(node.body, source.visitorKeys)) return true;
+    if (hasCalculation(node.body, source.visitorKeys)) return true;
     if (isInlineValue(node)) return true;
     if (isRecursive(node, source)) return true;
     if (isSharedFunction(node, source)) return true;
@@ -198,7 +198,7 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
             fix: 'Inline the function at its call sites and delete it.',
         },
         schema: [
-            optionsSchema({
+            buildOptionsSchema({
                 trivialStatements: {
                     description: 'Functions with this many statements or fewer are reported.',
                     type: 'integer',
@@ -214,12 +214,12 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
         const max = options.trivialStatements;
         return {
             [`${FUNCTION_SELECTOR}:exit`](node: ImplementedFunction) {
-                const count = totalStatements(node, context.sourceCode.visitorKeys);
+                const count = countStatements(node, context.sourceCode.visitorKeys);
                 if (count > max || isRequiredFunction(node, context.sourceCode)) return;
                 context.report({
                     node,
                     messageId: 'trivial',
-                    data: { statements: count === 1 ? '1 statement' : `${String(count)} statements`, max },
+                    data: { statements: count === 1 ? '1 statement' : `${String(count)} statements` },
                 });
             },
         };

@@ -19,7 +19,7 @@ import {
     PYTHON_TOOL_PROJECT_FILE,
 } from '#cli/config/system/locations.ts';
 
-function patch(path: string, before: string, after: string, beforeName: string): string {
+function buildDiff(path: string, before: string, after: string, beforeName: string): string {
     return createTwoFilesPatch(
         `a/${convertToPosixPath(path)}`,
         `b/${convertToPosixPath(path)}`,
@@ -33,7 +33,7 @@ function patch(path: string, before: string, after: string, beforeName: string):
     );
 }
 
-function staleWholeFiles(files: Files, generated: GenerationResult): StaleFile[] {
+function listStaleWholeFiles(files: Files, generated: GenerationResult): StaleFile[] {
     return generated.files.flatMap((file): StaleFile[] => {
         const current = files.read(file.path);
         if (current === undefined) return [{ path: file.path, kind: 'missing' }];
@@ -44,14 +44,14 @@ function staleWholeFiles(files: Files, generated: GenerationResult): StaleFile[]
                 {
                     path: file.path,
                     kind: 'changed',
-                    diff: patch(file.path, disk, file.content, 'on disk'),
+                    diff: buildDiff(file.path, disk, file.content, 'on disk'),
                 },
             ];
         return [];
     });
 }
 
-function staleBlocks(files: Files, generated: GenerationResult): StaleFile[] {
+function listStaleBlocks(files: Files, generated: GenerationResult): StaleFile[] {
     const entries: StaleFile[] = [];
     for (const block of generated.blocks) {
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
@@ -62,14 +62,14 @@ function staleBlocks(files: Files, generated: GenerationResult): StaleFile[] {
             entries.push({
                 path: block.path,
                 kind: 'changed',
-                diff: patch(block.path, current, wanted, 'managed block on disk'),
+                diff: buildDiff(block.path, current, wanted, 'managed block on disk'),
             });
     }
     return entries;
 }
 
 // Classify merged files with no remaining managed fields as missing or changed.
-function staleKeys(files: Files, generated: GenerationResult): StaleFile[] {
+function listStaleFileEdits(files: Files, generated: GenerationResult): StaleFile[] {
     return generated.fileEdits.flatMap((output): StaleFile[] => {
         const current = files.read(output.path);
         if (current === undefined) return [{ path: output.path, kind: 'missing' }];
@@ -85,19 +85,19 @@ function staleKeys(files: Files, generated: GenerationResult): StaleFile[] {
  *
  * @returns the drift entries in path order.
  */
-export function findStaleFiles(
+export function listStaleFiles(
     session: Pick<Session, 'root' | 'requirePackageManager' | 'repository' | 'settingsFile'>,
     generated: GenerationResult,
 ): StaleFile[] {
     using files = openFiles(session.root);
-    const known = expectedPaths(session, generated);
+    const known = listExpectedPaths(session, generated);
     const lockfiles = listStaleLockfiles(session, generated.files);
     const strays = listStrayPaths(session, known).map((path): StaleFile => ({ path, kind: 'stray' }));
     return [
         ...lockfiles.flatMap(({ path, kind }) => (kind === undefined ? [] : [{ path, kind }])),
-        ...staleWholeFiles(files, generated),
-        ...staleBlocks(files, generated),
-        ...staleKeys(files, generated),
+        ...listStaleWholeFiles(files, generated),
+        ...listStaleBlocks(files, generated),
+        ...listStaleFileEdits(files, generated),
         ...strays,
     ].toSorted((a, b) => a.path.localeCompare(b.path));
 }
@@ -110,7 +110,7 @@ export function findStaleFiles(
  *
  * @returns the destination paths.
  */
-export function expectedPaths(
+export function listExpectedPaths(
     session: Pick<Session, 'requirePackageManager'>,
     generated: GenerationResult,
 ): Set<string> {

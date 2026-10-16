@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { readGitText } from '#cli/system/git.ts';
-import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
@@ -10,10 +10,10 @@ import { readPythonEnvironment } from '#cli/parsers/python.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import { readJavascriptEnvironment } from '#cli/parsers/typescript.ts';
-import { type EnvironmentRead } from '#cli/types/parsers/environment.ts';
+import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { readPushBase, readPushedCommits } from '#cli/repository/revisions/push.ts';
-import { type Finding, type CheckInput, type CheckResult } from '#cli/types/execution/check.ts';
+import { type Finding, type CheckInput, type CheckResult } from '#cli/types/checks/run/check.ts';
 import { historyResult, siblingCommand, runOverPushedCommits } from '#cli/checks/general/pushed-commits.ts';
 
 import {
@@ -56,7 +56,7 @@ function findMissingEnvironmentKeys(
         if (key === undefined || known.has(key) || seen.has(key)) continue;
         seen.add(key);
         findings.push(
-            findingAt(
+            buildFinding(
                 input,
                 { file: path, line },
                 'missing-key',
@@ -70,10 +70,10 @@ function findMissingEnvironmentKeys(
 /**
  * Scan the exact selected commits, including secrets removed before the final pushed tree.
  * @param session the open session.
- * @param planned the planned check.
+ * @param planned the selected history range and scanner command.
  * @returns the check result.
  */
-export async function gitleaksPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkSecretsGitleaksPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const command = siblingCommand(planned, GITLEAKS_STAGED_CHECK).filter(
         (argument) => argument !== GITLEAKS_STAGED_FLAG,
     );
@@ -87,10 +87,10 @@ export async function gitleaksPushed(session: Session, planned: PlannedCheck): P
 /**
  * Scan the selected Git range with TruffleHog.
  * @param session the open session.
- * @param planned the planned check.
+ * @param planned the selected history range and scanner command.
  * @returns the check result.
  */
-export async function trufflehog(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkSecretsTrufflehogPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const base = historyResult(session, planned);
     if (base.status === 'skipped') return base;
@@ -115,11 +115,11 @@ export async function trufflehog(session: Session, planned: PlannedCheck): Promi
 
 /**
  * Reports supported environment reads missing from example environment files, or the absent example prerequisite.
- * @param input the check input.
+ * @param input the scope inventory, declared example filenames, and environment reader settings.
  * @returns the findings.
  */
-export async function envExamples(input: CheckInput): Promise<Finding[]> {
-    const { env_examples: names, reader_functions: readers } = input.scope.view.options('secrets');
+export async function checkSecretsEnvExamples(input: CheckInput): Promise<Finding[]> {
+    const { env_examples: names, environment_functions: readers } = input.scope.view.options('secrets');
     // Example files list variable names; reads appear in code, so inspect the whole scope.
     const inScope = input.files.filter((file) => isInScope(file.path, input.scope.scope.path));
     const examples = inScope.filter((file) => names.includes(posix.basename(file.path)));

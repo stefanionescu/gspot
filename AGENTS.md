@@ -15,6 +15,11 @@ Languages:
 - `.gspot/rules/language/javascript/NODE.md`
 - `.gspot/rules/language/typescript/NAMING.md`
 - `.gspot/rules/language/typescript/TYPESCRIPT.md`
+- `.gspot/rules/language/bash/BASH.md`
+- `.gspot/rules/language/bash/LANGUAGE.md`
+- `.gspot/rules/language/bash/NAMING.md`
+- `.gspot/rules/language/bash/OPERATIONS.md`
+- `.gspot/rules/language/bash/SAFETY.md`
 - `.gspot/rules/language/css/CSS.md`
 - `.gspot/rules/language/css/NAMING.md`
 - `.gspot/rules/language/html/HTML.md`
@@ -68,12 +73,14 @@ Do not use subagents or parallel agents unless asked in the conversation.
 
 ## Folders
 
+For tests, `data/` replaces `config/` in these folder rules.
+
 - Each package keeps its fixed values (constants, lists, tables of names, paths, file names, limits, URLs, and
   command arguments) in a `config/` folder, and its TypeScript types in a `types/` folder:
-  `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, `scripts/`, and `tests/`.
+  `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/`.
 - `config/` imports only from `config/` of the same package. `types/` imports only from `config/` and `types/` of
   the same package, and may use `import type` from a library when a type extends a library type. `tests/types/` may
-  also `import type` from the CLI package; `tests/config/` imports only from `tests/config/`.
+  also `import type` from the CLI package; `tests/data/` imports only from `tests/data/`.
 - Write every exported type by hand in `types/<area>/<topic>.ts`, in plain TypeScript. Check each zod schema
   against its type with `satisfies z.ZodType<T>`. No exported type uses `z.infer`.
 - Keep a type in its own file when only that file uses it. Declare allowed names as an `as const` array in
@@ -86,9 +93,14 @@ Do not use subagents or parallel agents unless asked in the conversation.
 - Apply these folder rules to this repository only. gspot does not ask other repositories to follow them.
 - Tests: unit tests in `tests/unit/cli/` and `tests/unit/eslint-plugin/`, integration tests in `tests/integration/`,
   end-to-end tests in `tests/e2e/`, shared test code in `tests/setup/`, test constants and sample data in
-  `tests/config/`, shared test types in `tests/types/`.
+  `tests/data/`, shared test types in `tests/types/`.
 - The configurations gspot ships live in `packages/cli/configurations/`. The code that reads them lives in
   `packages/cli/src/configurations/`. The schema of `gspot.toml` lives in `packages/cli/src/settings/schema/`.
+
+Unit tests make no network calls. Integration and e2e tests install real tools, so they may reach the npm registry,
+PyPI, the Vale package downloads, and Docker Hub; where a local server exists, they use it.
+
+`.mise/tasks/` holds Bash task files. They run commands and import nothing.
 
 ## Code
 
@@ -125,40 +137,73 @@ Keep these final decisions. Never reverse one inside other work.
 
 ## Names
 
-| Concept                                   | Name                                         |
-| ----------------------------------------- | -------------------------------------------- |
-| Settings file and its values              | `gspot.toml`, settings                       |
-| Selection of checks                       | configuration                                |
-| One result from a check                   | finding                                      |
-| One linter instruction                    | lint rule                                    |
-| Markdown for coding agents                | rules                                        |
-| Detail of checking                        | level: `recommended` or `all`                |
-| When a check runs                         | stage: `commit`, `push`, `message`, `manual` |
-| A user command run as a check             | command check                                |
-| A `[[...]]` block                         | record, with a singular header               |
-| A value that loosens a check              | `{ value = ..., reason = "..." }`            |
-| Program installation                      | package manager or mise                      |
-| The machine and operating system code     | system                                       |
-| Files copied for a check                  | scratch copy                                 |
-| The test suites                           | unit, integration, e2e                       |
-| Code that prepares and runs tests         | test setup                                   |
-| A temporary repository for a test         | sandbox                                      |
-| Test values                               | test data, in `tests/config/` by topic       |
-| Fixed values                              | `config/`                                    |
-| TypeScript types                          | `types/`                                     |
-| Generation and installation code          | apply, install, ownership                    |
-| Record of files gspot writes              | ownership log                                |
-| File content changes                      | file edit                                    |
-| A check implemented by gspot              | built-in check                               |
-| Package registries                        | registry                                     |
-| The lint extension package                | ESLint plugin                                |
-| Text written by the user                  | your own                                     |
-| `.env.example`                            | env example                                  |
-| Functions that read environment variables | environment readers                          |
-| One run's state                           | run state                                    |
-| A file's kind and its source              | file classification                          |
-| Parsed source for convention checks       | convention source                            |
-| A scope's naming values                   | naming settings                              |
+| Concept                                                                               | Name                                                                                                      | Do not use                             |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Settings file and its values                                                          | `gspot.toml`, settings                                                                                    | config, configuration file             |
+| A setting as written in `gspot.toml`, before defaults                                 | written (`WrittenSettings`)                                                                               | —                                      |
+| Selection of checks                                                                   | configuration; its code and data live in `configurations/`                                                | config                                 |
+| A folder of configurations of one kind                                                | group: `language`, `framework`, `library`, `testing`, `infrastructure`, `platform`, `database`, `general` | category                               |
+| A configuration's `manifest.toml`                                                     | manifest                                                                                                  | manifest for `package.json`            |
+| Comes in the gspot package                                                            | shipped                                                                                                   | built-in (for configurations), bundled |
+| Detail of checking                                                                    | level: `recommended` or `all`                                                                             | —                                      |
+| When a check runs                                                                     | stage: `commit`, `push`, `message`, `manual`                                                              | —                                      |
+| A folder with its own configurations and settings                                     | scope                                                                                                     | `ScopeEntry`, workspace                |
+| A scope's naming values                                                               | naming settings                                                                                           | —                                      |
+| A `[[...]]` block                                                                     | record, with a singular header                                                                            | entry                                  |
+| A value with its reason                                                               | reasoned value: `{ value =..., reason = "..." }`                                                          | envelope, reason form                  |
+| An exported `gspot.toml` for another repository                                       | template                                                                                                  | —                                      |
+| The full name of a check                                                              | check ID: `<configuration>/<name>`                                                                        | check name (for the full ID)           |
+| A check that runs a tool, named after the tool                                        | tool check                                                                                                | declared check, manifest check         |
+| A user command run as a check                                                         | command check                                                                                             | custom check                           |
+| A check implemented by gspot                                                          | built-in check                                                                                            | native check                           |
+| The code gspot runs for one check                                                     | check implementation (`packages/cli/src/checks/implementations.ts`)                                       | runner                                 |
+| One result from a check                                                               | finding                                                                                                   | diagnostic, issue, problem, violation  |
+| One linter instruction                                                                | lint rule; code uses `rule` for its ID                                                                    | diagnostic rule                        |
+| A word the naming check rejects                                                       | banned word                                                                                               | banned term                            |
+| Files allowed to read environment variables                                           | environment readers (`architecture.roles.environment_readers`)                                            | configuration owner, environment owner |
+| Functions that read environment variables                                             | environment functions (`secrets.environment_functions`)                                                   | reader functions                       |
+| `.env.example`                                                                        | env example                                                                                               | —                                      |
+| What a step returns                                                                   | result                                                                                                    | outcome                                |
+| What gspot prints or writes as JSON                                                   | report                                                                                                    | —                                      |
+| One run's state                                                                       | run state                                                                                                 | pass                                   |
+| A file gspot writes                                                                   | generated file                                                                                            | —                                      |
+| A file a project's own generator writes                                               | generator output                                                                                          | generated file, generated path         |
+| A marked part of a file that gspot writes                                             | managed block                                                                                             | generated block, owned block           |
+| A tool's own settings file                                                            | tool file (in `.gspot/config/`); "config" only inside external names and that folder                      | config file, tool configuration        |
+| A root file that leads a tool or editor to a tool file                                | pointer                                                                                                   | redirect                               |
+| Markdown for coding agents                                                            | rules (`[rules]`, `.gspot/rules/`); a lint rule always says "lint rule"                                   | —                                      |
+| The `.gspot/` files that install tools: `package.json`, `pyproject.toml`, `mise.toml` | tool project                                                                                              | manifest                               |
+| File content changes                                                                  | file edit                                                                                                 | —                                      |
+| Building generated files in memory                                                    | generate (`generation/`)                                                                                  | emit                                   |
+| Writing generated files to disk                                                       | apply (`apply/`, `gspot apply`)                                                                           | apply for any other act                |
+| Deciding which files and blocks gspot owns                                            | ownership (`ownership/`)                                                                                  | —                                      |
+| Installing tools and turning on hooks                                                 | install (`commands/install/`, `gspot install`)                                                            | setup                                  |
+| A file the user wrote, by kind                                                        | source file (kind `source`)                                                                               | —                                      |
+| A file's kind and where the kind came from                                            | file classification: kind and origin                                                                      | source (for the origin)                |
+| A file that lists a project's dependencies                                            | dependency file                                                                                           | manifest, package manifest, fact       |
+| A file that marks a folder as a project                                               | project file                                                                                              | —                                      |
+| Third-party tools a repository already has                                            | existing tools                                                                                            | tooling                                |
+| A `package.json` that only holds tools                                                | tool-only package                                                                                         | tools-only, lint-only                  |
+| Parsed source for convention checks                                                   | convention source                                                                                         | —                                      |
+| Text written by the user                                                              | your own in prose, `authored` in code                                                                     | user-written, hand-written             |
+| Program installation                                                                  | package manager or mise                                                                                   | —                                      |
+| npm, pnpm, Yarn, or Bun                                                               | package manager (`PackageManager`)                                                                        | npm client, client, installer          |
+| One install entry of a `[[tool]]`: npm, PyPI, mise, brew, apt, winget, Scoop, GitHub  | installer                                                                                                 | —                                      |
+| Package registries                                                                    | registry                                                                                                  | —                                      |
+| The command that starts gspot from hooks                                              | runner                                                                                                    | —                                      |
+| The lint extension package                                                            | ESLint plugin                                                                                             | —                                      |
+| The machine and operating system code                                                 | system                                                                                                    | platform (for the system), OS          |
+| Files copied for a check                                                              | scratch copy                                                                                              | disposable copy, temporary copy        |
+| The bytes and mode of one file                                                        | file contents                                                                                             | copy                                   |
+| A folder                                                                              | folder; a path constant ends in `_PATH`                                                                   | directory, dir                         |
+| A list of process arguments                                                           | arguments; a constant ends in `_ARGUMENTS`                                                                | args, `_ARGV`, `_ARGS`                 |
+| A time in milliseconds                                                                | milliseconds                                                                                              | ms                                     |
+| Fixed values                                                                          | `config/`                                                                                                 | —                                      |
+| TypeScript types                                                                      | `types/`                                                                                                  | —                                      |
+| The test suites                                                                       | unit, integration, e2e                                                                                    | —                                      |
+| Code that prepares and runs tests                                                     | test setup                                                                                                | —                                      |
+| A temporary repository for a test                                                     | sandbox                                                                                                   | —                                      |
+| Test values                                                                           | test data, in `tests/data/` by topic                                                                      | fixture, config                        |
 
 Preserve official names of external tools, formats, and APIs. Use one name for each concept. A code name has the same meaning as its text name.
 

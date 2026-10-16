@@ -1,19 +1,19 @@
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { getToolName } from '#cli/configurations/tools.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
-import { REASON_ABOVE } from '#cli/config/checks/general/gspot.ts';
-import { type SourceComment } from '#cli/types/parsers/comments.ts';
-import { type ScopeSelection } from '#cli/types/settings/values.ts';
-import { type SuppressionSyntax } from '#cli/types/checks/general.ts';
-import { type TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { SourceComment } from '#cli/types/parsers/comments.ts';
+import type { ScopeSelection } from '#cli/types/settings/values.ts';
+import type { SuppressionSyntax } from '#cli/types/checks/general.ts';
+import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
-import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput, FindingPlace } from '#cli/types/checks/run/check.ts';
+import { REASON_ABOVE, SUPPRESSION_LIMITS, LIMIT_SUPPRESSION_MESSAGE } from '#cli/config/checks/general/gspot.ts';
 
 // A preceding reason belongs only to the next line. Intervening source or comments break adjacency.
-function reasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
+function findReasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
     if (
         previous === undefined ||
         !previous.standalone ||
@@ -26,7 +26,7 @@ function reasonAbove(previous: SourceComment | undefined, comment: SourceComment
 }
 
 // Only tools whose checks claim this source contribute suppression syntax.
-function suppressionSyntaxes(selection: ScopeSelection): SuppressionSyntax[] {
+function listSuppressionSyntaxes(selection: ScopeSelection): SuppressionSyntax[] {
     const selected = selection.selected;
     const checks = selected.flatMap((manifest) =>
         manifest.checks.map((check) => ({ check, files: check.files ?? manifest.files })),
@@ -56,9 +56,50 @@ function suppressionSyntaxes(selection: ScopeSelection): SuppressionSyntax[] {
     });
 }
 
+function isLimitSuppression(tool: string, text: string): boolean {
+    const limits = SUPPRESSION_LIMITS.get(tool);
+    if (limits === undefined) return false;
+    const directive = limits.directive.exec(text);
+    if (directive === null) return false;
+    const rules = directive.groups?.['rules']?.split(limits.separator)[0]?.trim();
+    return rules === undefined || rules === '' || limits.lintRules.test(rules);
+}
+
 function hasAcceptedReason(form: SuppressionSyntax, text: string, preceding: string | undefined): boolean {
     const reason = form.reason.exec(text)?.groups?.['reason']?.trim() ?? preceding;
     return isReasonAccepted(reason);
+}
+
+function checkSuppressionComment(
+    input: CheckInput,
+    form: SuppressionSyntax,
+    comment: SourceComment & FindingPlace,
+    preceding: string | undefined,
+): Finding[] {
+    const text = stripCommentEnd(comment.text);
+    const marker = comment.standalone ? form.marker : form.inlineMarker;
+    if (!marker.test(text)) return [];
+    const at = { file: comment.file, line: comment.line };
+    if (form.forbidden)
+        return [
+            buildFinding(
+                input,
+                at,
+                form.tool,
+                `${form.tool} suppression is not allowed; fix the finding or configure an explicit ignore.`,
+            ),
+        ];
+    if (isLimitSuppression(form.tool, text))
+        return [buildFinding(input, at, `${form.tool}-limit`, LIMIT_SUPPRESSION_MESSAGE)];
+    if (hasAcceptedReason(form, text, preceding)) return [];
+    return [
+        buildFinding(
+            input,
+            at,
+            `${form.tool}-no-reason`,
+            `This ${form.tool} suppression has no reason of two or more words.`,
+        ),
+    ];
 }
 
 /**
@@ -66,12 +107,12 @@ function hasAcceptedReason(form: SuppressionSyntax, text: string, preceding: str
  * @param input the check input with the read suppression comments.
  * @returns the findings.
  */
-async function suppressions(input: CheckInput): Promise<Finding[]> {
+export async function checkSuppressions(input: CheckInput): Promise<Finding[]> {
     const scopes = input.selections.map((selection) => selection.scope);
     const selections = new Map(input.selections.map((selection) => [selection.scope.path, selection]));
     const found: Finding[] = [];
     for (const [scope, selection] of selections) {
-        const syntaxes = suppressionSyntaxes(selection);
+        const syntaxes = listSuppressionSyntaxes(selection);
         for (const file of input.files.filter(
             (file) =>
                 file.kind === 'source' && file.tags.includes('text') && findScope(file.path, scopes).path === scope,
@@ -81,36 +122,13 @@ async function suppressions(input: CheckInput): Promise<Finding[]> {
             const comments = await parseComments(file.path, source);
             found.push(
                 ...comments.flatMap((comment, index) => {
-                    const preceding = reasonAbove(comments[index - 1], comment);
-                    const text = stripCommentEnd(comment.text);
-                    return forms.flatMap((form): Finding[] => {
-                        const marker = comment.standalone ? form.marker : form.inlineMarker;
-                        if (!marker.test(text)) return [];
-                        const at = { file: file.path, line: comment.line };
-                        if (form.forbidden)
-                            return [
-                                findingAt(
-                                    input,
-                                    at,
-                                    form.tool,
-                                    `${form.tool} suppression is not allowed; fix the finding or configure an explicit ignore.`,
-                                ),
-                            ];
-                        if (hasAcceptedReason(form, text, preceding)) return [];
-                        return [
-                            findingAt(
-                                input,
-                                at,
-                                `${form.tool}-no-reason`,
-                                `This ${form.tool} suppression has no reason of two or more words.`,
-                            ),
-                        ];
-                    });
+                    const preceding = findReasonAbove(comments[index - 1], comment);
+                    return forms.flatMap((form) =>
+                        checkSuppressionComment(input, form, { ...comment, file: file.path }, preceding),
+                    );
                 }),
             );
         }
     }
     return found;
 }
-
-export { suppressions };

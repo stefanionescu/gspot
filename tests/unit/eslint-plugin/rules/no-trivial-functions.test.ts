@@ -155,7 +155,7 @@ createRuleTester(import.meta.dir, {
         tsconfigRootDir: import.meta.dir,
     },
 }).run<keyof (typeof plugin.rules)['no-trivial-functions']['meta']['messages'], [Partial<TrivialFunctionsOptions[0]>]>(
-    'no-trivial-functions',
+    'no-trivial-functions with type information',
     plugin.rules['no-trivial-functions'],
     {
         valid: [],

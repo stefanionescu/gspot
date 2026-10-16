@@ -1,5 +1,7 @@
 # Dependencies
 
+Read this rule before you add, upgrade, or remove a dependency.
+
 ## Adding one
 
 - Do not add a dependency for a one-line native API, a small local helper, or an array, object, or
@@ -18,12 +20,16 @@
 - If the package manager refuses a release as too new, pick an older one or ask the user.
 - Upgrade one dependency per commit with the reason. Never upgrade broadly to satisfy a scanner
   without reading what changed.
+- Write each tool version once. Other files read that pin, or a check compares them with it.
 
 ## Policy
 
+- Delete an override when the lockfile has no package it applies to, or when every package that requests it already
+  accepts the fixed version.
+- Keep third-party license notices in a tracked file, not in a string in code.
 - Ask the user before you add a dependency whose license falls outside the allowed list.
-- Record a known advisory that has no fix in `[[ignore]]`, with the check, advisory ID, reason,
-  and expiry. Never ignore advisories in bulk.
+- For a known advisory that has no fix, follow the suppression rules: ask the user, then record it with
+  `gspot ignore` with the advisory ID, a reason, and an expiry date. Never ignore advisories in bulk.
 - Declare vendored code and record its upstream version and license. Change it only by updating
   it from upstream.
 - Remove dependencies when no runtime, build, tooling, or public peer dependency needs them.

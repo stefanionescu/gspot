@@ -1,5 +1,7 @@
 # Python Flow
 
+Read this rule when you write Python error handling, conditions, loops, or file handling.
+
 ## Exceptions and error handling
 
 Use explicit validation for external inputs and required preconditions. Avoid exceptions for

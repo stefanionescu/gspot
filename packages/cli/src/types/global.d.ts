@@ -1,13 +1,17 @@
+import 'zod/v4/core';
+
 // The runtime provides RegExp.escape before TypeScript's standard declarations include it.
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- reason: TypeScript extends the built-in RegExp constructor through an interface.
-interface RegExpConstructor {
-    escape(text: string): string;
+declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- reason: TypeScript extends the built-in RegExp constructor through an interface.
+    interface RegExpConstructor {
+        escape(text: string): string;
+    }
 }
 
-declare module 'spdx-expression-parse' {
-    export default function parse(expression: string): unknown;
-}
-
-declare module 'spdx-satisfies' {
-    export default function satisfies(expression: string, approved: string[]): boolean;
+// Zod reads the path role from schema metadata.
+declare module 'zod/v4/core' {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- reason: Zod reads extra metadata types only from an interface.
+    interface GlobalMeta {
+        pathRole?: 'source' | 'destination' | 'build';
+    }
 }

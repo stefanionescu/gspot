@@ -1,8 +1,7 @@
 {
     "commands": {
-        "install": "npm install --save-dev --save-exact @gspothq/cli",
-        "init": "npx gspot init --yes",
-        "level": "npx gspot set level all",
+        "install": "npm i -D -E @gspothq/cli",
+        "init": "npx gspot init",
         "install_tools": "npx gspot install",
         "check": "npx gspot check"
     },
@@ -10,7 +9,7 @@
         {
             "path": "package.json",
             "language": "json",
-            "content": "{\n    \"name\": \"orders\",\n    \"description\": \"Order totals and discounts for the shop.\",\n    \"private\": true,\n    \"type\": \"module\",\n    \"exports\": {\n        \"./*\": \"./src/*.ts\"\n    },\n    \"packageManager\": \"npm@11.19.0\"\n}\n"
+            "content": "{\n    \"name\": \"shop\",\n    \"description\": \"Checkout for the shop.\",\n    \"private\": true,\n    \"type\": \"module\",\n    \"exports\": {\n        \"./*\": \"./src/*.ts\"\n    },\n    \"engines\": {\n        \"node\": \">=24\"\n    },\n    \"packageManager\": \"npm@11.19.0\"\n}\n"
         },
         {
             "path": "tsconfig.json",
@@ -20,12 +19,12 @@
         {
             "path": "README.md",
             "language": "markdown",
-            "content": "# Orders\n\nOrder totals and discounts for the shop.\n\n## Setup\n\nRun `npm install`, then `npx gspot install`.\n"
+            "content": "# Shop\n\nCheckout for the shop.\n"
         },
         {
             "path": "LICENSE",
             "language": "text",
-            "content": "Copyright 2026 The Orders authors. All rights reserved.\n"
+            "content": "Copyright 2026 The Shop authors. All rights reserved.\n"
         },
         {
             "path": ".gitignore",
@@ -33,84 +32,97 @@
             "content": "node_modules/\n"
         },
         {
-            "path": "src/orders.ts",
+            "path": "src/cart.ts",
             "language": "typescript",
-            "content": "export type Order = { items: { price: number; quantity: number }[] };\n\n/**\n * The total price of an order.\n * @param order the order\n * @returns the sum of price times quantity over its items\n */\nexport function calculateTotal(order: Order): number {\n    let total = 0;\n    for (const item of order.items) total += item.price * item.quantity;\n    return total;\n}\n"
+            "content": "export type Cart = { total: number };\n"
         },
         {
-            "path": "src/discounts.ts",
+            "path": "src/payments.ts",
             "language": "typescript",
-            "content": "import type { Order } from './orders.js';\n\n/**\n * The order with every price lowered by a rate.\n * @param order the order\n * @param rate the share taken off each price, from 0 to 1\n * @returns the discounted order\n */\nexport function applyDiscount(order: Order, rate: number): Order {\n    const factor = 1 - rate;\n    const items = order.items.map((item) => ({ ...item, price: item.price * factor }));\n    return { items };\n}\n"
+            "content": "/**\n * Charge an amount to the customer's card.\n * @param amount the amount in cents\n * @returns after the payment provider accepts the charge\n */\nexport async function charge(amount: number): Promise<void> {\n    const response = await fetch('https://payments.example.com/charges', {\n        method: 'POST',\n        body: JSON.stringify({ amount }),\n    });\n    if (!response.ok) throw new Error(`The charge failed with status ${String(response.status)}.`);\n}\n"
         }
     ],
     "agent": {
-        "message": "feat: Add receipt lines",
+        "message": "feat: Add checkout",
         "files": [
             {
-                "path": "src/utils.ts",
+                "path": "src/checkout.ts",
                 "language": "typescript",
-                "content": "import { calculateTotal } from './orders.js';\n\n/**\n * The total of an order.\n * @param order the order\n * @returns the total\n */\nexport function getOrderTotal(order: any): number {\n    return calculateTotal(order);\n}\n"
-            },
-            {
-                "path": "src/receipt.ts",
-                "language": "typescript",
-                "content": "import type { Order } from './orders.js';\nimport { getOrderTotal } from './utils.js';\n\n/**\n * The receipt lines of an order: one line per item, then the total.\n * @param order the order\n * @returns the lines\n */\nexport function receiptLines(order: Order): string[] {\n    const lines = order.items.map((item) => `${String(item.quantity)} x ${String(item.price)}`);\n    lines.push(`Total: ${String(getOrderTotal(order))}`);\n    return lines;\n}\n"
+                "content": "import type { Cart } from './cart.js';\nimport { charge } from './payments.js';\n\nexport async function pay(cart: Cart) {\n    try {\n        // eslint-disable-next-line\n        charge(cart.total);\n    } catch {}\n}\n"
             }
         ]
     },
     "fix": {
-        "deleted": ["src/utils.ts"],
+        "deleted": [],
         "files": [
             {
-                "path": "src/receipt.ts",
+                "path": "src/checkout.ts",
                 "language": "typescript",
-                "content": "import { type Order, calculateTotal } from './orders.js';\n\n/**\n * The receipt lines of an order: one line per item, then the total.\n * @param order the order\n * @returns the lines\n */\nexport function receiptLines(order: Order): string[] {\n    const lines = order.items.map((item) => `${String(item.quantity)} x ${String(item.price)}`);\n    lines.push(`Total: ${String(calculateTotal(order))}`);\n    return lines;\n}\n"
+                "content": "import type { Cart } from './cart.js';\nimport { charge } from './payments.js';\n\nexport async function pay(cart: Cart) {\n    await charge(cart.total);\n}\n"
             }
         ]
     },
-    "rejected": "Checked the staged files.\nroot  commits/commitlint-pushed      passed     0 files     0.0s\nroot  docs/missing-paths             passed     115 files   0.0s\nroot  duplication/jscpd              passed     115 files   0.0s\nroot  format/prettier                passed     2 files     0.0s\nroot  format/editorconfig-checker    passed     2 files     0.0s\nroot  gspot/generated-files          passed     115 files   0.0s\nroot  gspot/unused-entries           passed     115 files   0.0s\nroot  gspot/suppressions             passed     115 files   0.0s\nroot  javascript/eslint              failed     2 files     0.0s\n  src/utils.ts:1:1  gspot/no-trivial-files  This file has only forwarding code, aliases, or small functions. Move that code to the module that uses it and delete this file.\n  src/utils.ts:8:31  @typescript-eslint/explicit-module-boundary-types  Argument 'order' should be typed with a non-any type.\n  src/utils.ts:8:38  @typescript-eslint/no-explicit-any  Unexpected any. Specify a different type.\n  src/utils.ts:9:27  @typescript-eslint/no-unsafe-argument  Unsafe argument of type `any` assigned to a parameter of type `Order`.\n    help: Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> links the rule documentation.\n  reproduce: gspot check --only javascript/eslint --staged\nroot  javascript/knip                passed     115 files   0.0s\nroot  naming/identifiers             passed     2 files     0.0s\nroot  naming/paths                   failed     2 files     0.0s\n  src/utils.ts:1:1  banned-term  typescript file \"utils\": \"utils\" is banned (roles group).\n    help: Rename the file or folder, or add a path rule under [[naming.override]] with a reason.\n  reproduce: gspot check --only naming/paths --staged\nroot  naming/settings                passed     115 files   0.0s\nroot  prose/vale                     passed     2 files     0.0s\nroot  repository/large-files         passed     115 files   0.0s\nroot  repository/tracked-files       passed     115 files   0.0s\nroot  secrets/gitleaks-staged        passed     115 files   0.0s\nroot  secrets/gitleaks-pushed        passed     0 files     0.0s\nroot  secrets/gitleaks-files         skipped    The secrets/gitleaks-files check scans the files of this Git repository.\nroot  secrets/trufflehog             passed     0 files     0.0s\nroot  secrets/env-examples           skipped    No example environment file exists in the repository root. Declare the example environment files under secrets.env_examples.\nroot  security/semgrep               passed     2 files     0.0s\nroot  spelling/typos                 passed     2 files     0.0s\nroot  structure/lone-files           passed     115 files   0.0s\nroot  structure/shared-prefixes      passed     115 files   0.0s\nroot  structure/file-folder-clashes  passed     115 files   0.0s\nroot  typescript/tsc                 passed     115 files   0.0s\nroot  typescript/tsconfig            passed     2 files     0.0s\n\nskipped    dependencies/osv  (inputs)\nskipped    dependencies/syncpack  (inputs)\nskipped    dependencies/package-json  (inputs)\nskipped    dependencies/lockfile-hosts  (inputs)\nskipped    docs/lychee  (inputs)\nskipped    docs/required-files  (inputs)\nskipped    files/taplo  (inputs)\nskipped    files/taplo-format  (inputs)\nskipped    files/yamllint  (inputs)\nskipped    files/v8r  (inputs)\nskipped    files/xmllint  (inputs)\nskipped    gspot/settings-format  (inputs)\nskipped    javascript/tsc  (inputs)\nskipped    licenses/allowed  (inputs)\nskipped    markdown/markdownlint  (inputs)\nskipped    markdown/fences  (inputs)\nskipped    secrets/gitleaks-files  (condition)\nskipped    secrets/dotenv-linter  (inputs)\nskipped    structure/file-lines  (inputs)\nskipped    structure/trivial-functions  (inputs)\nskipped    structure/env-reads  (inputs)\n\n24 checks passed, 2 checks failed, 2 checks skipped, 5 findings, 0.0s (failed)",
+    "rejected": "Checked the staged files.\njavascript/eslint  failed  4 findings\n  src/checkout.ts:4:8  @typescript-eslint/require-await  Async function 'pay' has no 'await' expression.\n  src/checkout.ts:5:5  sonarjs/no-try-promise  Consider using 'await' for the promise inside this 'try' or replace it with 'Promise.prototype.catch(...)' usage.\n  src/checkout.ts:6  unicorn/no-abusive-eslint-disable  Specify the rules you want to disable.\n  src/checkout.ts:8:13  no-empty  Empty block statement.\n  help: Run `gspot check --fix` for the rules that fix themselves, then read each remaining line; `gspot explain <rule>` links the rule documentation.\n  run again: gspot check --only javascript/eslint --staged\n\ngspot/suppressions  failed  1 finding\n  src/checkout.ts:6  eslint-limit  Split the code by its steps, or ask the user to raise the limit in gspot.toml.\n  help: Use the tool's suppression syntax to write a meaningful reason, or fix the finding and remove the suppression. Never suppress a size or complexity limit; split the code by its steps, or ask the user to raise the limit in gspot.toml.\n  run again: gspot check --only gspot/suppressions --staged\n\nFailed: 2 checks with 5 findings. Passed: 11 checks. Skipped: 8 checks.\nTime: 1.0s. Exit code 1.\nBypass this hook once: git commit --no-verify",
     "findings": [
         {
             "check": "javascript/eslint",
-            "file": "src/utils.ts",
-            "line": 1,
-            "column": 1,
-            "rule": "gspot/no-trivial-files",
-            "message": "This file has only forwarding code, aliases, or small functions. Move that code to the module that uses it and delete this file."
+            "file": "src/checkout.ts",
+            "line": 4,
+            "column": 8,
+            "rule": "@typescript-eslint/require-await",
+            "message": "Async function 'pay' has no 'await' expression."
         },
         {
             "check": "javascript/eslint",
-            "file": "src/utils.ts",
+            "file": "src/checkout.ts",
+            "line": 5,
+            "column": 5,
+            "rule": "sonarjs/no-try-promise",
+            "message": "Consider using 'await' for the promise inside this 'try' or replace it with 'Promise.prototype.catch(...)' usage."
+        },
+        {
+            "check": "javascript/eslint",
+            "file": "src/checkout.ts",
+            "line": 6,
+            "rule": "unicorn/no-abusive-eslint-disable",
+            "message": "Specify the rules you want to disable."
+        },
+        {
+            "check": "javascript/eslint",
+            "file": "src/checkout.ts",
             "line": 8,
-            "column": 31,
-            "rule": "@typescript-eslint/explicit-module-boundary-types",
-            "message": "Argument 'order' should be typed with a non-any type."
+            "column": 13,
+            "rule": "no-empty",
+            "message": "Empty block statement."
         },
         {
-            "check": "javascript/eslint",
-            "file": "src/utils.ts",
-            "line": 8,
-            "column": 38,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type."
-        },
-        {
-            "check": "javascript/eslint",
-            "file": "src/utils.ts",
-            "line": 9,
-            "column": 27,
-            "rule": "@typescript-eslint/no-unsafe-argument",
-            "message": "Unsafe argument of type `any` assigned to a parameter of type `Order`."
-        },
-        {
-            "check": "naming/paths",
-            "file": "src/utils.ts",
-            "line": 1,
-            "column": 1,
-            "rule": "banned-term",
-            "message": "typescript file \"utils\": \"utils\" is banned (roles group)."
+            "check": "gspot/suppressions",
+            "file": "src/checkout.ts",
+            "line": 6,
+            "rule": "eslint-limit",
+            "message": "Split the code by its steps, or ask the user to raise the limit in gspot.toml."
         }
     ],
-    "passed": "26 checks passed, 0 checks failed, 2 checks skipped, 0 findings",
-    "settings": "#:schema https://unpkg.com/@gspothq/cli@0.1.0/gspot.schema.json\n\nlevel = \"all\"\n# gspot settings for this repository. Change them with gspot set, unset, ignore, add, and remove.\n\nconfigurations = [\"commits\", \"dependencies\", \"docs\", \"duplication\", \"engineering\", \"files\", \"format\", \"gspot\", \"javascript\", \"licenses\", \"markdown\", \"naming\", \"prose\", \"repository\", \"secrets\", \"security\", \"spelling\", \"structure\", \"typescript\"]\n\n[hooks]\nenabled = true\n"
+    "passed": "Passed: 13 checks. Skipped: 8 checks.",
+    "accepted": "Checked the staged files.\njavascript/eslint  passed  1 file  0.9s\n\nmarkdown/markdownlint  skipped  No matching files.\n\nmarkdown/fences  skipped  No matching files.\n\ntypescript/tsconfig  passed  1 file  0.4s\n\ndependencies/lockfiles  skipped  No matching files.\n\ndocs/lychee  skipped  No matching files.\n\ndocs/missing-paths  passed  1 file  0.4s\n\nfiles/taplo-format  skipped  No matching files.\n\nfiles/yamllint  skipped  No matching files.\n\nfiles/xmllint  skipped  No matching files.\n\nformat/prettier  passed  1 file  0.3s\n\nformat/editorconfig-checker  passed  1 file  0.2s\n\ngspot/generated-files  passed  0 files  0.1s\n\ngspot/unmatched-patterns  passed  0 files  0.2s\n\ngspot/suppressions  passed  0 files  0.2s\n\nprose/vale  passed  1 file  0.2s\n\nrepository/large-files  passed  0 files  0.1s\n\nrepository/local-files  passed  0 files  0.1s\n\nsecrets/gitleaks-staged  passed  111 files  0.2s\n\nsecrets/dotenv-linter  skipped  No matching files.\n\nspelling/typos  passed  1 file  0.0s\n\nPassed: 13 checks. Skipped: 8 checks.\nTime: 1.1s. Exit code 0.",
+    "problems": [
+        {
+            "title": "No await.",
+            "text": "The function returns before the charge ends.",
+            "lines": [4, 5],
+            "rules": ["@typescript-eslint/require-await", "sonarjs/no-try-promise"]
+        },
+        {
+            "title": "Linter off.",
+            "text": "The comment turns off every rule for line 7 and gives no reason.",
+            "lines": [6],
+            "rules": ["unicorn/no-abusive-eslint-disable", "eslint-limit"]
+        },
+        {
+            "title": "Errors dropped.",
+            "text": "The empty `catch` throws away every error it catches.",
+            "lines": [8],
+            "rules": ["no-empty"]
+        }
+    ]
 }

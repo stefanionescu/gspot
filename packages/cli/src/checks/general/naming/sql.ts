@@ -16,7 +16,7 @@ import {
     SQL_DECLARATION_PREFIX,
 } from '#cli/config/parsers/sql.ts';
 
-function addedColumns({ fields }: SqlStatementView<'AlterTableStmt'>): SqlNamed[] {
+function listAddedColumns({ fields }: SqlStatementView<'AlterTableStmt'>): SqlNamed[] {
     return listNodeFields(fields.cmds, 'AlterTableCmd')
         .filter((command) => command.subtype === 'AT_AddColumn')
         .flatMap((command) =>
@@ -49,7 +49,7 @@ const NAME_READERS: SqlStatementReaders<SqlNamed[]> = {
             ...(fields.view?.location === undefined ? {} : { location: fields.view.location }),
         },
     ],
-    AlterTableStmt: addedColumns,
+    AlterTableStmt: listAddedColumns,
     IndexStmt: ({ fields }) => [{ category: 'indexes', name: fields.idxname ?? '' }],
     CreateTrigStmt: ({ fields }) => [{ category: 'triggers', name: fields.trigname ?? '' }],
     CreatePolicyStmt: ({ fields }) => [{ category: 'policies', name: fields.policy_name ?? '' }],
@@ -77,7 +77,7 @@ function scanParameterList(source: string, start: number): { spans: number[]; sp
     return { spans, span, end: at };
 }
 
-function parameterSpans(source: string, start: number): { spans: number[]; end: number } {
+function parseParameterSpans(source: string, start: number): { spans: number[]; end: number } {
     const scanned = scanParameterList(source, start);
     if (source.slice(scanned.span, scanned.end).trim() !== '') scanned.spans.push(scanned.span);
     return { spans: scanned.spans, end: scanned.end + 1 };
@@ -91,7 +91,7 @@ function findFunctionName(statement: SqlStatementView<'CreateFunctionStmt'>, sou
     return { start, qualified, offset: start + (lastPart?.index ?? 0) };
 }
 
-function functionNames(statement: SqlStatementView<'CreateFunctionStmt'>, source: string): SqlNamed[] {
+function listFunctionNames(statement: SqlStatementView<'CreateFunctionStmt'>, source: string): SqlNamed[] {
     const { start, qualified, offset } = findFunctionName(statement, source);
     const names: SqlNamed[] = [
         {
@@ -101,10 +101,12 @@ function functionNames(statement: SqlStatementView<'CreateFunctionStmt'>, source
         },
     ];
     const open = source.indexOf('(', start + qualified.length);
-    const input = parameterSpans(source, open + 1);
+    const input = parseParameterSpans(source, open + 1);
     const output = SQL_TABLE_PARAMETERS.exec(source.slice(input.end));
     const spans =
-        output === null ? input.spans : [...input.spans, ...parameterSpans(source, input.end + output[0].length).spans];
+        output === null
+            ? input.spans
+            : [...input.spans, ...parseParameterSpans(source, input.end + output[0].length).spans];
     for (const [index, parameter] of listNodeFields(statement.fields.parameters, 'FunctionParameter').entries()) {
         const span = spans[index];
         if (span === undefined) continue;
@@ -137,7 +139,7 @@ function findIdentifierOffset(entry: SqlNamed, parsed: SqlFile, source: string, 
     return found;
 }
 
-function statementIdentifiers({
+function extractStatementIdentifiers({
     file,
     source,
     statement,
@@ -152,7 +154,7 @@ function statementIdentifiers({
 }): Identifier[] {
     const named =
         statement.kind === 'CreateFunctionStmt'
-            ? functionNames(statement, lexicalSource)
+            ? listFunctionNames(statement, lexicalSource)
             : (readStatement(statement, NAME_READERS) ?? []);
     let offset = statement.start + (SQL_DECLARATION_PREFIX.exec(lexicalSource.slice(statement.start))?.[0].length ?? 0);
     return named
@@ -183,9 +185,9 @@ function statementIdentifiers({
  * @param file the file path.
  * @param source the file text.
  * @param reads optional execution reads shared by SQL checks.
- * @returns the identifiers.
+ * @returns declarations with source locations, or the parser error with an empty list.
  */
-export async function sqlIdentifiers(file: string, source: string, reads: ReadCache): Promise<IdentifierRead> {
+export async function extractSqlIdentifiers(file: string, source: string, reads: ReadCache): Promise<IdentifierRead> {
     const parsed = await parseSqlFile(source, reads);
     if (parsed.error !== undefined) return { identifiers: [], error: parsed.error };
     // eslint-disable-next-line unicorn/prefer-spread -- reason: SQL offsets count UTF-16 code units, including each surrogate half.
@@ -196,7 +198,7 @@ export async function sqlIdentifiers(file: string, source: string, reads: ReadCa
     const lexicalSource = characters.join('');
     return {
         identifiers: parsed.statements.flatMap((statement) =>
-            statementIdentifiers({
+            extractStatementIdentifiers({
                 file: file,
                 source: source,
                 statement: statement,

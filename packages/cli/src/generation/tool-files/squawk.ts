@@ -1,7 +1,7 @@
 import { stringify } from '@decimalturn/toml-patch';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
-import { TOOL_EMIT_FORMAT, SQUAWK_RECOMMENDED_OFF } from '#cli/config/generation/tool-file-sources.ts';
+import { TOML_FORMAT, SQUAWK_RECOMMENDED_OFF } from '#cli/config/generation/tool-files.ts';
 /**
  * Build squawk file from the selected settings.
  * @param context the repository, scope settings, tool declaration, and output path.
@@ -20,7 +20,7 @@ function buildSquawkFile(context: ToolFileContext): string {
         excluded_rules: [...rulesOff('postgres/squawk'), ...(isAll ? [] : SQUAWK_RECOMMENDED_OFF)],
         excluded_paths: [...selectFrozenMigrations(migrations, settings['postgres.frozen_through'] as string)],
     };
-    return stringify(document, TOOL_EMIT_FORMAT).trimEnd();
+    return stringify(document, TOML_FORMAT).trimEnd();
 }
 
 export { buildSquawkFile };

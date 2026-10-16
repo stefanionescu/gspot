@@ -6,3 +6,6 @@ title = "Engineering guidance"
 
 [rules]
 "ACCESSIBILITY.md" = { filenames = ["*.html", "*.tsx", "*.jsx", "*.vue", "*.svelte", "*.astro", "*.swift"] }
+
+"HTTP.md" = { dependencies = ["express", "fastify", "hono", "koa", "@nestjs/core", "next", "@sveltejs/kit", "fastapi", "flask", "django", "starlette", "aiohttp", "vapor"] }
+"LOGGING.md" = { dependencies = ["pino", "winston", "bunyan", "structlog", "loguru", "express", "fastify", "hono", "koa", "@nestjs/core", "fastapi", "flask", "django", "vapor"] }

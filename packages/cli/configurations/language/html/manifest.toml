@@ -13,16 +13,16 @@ replace = [".htmlvalidate.json", ".htmlvalidate.js", ".htmlvalidate.cjs"]
 suppression = { marker = "^<!--\\s*\\[?html-validate-disable(?:-next|-block)?(?=\\s|\\]|$)", reason = "(?: -- |: )(?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*\\]?\\s*(?:--!?>)?$" }
 version = "11.6.1"
 [[tool_file]]
-check = "html/validate"
+check = "html/html-validate"
 target = ".gspot/config/html-validate-source.json"
 tool = "html-validate"
 
 [[check]]
 command = ["html-validate", "--config", "{tool_file:html-validate-source}", "--formatter", "json", "{files}"]
 example = "An `<img src=\"logo.png\">` element without alternative text reports an accessibility finding under the configured rules. Add meaningful `alt` text, or an empty `alt` value for a decorative image."
-help = "Change the markup the way the rule page says. Turn one rule off with gspot ignore html/validate --rule `<name>` --reason \"`<why>`\"."
+help = "Change the markup the way the rule page says. Turn one rule off with `gspot ignore html/html-validate --rule <name> --reason \"<why>\"`."
 level = "recommended"
-name = "validate"
+name = "html-validate"
 output = { format = "json", children = "messages", fields = { file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message" } }
 stage = "commit"
 summary = "Validates every HTML file: elements where they may sit, required attributes, text alternatives, and one style for void elements."

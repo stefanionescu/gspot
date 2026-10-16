@@ -1,5 +1,5 @@
 // Reads tool messages with declared text patterns.
-import type { Finding } from '#cli/types/execution/check.ts';
+import type { Finding } from '#cli/types/checks/run/check.ts';
 import { type ReportInput, type RegexParser } from '#cli/types/parsers/output.ts';
 import { LEADING_DOT_SLASH, TRAILING_PAREN_RULE, TRAILING_BRACKET_RULE } from '#cli/config/parsers/output.ts';
 

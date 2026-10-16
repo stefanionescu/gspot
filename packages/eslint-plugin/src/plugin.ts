@@ -1,5 +1,4 @@
 import { PLUGIN_PREFIX } from './config/plugin.ts';
-import { headerFirst } from './rules/header-first.ts';
 import { noClientEnv } from './rules/no-client-env.ts';
 import { noAliasExports } from './rules/no-alias-exports.ts';
 import { noIndexImports } from './rules/no-index-imports.ts';
@@ -8,9 +7,10 @@ import { importBoundaries } from './rules/import-boundaries.ts';
 import { requireServerOnly } from './rules/require-server-only.ts';
 import { noTrivialFunctions } from './rules/no-trivial-functions.ts';
 import { name, version } from '../package.json' with { type: 'json' };
+import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
 
 const rules = {
-    'header-first': headerFirst,
+    'no-comments-in-imports': noCommentsInImports,
     'no-client-env': noClientEnv,
     'import-boundaries': importBoundaries,
     'no-alias-exports': noAliasExports,
@@ -20,7 +20,7 @@ const rules = {
     'require-server-only': requireServerOnly,
 };
 
-const rulesAt = (levels: string[]) =>
+const selectLevelRules = (levels: string[]) =>
     Object.fromEntries(
         Object.entries(rules)
             .filter(([, rule]) => levels.includes(rule.meta.docs.level))
@@ -37,9 +37,13 @@ export default Object.assign(plugin, {
     configs: {
         recommended: {
             name: `${PLUGIN_PREFIX}/recommended`,
-            plugins: { gspot: plugin },
-            rules: rulesAt(['recommended']),
+            plugins: { [PLUGIN_PREFIX]: plugin },
+            rules: selectLevelRules(['recommended']),
         },
-        all: { name: `${PLUGIN_PREFIX}/all`, plugins: { gspot: plugin }, rules: rulesAt(['recommended', 'all']) },
+        all: {
+            name: `${PLUGIN_PREFIX}/all`,
+            plugins: { [PLUGIN_PREFIX]: plugin },
+            rules: selectLevelRules(['recommended', 'all']),
+        },
     },
 });

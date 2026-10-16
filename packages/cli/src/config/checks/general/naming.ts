@@ -21,7 +21,7 @@ export const CATEGORY_PARENTS = {
     attributes: 'properties',
     enum_cases: 'properties',
     modules: 'files',
-    packages: 'directories',
+    packages: 'folders',
 } as const;
 
 export const SEPARATORS = /[^A-Za-z0-9]+/u;
@@ -91,7 +91,7 @@ export const NAMED_CATEGORIES = [
     'properties',
     'enum_cases',
     'files',
-    'directories',
+    'folders',
     'modules',
     'packages',
     'path_parameters',
@@ -117,7 +117,7 @@ export const CATEGORY_LABELS = {
     properties: 'property',
     enum_cases: 'enum case',
     files: 'file',
-    directories: 'directory',
+    folders: 'folder',
     modules: 'module',
     packages: 'package',
     path_parameters: 'path parameter',
@@ -197,3 +197,12 @@ export const TYPESCRIPT_CALLABLE_NODES = [
     ...TYPESCRIPT_METHOD_NODES,
     'arrow_function',
 ] as const;
+
+export const WORD_FORM_SUFFIXES = ['s', 'es', 'ed', 'ing', 'ings', 'er', 'ers'] as const;
+export const WORD_FORM_CONSONANT = /[aeiou][bcdfghjklmnpqrstvwxyz]$/u;
+
+export const BANNED_WORD_FORMS: Readonly<Record<string, readonly string[]>> = {
+    catalog: ['catalog', 'catalogue'],
+    sync: ['sync', 'synchronize'],
+    resolve: ['resolve', 'resolution'],
+};

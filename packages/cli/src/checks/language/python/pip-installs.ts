@@ -1,18 +1,18 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/parsers/dependency-files.ts';
-import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
+import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { PIP_INSTALL, INSTALL_EXTENSIONS } from '#cli/config/checks/language/python.ts';
 
 /**
  * pyproject.toml owns every dependency: no hand-kept requirements file, and no unmanaged pip install.
- * @param input the check input.
+ * @param input the source files, lockfile declarations, and selected project scope.
  * @returns the findings.
  */
-export function pythonPipInstalls(input: CheckInput): Finding[] {
+export function checkPythonPipInstalls(input: CheckInput): Finding[] {
     if (
         !(input.check.files?.filenames ?? []).some(
             (file) => statSync(join(input.root, input.scope.scope.path, file), { throwIfNoEntry: false }) !== undefined,
@@ -23,7 +23,7 @@ export function pythonPipInstalls(input: CheckInput): Finding[] {
     const requirements = files
         .filter((file) => REQUIREMENTS_FILE.test(file.path))
         .map((file) =>
-            findingAt(
+            buildFinding(
                 input,
                 { file: file.path, line: 1 },
                 'requirements-file',
@@ -39,7 +39,7 @@ export function pythonPipInstalls(input: CheckInput): Finding[] {
                 .flatMap((text, index): Finding[] =>
                     PIP_INSTALL.test(text) && !text.trimStart().startsWith('#')
                         ? [
-                              findingAt(
+                              buildFinding(
                                   input,
                                   { file: file.path, line: index + 1 },
                                   'pip-install',

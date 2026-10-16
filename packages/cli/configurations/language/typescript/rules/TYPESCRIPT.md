@@ -1,5 +1,7 @@
 # TypeScript
 
+Read this rule when you change TypeScript code.
+
 TypeScript checks static types. JavaScript and runtime rules cover modules and execution.
 
 ## Philosophy
@@ -10,8 +12,10 @@ unions, and clear modules keep types easier to read than elaborate type transfor
 ## Files and modules
 
 Diagnostics and process termination stay at executable boundaries. Check the effective lint
-configuration for a path before assuming a rule. Follow the project's arrangement for types
-and constants. Infer schema types from their authored schemas.
+configuration for a path before assuming a rule.
+
+Do not edit compiler output with string replacement. Change the source or the compiler options, then ship what the
+compiler writes.
 
 ## Values and shapes
 
@@ -73,7 +77,55 @@ export async function createProviderOperation(request: ProviderOperationRequest)
 }
 ```
 
-## Comments
+## Naming
 
-Comments document purpose, invariants, security boundaries, concurrency behavior, and runtime
-assumptions. Do not restate TypeScript syntax or code.
+### TypeScript files and modules
+
+<!-- level: all -->
+
+- Do not use namespaces, `module`, triple-slash references, or
+  `import x = require(...)` to simulate ownership.
+- Keep generated file names only when generator-owned.
+
+### TypeScript variables
+
+<!-- level: all -->
+
+- Use explanatory destructuring names.
+
+For a range comparison, name the value `value` and the bounds `minimum` and
+`maximum`. Use a type that supports the comparison, such as `number`; an
+unconstrained generic does not establish ordering semantics.
+
+When iterating a map of users, destructure its entries as `[userId, user]`
+instead of naming each pair `keyValue`.
+
+Name a reused daily timer duration `MILLISECONDS_PER_DAY` and define it as
+`86_400_000`. The name explains both the interval and its unit.
+
+### TypeScript functions
+
+<!-- level: all -->
+
+- Use async/await in names only to distinguish from a blocking counterpart. Normally the return type communicates async.
+
+### TypeScript types
+
+<!-- level: all -->
+
+- Use unions and discriminated unions for alternatives.
+- Use interfaces only when a framework contract, declaration merging, or
+  `implements` relationship makes an interface the clearest tool.
+- Use optional fields and parameters for values callers can omit.
+- Avoid return-type-only generics. When using an existing return-type-only
+  generic API, specify the generic explicitly.
+- Name index keys meaningfully when the type needs an index signature.
+- Prefer `Map` for key/value operations.
+
+Name a coffee response union `CoffeeResponse`; put `| undefined` on an
+operation that can return no response. Name a user index `UsersById` and its
+index key `userId`.
+
+A function that selects a collection element ties its generic to the input
+collection. Its return contract must account for an empty collection unless
+the input type or validation proves that an element exists.

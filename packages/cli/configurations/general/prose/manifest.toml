@@ -65,7 +65,7 @@ tool = "vale"
 
 [[check]]
 example = "The sentence `Release on 03/04/2026.` reports an ambiguous date at the recommended level. Write `Release on March 4, 2026.` when March 4 is the intended date, then rerun. Write legitimate project names in the root allowed_words setting."
-help = "Rewrite the sentence the alert names, write a real name and its reason in the root allowed_words setting, or use gspot ignore prose/vale --rule `<rule>` --reason \"`<why>`\"."
+help = "Rewrite the sentence the alert names, write a real name and its reason in the root allowed_words setting, or use `gspot ignore prose/vale --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "vale"
 stage = "commit"

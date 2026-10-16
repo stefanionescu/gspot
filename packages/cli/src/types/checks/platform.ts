@@ -11,7 +11,7 @@ export type SupabaseConfiguration = {
     storage?: { buckets?: Record<string, unknown> | undefined } | undefined;
 };
 
-/** Native Deno lint output including source diagnostics and analysis errors. */
+/** Deno lint output including source diagnostics and analysis errors. */
 export type DenoLintReport = {
     diagnostics: { filename: string; code: string; message: string; range: { start: { line: number } } }[];
     errors: { file_path: string; message: string }[];

@@ -1,22 +1,19 @@
+import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { parseSettings } from '#cli/settings/read.ts';
-import { printResult } from '#cli/system/terminal.ts';
-import { counted } from '#cli/commands/check/report.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import type { CommandResult } from '#cli/types/terminal.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
-import { saveSettings, startSettingsEdit } from '#cli/commands/save-settings.ts';
+import { saveSettings, startSettingsEdit } from '#cli/apply/save-settings.ts';
 import { listCheckIds, formatUnknownCheck } from '#cli/configurations/manifests.ts';
-import type { IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/save-settings.ts';
-
+import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+import type { IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/edit-settings.ts';
 /**
  * Register removal of ignores by check, lint rule, and path.
  * @param program the command program
+ * @param onResult the sink that writes the completed command result.
  */
-function registerUnignore(program: Command): void {
+function registerUnignore(program: Command, onResult: CommandCompletion): void {
     program
         .command('unignore')
         .argument('<check>', COMMAND_HELP.unignore.arguments['check'])
@@ -25,7 +22,7 @@ function registerUnignore(program: Command): void {
         .option('--rule <rule>', COMMAND_HELP.unignore.options['--rule <rule>'])
         .option('--paths <glob...>', COMMAND_HELP.unignore.options['--paths <glob...>'])
         .action(async (check, flags) => {
-            printResult(await unignoreCommand({ cwd: process.cwd(), check, ...flags }));
+            onResult(await runUnignoreCommand({ cwd: process.cwd(), check, ...flags }));
         });
 }
 
@@ -74,15 +71,11 @@ function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' 
  * @param options the repository, check, optional rule, and paths
  * @returns the mutation result and any ignore that still covers every path
  */
-async function unignoreCommand(
+async function runUnignoreCommand(
     options: Pick<IgnoreOptions, 'cwd' | 'check' | 'rule' | 'paths'>,
 ): Promise<CommandResult> {
-    const { root, input } = await startSettingsEdit(options.cwd);
-    const commandChecks: unknown[] = Array.isArray(input.table['command_check']) ? input.table['command_check'] : [];
-    const names = commandChecks.flatMap((entry) =>
-        isRecord(entry) && typeof entry['name'] === 'string' ? [{ name: entry['name'] }] : [],
-    );
-    const known = listCheckIds(names, createReadCache(root));
+    const { root, input, settings, reads } = startSettingsEdit(options.cwd);
+    const known = listCheckIds(Object.values(settings.commandChecks), reads);
     if (!known.includes(options.check)) throw new GspotError('arguments', formatUnknownCheck(options.check, known));
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, options);
     const [noun, verb, pronoun] = everywhere === 1 ? ['ignore', 'covers', 'it'] : ['ignores', 'cover', 'them'];
@@ -92,18 +85,17 @@ async function unignoreCommand(
             : `Kept ${String(everywhere)} ${noun} that ${verb} every path. To delete ${pronoun}, run gspot unignore without --paths.\n`;
     const warningFields = stripUndefined({ warning: everywhere === 0 ? undefined : warning.trim() });
     if (deleted === 0 && changedIgnores === 0) {
-        parseSettings(input.text, root, createReadCache(root));
         return {
-            text: `nothing to remove\n${warning}`,
+            text: `No change: ${options.check} has no matching ignore.\n${warning}`,
             json: { changed: false, ...warningFields },
             exitCode: 0,
         };
     }
     const summary = [
-        { count: deleted, message: `deleted ${counted(deleted, 'ignore')}` },
+        { count: deleted, message: `Removed ${formatCount(deleted, 'ignore')} for ${options.check}.` },
         {
             count: changedIgnores,
-            message: `took ${counted(removedPaths, 'path')} out of ${counted(changedIgnores, 'ignore')}`,
+            message: `Removed ${formatCount(removedPaths, 'path')} from ${formatCount(changedIgnores, 'ignore')}.`,
         },
     ]
         .filter(({ count }) => count !== 0)

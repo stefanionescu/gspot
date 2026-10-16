@@ -4,12 +4,12 @@ import { resolve, relative } from 'node:path';
 import { LINE_FEED } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
 import { parseReport } from '#cli/parsers/output/formats.ts';
-import type { Finding } from '#cli/types/execution/check.ts';
-import { type TypoEntry, type ReportInput } from '#cli/types/parsers/output.ts';
+import type { Finding } from '#cli/types/checks/run/check.ts';
+import { type ReportInput, type ReportedTypo } from '#cli/types/parsers/output.ts';
 
 // The lines of a source file as bytes, read once per file, so byte offsets map to columns.
 function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {
@@ -37,7 +37,7 @@ function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]
 function computeTypoPosition(
     root: string,
     path: string,
-    entry: TypoEntry,
+    entry: ReportedTypo,
     cache: Map<string, Buffer[]>,
 ): Pick<Finding, 'line' | 'column'> {
     if (entry.line_num === undefined) return {};
@@ -55,7 +55,7 @@ function computeTypoPosition(
 function buildFinding(
     check: string,
     help: string,
-    entry: TypoEntry,
+    entry: ReportedTypo,
     path: string,
     position: Pick<Finding, 'line' | 'column'>,
 ): Finding {
@@ -80,14 +80,14 @@ const reportedTypoSchema = z.object({
     byte_offset: z.number().int().nonnegative(),
     typo: z.string().min(1),
     corrections: z.array(z.string()).nullable(),
-} satisfies SchemaShape<TypoEntry>);
+} satisfies SchemaShape<ReportedTypo>);
 
 /**
  * Findings from the JSON lines typos prints. JSON preserves filename delimiters; offsets count UTF-8 bytes,
  * while report columns count characters.
  *
  * @param input the check, report text, source paths, and output declaration.
- * @returns the findings.
+ * @returns source positions with byte offsets converted to character columns.
  */
 export function parseTyposFindings(input: ReportInput): Finding[] {
     const { check, stdout, help, root, cwd } = input;

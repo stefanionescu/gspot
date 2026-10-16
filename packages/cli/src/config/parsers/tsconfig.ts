@@ -4,8 +4,7 @@ export const TS_NO_INPUTS_CODE = 18_003;
 
 export const JSCONFIG_FILE = 'jsconfig.json';
 export const TSCONFIG_FILE = 'tsconfig.json';
-export const TYPESCRIPT_TSCONFIG_CHECK = 'typescript/tsconfig';
-export const JAVASCRIPT_TSC_COMMAND = ['tsc', '-p', '{tool_file:jsconfig}'] as const;
+export const JAVASCRIPT_TSC_COMMAND = ['tsc', '-p'] as const;
 export const TSC_BUILD_COMMAND = ['tsc', '-b'] as const;
 export const TSC_PROJECT_COMMAND = ['tsc', '--noEmit', '-p'] as const;
 export const TSC_PLAIN_OUTPUT = ['--pretty', 'false'] as const;

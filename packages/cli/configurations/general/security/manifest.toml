@@ -28,7 +28,7 @@ tool = "semgrep"
 command = ["semgrep", "scan", "--strict", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--json", "{files}"]
 example = "Code matching a selected local Semgrep rule reports that rule ID and source location. For a rule banning dynamic evaluation, replace `eval(userInput)` with explicit parsing and permitted operations, then rerun the same rule set."
 exit_codes = [1, 3]
-help = "Change the code the way the message says. Turn one rule off for a path with gspot ignore security/semgrep --rule `<id>` --paths `<glob>` --reason \"`<why>`\"."
+help = "Change the code the way the message says. Turn one rule off for a path with `gspot ignore security/semgrep --rule <id> --paths <glob> --reason \"<why>\"`."
 level = "recommended"
 name = "semgrep"
 output = { format = "semgrep" }
@@ -40,7 +40,7 @@ why = "An injection or a logged secret reads like ordinary code, and a pattern r
 command = ["semgrep", "scan", "--strict", "{each:--config:tools.semgrep.registry_packs}", "--error", "--metrics", "off", "--disable-version-check", "--quiet", "--json", "{files}"]
 example = "Code matching a configured Semgrep registry rule reports its upstream rule ID. Correct the operation identified by that rule and rerun with network access. The configured rule set determines which patterns are findings."
 exit_codes = [1, 3]
-help = "Change the code the way the message says, or turn the rule off for a path with gspot ignore security/semgrep-registry --rule `<id>` --reason \"`<why>`\"."
+help = "Change the code the way the message says, or turn the rule off for a path with `gspot ignore security/semgrep-registry --rule <id> --reason \"<why>\"`."
 level = "recommended"
 name = "semgrep-registry"
 needs = ["network"]

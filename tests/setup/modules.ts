@@ -1,7 +1,7 @@
 // Links installed npm packages into test projects.
 import { join, dirname } from 'node:path';
-import { pathExists } from '#tests/setup/files.ts';
-import { isWindows } from '#tests/setup/operating-systems.ts';
+import { isOnDisk } from '#tests/setup/files.ts';
+import { isWindows } from '#tests/setup/system.ts';
 import { mkdir, readdir, symlink, realpath } from 'node:fs/promises';
 
 /** The installed workspace store keeps each package beside its own dependencies. */
@@ -15,7 +15,7 @@ const testModules = join(import.meta.dir, '../node_modules');
  * @param store the installed module folder.
  * @returns package names in filesystem order.
  */
-async function packageNames(store: string): Promise<string[]> {
+async function listPackageNames(store: string): Promise<string[]> {
     const entries = await readdir(store);
     const names = await Promise.all(
         entries
@@ -39,18 +39,17 @@ async function linkInstalledModules(target: string): Promise<void> {
     const kind = isWindows ? 'junction' : 'dir';
     const packages = await Promise.all(
         [testModules, installedModules].map(async (store) => {
-            const names = await packageNames(store);
+            const names = await listPackageNames(store);
             return names.map((name) => [store, name] as const);
         }),
     );
     const links = [[installedModules, '.bun'] as const, [testModules, '.bin'] as const, ...packages.flat()];
     for (const [store, name] of links) {
         const destination = join(target, name);
-        if (await pathExists(destination)) continue;
+        if (await isOnDisk(destination)) continue;
         await mkdir(dirname(destination), { recursive: true });
         const original = await realpath(join(store, name));
         await symlink(original, destination, kind);
     }
 }
-
 export { testModules, installedModules, linkInstalledModules };

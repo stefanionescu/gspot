@@ -1,15 +1,15 @@
 import { basename } from 'node:path';
 import { findScope } from '#cli/repository/scopes.ts';
-import { coverageArguments } from '#cli/planning/checks.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
+import { stripCoverageArguments } from '#cli/planning/checks.ts';
 import { PIP_LICENSES_COMMAND } from '#cli/config/tools/python.ts';
 import { PRETTIER_TOOL } from '#cli/config/generation/formatting.ts';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
-import { settingsSkip, isSettingEmpty } from '#cli/planning/skips.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
+import { isSettingEmpty, findSettingsSkip } from '#cli/planning/skips.ts';
 import type { StylelintComponent } from '#cli/types/generation/eslint.ts';
 import type { PrettierPlugin } from '#cli/types/generation/formatting.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
@@ -56,18 +56,20 @@ function listPrettierPluginNames(scopes: ScopeSelection[], programs: ReadonlySet
  *
  * @param scope the effective configuration selection.
  * @param check the declared check.
- * @param command the argv actually executed when supplied.
+ * @param command the command arguments actually executed when supplied.
  *
  * @returns each explicit and configuration-owned companion once.
  */
 export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration, command?: string[]): string[] {
     const manifest = scope.selected.find((owner) => owner.checks.includes(check));
-    const gated = coverageArguments({ scope, check, ...(manifest === undefined ? {} : { manifest }) }, {});
+    const gated = stripCoverageArguments({ scope, check, ...(manifest === undefined ? {} : { manifest }) }, {});
     const withoutCoverage =
         gated !== check.command && command?.some((part) => COVERAGE_FLAGS.has(part.replace(FLAG_VALUE, ''))) !== true;
     const tools = new Set([
         check.tool,
-        ...[check.command, check.fix].flatMap((argv) => (argv === undefined ? [] : [argv[0]])),
+        ...[check.command, check.fix].flatMap((commandArguments) =>
+            commandArguments === undefined ? [] : [commandArguments[0]],
+        ),
         ...(check.other_tools ?? []),
     ]);
     const companions = scope.selected
@@ -95,7 +97,7 @@ export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration, 
  *
  * @returns required executable, declared peer, and installation tools.
  */
-export function requiredToolNames(check: PlannedCheck): string[] {
+export function listRequiredTools(check: PlannedCheck): string[] {
     const names = new Set(
         [check.tool?.name, ...checkCompanions(check.scope, check.check), check.check.fix?.[0]].filter(
             (name) => name !== undefined,
@@ -118,13 +120,15 @@ export function requiredToolNames(check: PlannedCheck): string[] {
  *
  * @returns the selected manifests with only their required tools.
  */
-export function neededToolManifests(session: Session, checks: PlannedCheck[]): Manifest[] {
+export function selectNeededManifests(session: Session, checks: PlannedCheck[]): Manifest[] {
     const licenses = checks
         .filter((entry) => entry.manifest?.configuration.name === LICENSES_CONFIGURATION)
-        .flatMap((check) => licenseProjects(check.files, session.scopes, session.settingsFile.settings, check.check))
+        .flatMap((check) =>
+            listLicenseProjects(check.files, session.scopes, session.settingsFile.settings, check.check),
+        )
         .filter((project) => project.skip === undefined)
         .map((project) => (basename(project.manifest) === PACKAGE_JSON ? LICENSE_CHECKER : PIP_LICENSES_COMMAND[0]));
-    const needed = new Set([...checks.flatMap((check) => requiredToolNames(check)), ...licenses]);
+    const needed = new Set([...checks.flatMap((check) => listRequiredTools(check)), ...licenses]);
     for (const name of listPrettierPluginNames(session.scopes, needed)) needed.add(name);
     const selected = listSelectedManifests(session.scopes);
     const selectedTools = new Set(selected.flatMap((manifest) => manifest.tools.map(({ name }) => name)));
@@ -158,7 +162,7 @@ export function neededToolManifests(session: Session, checks: PlannedCheck[]): M
  *
  * @returns the consumer projects that require installed license reports.
  */
-export function licenseProjects(
+export function listLicenseProjects(
     files: TrackedFile[],
     scopes: ScopeSelection[],
     settings: Settings,
@@ -192,7 +196,7 @@ export function licenseProjects(
                               manifest: file.path,
                               selection,
                               configuration,
-                              skip: settingsSkip(settings, selection, check),
+                              skip: findSettingsSkip(settings, selection, check),
                           },
                       ];
             }),

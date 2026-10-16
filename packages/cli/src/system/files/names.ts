@@ -48,7 +48,7 @@ export function splitSystemPath(path: string): string[] {
 }
 
 /**
- * Public mutation plans cannot target the ownership log, lock, or recovery files.
+ * Keep public mutation plans outside the gspot state folder.
  * @param path the proposed path.
  */
 export function assertWritablePath(path: string): void {

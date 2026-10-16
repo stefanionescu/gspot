@@ -1,5 +1,7 @@
 # OpenAPI
 
+Read this rule when you change an OpenAPI document or its contract tests.
+
 ## Public contracts
 
 When the project publishes OpenAPI, its document describes the runtime API.

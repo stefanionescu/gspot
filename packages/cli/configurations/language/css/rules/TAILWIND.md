@@ -1,5 +1,7 @@
 # Tailwind CSS
 
+Read this rule when you change Tailwind CSS classes or configuration.
+
 ## Generated styles
 
 - Verify that source detection covers templates and content containing class names. Tailwind CSS 4
@@ -17,9 +19,9 @@ for the installed major version.
 <!-- level: all -->
 
 - Use theme tokens for colors, spacing, radii, fonts, and breakpoints. Explain deliberate values
-  outside those tokens at their owner.
+  outside those tokens where the code uses them.
 - Compose component styles with utility classes. Keep reusable theme and utility declarations
-  in their configured style owner.
+  in the configured stylesheet.
 - Use the project's adopted class-merging function when conditional utilities conflict.
   Do not introduce a separate merging implementation.
 - Avoid handwritten CSS that duplicates an existing utility without a component requirement.

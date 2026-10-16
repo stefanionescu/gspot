@@ -1,0 +1,93 @@
+---
+title: Concepts
+description: Understand configurations, checks, findings, settings, levels, and scopes.
+---
+
+import { buildLevelRows } from '../../../reference/levels.ts';
+
+## Configuration
+
+A configuration holds checks, tool files, and rules for one language, framework, library, platform, or topic.
+The [configuration reference](/reference/configurations/) lists them.
+
+## Check
+
+A check runs a tool or code implemented by gspot, then reports findings.
+
+## Finding
+
+A finding states a problem. It can name a file, line, column, and lint rule, with help to fix it.
+
+## Lint rule
+
+A lint rule gives one instruction for a linter to check, such as `no-console`.
+
+## Agent rules
+
+Rules give coding agents Markdown instructions. gspot writes the rules that match your setup under
+`.gspot/rules/` and lists them in `AGENTS.md`.
+
+## Settings
+
+`gspot.toml` stores settings. They select configurations, levels, limits, and ignores.
+
+## Stage
+
+A stage states when a check runs: `commit`, `push`, `message`, or `manual`. The `message` stage checks commit messages.
+
+## Scope
+
+A scope supplies configurations and settings for a folder. See [Monorepos and scopes](/configure/monorepos/).
+
+## Generated file
+
+A generated file holds output that gspot writes from your settings. See [Generated files](/maintain/generated-files/).
+
+## Levels
+
+| Level                   | What it checks                                                                                                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `recommended` (default) | Bugs, security and accessibility problems, type errors, formatting, and misuse of declared frameworks and libraries. Choose it for an existing codebase or first setup.        |
+| `all`                   | Also naming, wording, code structure, doc comments, declaration order, duplication, API style, and complexity. Choose it for a new repository or one that coding agents write. |
+
+<table>
+<thead><tr><th>Level</th><th>Declared checks and extra tools</th></tr></thead>
+<tbody>{buildLevelRows().map(({ level, count, tools }) => <tr><td><code>{level}</code></td><td>{count} checks; extra tools: {tools}.</td></tr>)}</tbody>
+</table>
+
+The counts cover every shipped configuration. Your repository runs only its selected and applicable checks.
+
+At level `all`, gspot also checks names, file structure, and wording. This `src/utils.ts` file passes at
+`recommended` and reports four findings at `all`:
+
+```typescript
+import type { Order } from './orders.js';
+import { calculateTotal } from './orders.js';
+
+/**
+ * Calculate the order total if needed.
+ * @param order the order
+ * @returns the total
+ */
+export function ensureOrderTotal(order: Order): number {
+    return calculateTotal(order);
+}
+```
+
+The findings identify these problems:
+
+- `gspot/no-trivial-files`: the forwarding file.
+- `naming/identifiers`: the banned name `ensureOrderTotal`.
+- `naming/paths`: the banned file name `utils`.
+- `prose/vale`: the words `if needed`.
+
+Import `calculateTotal` directly in the caller and delete `utils.ts`.
+
+To change the level and install any extra tools:
+
+```shell
+gspot set level all
+gspot install
+```
+
+Run `gspot set level recommended` to return to the default level.

@@ -63,7 +63,7 @@ command = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never",
 example = "The TOML assignment `enabled=true` differs from the configured formatter output. Run the formatter to obtain `enabled = true` and rerun."
 files = { extensions = [".toml"] }
 fix = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "{files}"]
-help = "Run gspot check --fix."
+help = "Run `gspot check --fix`."
 level = "recommended"
 name = "taplo-format"
 output = { format = "regex", pattern = "^(?:\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)|--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path=\"(?<file>[^\"]+)\")$", message = "The file does not parse as TOML, or it is not in the format of the configured TOML settings.", fixable = "^(?:--- a/|ERROR taplo:format_files)" }
@@ -75,7 +75,7 @@ why = "One formatter keeps a diff about the values, not the spacing."
 command = ["yamllint", "-c", "{tool_file:yamllint}", "-f", "parsable", "-s", "{files}"]
 example = "Two `enabled` keys in the same YAML mapping report a duplicate-key finding. Keep the one intended value and remove the duplicate."
 files = { extensions = [".yaml", ".yml"] }
-help = "Fix the line yamllint names, or set the rule's options with gspot set tools.yamllint.rules."
+help = "Fix the line yamllint names, or set the rule's options with `gspot set tools.yamllint.rules`."
 level = "recommended"
 name = "yamllint"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): \\[(?:error|warning)\\] (?<message>.*?)(?: \\((?<rule>[a-z-]+)\\))?$" }

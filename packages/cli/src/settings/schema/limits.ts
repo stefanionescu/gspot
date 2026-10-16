@@ -1,69 +1,63 @@
 import { z } from 'zod';
-import { type SchemaShape } from '#cli/types/objects.ts';
+import { type SchemaShape } from '#cli/types/shapes.ts';
 import { type WrittenLimits } from '#cli/types/settings/file.ts';
-import { DEFAULT_FIELDS, DEFAULT_VALUES } from '#cli/config/settings/defaults.ts';
-import { type TableSettings, type NamingLanguage } from '#cli/types/settings/tables.ts';
-import { percentage, wholeNumber, allowReasonedValue } from '#cli/settings/schema/parts.ts';
+import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
+import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
+import { wholeNumber, allowReasonedValue } from '#cli/settings/schema/parts.ts';
+import { type TableSettings, type SettingLanguage } from '#cli/types/settings/tables.ts';
 
 const limitFields = {
-    file_lines: allowReasonedValue(wholeNumber).default(DEFAULT_VALUES.file_lines).meta(DEFAULT_FIELDS.file_lines),
+    file_lines: allowReasonedValue(wholeNumber)
+        .default(SETTING_DEFAULTS.file_lines)
+        .meta(SETTING_DECLARATIONS['limits.file_lines']),
     function_lines: allowReasonedValue(wholeNumber)
-        .default(DEFAULT_VALUES.function_lines)
-        .meta(DEFAULT_FIELDS.function_lines),
+        .default(SETTING_DEFAULTS.function_lines)
+        .meta(SETTING_DECLARATIONS['limits.function_lines']),
     function_parameters: allowReasonedValue(wholeNumber)
-        .default(DEFAULT_VALUES.function_parameters)
-        .meta(DEFAULT_FIELDS.function_parameters),
-    statements: allowReasonedValue(wholeNumber).default(DEFAULT_VALUES.statements).meta(DEFAULT_FIELDS.statements),
-    nesting: allowReasonedValue(wholeNumber).default(DEFAULT_VALUES.nesting).meta(DEFAULT_FIELDS.nesting),
+        .default(SETTING_DEFAULTS.function_parameters)
+        .meta(SETTING_DECLARATIONS['limits.function_parameters']),
+    function_statements: allowReasonedValue(wholeNumber)
+        .default(SETTING_DEFAULTS.function_statements)
+        .meta(SETTING_DECLARATIONS['limits.function_statements']),
+    block_nesting: allowReasonedValue(wholeNumber)
+        .default(SETTING_DEFAULTS.block_nesting)
+        .meta(SETTING_DECLARATIONS['limits.block_nesting']),
     callback_nesting: allowReasonedValue(wholeNumber)
-        .default(DEFAULT_VALUES.callback_nesting)
-        .meta(DEFAULT_FIELDS.callback_nesting),
+        .default(SETTING_DEFAULTS.callback_nesting)
+        .meta(SETTING_DECLARATIONS['limits.callback_nesting']),
     cognitive_complexity: allowReasonedValue(wholeNumber)
-        .default(DEFAULT_VALUES.cognitive_complexity)
-        .meta(DEFAULT_FIELDS.cognitive_complexity),
+        .default(SETTING_DEFAULTS.cognitive_complexity)
+        .meta(SETTING_DECLARATIONS['limits.cognitive_complexity']),
     cyclomatic_complexity: allowReasonedValue(wholeNumber)
-        .default(DEFAULT_VALUES.cyclomatic_complexity)
-        .meta(DEFAULT_FIELDS.cyclomatic_complexity),
-    branches: allowReasonedValue(wholeNumber).default(DEFAULT_VALUES.branches).meta(DEFAULT_FIELDS.branches),
-    returns: allowReasonedValue(wholeNumber).default(DEFAULT_VALUES.returns).meta(DEFAULT_FIELDS.returns),
-    assignments: allowReasonedValue(wholeNumber).default(DEFAULT_VALUES.assignments).meta(DEFAULT_FIELDS.assignments),
+        .default(SETTING_DEFAULTS.cyclomatic_complexity)
+        .meta(SETTING_DECLARATIONS['limits.cyclomatic_complexity']),
+    function_branches: allowReasonedValue(wholeNumber)
+        .default(SETTING_DEFAULTS.function_branches)
+        .meta(SETTING_DECLARATIONS['limits.function_branches']),
+    function_returns: allowReasonedValue(wholeNumber)
+        .default(SETTING_DEFAULTS.function_returns)
+        .meta(SETTING_DECLARATIONS['limits.function_returns']),
+    function_assignments: allowReasonedValue(wholeNumber)
+        .default(SETTING_DEFAULTS.function_assignments)
+        .meta(SETTING_DECLARATIONS['limits.function_assignments']),
     closure_lines: allowReasonedValue(wholeNumber)
-        .default(DEFAULT_VALUES.closure_lines)
-        .meta(DEFAULT_FIELDS.closure_lines),
-    type_lines: allowReasonedValue(wholeNumber).default(DEFAULT_VALUES.type_lines).meta(DEFAULT_FIELDS.type_lines),
+        .default(SETTING_DEFAULTS.closure_lines)
+        .meta(SETTING_DECLARATIONS['limits.closure_lines']),
+    type_lines: allowReasonedValue(wholeNumber)
+        .default(SETTING_DEFAULTS.type_lines)
+        .meta(SETTING_DECLARATIONS['limits.type_lines']),
     index_exports: allowReasonedValue(wholeNumber)
-        .default(DEFAULT_VALUES.index_exports)
-        .meta(DEFAULT_FIELDS.index_exports),
-    min_function_statements: allowReasonedValue(z.number().int().positive())
-        .default(DEFAULT_VALUES.min_function_statements)
-        .meta(DEFAULT_FIELDS.min_function_statements),
-    prefix_collisions: allowReasonedValue(wholeNumber)
-        .default(DEFAULT_VALUES.prefix_collisions)
-        .meta(DEFAULT_FIELDS.prefix_collisions),
-    file_kilobytes: allowReasonedValue(wholeNumber)
-        .default(DEFAULT_VALUES.file_kilobytes)
-        .meta(DEFAULT_FIELDS.file_kilobytes),
-    sentence_words: allowReasonedValue(wholeNumber)
-        .default(DEFAULT_VALUES.sentence_words)
-        .meta(DEFAULT_FIELDS.sentence_words),
-    list_item_words: allowReasonedValue(wholeNumber)
-        .default(DEFAULT_VALUES.list_item_words)
-        .meta(DEFAULT_FIELDS.list_item_words),
-    paragraph_sentences: allowReasonedValue(wholeNumber)
-        .default(DEFAULT_VALUES.paragraph_sentences)
-        .meta(DEFAULT_FIELDS.paragraph_sentences),
-    min_duplicate_lines: allowReasonedValue(z.number().int().positive())
-        .default(DEFAULT_VALUES.min_duplicate_lines)
-        .meta(DEFAULT_FIELDS.min_duplicate_lines),
-    min_duplicate_tokens: allowReasonedValue(z.number().int().positive())
-        .default(DEFAULT_VALUES.min_duplicate_tokens)
-        .meta(DEFAULT_FIELDS.min_duplicate_tokens),
-    duplicate_percent: allowReasonedValue(percentage)
-        .default(DEFAULT_VALUES.duplicate_percent)
-        .meta(DEFAULT_FIELDS.duplicate_percent),
-} satisfies SchemaShape<Omit<TableSettings<'limits'>, NamingLanguage>, Omit<WrittenLimits, NamingLanguage>>;
+        .default(SETTING_DEFAULTS.index_exports)
+        .meta(SETTING_DECLARATIONS['limits.index_exports']),
+    trivial_function_statements: allowReasonedValue(z.number().int().positive())
+        .default(SETTING_DEFAULTS.trivial_function_statements)
+        .meta(SETTING_DECLARATIONS['limits.trivial_function_statements']),
+    shared_prefix_files: allowReasonedValue(wholeNumber)
+        .default(SETTING_DEFAULTS.shared_prefix_files)
+        .meta(SETTING_DECLARATIONS['limits.shared_prefix_files']),
+} satisfies SchemaShape<Omit<TableSettings<'limits'>, SettingLanguage>, Omit<WrittenLimits, SettingLanguage>>;
 
-const languageLimitsSchema = z.strictObject(limitFields);
+const languageLimitsSchema = z.strictObject(limitFields).register(z.globalRegistry, { id: 'languageLimits' });
 
 const limitsSchema = z.strictObject({
     ...limitFields,
@@ -76,5 +70,7 @@ const limitsSchema = z.strictObject({
     css: languageLimitsSchema.optional(),
     html: languageLimitsSchema.optional(),
 } satisfies SchemaShape<TableSettings<'limits'>, WrittenLimits>);
+
+limitsSchema.register(z.globalRegistry, { id: 'limits' });
 
 export { limitsSchema };

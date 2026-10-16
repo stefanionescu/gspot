@@ -1,8 +1,8 @@
 ---
-import Search from './Search.astro';
 import SiteTitle from './SiteTitle.astro';
+import ThemeSelect from './ThemeSelect.astro';
+import Search from '@astrojs/starlight/components/Search.astro';
 import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
-import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
 ---
 
 <div class="site-header">
@@ -20,52 +20,71 @@ import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
 <style>
 .site-header {
     display: grid;
-    grid-template-columns: auto minmax(0, 24rem) auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: center;
-    justify-content: space-between;
-    gap: 24px;
+    gap: 4px;
     height: 100%;
 }
 .search {
-    min-width: 0;
-    width: 100%;
+    justify-self: end;
+}
+.search :global(button[data-open-modal]) {
+    margin-inline: auto;
 }
 .controls {
     display: flex;
     align-items: center;
-    gap: 16px;
+    justify-self: end;
+    gap: 4px;
 }
-.controls :global(select) {
-    min-height: 44px;
+:global(html:not([data-has-sidebar])) .site-header {
+    max-width: var(--home-width);
+    margin-inline: auto;
+}
+:global(html:not([data-has-sidebar])) .controls {
+    margin-inline-end: -12px;
+}
+.social {
+    display: none;
+}
+.social :global(a) {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    border-radius: 8px;
+    color: var(--sl-color-gray-1);
+    font-size: 1.25rem;
+}
+@media (hover: hover) {
+    .social :global(a:hover) {
+        background: var(--sl-color-gray-6);
+        color: var(--sl-color-white);
+    }
 }
 
-@media (width <= 49.99rem) {
-    .site-header {
-        grid-template-columns: minmax(0, 1fr) 44px 44px;
-        gap: 8px;
-    }
-    .social {
-        display: none;
-    }
-    .controls :global(select) {
-        width: 44px;
-        padding: 0;
-        color: transparent;
-    }
-    .controls :global(select option) {
-        color: var(--sl-color-text);
-    }
-    .controls :global(.caret) {
-        display: none;
-    }
+@media (width < 50rem) {
     .search :global(button[data-open-modal]) {
         width: 44px;
         height: 44px;
-        padding: 10px;
+        padding: 0;
         justify-content: center;
+        border-radius: 8px;
     }
-    .search :global(button[data-open-modal] > :not(svg)) {
-        display: none;
+}
+
+@media (width >= 50rem) {
+    .site-header {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 24rem) minmax(0, 1fr);
+        gap: 24px;
+    }
+    .search {
+        justify-self: stretch;
+    }
+    .social {
+        display: flex;
     }
 }
 </style>

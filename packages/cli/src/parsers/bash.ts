@@ -61,12 +61,12 @@ function findEnclosingFunction(node: Node): Node | undefined {
 
 /**
  * Read each function's own syntax without counting nested function bodies.
- * @param root the parsed Bash root.
+ * @param syntaxRoot the parsed Bash root.
  * @param codeText source with comments masked at their original positions.
  * @returns function metrics and source spans.
  */
-function parseBashFunctions(root: Node, codeText: string): ScriptSyntax['functions'] {
-    return root.descendantsOfType('function_definition').flatMap((node) => {
+function parseBashFunctions(syntaxRoot: Node, codeText: string): ScriptSyntax['functions'] {
+    return syntaxRoot.descendantsOfType('function_definition').flatMap((node) => {
         const name = node.childForFieldName('name')?.text;
         const body = node.childForFieldName('body');
         if (name === undefined || body === null) return [];
@@ -325,12 +325,12 @@ export function listCodeLines(lines: string[]): NumberedLine[] {
 
 /**
  * Read expansions of environment names declared by the scope's reader scripts.
- * @param root the parsed Bash source.
+ * @param syntaxRoot the parsed Bash source.
  * @param owned the variables declared by environment readers.
  * @returns the environment reads and their source positions.
  */
-export function readBashEnvironment(root: Node, owned: ReadonlySet<string>): EnvironmentRead[] {
-    return root.descendantsOfType(['simple_expansion', 'expansion']).flatMap((expansion) =>
+export function readBashEnvironment(syntaxRoot: Node, owned: ReadonlySet<string>): EnvironmentRead[] {
+    return syntaxRoot.descendantsOfType(['simple_expansion', 'expansion']).flatMap((expansion) =>
         expansion.namedChildren
             .filter((node) => node.type === 'variable_name' && owned.has(node.text))
             .map((node) => ({

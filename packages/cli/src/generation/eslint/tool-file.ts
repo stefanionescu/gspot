@@ -4,8 +4,15 @@ import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { buildEslintContext } from '#cli/generation/eslint/context.ts';
 import { buildSelectedBlocks } from '#cli/generation/eslint/lint-rules.ts';
 import { collectFragments } from '#cli/generation/eslint/fragments/build.ts';
-import { serializeBlocks, serializeImports, serializeRuntimeSelectors } from '#cli/generation/eslint/print.ts';
 import { selectPlugins, buildBlocksAfterFragments, buildBlocksBeforeFragments } from '#cli/generation/eslint/base.ts';
+
+import {
+    serializeBlock,
+    serializeBlocks,
+    serializeImports,
+    indentEslintBlock,
+    serializeRuntimeSelectors,
+} from '#cli/generation/eslint/print.ts';
 
 /**
  * Build the ESLint file from the selected presets, rules, and fragment blocks.
@@ -16,7 +23,6 @@ function buildEslintFile(context: ToolFileContext): string {
     const { session, selection, toolFile: target } = context;
 
     const base = buildEslintContext(context);
-    const pluginLevels = base.pluginLevels;
     const { eslint, json, eslintModule } = base;
     const { fragmentParts, fragmentImports, fragmentSelectors } = collectFragments(
         session,
@@ -30,10 +36,10 @@ function buildEslintFile(context: ToolFileContext): string {
     const output: string[] = [
         serializeImports(plugins, fragmentImports),
         serializeRuntimeSelectors(config.runtimes),
-        'export default [\n    { ignores: ',
-        json(config.ignoredPaths),
-        ' },\n',
-        serializeBlocks(eslintModule, buildBlocksBeforeFragments(base, selection.view, pluginLevels, plugins)),
+        'export default [\n    // Shared ignore sections.\n',
+        indentEslintBlock(serializeBlock({ ignores: config.ignoredPaths }, '', undefined)),
+        ',\n',
+        serializeBlocks(eslintModule, buildBlocksBeforeFragments(base, selection.view, plugins)),
         '\n',
         fragmentParts.join('\n'),
         '\n',
@@ -41,7 +47,7 @@ function buildEslintFile(context: ToolFileContext): string {
     ];
 
     if (config.extra !== undefined) {
-        output.push('\n    ', json(config.extra.entries), ',\n');
+        output.push('\n    // Your own ESLint options.\n', indentEslintBlock(json(config.extra.entries)), ',\n');
     }
     output.push(
         serializeBlocks(

@@ -4,7 +4,7 @@ import { posix } from 'node:path';
 import { LINE_FEED } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { ANY_FOLDER_PREFIX } from '#cli/config/system/paths.ts';
 import { GIT_ENTRY_MODES } from '#cli/config/repository/revisions.ts';
 import type { GitEntry, GitStream, GitIndexEntry, AttributePattern } from '#cli/types/parsers/git.ts';
@@ -89,13 +89,12 @@ function parseBlobSize(header: string, hash: string): number {
  * @returns selectors rooted in that folder and their declared attributes.
  */
 export function parseAttributePatterns(text: string, folder: string): AttributePattern[] {
-    // eslint-disable-next-line complexity -- reason: Git attribute records need complete field validation and one parser position; splitting it repeats record state.
     return text.split('\n').flatMap((line) => {
         const trimmed = line.trim();
         if (trimmed.startsWith('#')) return [];
         const match = ATTRIBUTE_LINE.exec(trimmed);
         if (match === null) return [];
-        const raw = match[1] ?? '';
+        const raw = match[1] as string;
         const pattern = raw.startsWith('"') ? (JSON.parse(raw) as string) : raw;
         if (pattern.endsWith('/') || pattern.startsWith('!')) return [];
         const bare = pattern.replace(LEADING_SLASH, '');

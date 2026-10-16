@@ -5,13 +5,15 @@ export type RuleFile = {
     path: string;
     target: string;
     content: string;
+    scopes: string[];
     group: Manifest['configuration']['group'];
 };
 
 /** Effective instruction settings and the same selected rule files that generation writes. */
-export type ManagedBlockValues = {
+export type AgentsBlockInput = {
     files: RuleFile[];
     generatedPaths: string[];
+    fileEdits: { path: string; keys: string[] }[];
     level: Level;
     hasChecks: boolean;
     startCommand: string;
@@ -21,7 +23,7 @@ export type ManagedBlockValues = {
 export type RuleSection = { start: number; end: number; depth: number; all: boolean };
 
 /** A shipped rule asset and its path before selection. */
-export type RuleSource = {
+export type ShippedRule = {
     source: string;
     path: string;
     group: Manifest['configuration']['group'];

@@ -27,5 +27,5 @@
             "#root-package": ["./package.json"]
         }
     },
-    "include": ["scripts/**/*.ts", "tests/**/*.ts", "packages/cli/src/types/**/*.d.ts"]
+    "include": ["tests/**/*.ts", "packages/cli/src/types/**/*.d.ts"]
 }

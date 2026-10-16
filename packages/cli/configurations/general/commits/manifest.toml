@@ -24,7 +24,7 @@ tool = "commitlint"
 [[check]]
 command = ["commitlint", "--config", "{tool_file:commitlint}", "--edit", "{message_file}"]
 example = "The proposed message `changed stuff` lacks the configured conventional-commit structure. A message such as `fix(cli): report missing configuration` supplies a type, scope, and subject. Use a type and scope accepted by the repository policy."
-help = "Write `<type>`: `<subject>` or `<type>`(`<scope>`): `<subject>`, with an accepted type and optional scope. Keep the whole first line at 72 characters or fewer. Change accepted types with gspot set tools.commitlint.types."
+help = "Write `<type>`: `<subject>` or `<type>`(`<scope>`): `<subject>`, with an accepted type and optional scope. Keep the whole first line at 72 characters or fewer. Change accepted types with `gspot set tools.commitlint.types`."
 level = "all"
 name = "commitlint"
 output = { format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$" }
@@ -34,7 +34,7 @@ why = "A history of typed, scoped subjects is what release notes, blame and bise
 
 [[check]]
 example = "A new commit with message `changed stuff` causes the checked range to fail its message rules. Reword that commit to an accepted message such as `fix(cli): report missing configuration`. Rewriting commits changes their IDs; coordinate before rewriting shared history."
-help = "Reword the commits that fail with git rebase -i, or change the rule with gspot set tools.commitlint.rules."
+help = "Reword the commits that fail with `git rebase -i`, or change the rule with `gspot set tools.commitlint.rules`."
 level = "all"
 name = "commitlint-pushed"
 output = { format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$" }

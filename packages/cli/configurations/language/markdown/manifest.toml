@@ -33,7 +33,7 @@ command = ["markdownlint-cli2", "--no-globs", "--config", "{tool_file:markdownli
 example = "A heading that jumps from level one to level three reports MD001. Change the later heading to level two."
 exit_codes = [1]
 fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{tool_file:markdownlint-cli2}", "{files}"]
-help = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."
+help = "Run `gspot check --fix` for the rules that fix themselves; read the rule name for the rest."
 level = "recommended"
 name = "markdownlint"
 output = { format = "markdownlint" }

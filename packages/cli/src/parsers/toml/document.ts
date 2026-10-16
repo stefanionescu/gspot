@@ -1,7 +1,6 @@
 // Reads and edits TOML while preserving comments.
-import { parse as parseToml } from 'smol-toml';
-import { patch } from '@decimalturn/toml-patch';
 import { PATCH_FORMAT } from '#cli/config/parsers/toml.ts';
+import { patch, parse as parseToml } from '@decimalturn/toml-patch';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
 import { isRecord, getValueAt, normalizeTables } from '#cli/system/values.ts';
 import type { TomlInput, TomlSyntax, TomlComments, TomlTextChunk, TomlTableOptions } from '#cli/types/parsers/toml.ts';
@@ -51,7 +50,7 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
     const patched = patch(original.document.toTomlString, values, PATCH_FORMAT);
     const current = parseTomlSyntax(patched, values);
     const unmatched = new Set(listAnchoredComments(current));
-    const retained = new Set(current.entries.map(({ kind, path }) => JSON.stringify([kind, ...path])));
+    const retained = new Set(current.pathNodes.map(({ kind, path }) => JSON.stringify([kind, ...path])));
     const comments: TomlComments = new Map();
     const changed = listAnchoredComments(original)
         .map((source) => {
@@ -63,7 +62,7 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
     const chunks = changed.flatMap(({ source: { comment, anchor: authored }, found }): TomlTextChunk[] => {
         const owner =
             authored ??
-            original.entries.find(
+            original.pathNodes.find(
                 (entry) =>
                     getTomlRange(entry.node)[0] > getTomlRange(comment)[1] &&
                     retained.has(JSON.stringify([entry.kind, ...entry.path])),
@@ -81,7 +80,7 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
         const [start, end] = getTomlRange(found.comment);
         return [{ start, end: end + Number(patched[end] === '\n'), text: '' }];
     });
-    for (const entry of current.entries) {
+    for (const entry of current.pathNodes) {
         const text = insertTomlComments(comments, entry.kind, entry.path, '');
         if (text === '') continue;
         const start = getTomlRange(entry.node)[0];
@@ -144,7 +143,7 @@ export function openTomlFile(input: TomlInput): EditableFile {
  */
 export function parseTomlFile(input: TomlInput): Record<string, unknown> {
     try {
-        return parseToml(input.source);
+        return parseToml(input.source) as Record<string, unknown>;
     } catch (error) {
         throw new Error(`${input.path} is not valid TOML. Fix the file, then run gspot apply.`, { cause: error });
     }

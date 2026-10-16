@@ -1,3 +1,4 @@
+// Read npm registry settings and write isolated installer settings.
 import which from 'which';
 import Config from '@npmcli/config';
 import { isRecord } from '#cli/system/values.ts';
@@ -119,14 +120,14 @@ export function writeNpmrc(work: string, env: Record<string, string>): void {
 }
 
 /**
- * Read npm-compatible connection settings through the npm configuration owner, keeping credentials in memory.
+ * Read npm-compatible connection settings through the npm settings file, keeping credentials in memory.
  *
- * @param root the repository root.
+ * @param repositoryRoot the working folder for npm settings and relative certificate paths.
  *
  * @returns the environment variables that carry the registry settings.
  */
-export async function readRegistryEnvironment(root: string): Promise<Record<string, string>> {
-    const effective = await readRegistrySettings(root);
+export async function readRegistryEnvironment(repositoryRoot: string): Promise<Record<string, string>> {
+    const effective = await readRegistrySettings(repositoryRoot);
     const env: Record<string, string> = Object.fromEntries(
         Object.entries(effective)
             .filter(
@@ -137,7 +138,7 @@ export async function readRegistryEnvironment(root: string): Promise<Record<stri
                 let text: string;
                 if (Array.isArray(value)) text = value.join('\n\n');
                 else text = typeof value === 'string' ? value : JSON.stringify(value);
-                if (CERTIFICATE_KEYS.some((suffix) => key.endsWith(suffix))) text = resolve(root, text);
+                if (CERTIFICATE_KEYS.some((suffix) => key.endsWith(suffix))) text = resolve(repositoryRoot, text);
                 return [[`${NPM_SETTING_PREFIX}${key}`, text]];
             }),
     );

@@ -27,12 +27,18 @@ function buildDependencyPolicies({
     tests,
     trpcPaths,
 }: EslintBoundaryContext): EslintBoundaryPolicy[] {
-    const policies: EslintBoundaryPolicy[] = modules.map((module) => ({
+    const policies: EslintBoundaryPolicy[] = modules.map((module, index) => ({
         from: { file: { categories: `module:${module.name}` } },
         allow: {
             to: {
                 file: {
-                    categories: { anyOf: [module.name, ...module.may_import].map((name) => `module:${name}`) },
+                    categories: {
+                        anyOf: [
+                            ...modules.slice(0, index).map(({ name }) => name),
+                            module.name,
+                            ...module.may_import,
+                        ].map((name) => `module:${name}`),
+                    },
                 },
             },
         },

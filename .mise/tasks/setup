@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="Install the locked packages and write the docs site types."
+set -euo pipefail
+
+bun install --frozen-lockfile
+bun --cwd docs --bun astro sync

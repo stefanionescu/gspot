@@ -3,7 +3,7 @@ import picomatch from 'picomatch';
 import { normalizePath } from '../paths.ts';
 import { IMPORT_SELECTOR } from '../config/syntax.ts';
 import type { ImportSource } from '../types/syntax.ts';
-import { createRule, optionsSchema } from '../create-rule.ts';
+import { createRule, buildOptionsSchema } from '../create-rule.ts';
 import { DEFAULT_FOLDERS, RELATIVE_PREFIXES } from '../config/imports.ts';
 import type { RuleContext, ImportBoundariesOptions } from '../types/rules.ts';
 import { STDIN_NAMES, TRAILING_STAR, TRAILING_SLASH } from '../config/paths.ts';
@@ -18,7 +18,7 @@ function isGlobMatch(path: string, glob: string): boolean {
     }
     return isMatch(path);
 }
-function lintedPath(context: RuleContext): string | undefined {
+function getLintedPath(context: RuleContext): string | undefined {
     const absolute = normalizePath(context.physicalFilename);
     if (STDIN_NAMES.has(absolute)) return undefined;
     const root = normalizePath(
@@ -26,14 +26,14 @@ function lintedPath(context: RuleContext): string | undefined {
     ).replace(TRAILING_SLASH, '');
     return absolute.startsWith(`${root}/`) ? absolute.slice(root.length + 1) : absolute;
 }
-function relativeImportPath(importer: string, source: string): string | undefined {
+function computeImportTarget(importer: string, source: string): string | undefined {
     if (!RELATIVE_PREFIXES.some((prefix) => source.startsWith(prefix))) return undefined;
     return normalizePath(posix.join(posix.dirname(importer), source.split('?', 1)[0] ?? source));
 }
 
-function aliasFor(target: string, aliases: Record<string, string>): string | undefined {
-    for (const [prefix, directory] of Object.entries(aliases)) {
-        const base = directory.replace(TRAILING_STAR, '').replace(TRAILING_SLASH, '');
+function findAlias(target: string, aliases: Record<string, string>): string | undefined {
+    for (const [prefix, folder] of Object.entries(aliases)) {
+        const base = folder.replace(TRAILING_STAR, '').replace(TRAILING_SLASH, '');
         if (target === base || target.startsWith(`${base}/`))
             return `${prefix.replace(TRAILING_STAR, '')}${target.slice(base.length + 1)}`;
     }
@@ -46,10 +46,10 @@ function isWithinFolder(path: string, folder: string): boolean {
 }
 
 // Match ancestors rather than import filenames: a boundary can contain files directly or deeper folders.
-function boundaryOf(directory: string, folders: readonly string[]): string | undefined {
-    const segments = directory.split('/');
+function findBoundary(parentFolder: string, folders: readonly string[]): string | undefined {
+    const segments = parentFolder.split('/');
     const ancestors = segments.map((_segment, index) => segments.slice(0, index + 1).join('/'));
-    if (isWithinFolder(directory, '.')) ancestors.unshift('.');
+    if (isWithinFolder(parentFolder, '.')) ancestors.unshift('.');
     return ancestors.findLast((ancestor) => folders.some((glob) => isGlobMatch(ancestor, glob)));
 }
 
@@ -64,12 +64,12 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
             example:
                 'With `@/` mapped to `src/`, `import { a } from "../turn/a.js";` in `src/other/b.ts` reports `alias`. Correct the import to `import { a } from "@/turn/a.js";`. With folders `api` and `supabase`, a relative import from `api` into `supabase` reports `escape`.',
             description:
-                'Finds relative imports that leave the nearest boundary folder. By default every second-level folder, such as `src/cart` or `packages/shop`, is a boundary. Set folders to project paths or folder globs to choose other boundaries. Paths and aliases are relative to the repository root.',
+                'Finds relative imports that leave the nearest boundary folder. By default every second-level folder, such as `src/cart` or `packages/shop`, is a boundary. Set folders to project paths or folder globs to choose other boundaries. Paths and aliases are relative to the repository root. Alias imports are out of scope; architecture modules govern them.',
             why: 'Relative paths between folders couple separate parts of a project to the tree shape.',
             fix: 'Keep relative imports within the selected folder. eslint --fix uses a configured alias when one exists. Otherwise, move shared code into this folder or into a package both projects depend on, and import its package name.',
         },
         schema: [
-            optionsSchema({
+            buildOptionsSchema({
                 folders: {
                     description: 'Boundary folders or folder globs. The nearest matching ancestor owns each file.',
                     type: 'array',
@@ -88,24 +88,24 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
         },
     },
     create(context, [options]) {
-        const relative = lintedPath(context);
+        const relative = getLintedPath(context);
         if (relative === undefined) return {};
         const { folders, aliases } = options;
-        const folder = boundaryOf(posix.dirname(relative), folders);
+        const folder = findBoundary(posix.dirname(relative), folders);
         if (folder === undefined) return {};
         const check = (node: TSESTree.Node | null | undefined): void => {
             if (!node) return;
             const source = ASTUtils.getStringIfConstant(node);
             if (source === null) return;
-            const target = relativeImportPath(relative, source);
+            const target = computeImportTarget(relative, source);
             if (target === undefined) return;
             if (isWithinFolder(target, folder)) return;
-            const alias = aliasFor(target, aliases);
+            const alias = findAlias(target, aliases);
             if (alias === undefined) {
                 context.report({
                     node,
                     messageId: 'escape',
-                    data: { source, folder, target: boundaryOf(posix.dirname(target), folders) ?? target },
+                    data: { source, folder, target: findBoundary(posix.dirname(target), folders) ?? target },
                 });
             } else {
                 context.report({

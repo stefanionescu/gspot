@@ -1,0 +1,53 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+---
+
+<button popovertarget="starlight__sidebar" class="menu-button print:hidden">
+    <Icon name="bars" size="1.25rem" class="when-closed" />
+    <Icon name="close" size="1.25rem" class="when-open" />
+    <span class="when-closed">Menu</span>
+    <span class="when-open">Close</span>
+</button>
+
+<style>
+.menu-button {
+    position: fixed;
+    z-index: var(--sl-z-index-navbar);
+    top: var(--sl-nav-height);
+    inset-inline-start: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding-inline: 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--sl-color-gray-1);
+    font-size: var(--sl-text-sm);
+    font-weight: 500;
+    cursor: pointer;
+}
+@media (hover: hover) {
+    .menu-button:hover {
+        background: var(--sl-color-gray-6);
+        color: var(--sl-color-white);
+    }
+}
+.menu-button:has(~ :popover-open) .when-closed,
+.menu-button:not(:has(~ :popover-open)) .when-open {
+    display: none;
+}
+
+@media (width >= 50rem) {
+    .menu-button {
+        display: none;
+    }
+}
+</style>
+
+<style is:global>
+body:has(#starlight__sidebar:popover-open) {
+    overflow: hidden;
+}
+</style>

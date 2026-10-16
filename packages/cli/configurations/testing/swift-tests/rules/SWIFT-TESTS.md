@@ -1,5 +1,7 @@
 # Swift Tests
 
+Read this rule when you write or change a Swift test.
+
 When you write tests, these rules cover XCTest, Swift Testing, and snapshot tests.
 
 ## What to test

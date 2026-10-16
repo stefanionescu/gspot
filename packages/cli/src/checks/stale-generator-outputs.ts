@@ -1,24 +1,24 @@
 import { join, posix } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import { type GeneratedPath } from '#cli/types/configurations.ts';
-import { toolOutputDetail } from '#cli/checks/run/command/output.ts';
-import { type Substitutions } from '#cli/types/execution/command.ts';
+import { type GeneratorOutput } from '#cli/types/configurations.ts';
+import { formatOutputTail } from '#cli/checks/run/command/output.ts';
+import type { Substitutions } from '#cli/types/checks/run/command.ts';
 import { readBytes, readCachedText } from '#cli/system/files/reads.ts';
-import { commandSubstitutions } from '#cli/checks/run/command/check.ts';
-import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
+import { buildCommandSubstitutions } from '#cli/checks/run/command/check.ts';
+import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/checks/run/copy/scratch.ts';
-import { GENERATOR_SCAN_EXCLUSIONS } from '#cli/config/checks/stale-generated-files.ts';
-import { substitute, perFileCommands, substituteValue } from '#cli/checks/run/command/placeholders.ts';
+import { GENERATOR_SCAN_EXCLUSIONS } from '#cli/config/checks/stale-generator-outputs.ts';
+import { expandCommand, replacePlaceholders, buildFileInvocations } from '#cli/checks/run/command/placeholders.ts';
 
-function missingOutputs(input: CheckInput, targets: GeneratedPath[], commandText: string): Finding[] {
+function checkMissingOutputs(input: CheckInput, targets: GeneratorOutput[], commandText: string): Finding[] {
     const entry = targets.find((target) => readCachedText(input.reads, target.path) === undefined);
     if (entry === undefined) return [];
     return [
-        findingAt(
+        buildFinding(
             input,
             { file: entry.path, line: 1 },
             'missing',
@@ -28,7 +28,12 @@ function missingOutputs(input: CheckInput, targets: GeneratedPath[], commandText
 }
 
 // Both snapshots use the same traversal and source containment boundary.
-function copiedFiles(root: string, scope: string, patterns: string[], targets: GeneratedPath[]): Map<string, Buffer> {
+function readOutputContents(
+    root: string,
+    scope: string,
+    patterns: string[],
+    targets: GeneratorOutput[],
+): Map<string, Buffer> {
     const cwd = join(root, scope);
     const excluded = [...GENERATOR_SCAN_EXCLUSIONS, DOT_GSPOT].map((name) => `!**/${name}/**`);
     return new Map([
@@ -47,19 +52,19 @@ function buildGeneratorInputs(input: CheckInput):
           commandText: string;
           declaration: string[];
           patterns: string[];
-          targets: GeneratedPath[];
+          targets: GeneratorOutput[];
           selected: string[];
       }
     | undefined {
     const planned = input;
-    const values = commandSubstitutions(input, input, join(input.root, input.scope.scope.path));
+    const values = buildCommandSubstitutions(input, input, join(input.root, input.scope.scope.path));
     const declaration = input.check.command ?? [];
-    const command = substitute(input, planned, declaration, values);
+    const command = expandCommand(input, planned, declaration, values);
     if (command.length === 0) return undefined;
 
-    const declared = (input.check.generator_outputs ?? []).flatMap((entry): GeneratedPath[] => {
+    const declared = (input.check.generator_outputs ?? []).flatMap((entry): GeneratorOutput[] => {
         const { kind, path: original } = entry;
-        let path = substituteValue(input, planned, original, values);
+        let path = replacePlaceholders(input, planned, original, values);
         if (kind === 'pattern' && original.includes('{setting:') && input.scope.scope.path !== '') {
             const prefix = path.startsWith('**/') ? '**/' : '';
             const scopePath = path.slice(prefix.length);
@@ -91,7 +96,7 @@ export async function checkStaleGeneratorOutputs(input: CheckInput): Promise<Fin
     const inputs = buildGeneratorInputs(input);
     if (inputs === undefined) return [];
     const { planned, values, commandText, declaration, patterns, targets, selected } = inputs;
-    const missing = missingOutputs(input, targets, commandText);
+    const missing = checkMissingOutputs(input, targets, commandText);
     if (missing.length > 0) return missing;
     using folder = await copyIntoScratch(
         checkCopyInputs(
@@ -100,22 +105,22 @@ export async function checkStaleGeneratorOutputs(input: CheckInput): Promise<Fin
         ),
     );
     const cwd = join(folder.path, input.scope.scope.path);
-    const before = copiedFiles(folder.path, input.scope.scope.path, patterns, targets);
-    const argv = substitute({ ...input, root: folder.path }, planned, declaration, {
+    const before = readOutputContents(folder.path, input.scope.scope.path, patterns, targets);
+    const commandArguments = expandCommand({ ...input, root: folder.path }, planned, declaration, {
         ...values,
         root: folder.path,
     });
-    const commands = perFileCommands(argv, selected);
+    const commands = buildFileInvocations(commandArguments, selected);
     let stdout = '';
     for (const invocation of commands) {
-        const result = await runCheckTool(input, invocation.argv, { cwd });
+        const result = await runCheckTool(input, invocation.commandArguments, { cwd });
         if (result.code !== 0)
             throw new Error(
-                `The generator command failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
+                `The generator command failed: ${formatOutputTail(result, 'The tool printed no diagnostic.')}`,
             );
         stdout = result.stdout;
     }
-    const after = copiedFiles(folder.path, input.scope.scope.path, patterns, targets);
+    const after = readOutputContents(folder.path, input.scope.scope.path, patterns, targets);
     const trimmed = new Set(targets.filter((entry) => entry.kind === 'stdout').map((entry) => entry.path));
     for (const path of trimmed) after.set(path, Buffer.from(stdout.trim()));
     return [...new Set([...before.keys(), ...after.keys()])]
@@ -130,7 +135,7 @@ export async function checkStaleGeneratorOutputs(input: CheckInput): Promise<Fin
         })
         .toSorted((left, right) => left.localeCompare(right))
         .map((path) =>
-            findingAt(
+            buildFinding(
                 input,
                 { file: path, line: 1 },
                 'stale',

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#MISE description="Build the CLI: bundle gspot.js and the linkinator child process, and copy the grammars and the licenses."
+#MISE dir="{{config_root}}/packages/cli"
+set -euo pipefail
+
+bun build src/main.ts --outfile dist/gspot.js --target node --format esm --packages external --banner '#!/usr/bin/env node'
+bun build src/checks/framework/site/linkinator-process.ts --outdir dist --target node --format esm --packages external
+
+mkdir -p grammars/licenses
+for grammar in bash css html javascript python typescript; do
+    cp "node_modules/tree-sitter-${grammar}/LICENSE" "grammars/licenses/tree-sitter-${grammar}.txt"
+done
+for grammar in bash css html javascript python; do
+    cp "node_modules/tree-sitter-${grammar}/tree-sitter-${grammar}.wasm" "grammars/${grammar}.wasm"
+done
+cp node_modules/tree-sitter-typescript/tree-sitter-typescript.wasm grammars/typescript.wasm
+cp node_modules/tree-sitter-typescript/tree-sitter-tsx.wasm grammars/tsx.wasm
+
+# npm does not host the Swift grammar. Download it and its license once, and check both against their SHA-256.
+for pin in \
+    "0258a7ef17303a8079ffe0748b3583d59656b5c3e8653fca7b6451b3e6689eb2 grammars/swift.wasm https://github.com/alex-pinkus/tree-sitter-swift/releases/download/0.7.3/tree-sitter-swift.wasm" \
+    "3533cec129bb4bba015c0d61d86dd7c3b7e82110e4d2ff7837a01eff5bad5ccc grammars/licenses/tree-sitter-swift.txt https://raw.githubusercontent.com/alex-pinkus/tree-sitter-swift/b8b22bffbb3441780e6471665bacfb263741c86a/LICENSE"; do
+    read -r checksum file url <<<"${pin}"
+    if ! sha256sum -c - <<<"${checksum}  ${file}" >/dev/null 2>&1; then
+        curl --fail --silent --show-error --location --output "${file}" "${url}"
+        sha256sum -c - <<<"${checksum}  ${file}"
+    fi
+done
+
+cp ../../LICENSE.md LICENSE.md

@@ -25,8 +25,8 @@ export const EXECUTABLE_FILE = 0o755;
 export const PERMISSION_BITS = 0o777;
 
 /** Entered, read, and written by the owner alone: the mode of a private directory. */
-export const PRIVATE_DIRECTORY = 0o700;
+export const PRIVATE_FOLDER = 0o700;
 
-export const DIRECTORY_MODE = 0o755;
+export const OWNER_WRITABLE_FOLDER = 0o755;
 
 export const EXECUTABLE_BITS = 0o111;

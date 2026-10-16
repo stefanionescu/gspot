@@ -1,7 +1,7 @@
 {
     "$schema": "./node_modules/wrangler/config-schema.json",
     "name": "gspot-docs",
-    "compatibility_date": "2026-10-03",
+    "compatibility_date": "2026-10-02",
     "workers_dev": false,
     "routes": [{ "pattern": "generativespotting.com", "custom_domain": true }],
     "assets": {

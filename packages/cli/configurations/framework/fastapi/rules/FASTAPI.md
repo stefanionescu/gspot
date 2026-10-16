@@ -1,5 +1,7 @@
 # FastAPI
 
+Read this rule when you change a FastAPI application.
+
 Structure, parameters, schemas, responses, errors, and the runtime of a Python project on FastAPI
 and Pydantic v2.
 
@@ -46,8 +48,8 @@ app.include_router(router)
 
 ## Parameters
 
-Declare parameters with `Annotated[..., Query(...)]`, `Path`, `Body`, `Header`, `Cookie`, `Form`, `File`, or `Depends`;
-a plain scalar supplies a query parameter. A parameter without a default requires a value, even when it
+Declare each parameter with `Annotated[..., Query(...)]`, `Path`, `Body`, `Header`, `Cookie`, `Form`, `File`, or
+`Depends`. A plain scalar supplies a query parameter. A parameter without a default requires a value, even when it
 accepts `None`. Constraints such as `max_length` or `ge` belong at the boundary when the public interface requires them. Use a dependency for a check that needs a database or authorization state, not
 a validator. Declare fixed routes such as `/users/me` before `/users/{user_id}`, and group
 pagination or filter parameters into a query model with `extra="forbid"`.

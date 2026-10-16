@@ -58,11 +58,11 @@ export async function detectSwiftTags(path: string, text: string): Promise<strin
 
 /**
  * Read Swift process environment access from navigation expressions.
- * @param root the parsed Swift source.
+ * @param syntaxRoot the parsed Swift source.
  * @returns the environment reads and their source positions.
  */
-export function readSwiftEnvironment(root: Node): EnvironmentRead[] {
-    return root
+export function readSwiftEnvironment(syntaxRoot: Node): EnvironmentRead[] {
+    return syntaxRoot
         .descendantsOfType('navigation_expression')
         .filter((node) => node.text.replaceAll(/\s+/gu, '') === SWIFT_ENV_READ)
         .map((node) => ({ key: undefined, line: node.startPosition.row + 1, column: node.startPosition.column + 1 }));

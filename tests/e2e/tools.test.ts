@@ -1,22 +1,19 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
-import { fakeTool } from '#tests/setup/fake-tool.ts';
+import { fakeTool } from '#tests/setup/fakes.ts';
 import { CI_PINS } from '#cli/config/generation/ci.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import type { PackedSandbox } from '#tests/types/e2e.ts';
+import type { PackedSandbox } from '#tests/types/packages.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import type { RunReport } from '#cli/types/execution/check.ts';
-import { buildSpawnEnvironment } from '#cli/system/environment.ts';
-import { setUpPackedSandbox, createPackedSandbox } from '#tests/setup/e2e-sandbox.ts';
-
-const FAKE_MISE = `console.log(${JSON.stringify(CI_PINS.mise.version)});\n`;
+import type { RunReport } from '#cli/types/checks/run/check.ts';
+import { setUpPackedSandbox, createPackedSandbox } from '#tests/setup/packed-sandbox.ts';
 
 /** Prepare package data and private formatter inputs with the declared mise executable first. */
 async function prepareFormatterSandbox(installation: PackedSandbox) {
     const toolConsumer = join(installation.workspace, 'tool-consumer');
     const systemTools = join(installation.workspace, 'system-tools');
     await mkdir(toolConsumer);
-    await fakeTool(systemTools, 'mise', FAKE_MISE);
+    await fakeTool(systemTools, 'mise', `console.log(${JSON.stringify(CI_PINS.mise.version)});\n`);
     const bun = await runCommand(['bun', '--version'], {
         cwd: toolConsumer,
         env: installation.onlineOptions.env,
@@ -50,7 +47,7 @@ async function prepareFormatterSandbox(installation: PackedSandbox) {
 }
 
 test('the installed formatter reports and fixes source and keeps your package.json fields', async () => {
-    await using consumer = await createPackedSandbox(buildSpawnEnvironment()['GSPOT_TEST_NPMRC']!);
+    await using consumer = await createPackedSandbox();
 
     const { command } = consumer;
     const { toolConsumer, toolOptions, authoredPackage } = await prepareFormatterSandbox(consumer);

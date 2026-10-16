@@ -1,17 +1,22 @@
-import { findingAt } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { buildFileMatcher } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { findScope, isInScope } from '#cli/repository/scopes.ts';
-import { nameFindings } from '#cli/checks/general/naming/names.ts';
+import { checkIdentifier } from '#cli/checks/general/naming/names.ts';
 import { readNamingDefaults } from '#cli/configurations/manifests.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
-import type { FileNames, Identifier, NamingSource, NamingSettings } from '#cli/types/checks/general.ts';
-import { identifiersOf, fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
+import type { FileNames, NamedFile, Identifier, NamingSettings } from '#cli/types/checks/general.ts';
 
-function sourceFiles(input: CheckInput): NamingSource[] {
+import {
+    parseIdentifiers,
+    buildFileIdentifier,
+    buildFolderIdentifiers,
+} from '#cli/checks/general/naming/identifiers.ts';
+
+function listNamedFiles(input: CheckInput): NamedFile[] {
     const languages = input.scope.selected
         .filter((manifest) => manifest.configuration.group === 'language')
         .map((manifest) => ({
@@ -24,13 +29,13 @@ function sourceFiles(input: CheckInput): NamingSource[] {
             file,
             language: languages.find(({ matches }) => matches(file))?.manifest.configuration.name,
         }))
-        .filter((entry): entry is NamingSource => entry.language !== undefined);
+        .filter((entry): entry is NamedFile => entry.language !== undefined);
 }
 
-function findingsFor(input: CheckInput, settings: NamingSettings, identifiers: Identifier[]): Finding[] {
+function checkIdentifiers(input: CheckInput, settings: NamingSettings, identifiers: Identifier[]): Finding[] {
     const isTestFile = buildPathMatcher(input.scope.view.test_files);
     return identifiers.flatMap((identifier) =>
-        nameFindings(identifier, {
+        checkIdentifier(identifier, {
             check: input.check,
             settings,
             isTestFile: isTestFile(identifier.file),
@@ -38,16 +43,16 @@ function findingsFor(input: CheckInput, settings: NamingSettings, identifiers: I
     );
 }
 
-function pathIdentifiers(input: CheckInput): Identifier[] {
+function listPathIdentifiers(input: CheckInput): Identifier[] {
     const containers = readNamingDefaults(input.reads).path_containers;
     const seen = new Set<string>();
-    return sourceFiles(input).flatMap(({ file, language }) => {
+    return listNamedFiles(input).flatMap(({ file, language }) => {
         const all = [
-            fileIdentifier(file.path, language, containers),
-            ...directoryIdentifiers(file.path, language, containers),
+            buildFileIdentifier(file.path, language, containers),
+            ...buildFolderIdentifiers(file.path, language, containers),
         ];
         return all.filter((identifier) => {
-            const key = JSON.stringify([identifier.directory ?? identifier.file, identifier.language, identifier.name]);
+            const key = JSON.stringify([identifier.folder ?? identifier.file, identifier.language, identifier.name]);
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
@@ -60,18 +65,18 @@ function pathIdentifiers(input: CheckInput): Identifier[] {
  * @param input the repository for this scope and syntax tree resources.
  * @returns declared names and the existing path-name projection for every readable source.
  */
-async function declaredNames(input: CheckInput): Promise<{ files: FileNames[]; findings: Finding[] }> {
+async function readDeclaredNames(input: CheckInput): Promise<{ files: FileNames[]; findings: Finding[] }> {
     const files: FileNames[] = [];
     const findings: Finding[] = [];
     for (const selection of input.selections) {
         const scopeInput = {
             ...input,
             scope: selection,
-            files: input.files.filter((file) => findScope(file.path, input.scopeEntries).path === selection.scope.path),
+            files: input.files.filter((file) => findScope(file.path, input.scopes).path === selection.scope.path),
         };
-        const paths = pathIdentifiers(scopeInput);
-        for (const { file, language } of sourceFiles(scopeInput)) {
-            const { identifiers, error } = await identifiersOf(
+        const paths = listPathIdentifiers(scopeInput);
+        for (const { file, language } of listNamedFiles(scopeInput)) {
+            const { identifiers, error } = await parseIdentifiers(
                 file.path,
                 readCachedBytes(input.reads, file.path).toString('utf8'),
                 language,
@@ -79,7 +84,7 @@ async function declaredNames(input: CheckInput): Promise<{ files: FileNames[]; f
             );
             if (error !== undefined) {
                 findings.push(
-                    findingAt(
+                    buildFinding(
                         scopeInput,
                         { file: file.path, line: error.line, column: error.column },
                         'syntax',
@@ -97,9 +102,9 @@ async function declaredNames(input: CheckInput): Promise<{ files: FileNames[]; f
                         .filter(
                             (identifier) =>
                                 identifier.language === language &&
-                                (identifier.directory === undefined
+                                (identifier.folder === undefined
                                     ? identifier.file === file.path
-                                    : isInScope(file.path, identifier.directory)),
+                                    : isInScope(file.path, identifier.folder)),
                         )
                         .map((identifier) => identifier.name),
                     ...declarations,
@@ -115,20 +120,20 @@ async function declaredNames(input: CheckInput): Promise<{ files: FileNames[]; f
  * @param input the selected check and repository files.
  * @returns findings for allowed names without matching declarations.
  */
-export async function namingSettings(input: CheckInput): Promise<Finding[]> {
-    const { files, findings } = await declaredNames({ ...input, files: input.repositoryFiles });
+export async function checkNamingAllowedNames(input: CheckInput): Promise<Finding[]> {
+    const { files, findings } = await readDeclaredNames({ ...input, files: input.repositoryFiles });
     if (findings.length > 0) return findings;
-    const directories = input.selections
+    const folders = input.selections
         .flatMap((selection) =>
-            pathIdentifiers({
+            listPathIdentifiers({
                 ...input,
                 scope: selection,
                 files: input.repositoryFiles.filter(
-                    (file) => findScope(file.path, input.scopeEntries).path === selection.scope.path,
+                    (file) => findScope(file.path, input.scopes).path === selection.scope.path,
                 ),
             }),
         )
-        .filter((identifier) => identifier.category === 'directories');
+        .filter((identifier) => identifier.category === 'folders');
     return input.settingsFile.settings.naming.override.flatMap((override, index) => {
         const matches = buildPathMatcher(override.paths);
         const declared = new Set(
@@ -140,16 +145,14 @@ export async function namingSettings(input: CheckInput): Promise<Finding[]> {
                     return file.declarations;
                 }),
         );
-        if (override.categories === undefined || override.categories.includes('directories')) {
-            for (const identifier of directories.filter((identifier) =>
-                matches(identifier.directory ?? identifier.file),
-            ))
+        if (override.categories === undefined || override.categories.includes('folders')) {
+            for (const identifier of folders.filter((identifier) => matches(identifier.folder ?? identifier.file)))
                 declared.add(identifier.name);
         }
         return (override.allowed_names ?? [])
             .filter((name) => !declared.has(name))
             .map((name) =>
-                findingAt(
+                buildFinding(
                     input,
                     { file: SETTINGS_FILE },
                     'unused-entry',
@@ -164,19 +167,19 @@ export async function namingSettings(input: CheckInput): Promise<Finding[]> {
  * @param input the selected check and repository files.
  * @returns the findings for declared source names.
  */
-export async function namingIdentifiers(input: CheckInput): Promise<Finding[]> {
+export async function checkNamingIdentifiers(input: CheckInput): Promise<Finding[]> {
     const settings = readNamingSettings(input);
     const findings: Finding[] = [];
-    for (const { file, language } of sourceFiles(input)) {
+    for (const { file, language } of listNamedFiles(input)) {
         const text = readCachedBytes(input.reads, file.path).toString('utf8');
-        const { identifiers, error } = await identifiersOf(file.path, text, language, input);
+        const { identifiers, error } = await parseIdentifiers(file.path, text, language, input);
         if (error !== undefined) {
             findings.push(
-                findingAt(input, { file: file.path, line: error.line, column: error.column }, 'syntax', error.text),
+                buildFinding(input, { file: file.path, line: error.line, column: error.column }, 'syntax', error.text),
             );
             continue;
         }
-        findings.push(...findingsFor(input, settings, identifiers));
+        findings.push(...checkIdentifiers(input, settings, identifiers));
     }
     return findings;
 }
@@ -186,7 +189,7 @@ export async function namingIdentifiers(input: CheckInput): Promise<Finding[]> {
  * @param input the selected check and repository files.
  * @returns the findings for file and directory names.
  */
-export function namingPaths(input: CheckInput): Finding[] {
+export function checkNamingPaths(input: CheckInput): Finding[] {
     const settings = readNamingSettings(input);
-    return findingsFor(input, settings, pathIdentifiers(input));
+    return checkIdentifiers(input, settings, listPathIdentifiers(input));
 }

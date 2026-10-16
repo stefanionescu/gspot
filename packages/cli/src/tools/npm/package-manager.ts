@@ -1,15 +1,15 @@
-// Reads and selects the repository package manager.
+// Read and select the repository package manager.
 import { z } from 'zod';
 import semver from 'semver';
 import { join, dirname } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import { detectPackageManager as detectNypmPackageManager } from 'nypm';
-import { NPM_PROGRAM, NPM_CLIENT_DETECTION } from '#cli/config/tools/npm.ts';
+import { NPM_PROGRAM, NYPM_DETECTION_OPTIONS } from '#cli/config/tools/npm.ts';
 
 import {
     type PackageJson,
@@ -43,7 +43,7 @@ async function detectPackageManager(root: string, candidates: string[]): Promise
         const manifest = readPackageJson(root, path);
         const declared = manifest === undefined ? undefined : readPackageManagerDeclaration(manifest);
         if (declared !== undefined) return declared;
-        const detected = await detectNypmPackageManager(join(root, dirname(path)), NPM_CLIENT_DETECTION);
+        const detected = await detectNypmPackageManager(join(root, dirname(path)), NYPM_DETECTION_OPTIONS);
         if (detected !== undefined)
             return packageManagerDeclarationSchema.parse({ name: detected.name, version: detected.version });
     }
@@ -85,12 +85,15 @@ function readPackageManagerDeclaration(manifest: PackageJson): PackageManagerDec
 /**
  * Select the repository package manager from its declaration and lockfiles.
  *
- * @param root the repository root.
+ * @param repositoryRoot the folder whose package declarations and lockfiles select the manager.
  * @param trackedPaths the source paths inventoried in the repository.
  *
  * @returns the manager name and its declared or detected version, when present.
  */
-async function selectPackageManager(root: string, trackedPaths: string[]): Promise<PackageManagerDeclaration> {
+async function selectPackageManager(
+    repositoryRoot: string,
+    trackedPaths: string[],
+): Promise<PackageManagerDeclaration> {
     // The root declaration wins; without it, the first nested manifest provides a deterministic shared tool manager.
     const candidates = [
         PACKAGE_JSON,
@@ -99,7 +102,7 @@ async function selectPackageManager(root: string, trackedPaths: string[]): Promi
             .toSorted((left, right) => left.localeCompare(right))
             .slice(0, 1),
     ];
-    const { name, version } = await detectPackageManager(root, candidates);
+    const { name, version } = await detectPackageManager(repositoryRoot, candidates);
     if (version !== undefined) {
         if (semver.valid(version) === null)
             throw new GspotError(
@@ -114,21 +117,21 @@ async function selectPackageManager(root: string, trackedPaths: string[]): Promi
 /**
  * Resolve an undeclared package manager version only when generating or installing a tool project.
  *
- * @param root the repository root.
+ * @param repositoryRoot the working folder used when querying an undeclared version.
  * @param packageManager the declared or detected package manager identity.
  * @param timeoutSeconds the tool timeout in seconds.
  *
  * @returns the name and version requirement used by the tool project.
  */
 function readPackageManagerVersion(
-    root: string,
+    repositoryRoot: string,
     packageManager: PackageManagerDeclaration,
     timeoutSeconds: number,
 ): PackageManager {
     const { name, version } = packageManager;
     if (version !== undefined) return { name, version };
     const result = spawnProcessBlocking([name, VERSION_FLAG], {
-        cwd: root,
+        cwd: repositoryRoot,
         timeoutSeconds: timeoutSeconds,
     });
     if (result.code !== 0) throw new GspotError('tool', `Cannot determine the ${name} version for the tool project.`);

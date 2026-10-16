@@ -1,13 +1,17 @@
 # GitHub Actions
 
+Read this rule when you change a GitHub Actions workflow or action.
+
 ## Workflow shape
 
-- Every job has `timeout-minutes`. Every workflow that can run twice for one ref has a
-  `concurrency` group with `cancel-in-progress` for pull requests.
+- Every job has `timeout-minutes`.
+- Every workflow that can run twice for one ref has a `concurrency` group. Cancel a run in progress only for a pull
+  request. Never cancel a run on the default branch or a tag; its result records that commit.
 - Pin a runner image such as `ubuntu-24.04` for each job. Do not use `ubuntu-latest`.
 - No `continue-on-error` without a reason comment. Required failures must fail the job.
-- Upload diagnostics after failed checks with an explicit status condition. Deployments and
-  release publication require successful prerequisites.
+- Upload diagnostics after failed checks with an explicit status condition. Deployments and release publication
+  require successful prerequisites.
+- Before a release job publishes a package or creates a release, it runs the tests or needs the job that runs them.
 
 ## Repository actions and secrets
 
@@ -25,11 +29,11 @@
 ## Outputs
 
 - Artifacts and summaries name the job and the ref. Set retention explicitly.
-- Give deploy credentials only to the workflow that deploys. Run it on a protected
+- Every job leaves a result that a later job, a deployment, or a person uses. Do not upload an artifact that no job
+  downloads. Do not build the same output in two workflows.
+- Give deploy credentials only to the job that deploys, as `env` on the step that needs them. Deploy only from the
+  default branch or a release tag. When the repository uses GitHub environments, run the job in a protected
   environment with a reviewer.
-
-See [the GitHub shell configuration](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsshell)
-for the command each runner uses.
 
 ## Workflow organization
 

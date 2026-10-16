@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Copy-paste detection across every language a selected configuration claims, with a ceiling for the share of duplicated lines."
+description = "Copy-paste detection across every language a selected configuration claims. Every copied block is reported."
 title = "Duplication"
 
 [files]
@@ -17,13 +17,13 @@ target = ".gspot/config/jscpd.json"
 tool = "jscpd"
 
 [[check]]
-example = "Two selected files containing the same substantial code block can exceed the configured duplication threshold. Move the shared behavior into its actual owner and call it from both locations, then rerun."
+example = "Two selected files containing the same substantial code block report that copied block. Move the shared behavior into its actual owner and call it from both locations, then rerun."
 files = { languages = true }
 help = "Move the shared block into one function both callers use."
 level = "all"
 name = "jscpd"
 runs = "scope"
 stage = "push"
-summary = "Finds blocks of code copied between files. While the duplicated share stays at or under the ceiling it passes, and over it every copy is a finding that names both places."
+summary = "Reports every block of code copied between files, naming both places."
 tool = "jscpd"
 why = "A copied block is fixed in one place and stays broken in the other."

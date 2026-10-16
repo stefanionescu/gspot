@@ -1,0 +1,147 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+import { AGENT_PROMPT, SETUP_COMMANDS } from '../../config/setup.ts';
+
+const [first] = SETUP_COMMANDS;
+const [promptStart, promptEnd] = AGENT_PROMPT.split('curl -fsSL https://generativespotting.com/llms.txt');
+---
+
+<home-setup class="setup" data-mode="human">
+    <div class="setup-head">
+        <div class="modes" role="tablist" aria-label="Who sets up gspot">
+            <button
+                type="button"
+                role="tab"
+                id="mode-human"
+                aria-controls="panel-human"
+                aria-selected="true"
+                data-mode="human"
+            >
+                Human
+            </button>
+            <button
+                type="button"
+                role="tab"
+                id="mode-agent"
+                aria-controls="panel-agent"
+                aria-selected="false"
+                tabindex="-1"
+                data-mode="agent"
+            >
+                Agent
+            </button>
+        </div>
+        <div class="setup-tools">
+            <label class="manager">
+                <span class="visually-hidden">Package manager</span>
+                <select>
+                    {SETUP_COMMANDS.map(({ label }, index) => (
+                        <option value={index}>{label}</option>
+                    ))}
+                </select>
+                <Icon name="down-caret" size="1rem" class="icon-16" />
+            </label>
+            <button class="copy" type="button" data-copy aria-label="Copy">
+                <svg
+                    class="icon-16"
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <rect x="8" y="8" width="13" height="13" rx="2" />
+                    <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+                </svg>
+                <span class="copy-label">Copy</span>
+            </button>
+        </div>
+    </div>
+    <div class="setup-body">
+        <div class="setup-panel" role="tabpanel" id="panel-human" aria-labelledby="mode-human" tabindex="0">
+            <pre class="commands">{first.lines.map((line) => <span class="cmd"><span class="prompt" aria-hidden="true">$ </span>{line}</span>)}</pre>
+        </div>
+        <div class="setup-panel" role="tabpanel" id="panel-agent" aria-labelledby="mode-agent" tabindex="0" hidden>
+            <p class="agent-prompt">
+                {promptStart}
+                <span class="em">
+                    <span class="nowrap">curl -fsSL</span> https://
+                    <wbr />
+                    generativespotting.com/
+                    <wbr />
+                    llms.txt
+                </span>
+                {promptEnd}
+            </p>
+        </div>
+    </div>
+    <span class="visually-hidden" role="status" data-copy-status></span>
+</home-setup>
+
+<script>
+    import { AGENT_PROMPT, SETUP_COMMANDS } from '../../config/setup.ts';
+
+    class HomeSetup extends HTMLElement {
+        connectedCallback(): void {
+            const manager = this.querySelector('select');
+            const commands = this.querySelector('.commands');
+            const copy = this.querySelector('[data-copy]');
+            const status = this.querySelector('[data-copy-status]');
+            const tabs = [...this.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+            if (manager === null || commands === null || copy === null || status === null) {
+                throw new Error('The setup card has a missing control.');
+            }
+            manager.addEventListener('change', () => {
+                const selected = SETUP_COMMANDS[manager.selectedIndex];
+                if (selected === undefined) throw new Error('The package manager has no setup commands.');
+                commands.replaceChildren(...selected.lines.map((text) => {
+                    const line = document.createElement('span');
+                    line.className = 'cmd';
+                    const prompt = document.createElement('span');
+                    prompt.className = 'prompt';
+                    prompt.setAttribute('aria-hidden', 'true');
+                    prompt.textContent = '$ ';
+                    line.append(prompt, text);
+                    return line;
+                }));
+            });
+            for (const tab of tabs) {
+                tab.addEventListener('click', () => {
+                    this.dataset['mode'] = tab.dataset['mode'];
+                    for (const other of tabs) {
+                        const selected = other === tab;
+                        other.setAttribute('aria-selected', String(selected));
+                        other.tabIndex = selected ? 0 : -1;
+                        const panel = this.querySelector<HTMLElement>(`#${other.getAttribute('aria-controls')}`);
+                        if (panel === null) throw new Error('The setup tab has no panel.');
+                        panel.hidden = !selected;
+                    }
+                });
+                tab.addEventListener('keydown', (event) => {
+                    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                    event.preventDefault();
+                    let next = tabs.find((other) => other !== tab);
+                    if (event.key === 'Home') next = tabs[0];
+                    if (event.key === 'End') next = tabs.at(-1);
+                    if (next === undefined) throw new Error('The setup card has no next tab.');
+                    next.click();
+                    next.focus();
+                });
+            }
+            copy.addEventListener('click', async () => {
+                const selected = SETUP_COMMANDS[manager.selectedIndex];
+                if (selected === undefined) throw new Error('The package manager has no setup commands.');
+                const text = this.dataset['mode'] === 'agent' ? AGENT_PROMPT : selected.lines.join('\n');
+                try {
+                    await navigator.clipboard.writeText(text);
+                    status.textContent = 'Copied.';
+                } catch {
+                    status.textContent = 'Copy failed. Select and copy the text.';
+                }
+            });
+        }
+    }
+    customElements.define('home-setup', HomeSetup);
+</script>

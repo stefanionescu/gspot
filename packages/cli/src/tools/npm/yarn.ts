@@ -1,23 +1,23 @@
-// Validate Yarn settings before passing connection values to an isolated install.
+// Read Yarn connection settings for an isolated install.
 import { z } from 'zod';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import { YARN_SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { addEnvironmentReference } from '#cli/tools/npm/registry.ts';
 
 import {
-    YARN_CONFIG_GET,
-    YARN_CONFIG_LIST,
     YARN_SECRET_KEYS,
     NPM_SETTING_PREFIX,
     YARN_CONNECTION_KEYS,
+    YARN_CONFIG_GET_ARGUMENTS,
     YARN_ENVIRONMENT_SETTINGS,
+    YARN_CONFIG_LIST_ARGUMENTS,
     YARN_INSTALL_SETTINGS_FILE,
     YARN_SETTING_VARIABLE_PREFIX,
 } from '#cli/config/tools/npm.ts';
@@ -42,6 +42,7 @@ function convertToReference(value: unknown, key: string, env: Record<string, str
     return value;
 }
 
+// Read each Yarn environment owner and replace credential values with references.
 function buildEnvironmentSettings(env: Record<string, string>, secrets: string[]): Record<string, unknown> {
     const environmentSettings = YARN_ENVIRONMENT_SETTINGS.flatMap<[string, unknown]>((source) => {
         const entries = Object.entries(env).flatMap<[string, unknown]>(([key, value]) => {
@@ -84,8 +85,14 @@ async function writeYarnSettings(
         if (url.protocol === 'http:') settings['unsafeHttpWhitelist'] = [url.hostname];
     }
     Object.assign(settings, buildEnvironmentSettings(env, secrets));
-    context.steps.push(YARN_CONFIG_LIST);
-    const listed = await runTool(YARN_CONFIG_LIST, { cwd: root, env, timeoutSeconds });
+    context.steps.push(YARN_CONFIG_LIST_ARGUMENTS);
+    const listed = await runTool(YARN_CONFIG_LIST_ARGUMENTS, {
+        cancelSignal: context.cancelSignal,
+        cwd: root,
+        env,
+        timeoutSeconds,
+    });
+    context.cancelSignal?.throwIfAborted();
     if (listed.code !== 0)
         throw new GspotError(
             'installation',
@@ -97,13 +104,10 @@ async function writeYarnSettings(
         .map((line) => yarnConfigEntrySchema.parse(JSON.parse(line)))
         .filter((entry) => YARN_CONNECTION_KEYS.has(entry.key));
     for (const entry of entries) {
-        const command = [...YARN_CONFIG_GET, entry.key, '--json', '--no-redacted'];
+        const command = [...YARN_CONFIG_GET_ARGUMENTS, entry.key, '--json', '--no-redacted'];
         context.steps.push(command);
-        const read = await runTool(command, {
-            cwd: root,
-            timeoutSeconds,
-            env,
-        });
+        const read = await runTool(command, { cancelSignal: context.cancelSignal, cwd: root, timeoutSeconds, env });
+        context.cancelSignal?.throwIfAborted();
         if (read.code !== 0) throw new GspotError('installation', `Cannot read Yarn setting ${entry.key}.`);
         settings[entry.key] = convertToReference(
             yarnSettingSchema.parse(JSON.parse(read.stdout)),

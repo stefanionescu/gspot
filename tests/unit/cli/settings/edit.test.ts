@@ -4,10 +4,8 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { getValueAt } from '#cli/system/values.ts';
 import { localDateSchema } from '#cli/settings/schema/parts.ts';
-import { DATED_IGNORE } from '#tests/config/samples/settings.ts';
-import { setKey, addToList, deleteKey, updateSettings, findScopeTable, readSettingsEdit } from '#cli/settings/edit.ts';
-
-const initial = 'configurations = ["bash", "naming", "format"]\n';
+import { DATED_IGNORE, INITIAL_SETTINGS } from '#tests/data/settings/edits.ts';
+import { setKey, addToList, deleteKey, findScopeTable, updateSettings, readSettingsEdit } from '#cli/settings/edit.ts';
 
 test('an edit keeps a trailing array comma and writes inline tables without one', async () => {
     await using sandbox = await testdir();
@@ -36,7 +34,7 @@ test('an edit keeps a trailing array comma and writes inline tables without one'
 test('setting a nested key, then deleting it, removes the empty table', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
-    await writeFile(path, initial);
+    await writeFile(path, INITIAL_SETTINGS);
     const written = updateSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
         setKey(written, 'limits.bash.file_lines', 100);
     }).text;
@@ -50,7 +48,7 @@ test('setting a nested key, then deleting it, removes the empty table', async ()
 
 test('adding to a list skips values and records that are already there', async () => {
     await using sandbox = await testdir();
-    await writeFile(join(sandbox.path, 'gspot.toml'), initial);
+    await writeFile(join(sandbox.path, 'gspot.toml'), INITIAL_SETTINGS);
     const written = updateSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
         addToList(written, 'naming.banned_words', ['dispatcher', 'orchestrator']);
         addToList(written, 'naming.banned_words', ['dispatcher']);
@@ -68,11 +66,11 @@ test.each([
     ['an inline table', 'limits = { file_lines = 100 }'],
 ])('a scope setting written into %s loads with the settings already there', async (_form, scope) => {
     await using sandbox = await testdir();
-    await writeFile(join(sandbox.path, 'gspot.toml'), `${initial}[[scope]]\npath = "api"\n${scope}\n`);
+    await writeFile(join(sandbox.path, 'gspot.toml'), `${INITIAL_SETTINGS}[[scope]]\npath = "api"\n${scope}\n`);
     const result = updateSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
         setKey(findScopeTable(written, 'api'), 'limits.function_lines', 20);
     });
-    expect(result.settings.scopeTables['api']?.limits).toMatchObject({ file_lines: 100, function_lines: 20 });
+    expect(result.settings.scopes['api']?.limits).toMatchObject({ file_lines: 100, function_lines: 20 });
     await writeFile(join(sandbox.path, 'gspot.toml'), result.text);
     expect(readSettingsEdit(sandbox.path).table['scope']).toMatchObject([
         { path: 'api', limits: { file_lines: 100, function_lines: 20 } },
@@ -95,7 +93,7 @@ test('changing an until date in place rewrites it and keeps its comment', async 
 
 test('reordering keys does not change the file', async () => {
     await using sandbox = await testdir();
-    const source = `${initial}level = "all"\n`;
+    const source = `${INITIAL_SETTINGS}level = "all"\n`;
     await writeFile(join(sandbox.path, 'gspot.toml'), source);
     const result = updateSettings(sandbox.path, readSettingsEdit(sandbox.path), (written) => {
         const configurations = written['configurations'];

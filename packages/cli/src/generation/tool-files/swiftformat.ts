@@ -3,7 +3,7 @@ import { parseBuildSettings } from '#cli/parsers/xcode.ts';
 import { PBXPROJ_NAME } from '#cli/config/parsers/xcode.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
-import { SWIFT_TOOLS_VERSION } from '#cli/config/generation/tool-file-sources.ts';
+import { SWIFT_TOOLS_VERSION } from '#cli/config/generation/tool-files.ts';
 import { type ToolFileContext, type SwiftVersionInput } from '#cli/types/generation/files.ts';
 
 import {
@@ -35,7 +35,7 @@ function buildSwiftformatFile(context: ToolFileContext): string {
     const isAll = level === 'all';
     const version = readSwiftVersion(
         { root, scope: selection.scope.path, reads },
-        selection.view.options('xcode').project ?? '',
+        selection.view.options('swift').xcode_project ?? '',
     );
     const document = {
         options: {

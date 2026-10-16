@@ -1,20 +1,25 @@
-// Whether another configuration's scalar default disagrees with this one, and this one may not override it.
-// Whether another configuration's scalar default disagrees with this one, and this one may not override it.
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { mergeValue } from '#cli/settings/inherit.ts';
 import { toolsSchema } from '#cli/settings/schema/tools.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
+import { OVERRIDING_KINDS } from '#cli/config/settings/values.ts';
 import { buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 import type { MemoKey, ReadCache } from '#cli/types/system/files.ts';
+import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 import type { KnownSettings, SettingDefault } from '#cli/types/settings/values.ts';
-import { OVERRIDING_KINDS, GSPOT_DEFAULT_SOURCE } from '#cli/config/settings/values.ts';
-import { rootSettingSchemas, convertToJsonSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/settings/schema/tables.ts';
 import { BUILD_SCRIPT, COMMIT_SCOPES, XCODE_DESTINATIONS } from '#cli/config/settings/defaults.ts';
+// Read setting declarations and resolve their shipped and detected defaults.
+
+function getSchemaPathRole(input: z.core.JSONSchema.JSONSchema): unknown {
+    if (input['pathRole'] !== undefined) return input['pathRole'];
+    if (typeof input.items === 'object' && !Array.isArray(input.items)) return input.items['pathRole'];
+    return undefined;
+}
 
 function isScalarConflict(previous: SettingDefault, manifest: Manifest, declaration: SettingDeclaration): boolean {
     if (previous.configuration === manifest.configuration.name) return false;
@@ -76,14 +81,8 @@ function convertSchemaType(type: z.core.JSONSchema.JSONSchema['type']): SettingD
     throw new Error(`The setting schema has no supported value type: ${String(type)}.`);
 }
 
-function getSchemaPathRole(input: z.core.JSONSchema.JSONSchema): unknown {
-    if (input['pathRole'] !== undefined) return input['pathRole'];
-    if (typeof input.items === 'object' && !Array.isArray(input.items)) return input.items['pathRole'];
-    return undefined;
-}
-
 function deriveSettingType(schema: z.ZodType): Pick<SettingDeclaration, 'type' | 'path_role'> {
-    const document = convertToJsonSchema(schema);
+    const document = z.toJSONSchema(schema, { io: 'input' });
     const input = document.anyOf?.find((value) => typeof value === 'object' && value.type !== undefined) ?? document;
     const pathRole = getSchemaPathRole(input);
     return {
@@ -141,7 +140,7 @@ function buildKnownSettings(selected: Manifest[], level: Level = 'recommended', 
     const known: KnownSettings = { declarations: new Map(), defaults: new Map(), errors: [] };
     for (const declaration of roots) {
         known.declarations.set(declaration.name, declaration);
-        known.defaults.set(declaration.name, { value: declaration.default, configuration: GSPOT_DEFAULT_SOURCE });
+        known.defaults.set(declaration.name, { value: declaration.default, configuration: 'gspot default' });
     }
     for (const manifest of selected) addManifest(known, manifest, level);
     const tools = new Set(selected.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
@@ -174,7 +173,7 @@ function detectDefaults(inputs: {
     return new Map<string, unknown>([
         ['openapi.document', document],
         ['site.build_command', inputs.npmClient === undefined ? undefined : [inputs.npmClient, ...BUILD_SCRIPT]],
-        ['xcode.destination', XCODE_DESTINATIONS.get(inputs.sdkRoot)],
+        ['swift.xcode_destination', XCODE_DESTINATIONS.get(inputs.sdkRoot)],
         [
             'tools.commitlint.scopes',
             inputs.scopes === undefined || inputs.scopes.length === 0

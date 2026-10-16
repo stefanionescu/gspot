@@ -7,7 +7,7 @@ import { type EslintContext, type EslintFragment } from '#cli/types/generation/e
  * @param configuration the configuration that supplies the pinned rule list.
  * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildLintRuleFragment(context: EslintContext, configuration: string): EslintFragment {
+function buildLintRuleFragment(context: EslintContext, configuration: string): EslintFragment {
     // Only the registered constant fragments select this producer.
     const declaration = PLUGIN_LINT_RULE_FRAGMENTS[configuration] as (typeof PLUGIN_LINT_RULE_FRAGMENTS)[string];
     return {
@@ -23,3 +23,5 @@ export function buildLintRuleFragment(context: EslintContext, configuration: str
             ) + ',\n',
     };
 }
+
+export { buildLintRuleFragment };

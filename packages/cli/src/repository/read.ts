@@ -10,16 +10,23 @@ import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { readCachedBytes, readCachedPrefix } from '#cli/system/files/reads.ts';
 import { readIndexEntries, listTrackedFiles } from '#cli/repository/tracked.ts';
-import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
-import { trimGitLine, isOutsideGit, runGitBlocking, isGitRepository } from '#cli/system/git.ts';
+import { trimGitLine, runGitBlocking, isGitRepository } from '#cli/system/git.ts';
+import type { Scope, Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
 import { mergeAttributes, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
-import { GIT_LOCALE, WORK_TREE_ARGUMENTS, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 
+import {
+    GIT_LOCALE,
+    WORK_TREE_ARGUMENTS,
+    NOT_REPOSITORY_CODE,
+    NOT_REPOSITORY_MESSAGE,
+    GIT_TOP_LEVEL_ARGUMENTS,
+} from '#cli/config/system/git.ts';
 import {
     SET_VALUES,
     FILE_PREFIX_BYTES,
@@ -30,13 +37,13 @@ import {
 
 /**
  * Reads attribute rules once for a repository read.
- * @param root the repository root.
+ * @param repositoryRoot the folder used as the Git working directory.
  * @param paths the tracked attribute-file paths.
  * @returns the parsed rules, or none when the optional file does not exist.
  */
-function readAttributes(root: string, paths: string[]): Map<string, Record<string, string>> {
+function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Record<string, string>> {
     if (paths.length === 0) return new Map();
-    const result = runGitBlocking(root, CHECK_ATTRIBUTES_ARGUMENTS, {
+    const result = runGitBlocking(repositoryRoot, CHECK_ATTRIBUTES_ARGUMENTS, {
         stdin: paths.join('\0') + '\0',
     });
     if (result.code !== 0) throw new Error(`Git could not read the attributes: ${result.stderr.trim()}`);
@@ -44,17 +51,28 @@ function readAttributes(root: string, paths: string[]): Map<string, Record<strin
 }
 
 /**
+ * Refuse broken Git metadata while allowing a folder outside any repository.
+ * @param folder the folder whose top-level lookup failed.
+ * @param top the failed top-level lookup.
+ */
+function assertOutsideGit(folder: string, top: SpawnResult): void {
+    const inspection = runGitBlocking(folder, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
+    if (inspection.code !== NOT_REPOSITORY_CODE || !inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE))
+        throw new Error(`Git root discovery failed in ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`);
+}
+
+/**
  * Reads tracked files, dependency files, and the written and discovered scopes.
  * @param reads the run-owned repository cache.
  * @param options the declarations, written scopes, manifests, and cached source reads.
  * @param options.declarations the generated and vendored declarations.
- * @param options.scopeEntries the written scope entries.
+ * @param options.scopes the written scope entries.
  * @param options.manifests the shipped configuration manifests.
  * @returns the repository record.
  */
 export async function readRepository(
     reads: ReadCache,
-    { declarations, scopeEntries, manifests }: RepositoryReadOptions,
+    { declarations, scopes, manifests }: RepositoryReadOptions,
 ): Promise<Repository> {
     const root = reads.root;
     const hasGit = isGitRepository(root);
@@ -79,15 +97,15 @@ export async function readRepository(
     }
     const dependencyFiles = await readDependencyFiles(reads, files);
     const discovered = findScopes(files, dependencyFiles, manifests.values());
-    const written: ScopeEntry[] = [
+    const written: Scope[] = [
         { ...ROOT_SCOPE, configurations: [] },
-        ...scopeEntries
-            .filter((entry) => directory.stat(entry.path)?.isDirectory() === true)
+        ...scopes
+            .filter((entry) => directory.readStats(entry.path)?.isDirectory() === true)
             .map(
-                (entry): ScopeEntry => ({
+                (entry): Scope => ({
                     path: entry.path,
                     configurations: entry.configurations,
-                    source: SETTINGS_FILE,
+                    origin: SETTINGS_FILE,
                 }),
             ),
     ];
@@ -137,14 +155,13 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
  * The nearest folder at or above start that holds gspot.toml, stopping at the Git top level.
  * Without settings, use the Git top level or start outside Git.
  * @param start the directory to start from.
- * @returns the root.
+ * @returns the settings folder, Git top level, or starting folder outside Git.
  */
 export function findRoot(start: string): string {
     const folder = realpathSync(start);
     const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS);
     const gitRoot = top.code === 0 ? resolve(trimGitLine(top.stdout)) : undefined;
-    if (gitRoot === undefined && !isOutsideGit(runGitBlocking(folder, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE })))
-        throw new Error(`Git root discovery failed in ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`);
+    if (gitRoot === undefined) assertOutsideGit(folder, top);
     let current = folder;
     while (statSync(join(current, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {
         if (current === gitRoot) return gitRoot;

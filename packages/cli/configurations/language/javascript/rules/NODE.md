@@ -1,6 +1,6 @@
 # Node
 
-Rules that hold because the code runs on Node, whatever language the project uses.
+Read this rule when code runs on Node.
 
 ## Module resolution
 

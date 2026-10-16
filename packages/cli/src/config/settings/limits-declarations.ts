@@ -1,0 +1,107 @@
+export const LIMITS_DECLARATIONS = {
+    'limits.file_lines': {
+        configurations: ['sql', 'structure'],
+        description:
+            'File limits are 140 for Bash, 400 for SQL, and 300 otherwise. Blank lines and comment-only lines do not count.',
+        reason_needed: 'raising',
+        languages: ['typescript', 'javascript', 'python', 'swift', 'sql', 'bash'],
+        language_defaults: { sql: 400, bash: 140 },
+    },
+    'limits.function_lines': {
+        configurations: ['structure'],
+        description: 'The most lines one function may have.',
+        reason_needed: 'raising',
+        languages: ['typescript', 'javascript', 'swift', 'bash'],
+        language_defaults: { bash: 40 },
+    },
+    'limits.function_parameters': {
+        configurations: ['structure'],
+        description: 'The most parameters one function may take.',
+        reason_needed: 'raising',
+        languages: ['typescript', 'javascript', 'python', 'swift'],
+    },
+    'limits.function_statements': {
+        configurations: ['structure'],
+        description: 'The most statements one function may have.',
+        reason_needed: 'raising',
+        languages: ['typescript', 'javascript', 'python'],
+    },
+    'limits.block_nesting': {
+        configurations: ['structure'],
+        description: 'How deep blocks may nest inside one function.',
+        reason_needed: 'raising',
+        languages: ['typescript', 'javascript', 'bash'],
+        language_defaults: { bash: 3 },
+    },
+    'limits.callback_nesting': {
+        configurations: ['structure'],
+        description: 'How deep callbacks may nest.',
+        reason_needed: 'raising',
+        languages: ['typescript', 'javascript'],
+    },
+    'limits.cognitive_complexity': {
+        configurations: ['structure'],
+        description: 'How hard a function is to follow, by the sonarjs cognitive score.',
+        reason_needed: 'raising',
+        languages: ['typescript', 'javascript'],
+    },
+    'limits.cyclomatic_complexity': {
+        configurations: ['structure'],
+        description: 'How many paths run through one function.',
+        reason_needed: 'raising',
+        languages: ['typescript', 'javascript', 'python', 'swift'],
+    },
+    'limits.function_branches': {
+        configurations: ['structure'],
+        description: 'The most branches one function may have.',
+        reason_needed: 'raising',
+        languages: ['python', 'bash'],
+        language_defaults: { python: 8, bash: 8 },
+    },
+    'limits.function_returns': {
+        configurations: ['structure'],
+        description: 'The most return statements one function may have.',
+        reason_needed: 'raising',
+        languages: ['python'],
+        language_defaults: { python: 4 },
+    },
+    'limits.function_assignments': {
+        configurations: ['structure'],
+        description: 'The most variable assignments one shell function may make.',
+        reason_needed: 'raising',
+        language_defaults: { bash: 8 },
+        languages: ['bash'],
+    },
+    'limits.closure_lines': {
+        configurations: ['structure'],
+        description: 'The most lines one Swift closure may have.',
+        reason_needed: 'raising',
+        language_defaults: { swift: 60 },
+        languages: ['swift'],
+    },
+    'limits.type_lines': {
+        configurations: ['structure'],
+        description: 'The most lines one Swift type body may have.',
+        reason_needed: 'raising',
+        language_defaults: { swift: 300 },
+        languages: ['swift'],
+    },
+    'limits.index_exports': {
+        configurations: ['structure'],
+        description: 'The most re-exports one index file may hold.',
+        reason_needed: 'raising',
+        languages: ['typescript', 'javascript'],
+    },
+    'limits.trivial_function_statements': {
+        configurations: ['structure'],
+        description:
+            'Functions with this many statements or fewer are reported. Any whole number of 1 or more works, and a higher number reports more functions. Set it for one language under limits.`<language>`.',
+        reason_needed: 'lowering',
+        languages: ['typescript', 'javascript', 'python', 'swift', 'bash'],
+    },
+    'limits.shared_prefix_files': {
+        configurations: ['structure'],
+        description: 'The number of siblings sharing a name prefix that makes a finding.',
+        reason_needed: 'raising',
+    },
+} as const;

@@ -1,10 +1,11 @@
+// Read Python index settings for an isolated install.
 import { z } from 'zod';
 import { writeFileSync } from 'node:fs';
-import { parse, stringify } from 'smol-toml';
 import { readText } from '#cli/system/files/reads.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
+import { parse, stringify } from '@decimalturn/toml-patch';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
-import { HTTP_URL } from '#cli/config/tools/diagnostics.ts';
+import { HTTP_URL } from '#cli/config/tools/credentials.ts';
 import { extractUrlPasswords } from '#cli/tools/credentials.ts';
 import { join, isAbsolute, resolve as absolutePath } from 'node:path';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
@@ -37,15 +38,15 @@ const uvIndexSchema = z.looseObject({ url: z.string() } satisfies SchemaShape<{ 
 /**
  * Copy repository uv index settings into the scratch folder, make relative paths absolute, and collect registry credentials.
  *
- * @param root the repository root.
+ * @param repositoryRoot the base folder for reading uv settings and resolving local index paths.
  * @param work the directory the resolution runs in.
  *
  * @returns index credentials that must remain absent from generated lockfiles.
  */
-export function writePythonSettings(root: string, work: string): string[] {
-    const { settings, credentials } = parsePythonSettings(root, {
-        uv: readText(root, UV_SETTINGS_FILE),
-        project: readText(root, PYPROJECT_TOML),
+export function writePythonSettings(repositoryRoot: string, work: string): string[] {
+    const { settings, credentials } = parsePythonSettings(repositoryRoot, {
+        uv: readText(repositoryRoot, UV_SETTINGS_FILE),
+        project: readText(repositoryRoot, PYPROJECT_TOML),
     });
     writeFileSync(join(work, UV_SETTINGS_FILE), stringify(settings), { mode: PRIVATE_FILE });
     return credentials;
@@ -54,27 +55,27 @@ export function writePythonSettings(root: string, work: string): string[] {
 /**
  * Read repository index settings and resolve their local paths for a temporary uv project.
  *
- * @param root the repository root for resolving local index paths.
+ * @param repositoryRoot the repository root for resolving local index paths.
  * @param sources the authored uv.toml and pyproject.toml contents.
  *
  * @returns selected settings and passwords excluded from generated lockfiles and diagnostics.
  */
-export function parsePythonSettings(root: string, sources: PythonSettingsSources): PythonIndexSettings {
-    const parsed = parse(sources.uv ?? sources.project ?? '');
+export function parsePythonSettings(repositoryRoot: string, sources: PythonSettingsSources): PythonIndexSettings {
+    const parsed = parse(sources.uv ?? sources.project ?? '') as Record<string, unknown>;
     const table = sources.uv === undefined ? uvProjectSettingsSchema.parse(parsed).tool.uv : parsed;
     const selected = Object.fromEntries(Object.entries(table).filter(([key]) => INDEX_SETTINGS.has(key)));
     if (selected['find-links'] !== undefined)
         selected['find-links'] = z
             .array(z.string())
             .parse(selected['find-links'])
-            .map((value) => normalizeIndexLocation(root, value));
+            .map((value) => normalizeIndexLocation(repositoryRoot, value));
     const indexes =
         selected['index'] === undefined
             ? []
             : z
                   .array(uvIndexSchema)
                   .parse(selected['index'])
-                  .map((index) => ({ ...index, url: normalizeIndexLocation(root, index.url) }));
+                  .map((index) => ({ ...index, url: normalizeIndexLocation(repositoryRoot, index.url) }));
     if (selected['index'] !== undefined) selected['index'] = indexes;
     const credentials = Object.entries(selected).flatMap(([key, value]) => {
         const entries: unknown[] = Array.isArray(value) ? value : [value];

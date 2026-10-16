@@ -2,8 +2,9 @@ import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
 import { visit } from 'unist-util-visit';
 import { statSync, readdirSync } from 'node:fs';
-import { findingAt } from '#cli/checks/finding.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
+import { scopeLabel } from '#cli/system/terminal.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { parseMiseTasks } from '#cli/parsers/mise.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
@@ -15,8 +16,8 @@ import { LEADING_DOT_SLASH } from '#cli/config/parsers/output.ts';
 import { LICENSE_FILE } from '#cli/config/repository/inventory.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
 import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
-import type { PathIndex, TaskSources } from '#cli/types/checks/general.ts';
+import type { PathIndex, TaskNames } from '#cli/types/checks/general.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { findScope, isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { listExecutableNames, includeParentFolders } from '#cli/system/paths.ts';
 import { MISE_FILES, RUNNER_NAMES, MISE_TASKS_FOLDER } from '#cli/config/repository/existing-tools.ts';
@@ -54,7 +55,7 @@ function listGeneratorPaths(input: CheckInput): string[] {
     return paths;
 }
 
-function knownPaths(input: CheckInput): Set<string> {
+function listKnownPaths(input: CheckInput): Set<string> {
     const known = includeParentFolders(input.repositoryFiles.map((file) => file.path));
     for (const path of includeParentFolders([...input.generatedPaths()])) known.add(path);
     for (const path of includeParentFolders([...OPTIONAL_GENERATED_PATHS])) known.add(path);
@@ -78,11 +79,11 @@ function knownPaths(input: CheckInput): Set<string> {
     for (const path of includeParentFolders(ignored)) known.add(path);
     // Check names resemble paths. A reference to postgres/migration-order identifies that check.
     for (const check of input.manifests.values().flatMap((manifest) => manifest.checks)) known.add(check.name);
-    for (const check of Object.values(input.settingsFile.settings.check)) known.add(check.name);
+    for (const check of Object.values(input.settingsFile.settings.commandChecks)) known.add(check.name);
     return known;
 }
 
-function miseTasks(input: CheckInput, file: string): string[] {
+function readMiseTasks(input: CheckInput, file: string): string[] {
     try {
         return parseMiseTasks(readCachedBytes(input.reads, file).toString('utf8'));
     } catch (error) {
@@ -91,7 +92,7 @@ function miseTasks(input: CheckInput, file: string): string[] {
     }
 }
 
-function packageScripts(input: CheckInput, file: string): string[] | undefined {
+function readPackageScripts(input: CheckInput, file: string): string[] | undefined {
     try {
         const manifest = parseJsonFile(file, readCachedBytes(input.reads, file).toString('utf8'), packageJsonSchema);
         return manifest.scripts === undefined ? [] : Object.keys(manifest.scripts);
@@ -110,12 +111,12 @@ function isMissing(token: string, file: string, index: PathIndex): boolean {
     return !index.known.has(clean) && (index.known.has(first) || (!first.includes('.') && FILE_EXTENSION.test(clean)));
 }
 
-function lineFindings(input: CheckInput, file: string, prose: NumberedLine, index: PathIndex): Finding[] {
+function checkProseLine(input: CheckInput, file: string, prose: NumberedLine, index: PathIndex): Finding[] {
     const { number, text: line } = prose;
-    const paths = pathTokens(line)
+    const paths = extractPathTokens(line)
         .filter((token) => isMissing(token, file, index))
         .map((token) =>
-            findingAt(input, { file, line: number }, 'missing-path', `${token} names no tracked file or folder.`),
+            buildFinding(input, { file, line: number }, 'missing-path', `${token} names no tracked file or folder.`),
         );
     const runToken = new RegExp(String.raw`\b(?:${RUNNER_NAMES.join('|')}) run (?:--[\w-]+\s+)*[\w][\w:.-]*`, 'gu');
     const runs = line
@@ -131,14 +132,14 @@ function lineFindings(input: CheckInput, file: string, prose: NumberedLine, inde
             );
         })
         .map((match) =>
-            findingAt(input, { file, line: number }, 'missing-task', `${match[0]} names no task or script.`),
+            buildFinding(input, { file, line: number }, 'missing-task', `${match[0]} names no task or script.`),
         )
         .toArray();
     return [...paths, ...runs];
 }
 
-function taskSources(input: CheckInput, scope: string): TaskSources {
-    const ancestors = input.scopeEntries
+function readTaskNames(input: CheckInput, scope: string): TaskNames {
+    const ancestors = input.scopes
         .filter((entry) => isInScope(scope, entry.path))
         .toSorted((left, right) => right.path.length - left.path.length);
     const files = [
@@ -151,14 +152,14 @@ function taskSources(input: CheckInput, scope: string): TaskSources {
     ];
     let scripts: string[] = [];
     for (const { path } of ancestors) {
-        const found = packageScripts(input, posix.join(path, 'package.json'));
+        const found = readPackageScripts(input, posix.join(path, 'package.json'));
         if (found === undefined) continue;
         scripts = found;
         break;
     }
     return {
         mise: new Set([
-            ...files.flatMap((file) => miseTasks(input, file)),
+            ...files.flatMap((file) => readMiseTasks(input, file)),
             ...ancestors.flatMap(({ path }) => {
                 const folder = posix.join(path, MISE_TASKS_FOLDER);
                 return listMatchingPaths(input.root, posix.join(folder, '**')).map((file) =>
@@ -181,7 +182,7 @@ function taskSources(input: CheckInput, scope: string): TaskSources {
  * @param text the Markdown text.
  * @returns the lines a path check reads.
  */
-function proseLines(text: string): NumberedLine[] {
+function extractProseLines(text: string): NumberedLine[] {
     const ignored = new Set<number>();
     visit(fromMarkdown(text), 'code', (node) => {
         if (node.position === undefined) return;
@@ -198,10 +199,10 @@ function proseLines(text: string): NumberedLine[] {
 
 /**
  * The tokens of one line that look like paths.
- * @param line the line.
- * @returns the path tokens.
+ * @param line a single prose row to scan for repository references.
+ * @returns reference candidates with trailing punctuation and emphasis markers removed.
  */
-function pathTokens(line: string): string[] {
+function extractPathTokens(line: string): string[] {
     return line
         .split(TOKEN_SEPARATORS)
         .map((token) => {
@@ -222,43 +223,43 @@ function pathTokens(line: string): string[] {
 
 /**
  * One finding per path token that names nothing tracked and per run invocation that names no task.
- * @param input the check input.
+ * @param input the selected Markdown sources, declared tasks, and tracked path inventory.
  * @returns the findings.
  */
-export function missingPaths(input: CheckInput): Finding[] {
+export function checkDocsMissingPaths(input: CheckInput): Finding[] {
     const files = input.files.filter((file) => file.kind === 'source' && file.path.endsWith('.md'));
-    const known = knownPaths(input);
-    const projects = Map.groupBy(files, (file) => findScope(file.path, input.scopeEntries).path);
+    const known = listKnownPaths(input);
+    const projects = Map.groupBy(files, (file) => findScope(file.path, input.scopes).path);
     return [...projects].flatMap(([scope, sources]) => {
-        const index: PathIndex = { known, tasks: taskSources(input, scope) };
+        const index: PathIndex = { known, tasks: readTaskNames(input, scope) };
         return sources.flatMap((file) => {
             const text = readCachedBytes(input.reads, file.path).toString('utf8');
-            return proseLines(text).flatMap((prose) => lineFindings(input, file.path, prose, index));
+            return extractProseLines(text).flatMap((prose) => checkProseLine(input, file.path, prose, index));
         });
     });
 }
 
 /**
  * One finding per scope without a README.md, and one when the root has no license file.
- * @param input the check input.
+ * @param input the scope path and repository directory that determine required document locations.
  * @returns the findings.
  */
-export function requiredFiles(input: CheckInput): Finding[] {
+export function checkDocsRequiredFiles(input: CheckInput): Finding[] {
     const findings: Finding[] = [];
     const readme = joinScope(input.scope.scope.path, README_FILE);
     if (statSync(join(input.root, readme), { throwIfNoEntry: false }) === undefined)
         findings.push(
-            findingAt(
+            buildFinding(
                 input,
                 { file: readme },
                 'missing-readme',
-                `The scope ${input.scope.scope.path === '' ? 'root' : input.scope.scope.path} has no README.md.`,
+                `The scope ${scopeLabel(input.scope.scope.path)} has no README.md.`,
             ),
         );
     if (
         input.scope.scope.path === '' &&
         !readdirSync(input.root).some((name) => LICENSE_FILE.test(name) && statSync(join(input.root, name)).isFile())
     )
-        findings.push(findingAt(input, { file: LICENSE_PATH }, 'missing-license', 'The root has no LICENSE file.'));
+        findings.push(buildFinding(input, { file: LICENSE_PATH }, 'missing-license', 'The root has no LICENSE file.'));
     return findings;
 }

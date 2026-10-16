@@ -4,7 +4,6 @@ import type { Files } from '#cli/types/system/files.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { findLockfile } from '#cli/repository/classify.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import { DIRECTORY_MODE } from '#cli/config/system/modes.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { listPackageFiles } from '#cli/tools/npm/packages.ts';
 import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
@@ -13,26 +12,26 @@ import { createScratchFolder } from '#cli/system/files/folders.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
 import { writeScratchFiles } from '#cli/checks/run/copy/scratch.ts';
 import { GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
+import { OWNER_WRITABLE_FOLDER } from '#cli/config/system/modes.ts';
 import { runGit, readGitText, trimGitLine } from '#cli/system/git.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
 import { join, posix, dirname, resolve, basename, relative } from 'node:path';
-import type { ScratchFile, DependencyCopy } from '#cli/types/execution/copy.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
+import type { ScratchFile, DependencyCopy } from '#cli/types/checks/run/copy.ts';
 import { statSync, chmodSync, lstatSync, mkdirSync, existsSync, realpathSync } from 'node:fs';
 import { visitGitBlobs, listRevisionEntries } from '#cli/repository/revisions/tree-entries.ts';
-import { DOT_GSPOT, VALE_CONFIG, VALE_PACKAGE_DIRECTORY } from '#cli/config/system/locations.ts';
+import { DOT_GSPOT, VALE_PACKAGES_PATH, VALE_TOOL_FILE_PATH } from '#cli/config/system/locations.ts';
 import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
-import { ignoredPaths, copyDependencies, declarationDependencies } from '#cli/checks/run/copy/dependencies.ts';
+import { readIgnoredPaths, copyDependencies, readDeclarationDependencies } from '#cli/checks/run/copy/dependencies.ts';
 
 import {
     GIT_SET_HEAD,
     GIT_HASH_PATHS,
-    GIT_INDEX_INFO,
     GIT_WRITE_TREE,
     GIT_EMPTY_INDEX,
     DEPENDENCY_FILES,
     GIT_SHARED_CLONE,
-} from '#cli/config/execution/copy.ts';
+} from '#cli/config/checks/run/copy.ts';
 
 // Refuses a copy whose Vale configuration differs from the configuration that selected its installed packages.
 function assertValeMatches(installed: Files, destination: Files, config: string): void {
@@ -60,7 +59,7 @@ function listDependencyFolders(installed: Files, projects: string[]): string[] {
     return projects.flatMap((path) => {
         const folder = dirname(path);
         if (basename(path) !== PACKAGE_JSON) return [];
-        return installed.stat(posix.join(folder, NODE_MODULES)) === undefined ? [] : [folder];
+        return installed.readStats(posix.join(folder, NODE_MODULES)) === undefined ? [] : [folder];
     });
 }
 
@@ -94,7 +93,7 @@ async function assertDependencyFilesUnchanged(
     if (inputs.some((entry) => statSync(join(root, entry.path), { throwIfNoEntry: false }) === undefined))
         throw mismatch;
     // The confined read refuses a manifest link that leaves the repository before Git follows it.
-    for (const entry of inputs) installed.realPath(entry.path);
+    for (const entry of inputs) installed.readRealPath(entry.path);
     const hashed = await runGit(root, GIT_HASH_PATHS, {
         stdin: inputs.map((entry) => `${entry.path}\n`).join(''),
         cancelSignal,
@@ -111,15 +110,17 @@ async function assertDependencyFilesUnchanged(
 /**
  * Copy installed Vale packages only when the copy retains their installation configuration.
  *
- * @param root the repository root.
+ * @param repositoryRoot the directory containing installed style packages and their configuration.
  * @param scratch the package-copy destination.
  * @param paths the copy's files, among them the Vale configurations that name packages.
  */
-function copyValePackages(root: string, scratch: string, paths: string[]): void {
-    const configurations = paths.filter((path) => path === VALE_CONFIG || path.endsWith(`/${VALE_CONFIG}`));
-    using installed = openFiles(root);
+function copyValePackages(repositoryRoot: string, scratch: string, paths: string[]): void {
+    const configurations = paths.filter(
+        (path) => path === VALE_TOOL_FILE_PATH || path.endsWith(`/${VALE_TOOL_FILE_PATH}`),
+    );
+    using installed = openFiles(repositoryRoot);
     using destination = openFiles(resolve(scratch));
-    const packages = listStyleFiles(installed, VALE_PACKAGE_DIRECTORY);
+    const packages = listStyleFiles(installed, VALE_PACKAGES_PATH);
     if (packages.length === 0) return;
     for (const config of configurations) assertValeMatches(installed, destination, config);
     for (const path of packages) copyPackageFile(installed, destination, path);
@@ -128,49 +129,48 @@ function copyValePackages(root: string, scratch: string, paths: string[]): void 
 /**
  * Select installed packages after checking the copied project inputs.
  *
- * @param root the repository root.
+ * @param repositoryRoot the working tree whose installed dependencies can supply the copy.
  * @param scratch the private copy.
  * @param entries Git entries with each project's manifests.
  * @param cancelSignal cancellation for the copy.
  *
  * @returns guarded dependency operations.
  */
-async function revisionDependencies(
-    root: string,
+async function selectRevisionDependencies(
+    repositoryRoot: string,
     scratch: string,
     entries: GitEntry[],
     cancelSignal?: AbortSignal,
 ): Promise<DependencyCopy[]> {
-    using installed = openFiles(root);
+    using installed = openFiles(repositoryRoot);
     const inputs = entries.filter((entry) => {
         const name = basename(entry.path);
         const lockfile = findLockfile(name);
         return DEPENDENCY_FILES.has(name) || name === PACKAGE_SWIFT || (lockfile !== undefined && 'copied' in lockfile);
     });
     const projects = inputs.map((entry) => entry.path).filter((path) => DEPENDENCY_FILES.has(basename(path)));
-    const directories = listDependencyFolders(installed, projects);
+    const folders = listDependencyFolders(installed, projects);
     const environments = projects
         .filter(
             (path) =>
                 basename(path) === PYPROJECT_TOML &&
-                installed.stat(posix.join(dirname(path), PYTHON_ENVIRONMENT_FOLDER))?.isDirectory() === true,
+                installed.readStats(posix.join(dirname(path), PYTHON_ENVIRONMENT_FOLDER))?.isDirectory() === true,
         )
         .map((path) => dirname(path));
-    const declarations = await declarationDependencies(root, entries, cancelSignal);
-    const artifacts = await ignoredPaths(
-        root,
+    const declarations = await readDeclarationDependencies(repositoryRoot, entries, cancelSignal);
+    const artifacts = await readIgnoredPaths(
+        repositoryRoot,
         listPackageFiles(
-            root,
+            repositoryRoot,
             projects.filter((path) => basename(path) === PACKAGE_JSON),
         ),
         cancelSignal,
     );
     const untrackedArtifacts = artifacts.filter((path) => !entries.some((entry) => entry.path === path));
-    if (directories.length + environments.length + declarations.copies.length + untrackedArtifacts.length === 0)
-        return [];
-    for (const folder of directories) assertDependencyReady(scratch, folder);
+    if (folders.length + environments.length + declarations.copies.length + untrackedArtifacts.length === 0) return [];
+    for (const folder of folders) assertDependencyReady(scratch, folder);
     await assertDependencyFilesUnchanged(
-        root,
+        repositoryRoot,
         installed,
         [...new Set([...inputs, ...entries.filter(({ path }) => declarations.configurationPaths.has(path))])],
         cancelSignal,
@@ -178,7 +178,7 @@ async function revisionDependencies(
     return [
         ...declarations.copies,
         ...untrackedArtifacts.map((path): DependencyCopy => ({ path, operation: 'clone' })),
-        ...directories.map((folder): DependencyCopy => {
+        ...folders.map((folder): DependencyCopy => {
             const path = posix.join(folder, NODE_MODULES);
             if (lstatSync(join(scratch, path), { throwIfNoEntry: false }) !== undefined)
                 throw new GspotError(
@@ -191,7 +191,7 @@ async function revisionDependencies(
 }
 
 // Two tracked paths that differ only by letter case, or undefined when every path folds to its own spelling.
-function caseCollision(entries: GitEntry[]): [string, string] | undefined {
+function findCaseCollision(entries: GitEntry[]): [string, string] | undefined {
     const seen = new Map<string, string>();
     for (const { path } of entries) {
         const earlier = seen.get(path.toLowerCase());
@@ -201,13 +201,13 @@ function caseCollision(entries: GitEntry[]): [string, string] | undefined {
     return undefined;
 }
 
-async function populateRevision(
+async function writeRevisionFiles(
     root: string,
     scratch: string,
     entries: GitEntry[],
     cancelSignal?: AbortSignal,
 ): Promise<void> {
-    const collision = caseCollision(entries);
+    const collision = findCaseCollision(entries);
     const upper = scratch.toUpperCase();
     if (collision !== undefined && upper !== scratch && existsSync(upper))
         throw new GspotError(
@@ -216,8 +216,8 @@ async function populateRevision(
         );
     for (const entry of entries.filter((file) => file.mode === GITLINK_MODE)) {
         const target = join(scratch, ...splitSystemPath(entry.path));
-        mkdirSync(target, { recursive: true, mode: DIRECTORY_MODE });
-        chmodSync(target, DIRECTORY_MODE);
+        mkdirSync(target, { recursive: true, mode: OWNER_WRITABLE_FOLDER });
+        chmodSync(target, OWNER_WRITABLE_FOLDER);
     }
     // Write links last so no authored link can redirect another tracked write.
     for (const linked of [false, true]) {
@@ -225,7 +225,7 @@ async function populateRevision(
             entries.flatMap((entry) =>
                 entry.mode === GITLINK_MODE || (entry.mode === SYMLINK_MODE) !== linked
                     ? []
-                    : [{ ...entry, mode: entry.mode }],
+                    : [{ ...entry, mode: entry.mode } as const],
             ),
             (entry) => entry.hash,
         );
@@ -233,12 +233,18 @@ async function populateRevision(
             scratch,
             [...selected.keys()],
             async (blobs) => {
-                async function* files(): AsyncGenerator<ScratchFile> {
+                async function* listBlobFiles(): AsyncGenerator<ScratchFile> {
                     for await (const [hash, bytes] of blobs) {
                         for (const entry of selected.get(hash) ?? []) yield { entry, bytes };
                     }
                 }
-                await writeScratchFiles({ root, target: scratch, files: files(), dependencies: [], cancelSignal });
+                await writeScratchFiles({
+                    root,
+                    target: scratch,
+                    files: listBlobFiles(),
+                    dependencies: [],
+                    cancelSignal,
+                });
             },
             cancelSignal,
         );
@@ -256,7 +262,7 @@ async function populateRevision(
 function listStyleFiles(files: Files, folder: string): string[] {
     const found: string[] = [];
     walkFiles(files, folder, (path) => {
-        if (files.stat(path)?.isDirectory() === true) return true;
+        if (files.readStats(path)?.isDirectory() === true) return true;
         found.push(path);
         return false;
     });
@@ -266,7 +272,7 @@ function listStyleFiles(files: Files, folder: string): string[] {
 /**
  * Write Git revision content without checkout filters, stashing, or working-tree writes.
  *
- * @param root repository directory.
+ * @param repositoryRoot the checkout that provides revision objects and installed prerequisites.
  * @param source selected revision.
  * @param action operation using the disposable copy.
  * @param cancelSignal command cancellation.
@@ -274,13 +280,13 @@ function listStyleFiles(files: Files, folder: string): string[] {
  * @returns the operation result.
  */
 export async function copyRevision<Result>(
-    root: string,
+    repositoryRoot: string,
     source: Revision,
     action: (scratch: string, tree: string) => Promise<Result>,
     cancelSignal?: AbortSignal,
 ): Promise<Result> {
-    const toplevel = trimGitLine(await readGitText(root, GIT_TOP_LEVEL_ARGUMENTS, { cancelSignal }));
-    const directory = relative(realpathSync(toplevel), realpathSync(root));
+    const toplevel = trimGitLine(await readGitText(repositoryRoot, GIT_TOP_LEVEL_ARGUMENTS, { cancelSignal }));
+    const folder = relative(realpathSync(toplevel), realpathSync(repositoryRoot));
     const entries = await listRevisionEntries(toplevel, source, cancelSignal);
     const index = entries.map((entry) => `${entry.mode} ${entry.hash} 0\t${entry.path}\0`).join('');
     using scratch = createScratchFolder();
@@ -290,17 +296,17 @@ export async function copyRevision<Result>(
     // The clone shares its object store for reads; the copy owns its index and working tree.
     if (source.kind === 'commit') await readGitText(scratch.path, [...GIT_SET_HEAD, source.hash], { cancelSignal });
     await readGitText(scratch.path, GIT_EMPTY_INDEX, { cancelSignal });
-    await readGitText(scratch.path, GIT_INDEX_INFO, { cancelSignal, stdin: index });
+    await readGitText(scratch.path, ['update-index', '-z', '--index-info'], { cancelSignal, stdin: index });
     const tree = trimGitLine(await readGitText(scratch.path, GIT_WRITE_TREE, { cancelSignal }));
-    await populateRevision(toplevel, scratch.path, entries, cancelSignal);
+    await writeRevisionFiles(toplevel, scratch.path, entries, cancelSignal);
     copyValePackages(
         toplevel,
         scratch.path,
         entries.map((entry) => entry.path),
     );
-    const dependencies = await revisionDependencies(toplevel, scratch.path, entries, cancelSignal);
+    const dependencies = await selectRevisionDependencies(toplevel, scratch.path, entries, cancelSignal);
     await copyDependencies({ root: toplevel, target: scratch.path, dependencies, cancelSignal });
     await setImmediate();
     cancelSignal?.throwIfAborted();
-    return await action(join(scratch.path, directory), tree);
+    return await action(join(scratch.path, folder), tree);
 }

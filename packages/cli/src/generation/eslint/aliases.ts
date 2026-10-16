@@ -32,16 +32,16 @@ function readPackageAliases(root: string, prefix: string): Record<string, string
 
 /**
  * Resolves package imports and TypeScript paths for one scope, with TypeScript paths taking precedence.
- * @param root the repository root.
+ * @param repositoryRoot the boundary for resolving compiler paths and expressing alias targets.
  * @param scope the scope path, empty for the root.
  * @param reads the run-owned compiler configuration cache.
  * @returns aliases relative to the repository root.
  */
-export function readScopeAliases(root: string, scope: string, reads: ReadCache): Record<string, string> {
+export function readScopeAliases(repositoryRoot: string, scope: string, reads: ReadCache): Record<string, string> {
     const prefix = joinScope(scope, '');
-    const aliases = readPackageAliases(root, prefix);
-    const path = join(root, prefix, TSCONFIG_FILE);
-    const config = readTsconfig(root, path, reads);
+    const aliases = readPackageAliases(repositoryRoot, prefix);
+    const path = join(repositoryRoot, prefix, TSCONFIG_FILE);
+    const config = readTsconfig(repositoryRoot, path, reads);
     if (config === undefined) return aliases;
     const options = config.options;
     const paths = options.paths === undefined ? [] : Object.entries(options.paths);
@@ -50,7 +50,7 @@ export function readScopeAliases(root: string, scope: string, reads: ReadCache):
     for (const [pattern, targets] of paths) {
         const target = targets[0];
         if (target === undefined) continue;
-        const alias = convertToPosixPath(relative(root, resolve(base, target))).replace(TRAILING_STAR, '');
+        const alias = convertToPosixPath(relative(repositoryRoot, resolve(base, target))).replace(TRAILING_STAR, '');
         aliases[pattern.replace(TRAILING_STAR, '')] = alias;
     }
     return aliases;

@@ -1,5 +1,7 @@
 # Accessibility
 
+Read this rule when you change a user interface.
+
 ## Structure
 
 - Use semantic elements and roles: headings in order, landmarks, lists for lists, tables for data,

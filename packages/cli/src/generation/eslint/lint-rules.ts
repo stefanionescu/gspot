@@ -40,7 +40,7 @@ import {
  *
  * @returns one option block per scope and path override, in application order.
  */
-export function buildRuleOptions(settings: Settings): EslintRuleOptions[] {
+function buildRuleOptions(settings: Settings): EslintRuleOptions[] {
     const tables = listSettingsTables(settings).toSorted((first, second) =>
         compareScopeDepth(first.scope ?? '', second.scope ?? ''),
     );
@@ -65,7 +65,7 @@ export function buildRuleOptions(settings: Settings): EslintRuleOptions[] {
  *
  * @returns explicit rule ignores with their path selectors.
  */
-export function buildIgnoreBlocks(settings: Settings): EslintRuleBlock[] {
+function buildIgnoreBlocks(settings: Settings): EslintRuleBlock[] {
     return listActiveIgnores(settings).flatMap((entry): EslintRuleBlock[] =>
         entry.rule === undefined || entry.check !== ESLINT_CHECK
             ? []
@@ -88,7 +88,7 @@ export function buildIgnoreBlocks(settings: Settings): EslintRuleBlock[] {
  *
  * @returns rule blocks that exclude every nested scope.
  */
-export function buildRulesOffBlocks(scopes: ScopeSelection[]): EslintRuleBlock[] {
+function buildRulesOffBlocks(scopes: ScopeSelection[]): EslintRuleBlock[] {
     return scopes.flatMap((selection) => {
         const scope = selection.scope.path;
         const children = listNestedScopes(
@@ -109,16 +109,18 @@ export function buildRulesOffBlocks(scopes: ScopeSelection[]): EslintRuleBlock[]
 /**
  * Calculate ESLint limit options directly from the settings.
  *
- * @param root0 the values for this generated file.
- * @param root0.limit the configured numeric limit reader.
+ * @param view the configured ESLint limits and tool options.
+ * @param view.limit the configured numeric limit reader.
+ * @param view.options the reader for each tool’s configured options.
  * @param selectors the rule selectors and their paths.
  *
  * @returns the rules selected at this level.
  */
-export function buildLevelRules(
-    { limit }: Pick<ScopeView, 'limit'>,
+function buildLevelRules(
+    view: Pick<ScopeView, 'limit' | 'options'>,
     selectors: Readonly<SelectorGroup['selectors']>,
 ): EslintLevelRules {
+    const { limit, options } = view;
     return {
         code: {
             ...BASE_RULES,
@@ -133,12 +135,12 @@ export function buildLevelRules(
                 { max: limit('function_lines', 'typescript'), skipBlankLines: true, skipComments: true, IIFEs: true },
             ],
             'max-params': ['error', { max: limit('function_parameters', 'typescript'), countVoidThis: false }],
-            'max-depth': ['error', limit('nesting', 'typescript')],
-            'max-statements': ['error', limit('statements', 'typescript')],
+            'max-depth': ['error', limit('block_nesting', 'typescript')],
+            'max-statements': ['error', limit('function_statements', 'typescript')],
             'max-nested-callbacks': ['error', limit('callback_nesting', 'typescript')],
             complexity: ['error', limit('cyclomatic_complexity', 'typescript')],
             'sonarjs/cognitive-complexity': ['error', limit('cognitive_complexity', 'typescript')],
-            'sonarjs/no-identical-functions': ['error', limit('min_duplicate_lines')],
+            'sonarjs/no-identical-functions': ['error', options('duplication').min_lines],
         },
         javascript: {
             'max-params': ['error', limit('function_parameters', 'javascript')],
@@ -155,9 +157,7 @@ export function buildLevelRules(
  *
  * @returns the emitted rule blocks with resolved file selectors.
  */
-export function buildSelectedBlocks(
-    base: Pick<EslintContext, 'settingsBlocks' | 'eslintFiles'>,
-): EslintSettingsBlock[] {
+function buildSelectedBlocks(base: Pick<EslintContext, 'settingsBlocks' | 'eslintFiles'>): EslintSettingsBlock[] {
     const result: EslintSettingsBlock[] = [];
     for (const { scope, includes, excludes, rules } of base.settingsBlocks) {
         const entries = Object.entries(rules);
@@ -189,7 +189,7 @@ export function buildSelectedBlocks(
  *
  * @returns the enclosing selection, or undefined at the root.
  */
-export function findParentSelection(scopes: ScopeSelection[], path: string): ScopeSelection | undefined {
+function findParentSelection(scopes: ScopeSelection[], path: string): ScopeSelection | undefined {
     return scopes
         .filter(({ scope }) => scope.path !== path && isInScope(path, scope.path))
         .toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path))
@@ -203,7 +203,7 @@ export function findParentSelection(scopes: ScopeSelection[], path: string): Sco
  *
  * @returns environment and structural rules at all, otherwise no blocks.
  */
-export function buildEnvironmentRuleBlocks(
+function buildEnvironmentRuleBlocks(
     input: Pick<EslintContext, 'scopes' | 'repositorySettings' | 'nodeFiles'>,
 ): EslintRuleBlock[] {
     const { scopes, repositorySettings: settings, nodeFiles } = input;
@@ -244,7 +244,7 @@ export function buildEnvironmentRuleBlocks(
  *
  * @returns the lint rules that detect unnecessary forwarding functions.
  */
-export function buildTrivialRuleBlocks(
+function buildTrivialRuleBlocks(
     input: Pick<EslintContext, 'scopes' | 'repositorySettings' | 'nodeFiles'>,
 ): EslintRuleBlock[] {
     const { scopes, repositorySettings: settings, nodeFiles } = input;
@@ -284,3 +284,14 @@ export function buildTrivialRuleBlocks(
     }
     return blocks;
 }
+
+export {
+    buildLevelRules,
+    buildRuleOptions,
+    buildIgnoreBlocks,
+    buildRulesOffBlocks,
+    buildSelectedBlocks,
+    findParentSelection,
+    buildTrivialRuleBlocks,
+    buildEnvironmentRuleBlocks,
+};

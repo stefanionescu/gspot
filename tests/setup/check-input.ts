@@ -1,32 +1,27 @@
 // Opens the selected check input and owns temporary compiler resources for tests.
 import { spyOn } from 'bun:test';
+import { openSession } from '#cli/session.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { type Session } from '#cli/types/planning.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { settingsText } from '#tests/setup/settings.ts';
 import * as environment from '#cli/system/environment.ts';
 import { normalizeOutputPath } from '#cli/system/paths.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { mockPinnedExecutables } from '#tests/setup/pins.ts';
-import { SWIFT_PACKAGE } from '#tests/config/swift/package.ts';
+import { buildSettingsText } from '#tests/setup/settings.ts';
+import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import { SWIFT_PACKAGE } from '#tests/data/checks/swift/package.ts';
 import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { checkInput, runBuiltInCheck } from '#cli/checks/run/built-in.ts';
 import { checkStaleGeneratorOutputs } from '#cli/checks/stale-generator-outputs.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
-
-import {
-    type Finding,
-    type CheckInput,
-    type RunnableCheck,
-    type CheckImplementations,
-} from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput, RunnableCheck, CheckImplementations } from '#cli/types/checks/run/check.ts';
 
 /**
  * Keep compiler state in a test-owned folder and restore the cache boundary when the test ends.
  * @returns the disposable temporary directory and boundary spy.
  */
-async function isolateCompilerCache(): Promise<AsyncDisposableStack> {
+async function createCompilerCache(): Promise<AsyncDisposableStack> {
     await using resources = new AsyncDisposableStack();
     const cache = resources.use(await testdir());
     resources.use(spyOn(environment, 'readCacheFolder').mockReturnValue(cache.path));
@@ -41,7 +36,7 @@ async function isolateCompilerCache(): Promise<AsyncDisposableStack> {
  * @param options.scope the scope path.
  * @param options.paths the selected source paths.
  * @param options.resources the resources owned by this check.
- * @returns the check input.
+ * @returns the selected files and check with the full repository inventory for references.
  */
 function buildCheckInput(
     session: Session,
@@ -73,7 +68,7 @@ function buildCheckInput(
  * @param files the test's source and authored settings overrides.
  * @returns the opened input and session, with their preparation resources.
  */
-async function swiftBuildInput(
+async function prepareSwiftInput(
     sandbox: TestdirResult,
     checkId: string,
     files: DirectoryJSON = {},
@@ -81,14 +76,14 @@ async function swiftBuildInput(
     await using resources = new AsyncDisposableStack();
     resources.use(spyOn(environment, 'getOperatingSystem').mockReturnValue('macos'));
     resources.use(
-        mockPinnedExecutables(
+        fakePinnedExecutables(
             [...readManifests(createReadCache(process.cwd())).values()].flatMap((manifest) => manifest.tools),
         ),
     );
-    resources.use(await isolateCompilerCache());
+    resources.use(await createCompilerCache());
     await createFileTree(sandbox.path, {
         'Package.swift': SWIFT_PACKAGE,
-        'gspot.toml': settingsText(['swift']),
+        'gspot.toml': buildSettingsText(['swift']),
         ...files,
     });
     const session = await openSession(sandbox.path);
@@ -120,7 +115,7 @@ async function checkFindings(
     return result.findings;
 }
 
-/** Select the implementation used by the planned check, including generated-file checks. */
+/** Select the implementation selected by the planned check, including generated-file checks. */
 function selectCheckRunner(
     input: CheckInput,
     implementation: CheckImplementations[string] | undefined,
@@ -131,4 +126,15 @@ function selectCheckRunner(
     return runBuiltInCheck(implementation.check);
 }
 
-export { checkFindings, buildCheckInput, swiftBuildInput, isolateCompilerCache };
+/** Open a session and own the pinned executable identities used by the selected tools. */
+async function openPinnedSession(
+    root: string,
+    toolNames: string[],
+    resources: Pick<DisposableStack, 'use'>,
+): Promise<Session> {
+    const session = await openSession(root);
+    resources.use(fakePinnedExecutables(toolNames.map((name) => getToolDeclaration(session.manifests.values(), name))));
+    return session;
+}
+
+export { checkFindings, buildCheckInput, openPinnedSession, prepareSwiftInput, createCompilerCache };

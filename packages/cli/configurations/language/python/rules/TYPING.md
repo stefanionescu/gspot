@@ -1,5 +1,7 @@
 # Python Typing
 
+Read this rule when you write Python type annotations.
+
 ## Annotations
 
 <!-- level: all -->
@@ -52,7 +54,7 @@ Use `float` for numeric APIs that also accept integers. Use `str` for text and `
 `AnyStr` ties several annotations to one text or binary type.
 
 A `Path | None = None` input handles its `None` branch
-before calling path methods, and the default path belongs to the configuration owner. Generic
+before calling path methods, and the default path belongs to the module that reads the configuration. Generic
 types name their parameters, such as `Sequence[int]`. A bare `Sequence` or `dict` exists only when
 the element type intentionally accepts any type and says so with `Any`. A `TypeVar` connects
 input and output types when that relationship matters, as `Key` does above.

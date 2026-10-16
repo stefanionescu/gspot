@@ -1,19 +1,19 @@
 import { z } from 'zod';
 import { gzipSync } from 'node:zlib';
 import { join, isAbsolute } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
-import { BYTES_PER_KB } from '#cli/config/units.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { type SchemaShape } from '#cli/types/objects.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
+import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { parseOutput } from '#cli/parsers/output/formats.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { fileBatches } from '#cli/checks/run/command/batches.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { toolFilePath } from '#cli/checks/run/command/placeholders.ts';
-import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
-import { filesUnder, requireBuild, deriveBuiltFilePath } from '#cli/checks/framework/site/build.ts';
+import { splitFileArguments } from '#cli/checks/run/command/batches.ts';
+import { selectToolFilePath } from '#cli/checks/run/command/placeholders.ts';
+import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
+import { listBuiltFiles, getSuccessfulBuild, deriveBuiltFilePath } from '#cli/checks/framework/site/build.ts';
 
 import {
     PURGECSS,
@@ -32,16 +32,18 @@ import {
     LINKINATOR_PROCESS,
 } from '#cli/config/checks/framework/site.ts';
 
-function sitemapUrls(folder: string, files: ReadonlySet<string>): string[] {
+function readSitemapUrls(folder: string, files: ReadonlySet<string>): string[] {
     const visited = new Set<string>();
     const urls = new Set<string>();
-    // eslint-disable-next-line sonarjs/cognitive-complexity -- reason: The sitemap reader handles routes and URL normalization together; splitting it duplicates the same page context.
+
     const read = (file: string): void => {
         if (visited.has(file)) return;
         visited.add(file);
-        for (const match of readBytes(folder, file).toString('utf8').matchAll(SITEMAP_LOCATION)) {
-            const url = match.groups?.['url'];
-            if (url === undefined) continue;
+        for (const url of readBytes(folder, file)
+            .toString('utf8')
+            .matchAll(SITEMAP_LOCATION)
+            .map((match) => match.groups?.['url'])
+            .filter((url) => url !== undefined)) {
             if (new URL(url).pathname.endsWith('.xml')) {
                 const nested = decodeURIComponent(new URL(url).pathname).replace(/^\//u, '');
                 if (files.has(nested)) read(nested);
@@ -52,8 +54,8 @@ function sitemapUrls(folder: string, files: ReadonlySet<string>): string[] {
     return [...urls];
 }
 
-function pageOf(url: string): [string, ...string[]] {
-    const path = decodeURIComponent(url === '' ? '/' : new URL(url).pathname).replace(/^\//u, '');
+function listCandidatePages(pathname: string): [string, ...string[]] {
+    const path = decodeURIComponent(pathname.replace(/[?#][\s\S]*/u, '')).replace(/^\//u, '');
     if (path === '' || path.endsWith('/')) return [`${path}${INDEX_PAGE}`];
     return path.endsWith(HTML_EXTENSION) ? [path] : [path, `${path}${HTML_EXTENSION}`, `${path}/${INDEX_PAGE}`];
 }
@@ -92,13 +94,13 @@ const purgecssReportSchema = z.array(
 
 /**
  * The broken links between built pages, stylesheets, and fragments.
- * @param input the check input.
+ * @param input the site scope, build settings, and allowed external URLs.
  * @returns one finding for each broken link.
  */
 export async function checkSiteLinkinator(input: CheckInput): Promise<Finding[]> {
-    const build = await requireBuild(input);
-    const pages = new Set(filesUnder(build.folder));
-    const location = sitemapUrls(build.folder, pages)[0];
+    const build = await getSuccessfulBuild(input);
+    const pages = new Set(listBuiltFiles(build.folder));
+    const location = readSitemapUrls(build.folder, pages)[0];
     const paths = [...pages].filter((path) => path.endsWith(HTML_EXTENSION));
     const result = await runCheckTool(
         input,
@@ -121,9 +123,9 @@ export async function checkSiteLinkinator(input: CheckInput): Promise<Finding[]>
     return report.links
         .filter((link) => link.state === BROKEN_LINK)
         .map((link) => {
-            const candidates = pageOf(link.parent ?? '');
+            const candidates = listCandidatePages(link.parent ?? '');
             const page = candidates.find((path) => pages.has(path)) ?? candidates[0];
-            return findingAt(
+            return buildFinding(
                 input,
                 { file: deriveBuiltFilePath(input, build, join(build.folder, page)), line: 1 },
                 'broken-link',
@@ -136,20 +138,26 @@ export async function checkSiteLinkinator(input: CheckInput): Promise<Finding[]>
 
 /**
  * html-validate over every built page, with the configuration for built files.
- * @param input the check input.
+ * @param input the site scope and installed HTML validator configuration.
  * @returns the findings.
  */
-export async function htmlValidate(input: CheckInput): Promise<Finding[]> {
-    const build = await requireBuild(input);
-    const pages = filesUnder(build.folder)
+export async function checkSiteHtmlValidate(input: CheckInput): Promise<Finding[]> {
+    const build = await getSuccessfulBuild(input);
+    const pages = listBuiltFiles(build.folder)
         .filter((path) => path.endsWith(HTML_EXTENSION))
         .map((path) => join(build.folder, path));
     if (pages.length === 0) return [];
-    const config = join(input.root, toolFilePath(input, input, 'html-validate-built'));
+    const toolFile = join(input.root, selectToolFilePath(input, input, 'html-validate-built'));
     using reports = createScratchFolder();
-    const command = [HTML_VALIDATE, '--config', config, '--formatter', `json=${join(reports.path, HTML_REPORT_FILE)}`];
+    const command = [
+        HTML_VALIDATE,
+        '--config',
+        toolFile,
+        '--formatter',
+        `json=${join(reports.path, HTML_REPORT_FILE)}`,
+    ];
     const findings: Finding[] = [];
-    for (const batch of fileBatches(pages, command, process.platform)) {
+    for (const batch of splitFileArguments(pages, command, process.platform)) {
         const result = await runCheckTool(input, [...command, ...batch], { cwd: build.cwd });
         if (![0, 1].includes(result.code)) throw new Error(`HTML validation failed: ${result.stderr}`);
         const parsed = parseOutput(input.check, readBytes(reports.path, HTML_REPORT_FILE).toString('utf8'), '', {
@@ -170,24 +178,24 @@ export async function htmlValidate(input: CheckInput): Promise<Finding[]> {
 
 /**
  * The selectors of the built stylesheets that no built page or script uses.
- * @param input the check input.
+ * @param input the site scope and installed stylesheet analysis configuration.
  * @returns one finding for each unused selector.
  */
-export async function purgecss(input: CheckInput): Promise<Finding[]> {
-    const build = await requireBuild(input);
-    const sheets = filesUnder(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
+export async function checkSitePurgecss(input: CheckInput): Promise<Finding[]> {
+    const build = await getSuccessfulBuild(input);
+    const sheets = listBuiltFiles(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
     if (sheets.length === 0) return [];
-    const config = join(input.root, toolFilePath(input, input, PURGECSS));
+    const toolFile = join(input.root, selectToolFilePath(input, input, PURGECSS));
     const result = await runCheckTool(
         input,
-        [PURGECSS, '--config', config, '--css', ...sheets, '--content', ...PURGECSS_CONTENT, '--rejected'],
+        [PURGECSS, '--config', toolFile, '--css', ...sheets, '--content', ...PURGECSS_CONTENT, '--rejected'],
         { cwd: build.folder },
     );
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
     const report = purgecssReportSchema.parse(JSON.parse(result.stdout));
     return report.flatMap((sheet) =>
         sheet.rejected.map((selector) =>
-            findingAt(
+            buildFinding(
                 input,
                 {
                     file: deriveBuiltFilePath(
@@ -206,23 +214,23 @@ export async function purgecss(input: CheckInput): Promise<Finding[]> {
 
 /**
  * The compressed weight of the built paths each limit names.
- * @param input the check input.
+ * @param input the site scope and configured compressed-file limits.
  * @returns one finding for each limit passed.
  */
-export async function siteSize(input: CheckInput): Promise<Finding[]> {
+export async function checkSiteSize(input: CheckInput): Promise<Finding[]> {
     const limits = input.scope.view.options('site').size_limit;
-    const build = await requireBuild(input);
-    const files = filesUnder(build.folder);
+    const build = await getSuccessfulBuild(input);
+    const files = listBuiltFiles(build.folder);
     return limits.flatMap((limit) => {
         const isCounted = buildPathMatcher(limit.paths);
         const bytes = files
             .filter((entry) => isCounted(deriveBuiltFilePath(input, build, join(build.folder, entry))))
             .reduce((sum, path) => sum + gzipSync(readBytes(build.folder, path)).length, 0);
-        const weight = Math.ceil(bytes / BYTES_PER_KB);
+        const weight = Math.ceil(bytes / BYTES_PER_KILOBYTE);
         return weight <= limit.kilobytes
             ? []
             : [
-                  findingAt(
+                  buildFinding(
                       input,
                       { file: SETTINGS_FILE, line: 1 },
                       'size',
@@ -234,21 +242,21 @@ export async function siteSize(input: CheckInput): Promise<Finding[]> {
 
 /**
  * Compare sitemap routes with built pages. Require each built page unless the settings exclude it.
- * @param input the check input.
+ * @param input the site scope and settings that permit unlisted pages.
  * @returns the findings.
  */
-export async function sitemap(input: CheckInput): Promise<Finding[]> {
-    const build = await requireBuild(input);
-    const files = new Set(filesUnder(build.folder));
+export async function checkSiteSitemap(input: CheckInput): Promise<Finding[]> {
+    const build = await getSuccessfulBuild(input);
+    const files = new Set(listBuiltFiles(build.folder));
     const sitemapFile = [...files].find((file) => SITEMAP_FILE.test(file));
     if (sitemapFile === undefined) return [];
-    const urls = sitemapUrls(build.folder, files);
-    const listed = new Set(urls.flatMap((url) => pageOf(url)));
+    const urls = readSitemapUrls(build.folder, files);
+    const listed = new Set(urls.flatMap((url) => listCandidatePages(new URL(url).pathname)));
     const isLeftOut = buildPathMatcher(input.scope.view.options('site').allowed_unlisted_pages);
     const missing = urls
-        .filter((url) => pageOf(url).every((page) => !files.has(page)))
+        .filter((url) => listCandidatePages(new URL(url).pathname).every((page) => !files.has(page)))
         .map((url) =>
-            findingAt(
+            buildFinding(
                 input,
                 {
                     file: deriveBuiltFilePath(input, build, join(build.folder, sitemapFile)),
@@ -266,7 +274,7 @@ export async function sitemap(input: CheckInput): Promise<Finding[]> {
                 !isLeftOut(deriveBuiltFilePath(input, build, join(build.folder, path))),
         )
         .map((path) =>
-            findingAt(
+            buildFinding(
                 input,
                 { file: deriveBuiltFilePath(input, build, join(build.folder, path)), line: 1 },
                 'unlisted-page',

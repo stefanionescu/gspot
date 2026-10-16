@@ -30,15 +30,12 @@ const LAST_TABLES = ['tools', 'scope', 'command_check', 'ignore'] as const;
 /** Value encoding and concrete syntax tree array layout. */
 const TOML_FORMAT = { updateOrder: true, bracketSpacing: true, trailingComma: false } as const;
 
-/** Document metadata precedes every settings section. */
-
 /** Parse diagnostics show the location, source line, and caret. */
 const PARSE_CONTEXT_LINES = 3;
 
-const SCHEMA_COMMENT_PREFIX = '#:schema ';
 const TEMPLATE_COMMENT_PREFIX = '# Copied from template ';
-const METADATA_PREFIXES = [SCHEMA_COMMENT_PREFIX, TEMPLATE_COMMENT_PREFIX] as const;
-const SCHEMA_URL_PREFIX = 'https://unpkg.com/@gspothq/cli@';
+const METADATA_PREFIXES = [TEMPLATE_COMMENT_PREFIX] as const;
+const SCHEMA_URL = 'https://generativespotting.com/gspot.schema.json';
 const SCHEMA_FILE = 'gspot.schema.json';
 
 const RECORD_FIELDS = {
@@ -68,7 +65,7 @@ const RECORD_FIELDS = {
         'cases',
         'reason',
     ],
-    'coverage.target': ['name', 'lines', 'reason'],
+    'coverage.swift_target': ['name', 'lines', 'reason'],
     'licenses.allowed_package': ['name', 'version', 'reason'],
     'site.size_limit': ['paths', 'kilobytes'],
     'tools.eslint.override': ['paths', 'rules', 'runtime'],
@@ -82,12 +79,12 @@ const SETTINGS_REFERENCE_URL = 'generativespotting.com/reference/gspot-toml/';
 
 export {
     ROOT_KEYS,
+    SCHEMA_URL,
     LAST_TABLES,
     SCHEMA_FILE,
     FIRST_TABLES,
     RECORD_FIELDS,
     METADATA_PREFIXES,
-    SCHEMA_URL_PREFIX,
     TOML_HEADER_FORMAT,
     PARSE_CONTEXT_LINES,
     IGNORE_IDENTITY_FIELDS,

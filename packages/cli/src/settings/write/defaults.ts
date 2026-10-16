@@ -13,13 +13,6 @@ import { findDeclaration, getSettingValue } from '#cli/settings/inherit.ts';
 import { detectDefaults, buildKnownSettings } from '#cli/settings/known.ts';
 import { type Settings, type WrittenTable } from '#cli/types/settings/values.ts';
 
-function parseConfigurationSelection(table: TomlTable) {
-    return {
-        configurations: settingsSchema.shape.configurations.parse(table['configurations']),
-        removed_configurations: settingsSchema.shape.removed_configurations.parse(table['removed_configurations']),
-    };
-}
-
 function changesInheritedValue(
     name: string,
     key: string,
@@ -34,8 +27,8 @@ function changesInheritedValue(
     const changed = { ...settings };
     if (writtenTable.scope === '') changed.written = omitted;
     else {
-        const previous = settings.scopeTables[writtenTable.scope] as Settings['scopeTables'][string];
-        changed.scopeTables = { ...settings.scopeTables, [writtenTable.scope]: { ...previous, written: omitted } };
+        const previous = settings.scopes[writtenTable.scope] as Settings['scopes'][string];
+        changed.scopes = { ...settings.scopes, [writtenTable.scope]: { ...previous, written: omitted } };
     }
     return !consumers.every((consumer) =>
         isDeepStrictEqual(
@@ -43,6 +36,13 @@ function changesInheritedValue(
             getSettingValue(consumer.known, changed, key, consumer.scope)?.value,
         ),
     );
+}
+
+function parseConfigurationSelection(table: TomlTable) {
+    return {
+        configurations: settingsSchema.shape.configurations.parse(table['configurations']),
+        removed_configurations: settingsSchema.shape.removed_configurations.parse(table['removed_configurations']),
+    };
 }
 
 function dropTableDefaults(
@@ -109,7 +109,7 @@ function dropDefaults(settings: TomlTable): TomlTable {
     const scopes = (settings['scope'] ?? []) as TomlTable[];
     const selection = {
         ...parseConfigurationSelection(settings),
-        scope: Object.fromEntries(
+        scopes: Object.fromEntries(
             scopes.map((table) => [trimTrailingSlashes(table['path'] as string), parseConfigurationSelection(table)]),
         ),
     };

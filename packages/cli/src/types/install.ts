@@ -13,10 +13,11 @@ export type HookContext = { settings: Settings; repository: Pick<Repository, 'ro
 /** Hook readiness and a readable status. */
 export type HookStatus = { ready: boolean; text: string };
 /** The Git setting to write, or instructions for hooks already owned by the repository. */
-export type HookPlan = { path?: string; command?: readonly string[]; note: string };
+export type HookPlan = { path: string; command?: readonly string[]; note: string };
 
 /** Shared state and attempted commands for installing the selected tools. */
 export type InstallContext = {
+    cancelSignal?: AbortSignal;
     session: Session;
     writer: Writer;
     generated: GenerationResult;
@@ -24,3 +25,6 @@ export type InstallContext = {
     mise: string | null;
     steps: (readonly string[])[];
 };
+
+/** The successful JSON result of installing the selected tools. */
+export type InstallCommandJson = { installed: boolean; steps: readonly (readonly string[])[] };

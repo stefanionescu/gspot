@@ -1,7 +1,6 @@
 # React
 
-Rules that hold for any React application: Next.js, Vite, Expo, or a library. The framework file
-adds routing, server components, and caching on top of these.
+Read this rule when you change React components, hooks, or state.
 
 ## Components
 
@@ -15,7 +14,7 @@ adds routing, server components, and caching on top of these.
 
 - Compose downward: a component imports children and shared primitives, never its parent, its
   section, or its route.
-- Domain-neutral primitives such as button, input, dialog, popover, and tooltip live in the shared UI owner
+- Domain-neutral primitives such as button, input, dialog, popover, and tooltip live in the shared UI folder
   and take values and callbacks. They never fetch or import a feature.
 - Keep a component small enough that its JSX reads as one screen region. Extract by visual
   responsibility, not by line count.
@@ -26,8 +25,8 @@ adds routing, server components, and caching on top of these.
 ## Hooks
 
 - Every custom hook starts with `use` and owns one concern.
-- Use `useMemo`, `useCallback`, or `memo` when a measurement shows expensive work or a
-  consumer needs a stable reference, not by default.
+- Memoize with `useMemo`, `useCallback`, or `memo` only when a measurement shows expensive work or a consumer
+  needs a stable reference.
 
 ## Effects and state
 
@@ -36,7 +35,7 @@ adds routing, server components, and caching on top of these.
   timers, observers, subscriptions, animation frames, and requests.
 - Use refs for mutable controller values and state for values displayed in the UI.
 
-- Give each state value one owner: URL state for navigation, query cache for server snapshots, form/local
+- Give each state value one place: URL state for navigation, query cache for server snapshots, form/local
   state for editing, and client store for truly shared client state.
 
 - Reset private state across identity and tenant changes; give each request its own server stores.
@@ -63,7 +62,7 @@ adds routing, server components, and caching on top of these.
 - Validate parsed values, and handle missing or malformed input without assertions or an unchecked
   `JSON.parse`.
 - Define the precedence among URL values, stored preferences, and defaults. When the URL owns a
-  value, back and forward navigation reach the state owner.
+  value, back and forward navigation reach the code that holds that value.
 - One synchronization path compares values before writing, so store-to-URL and URL-to-store updates
   never loop.
 - Keep unrelated query parameters and fragments. Use the installed router or the History API to replace history for transient edits and to push an entry when back navigation restores the previous state.
@@ -101,8 +100,3 @@ UI updates after hydration. Fix the mismatch instead of hiding warnings globally
 - Validate input against the declared contract and expose its errors to the user. When the application uses a form
   library, use its supported validation and state APIs.
 - A form awaits the save and reports its result.
-
-## Accessibility
-
-- Use native interactive elements such as `button`, `a`, and `input`, or give each element the matching role,
-  keyboard handling, and focus management.

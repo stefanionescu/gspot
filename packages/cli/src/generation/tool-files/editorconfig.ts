@@ -1,6 +1,8 @@
+import { isInGspotFolder } from '#cli/repository/classify.ts';
+import { AGENTS_FILE, CLAUDE_FILE } from '#cli/config/rules.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { listScopeFormats } from '#cli/generation/tool-files/prettier.ts';
-import { escapeGlob, includeFolderContents } from '#cli/repository/matchers.ts';
+import { escapeGlob, buildPathMatcher, includeFolderContents } from '#cli/repository/matchers.ts';
 import { UNREPRESENTABLE_SELECTOR, EDITORCONFIG_FIXED_SECTIONS } from '#cli/config/generation/formatting.ts';
 
 // A Prettier selector as an EditorConfig section path, placed under its scope when it has one.
@@ -18,15 +20,21 @@ function buildSectionPath(pattern: string, scope: string): string {
 }
 
 /**
- * Build EditorConfig sections from the selected formatting settings.
- * @param context the selected scope and repository formatting settings.
- * @returns the EditorConfig file text.
+ * Build editorconfig file from the selected settings.
+ * @param context the selected scope, settings, and source files.
+ * @returns the EditorConfig sections used by this repository.
  */
 function buildEditorconfigFile(context: ToolFileContext): string {
     const { format, extra } = context.selection.view;
     const settings = context.session.settingsFile.settings;
+    const paths = [
+        ...context.session.repository.files
+            .filter((file) => !isInGspotFolder(file.path) && (file.kind !== 'generated' || file.kindOrigin !== 'gspot'))
+            .map((file) => file.path),
+        ...(settings.rules.enabled ? [AGENTS_FILE, CLAUDE_FILE] : []),
+    ];
 
-    const native = extra('editorconfig-checker');
+    const extraOptions = extra('editorconfig-checker');
     const sections = [
         {
             path: '*',
@@ -38,9 +46,10 @@ function buildEditorconfigFile(context: ToolFileContext): string {
                 indent_size: format.indent_width,
             },
         },
-        { path: '*.md', options: EDITORCONFIG_FIXED_SECTIONS['*.md'] },
-        { path: 'Makefile', options: EDITORCONFIG_FIXED_SECTIONS.Makefile },
-        ...(native === undefined ? [] : Object.entries(native)).flatMap(([path, options]) =>
+        ...Object.entries(EDITORCONFIG_FIXED_SECTIONS)
+            .filter(([path]) => path !== '*' && paths.some(buildPathMatcher([path])))
+            .map(([path, options]) => ({ path, options })),
+        ...(extraOptions === undefined ? [] : Object.entries(extraOptions)).flatMap(([path, options]) =>
             typeof options === 'object' && options !== null ? [{ path, options }] : [],
         ),
         ...listScopeFormats(settings).flatMap(({ scope, paths, format }) => {

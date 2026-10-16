@@ -2,11 +2,12 @@ import { getValueAt } from '#cli/system/values.ts';
 import { join, dirname, relative } from 'node:path';
 import { findScope } from '#cli/repository/scopes.ts';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
-import { generatedIgnores } from '#cli/generation/ignore-files.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
+import { IGNORE_SECTION_TITLES } from '#cli/config/generation/ignore-files.ts';
+import { globSections, ignoreSections } from '#cli/generation/ignore-files.ts';
 import { JSCONFIG_FILE, TSCONFIG_FILE, SOURCE_SELECTION_FIELDS } from '#cli/config/parsers/tsconfig.ts';
 
 import {
@@ -25,9 +26,14 @@ function buildJsconfig(context: ToolFileContext): string {
     const { root, reads } = context.session;
     const { files, targetPath: target } = context;
     const scope = context.selection.scope.path;
-    const scopeEntries = context.scopes.map((entry) => entry.scope);
+    const scopes = context.scopes.map((entry) => entry.scope);
     const importStyle = context.selection.view.options('tools.eslint').import_extension;
-    const declarationPaths = generatedIgnores(context.session);
+    const declarationPaths = globSections(
+        ignoreSections(context.session).filter(
+            (section) =>
+                context.session.settingsFile.settings.level !== 'all' || section.title !== IGNORE_SECTION_TITLES.build,
+        ),
+    );
     const jsconfigOwner = readTsconfig(root, join(root, scope, JSCONFIG_FILE), reads);
     const owner = jsconfigOwner === undefined ? TSCONFIG_FILE : JSCONFIG_FILE;
     const authored = jsconfigOwner ?? readTsconfig(root, join(root, scope, owner), reads);
@@ -39,7 +45,7 @@ function buildJsconfig(context: ToolFileContext): string {
             importStyle === 'extensionless' &&
             file.kind === 'source' &&
             file.tags.includes('javascript') &&
-            findScope(file.path, scopeEntries).path === scope,
+            findScope(file.path, scopes).path === scope,
     );
     const hasSourceSelection = SOURCE_SELECTION_FIELDS.some(
         (field) => getValueAt(jsconfigOwner?.raw, [field]) !== undefined,

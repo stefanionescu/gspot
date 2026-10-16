@@ -1,5 +1,5 @@
-import { findingAt } from '#cli/checks/finding.ts';
-import type { Finding } from '#cli/types/execution/check.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
+import type { Finding } from '#cli/types/checks/run/check.ts';
 import type { NamingCase } from '#cli/types/settings/tables.ts';
 import { splitParts } from '#cli/checks/general/naming/settings.ts';
 import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
@@ -27,7 +27,10 @@ import {
     VERB_CATEGORIES,
     CATEGORY_PARENTS,
     MIGRATION_DIGITS,
+    BANNED_WORD_FORMS,
     SWIFTLINT_PARENTS,
+    WORD_FORM_SUFFIXES,
+    WORD_FORM_CONSONANT,
 } from '#cli/config/checks/general/naming.ts';
 
 function isSnakeMigration(name: string): boolean {
@@ -48,21 +51,31 @@ const CASE_TESTS = {
     'timestamp-snake': isSnakeMigration,
 } satisfies Record<NamingCase, (name: string) => boolean>;
 
+function isWordForm(word: string, stem: string): boolean {
+    return (BANNED_WORD_FORMS[stem] ?? [stem]).some((base) => {
+        if (word === base) return true;
+        const forms = [base];
+        if (base.endsWith('e')) forms.push(base.slice(0, -1));
+        if (base.endsWith('y') && ['ies', 'ied'].some((suffix) => word === base.slice(0, -1) + suffix)) return true;
+        if (WORD_FORM_CONSONANT.test(base)) forms.push(base + (base.at(-1) as string));
+        return forms.some((form) => WORD_FORM_SUFFIXES.some((suffix) => word === form + suffix));
+    });
+}
+
 function isConsecutive(parts: string[], termParts: string[]): boolean {
     for (let start = 0; start + termParts.length <= parts.length; start += 1) {
-        if (termParts.every((part, index) => parts[start + index] === part)) return true;
+        if (termParts.every((part, index) => isWordForm(parts[start + index] as string, part))) return true;
     }
     return false;
 }
 
-function stripped(name: string, rules: CompiledOverride[]): string {
+function stripPrefixes(name: string, rules: CompiledOverride[]): string {
     let result = name;
-    for (const rule of rules)
-        if (rule.structuralPrefix !== undefined) result = result.replace(rule.structuralPrefix, '');
+    for (const rule of rules) if (rule.ignoredPrefix !== undefined) result = result.replace(rule.ignoredPrefix, '');
     return result === '' ? name : result;
 }
 
-function caseFinding(context: NamingContext, name: string, limits: CategoryLimits) {
+function checkCase(context: NamingContext, name: string, limits: CategoryLimits) {
     if (limits.caseNames.length === 0) return undefined;
     const isFileName = context.identifier.category === 'files';
     const digitless = name.replaceAll(DIGIT_RUNS, '');
@@ -75,10 +88,15 @@ function caseFinding(context: NamingContext, name: string, limits: CategoryLimit
     });
     return isMatched
         ? undefined
-        : findingAt(context, context.place, 'case', `${context.prefix}expected ${limits.caseNames.join(' or ')} case.`);
+        : buildFinding(
+              context,
+              context.place,
+              'case',
+              `${context.prefix}expected ${limits.caseNames.join(' or ')} case.`,
+          );
 }
 
-function digitFinding(context: NamingContext, parts: string[], rules: CompiledOverride[]) {
+function checkDigits(context: NamingContext, parts: string[], rules: CompiledOverride[]) {
     const { settings } = context;
     if (
         settings.isDigitsAllowed ||
@@ -86,12 +104,12 @@ function digitFinding(context: NamingContext, parts: string[], rules: CompiledOv
         rules.some((rule) => rule.isDigitsAllowed)
     )
         return undefined;
-    return findingAt(context, context.place, 'digits', `${context.prefix}a digit is not a word.`);
+    return buildFinding(context, context.place, 'digits', `${context.prefix}a digit is not a word.`);
 }
 
-function lengthFinding(context: NamingContext, name: string, limits: CategoryLimits) {
+function checkLength(context: NamingContext, name: string, limits: CategoryLimits) {
     if (limits.maxChars <= 0 || name.length <= limits.maxChars) return undefined;
-    return findingAt(
+    return buildFinding(
         context,
         context.place,
         'length',
@@ -99,9 +117,9 @@ function lengthFinding(context: NamingContext, name: string, limits: CategoryLim
     );
 }
 
-function wordsFinding(context: NamingContext, words: string[], limits: CategoryLimits) {
+function checkWordCount(context: NamingContext, words: string[], limits: CategoryLimits) {
     if (limits.maxWords <= 0 || words.length <= limits.maxWords) return undefined;
-    return findingAt(
+    return buildFinding(
         context,
         context.place,
         'words',
@@ -109,37 +127,64 @@ function wordsFinding(context: NamingContext, words: string[], limits: CategoryL
     );
 }
 
-function repeatFinding(context: NamingContext, words: string[], rules: CompiledOverride[]) {
+function checkRepeatedWords(context: NamingContext, words: string[], rules: CompiledOverride[]) {
     const { settings } = context;
     if (settings.isRepeatAllowed || rules.some((rule) => rule.isRepeatAllowed)) return undefined;
-    const repeated = repeatedPart(words);
+    const repeated = findRepeatedPart(words);
     return repeated === undefined
         ? undefined
-        : findingAt(context, context.place, 'duplicate-words', `${context.prefix}"${repeated}" repeats.`);
+        : buildFinding(context, context.place, 'duplicate-words', `${context.prefix}"${repeated}" repeats.`);
 }
 
-function termFindings(context: NamingContext, parts: string[]): Finding[] {
+function removeAllowedPhrases(parts: string[], phrases: string[][]): string[] {
+    let words = parts;
+    for (const phrase of phrases) {
+        const remaining: string[] = [];
+        for (let index = 0; index < words.length; ) {
+            if (
+                index + phrase.length <= words.length &&
+                phrase.every((word, offset) =>
+                    offset === phrase.length - 1
+                        ? isWordForm(words[index + offset] as string, word)
+                        : words[index + offset] === word,
+                )
+            )
+                index += phrase.length;
+            else {
+                remaining.push(words[index] as string);
+                index += 1;
+            }
+        }
+        words = remaining;
+    }
+    return words;
+}
+
+function checkBannedWords(context: NamingContext, parts: string[]): Finding[] {
     const { settings } = context;
     const findings: Finding[] = [];
-    const terms = context.isTestFile ? settings.terms.filter((term) => term.group !== TEST_TERM_GROUP) : settings.terms;
+    const terms = context.isTestFile
+        ? settings.bannedWords.filter((term) => term.group !== TEST_TERM_GROUP)
+        : settings.bannedWords;
+    const words = removeAllowedPhrases(parts, settings.allowedPhrases);
     const banned = terms.find(
         (term) =>
             (term.categories === undefined || term.categories.includes(context.identifier.category)) &&
-            isConsecutive(parts, term.parts),
+            isConsecutive(words, term.parts),
     );
     if (banned !== undefined)
         findings.push(
-            findingAt(
+            buildFinding(
                 context,
                 context.place,
-                'banned-term',
-                `${context.prefix}"${banned.term}" is banned (${banned.source}).`,
+                'banned-word',
+                `${context.prefix}"${banned.word}" is banned (${banned.setting}).`,
             ),
         );
     for (const [term, allowedFor] of settings.reserved) {
         if (!parts.includes(term) || allowedFor.includes(context.identifier.category)) continue;
         findings.push(
-            findingAt(
+            buildFinding(
                 context,
                 context.place,
                 'reserved-term',
@@ -150,7 +195,7 @@ function termFindings(context: NamingContext, parts: string[]): Finding[] {
     return findings;
 }
 
-function callbackFinding(context: NamingContext, parts: string[]) {
+function checkCallbackVerb(context: NamingContext, parts: string[]) {
     if (!VERB_CATEGORIES.has(context.identifier.category)) return undefined;
     const verb = context.settings.rules
         .filter(
@@ -158,11 +203,11 @@ function callbackFinding(context: NamingContext, parts: string[]) {
                 rule.matches(context.identifier.file) &&
                 (rule.languages === undefined || rule.languages.has(context.identifier.language)),
         )
-        .map((rule) => rule.structuralPrefix?.exec(context.identifier.name)?.[0])
+        .map((rule) => rule.ignoredPrefix?.exec(context.identifier.name)?.[0])
         .find((prefix) => prefix === parts[0]);
     return verb === undefined
         ? undefined
-        : findingAt(
+        : buildFinding(
               context,
               context.place,
               'callback-verb',
@@ -172,10 +217,10 @@ function callbackFinding(context: NamingContext, parts: string[]) {
 
 /**
  * The first part that appears twice, if any.
- * @param parts the parts.
- * @returns the repeated part.
+ * @param parts ordered words and digit groups from one declared name.
+ * @returns the first duplicate encountered from left to right, or undefined.
  */
-function repeatedPart(parts: string[]): string | undefined {
+function findRepeatedPart(parts: string[]): string | undefined {
     const seen = new Set<string>();
     for (const part of parts) {
         if (seen.has(part)) return part;
@@ -187,11 +232,11 @@ function repeatedPart(parts: string[]): string | undefined {
 /**
  * The path rules that apply to one identifier.
  * @param settings the effective settings.
- * @param identifier the identifier.
+ * @param identifier the category, language, and source location that select path exceptions.
  * @returns the rules, in settings order.
  */
-function overridesFor(settings: NamingSettings, identifier: Identifier): CompiledOverride[] {
-    const path = identifier.directory ?? identifier.file;
+function selectOverrides(settings: NamingSettings, identifier: Identifier): CompiledOverride[] {
+    const path = identifier.folder ?? identifier.file;
     return settings.rules.filter(
         (rule) =>
             rule.matches(path) &&
@@ -203,11 +248,11 @@ function overridesFor(settings: NamingSettings, identifier: Identifier): Compile
 /**
  * The limits and cases for one identifier after its path rules.
  * @param settings the effective settings.
- * @param identifier the identifier.
+ * @param identifier the category and language whose length and case constraints apply.
  * @param rules the rules that apply.
- * @returns the limits.
+ * @returns effective length bounds and allowed cases after language and path exceptions.
  */
-function ruleLimits(settings: NamingSettings, identifier: Identifier, rules: CompiledOverride[]): CategoryLimits {
+function deriveLimits(settings: NamingSettings, identifier: Identifier, rules: CompiledOverride[]): CategoryLimits {
     const base = settings.limitsFor(identifier.language, identifier.category);
     const parents: Readonly<Record<string, string>> = CATEGORY_PARENTS;
     const parent = parents[identifier.category] ?? identifier.category;
@@ -218,17 +263,17 @@ function ruleLimits(settings: NamingSettings, identifier: Identifier, rules: Com
         (identifier.language === 'python' && RUFF_CATEGORIES.has(identifier.category))
     )
         return { ...base, caseNames: [], maxChars: 0 };
-    const caseRule = rules.findLast((rule) => rule.caseNames !== undefined);
-    return caseRule?.caseNames === undefined ? base : { ...base, caseNames: caseRule.caseNames };
+    const caseRule = rules.findLast((rule) => rule.cases !== undefined);
+    return caseRule?.cases === undefined ? base : { ...base, caseNames: caseRule.cases };
 }
 
 /**
  * Findings for one identifier under the settings. A path rule can exclude the identifier.
- * @param identifier the identifier.
+ * @param identifier the spelling, category, language, and source location to evaluate.
  * @param inputs the check identity, effective settings, and the file's test status.
  * @returns the findings, empty when the name passes.
  */
-export function nameFindings(identifier: Identifier, inputs: NamingInputs): Finding[] {
+export function checkIdentifier(identifier: Identifier, inputs: NamingInputs): Finding[] {
     const context: NamingContext = {
         ...inputs,
         identifier,
@@ -236,20 +281,20 @@ export function nameFindings(identifier: Identifier, inputs: NamingInputs): Find
         prefix: `${identifier.label} "${identifier.name}": `,
     };
     const { settings } = inputs;
-    const rules = overridesFor(settings, identifier);
-    if (rules.some((rule) => rule.allowed?.has(identifier.name) === true)) return [];
-    const limits = ruleLimits(settings, identifier, rules);
-    const name = stripped(identifier.name, rules);
+    const rules = selectOverrides(settings, identifier);
+    if (rules.some((rule) => rule.allowedNames?.has(identifier.name) === true)) return [];
+    const limits = deriveLimits(settings, identifier, rules);
+    const name = stripPrefixes(identifier.name, rules);
     const parts = splitParts(name);
     const words = splitParts(name.split('.', 1)[0] ?? name).filter((part) => !DIGITS_ONLY.test(part));
     const findings = [
-        caseFinding(context, name, limits),
-        digitFinding(context, parts, rules),
-        lengthFinding(context, name, limits),
-        wordsFinding(context, words, limits),
-        repeatFinding(context, words, rules),
-        ...termFindings(context, parts),
-        callbackFinding(context, parts),
+        checkCase(context, name, limits),
+        checkDigits(context, parts, rules),
+        checkLength(context, name, limits),
+        checkWordCount(context, words, limits),
+        checkRepeatedWords(context, words, rules),
+        ...checkBannedWords(context, parts),
+        checkCallbackVerb(context, parts),
     ];
     return findings.filter((finding) => finding !== undefined);
 }

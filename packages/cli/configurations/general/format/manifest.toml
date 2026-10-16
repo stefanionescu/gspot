@@ -35,7 +35,34 @@ target = ".editorconfig"
 tool = ["editorconfig-checker", "prettier"]
 
 [[tool_file]]
-pointer = { path = "prettier.config.mjs", when = { configuration = "javascript" } }
+pointer = { path = "prettier.config.mjs", when = { configuration = "javascript" }, body = '''
+import { readFileSync } from 'node:fs';
+import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const toolFile = new URL({target_json}, import.meta.url);
+const options = JSON.parse(readFileSync(toolFile, 'utf8'));
+const folder = dirname(fileURLToPath(toolFile));
+const root = dirname(fileURLToPath(import.meta.url));
+const movePattern = (pattern) => {
+    const negated = pattern.startsWith('!');
+    const value = negated ? pattern.slice(1) : pattern;
+    if (!value.includes('/') || isAbsolute(value)) return pattern;
+    return (negated ? '!' : '') + relative(root, resolve(folder, value)).replaceAll('\\', '/');
+};
+const moveSelectors = (selectors) => Array.isArray(selectors) ? selectors.map(movePattern) : movePattern(selectors);
+if (options.plugins !== undefined) {
+    options.plugins = options.plugins.map((plugin) => plugin.startsWith('.') ? fileURLToPath(new URL(plugin, toolFile)) : plugin);
+}
+if (options.overrides !== undefined) {
+    options.overrides = options.overrides.map((entry) => ({
+        ...entry,
+        files: moveSelectors(entry.files),
+        ...(entry.excludeFiles === undefined ? {} : { excludeFiles: moveSelectors(entry.excludeFiles) }),
+    }));
+}
+export default options;
+''' }
 target = ".gspot/config/prettier.json"
 tool = "prettier"
 
@@ -48,10 +75,10 @@ command = ["prettier", "--check", "--config", "{tool_file:prettier}", "--ignore-
 example = "A selected JavaScript file containing `const value={enabled:true};` differs from the configured Prettier output. Run the formatter and retain its spacing and wrapping changes before rerunning."
 exit_codes = [1]
 fix = ["prettier", "--write", "--config", "{tool_file:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
-help = "Run gspot check --fix to format every file, or prettier --write on one file."
+help = "Run `gspot check --fix` to format every file, or `prettier --write` on one file."
 level = "recommended"
 name = "prettier"
-output = { format = "regex", pattern = "^\\[warn\\] (?<file>[^\\s].*[^\\s.])$", message = "This file is not formatted the way Prettier formats it." }
+output = { format = "regex", pattern = "^\\[warn\\] (?<file>[^\\s].*[^\\s.])$", message = "Not formatted the way Prettier formats it." }
 stage = "commit"
 summary = "Checks that every file Prettier formats is already formatted that way."
 why = "Formatting by hand differs by editor; one formatter keeps diffs about the change and not the spacing."

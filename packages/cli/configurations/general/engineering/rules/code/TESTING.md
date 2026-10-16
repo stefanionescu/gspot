@@ -1,5 +1,7 @@
 # Testing
 
+Read this rule when you write or change a test.
+
 Tests exist to catch bugs. A useful test fails when the behavior it covers breaks.
 
 ## Assertions
@@ -13,6 +15,9 @@ Tests exist to catch bugs. A useful test fails when the behavior it covers break
   that a mock returns the value supplied to it.
 - Use snapshots only for stable data, and review every change to them.
 - Do not add test-only authentication bypasses, magic headers, or bypass routes.
+- Do not write a test that only repeats a constant, a table, or a configuration value. A test runs code and checks
+  its result.
+- Do not export a function only so that a test can call it. Test it through the public function that uses it.
 
 ## Mocks
 
@@ -47,6 +52,8 @@ Tests exist to catch bugs. A useful test fails when the behavior it covers break
 - Use unique queue names, event IDs, operation IDs, or correlation IDs for event-driven tests.
   Never purge shared queues or tables as a substitute for isolated data.
 - Do not use fixed sleeps. Use bounded polling, fake timers, or a signal that proves completion.
+- Test data does not copy the current version of the project or of a tool. Read the version from the package
+  manifest, or use a value outside real releases, such as `0.0.0-test`.
 
 ## Network and providers
 

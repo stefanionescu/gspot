@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { camelCase } from 'scule';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { findingAt } from '#cli/checks/finding.ts';
 import { safeParseJson } from '#cli/parsers/json.ts';
-import type { SchemaShape } from '#cli/types/objects.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listSourcePaths } from '#cli/repository/coverage.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 
 import {
     NOT_WORD,
@@ -21,7 +21,7 @@ import {
     DEFAULT_SOURCE_LANGUAGE,
 } from '#cli/config/checks/infrastructure/xcode.ts';
 
-function assetSetName(path: string): string {
+function getAssetSetName(path: string): string {
     const folder = path.slice(0, path.lastIndexOf('/'));
     const name = posix.basename(folder);
     return name.slice(0, name.lastIndexOf('.'));
@@ -55,41 +55,42 @@ const assetContentsSchema = z.object({
 } satisfies SchemaShape<{ images?: { filename?: string | undefined }[] | undefined }>);
 /**
  * The findings of every asset catalog: each Contents.json parses, each image set holds its images.
- * @param input the check input.
+ * @param input the catalog metadata and repository paths that locate the declared images.
  * @returns the findings.
  */
-export function xcodeAssets(input: CheckInput): Finding[] {
+export function checkXcodeAssets(input: CheckInput): Finding[] {
     return listSourcePaths(input.files, [ASSET_CONTENTS])
         .filter((path) => path.includes(XCASSETS_FOLDER))
         .flatMap((path) => {
             const read = safeParseJson(readCachedBytes(input.reads, path).toString('utf8'), assetContentsSchema);
             const at = { file: path, line: 1 };
-            if ('error' in read) return [findingAt(input, at, 'syntax', read.error)];
+            if ('error' in read) return [buildFinding(input, at, 'syntax', read.error)];
             if (!path.endsWith(IMAGE_SET)) return [];
             const contents = read.value;
             const names = (contents.images ?? []).flatMap((image) =>
                 image.filename === undefined ? [] : [image.filename],
             );
-            if (names.length === 0) return [findingAt(input, at, 'empty-set', 'This image set names no image file.')];
+            if (names.length === 0)
+                return [buildFinding(input, at, 'empty-set', 'This image set names no image file.')];
             const folder = path.slice(0, path.lastIndexOf('/'));
             return names
                 .filter((name) => statSync(join(input.root, folder, name), { throwIfNoEntry: false }) === undefined)
-                .map((name) => findingAt(input, at, 'missing-image', `The image ${name} is not in the set.`));
+                .map((name) => buildFinding(input, at, 'missing-image', `The image ${name} is not in the set.`));
         });
 }
 /**
  * Report asset sets that no source or Xcode build setting names.
- * @param input the check input.
+ * @param input the asset catalogs, source texts, and project settings that name each resource.
  * @returns the findings.
  */
-export function xcodeUnusedAssets(input: CheckInput): Finding[] {
+export function checkXcodeUnusedAssets(input: CheckInput): Finding[] {
     const sourceTexts = listSourcePaths(input.files, ASSET_REFERENCE_ENDINGS).map((path) =>
         readCachedBytes(input.reads, path).toString('utf8'),
     );
     return listSourcePaths(input.files, [ASSET_CONTENTS])
         .filter((path) => NAMED_SETS.some((ending) => path.endsWith(ending)))
         .filter((path) => {
-            const name = assetSetName(path);
+            const name = getAssetSetName(path);
             const assignment = new RegExp(String.raw`=\s*${RegExp.escape(name)}\s*(?:;|$)`, 'mu');
             return sourceTexts.every(
                 (text) =>
@@ -99,24 +100,24 @@ export function xcodeUnusedAssets(input: CheckInput): Finding[] {
             );
         })
         .map((path) =>
-            findingAt(
+            buildFinding(
                 input,
                 { file: path, line: 1 },
                 'unused-asset',
-                `No source names the asset ${assetSetName(path)}.`,
+                `No source names the asset ${getAssetSetName(path)}.`,
             ),
         );
 }
 /**
  * The findings of every string catalog: it parses, and every string has every locale the catalog uses.
- * @param input the check input.
+ * @param input the string catalog paths and cached JSON reads.
  * @returns the findings.
  */
-export function xcstrings(input: CheckInput): Finding[] {
+export function checkXcstrings(input: CheckInput): Finding[] {
     return listSourcePaths(input.files, [XCSTRINGS_SUFFIX]).flatMap((path) => {
         const read = safeParseJson(readCachedBytes(input.reads, path).toString('utf8'), stringsFileSchema);
         const at = { file: path, line: 1 };
-        if ('error' in read) return [findingAt(input, at, 'syntax', read.error)];
+        if ('error' in read) return [buildFinding(input, at, 'syntax', read.error)];
         const strings = read.value;
         const entries = (strings.strings === undefined ? [] : Object.entries(strings.strings)).filter(
             ([, entry]) => entry.shouldTranslate !== false,
@@ -129,7 +130,12 @@ export function xcstrings(input: CheckInput): Finding[] {
             const missing = [...locales].filter((locale) => entry.localizations?.[locale] === undefined);
             if (missing.length === 0) return [];
             return [
-                findingAt(input, at, 'missing-translation', `"${key}" has no translation for ${missing.join(', ')}.`),
+                buildFinding(
+                    input,
+                    at,
+                    'missing-translation',
+                    `"${key}" has no translation for ${missing.join(', ')}.`,
+                ),
             ];
         });
     });

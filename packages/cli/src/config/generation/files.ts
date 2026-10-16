@@ -1,4 +1,4 @@
-import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import { DOT_GSPOT, TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
 
 export const LF_ATTRIBUTES = 'text eol=lf';
 
@@ -13,4 +13,4 @@ export const ATTRIBUTE_QUOTED_CHARACTERS = /[\s"]/u;
 export const AUTO_LF_ATTRIBUTES = ['text=auto', 'eol=lf'] as const;
 export const TOOL_FILE_REFERENCE = /(?:['"]\.\/|\bnew\s+URL\(\s*['"])(?<path>[^'"]+)['"]/gu;
 
-export const SEMGREP_RULE_PACK_FOLDER = '.gspot/config/semgrep/';
+export const SEMGREP_RULE_PACK_FOLDER = `${TOOL_FILES_FOLDER}/semgrep/`;

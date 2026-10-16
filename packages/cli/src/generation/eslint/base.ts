@@ -18,7 +18,6 @@ import {
     type SelectorGroup,
     type EslintContext,
     type EslintPresets,
-    type EslintRuleLevels,
 } from '#cli/types/generation/eslint.ts';
 
 /**
@@ -26,15 +25,13 @@ import {
  *
  * @param base the initial check result.
  * @param view the resolved scope settings.
- * @param pluginLevels the ESLint plugin rule levels.
  * @param plugins the selected formatter plugins.
  *
  * @returns the blocks for source syntax and code rules.
  */
 function buildBlocksBeforeFragments(
     base: EslintContext,
-    view: Pick<ScopeView, 'limit'>,
-    pluginLevels: EslintRuleLevels,
+    view: Pick<ScopeView, 'limit' | 'options'>,
     plugins: EslintPlugins,
 ): Parameters<EslintModule['block']>[] {
     const { eslintFiles, isAll, json } = base;
@@ -43,10 +40,12 @@ function buildBlocksBeforeFragments(
     const pluginMap = Object.entries(plugins)
         .map(([name, [importName]]) => `${JSON.stringify(name)}: ${importName}`)
         .join(', ');
-    const pluginRules = Object.fromEntries(
-        Object.entries(pluginLevels)
-            .filter(([, level]) => level === 'recommended' || (isAll && level === 'all'))
-            .map(([rule]) => [`gspot/${rule}`, 'error']),
+    const pluginOptions = Object.fromEntries(
+        base.ruleOptions.flatMap(({ rules }) =>
+            Object.keys(rules)
+                .filter((name) => name.startsWith('gspot/'))
+                .map((name) => [name, 'error']),
+        ),
     );
     const projectBlocks: Parameters<EslintModule['block']>[] = [
         ...config.importStyleBlocks,
@@ -63,8 +62,9 @@ function buildBlocksBeforeFragments(
     return [
         ...buildBasePresetBlocks(base.eslintPresets.get('javascript') as EslintPresets, CODE_PRESETS, eslintFiles.code),
         [
-            { files: eslintFiles.code, rules: { ...rules.code, ...pluginRules, ...config.allLevelRules } },
+            { files: eslintFiles.code, rules: { ...rules.code, ...pluginOptions, ...config.allLevelRules } },
             `plugins: { ${pluginMap} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }${config.boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`,
+            { expression: `gspot.configs.${isAll ? 'all' : 'recommended'}.rules`, rules: {} },
         ],
         [{ files: eslintFiles.javascript, rules: JAVASCRIPT_RULES }],
         ...projectBlocks,
@@ -92,7 +92,7 @@ function buildBlocksBeforeFragments(
  */
 function buildBlocksAfterFragments(
     base: EslintContext,
-    view: Pick<ScopeView, 'limit'>,
+    view: Pick<ScopeView, 'limit' | 'options'>,
     fragmentSelectors: SelectorGroup[],
 ): Parameters<EslintModule['block']>[] {
     const { eslintFiles, isAll, json } = base;
