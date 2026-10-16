@@ -17,19 +17,19 @@ async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<
         const parse = selectDependencyFileParser(file.path);
         if (parse === undefined) return undefined;
         const text = readCachedText(reads, file.path);
-        if (text === undefined) throw new Error(`Manifest is missing: ${file.path}`);
+        if (text === undefined) throw new Error(`The dependency file is missing: ${file.path}`);
         return await parse(file.path, text);
     } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
-        throw new Error(`Cannot inspect manifest ${file.path}: ${detail}`, { cause: error });
+        throw new Error(`Cannot read the dependency file ${file.path}: ${detail}`, { cause: error });
     }
 }
 
 /**
- * Read supported project manifests for dependency and runtime detection.
+ * Read the supported dependency files for dependency and runtime detection.
  * @param reads the run's cached source reads.
  * @param files the tracked files.
- * @returns one project manifest per supported source file.
+ * @returns one dependency file per supported source file.
  */
 export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]): Promise<DependencyFile[]> {
     const dependencies: DependencyFile[] = [];

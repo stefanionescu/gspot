@@ -16,8 +16,8 @@ import {
  * @returns the findings.
  */
 export async function checkBashForwarders(input: CheckInput): Promise<Finding[]> {
-    const index = await readScripts(input);
-    return index.flatMap((file) => {
+    const scripts = await readScripts(input);
+    return scripts.flatMap((file) => {
         const findings = [];
         const code = listCodeLines(file.code);
         const alias = file.lines.findIndex((line) => DEPRECATED_ALIAS.test(line));

@@ -127,7 +127,9 @@ export function selectNeededManifests(session: Session, checks: PlannedCheck[]):
             listLicenseProjects(check.files, session.scopes, session.settingsFile.settings, check.check),
         )
         .filter((project) => project.skip === undefined)
-        .map((project) => (basename(project.manifest) === PACKAGE_JSON ? LICENSE_CHECKER : PIP_LICENSES_COMMAND[0]));
+        .map((project) =>
+            basename(project.dependencyFile) === PACKAGE_JSON ? LICENSE_CHECKER : PIP_LICENSES_COMMAND[0],
+        );
     const needed = new Set([...checks.flatMap((check) => listRequiredTools(check)), ...licenses]);
     for (const name of listPrettierPluginNames(session.scopes, needed)) needed.add(name);
     const selected = listSelectedManifests(session.scopes);
@@ -193,7 +195,7 @@ export function listLicenseProjects(
                     ? []
                     : [
                           {
-                              manifest: file.path,
+                              dependencyFile: file.path,
                               selection,
                               configuration,
                               skip: findSettingsSkip(settings, selection, check),

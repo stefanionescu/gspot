@@ -67,8 +67,8 @@ function validateDocComment(
  * @returns the findings.
  */
 export async function checkBashDocComments(input: CheckInput): Promise<Finding[]> {
-    const index = await readScripts(input);
-    return index.flatMap((file) => {
+    const scripts = await readScripts(input);
+    return scripts.flatMap((file) => {
         return file.functions.flatMap((entry) => {
             if (entry.name === MAIN_FUNCTION) return [];
             const found = validateDocComment(entry, collectCommentBlock(file.lines, entry.start));

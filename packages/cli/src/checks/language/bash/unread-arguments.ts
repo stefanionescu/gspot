@@ -8,14 +8,14 @@ import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
  * @returns the findings.
  */
 export async function checkBashUnreadArguments(input: CheckInput): Promise<Finding[]> {
-    const index = await readScripts(input);
-    const names = new Set(index.flatMap((file) => file.functions.map((entry) => entry.name)));
+    const scripts = await readScripts(input);
+    const names = new Set(scripts.flatMap((file) => file.functions.map((entry) => entry.name)));
     const widest = new Map<string, number>();
-    for (const file of index)
+    for (const file of scripts)
         for (const call of file.calls) {
             if (names.has(call.name)) widest.set(call.name, Math.max(widest.get(call.name) ?? 0, call.count));
         }
-    return index.flatMap((file) =>
+    return scripts.flatMap((file) =>
         file.functions.flatMap((entry) => {
             const width = widest.get(entry.name) ?? 0;
             const highest = entry.highestRead;

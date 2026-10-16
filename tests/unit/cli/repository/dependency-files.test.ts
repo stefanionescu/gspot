@@ -44,7 +44,7 @@ test.each([...INVALID_PYTHON_DEPENDENCIES])('an invalid $name in $path names the
     await createFileTree(sandbox.path, { [path]: source });
     const files = [buildTrackedFile(path)];
     expect(await captureRejection(readDependencyFiles(createReadCache(sandbox.path), files))).toContain(
-        `Cannot inspect manifest ${path}`,
+        `Cannot read the dependency file ${path}`,
     );
 });
 
@@ -94,7 +94,7 @@ test('package.json reads keep your own fields and tell a missing file from inval
     await writeFile(join(sandbox.path, 'package.json'), '{');
     expect(() => readPackageJson(sandbox.path, 'package.json')).toThrow('package.json is not valid JSON.');
     expect(await captureRejection(readDependencyFiles(createReadCache(sandbox.path), repository.files))).toMatch(
-        /^Cannot inspect manifest package\.json: (?![\s\S]*Cannot read package manifest)/u,
+        /^Cannot read the dependency file package\.json: (?![\s\S]*Cannot read the dependency file)/u,
     );
     await writeFile(join(sandbox.path, 'package.json'), '{"dependencies":{"next":16}}');
     expect(() => readPackageJson(sandbox.path, 'package.json')).toThrow('package.json is not valid JSON.');

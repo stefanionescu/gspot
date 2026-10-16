@@ -13,8 +13,8 @@ export async function checkBashSafety(input: CheckInput): Promise<Finding[]> {
         ...(input.settingsFile.settings.level === 'all' ? ALL_LEVEL_SAFETY_PATTERNS : []),
         ...SAFETY_PATTERNS,
     ];
-    const index = await readScripts(input);
-    return index.flatMap((file) =>
+    const scripts = await readScripts(input);
+    return scripts.flatMap((file) =>
         file.code.flatMap((code, position) => {
             const isCleanup = file.temporaryPaths.some((temporary) => temporary.cleanupLines.includes(position + 1));
             return rules

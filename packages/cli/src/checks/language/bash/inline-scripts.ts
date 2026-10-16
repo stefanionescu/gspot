@@ -9,8 +9,8 @@ import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
  * @returns the findings.
  */
 export async function checkBashInlineScripts(input: CheckInput): Promise<Finding[]> {
-    const index = await readScripts(input);
-    return index.flatMap((file) =>
+    const scripts = await readScripts(input);
+    return scripts.flatMap((file) =>
         file.code.flatMap((line, position) => {
             const embed = RUNTIME_EMBEDS.find(([pattern]) => pattern.test(line));
             if (embed === undefined) return [];

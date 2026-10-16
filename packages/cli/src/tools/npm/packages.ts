@@ -62,7 +62,7 @@ function listWorkspaceDependencyFiles(source: string, scope: string, files: Trac
     for (const folder of pending) {
         const manifest = packages.get(folder);
         if (manifest === undefined)
-            throw new Error(`Workspace manifest is missing: ${posix.join(folder, PACKAGE_JSON)}`);
+            throw new Error(`The workspace package.json is missing: ${posix.join(folder, PACKAGE_JSON)}`);
         const names = Object.keys({
             ...manifest.dependencies,
             ...manifest.devDependencies,

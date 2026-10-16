@@ -9,9 +9,9 @@ import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
  * @returns the findings.
  */
 export async function checkBashUnusedFunctions(input: CheckInput): Promise<Finding[]> {
-    const index = await readScripts(input);
-    const referenced = new Set(index.flatMap((file) => file.references.keys().toArray()));
-    return index.flatMap((file) => {
+    const scripts = await readScripts(input);
+    const referenced = new Set(scripts.flatMap((file) => file.references.keys().toArray()));
+    return scripts.flatMap((file) => {
         return file.functions
             .filter((entry) => entry.name !== MAIN_FUNCTION && !referenced.has(entry.name))
             .map((entry) =>

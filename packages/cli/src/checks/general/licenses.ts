@@ -79,9 +79,13 @@ async function scanPythonLicenses(input: CheckInput, start: string): Promise<Lic
         .map((entry) => ({ name: `${entry.Name}@${entry.Version}`, license: entry.License }));
 }
 
-function hasProjectDependencies(input: CheckInput, manifest: string): boolean {
-    if (basename(manifest) !== 'package.json') return true;
-    const project = parseJsonFile(manifest, readCachedBytes(input.reads, manifest).toString('utf8'), packageJsonSchema);
+function hasProjectDependencies(input: CheckInput, dependencyFile: string): boolean {
+    if (basename(dependencyFile) !== 'package.json') return true;
+    const project = parseJsonFile(
+        dependencyFile,
+        readCachedBytes(input.reads, dependencyFile).toString('utf8'),
+        packageJsonSchema,
+    );
     return (
         Object.keys({ ...project.dependencies, ...project.devDependencies, ...project.optionalDependencies }).length > 0
     );
@@ -91,10 +95,10 @@ function hasProjectDependencies(input: CheckInput, manifest: string): boolean {
 async function scanLicenses(input: CheckInput) {
     const inventories: ProjectLicenses[] = [];
     const projects = listLicenseProjects(input.files, input.selections, input.settingsFile.settings, input.check);
-    for (const { manifest, selection } of projects.filter(({ skip }) => skip === undefined)) {
-        if (!hasProjectDependencies(input, manifest)) continue;
+    for (const { dependencyFile, selection } of projects.filter(({ skip }) => skip === undefined)) {
+        if (!hasProjectDependencies(input, dependencyFile)) continue;
         const scanner =
-            basename(manifest) === 'package.json'
+            basename(dependencyFile) === 'package.json'
                 ? { scan: scanJavascriptLicenses, packageKey: (name: string) => name }
                 : {
                       scan: scanPythonLicenses,
@@ -105,14 +109,17 @@ async function scanLicenses(input: CheckInput) {
             scope: selection,
         };
         const configuration = selected.scope.view.options('licenses');
-        const packages = await scanner.scan(selected, join(input.root, dirname(manifest)));
+        const packages = await scanner.scan(selected, join(input.root, dirname(dependencyFile)));
         if (packages.length === 0)
             throw new Error(
                 'The license scan found no packages. Install the selected project dependencies before scanning.',
             );
-        inventories.push({ dependencyFile: manifest, packages, packageKey: scanner.packageKey, configuration });
+        inventories.push({ dependencyFile, packages, packageKey: scanner.packageKey, configuration });
     }
-    return { inventories, skipped: projects.filter(({ skip }) => skip !== undefined).map(({ manifest }) => manifest) };
+    return {
+        inventories,
+        skipped: projects.filter(({ skip }) => skip !== undefined).map(({ dependencyFile }) => dependencyFile),
+    };
 }
 
 const licenseSchema = z.object({
@@ -136,7 +143,7 @@ const pythonReportSchema = z.array(
  */
 export async function checkAllowedLicenses(input: CheckInput): Promise<Finding[]> {
     const { inventories, skipped } = await scanLicenses(input);
-    const findings = inventories.flatMap(({ dependencyFile: manifest, packages, packageKey, configuration }) => {
+    const findings = inventories.flatMap(({ dependencyFile, packages, packageKey, configuration }) => {
         const allow = new Set(configuration.allowed);
         const exceptions = new Map(
             configuration.allowed_package.map((entry) => [packageKey(`${entry.name}@${entry.version}`), entry]),
@@ -147,7 +154,7 @@ export async function checkAllowedLicenses(input: CheckInput): Promise<Finding[]
             return [
                 buildFinding(
                     input,
-                    { file: manifest, line: 1 },
+                    { file: dependencyFile, line: 1 },
                     'disallowed-license',
                     `${name} uses ${license}, which is not allowed.`,
                 ),
@@ -156,12 +163,12 @@ export async function checkAllowedLicenses(input: CheckInput): Promise<Finding[]
     });
     const stale = listSettingsTables(input.settingsFile.settings).flatMap(({ table, scope = '' }) => {
         const authored = getWrittenSetting(table, 'licenses.allowed_package');
-        if (authored === undefined || skipped.some((manifest) => isInScope(manifest, scope))) return [];
+        if (authored === undefined || skipped.some((dependencyFile) => isInScope(dependencyFile, scope))) return [];
         const exceptions = configurationTableSchemas.licenses
             .unwrap()
             .shape.allowed_package.unwrap()
             .parse(authored.value);
-        const projects = inventories.filter(({ dependencyFile: manifest }) => isInScope(manifest, scope));
+        const projects = inventories.filter(({ dependencyFile }) => isInScope(dependencyFile, scope));
         const where = scope === '' ? '' : ` in ${scope}`;
         return exceptions
             .map((entry) => `${entry.name}@${entry.version}`)

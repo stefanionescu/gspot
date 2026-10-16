@@ -101,7 +101,7 @@ export type StageFilter = Stage | 'all';
 
 /** A selected installed consumer and the effective license settings governing its report. */
 export type LicenseProject = {
-    manifest: string;
+    dependencyFile: string;
     selection: ScopeSelection;
     configuration: ParsedLicenses;
     skip: SettingsSkip | undefined;
