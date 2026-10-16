@@ -29,6 +29,7 @@ import {
     GITLAB_BASE_LINE,
     GITHUB_CONCURRENCY,
     CI_TIMEOUT_MINUTES,
+    MISE_TOKEN_ENVIRONMENT,
     GITHUB_BASE_EXPRESSION,
     GITHUB_MANUAL_CONDITION,
     GITLAB_MANUAL_CONDITION,
@@ -119,7 +120,7 @@ function buildJob(
                           run: pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' '),
                       },
                   ]),
-            { name: CI_STEP_NAMES.install, run: `${command} install` },
+            { name: CI_STEP_NAMES.install, env: { ...MISE_TOKEN_ENVIRONMENT }, run: `${command} install` },
             structuredClone(check.step),
         ],
     };
@@ -176,6 +177,7 @@ function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
                                 condition: GITHUB_MANUAL_CONDITION,
                                 step: {
                                     name: CI_STEP_NAMES.manual,
+                                    ...(manual.tools.length === 0 ? {} : { env: { ...MISE_TOKEN_ENVIRONMENT } }),
                                     run:
                                         [
                                             ...(manual.tools.length === 0

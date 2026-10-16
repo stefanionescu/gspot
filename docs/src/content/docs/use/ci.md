@@ -28,6 +28,9 @@ expects mise on the CI machine. To prepare the project before gspot installs its
 example `gspot set ci.setup_command npm ci`. The job runs it before `gspot install` and stops if it fails. gspot
 quotes each argument, so spaces, quotes, and `$` reach the command as plain text.
 
+On GitHub, the install step passes the job's token to mise as `MISE_GITHUB_TOKEN`, which lifts the low rate limit on
+anonymous GitHub downloads. In other pipelines, set `MISE_GITHUB_TOKEN` to a GitHub token yourself.
+
 If gspot finds an existing lint job, or Bitbucket Pipelines, Jenkins, CircleCI, Azure Pipelines, or Buildkite,
 `init` writes no workflow. Add the steps of "Your own pipeline" to that pipeline.
 

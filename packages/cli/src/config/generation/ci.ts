@@ -64,6 +64,8 @@ const ZERO_SHAS = [
 ] as const;
 
 const SWIFT_CONFIGURATION = 'swift';
+// mise reads this token to download release builds from GitHub above the anonymous rate limit.
+const MISE_TOKEN_ENVIRONMENT = { MISE_GITHUB_TOKEN: '${{ github.token }}' } as const;
 const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';
 const CI_CACHE_FILES = [
     SETTINGS_FILE,
@@ -108,6 +110,7 @@ export {
     CI_TIMEOUT_MINUTES,
     GITHUB_CONCURRENCY,
     SWIFT_CONFIGURATION,
+    MISE_TOKEN_ENVIRONMENT,
     GITHUB_BASE_EXPRESSION,
     GITHUB_MANUAL_CONDITION,
     GITLAB_MANUAL_CONDITION,

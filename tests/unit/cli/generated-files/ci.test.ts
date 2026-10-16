@@ -61,6 +61,28 @@ test.each(['docs/lychee-external', 'project/audit'])(
     },
 );
 
+test('only the steps that install tools receive the GitHub token for mise', async () => {
+    await using resources = new AsyncDisposableStack();
+    const pipeline = await buildPipeline(resources);
+
+    const workflow = parse(
+        buildGithubWorkflow({
+            ...pipeline,
+            manualChecks: pipeline.manualChecks.filter(({ check }) => check.name === 'docs/lychee-external'),
+        }).content,
+    ) as GithubWorkflow;
+    const tokenSteps = Object.entries(workflow.jobs).flatMap(([job, { steps }]) =>
+        steps
+            .filter((step) => step.env?.['MISE_GITHUB_TOKEN'] !== undefined)
+            .map((step) => `${job}: ${step.name ?? ''}`),
+    );
+    expect(tokenSteps).toStrictEqual([
+        'check-linux: Install gspot tools',
+        'manual-linux: Install gspot tools',
+        'manual-linux: Manual checks',
+    ]);
+});
+
 test('a Swift scope adds the macOS jobs', async () => {
     await using resources = new AsyncDisposableStack();
     const pipeline = await buildPipeline(resources);
