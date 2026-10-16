@@ -8,7 +8,6 @@ export type HeaderBlocks = { blocks: HeaderBlock[]; findings: NumberedLine[] };
 
 /** Project functions and storage declarations derived from their external schema. */
 export type SupabaseConfiguration = {
-    functions?: Record<string, unknown> | undefined;
     storage?: { buckets?: Record<string, unknown> | undefined } | undefined;
 };
 

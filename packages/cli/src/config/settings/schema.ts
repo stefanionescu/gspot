@@ -155,10 +155,6 @@ export const SETTING_FIELDS = {
         configurations: ['javascript'],
         description: 'Rule options for repository-relative paths, in order. Explicit ignores apply last.',
     },
-    codeql_languages: {
-        configurations: ['security'],
-        description: 'The CodeQL languages to scan, such as javascript-typescript, python, or swift.',
-    },
     hadolint_trusted_registries: {
         configurations: ['docker'],
         description: 'The registries a base image may come from; empty allows any.',
@@ -183,12 +179,6 @@ export const SETTING_FIELDS = {
     sqlfluff_dialect: {
         configurations: ['sql'],
         description: 'The sqlfluff dialect; a database configuration sets it.',
-    },
-    svgo_min_saving_percent: {
-        configurations: ['site'],
-        description: 'Report an SVG when optimization saves more than this percentage of its UTF-8 bytes.',
-        default_all: 0,
-        reason_needed: 'raising',
     },
     swiftlint_always_keep_imports: {
         configurations: ['swift'],

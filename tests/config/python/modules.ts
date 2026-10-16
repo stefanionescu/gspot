@@ -44,40 +44,13 @@ VALUE_10 = 10
 VALUE_11 = 11
 VALUE_12 = 12`;
 
-const LONG_FUNCTION_BODY = `    step_0 = 0
-    step_1 = 1
-    step_2 = 2
-    step_3 = 3
-    step_4 = 4`;
-
 const PYTHON_MODULE_CASES = [
-    {
-        check: 'python/function-size',
-        settings: '[limits]\nfunction_lines = 6\n',
-        files: {
-            'example/long.py': `"""A test module."""
-
-
-def long_one() -> None:
-    """Hold many steps."""
-${LONG_FUNCTION_BODY}
-`,
-        },
-        expected: { file: 'example/long.py', rule: 'function-lines', line: 4 },
-    },
     {
         check: 'python/placeholder-docstrings',
         files: {
             'example/empty.py': `"""A test module."""\n\n\ndef load_orders() -> None:\n    """Load orders."""\n    first = 1\n    second = first\n    third = second\n    print(third)\n`,
         },
         expected: { file: 'example/empty.py', rule: 'placeholder-docstring', line: 4 },
-    },
-    {
-        check: 'python/module-getattr',
-        files: {
-            'example/lazy.py': `"""A test module."""\n\n\ndef __getattr__(name: str) -> int:\n    """Make names appear."""\n    return len(name)\n`,
-        },
-        expected: { file: 'example/lazy.py', rule: 'lazy-export', line: 4 },
     },
 ] as const;
 
@@ -91,13 +64,4 @@ def lookup():
         raise HTTPException(status_code=500, detail=str(error)) from error
 `;
 
-const PYTHON_MODULE_HEADER = '"""A test module."""\n\n\n';
-
-export {
-    FASTAPI_SOURCE,
-    LONG_PYTHON_FILE,
-    CLEAN_PYTHON_MODULE,
-    PYTHON_MODULE_CASES,
-    PYTHON_MODULE_HEADER,
-    PYTHON_MODULE_REPOSITORY,
-};
+export { FASTAPI_SOURCE, LONG_PYTHON_FILE, CLEAN_PYTHON_MODULE, PYTHON_MODULE_CASES, PYTHON_MODULE_REPOSITORY };

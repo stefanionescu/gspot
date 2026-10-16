@@ -29,7 +29,6 @@ import {
     SITEMAP_LOCATION,
     LINKINATOR_STATES,
     LINKINATOR_PROGRAM,
-    PLACEHOLDER_ORIGIN,
 } from '#cli/config/checks/framework/site.ts';
 
 function sitemapUrls(build: { folder: string }): string[] {
@@ -54,7 +53,7 @@ function sitemapUrls(build: { folder: string }): string[] {
 }
 
 function pageOf(url: string): [string, ...string[]] {
-    const path = decodeURIComponent(new URL(url, PLACEHOLDER_ORIGIN).pathname).replace(/^\//u, '');
+    const path = decodeURIComponent(url === '' ? '/' : new URL(url).pathname).replace(/^\//u, '');
     if (path === '' || path.endsWith('/')) return [`${path}${INDEX_PAGE}`];
     return path.endsWith(HTML_EXTENSION) ? [path] : [path, `${path}${HTML_EXTENSION}`, `${path}/${INDEX_PAGE}`];
 }
@@ -106,13 +105,11 @@ const purgecssReportSchema = z.array(
 ) satisfies z.ZodType<{ file: string; rejected: string[] }[]>;
 
 /**
- * The broken links of the built site: between its pages, stylesheets, and fragments, or every link with the external
- * ones included.
+ * The broken links between built pages, stylesheets, and fragments.
  * @param input the check input.
- * @param isExternal whether the links that leave the site count.
  * @returns one finding for each broken link.
  */
-export async function linkinator(input: CheckInput, isExternal: boolean): Promise<Finding[]> {
+export async function linkinator(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
     const pages = new Set(filesUnder(build.folder));
     const location = sitemapUrls(build)[0];
@@ -125,7 +122,6 @@ export async function linkinator(input: CheckInput, isExternal: boolean): Promis
             stdin: JSON.stringify({
                 paths,
                 origin: location === undefined ? undefined : new URL(location).origin,
-                external: isExternal,
                 skipped: input.selection.view.options('docs').allowed_urls,
             }),
         },

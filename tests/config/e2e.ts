@@ -51,15 +51,26 @@ Run the tests.
 `,
 } as const;
 
-/** Exact Bash diagnostics for the launcher's syntax sample. */
-export const BASH_SYNTAX_FINDINGS = [
+/** Exact ShellCheck diagnostics for the launcher's syntax sample. */
+export const SHELLCHECK_SYNTAX_FINDINGS = [
     {
-        check: 'bash/bash-syntax',
+        check: 'bash/shellcheck',
         file: 'broken.sh',
         line: 1,
-        message: "syntax error near unexpected token `then'",
+        column: 1,
+        rule: 'SC1073',
+        message: "Couldn't parse this if expression. Fix to allow more checks.",
+        fixable: false,
     },
-    { check: 'bash/bash-syntax', file: 'broken.sh', line: 1, message: "`if then'" },
+    {
+        check: 'bash/shellcheck',
+        file: 'broken.sh',
+        line: 1,
+        column: 4,
+        rule: 'SC1072',
+        message: 'Unexpected keyword/token. Fix any mentioned problems and try again.',
+        fixable: false,
+    },
 ] as const;
 
 export const MODULE_PROGRAM = String.raw`

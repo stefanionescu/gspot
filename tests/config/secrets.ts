@@ -149,11 +149,6 @@ const FIXED_SECRET_FILES = {
     'identity.py': 'import os\naws_access_key_id = os.environ["AWS_ACCESS_KEY_ID"]\n',
 } as const;
 
-const GITLEAKS_SCOPES = [
-    ['root', ''],
-    ['child', 'app/'],
-] as const;
-
 /** Inert tokens recognized only by the loopback provider's custom detector. */
 const VERIFIER_TOKENS = {
     first: 'gspot-acceptance-token-first',
@@ -205,7 +200,6 @@ export {
     READER_TABLES,
     READER_EXAMPLE,
     READER_FINDINGS,
-    GITLEAKS_SCOPES,
     VERIFIER_TOKENS,
     NESTED_ENV_FILES,
     SCOPE_READER_FILES,

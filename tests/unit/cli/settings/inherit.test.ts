@@ -12,10 +12,10 @@ import { settingsText, settingsErrors } from '#tests/setup/settings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { validateAgainstKnownSettings } from '#cli/settings/errors/keys.ts';
 
-test('a zero svgo setting is inherited, and a scope value applies to its children', async () => {
+test('an empty PurgeCSS safelist is inherited, and a scope value applies to its children', async () => {
     await using sandbox = await testdir();
-    const tables = `[tools.svgo]
-min_saving_percent = 0
+    const tables = `[tools.purgecss]
+safelist = []
 [[scope]]
 path = "app"
 configurations = []
@@ -37,7 +37,7 @@ removed_configurations = ["site"]
     for (const path of ['', 'app', 'app/deep']) {
         const scope = inherited.scopes.find(({ scope }) => scope.path === path)!;
         expect(scope.selected.map(({ configuration }) => configuration.name)).toContain('site');
-        expect(scope.view.options('tools.svgo').min_saving_percent).toBe(0);
+        expect(scope.view.options('tools.purgecss').safelist).toStrictEqual([]);
     }
     expect(
         inherited.scopes
@@ -46,21 +46,21 @@ removed_configurations = ["site"]
     ).not.toContain('site');
     const overridden = tables.replace(
         'path = "app"\n',
-        'path = "app/"\ntools.svgo.min_saving_percent = { value = 8, reason = "The reviewed asset threshold is eight percent." }\n',
+        'path = "app/"\ntools.purgecss.safelist = { value = ["keep"], reason = "The reviewed stylesheet keeps its dynamic selectors." }\n',
     );
     await writeFile(join(sandbox.path, 'gspot.toml'), settingsText(['site'], { level: 'all', tables: overridden }));
     const session = await openSession(sandbox.path);
     expect(
         session.scopes
             .filter(({ scope }) => scope.path !== 'sibling')
-            .map(({ scope, view }) => [scope.path, view.options('tools.svgo').min_saving_percent]),
+            .map(({ scope, view }) => [scope.path, view.options('tools.purgecss').safelist]),
     ).toStrictEqual([
-        ['', 0],
-        ['app', 8],
-        ['app/deep', 8],
+        ['', []],
+        ['app', ['keep']],
+        ['app/deep', ['keep']],
     ]);
-    expect(() => session.scopes.find(({ scope }) => scope.path === 'sibling')!.view.options('tools.svgo')).toThrow(
-        'The selected scope has no tools.svgo settings.',
+    expect(() => session.scopes.find(({ scope }) => scope.path === 'sibling')!.view.options('tools.purgecss')).toThrow(
+        'The selected scope has no tools.purgecss settings.',
     );
 });
 
@@ -158,9 +158,7 @@ test('limits that no check reads are refused', () => {
     const known = knownSettings(selectConfigurations(['structure', 'sql', 'bash'], configurationManifests()));
     expect(declarationFor(known, 'limits.sql.function_lines')).toBeUndefined();
     expect(declarationFor(known, 'limits.bash.cyclomatic_complexity')).toBeUndefined();
-    expect(declarationFor(known, 'limits.sql.function_parameters')?.declaration.name).toBe(
-        'limits.function_parameters',
-    );
+    expect(declarationFor(known, 'limits.sql.function_parameters')).toBeUndefined();
     const errors = settingsErrors(
         settingsText(['sql', 'bash'], {
             rules: true,

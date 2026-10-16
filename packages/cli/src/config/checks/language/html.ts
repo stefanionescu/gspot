@@ -13,20 +13,6 @@ export const DOCUMENT_URL_ATTRIBUTES = {
 
 export const ACTIVE_DOCUMENT_TYPES = new Set(['text/html', 'application/xhtml+xml', 'image/svg+xml']);
 
-export const COPY_ATTRIBUTES = new Set(['alt', 'aria-label', 'aria-description', 'placeholder', 'title']);
-
-// The marks that open and close a placeholder in the template languages a static site uses.
-export const PLACEHOLDER_MARKS = [
-    ['{{', '}}'],
-    ['{%', '%}'],
-    ['<%', '%>'],
-    ['${', '}'],
-] as const;
-
-export const SHOWN_TEXT = 40;
-
-export const LETTERS = /\p{L}{2,}/u;
-
 export const EVENT_ATTRIBUTE = /^on[a-z]+$/u;
 
 export const SCRIPT_SCHEMES = new Set(['javascript:', 'vbscript:']);

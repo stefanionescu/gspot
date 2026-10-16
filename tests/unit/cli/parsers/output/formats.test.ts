@@ -82,7 +82,7 @@ test.each(['diff', 'log', 'both'])('Taplo reports one finding from %s', async (s
 });
 
 test('a Taplo syntax error names its file by a Windows path with a drive letter', () => {
-    const check = allChecks(configurationManifests().values()).get('files/taplo')!.check;
+    const check = allChecks(configurationManifests().values()).get('files/taplo-format')!.check;
     const stdout = 'error: invalid TOML\n  ┌─ C:/work/settings.toml:2:3\n  │\n';
     expect(parseOutput(check, stdout, '', { root: 'C:/work', cwd: 'C:/work' })).toMatchObject([
         { file: 'settings.toml', line: 2, column: 3 },
@@ -125,11 +125,11 @@ test.skipIf(isLinux)('an absolute path that names the root in another case is st
     ]);
 });
 
-test('a syntax finding is not fixable when its check has no fix command', () => {
-    const check = allChecks(configurationManifests().values()).get('files/taplo')!.check;
+test('a Taplo parse finding is not fixable', () => {
+    const check = allChecks(configurationManifests().values()).get('files/taplo-format')!.check;
     const findings = parseOutput(check, '', '  ┌─ settings.toml:2:1\n', { root: '/repository', cwd: '/repository' });
     expect(findings).toMatchObject([
-        { check: 'files/taplo', file: 'settings.toml', line: 2, column: 1, fixable: false },
+        { check: 'files/taplo-format', file: 'settings.toml', line: 2, column: 1, fixable: false },
     ]);
 });
 

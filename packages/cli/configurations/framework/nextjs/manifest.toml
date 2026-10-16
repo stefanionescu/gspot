@@ -19,7 +19,7 @@ reason = "Next.js discovers these data and metadata exports by name."
 title = "Next.js"
 requires = ["typescript", "react", "react-dom"]
 suggests = ["css"]
-description = "A Next.js app: the framework and hooks rules of ESLint, and server code marked as server only. Route segments serve one thing, and the configuration turns no build check off."
+description = "A Next.js app: the framework and hooks rules of ESLint, and server code marked as server only. The configuration turns no build check off."
 
 [detect]
 dependencies = ["next"]
@@ -51,31 +51,6 @@ instead_of = "typescript/tsc"
 summary = "Has Next.js write its types, then type-checks the app with the strict compiler options."
 why = "A fresh clone holds no next-env.d.ts and no route types, so a plain tsc run fails on imports the framework resolves."
 help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
-
-[[check]]
-name = "build"
-tool = "next"
-example = "A Next.js page importing a nonexistent component fails the project build. Restore the component or correct the import path and rerun the configured build."
-level = "all"
-stage = "push"
-runs = "scope"
-needs = ["build"]
-summary = "Builds the app with next build at all when its scope contains an app or pages tree."
-why = "Some mistakes show only at build time: a server import in a client file, or a page that cannot be prerendered."
-help = "Run next build and read the first error it prints."
-
-[check.files]
-paths = ["**/app/**", "**/pages/**"]
-
-[[check]]
-name = "route-segments"
-example = "A Next.js segment containing both `page.tsx` and `route.ts` reports conflicting route ownership. Move the route handler into a separate segment, such as `api`, and update its callers."
-level = "recommended"
-stage = "commit"
-runs = "once"
-summary = "Checks that no route segment holds both a page and a route handler."
-why = "This commit check finds route conflicts before next build and also runs at recommended, where the build check does not."
-help = "Move the route handler into a segment of its own, such as an api folder."
 
 [[check]]
 name = "next-config"

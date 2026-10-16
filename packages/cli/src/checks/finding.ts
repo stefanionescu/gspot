@@ -48,13 +48,3 @@ export function sourcePaths(input: CheckInput, endings?: readonly string[]): str
         )
         .map((file) => file.path);
 }
-
-/**
- * Sort text by length, then alphabetically.
- * @param left the first path.
- * @param right the second path.
- * @returns the length difference, or the name comparison for equal lengths.
- */
-export function byLengthThenName(left: string, right: string): number {
-    return left.length - right.length || left.localeCompare(right);
-}

@@ -12,25 +12,18 @@ import { useEnvironment } from '#tests/setup/environment.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { type GitleaksHistory } from '#tests/types/secrets.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
-import { copyIntoScratch } from '#cli/execution/copy/scratch.ts';
 import { containing, containingAll } from '#tests/setup/matchers.ts';
 import { type RunReport, type CheckResult } from '#cli/types/execution/check.ts';
-import { API_TOKEN, AWS_KEY_ID, SECRET_FILES, GITLEAKS_SCOPES, FIXED_SECRET_FILES } from '#tests/config/secrets.ts';
+import { API_TOKEN, AWS_KEY_ID, SECRET_FILES, FIXED_SECRET_FILES } from '#tests/config/secrets.ts';
 
 const SECRETS_FILES_POLICY = settingsText(['secrets']);
 
 async function secretChecks(root: string): Promise<RunReport['checks']> {
-    const result = await spawnGspot(root, [
-        'check',
-        '--only',
-        'secrets/gitleaks-files',
-        'secrets/gitleaks-staged',
-        '--json',
-    ]);
+    const result = await spawnGspot(root, ['check', '--only', 'secrets/gitleaks-staged', '--json']);
     return (JSON.parse(result.stdout) as RunReport).checks;
 }
 
-test('the secrets checks scan the files of a folder without Git, and the staged changes once Git exists', async () => {
+test('the staged scan skips a folder without Git and checks staged changes once Git exists', async () => {
     using _tools = useEnvironment({ PATH: toolsPath() });
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -43,17 +36,9 @@ test('the secrets checks scan the files of a folder without Git, and the staged 
         writeGeneratedFiles(session, emitAll(session), log);
     }
     const withoutGit = await secretChecks(sandbox.path);
-    expect(withoutGit).toContainEqual(
-        containing({
-            check: 'secrets/gitleaks-files',
-            status: 'failed',
-            findings: containingAll([containing({ file: 'src/config.js' })]),
-        }),
-    );
     expect(withoutGit.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('skipped');
     commitAll(sandbox.path);
     const committed = await secretChecks(sandbox.path);
-    expect(committed.find((check) => check.check === 'secrets/gitleaks-files')?.status).toBe('skipped');
     expect(committed.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('passed');
     await createFileTree(sandbox.path, { 'src/staged.js': `const token = "${API_TOKEN}";\n` });
     gitOutput(sandbox.path, ['add', 'src/staged.js']);
@@ -105,23 +90,6 @@ function expectSecretFindings(check: CheckResult | undefined, output: string, pr
     expect(check?.findings.every(({ column }) => column !== undefined && column > 0)).toBe(true);
     for (const token of [AWS_KEY_ID, API_TOKEN]) expect(output).not.toContain(token);
 }
-
-test('gitleaks reports both secrets in files, hides the tokens, and passes after the fix', async () => {
-    await using sandbox = await testdir();
-    const environment = { PATH: toolsPath() };
-    await prepareSecrets(sandbox.path, environment);
-    await createFileTree(sandbox.path, SECRET_FILES);
-    const files = await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-files', '--json'], environment);
-    expect(files.code, files.stdout + files.stderr).toBe(1);
-    expectSecretFindings((JSON.parse(files.stdout) as RunReport).checks[0], files.stdout + files.stderr, '');
-    await createFileTree(sandbox.path, FIXED_SECRET_FILES);
-    const cleanFiles = await spawnGspot(
-        sandbox.path,
-        ['check', '--only', 'secrets/gitleaks-files', '--json'],
-        environment,
-    );
-    expect(cleanFiles.code, cleanFiles.stdout + cleanFiles.stderr).toBe(0);
-});
 
 test('gitleaks reports both staged secrets, hides the tokens, and passes after the fix', async () => {
     await using sandbox = await testdir();
@@ -213,67 +181,3 @@ reason = "The other exact historical token is an inert example."
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect((JSON.parse(accepted.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings).toStrictEqual([]);
 });
-
-test.each([...GITLEAKS_SCOPES])(
-    'an ignore of one gitleaks fingerprint works at the %s and in a scratch copy without Git',
-    async (_name, folder) => {
-        await using sandbox = await testdir();
-        const environment = { PATH: toolsPath() };
-        const tables =
-            folder === ''
-                ? ''
-                : `[[scope]]
-path = "app"
-
-configurations = ["secrets"]
-`;
-        const settings = settingsText(['secrets'], { tables });
-        await createFileTree(sandbox.path, { 'gspot.toml': settings });
-        const applied = await spawnGspot(sandbox.path, ['apply'], environment);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await createFileTree(
-            sandbox.path,
-            Object.fromEntries(Object.entries(SECRET_FILES).map(([file, text]) => [folder + file, text])),
-        );
-        await Bun.write(
-            join(sandbox.path, 'gspot.toml'),
-            settings +
-                `
-[[ignore]]
-check = "secrets/gitleaks-files"
-rule = "${folder}identity.py:aws-access-token:1"
-paths = ["${folder}identity.py"]
-reason = "This exact inert token is a reviewed example."
-`,
-        );
-        using copied = await copyIntoScratch({
-            root: sandbox.path,
-            dependencies: [],
-            paths: [
-                'gspot.toml',
-                '.gspot/config/gitleaks.toml',
-                ...Object.keys(SECRET_FILES).map((file) => folder + file),
-            ],
-        });
-        const command = ['check', '--only', 'secrets/gitleaks-files', '--json'];
-        for (const root of [sandbox.path, copied.path]) {
-            const checked = await spawnGspot(root, command, environment);
-            expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-            expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
-                {
-                    check: 'secrets/gitleaks-files',
-                    status: 'failed',
-                    findings: [
-                        {
-                            file: `${folder}credential,é.py`,
-                            rule: `${folder}credential,é.py:generic-api-key:1`,
-                            line: 1,
-                        },
-                    ],
-                },
-            ]);
-            expect((JSON.parse(checked.stdout) as RunReport).checks[0]?.findings).toHaveLength(1);
-            for (const token of [AWS_KEY_ID, API_TOKEN]) expect(checked.stdout + checked.stderr).not.toContain(token);
-        }
-    },
-);

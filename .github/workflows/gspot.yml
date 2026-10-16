@@ -80,5 +80,5 @@ jobs:
       - run: mise exec 'node@24' 'npm:@gspothq/cli@0.1.1' 'bun@1.4.3' -- gspot install
       - name: Manual checks
         run: |
-          (cd .gspot && mise install 'github:github/codeql-cli-binaries' lychee)
-          mise exec 'node@24' 'npm:@gspothq/cli@0.1.1' 'bun@1.4.3' -- gspot check --only docs/lychee-external security/codeql security/semgrep-registry site/linkinator-external
+          (cd .gspot && mise install lychee)
+          mise exec 'node@24' 'npm:@gspothq/cli@0.1.1' 'bun@1.4.3' -- gspot check --only docs/lychee-external security/semgrep-registry site/linkinator-external

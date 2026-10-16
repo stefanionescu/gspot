@@ -10,7 +10,7 @@ test("a tool's output reaches its check with LF line endings when the tool print
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': settingsText(['bash']) });
     const session = await openSession(sandbox.path);
-    const input = buildCheckInput(session, 'bash/bash-syntax');
+    const input = buildCheckInput(session, 'bash/shfmt');
     const printed = String.raw`process.stdout.write('one\r\ntwo\r\n'); process.stderr.write('three\r\n');`;
     const result = await runCheckTool(input, [process.execPath, '-e', printed], { cwd: sandbox.path });
     expect(result.stdout).toBe('one\ntwo\n');

@@ -1,8 +1,6 @@
-import type { SqlFile } from '#cli/types/parsers/sql.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { ScriptSyntax } from '#cli/types/parsers/bash.ts';
 import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import type { FENCE_PARSERS } from '#cli/config/checks/language/markdown.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 
@@ -22,19 +20,6 @@ export type ScriptFile = ScriptSyntax & {
 
 /** Native docstring arguments and the authored or inherited style, before source detection. */
 export type DocstringConfiguration = { command: string[]; style: PythonDocstringStyle | undefined };
-
-export type SqlSource = { path: string; text: string };
-
-export type SqlFileInput = {
-    input: CheckInput;
-    source: SqlSource;
-    parsed: SqlFile;
-    statementLimit: number;
-    parameterLimit: number;
-};
-
-/** Findings and measured triviality of one `CREATE FUNCTION` statement. */
-export type SqlFunctionFindings = { findings: Finding[]; isTrivial: boolean };
 
 /** The build of one Swift scope. */
 export type SwiftBuildPlan = {
@@ -68,8 +53,6 @@ export type FenceSyntaxError = { line: number; message: string };
 
 /** The styles accepted by the native Python docstring checker. */
 export type PythonDocstringStyle = 'google' | 'numpy' | 'sphinx';
-
-export type ParsedHtml = { templates: string[] };
 
 /** Referenced compiler projects whose outputs stay inside the caller-owned scratch copy. */
 export type TypeScriptReferenceCopy = {

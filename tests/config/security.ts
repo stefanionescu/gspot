@@ -61,22 +61,6 @@ export const ENCODED_REPORT = {
     ],
 } as const;
 
-export const CODEQL_SAMPLE = `from flask import request
-import sqlite3
-
-def query():
-    value = request.args.get("name")
-    sqlite3.connect("db.sqlite").execute("SELECT * FROM users WHERE name = " + value)
-`;
-
-export const CODEQL_FIXED = `from flask import request
-import sqlite3
-
-def query():
-    value = request.args.get("name")
-    sqlite3.connect("db.sqlite").execute("SELECT * FROM users WHERE name = ?", (value,))
-`;
-
 /** Keychain and hashing samples beside a safe keychain setting. */
 export const SWIFT_SAMPLE = `let access = kSecAttrAccessibleAlways
 let hash = Insecure.MD5
@@ -198,5 +182,3 @@ export const POSITIONLESS_REGIONS = [
     { name: 'negative offset', region: { charOffset: -1 } },
     { name: 'large offset', region: { charOffset: 1000 } },
 ] as const;
-
-export const CODEQL_FILE = 'query.py';

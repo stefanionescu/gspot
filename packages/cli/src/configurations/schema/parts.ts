@@ -61,7 +61,7 @@ export const conditionSchema = z.strictObject({
     level: levelSchema,
     setting: z.string().min(1),
     value: z.union([z.string(), z.number(), z.boolean()]),
-    git: z.boolean(),
+    git: z.literal(true),
     dependencies: z.array(z.string().min(1)).min(1),
     absent_dependencies: z.array(z.string().min(1)).min(1),
     filenames: z.array(z.string().min(1)).min(1),

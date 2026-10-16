@@ -29,9 +29,6 @@ export type LinkinatorConstructor = new () => {
     >;
 };
 
-/** Web manifest data validated before inspecting its icon paths. */
-export type WebManifest = { name?: unknown; icons?: { src?: string | undefined }[] | undefined };
-
 export type ParsedSite = {
     build_command: string[];
     build_folder: string;

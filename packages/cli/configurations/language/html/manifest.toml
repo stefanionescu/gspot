@@ -1,7 +1,7 @@
 allowed_words = ["HTML"]
 [configuration]
 title = "HTML"
-description = "HTML files: html-validate for structure and accessibility, no inline script or handler, and templates that hold placeholders in place of copy."
+description = "HTML files: html-validate for structure and accessibility, and no inline script or handler."
 
 [files]
 extensions = [".html", ".htm"]
@@ -48,12 +48,3 @@ stage = "commit"
 summary = "Refuses executable inline script, event handler attributes, and executable script or data URLs in HTML files."
 why = "A content security policy that allows inline script allows an injected one too, so the policy only holds when the pages hold none."
 help = "Move the script into a file, and attach the handler from that file. Structured data of type application/ld+json stays inline."
-
-[[check]]
-name = "template-text"
-example = "Text written into a file listed in html.templates reports a literal. Move the text to its content file and use a placeholder in the template."
-level = "all"
-stage = "commit"
-summary = "In the template files named by html.templates, checks that text a person reads is a placeholder and never a literal."
-why = "Copy written into a template is copy no translator and no content file ever sees."
-help = "Replace the text with a placeholder and put the words in the content file. Remove files that are not templates from html.templates."

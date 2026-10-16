@@ -1,4 +1,3 @@
-import type { ParsedHtml } from '#cli/types/checks/language.ts';
 import type { ParsedSite } from '#cli/types/checks/framework.ts';
 import type { ParsedPostgres } from '#cli/types/checks/database.ts';
 import type { ParsedTools } from '#cli/types/settings/tool-tables.ts';
@@ -50,7 +49,6 @@ type TableValues = {
     docs?: ParsedDocs | undefined;
     drizzle?: ParsedDrizzle | undefined;
     format: ParsedFormat;
-    html?: ParsedHtml | undefined;
     licenses?: ParsedLicenses | undefined;
     limits?: ParsedLimits | undefined;
     naming?: ParsedNaming | undefined;
@@ -63,7 +61,6 @@ type TableValues = {
     supabase?: ParsedSupabase | undefined;
     translations?: ParsedTranslations | undefined;
     xcode?: ParsedXcode | undefined;
-    'tools.codeql'?: NonNullable<ParsedTools['codeql']> | undefined;
     'tools.commitlint'?: NonNullable<ParsedTools['commitlint']> | undefined;
     'tools.editorconfig-checker'?: NonNullable<ParsedTools['editorconfig-checker']> | undefined;
     'tools.eslint'?: NonNullable<ParsedTools['eslint']> | undefined;
@@ -79,7 +76,6 @@ type TableValues = {
     'tools.sqlfluff'?: NonNullable<ParsedTools['sqlfluff']> | undefined;
     'tools.squawk'?: NonNullable<ParsedTools['squawk']> | undefined;
     'tools.stylelint'?: NonNullable<ParsedTools['stylelint']> | undefined;
-    'tools.svgo'?: NonNullable<ParsedTools['svgo']> | undefined;
     'tools.swiftlint'?: NonNullable<ParsedTools['swiftlint']> | undefined;
     'tools.taplo'?: NonNullable<ParsedTools['taplo']> | undefined;
     'tools.trivy'?: NonNullable<ParsedTools['trivy']> | undefined;

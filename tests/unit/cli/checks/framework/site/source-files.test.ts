@@ -1,24 +1,13 @@
 import { join } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, readFile } from 'node:fs/promises';
-import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { fakeNpmTool } from '#tests/setup/fake-tool.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
-import { processResult } from '#tests/setup/processes.ts';
-import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { copyRevision } from '#cli/execution/copy/revision.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
-
-import {
-    ORIGINAL_SVG,
-    MANIFEST_LINKS,
-    SVG_SAVING_CASES,
-    INVALID_WEB_MANIFESTS,
-} from '#tests/config/site/source-files.ts';
 
 test("an asset in a scope's assets folder counts as used when a file outside the scope links to it", async () => {
     await using sandbox = await testdir({
@@ -103,89 +92,4 @@ test('an unstaged deletion removes the reference without failing the asset check
     expect(CHECK_FUNCTIONS['site/unused-assets'](input)).toMatchObject([
         { file: 'docs/assets/logo.svg', rule: 'dead-asset' },
     ]);
-});
-
-test.each([...INVALID_WEB_MANIFESTS])('malformed web manifest %s produces a parse finding', async (source) => {
-    await using sandbox = await testdir({
-        'gspot.toml': settingsText(['site']),
-        'site.webmanifest': source,
-    });
-    const findings = await checkFindings(sandbox.path, 'site/webmanifest');
-    expect(findings).toMatchObject([{ check: 'site/webmanifest', file: 'site.webmanifest', line: 1, rule: 'parse' }]);
-});
-
-test('a valid web manifest reports missing names and icons and passes after the fix', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': settingsText(['site']),
-        'site.webmanifest': '{"icons": [{"src": "icon.png"}]}',
-    });
-    const rejected = await checkFindings(sandbox.path, 'site/webmanifest');
-    expect(rejected).toMatchObject([
-        { file: 'site.webmanifest', line: 1, rule: 'missing-name' },
-        { file: 'site.webmanifest', line: 1, rule: 'icon' },
-    ]);
-    await createFileTree(sandbox.path, {
-        'site.webmanifest': '{"name": "Example", "icons": [{"src": "icon.png"}]}',
-        'icon.png': 'icon',
-    });
-    expect(await checkFindings(sandbox.path, 'site/webmanifest')).toStrictEqual([]);
-});
-
-test.each([...SVG_SAVING_CASES])('SVG optimization $name', async (sample) => {
-    const { percent, saved, finding } = sample;
-    await using sandbox = await testdir();
-    const settings = settingsText(['site'], {
-        level: 'all',
-        tables:
-            percent === 0
-                ? '[tools.svgo]\nmin_saving_percent = 0\n'
-                : `[tools.svgo]\nmin_saving_percent = { value = ${String(percent)}, reason = "Required asset size limit." }\n`,
-    });
-    await createFileTree(sandbox.path, { 'gspot.toml': settings, 'icon.svg': ORIGINAL_SVG });
-    const session = await openSession(sandbox.path);
-    const pin = await fakeNpmTool(sandbox.path, 'svgo');
-    await createFileTree(sandbox.path, {});
-    using resources = new DisposableStack();
-    resources.use(mockPinnedExecutables([pin]));
-    using run = spyOn(processes, 'run').mockResolvedValue(
-        processResult({ stdout: '<svg/>'.padEnd(Buffer.byteLength(ORIGINAL_SVG) - saved) }),
-    );
-    const findings = await checkFindings(session.root, 'site/svgo');
-    expect(run.mock.calls.map(([, options]) => options.stdin)).toStrictEqual([ORIGINAL_SVG]);
-    if (finding) {
-        expect(findings).toMatchObject([{ file: 'icon.svg', rule: 'unoptimized' }]);
-    } else expect(findings).toStrictEqual([]);
-    expect(await readFile(join(sandbox.path, 'icon.svg'), 'utf8')).toBe(ORIGINAL_SVG);
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-});
-
-test('web manifests are found through HTML link tags, not by file name', async () => {
-    await using sandbox = await testdir();
-    const settings = settingsText(['site'], {
-        level: 'all',
-        tables: '[[scope]]\npath = "app"\nconfigurations = ["site"]\n',
-    });
-    await createFileTree(sandbox.path, { 'gspot.toml': settings });
-    for (const scope of ['', 'app'])
-        await createFileTree(sandbox.path, {
-            [join(scope, 'index.html')]: MANIFEST_LINKS,
-            [join(scope, 'config/manifest.json')]: '{',
-            [join(scope, 'metadata/app manifest.json')]: '{"icons":[{"src":"icon.png"}]}',
-        });
-    for (const scope of ['', 'app']) {
-        const path = scope === '' ? 'metadata/app manifest.json' : 'app/metadata/app manifest.json';
-        const findings = await checkFindings(sandbox.path, 'site/webmanifest', { scope });
-        expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
-            { file: path, rule: 'missing-name' },
-            { file: path, rule: 'icon' },
-        ]);
-        await createFileTree(sandbox.path, {
-            [path]: '{"name":"Example","icons":[{"src":"icon.png"}]}',
-            [join(scope, 'metadata/icon.png')]: 'icon',
-        });
-        expect(await checkFindings(sandbox.path, 'site/webmanifest', { scope })).toStrictEqual([]);
-        expect(await readFile(join(sandbox.path, scope, 'config/manifest.json'), 'utf8')).toBe('{');
-        expect(await readFile(join(sandbox.path, scope, 'index.html'), 'utf8')).toBe(MANIFEST_LINKS);
-    }
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });

@@ -77,7 +77,7 @@ export const CHECK_REPORT_PROGRESS = {
 
 export const NO_COLOR_SETTINGS = `configurations = []
 [[ignore]]
-check = "gspot/settings-format"
+check = "gspot/generated-files"
 paths = ["absent/**"]
 reason = "This path belongs to an external generated project."
 `;

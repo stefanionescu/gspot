@@ -9,7 +9,6 @@ import { stat, chmod, readFile } from 'node:fs/promises';
 import { fileMode } from '#cli/system/safe-folder/reads.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandbox.ts';
-import { SOURCE_HEADER } from '#tests/config/swift/snapshots.ts';
 import { hasToolBuild } from '#tests/setup/operating-systems.ts';
 import { SWIFT_FORMAT_CHECK } from '#tests/config/swift/projects.ts';
 import { checkChanges, runCheckSample } from '#tests/setup/fixes.ts';
@@ -18,6 +17,7 @@ import {
     CAST_SWIFT,
     CLEAN_SWIFT,
     SWIFT_CASES,
+    SOURCE_HEADER,
     SWIFT_SANDBOX,
     SWIFT_DOCS_SOURCE,
     SWIFT_INLINE_DOCS,

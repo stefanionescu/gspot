@@ -32,7 +32,7 @@ const GITHUB_ACTIONS_CASES = [
     {
         check: 'github-actions/zizmor',
         files: {
-            '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - uses: actions/checkout@v4\n            - run: echo "\${{ github.event.pull_request.title }}"\n`,
+            '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0\n            - run: echo "\${{ github.event.pull_request.title }}"\n`,
         },
         expected: { file: '.github/workflows/unpinned.yml', rule: 'template-injection', line: 10 },
         corrected: {
@@ -59,7 +59,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 `;
@@ -74,7 +74,10 @@ const CALLED_WORKFLOW_REFERENCES = [
     [`|-\n          $/${CALLED_WORKFLOW}`, `|-\n          ./${CALLED_WORKFLOW}`],
     [`|- # $comment\n          $/${CALLED_WORKFLOW}`, `|- # $comment\n          ./${CALLED_WORKFLOW}`],
     ['$/.github/workflows/$called.yml', './.github/workflows/$called.yml'],
-    ['actions/checkout@v4', 'actions/checkout@v4'],
+    [
+        'actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0',
+        'actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0',
+    ],
 ] as const;
 
 const ACTIONLINT_EXITS = [

@@ -26,20 +26,20 @@ export const DEFAULT_FIELDS = {
         configurations: ['structure'],
         description: 'The most lines one function may have.',
         reason_needed: 'raising',
-        languages: ['typescript', 'javascript', 'python', 'swift', 'bash'],
+        languages: ['typescript', 'javascript', 'swift', 'bash'],
         language_defaults: { bash: 40 },
     },
     function_parameters: {
         configurations: ['structure'],
         description: 'The most parameters one function may take.',
         reason_needed: 'raising',
-        languages: ['typescript', 'javascript', 'python', 'swift', 'sql'],
+        languages: ['typescript', 'javascript', 'python', 'swift'],
     },
     statements: {
         configurations: ['structure'],
         description: 'The most statements one function may have.',
         reason_needed: 'raising',
-        languages: ['typescript', 'javascript'],
+        languages: ['typescript', 'javascript', 'python'],
     },
     nesting: {
         configurations: ['structure'],
@@ -105,14 +105,14 @@ export const DEFAULT_FIELDS = {
         configurations: ['structure'],
         description: 'The most re-exports one index file may hold.',
         reason_needed: 'raising',
-        languages: ['typescript', 'javascript', 'python'],
+        languages: ['typescript', 'javascript'],
     },
     min_function_statements: {
         configurations: ['structure'],
         description:
             'Functions with this many statements or fewer are reported. Any whole number of 1 or more works, and a higher number reports more functions. Set it for one language under limits.`<language>`.',
         reason_needed: 'lowering',
-        languages: ['typescript', 'javascript', 'python', 'swift', 'bash', 'sql'],
+        languages: ['typescript', 'javascript', 'python', 'swift', 'bash'],
     },
     prefix_collisions: {
         configurations: ['structure'],
@@ -239,7 +239,5 @@ export const DEFAULT_VALUES = {
     max_characters: 35,
     max_words: 4,
     minProperties: 2,
-    min_saving_percent_maximum: 100,
-    min_saving_percent: 10,
     tool_timeout_seconds: 600,
 } as const;

@@ -12,6 +12,7 @@ import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { fileMode } from '#cli/system/safe-folder/reads.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { stat, chmod, mkdir, unlink, readFile, writeFile } from 'node:fs/promises';
@@ -215,14 +216,14 @@ test.skipIf(!caseFolding)('a case-folding disk refuses them', async () => {
 
 test('staged checks use index bytes and settings on an unborn branch while preserving unstaged edits', async () => {
     await using directory = await testdir();
-    const settings = settingsText(['bash']);
+    const settings = settingsText(['bash'], { tables: BASH_SYNTAX_CHECK });
     await createFileTree(directory.path, { 'gspot.toml': settings, 'script with spaces.sh': 'if then\n' });
     gitOutput(directory.path, ['init', '-q']);
     gitOutput(directory.path, ['add', '-A']);
     const index = gitOutput(directory.path, ['ls-files', '--stage', '-z']);
     await writeFile(join(directory.path, 'script with spaces.sh'), 'echo repaired only in the working tree\n');
     await writeFile(join(directory.path, 'gspot.toml'), 'invalid working settings');
-    const args = ['check', '--staged', '--only', 'bash/bash-syntax', '--json'];
+    const args = ['check', '--staged', '--only', 'project/bash-syntax', '--json'];
     const failed = await checkReport(directory.path, args);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const failedReport = failed.report;
@@ -250,12 +251,12 @@ test('staged checks use index bytes and settings on an unborn branch while prese
 test('staged checks read an indexed file when its working file is missing', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': settingsText(['bash']),
+        'gspot.toml': settingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'script with spaces.sh': 'echo indexed\n',
     });
     gitOutput(directory.path, ['init', '-q']);
     gitOutput(directory.path, ['add', '-A']);
-    const args = ['check', '--staged', '--only', 'bash/bash-syntax', '--json'];
+    const args = ['check', '--staged', '--only', 'project/bash-syntax', '--json'];
     await unlink(join(directory.path, 'script with spaces.sh'));
     const ran = await checkReport(directory.path, args);
     expect(ran.code, ran.stdout + ran.stderr).toBe(0);
@@ -266,14 +267,14 @@ test('staged checks read an indexed file when its working file is missing', asyn
 test('staged checks validate the index version pin instead of the working pin', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': settingsText(['bash']),
+        'gspot.toml': settingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
         '.gspot/version': '0.0.0\n',
         'script.sh': 'echo valid\n',
     });
     gitOutput(directory.path, ['init', '-q']);
     gitOutput(directory.path, ['add', '-A']);
     await writeFile(join(directory.path, '.gspot/version'), `${cliPackage.version}\n`);
-    const args = ['check', '--staged', '--only', 'bash/bash-syntax', '--json'];
+    const args = ['check', '--staged', '--only', 'project/bash-syntax', '--json'];
     const refused = await runGspot(directory.path, args);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).error).toBe('pin');

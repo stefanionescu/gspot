@@ -3,9 +3,9 @@ import { quoteArgument } from '#cli/text.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { JsonValue } from '#cli/types/parsers/json.ts';
 import type { TableSettings } from '#cli/types/settings/tables.ts';
+import { RECORD_DESCRIPTIONS } from '#cli/config/settings/defaults.ts';
 import type { ToolTable, StylelintOptions } from '#cli/types/settings/file.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tool-tables.ts';
-import { DEFAULT_VALUES, RECORD_DESCRIPTIONS } from '#cli/config/settings/defaults.ts';
 import { YAMLLINT_RULES, COMMITLINT_RULES } from '#cli/config/generation/tool-file-sources.ts';
 import ESLINT_RUNTIMES from '../../../configurations/language/javascript/eslint-runtime-names.json' with { type: 'json' };
 
@@ -164,11 +164,6 @@ const eslintTable = toolOptionsSchema.extend({
 >);
 
 export const toolsSchema = z.strictObject({
-    codeql: z
-        .strictObject({
-            languages: settingField(nonemptyStrings, [], SETTING_FIELDS.codeql_languages),
-        } satisfies SchemaShape<TableSettings<'tools.codeql'>, NonNullable<WrittenTools['codeql']>>)
-        .optional(),
     hadolint: z
         .strictObject({
             trusted_registries: settingField(z.array(z.string()), [], SETTING_FIELDS.hadolint_trusted_registries),
@@ -201,15 +196,6 @@ export const toolsSchema = z.strictObject({
         .strictObject({
             dialect: settingField(z.string().regex(/^[a-z][a-z0-9_]*$/u), 'ansi', SETTING_FIELDS.sqlfluff_dialect),
         } satisfies SchemaShape<TableSettings<'tools.sqlfluff'>, NonNullable<WrittenTools['sqlfluff']>>)
-        .optional(),
-    svgo: z
-        .strictObject({
-            min_saving_percent: settingField(
-                reasonValue(z.number().min(0).max(DEFAULT_VALUES.min_saving_percent_maximum)),
-                DEFAULT_VALUES.min_saving_percent,
-                SETTING_FIELDS.svgo_min_saving_percent,
-            ),
-        } satisfies SchemaShape<TableSettings<'tools.svgo'>, NonNullable<WrittenTools['svgo']>>)
         .optional(),
     swiftlint: z
         .strictObject({

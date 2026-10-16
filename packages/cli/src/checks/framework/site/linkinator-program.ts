@@ -10,9 +10,8 @@ import { LINKINATOR, LOCAL_HOSTS } from '#cli/config/checks/framework/site.ts';
 const linkinatorRequestSchema = z.strictObject({
     paths: z.array(z.string().min(1)),
     origin: z.url().optional(),
-    external: z.boolean(),
     skipped: z.array(z.string()),
-} satisfies SchemaShape<{ paths: string[]; origin?: string | undefined; external: boolean; skipped: string[] }>);
+} satisfies SchemaShape<{ paths: string[]; origin?: string | undefined; skipped: string[] }>);
 const executable = z.string().parse(process.argv[2]);
 const api = (await import(pathToFileURL(createRequire(executable).resolve(LINKINATOR)).href)) as {
     LinkChecker: LinkinatorConstructor;
@@ -36,7 +35,7 @@ const result = await checker.check({
     linksToSkip: (href) => {
         const url = new URL(href);
         return Promise.resolve(
-            (!request.external && url.origin !== request.origin && !new Set<string>(LOCAL_HOSTS).has(url.hostname)) ||
+            (url.origin !== request.origin && !new Set<string>(LOCAL_HOSTS).has(url.hostname)) ||
                 skipped.some((pattern) => pattern.test(href)),
         );
     },

@@ -1,6 +1,5 @@
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { Defined, Optional } from '#cli/types/objects.ts';
-import type { ParsedHtml } from '#cli/types/checks/language.ts';
 import type { ParsedSite } from '#cli/types/checks/framework.ts';
 import type { FileCopy } from '#cli/types/system/safe-folder.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
@@ -118,7 +117,6 @@ export type WrittenSettings = Optional<
         | 'rules'
         | 'cloudflare'
         | 'drizzle'
-        | 'html'
         | 'openapi'
         | 'postgres'
         | 'secrets'
@@ -131,7 +129,6 @@ export type WrittenSettings = Optional<
     licenses?: WrittenLicenses | undefined;
     cloudflare?: Optional<ParsedCloudflare> | undefined;
     drizzle?: Optional<ParsedDrizzle> | undefined;
-    html?: Optional<ParsedHtml> | undefined;
     openapi?: Optional<ParsedOpenapi> | undefined;
     postgres?: Optional<ParsedPostgres> | undefined;
     secrets?: Optional<ParsedSecrets> | undefined;
@@ -181,7 +178,6 @@ export type ParsedSettings = ParsedRoot & {
               dependencies?: ParsedDependencies | undefined;
               docs?: Omit<ParsedDocs, 'banned_headings'> | undefined;
               drizzle?: ParsedDrizzle | undefined;
-              html?: ParsedHtml | undefined;
               licenses?: Omit<ParsedLicenses, 'allowed_package'> | undefined;
               openapi?: ParsedOpenapi | undefined;
               postgres?: ParsedPostgres | undefined;
@@ -207,7 +203,6 @@ export type ParsedSettings = ParsedRoot & {
     dependencies?: ParsedDependencies | undefined;
     docs?: ParsedDocs | undefined;
     drizzle?: ParsedDrizzle | undefined;
-    html?: ParsedHtml | undefined;
     licenses?: ParsedLicenses | undefined;
     openapi?: ParsedOpenapi | undefined;
     postgres?: ParsedPostgres | undefined;

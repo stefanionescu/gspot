@@ -18,7 +18,7 @@ const sourceRoot = resolve('selected-source');
 const sourceUri = pathToFileURL(`${sourceRoot}${sep}`).href;
 
 test('sarifFindings maps every result to its file and line', () => {
-    const findings = sarifFindings(CODEQL_REPORT, 'security/codeql', 'Correct the defect.', sourceRoot);
+    const findings = sarifFindings(CODEQL_REPORT, 'docker/trivy-config', 'Correct the defect.', sourceRoot);
     expect(findings.map((finding) => [finding.file, finding.line, finding.rule])).toStrictEqual([
         ['api/src/users.ts', 12, 'js/sql-injection'],
         ['scripts/build.ts', undefined, 'js/path-injection'],
@@ -31,7 +31,7 @@ test.each([...FAILED_INVOCATIONS])(
         expect(() =>
             sarifFindings(
                 { version: '2.1.0', runs: [{ results: [], invocations: [invocation] }] },
-                'security/codeql',
+                'docker/trivy-config',
                 'Correct the defect.',
                 sourceRoot,
             ),
@@ -71,7 +71,7 @@ test.each([
             },
         ],
     };
-    expect(sarifFindings(report, 'security/codeql', 'Correct the defect.', sourceRoot)).toMatchObject([
+    expect(sarifFindings(report, 'docker/trivy-config', 'Correct the defect.', sourceRoot)).toMatchObject([
         { file: 'api/some file.ts', line: 9, column: 4, rule: 'js/sql-injection' },
     ]);
 });
@@ -87,11 +87,13 @@ test.each([
         version: '2.1.0',
         runs: [{ results: [{ locations: [{ physicalLocation: { artifactLocation: artifact } }] }] }],
     };
-    expect(() => sarifFindings(report, 'security/codeql', 'Correct the defect.', sourceRoot)).toThrow('SARIF reported');
+    expect(() => sarifFindings(report, 'docker/trivy-config', 'Correct the defect.', sourceRoot)).toThrow(
+        'SARIF reported',
+    );
 });
 
 test('cyclic URI bases are refused before a finding resolves', () => {
-    expect(() => sarifFindings(CYCLIC_REPORT, 'security/codeql', 'Correct the defect.', sourceRoot)).toThrow(
+    expect(() => sarifFindings(CYCLIC_REPORT, 'docker/trivy-config', 'Correct the defect.', sourceRoot)).toThrow(
         'SARIF reported a cyclic source location.',
     );
 });
@@ -111,7 +113,7 @@ test.each([...POSITIONLESS_REGIONS])(
                 },
             ],
         };
-        const [finding] = sarifFindings(report, 'security/codeql', 'Correct the defect.', sourceRoot);
+        const [finding] = sarifFindings(report, 'docker/trivy-config', 'Correct the defect.', sourceRoot);
         expect(finding).toMatchObject({ file: 'missing.py', fixable: false });
         expect(finding).not.toHaveProperty('line');
         expect(finding).not.toHaveProperty('column');
@@ -122,7 +124,7 @@ test('given positions are kept without reading source bytes or encodings', async
     await using directory = await testdir();
     const source = Buffer.from('first\n😀x', 'utf16le');
     await createFileTree(directory.path, { 'source.py': source });
-    expect(sarifFindings(ENCODED_REPORT, 'security/codeql', 'Correct the defect.', directory.path)).toMatchObject([
+    expect(sarifFindings(ENCODED_REPORT, 'docker/trivy-config', 'Correct the defect.', directory.path)).toMatchObject([
         { file: 'source.py', line: 3, column: 2 },
     ]);
     expect(await readFile(join(directory.path, 'source.py'))).toStrictEqual(source);
@@ -130,7 +132,7 @@ test('given positions are kept without reading source bytes or encodings', async
 
 test('a result with no location is a repository-level finding without line or column', () => {
     const report = { version: '2.1.0', runs: [{ results: [{}] }] };
-    const [finding] = sarifFindings(report, 'security/codeql', 'Correct the defect.', sourceRoot);
+    const [finding] = sarifFindings(report, 'docker/trivy-config', 'Correct the defect.', sourceRoot);
     expect(finding).toMatchObject({ file: '', fixable: false });
     expect(finding).not.toHaveProperty('line');
     expect(finding).not.toHaveProperty('column');

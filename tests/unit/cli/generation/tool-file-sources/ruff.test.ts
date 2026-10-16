@@ -11,6 +11,7 @@ test('Ruff selects the pytest and FastAPI families only when selected, and adds 
     ) as RuffToolFile;
     expect(plain.lint.select.filter((code) => /^(?:AIR|DJ|FAST|NPY|PT)/u.test(code))).toStrictEqual([]);
     expect(plain.lint['per-file-ignores']).toBeUndefined();
+    expect(plain.lint.pylint['max-statements']).toBe(30);
     const tested = parse(
         await emitFile(settingsText(['python', 'pytest']), '.gspot/config/ruff.toml', { 'example.py': 'value = 1\n' }),
     ) as RuffToolFile;

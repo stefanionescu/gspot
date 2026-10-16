@@ -1,18 +1,11 @@
 // Reads Python modules, declarations, and imports.
+// Reads Python modules, declarations, and imports.
 import type { Node } from 'web-tree-sitter';
 import { readSource } from '#cli/system/file-reads.ts';
-import { SURROUNDING_QUOTES } from '#cli/config/text.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { ParseCache, SourceInput } from '#cli/types/parsers/tree-sitter.ts';
-import { PYTHON_EXTENSION, PYTHON_EXPORT_LIST, PYTHON_FUNCTION_NODES } from '#cli/config/parsers/python.ts';
-import type { PythonFiles, PythonModule, PythonExports, PythonFunction } from '#cli/types/parsers/python.ts';
-
-// The value assigned to __all__ by a statement, or undefined when the statement assigns something else.
-function exportList(statement: Node): Node | undefined {
-    const assignment = assignmentOf(statement);
-    if (assignment?.childForFieldName('left')?.text !== PYTHON_EXPORT_LIST) return undefined;
-    return assignment.childForFieldName('right') ?? undefined;
-}
+import { PYTHON_EXTENSION, PYTHON_FUNCTION_NODES } from '#cli/config/parsers/python.ts';
+import type { PythonFiles, PythonModule, PythonFunction } from '#cli/types/parsers/python.ts';
 
 /**
  * Every function of a module, nested ones included.
@@ -89,16 +82,6 @@ export async function parsePythonModule(path: string, text: string, cache?: Pars
 }
 
 /**
- * Read an assignment from an expression statement.
- * @param statement the module statement.
- * @returns the assignment, or undefined for other statements.
- */
-export function assignmentOf(statement: Node): Node | undefined {
-    const first = statement.type === 'expression_statement' ? statement.namedChildren[0] : undefined;
-    return first?.type === 'assignment' ? first : undefined;
-}
-
-/**
  * The docstring text of a function, or undefined.
  * @param definition the function definition.
  * @returns the text inside the quotes.
@@ -109,23 +92,6 @@ export function docstringOf(definition: Node): string | undefined {
     if (first === undefined || !isDocstring(first, siblings)) return undefined;
     const content = first.namedChildren[0]?.namedChildren.find((part) => part.type === 'string_content');
     return content?.text.trim() ?? '';
-}
-
-/**
- * The names a module lists in __all__, or undefined when it has no such list.
- * @param module the module.
- * @returns the names and the statement that holds them.
- */
-export function exportedNames(module: PythonModule): PythonExports | undefined {
-    for (const statement of module.statements) {
-        const list = exportList(statement);
-        if (list === undefined) continue;
-        const names = list.namedChildren
-            .filter((item) => item.type === 'string')
-            .map((item) => item.text.replaceAll(SURROUNDING_QUOTES, ''));
-        return { names, statement };
-    }
-    return undefined;
 }
 
 /**

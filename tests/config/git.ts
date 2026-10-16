@@ -61,7 +61,7 @@ const NESTED_SCOPE_FILES = {
     'nested policy/source.txt': 'committed',
 } as const;
 
-const PUSH_CHECK_ARGV = ['check', '--hook', 'pre-push', '--only', 'bash/bash-syntax', '--json', '--'] as const;
+const PUSH_CHECK_ARGV = ['check', '--hook', 'pre-push', '--only', 'project/bash-syntax', '--json', '--'] as const;
 
 const PUSH_CHECK_COMMAND = [...PUSH_CHECK_ARGV, 'origin', 'unused'] as const;
 

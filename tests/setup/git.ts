@@ -7,6 +7,7 @@ import { stat, chmod, writeFile } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import type { SpawnOutcome } from '#tests/types/processes.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
 import { environmentVariables } from '#cli/system/environment.ts';
 import { PUSH_CONTENT, GIT_TEST_CONFIG, GIT_TEST_ENVIRONMENT, SANDBOX_COMMIT_STEPS } from '#tests/config/git.ts';
 
@@ -78,7 +79,7 @@ export async function preparePushRepository(
     root: string,
 ): Promise<{ base: string; reviewed: string; broken: string; zero: string }> {
     await createFileTree(root, {
-        'gspot.toml': settingsText(['bash']),
+        'gspot.toml': settingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'changed.sh': PUSH_CONTENT.base,
         'legacy.sh': PUSH_CONTENT.broken,
     });

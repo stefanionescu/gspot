@@ -25,9 +25,6 @@ export const ASSET_SETTING_CASES = [
     },
 ] as const;
 
-/** Invalid test plans report source findings rather than execution errors. */
-export const INVALID_TEST_PLAN_DOCUMENTS = [['xcode/test-plans', 'App.xctestplan', '{']] as const;
-
 /** Invalid resource documents report source findings rather than execution errors. */
 export const INVALID_RESOURCE_DOCUMENTS = [
     ['xcode/xcstrings', 'Localizable.xcstrings', 'null'],

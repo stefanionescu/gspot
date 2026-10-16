@@ -21,12 +21,10 @@ function conditionSkip(check: PlannedCheck, hasGit: boolean, projects: Dependenc
         !dependencies.some((name) => name in projectDependencies(projects, check.scope.scope.path))
     )
         return { cause: 'condition', note: `Needs a project dependency: ${dependencies.join(', ')}.` };
-    if (git !== !hasGit) return undefined;
+    if (git !== true || hasGit) return undefined;
     return {
         cause: 'condition',
-        note: git
-            ? 'This folder is not a Git repository, so the check has no history to read.'
-            : `The ${check.check.name} check scans the files of this Git repository.`,
+        note: 'This folder is not a Git repository, so the check has no history to read.',
     };
 }
 

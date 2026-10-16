@@ -62,9 +62,7 @@ Run `gspot add swift-tests`. gspot writes a `.swiftlint.yml` into each `Tests` o
 that turns off `force_unwrapping`, `missing_docs`, and `no_magic_numbers` in tests, while your
 source files keep those rules. `gspot check --only swift/swiftlint` reads these nested files. When configuring an editor directly, omit `--config` from SwiftLint because that option disables nested configuration.
 
-If you use swift-snapshot-testing, gspot also checks that no test keeps recording enabled, and that every `__Snapshots__` folder has the name of a Swift test file next to it. The
-[swift-snapshot-testing](/reference/configurations/swift-snapshot-testing/) declares these checks.
-[swift-tests](/reference/configurations/swift-tests/) declares checks for test reasons, sleeps, and coverage.
+[swift-tests](/reference/configurations/swift-tests/) declares checks for test reasons and coverage.
 
 To set a line coverage limit for a Swift target:
 

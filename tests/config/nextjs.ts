@@ -1,16 +1,5 @@
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
 
-const NEXT_ROUTE = `// Answers the same address as the page.
-
-/**
- * Answers a request.
- * @returns the answer
- */
-export function GET(): Response {
-    return new Response("ok");
-}
-`;
-
 const NEXT_PACKAGE_JSON =
     '{"name":"example","version":"1.0.0","private":true,"type":"module","dependencies":{"next":"16.3.5","next-intl":"4.3.9","react":"19.1.1","react-dom":"19.1.1"}}\n';
 
@@ -23,7 +12,7 @@ export default config;
 `;
 
 /** The home page emitted by the test application. */
-export const NEXT_PAGE = `// The home page.
+const NEXT_PAGE = `// The home page.
 
 /**
  * Renders the home page.
@@ -66,12 +55,6 @@ export const NEXT_REPOSITORY = {
 
 export const NEXT_CASES = [
     {
-        check: 'nextjs/route-segments',
-        files: { 'app/route.ts': NEXT_ROUTE },
-        expected: { file: 'app/route.ts', rule: 'route-segment', line: 1 },
-        corrected: { files: { 'app/api/route.ts': NEXT_ROUTE } },
-    },
-    {
         check: 'nextjs/next-config',
         files: {
             'next.config.mjs': `// The framework configuration.
@@ -83,10 +66,6 @@ export default config;
         expected: { file: 'next.config.mjs', rule: 'checks-off', line: 2 },
     },
 ] as const;
-
-/** A missing imported page dependency fails native bundling. */
-export const NEXT_BUILD_FAILURE_PAGE =
-    "import Missing from './missing-component';\nexport default function Page() { return <Missing />; }\n";
 
 export const NEXT_PACKAGE = {
     name: 'example',
@@ -212,31 +191,7 @@ export const NEXT_CONFIG_CASES = [
     },
 ] as const;
 
-/** The SDK-only root has no app; the child app owns its complete build inputs. */
-export const NEXT_BUILD_FILES = {
-    'package.json': '{"dependencies":{"next":"16.3.5"}}',
-    'library.ts': 'export const count = 1;\n',
-    'web/package.json': '{"dependencies":{"next":"16.3.5"}}',
-    'web/tsconfig.json': '{}',
-    'web/src/data.ts': 'export const count = 1;\n',
-} as const;
-
-export const NEXT_BUILD_TABLES = `[[scope]]
-path = "web"
-configurations = ["nextjs"]
-`;
-
-/** Next.js accepts either router at the project root or under src. */
-export const NEXT_BUILD_ROUTES = [
-    'app/page.tsx',
-    'src/app/page.tsx',
-    'pages/index.tsx',
-    'src/pages/index.tsx',
-] as const;
-
 export const TSC_FAILURE_OUTPUT = 'src/app/page.ts(1,1): error TS2322: Type mismatch\n';
-
-export const BUILD_FAILURE_OUTPUT = 'Error: Page is invalid\n';
 
 export const NEXT_VERSION_OUTPUT = 'Next.js v16.3.5';
 

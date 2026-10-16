@@ -27,8 +27,8 @@ beforeAll(async () => {
     preparation = new AsyncDisposableStack();
     const sandbox = preparation.use(
         await testdir({
-            'gspot.toml': settingsText(['security'], {
-                tables: '[tools.codeql]\nlanguages = ["javascript"]\n[[command_check]]\nname = "project/audit"\npaths = ["**/*"]\nstage = "manual"\ncommand = ["echo", "sample"]\n',
+            'gspot.toml': settingsText(['docs'], {
+                tables: '[[command_check]]\nname = "project/audit"\npaths = ["**/*"]\nstage = "manual"\ncommand = ["echo", "sample"]\n',
             }),
             'source.js': 'export const value = 1;\n',
             'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
@@ -39,8 +39,8 @@ beforeAll(async () => {
     PIPELINE = {
         ...LINUX_PIPELINE,
         operatingSystems: [...LINUX_PIPELINE.operatingSystems],
-        manualChecks: session.configuredChecks.filter(({ check }) => check.name === 'security/codeql'),
-        manualTools: session.manifests.get('security')!.tools.filter((tool) => tool.name === 'codeql'),
+        manualChecks: session.configuredChecks.filter(({ check }) => check.name === 'docs/lychee-external'),
+        manualTools: session.manifests.get('docs')!.tools.filter((tool) => tool.name === 'lychee'),
         ...(client === undefined ? {} : { npmClient: client }),
     };
     PIPELINE.manualChecks.push(...session.configuredChecks.filter(({ check }) => check.name === 'project/audit'));
@@ -52,7 +52,7 @@ afterAll(async () => {
 test('the GitHub workflow has a check job and a manual job per operating system, and no manual job without manual checks', () => {
     const file = githubFile({
         ...PIPELINE,
-        manualChecks: PIPELINE.manualChecks.filter(({ check }) => check.name === 'security/codeql'),
+        manualChecks: PIPELINE.manualChecks.filter(({ check }) => check.name === 'docs/lychee-external'),
     });
     const workflow = parse(file.content) as GithubWorkflow;
     expect(Object.keys(workflow.jobs)).toStrictEqual(['check-linux', 'manual-linux']);
@@ -60,14 +60,14 @@ test('the GitHub workflow has a check job and a manual job per operating system,
     expect(Object.keys(none.jobs)).toStrictEqual(['check-linux']);
 });
 
-test.each(['security/codeql', 'project/audit'])(
+test.each(['docs/lychee-external', 'project/audit'])(
     'the manual job runs %s by name and the check job runs every check',
     (name) => {
         const workflow = parse(
             githubFile({
                 ...PIPELINE,
                 manualChecks: PIPELINE.manualChecks.filter(({ check }) => check.name === name),
-                manualTools: name === 'security/codeql' ? PIPELINE.manualTools : [],
+                manualTools: name === 'docs/lychee-external' ? PIPELINE.manualTools : [],
             }).content,
         ) as GithubWorkflow;
         const runs = workflow.jobs['manual-linux']!.steps.map((step) => step.run ?? '');

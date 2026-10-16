@@ -20,11 +20,6 @@ file = "linkinator.config.json"
 shared = false
 
 [[tool]]
-name = "svgo"
-version = "4.1.0"
-npm = "svgo"
-
-[[tool]]
 name = "purgecss"
 version = "7.0.2"
 npm = "purgecss"
@@ -90,18 +85,6 @@ why = "A broken internal link is a dead end a visitor finds before the author do
 help = "Fix the link, or the page it points at."
 
 [[check]]
-name = "linkinator-external"
-tool = "linkinator"
-example = "A built link to an external URL that responds with HTTP 404 reports a link failure. Replace it with the verified destination or remove the obsolete link, then rerun with network access."
-level = "recommended"
-stage = "manual"
-runs = "scope"
-needs = ["network"]
-summary = "Follows every link of the built site, the ones that leave it included."
-why = "Other sites move their pages, and a link nobody rechecks rots."
-help = "Update the link, or allow its URL under docs.allowed_urls with a reason."
-
-[[check]]
 name = "size"
 example = "A built page larger than its configured byte ceiling reports its measured size. Remove unused assets or reduce the page payload, rebuild, and rerun to verify it fits the ceiling."
 level = "recommended"
@@ -134,26 +117,3 @@ files = { paths = ["**/*"], kinds = ["source", "binary"] }
 summary = "Finds files under an assets folder that no page, stylesheet, or script names."
 why = "An asset nobody references ships with every deploy and is kept by everyone who fears deleting it."
 help = "Delete the file."
-
-[[check]]
-name = "svgo"
-tool = "svgo"
-example = "An SVG containing removable editor metadata differs from optimized output. Run the configured SVGO formatter on its source, inspect the result, and rebuild before checking again."
-level = "recommended"
-stage = "commit"
-files = { extensions = [".svg"] }
-fix = ["svgo", "--quiet", "{files}"]
-summary = "Reports SVG byte reductions above tools.svgo.min_saving_percent, which defaults to 10 at level `recommended` and 0 at level `all`."
-why = "An SVG straight from an editor carries metadata and precision a browser never needs."
-help = "Run svgo over the file."
-
-[[check]]
-name = "webmanifest"
-example = "A web manifest referencing `icon-192.png` reports a missing icon when no such file sits beside the manifest. Add the icon to the build or correct the manifest path, then rebuild."
-level = "recommended"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".webmanifest", ".html", ".htm", ".json"] }
-summary = "Checks that the web manifest parses, names the app, and lists icons that exist."
-why = "A manifest with a missing icon installs an app with a blank tile."
-help = "Correct the manifest, or add the icon."

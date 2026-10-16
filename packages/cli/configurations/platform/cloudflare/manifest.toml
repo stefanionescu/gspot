@@ -5,7 +5,7 @@ generated = ["worker-configuration.d.ts"]
 title = "Cloudflare"
 requires = ["javascript"]
 suggests = []
-description = "Cloudflare Pages and Workers: a wrangler configuration that parses and pins its date, headers and redirects files Cloudflare can read, fresh binding types, and the Semgrep rules for workers."
+description = "Cloudflare Pages and Workers: headers and redirects files Cloudflare can read, fresh binding types, and the Semgrep rules for workers."
 
 [detect]
 filenames = ["wrangler.toml", "wrangler.json", "wrangler.jsonc", "_worker.js"]
@@ -24,9 +24,6 @@ version_command = ["--version"]
 min_version = "3.78.3"
 npm = "wrangler"
 
-[[tool]]
-name = "v8r"
-
 [[tool_file]]
 source = "semgrep/cloudflare.yml"
 target = ".gspot/config/semgrep/cloudflare.yml"
@@ -35,20 +32,6 @@ rule_keys = ["rules"]
 per_scope = true
 when = { configuration = "security" }
 level = "all"
-
-[[check]]
-name = "wrangler"
-tool = ["wrangler", "v8r"]
-command = ["v8r", "--schema", "{wrangler_schema}", "--ignore-errors", "--output-format", "text", "{files}"]
-output = { format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$" }
-files = { filenames = ["wrangler.toml", "wrangler.json", "wrangler.jsonc"] }
-example = "A Wrangler configuration without `compatibility_date` reports the missing date. Add a reviewed date in `YYYY-MM-DD` form, such as `2025-01-31`, and test the Worker against that runtime behavior."
-level = "recommended"
-stage = "commit"
-runs = "scope"
-summary = "Checks that every wrangler configuration parses, names the worker, and pins a compatibility date."
-why = "Without a pinned date the runtime changes behavior under a deployed worker."
-help = "Add the name and a compatibility_date in the form 2025-01-31."
 
 [[check]]
 name = "headers"

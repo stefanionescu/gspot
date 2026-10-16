@@ -9,9 +9,6 @@ export type PythonModule = {
     statements: Node[];
 };
 
-/** A parsed __all__ declaration and the names it exposes. */
-export type PythonExports = { names: string[]; statement: Node };
-
 /** One named function or lambda, with its docstring omitted from the body. */
 export type PythonFunction = { path: string; name: string; node: Node; body: Node[] };
 

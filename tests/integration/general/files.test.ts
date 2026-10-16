@@ -173,11 +173,11 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
     const directive = `#:schema ${server.url.toString()}schema.json\n`;
     resources.use(
         await preserveSandboxChanges(installedSandbox(), {
-            check: 'files/taplo',
+            check: 'files/taplo-format',
             files: { 'settings/schema.toml': directive + 'value =\n' },
         }),
     );
-    const command = ['check', 'settings/schema.toml', '--only', 'files/taplo', '--json'];
+    const command = ['check', 'settings/schema.toml', '--only', 'files/taplo-format', '--json'];
     {
         const level = 'all';
         const selected = await spawnGspot(root, ['set', 'level', level], environment);
@@ -186,13 +186,13 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
         const failed = await spawnGspot(root, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([
-            { check: 'files/taplo', status: 'failed', findings: [{ file: 'settings/schema.toml', line: 2 }] },
+            { check: 'files/taplo-format', status: 'failed', findings: [{ file: 'settings/schema.toml', line: 2 }] },
         ]);
         await Bun.write(join(root, 'settings/schema.toml'), directive + 'value = 1\n');
         const corrected = await spawnGspot(root, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'files/taplo', status: 'passed', findings: [] },
+            { check: 'files/taplo-format', status: 'passed', findings: [] },
         ]);
     }
     expect(requests).toBe(0);

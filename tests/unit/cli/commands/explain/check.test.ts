@@ -49,10 +49,8 @@ test.each([
 });
 
 test('a check explains the minimum version its declaring tool needs', () => {
-    const bats = explain(undefined, 'bash/bats-syntax');
-    expect(bats.text).toContain('Needs bash 4.4.0 or newer');
-    const syntax = explain(undefined, 'bash/bash-syntax');
-    expect(syntax.text).toContain('Needs bash 4.4.0 or newer');
+    const ruff = explain(undefined, 'python/ruff');
+    expect(ruff.text).toContain('Needs ruff 0.9.0 or newer');
 });
 
 test('an unknown rule prefix is refused and names the subject', () => {

@@ -1,22 +1,5 @@
 import { BASH_HEADER } from '#tests/config/bash/tools.ts';
 
-export const VARIABLE_DEFAULT_CASES = [
-    {
-        check: 'bash/variable-defaults',
-        files: {
-            'scripts/defaults.sh': `${BASH_HEADER}# main: runs the script.
-main() {
-    local port="\${PORT:-8080}"
-    echo "\${port} $1"
-}
-
-main "$@"
-`,
-        },
-        expected: { file: 'scripts/defaults.sh', rule: 'default-outside-owner', line: 10 },
-    },
-] as const;
-
 export const BASH_ENV_READ_CASES = [
     {
         check: 'structure/env-reads',

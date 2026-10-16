@@ -14,17 +14,16 @@ import { pathMatcher } from '#cli/repository/selectors.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { readText, readSource } from '#cli/system/file-reads.ts';
+import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { toolFindings, toolOutputDetail } from '#cli/execution/command/output.ts';
 import type { DenoLintReport, SupabaseConfiguration } from '#cli/types/checks/platform.ts';
-import { migrationPaths, readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 
 import {
     DENO_LOCATION,
     SHARED_PREFIX,
     ADMIN_KEY_TAGS,
     FUNCTION_ENTRY,
-    MIGRATION_NAME,
     ADMIN_KEY_NAMES,
     FILE_URL_PREFIX,
     DENO_CONFIG_FLAG,
@@ -77,7 +76,6 @@ function readConfigToml(input: CheckInput): Parsed<SupabaseConfiguration> | unde
 // Validate Supabase project declarations and the structured diagnostics of edge functions.
 
 const supabaseProjectSchema = z.object({
-    functions: z.record(z.string(), z.unknown()).optional(),
     storage: z
         .object({ buckets: z.record(z.string(), z.unknown()).optional() } satisfies SchemaShape<
             NonNullable<SupabaseConfiguration['storage']>
@@ -122,31 +120,6 @@ export function functionFolders(input: CheckInput): string[] {
 }
 
 /**
- * The project file parses, and every function it configures has a folder.
- * @param input the check input.
- * @returns the findings.
- */
-export function supabaseProjectFile(input: CheckInput): Finding[] {
-    const read = readConfigToml(input);
-    const at = { file: posix.join(input.selection.scope.path, SUPABASE_CONFIG_TOML), line: 1 };
-    if (read === undefined) return [];
-    if ('error' in read) return [findingAt(input, at, 'syntax', read.error)];
-    const { value: config } = read;
-    const folders = new Set(functionFolders(input).map((folder) => posix.basename(folder)));
-    const missing = (config.functions === undefined ? [] : Object.keys(config.functions)).filter(
-        (name) => !folders.has(name),
-    );
-    return missing.map((name) =>
-        findingAt(
-            input,
-            at,
-            'function',
-            `[functions.${name}] configures a function that has no folder with an index file.`,
-        ),
-    );
-}
-
-/**
  * Every storage bucket of the project file has a policy on storage.objects that names it, in some migration.
  * @param input the check input.
  * @returns the findings.
@@ -181,24 +154,6 @@ export async function supabaseStoragePolicies(input: CheckInput): Promise<Findin
                 at,
                 'bucket-policy',
                 `The bucket ${bucket} has no policy on storage.objects in any migration.`,
-            ),
-        );
-}
-
-/**
- * Require migration names in the Supabase command-line format.
- * @param input the check input.
- * @returns the findings.
- */
-export function supabaseMigrationNames(input: CheckInput): Finding[] {
-    return migrationPaths(input)
-        .filter((path) => !MIGRATION_NAME.test(posix.basename(path)))
-        .map((path) =>
-            findingAt(
-                input,
-                { file: path, line: 1 },
-                'migration-name',
-                'Name the migration <14-digit timestamp>_<snake_case>.sql.',
             ),
         );
 }

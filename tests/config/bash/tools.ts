@@ -7,16 +7,6 @@ export const BASH_SIZE_LOCATIONS = [
     { file: 'scripts/mutable.sh', rule: 'assignments', line: 9 },
 ] as const;
 
-/** The syntax checker has ordinary Bash input; Bats must refuse an older parsing runtime. */
-export const BATS_MINIMUM_FILES = {
-    '.gitignore': 'bin/\n',
-    'script.sh': 'printf "%s\\n" example\n',
-    'script.bats': `@test "broken" {
-    if then
-}
-`,
-} as const;
-
 export const BASH_HEADER = `#!/usr/bin/env bash
 #
 # Builds the thing.
@@ -170,14 +160,6 @@ fi
 
 /** Native file selection and syntax diagnostics for each interpreter. */
 export const SYNTAX_CASES = [
-    {
-        check: 'bash/bash-syntax',
-        path: 'script.sh',
-        files: ['launcher', 'script.sh'],
-        broken: 'if then\n',
-        line: 1,
-        message: 'syntax',
-    },
     // Zsh reports a parse error at the end of this one-line input, on line 2.
     {
         check: 'bash/zsh-syntax',
@@ -186,17 +168,6 @@ export const SYNTAX_CASES = [
         broken: 'if then\n',
         line: 2,
         message: 'parse error',
-    },
-    {
-        check: 'bash/bats-syntax',
-        path: 'script.bats',
-        files: ['script.bats'],
-        broken: `@test "broken" {
-    if then
-}
-`,
-        line: 2,
-        message: 'syntax',
     },
 ] as const;
 
@@ -222,3 +193,12 @@ export const SYNTAX_FILES = {
 } as const;
 
 export const SHELLCHECK_RC = '.gspot/config/shellcheckrc';
+
+/** A user command check used by repository and revision tests. */
+export const BASH_SYNTAX_CHECK = String.raw`[[command_check]]
+name = "project/bash-syntax"
+command = ["bash", "-n", "{file}"]
+paths = ["**/*.sh"]
+stage = "commit"
+output = { format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$" }
+`;

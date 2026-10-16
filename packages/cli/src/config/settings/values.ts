@@ -31,8 +31,6 @@ export const COMMAND_CHECK_DEFAULTS = {
 
 export const TOOL_TIMEOUT_SETTING = 'tool_timeout_seconds';
 
-export const ENV_ROLE = 'environment_readers';
-
 export const TABLE_FIELDS = {
     allowed: {
         configurations: ['licenses'],
@@ -109,10 +107,6 @@ export const TABLE_FIELDS = {
     client_names: {
         configurations: ['drizzle'],
         description: 'The Drizzle client identifiers checked for update and delete operations without a where clause.',
-    },
-    templates: {
-        configurations: ['html'],
-        description: 'The HTML files that are templates filled from content; empty turns the copy check off.',
     },
     document: {
         configurations: ['openapi'],

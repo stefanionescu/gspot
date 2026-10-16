@@ -76,7 +76,18 @@ CREATE FUNCTION named.named() RETURNS TABLE (
 ) LANGUAGE sql AS $$SELECT 1, 2$$;
 `;
 
+/** A local SQL reader for tests that exercise selection and fix verification. */
+const SQL_CHECK_PROGRAM = `const fs = require('node:fs'); for (const path of process.argv.slice(1)) { if (fs.readFileSync(path, 'utf8').includes('CREATE FUNCTION')) { console.log(path + ':1: Replace the sample function.'); process.exitCode = 1; } }`;
+
+const SQL_CHECK = `[[command_check]]
+name = "project/read-sql"
+paths = ["**/*.sql"]
+stage = "commit"
+command = ${JSON.stringify([process.execPath, '-e', SQL_CHECK_PROGRAM, '{files}'])}
+`;
+
 export {
+    SQL_CHECK,
     SQL_CASES,
     SQL_SANDBOX,
     CHILD_MIGRATIONS,

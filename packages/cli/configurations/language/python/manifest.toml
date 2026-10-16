@@ -83,13 +83,6 @@ min_version = "0.20.0"
 mise = "pipx:deptry"
 pypi = "deptry"
 
-[[tool]]
-name = "validate-pyproject"
-version = "0.26"
-mise = "pipx:validate-pyproject"
-pypi = "validate-pyproject"
-version_pattern = "(\\d+\\.\\d+(?:\\.\\d+)?)"
-
 [[tool_file]]
 target = ".gspot/config/ruff.toml"
 tool = "ruff"
@@ -203,20 +196,6 @@ why = "An import that works through somebody else's dependency breaks the day th
 help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with gspot ignore python/deptry --rule `<code>` --reason \"`<why>`\"."
 
 [[check]]
-name = "pyproject"
-example = "The project metadata `version = 7` in `pyproject.toml` reports an invalid version value. Use a valid version string, such as `version = \"1.0.0\"`, and rerun before updating the lockfile."
-level = "recommended"
-stage = "commit"
-command = ["validate-pyproject", "{file}"]
-exit_codes = [1]
-files = { filenames = ["pyproject.toml"] }
-tool = "validate-pyproject"
-output = { format = "regex", pattern = "^\\[ERROR\\] (?<message>.*)$" }
-summary = "Validates every pyproject.toml against the packaging schemas."
-why = "A key the build backend does not know is ignored without a word."
-help = "Correct the key the message names."
-
-[[check]]
 name = "pip-installs"
 example = "A `requirements.txt` written by hand beside a locked Python project creates a second dependency owner. Export that file from the lockfile, declare it generated, and use the locked installation command."
 level = "all"
@@ -235,17 +214,6 @@ why = "Two owners of the dependency list drift apart, and the image installs wha
 help = "Export the requirements file from the lockfile and declare it generated, and replace pip install with the locked install. Accept a reviewed path with gspot ignore python/pip-installs --paths `<glob>` --reason \"`<why>`\"."
 
 [[check]]
-name = "function-size"
-example = "A Python function exceeding the configured code-line ceiling reports a length finding. Extract a distinct operation with its own responsibility and verify the remaining function and extracted operation."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py"] }
-summary = "Checks that no Python function has more code lines than the ceiling."
-why = "A function that fills a screen does several things, and a reader has to hold all of them."
-help = "Move one job of the function into a function of its own."
-
-[[check]]
 name = "placeholder-docstrings"
 example = "A function whose docstring merely repeats its name reports a placeholder description. Replace the docstring with the behavior, inputs, and consequential effects that the name does not explain."
 level = "all"
@@ -255,72 +223,6 @@ files = { extensions = [".py"] }
 summary = "Finds docstrings that hold a placeholder word, or the name of the function again."
 why = "A docstring that says nothing passes the docstring rule and wastes the line."
 help = "Say what the function does that its name does not, or for whom it exists."
-
-[[check]]
-name = "private-prefix"
-example = "A file-local function with no leading underscore and no public export reports a naming finding. Add the underscore and update its local callers, or declare the actual public contract in the export list."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py"] }
-summary = "In a module with an export list, checks that every other definition starts with an underscore, and that the list holds no such name."
-why = "A name that is public by accident gets imported, and then it cannot change."
-help = "Add the underscore, or list the name in the export list."
-
-[[check]]
-name = "exports-at-bottom"
-example = "A module with `__all__` before later declarations reports an export-list position finding. Move the export list after those declarations."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py"] }
-summary = "Checks that the export list is the last statement of its module."
-why = "A reader looks for the public surface in one place."
-help = "Move the export list to the end of the module."
-
-[[check]]
-name = "module-getattr"
-example = "A package exposing names through module-level `__getattr__` reports lazy exports. Import the intended public names explicitly and list them in `__all__`."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py"] }
-summary = "Finds a module-level `__getattr__`."
-why = "A name that appears only at run time hides from the type checker, the editor, and the reader."
-help = "Import the names and list them."
-
-[[check]]
-name = "package-exports"
-example = "A package export list larger than its configured limit reports the export count. Split unrelated public responsibilities into separate packages or remove unnecessary exports and update consumers."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py"] }
-summary = "Checks that a package exports no more names than the ceiling."
-why = "A package that exports everything has no surface, so every change to it is a breaking one."
-help = "Split the package, or export fewer names."
-
-[[check]]
-name = "export-order"
-example = "An `__all__` list whose names are not ordered shortest first reports the sorted order. Reorder the list."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py"] }
-summary = "Checks that the names in the export list go shortest first, alphabetically among names of one length."
-why = "Ruff RUF022 sorts alphabetically; gspot turns it off and sorts shortest first, then alphabetically among names of one length."
-help = "Reorder the names shortest first."
-
-[[check]]
-name = "singletons"
-example = "A module-level service instance created during import reports a singleton finding when settings do not allow it. Construct it in the application entry point and pass the instance to consumers."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py"] }
-summary = "Finds objects built at import time and kept in a module variable."
-why = "Every importer shares the one instance, and no test gets a fresh one."
-help = "Build the object where the program starts, and pass it in. Accept a reviewed composition file with gspot ignore python/singletons --paths `<glob>` --reason \"`<why>`\"."
 
 [ruff_rules]
 recommended = [

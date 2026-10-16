@@ -1,8 +1,3 @@
-export const SHOWN_FUNCTION = `def shown() -> int:
-    """Give one."""
-    return 1
-`;
-
 /** The setting applies only after native pydoclint style and the scoped Ruff convention. */
 export const DOCSTRING_STYLES = [
     {

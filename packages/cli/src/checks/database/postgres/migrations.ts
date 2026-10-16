@@ -33,37 +33,11 @@ async function parseMigrations(input: CheckInput, paths: string[]): Promise<Migr
 }
 
 /**
- * Reads and parses every tracked migration in version order.
- * @param input the check input.
- * @returns the migrations, empty when the repository has no migrations folder.
- */
-export async function readMigrations(input: CheckInput): Promise<Migration[]> {
-    const paths = migrationPaths(input);
-    if (paths.length === 0) return [];
-    const key = JSON.stringify(paths);
-    return memoized(input.reads, MIGRATION_MEMO, key, () =>
-        parseMigrations(
-            input,
-            paths
-                .map((path) => ({
-                    path,
-                    version: BigInt(MIGRATION_VERSION.exec(posix.basename(path))?.groups?.['version'] ?? '0'),
-                }))
-                .toSorted((left, right) => {
-                    if (left.version === right.version) return left.path.localeCompare(right.path);
-                    return left.version < right.version ? -1 : 1;
-                })
-                .map((entry) => entry.path),
-        ),
-    );
-}
-
-/**
  * Select forward SQL migration paths from the effective folder or configuration-owned defaults.
  * @param input the input for one scope.
  * @returns root-relative migration paths without parsing their SQL.
  */
-export function migrationPaths(input: CheckInput): string[] {
+function migrationPaths(input: CheckInput): string[] {
     const folder = input.selection.view.options('postgres').migrations_folder;
     const migrations =
         folder === undefined
@@ -84,3 +58,31 @@ export function migrationPaths(input: CheckInput): string[] {
         .filter((file) => file.path.endsWith(SQL_EXTENSION) && !file.path.endsWith(DOWN_MIGRATION_SUFFIX))
         .map((file) => file.path);
 }
+
+/**
+ * Reads and parses every tracked migration in version order.
+ * @param input the check input.
+ * @returns the migrations, empty when the repository has no migrations folder.
+ */
+async function readMigrations(input: CheckInput): Promise<Migration[]> {
+    const paths = migrationPaths(input);
+    if (paths.length === 0) return [];
+    const key = JSON.stringify(paths);
+    return memoized(input.reads, MIGRATION_MEMO, key, () =>
+        parseMigrations(
+            input,
+            paths
+                .map((path) => ({
+                    path,
+                    version: BigInt(MIGRATION_VERSION.exec(posix.basename(path))?.groups?.['version'] ?? '0'),
+                }))
+                .toSorted((left, right) => {
+                    if (left.version === right.version) return left.path.localeCompare(right.path);
+                    return left.version < right.version ? -1 : 1;
+                })
+                .map((entry) => entry.path),
+        ),
+    );
+}
+
+export { readMigrations };

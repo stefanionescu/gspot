@@ -1,6 +1,7 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
+import { SQL_CHECK } from '#tests/config/sql.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { containing } from '#tests/setup/matchers.ts';
@@ -104,13 +105,13 @@ fix = [${JSON.stringify(process.execPath)}, "correct.cjs", "{files}"]
 format = "none"
 `;
         await createFileTree(sandbox.path, {
-            'gspot.toml': settings,
+            'gspot.toml': settings + SQL_CHECK,
             'query.sql': 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n',
             'notes.txt': 'Authored notes.\n',
             'correct.cjs': String.raw`const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "select 1;\n");`,
         });
         const session = await openSession(sandbox.path);
-        const options = buildRunOptions({ only: ['sql/functions', 'project/correct-sql'] });
+        const options = buildRunOptions({ only: ['project/read-sql', 'project/correct-sql'] });
         const failed = await executeRun(session, options);
         expect(failed.report.exitCode).toBe(1);
         expect(failed.report.checks.flatMap((check) => check.findings)).toContainEqual(
@@ -121,11 +122,11 @@ format = "none"
         expect(
             corrected.report.checks.map(({ check, status, findings }) => ({ check, status, findings })),
         ).toStrictEqual([
-            { check: 'sql/functions', status: 'passed', findings: [] },
             { check: 'project/correct-sql', status: 'passed', findings: [] },
+            { check: 'project/read-sql', status: 'passed', findings: [] },
         ]);
         expect(await Bun.file(join(sandbox.path, 'query.sql')).text()).toBe('select 1;\n');
-        expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(settings);
+        expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(settings + SQL_CHECK);
         expect(await Bun.file(join(sandbox.path, 'notes.txt')).text()).toBe('Authored notes.\n');
     });
 
@@ -207,9 +208,20 @@ fix = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("added.txt", "c
 }
 {
     test('a fix run keeps the generated-file list', async () => {
-        const text =
-            'configurations=["nextjs","cloudflare"]\n[[scope]]\npath = "app"\nconfigurations=["nextjs","cloudflare"]\n';
-        await using sandbox = await testdir({ 'gspot.toml': text, ...DECLARATION_FILES });
+        const text = settingsText(['nextjs', 'cloudflare'], {
+            tables: `[[command_check]]
+name = "project/correct"
+paths = ["marker.txt"]
+stage = "commit"
+command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
+fix = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, 'before', 'after', '{files}'])}
+output = { format = "none" }
+[[scope]]
+path = "app"
+configurations = ["nextjs", "cloudflare"]
+`,
+        });
+        await using sandbox = await testdir({ 'gspot.toml': text, 'marker.txt': 'before', ...DECLARATION_FILES });
         const session = await openSession(sandbox.path);
         const before = session.repository.files.filter(({ kind }) => kind === 'generated').map(({ path }) => path);
         expect(before.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
@@ -218,9 +230,9 @@ fix = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("added.txt", "c
             'next-env.d.ts',
             'worker-configuration.d.ts',
         ]);
-        const report = await executeRun(session, buildRunOptions({ only: ['gspot/settings-format'], fix: true }));
-        expect(report.report.checks.find(({ check }) => check === 'gspot/settings-format')?.status).toBe('passed');
-        expect(report.fixes?.changed).toContain('gspot.toml');
+        const report = await executeRun(session, buildRunOptions({ only: ['project/correct'], fix: true }));
+        expect(report.report.checks.find(({ check }) => check === 'project/correct')?.status).toBe('passed');
+        expect(report.fixes?.changed).toContain('marker.txt');
         expect(
             session.repository.files.filter(({ kind }) => kind === 'generated').map(({ path }) => path),
         ).toStrictEqual(before);

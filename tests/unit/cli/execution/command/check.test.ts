@@ -14,6 +14,7 @@ import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { chmod, symlink, writeFile } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/operating-systems.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/config/settings/scopes.ts';
 import { runCheckCommand, commandEnvironment } from '#cli/execution/command/check.ts';
 import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
@@ -243,10 +244,10 @@ test.skipIf(isWindows)('a command check reports files whose folder name has a co
     await using sandbox = await testdir();
     const paths = ['source\nfiles/greet.sh', 'source:files/greet.sh'];
     await createFileTree(sandbox.path, {
-        'gspot.toml': settingsText(['bash']),
+        'gspot.toml': settingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
         ...Object.fromEntries(paths.map((path) => [path, 'if then\n'])),
     });
-    const options = buildRunOptions({ only: ['bash/bash-syntax'] });
+    const options = buildRunOptions({ only: ['project/bash-syntax'] });
     const broken = await executeRun(await openSession(sandbox.path), options);
     expect(broken.report.exitCode).toBe(1);
     expect(

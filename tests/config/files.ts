@@ -11,12 +11,6 @@ export const FILES_SANDBOX = {
 
 export const FILES_CASES = [
     {
-        check: 'files/taplo',
-        files: { 'settings.toml': 'a = 1\n[x\n' },
-        expected: { file: 'settings.toml', line: 2 },
-        corrected: { files: { 'settings.toml': 'a = 1\n' } },
-    },
-    {
         check: 'files/yamllint',
         files: { 'config.yaml': 'key: 1\nkey: 2\n' },
         expected: { file: 'config.yaml', line: 2, rule: 'key-duplicates' },

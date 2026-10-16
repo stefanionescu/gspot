@@ -99,3 +99,9 @@ public func pairSize(of count: Int) -> Int {
     count * 2
 }
 `;
+
+export const SOURCE_HEADER = `// Greeting.swift
+// Created by Alex Garcia.
+// Copyright 2026 Example Contributors.
+
+`;

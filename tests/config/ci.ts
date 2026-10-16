@@ -44,7 +44,7 @@ export const LINUX_PIPELINE = {
     npmClient: { name: 'npm', version: '11.10.1' },
     operatingSystems: ['linux'],
     hasSwift: false,
-    manualChecks: ['security/codeql'],
+    manualChecks: ['docs/lychee-external'],
 } as const;
 
 export const GITLAB_PIPELINE = `stages: [test]

@@ -5,6 +5,7 @@ import { runCommand } from '#tests/setup/processes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { settingsText } from '#tests/setup/settings.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { CLI_MAIN, runGspot, spawnGspot } from '#tests/setup/run-gspot.ts';
 import { commitAll, gitOutput, preparePushRepository } from '#tests/setup/git.ts';
@@ -246,20 +247,23 @@ test('pre-push reports multiple objects once per object and handles forced rewin
 test('full-tree pre-push settings checks unchanged files in the pushed object', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': settingsText(['bash']),
+        'gspot.toml': settingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'changed.sh': 'echo base\n',
         'legacy.sh': 'if then\n',
     });
     commitAll(sandbox.path);
     const base = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     await Bun.write(join(sandbox.path, 'changed.sh'), 'echo changed\n');
-    await writeFile(join(sandbox.path, 'gspot.toml'), settingsText(['bash'], { tables: '[hooks]\n' }));
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        settingsText(['bash'], { tables: BASH_SYNTAX_CHECK + '[hooks]\n' }),
+    );
     gitOutput(sandbox.path, ['add', 'gspot.toml', 'changed.sh']);
     gitOutput(sandbox.path, ['commit', '-qm', 'full pushed tree']);
     const pushedCommit = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     const all = await spawnGspot(
         sandbox.path,
-        ['check', '--hook', 'pre-push', '--only', 'bash/bash-syntax', '--json', '--', 'origin', 'unused'],
+        ['check', '--hook', 'pre-push', '--only', 'project/bash-syntax', '--json', '--', 'origin', 'unused'],
         {},
         {
             stdin: `refs/heads/main ${pushedCommit} refs/heads/main ${base}\n`,

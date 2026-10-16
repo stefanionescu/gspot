@@ -14,7 +14,7 @@ test('an edit keeps a trailing array comma and writes inline tables without one'
     const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, '# Authored selection.\nconfigurations = ["security",]\n');
     const entry = {
-        check: 'security/codeql',
+        check: 'security/semgrep',
         rule: 'js/file-system-race',
         paths: ['fixture.js'],
         reason: 'The sandbox owns its temporary files.',

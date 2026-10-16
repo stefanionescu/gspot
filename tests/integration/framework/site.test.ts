@@ -1,16 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { pathExists } from '#tests/setup/files.ts';
 import { containing } from '#tests/setup/matchers.ts';
 import { runCheckSample } from '#tests/setup/fixes.ts';
-import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
+import { SITE_SANDBOX } from '#tests/config/site/project.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandbox.ts';
-import { pathExists, applyChanges } from '#tests/setup/files.ts';
 import { runGspot, spawnGspot } from '#tests/setup/run-gspot.ts';
-import { SITE_SANDBOX, SVG_CHECK_COMMAND } from '#tests/config/site/project.ts';
 
 import {
     SITE_CASES,
@@ -108,50 +107,6 @@ test.each([...OUTPUT_CASES])(
     },
 );
 
-test('svgo enforces the saving limit of each level and checks only the files named', async () => {
-    const { root, environment } = installedSandbox();
-    const restore = await applyChanges(root, {
-        check: 'site/svgo',
-        removed: ['logo.svg'],
-        files: {
-            'icon.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><path d="M0 0h8v8H0z"/></svg>\n',
-        },
-    });
-    try {
-        const recommended = await spawnGspot(root, ['set', 'level', 'recommended'], environment);
-        expect(recommended.code, recommended.stdout + recommended.stderr).toBe(0);
-        const native = await runCommand(
-            [join(root, '.gspot/node_modules/.bin/svgo'), '--input', 'icon.svg', '--output', '-'],
-            { cwd: root, env: environment },
-        );
-        expect(native.code, native.stdout + native.stderr).toBe(0);
-        await verifySvgSavingLimits(root, environment, native.stdout);
-        {
-            const configured = await spawnGspot(root, ['set', 'level', 'all'], environment);
-            expect(configured.code, configured.stdout + configured.stderr).toBe(0);
-            await Bun.write(join(root, 'icon.svg'), native.stdout);
-            await Bun.write(join(root, 'other.svg'), '<svg><broken>');
-            // A path goes before --only, which takes every word up to the next command option.
-            const selected = await spawnGspot(root, ['check', 'icon.svg', ...SVG_CHECK_COMMAND.slice(1)], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-            const malformed = await spawnGspot(root, SVG_CHECK_COMMAND, environment);
-            expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
-            expect((JSON.parse(malformed.stdout) as RunReport).checks[0]!.status).toBe('error');
-            await Bun.write(join(root, 'other.svg'), native.stdout);
-            const repaired = await spawnGspot(root, SVG_CHECK_COMMAND, environment);
-            expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
-            expect((JSON.parse(repaired.stdout) as RunReport).checks).toMatchObject([
-                { check: 'site/svgo', status: 'passed', fileCount: 2, findings: [] },
-            ]);
-        }
-    } finally {
-        await restore();
-        await rm(join(root, 'other.svg'), { force: true });
-        const restored = await spawnGspot(root, ['apply'], environment);
-        expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-    }
-});
-
 for (const repository of BUILT_HTML_SITES)
     test(`a built HTML ignore stays inside its own site with ${repository.name}`, async () => {
         const { root, environment } = installedSandbox();
@@ -200,51 +155,3 @@ for (const repository of BUILT_HTML_SITES)
             expect(restored.code, restored.stdout + restored.stderr).toBe(0);
         }
     });
-
-/** Exercise level defaults and explicit SVG saving limits against one optimized image. */
-async function verifySvgSavingLimits(
-    root: string,
-    environment: Record<string, string>,
-    compressedImage: string,
-): Promise<void> {
-    await Bun.write(join(root, 'icon.svg'), `${compressedImage} `);
-    const small = await spawnGspot(root, SVG_CHECK_COMMAND, environment);
-    expect(small.code, small.stdout + small.stderr).toBe(0);
-    await Bun.write(join(root, 'icon.svg'), compressedImage + ' '.repeat(Buffer.byteLength(compressedImage)));
-    const large = await spawnGspot(root, SVG_CHECK_COMMAND, environment);
-    expect(large.code, large.stdout + large.stderr).toBe(1);
-    expect((JSON.parse(large.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
-        containing({ file: 'icon.svg', rule: 'unoptimized' }),
-    ]);
-    await Bun.write(join(root, 'icon.svg'), `${compressedImage} `);
-    const configured = await spawnGspot(root, ['set', 'level', 'all'], environment);
-    expect(configured.code, configured.stdout + configured.stderr).toBe(0);
-    const strict = await spawnGspot(root, SVG_CHECK_COMMAND, environment);
-    expect(strict.code, strict.stdout + strict.stderr).toBe(1);
-    const relaxed = await spawnGspot(
-        root,
-        [
-            'set',
-            'tools.svgo.min_saving_percent',
-            '100',
-            '--reason',
-            'Required optimization threshold for generated SVG assets.',
-        ],
-        environment,
-    );
-    expect(relaxed.code, relaxed.stdout + relaxed.stderr).toBe(0);
-    await Bun.write(join(root, 'icon.svg'), compressedImage + ' '.repeat(Buffer.byteLength(compressedImage)));
-    const allowed = await spawnGspot(root, SVG_CHECK_COMMAND, environment);
-    expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
-    const tightened = await spawnGspot(root, ['set', 'tools.svgo.min_saving_percent', '0'], environment);
-    expect(tightened.code, tightened.stdout + tightened.stderr).toBe(0);
-    await Bun.write(join(root, 'icon.svg'), `${compressedImage} `);
-    const restored = await spawnGspot(root, SVG_CHECK_COMMAND, environment);
-    expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-    await Bun.write(join(root, 'icon.svg'), compressedImage);
-    const corrected = await spawnGspot(root, SVG_CHECK_COMMAND, environment);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'site/svgo', status: 'passed', fileCount: 1, findings: [] },
-    ]);
-}

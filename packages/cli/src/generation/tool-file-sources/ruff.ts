@@ -46,6 +46,7 @@ export function ruffToolFile(
             mccabe: { 'max-complexity': limit('cyclomatic_complexity', 'python') },
             ...(convention === undefined ? {} : { pydocstyle: { convention } }),
             pylint: {
+                'max-statements': limit('statements', 'python'),
                 'max-args': limit('function_parameters', 'python'),
                 'max-positional-args': limit('function_parameters', 'python'),
                 'max-branches': limit('branches', 'python'),

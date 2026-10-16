@@ -55,14 +55,7 @@ test('generated Gradle and Maven launchers are classified generated and never se
         kindSource: '.gitattributes',
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), settingsText(['bash']));
-    const checked = await checkReport(sandbox.path, [
-        'check',
-        '--only',
-        'bash/bash-syntax',
-        'bash/shellcheck',
-        'bash/shfmt',
-        '--json',
-    ]);
+    const checked = await checkReport(sandbox.path, ['check', '--only', 'bash/shellcheck', 'bash/shfmt', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(checked.report.checks).toStrictEqual([]);
 });

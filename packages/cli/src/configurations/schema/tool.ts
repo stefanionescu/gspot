@@ -120,7 +120,6 @@ const toolSchema = z
                 } satisfies SchemaShape<NonNullable<ToolDeclaration['refused_options']>[number]>),
             )
             .optional(),
-        query_packs: z.record(z.string().regex(/^[a-z][a-z0-9-]*$/u), z.string().regex(/^\d+\.\d+\.\d+$/u)).optional(),
         prettier: z
             .strictObject({
                 entry: z.string().min(1),

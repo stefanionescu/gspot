@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
 import { TYPO } from '#tests/config/spelling.ts';
+import { SQL_CHECK } from '#tests/config/sql.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
@@ -101,7 +102,7 @@ test('init replaces an ignore file inside a scope, and the scope check runs', as
         'db/package.json': '{"private":true}',
         'db/.sqlfluffignore': '# Templates\ntemplates/\n',
     });
-    await Bun.write(join(sandbox.path, 'template.toml'), 'configurations = []\n');
+    await Bun.write(join(sandbox.path, 'template.toml'), 'configurations = []\n' + SQL_CHECK);
     commitAll(sandbox.path);
     const argv = [...buildInitArguments([]), '--from', 'template.toml'];
     const initialized = await runGspot(sandbox.path, argv);
@@ -113,10 +114,10 @@ test('init replaces an ignore file inside a scope, and the scope check runs', as
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const dialect = await runGspot(sandbox.path, ['set', 'tools.sqlfluff.dialect', 'postgres', '--scope', 'db']);
     expect(dialect.code, dialect.stdout + dialect.stderr).toBe(0);
-    const checked = await checkReport(sandbox.path, ['check', '--only', 'sql/functions', '--json']);
+    const checked = await checkReport(sandbox.path, ['check', '--only', 'project/read-sql', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(checked.report.checks).toMatchObject([
-        { check: 'sql/functions', scope: 'db', status: 'passed', fileCount: 1 },
+        { check: 'project/read-sql', scope: '', status: 'passed', fileCount: 1 },
     ]);
 });
 

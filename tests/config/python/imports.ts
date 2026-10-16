@@ -1,6 +1,3 @@
-import { SHOWN_FUNCTION } from '#tests/config/python/docstrings.ts';
-import { PYTHON_MODULE_HEADER } from '#tests/config/python/modules.ts';
-
 // Native import-linter output keeps two broken contracts and their distinct dependency chains.
 const IMPORT_CONTRACT_REPORT = `Contracts
 ---------
@@ -53,21 +50,4 @@ forbidden_modules = ["example.high"]
     },
 ] as const;
 
-const EXPORT_ORDER_FILES = {
-    'example/top.py': `${PYTHON_MODULE_HEADER}__all__ = ["shown"]
-
-
-${SHOWN_FUNCTION}`,
-    'example/listed.py': `${PYTHON_MODULE_HEADER}${SHOWN_FUNCTION}
-
-def ab() -> int:
-    """Give two."""
-    return 2
-
-
-__all__ = ["shown", "ab"]
-`,
-    'example/__init__.py': `${PYTHON_MODULE_HEADER}__all__ = ["a", "b", "c"]\n`,
-} as const;
-
-export { EXPORT_ORDER_FILES, IMPORT_CONFIGURATIONS, IMPORT_CONTRACT_REPORT };
+export { IMPORT_CONFIGURATIONS, IMPORT_CONTRACT_REPORT };

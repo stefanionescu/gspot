@@ -1,7 +1,8 @@
 import { vale } from '#cli/checks/general/prose.ts';
+import { semgrep } from '#cli/checks/general/security.ts';
 import { expoDoctor } from '#cli/checks/framework/expo.ts';
 import { jscpd } from '#cli/checks/general/duplication.ts';
-import { sqlFunctions } from '#cli/checks/language/sql.ts';
+import { htmlScripts } from '#cli/checks/language/html.ts';
 import { runBuiltInCheck } from '#cli/execution/built-in.ts';
 import { svelteCheck } from '#cli/checks/framework/svelte.ts';
 import { deptry } from '#cli/checks/language/python/deptry.ts';
@@ -9,8 +10,6 @@ import { siteBuild } from '#cli/checks/framework/site/build.ts';
 import { bashSafety } from '#cli/checks/language/bash/safety.ts';
 import { commitlintPushed } from '#cli/checks/general/commits.ts';
 import { allowedLicenses } from '#cli/checks/general/licenses.ts';
-import { codeql, semgrep } from '#cli/checks/general/security.ts';
-import { drizzleRelations } from '#cli/checks/library/drizzle.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { translationsMessages } from '#cli/checks/translations.ts';
 import { ansibleLint } from '#cli/checks/infrastructure/ansible.ts';
@@ -19,51 +18,46 @@ import { bashWrappers } from '#cli/checks/language/bash/wrappers.ts';
 import { pydoclint } from '#cli/checks/language/python/pydoclint.ts';
 import { envReads } from '#cli/checks/general/structure/env-reads.ts';
 import { nginxConfigTest } from '#cli/checks/infrastructure/nginx.ts';
+import { nextjsTsc, nextConfig } from '#cli/checks/framework/nextjs.ts';
 import { fileLines } from '#cli/checks/general/structure/file-lines.ts';
 import { loneFiles } from '#cli/checks/general/structure/lone-files.ts';
 import { suppressions } from '#cli/checks/general/gspot/suppressions.ts';
+import { unusedAssets } from '#cli/checks/framework/site/source-files.ts';
 import { missingPaths, requiredFiles } from '#cli/checks/general/docs.ts';
 import { actionlint } from '#cli/checks/infrastructure/github-actions.ts';
 import { staleGeneratedFiles } from '#cli/checks/stale-generated-files.ts';
 import { unusedEntries } from '#cli/checks/general/gspot/unused-entries.ts';
 import { bashDocComments } from '#cli/checks/language/bash/doc-comments.ts';
-import { bashSourceOrder } from '#cli/checks/language/bash/source-order.ts';
 import { importLinter } from '#cli/checks/language/python/import-linter.ts';
 import { tsc, javascriptTsc } from '#cli/checks/language/typescript/tsc.ts';
 import { largeFiles, trackedFiles } from '#cli/checks/general/repository.ts';
-import { htmlScripts, htmlTemplateText } from '#cli/checks/language/html.ts';
 import { generatedFiles } from '#cli/checks/general/gspot/generated-files.ts';
 import { bashFunctionSize } from '#cli/checks/language/bash/function-size.ts';
 import { bashScriptLayout } from '#cli/checks/language/bash/script-layout.ts';
 import { packageJson } from '#cli/checks/general/dependencies/package-json.ts';
-import { bashIncludeGuards } from '#cli/checks/language/bash/include-guards.ts';
 import { bashInlineScripts } from '#cli/checks/language/bash/inline-scripts.ts';
-import { bashPrivatePrefix } from '#cli/checks/language/bash/private-prefix.ts';
 import { pythonPipInstalls } from '#cli/checks/language/python/pip-installs.ts';
 import { typescriptTsconfig } from '#cli/checks/language/typescript/tsconfig.ts';
 import { sharedPrefixes } from '#cli/checks/general/structure/shared-prefixes.ts';
 import { lockfileHosts } from '#cli/checks/general/dependencies/lockfile-hosts.ts';
 import { bashUnreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
 import { bashUnusedFunctions } from '#cli/checks/language/bash/unused-functions.ts';
+import { pythonPlaceholderDocstrings } from '#cli/checks/language/python/modules.ts';
 import { trivialFunctions } from '#cli/checks/general/structure/trivial-functions.ts';
-import { bashVariableDefaults } from '#cli/checks/language/bash/variable-defaults.ts';
-import { recording, references } from '#cli/checks/library/swift-snapshot-testing.ts';
+import { xcodeFilesWithoutTarget } from '#cli/checks/infrastructure/xcode/project.ts';
 import { type BuiltInCheck, type BuiltInChecks } from '#cli/types/execution/check.ts';
 import { trufflehog, envExamples, gitleaksPushed } from '#cli/checks/general/secrets.ts';
 import { fileFolderClashes } from '#cli/checks/general/structure/file-folder-clashes.ts';
 import { markdownFences, markdownlintArguments } from '#cli/checks/language/markdown.ts';
 import { postgresForeignKeyIndexes } from '#cli/checks/database/postgres/foreign-keys.ts';
-import { svgo, webManifest, unusedAssets } from '#cli/checks/framework/site/source-files.ts';
 import { trivyImage, dockerignore, dockerCompose } from '#cli/checks/infrastructure/docker.ts';
-import { settingsFormat, fixSettingsFormat } from '#cli/checks/general/gspot/settings-format.ts';
+import { swiftTestsCoverage, swiftTestsSkipReasons } from '#cli/checks/testing/swift-tests.ts';
 import { namingPaths, namingSettings, namingIdentifiers } from '#cli/checks/general/naming/checks.ts';
-import { nextjsTsc, nextConfig, nextjsBuild, nextjsRouteSegments } from '#cli/checks/framework/nextjs.ts';
 import { xcstrings, xcodeAssets, xcodeUnusedAssets } from '#cli/checks/infrastructure/xcode/resources.ts';
 import { postgresMigrationOrder, postgresEditedMigrations } from '#cli/checks/database/postgres/history.ts';
-import { swiftTestsSleep, swiftTestsCoverage, swiftTestsSkipReasons } from '#cli/checks/testing/swift-tests.ts';
 import { sitemap, purgecss, siteSize, linkinator, htmlValidate } from '#cli/checks/framework/site/built-pages.ts';
-import { xcodeSymlinks, xcodeTestPlans, xcodeFilesWithoutTarget } from '#cli/checks/infrastructure/xcode/project.ts';
 import { xcconfig, xcodeEntitlements, xcodeAppTransportSecurity } from '#cli/checks/infrastructure/xcode/settings.ts';
+import { cloudflareHeaders, cloudflareRedirects, cloudflareSecurityHeaders } from '#cli/checks/platform/cloudflare.ts';
 
 import {
     postgresGrants,
@@ -77,28 +71,8 @@ import {
     swiftlintConfigurationFiles,
 } from '#cli/checks/language/swift/build.ts';
 import {
-    cloudflareHeaders,
-    cloudflareWrangler,
-    cloudflareRedirects,
-    cloudflareSecurityHeaders,
-} from '#cli/checks/platform/cloudflare.ts';
-import {
-    pythonExportOrder,
-    pythonPrivatePrefix,
-    pythonPackageExports,
-    pythonExportsAtBottom,
-} from '#cli/checks/language/python/exports.ts';
-import {
-    pythonSingletons,
-    pythonFunctionSize,
-    pythonModuleGetattr,
-    pythonPlaceholderDocstrings,
-} from '#cli/checks/language/python/modules.ts';
-import {
     supabaseDenoLint,
     supabaseDenoCheck,
-    supabaseProjectFile,
-    supabaseMigrationNames,
     supabaseServiceRoleKey,
     supabaseStoragePolicies,
 } from '#cli/checks/platform/supabase.ts';
@@ -123,46 +97,27 @@ export const CHECK_FUNCTIONS = {
     'duplication/jscpd': jscpd,
     'secrets/env-examples': envExamples,
     'repository/tracked-files': trackedFiles,
-    'security/codeql': codeql,
     'dependencies/package-json': packageJson,
     'licenses/allowed': allowedLicenses,
     'dependencies/lockfile-hosts': lockfileHosts,
-    'drizzle/relations': drizzleRelations,
     'drizzle/stale-migrations': staleGeneratedFiles,
-    'nextjs/route-segments': nextjsRouteSegments,
     'nextjs/next-config': nextConfig,
-    'nextjs/build': nextjsBuild,
     'cloudflare/headers': cloudflareHeaders,
     'cloudflare/redirects': cloudflareRedirects,
-    'cloudflare/wrangler': cloudflareWrangler,
     'cloudflare/stale-types': staleGeneratedFiles,
     'site/build': siteBuild,
     'site/html-validate': htmlValidate,
     'site/purgecss': purgecss,
-    'site/linkinator': (input) => linkinator(input, false),
-    'site/linkinator-external': (input) => linkinator(input, true),
+    'site/linkinator': linkinator,
     'site/size': siteSize,
     'site/sitemap': sitemap,
     'site/unused-assets': unusedAssets,
-    'site/svgo': svgo,
-    'site/webmanifest': webManifest,
     'cloudflare/security-headers': cloudflareSecurityHeaders,
     'html/scripts': htmlScripts,
-    'html/template-text': htmlTemplateText,
-    'python/function-size': pythonFunctionSize,
     'python/placeholder-docstrings': pythonPlaceholderDocstrings,
-    'python/private-prefix': pythonPrivatePrefix,
-    'python/exports-at-bottom': pythonExportsAtBottom,
-    'python/module-getattr': pythonModuleGetattr,
-    'python/package-exports': pythonPackageExports,
-    'python/export-order': pythonExportOrder,
-    'python/singletons': pythonSingletons,
     'python/import-linter': importLinter,
     'python/pip-installs': pythonPipInstalls,
     'swift-tests/skip-reasons': swiftTestsSkipReasons,
-    'swift-tests/sleep': swiftTestsSleep,
-    'swift-snapshot-testing/recording': recording,
-    'swift-snapshot-testing/references': references,
     'swift-tests/coverage': swiftTestsCoverage,
     'xcode/xcconfig': xcconfig,
     'xcode/entitlements': xcodeEntitlements,
@@ -170,16 +125,12 @@ export const CHECK_FUNCTIONS = {
     'xcode/xcstrings': xcstrings,
     'xcode/assets': xcodeAssets,
     'xcode/unused-assets': xcodeUnusedAssets,
-    'xcode/test-plans': xcodeTestPlans,
     'xcode/files-without-target': xcodeFilesWithoutTarget,
-    'xcode/symlinks': xcodeSymlinks,
     'swift/build': swiftBuild,
     'swift/swiftlint-analyze': swiftlintAnalyze,
     'swift/periphery': swiftPeriphery,
     'openapi/stale-document': staleGeneratedFiles,
-    'supabase/project-file': supabaseProjectFile,
     'supabase/storage-policies': supabaseStoragePolicies,
-    'supabase/migration-names': supabaseMigrationNames,
     'supabase/deno-lint': supabaseDenoLint,
     'supabase/deno-check': supabaseDenoCheck,
     'supabase/service-role-key': supabaseServiceRoleKey,
@@ -190,7 +141,6 @@ export const CHECK_FUNCTIONS = {
     'postgres/foreign-key-indexes': postgresForeignKeyIndexes,
     'postgres/migration-order': postgresMigrationOrder,
     'postgres/edited-migrations': postgresEditedMigrations,
-    'sql/functions': sqlFunctions,
     'docker/dockerignore': dockerignore,
     'docker/trivy-image': trivyImage,
     'structure/lone-files': loneFiles,
@@ -200,14 +150,10 @@ export const CHECK_FUNCTIONS = {
     'bash/doc-comments': bashDocComments,
     'bash/unused-functions': bashUnusedFunctions,
     'bash/unread-arguments': bashUnreadArguments,
-    'bash/private-prefix': bashPrivatePrefix,
     'bash/script-layout': bashScriptLayout,
     'bash/wrappers': bashWrappers,
     'bash/inline-scripts': bashInlineScripts,
-    'bash/variable-defaults': bashVariableDefaults,
-    'bash/include-guards': bashIncludeGuards,
     'bash/safety': bashSafety,
-    'bash/source-order': bashSourceOrder,
     'prose/vale': vale,
     'naming/identifiers': namingIdentifiers,
     'naming/paths': namingPaths,
@@ -225,7 +171,6 @@ export const BUILT_IN_CHECKS = {
     'markdown/markdownlint': { run: runCheckCommand, arguments: markdownlintArguments },
     'swift/swiftlint': { run: runCheckCommand, configurationFiles: swiftlintConfigurationFiles },
     'gspot/generated-files': { run: generatedFiles },
-    'gspot/settings-format': { run: settingsFormat, fix: fixSettingsFormat },
     'security/semgrep': { run: semgrep },
     'nextjs/tsc': { run: nextjsTsc },
     'docker/compose': { run: dockerCompose },

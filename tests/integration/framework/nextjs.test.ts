@@ -9,7 +9,6 @@ import { readTsconfig } from '#cli/parsers/tsconfig.ts';
 import { installedModules } from '#tests/setup/modules.ts';
 import { createReadCache } from '#cli/system/file-reads.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
-import { installToolProjects } from '#tests/setup/install.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { prepareInstalledSandbox } from '#tests/setup/sandbox.ts';
 import workspacePackage from '#root-package' with { type: 'json' };
@@ -18,15 +17,7 @@ import testsPackage from '#tests/package.json' with { type: 'json' };
 import reactManifest from 'react/package.json' with { type: 'json' };
 import reactDomManifest from 'react-dom/package.json' with { type: 'json' };
 import type { Sandbox, InstalledSandboxPlan } from '#tests/types/sandbox.ts';
-
-import {
-    NEXT_PAGE,
-    NEXT_LAYOUT,
-    NEXT_PACKAGE,
-    NEXTJS_SANDBOX,
-    NEXT_BUILD_FAILURE_PAGE,
-    REFERENCE_PROJECT_FILES,
-} from '#tests/config/nextjs.ts';
+import { NEXT_LAYOUT, NEXT_PACKAGE, NEXTJS_SANDBOX, REFERENCE_PROJECT_FILES } from '#tests/config/nextjs.ts';
 
 // Runs the named checks alone, expects the exit code, and returns the report.
 async function checked(repository: Sandbox, checks: string[], code: number): Promise<RunReport> {
@@ -93,36 +84,6 @@ test('type checking delegates to the Next.js check only when it runs', async () 
         status: 'skipped',
         note: 'nextjs/tsc runs it here',
     });
-});
-test('nextjs/build builds the app at level all and is not run at level recommended', async () => {
-    const { root, environment } = installedSandbox;
-    const page = join(root, 'app/page.tsx');
-    const settings = await Bun.file(join(root, 'gspot.toml')).text();
-    const compiler = await Bun.file(join(root, 'tsconfig.json')).text();
-    await Bun.write(page, NEXT_BUILD_FAILURE_PAGE);
-    try {
-        const failed = await checked(installedSandbox, ['nextjs/build'], 1);
-        expect(failed.checks).toMatchObject([
-            { check: 'nextjs/build', status: 'failed', findings: [{ rule: 'build' }] },
-        ]);
-        expect(failed.checks[0]!.findings[0]!.message).toContain('Build failed because of webpack errors');
-        const recommended = await spawnGspot(root, ['set', 'level', 'recommended'], environment);
-        expect(recommended.code, recommended.stdout + recommended.stderr).toBe(0);
-        const omitted = await checked(installedSandbox, ['nextjs/build'], 0);
-        expect(omitted.checks).toStrictEqual([]);
-        await Bun.write(page, NEXT_PAGE);
-        const all = await spawnGspot(root, ['set', 'level', 'all'], environment);
-        expect(all.code, all.stdout + all.stderr).toBe(0);
-        await installToolProjects(root);
-        const passed = await checked(installedSandbox, ['nextjs/build'], 0);
-        expect(passed.checks).toMatchObject([{ check: 'nextjs/build', status: 'passed', findings: [] }]);
-        expect(await Bun.file(join(root, 'tsconfig.json')).text()).toBe(compiler);
-        expect(await Bun.file(join(root, 'gspot.toml')).text()).toBe(settings);
-    } finally {
-        await Bun.write(page, NEXT_PAGE);
-        await Bun.write(join(root, 'gspot.toml'), settings);
-        await installToolProjects(root);
-    }
 });
 test('the i18n rules reject literal markup', async () => {
     const layout = join(installedSandbox.root, 'app/layout.tsx');

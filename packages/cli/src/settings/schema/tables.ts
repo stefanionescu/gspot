@@ -170,11 +170,6 @@ const configurationTableSchemas = {
             client_names: settingField(nonemptyStrings, ['db'], TABLE_FIELDS.client_names),
         } satisfies SchemaShape<TableSettings<'drizzle'>, NonNullable<WrittenSettings['drizzle']>>)
         .optional(),
-    html: z
-        .strictObject({
-            templates: settingField(relativePaths, [], TABLE_FIELDS.templates),
-        } satisfies SchemaShape<TableSettings<'html'>, NonNullable<WrittenSettings['html']>>)
-        .optional(),
     licenses: licensesSchema.optional(),
     openapi: z
         .strictObject({
@@ -252,7 +247,6 @@ const tableValuesSchema = z
     .strictObject({
         ...configurationTableSchemas,
         format: formatSchema.prefault({}),
-        'tools.codeql': toolsSchema.shape['codeql'],
         'tools.commitlint': toolsSchema.shape['commitlint'],
         'tools.editorconfig-checker': toolsSchema.shape['editorconfig-checker'],
         'tools.eslint': toolsSchema.shape['eslint'],
@@ -268,7 +262,6 @@ const tableValuesSchema = z
         'tools.sqlfluff': toolsSchema.shape['sqlfluff'],
         'tools.squawk': toolsSchema.shape['squawk'],
         'tools.stylelint': toolsSchema.shape['stylelint'],
-        'tools.svgo': toolsSchema.shape['svgo'],
         'tools.swiftlint': toolsSchema.shape['swiftlint'],
         'tools.taplo': toolsSchema.shape['taplo'],
         'tools.trivy': toolsSchema.shape['trivy'],

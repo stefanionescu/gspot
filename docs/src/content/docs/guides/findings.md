@@ -7,9 +7,9 @@ A finding names the file, the line, the check, and the message. The `help:` line
 says what to do:
 
 ```text
-root  bash/bash-syntax  failed  1 file  0.0s
-  greet.sh:1  bash/bash-syntax  syntax error near unexpected token `then'
-    help: Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about.
+root  bash/shellcheck  failed  1 file  0.0s
+  greet.sh:1:1  SC1073  Couldn't parse this if expression. Fix to allow more checks.
+    help: Fix the ShellCheck finding at the line it names.
 ```
 
 Fix the file, then run the check again.
@@ -19,7 +19,7 @@ Fix the file, then run the check again.
 `gspot explain` prints what a check looks for, why it matters, and what to do:
 
 ```bash
-gspot explain bash/bash-syntax
+gspot explain bash/shellcheck
 ```
 
 For a rule inside a tool, name the tool and the rule, such as

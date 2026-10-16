@@ -1,8 +1,8 @@
-allowed_words = ["Semgrep", "CodeQL"]
+allowed_words = ["Semgrep"]
 [configuration]
 title = "Security"
 always_selected = true
-description = "Static analysis for security patterns with Semgrep over every file a selected language claims, and CodeQL for configured project languages."
+description = "Static analysis for security patterns with Semgrep over every file a selected language claims."
 
 [files]
 languages = true
@@ -21,16 +21,6 @@ builds = ["macos", "linux"]
 [[tool.replace]]
 file = ".semgrepignore"
 shared = false
-
-[[tool]]
-name = "codeql"
-version = "2.24.3"
-brew = "codeql"
-github = { name = "github/codeql-cli-binaries", version = "v2.24.3" }
-# The CLI ships for x64 Linux only; its bundled Java does not run on arm64.
-builds = ["macos", "linux-x64", "windows"]
-# Query versions paired with github/codeql tag codeql-cli/v2.24.3.
-query_packs = { actions = "0.6.21", cpp = "1.5.12", csharp = "1.6.3", go = "1.5.7", java = "1.10.8", javascript = "2.3.3", python = "1.7.8", ruby = "1.5.8", rust = "0.1.28", swift = "1.2.17" }
 
 [[tool_file]]
 target = ".semgrepignore"
@@ -63,15 +53,3 @@ output = { format = "semgrep" }
 summary = "Runs the public Semgrep registry packs named in tools.semgrep.registry_packs, which the registry serves over the network."
 why = "The registry packs cover the common vulnerability classes, and their license keeps them out of this package."
 help = "Change the code the way the message says, or turn the rule off for a path with gspot ignore security/semgrep-registry --rule `<id>` --reason \"`<why>`\"."
-
-[[check]]
-name = "codeql"
-example = "A query constructed by concatenating request input into SQL reports a SQL-injection finding when the selected language query pack detects the flow. Use a parameterized database query and rerun with the language build prerequisites satisfied."
-level = "recommended"
-stage = "manual"
-runs = "once"
-tool = "codeql"
-when = { setting = "tools.codeql.languages" }
-summary = "Builds a CodeQL database for every language in tools.codeql.languages and runs the security suite over it."
-why = "Data-flow analysis follows a value from a request to a query across files, which a pattern rule cannot."
-help = "Change the code the result names. Record a false positive with gspot ignore security/codeql --rule `<id>` --paths `<glob>` --reason \"`<why>`\"."

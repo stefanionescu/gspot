@@ -9,7 +9,7 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { environmentVariables } from '#cli/system/environment.ts';
-import { STARTING_FILES, BASH_SYNTAX_FINDINGS } from '#tests/config/e2e.ts';
+import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/config/e2e.ts';
 import { setUpPackedSandbox, createPackedSandbox } from '#tests/setup/e2e-sandbox.ts';
 import { runCommand, waitForExit, waitForFile, captureChild, prepareCommand } from '#tests/setup/processes.ts';
 
@@ -92,7 +92,7 @@ test('init replaces formatter files, leaves CLAUDE.md and your AGENTS.md notes a
             ...consumer.command,
             'check',
             '--only',
-            'bash/bash-syntax',
+            'bash/shellcheck',
             'dependencies/lockfile-hosts',
             'format/prettier',
             '--json',
@@ -116,14 +116,14 @@ test('init replaces formatter files, leaves CLAUDE.md and your AGENTS.md notes a
             findings.map(({ file, line }) => ({ check, status, file, line })),
         ),
     ).toEqual(containingAll([{ check: 'format/prettier', status: 'failed', file: 'source.js', line: undefined }]));
-    expect(checks.find(({ check }) => check === 'bash/bash-syntax')).toMatchObject({
+    expect(checks.find(({ check }) => check === 'bash/shellcheck')).toMatchObject({
         status: 'failed',
         fileCount: 1,
-        findings: BASH_SYNTAX_FINDINGS,
+        findings: SHELLCHECK_SYNTAX_FINDINGS,
     });
     await writeFile(join(root, 'broken.sh'), 'echo example\n');
     const corrected = await runCommand(
-        [...consumer.command, 'check', '--only', 'bash/bash-syntax', '--json'],
+        [...consumer.command, 'check', '--only', 'bash/shellcheck', '--json'],
         consumer.offlineOptions,
     );
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -131,6 +131,6 @@ test('init replaces formatter files, leaves CLAUDE.md and your AGENTS.md notes a
     expect(clean.exitCode).toBe(0);
     expect(clean.skips).toStrictEqual([]);
     expect(clean.checks).toHaveLength(1);
-    expect(clean.checks[0]).toMatchObject({ check: 'bash/bash-syntax', status: 'passed', fileCount: 1, findings: [] });
+    expect(clean.checks[0]).toMatchObject({ check: 'bash/shellcheck', status: 'passed', fileCount: 1, findings: [] });
     expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe(STARTING_FILES['authored.txt']);
 });

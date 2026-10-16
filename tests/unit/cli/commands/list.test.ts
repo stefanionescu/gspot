@@ -14,7 +14,7 @@ test('list shows selected settings and available configurations while doctor kee
     await using directory = await testdir();
     const settings = settingsText(['bash', 'nextjs'], {
         tables: `[[ignore]]
-check = "bash/bash-syntax"
+check = "bash/shfmt"
 reason = "Review this separately."
 `,
     });
@@ -30,10 +30,8 @@ reason = "Review this separately."
     expect(Object.keys(result)).toStrictEqual(['selected', 'available']);
     const checks = result.selected.flatMap((configuration) => configuration.checks);
     expect(checks).toContainEqual({ name: 'bash/shellcheck', scope: '', state: 'on' });
-    expect(checks).toContainEqual({ name: 'bash/bash-syntax', scope: '', state: 'off (ignore)' });
-    expect(checks).toContainEqual({ name: 'bash/shfmt', scope: '', state: 'on' });
+    expect(checks).toContainEqual({ name: 'bash/shfmt', scope: '', state: 'off (ignore)' });
     expect(checks).toContainEqual({ name: 'structure/shared-prefixes', scope: '', state: 'off (level)' });
-    expect(checks).toContainEqual({ name: 'nextjs/build', scope: '', state: 'off (level)' });
     expect(
         listSuggestions(await openSession(directory.path)).detected.find(
             (configuration) => configuration.configuration === 'sql',
@@ -80,7 +78,7 @@ test('the text check list puts the states of all scopes in one row', async () =>
     await createFileTree(directory.path, {
         'gspot.toml': settingsText(['bash'], {
             tables: `[[ignore]]
-check = "bash/bash-syntax"
+check = "bash/shfmt"
 paths = ["api/**"]
 reason = "Review scoped syntax separately."
 [[scope]]
@@ -99,15 +97,15 @@ path = "api/worker"
     expect(structured.stderr).toBe('');
     const { selected } = JSON.parse(structured.stdout) as ConfigurationsListJson;
     const checks = selected.flatMap((configuration) => configuration.checks);
-    expect(checks.filter((check) => check.name === 'bash/bash-syntax')).toStrictEqual([
-        { name: 'bash/bash-syntax', scope: '', state: 'on' },
-        { name: 'bash/bash-syntax', scope: 'api', state: 'off (ignore)' },
-        { name: 'bash/bash-syntax', scope: 'api/worker', state: 'off (ignore)' },
+    expect(checks.filter((check) => check.name === 'bash/shfmt')).toStrictEqual([
+        { name: 'bash/shfmt', scope: '', state: 'on' },
+        { name: 'bash/shfmt', scope: 'api', state: 'off (ignore)' },
+        { name: 'bash/shfmt', scope: 'api/worker', state: 'off (ignore)' },
     ]);
     const human = await runGspot(directory.path, ['list']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
-    expect(human.stdout).toContain('    bash/bash-syntax  root: on, api: off (ignore), api/worker: off (ignore)\n');
+    expect(human.stdout).toContain('    bash/shfmt  root: on, api: off (ignore), api/worker: off (ignore)\n');
     for (const name of new Set(checks.map((check) => check.name)))
         expect(human.stdout.split('\n').filter((line) => line.trimStart().startsWith(`${name} `))).toHaveLength(1);
     expect(await readTree(directory.path)).toStrictEqual(before);

@@ -12,12 +12,10 @@ export const RUFF_IGNORED_RULES = [
     'N999',
     'ISC001',
     'ISC002',
-    'PLR0915',
     'Q000',
     'Q001',
     'Q002',
     'Q003',
-    'RUF022',
     'RUF023',
     'W191',
 ] as const;

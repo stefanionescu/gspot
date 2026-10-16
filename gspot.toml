@@ -108,16 +108,6 @@ allowed_names = ["Data", "DetectorName", "JsonEnumerator", "SourceMetadata", "Ve
 reason = "These tool report properties retain the exact TruffleHog, Semgrep, markdownlint and typos JSON field names."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/library/swift-snapshot-testing.ts"]
-allowed_names = ["swift-snapshot-testing"]
-reason = "The final placement retains the official Swift Snapshot Testing library name."
-
-[[naming.override]]
-paths = ["tests/config/swift/snapshots.ts"]
-allowed_names = ["snapshots", "SNAPSHOT_CASES", "SNAPSHOT_REPOSITORY"]
-reason = "The final placement names test data for the Swift SnapshotTesting library."
-
-[[naming.override]]
 paths = ["tests/unit/cli/generation/tool-file-sources/v8r.test.ts", "packages/cli/configurations/language/markdown/markdownlint-cli2.mjs"]
 allow_digits = true
 reason = "These files retain the official v8r and markdownlint-cli2 tool names."
@@ -369,9 +359,6 @@ name = "lightningcss"
 version = "1.33.0"
 reason = "A build dependency of the manual site; the license binds changes to its own files, and none are made."
 
-[tools.codeql]
-languages = ["javascript-typescript", "actions"]
-
 [tools.commitlint]
 scopes = ["cli", "eslint-plugin", "docs", "root", "deps"]
 
@@ -453,18 +440,6 @@ paths = ["tests/config/prose.ts"]
 reason = "The sample for the session-identifier rule is a URL with a session id."
 
 [[ignore]]
-check = "security/codeql"
-rule = "js/file-system-race"
-paths = ["tests/unit/cli/checks/framework/nextjs.test.ts", "tests/unit/cli/checks/language/swift/build/isolation.test.ts", "tests/unit/cli/tools/npm/project/client.test.ts", "tests/unit/cli/tools/npm/project/install.test.ts", "tests/setup/files.ts"]
-reason = "Each test is the only writer in its temporary folder."
-
-[[ignore]]
-check = "security/codeql"
-rule = "js/http-to-file-access"
-paths = ["scripts/build.ts"]
-reason = "The build checks the SHA-256 hash of each download before it writes the file."
-
-[[ignore]]
 check = "site/html-validate"
 rule = "element-permitted-content"
 paths = ["docs/**"]
@@ -510,7 +485,7 @@ reason = "A configuration template takes the name of the file it writes, and a t
 
 [[ignore]]
 check = "structure/shared-prefixes"
-paths = ["packages/cli/src/checks/general/gspot/settings-format.ts", "packages/cli/src/checks/general/structure/file-folder-clashes.ts", "packages/cli/src/checks/language/swift/build-folder.ts", "packages/cli/src/config/generation/tool-file-sources.ts", "packages/cli/src/generation/eslint/fragments/react*.ts", "packages/cli/src/generation/tool-file-builders.ts", "packages/cli/src/generation/tool-files.ts", "packages/cli/src/ownership/log-schema.ts", "tests/config/ignore-patterns.ts", "tests/config/swift-tests.ts", "tests/types/tool-files.ts", "tests/unit/cli/checks/general/structure/file-folder-clashes.test.ts", "tests/unit/cli/checks/language/swift/build-folder.test.ts", "tests/unit/cli/generation/tool-files.test.ts"]
+paths = ["packages/cli/src/checks/general/structure/file-folder-clashes.ts", "packages/cli/src/checks/language/swift/build-folder.ts", "packages/cli/src/config/generation/tool-file-sources.ts", "packages/cli/src/generation/eslint/fragments/react*.ts", "packages/cli/src/generation/tool-file-builders.ts", "packages/cli/src/generation/tool-files.ts", "packages/cli/src/ownership/log-schema.ts", "tests/config/ignore-patterns.ts", "tests/config/swift-tests.ts", "tests/types/tool-files.ts", "tests/unit/cli/checks/general/structure/file-folder-clashes.test.ts", "tests/unit/cli/checks/language/swift/build-folder.test.ts", "tests/unit/cli/generation/tool-files.test.ts"]
 reason = "The final placement names each distinct topic directly; these related topics share a word without sharing one implementation."
 
 [[ignore]]

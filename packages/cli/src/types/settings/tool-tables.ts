@@ -3,13 +3,11 @@ import type { ReasonValue } from '#cli/types/settings/file.ts';
 import type { RULE_CONDITIONS, IMPORT_EXTENSIONS, DOCSTRING_CONVENTIONS } from '#cli/config/settings/schema.ts';
 
 type WrittenTools = {
-    codeql?: { languages?: string[] | undefined } | undefined;
     hadolint?: { trusted_registries?: string[] | undefined } | undefined;
     nginx?: { image?: string | undefined } | undefined;
     ruff?: { docstring_convention?: (typeof DOCSTRING_CONVENTIONS)[number] | undefined } | undefined;
     semgrep?: { registry_packs?: string[] | undefined; rule_files?: string[] | undefined } | undefined;
     sqlfluff?: { dialect?: string | undefined } | undefined;
-    svgo?: { min_saving_percent?: ReasonValue<number> | undefined } | undefined;
     swiftlint?: { always_keep_imports?: string[] | undefined } | undefined;
     trivy?: { severity?: string[] | undefined } | undefined;
     eslint?:
@@ -100,8 +98,6 @@ type WrittenTools = {
     taplo?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
 };
 
-type ParsedCodeql = { languages: string[] };
-
 type ParsedHadolint = { trusted_registries: string[] };
 
 type ParsedNginx = { image: string };
@@ -111,8 +107,6 @@ type ParsedRuff = { docstring_convention?: (typeof DOCSTRING_CONVENTIONS)[number
 type ParsedSemgrep = { registry_packs: string[]; rule_files: string[] };
 
 type ParsedSqlfluff = { dialect: string };
-
-type ParsedSvgo = { min_saving_percent: number };
 
 type ParsedSwiftlint = { always_keep_imports: string[] };
 
@@ -193,13 +187,11 @@ type ParsedV8r = { schema: { paths: string[]; url: string }[] };
 type ParsedTaplo = { extra?: Record<string, unknown> | undefined };
 
 type ParsedTools = {
-    codeql?: ParsedCodeql | undefined;
     hadolint?: ParsedHadolint | undefined;
     nginx?: ParsedNginx | undefined;
     ruff?: ParsedRuff | undefined;
     semgrep?: ParsedSemgrep | undefined;
     sqlfluff?: ParsedSqlfluff | undefined;
-    svgo?: ParsedSvgo | undefined;
     swiftlint?: ParsedSwiftlint | undefined;
     trivy?: ParsedTrivy | undefined;
     eslint?: ParsedEslint | undefined;

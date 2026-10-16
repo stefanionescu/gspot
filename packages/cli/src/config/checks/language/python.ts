@@ -11,12 +11,6 @@ export const PIP_INSTALL = /\bpip3? install\b/u;
 
 export const INSTALL_EXTENSIONS = ['.sh', '.bash', '.yml', '.yaml', '.toml', 'Dockerfile'] as const;
 
-export const CLASS_CALL = /^[A-Z][A-Za-z\d]*\(/u;
-
-export const DEFINITIONS = new Set(['function_definition', 'class_definition']);
-
-export const INIT_PY = '__init__.py';
-
 export const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'description', 'summary']);
 
 /** A comment that directs a tool rather than a reader, which must sit on the line it covers. */
@@ -40,10 +34,6 @@ export const DOCSTRING_STYLES = ['google', 'numpy', 'sphinx'] as const;
 export const PYDOCLINT_STYLE_FLAG = '--style';
 
 export const DEPTRY_EXCLUDE_FLAG = '--extend-exclude';
-
-export const PYTHON_PRIVATE_PREFIX = '_';
-
-export const DUNDER_PREFIX = '__';
 
 export const NON_WORD_RUN = /[^a-z\d]+/gu;
 

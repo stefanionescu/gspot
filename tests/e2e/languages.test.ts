@@ -79,22 +79,21 @@ async function runPackedCheck(
         expect(added.code, added.stdout + added.stderr).toBe(0);
         const configured = await runCommand([...command, 'set', 'tools.sqlfluff.dialect', 'postgres'], onlineOptions);
         expect(configured.code, configured.stdout + configured.stderr).toBe(0);
-        await writeFile(join(root, 'query.sql'), 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n');
+        await writeFile(join(root, 'query.sql'), 'SELECT FROM;\n');
         const failed = await runCommand(
-            [...command, 'check', 'query.sql', '--only', 'sql/functions', '--json'],
+            [...command, 'check', 'query.sql', '--only', 'sql/sqlfluff', '--json'],
             offlineOptions,
         );
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const failedReport = JSON.parse(failed.stdout) as RunReport;
         expect(failedReport.skips).toStrictEqual([]);
-        expect(failedReport.checks).toMatchObject([{ check: 'sql/functions', status: 'failed', fileCount: 1 }]);
+        expect(failedReport.checks).toMatchObject([{ check: 'sql/sqlfluff', status: 'failed', fileCount: 1 }]);
         expect(failedReport.checks[0]!.findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
-            { file: 'query.sql', line: 1, rule: 'trivial-function' },
-            { file: 'query.sql', line: 1, rule: 'trivial-file' },
+            { file: 'query.sql', line: 1, rule: 'PRS' },
         ]);
         await writeFile(join(root, 'query.sql'), 'SELECT 1;\n');
         const sql = await runCommand(
-            [...command, 'check', 'query.sql', '--only', 'sql/functions', '--json'],
+            [...command, 'check', 'query.sql', '--only', 'sql/sqlfluff', '--json'],
             offlineOptions,
         );
         expect(sql.code, sql.stdout + sql.stderr).toBe(0);
@@ -102,7 +101,7 @@ async function runPackedCheck(
         expect(sqlReport.skips).toStrictEqual([]);
         expect(sqlReport.checks).toHaveLength(1);
         expect(sqlReport.checks[0]).toMatchObject({
-            check: 'sql/functions',
+            check: 'sql/sqlfluff',
             status: 'passed',
             fileCount: 1,
             findings: [],

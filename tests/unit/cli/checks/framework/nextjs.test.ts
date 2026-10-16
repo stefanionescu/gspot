@@ -16,17 +16,16 @@ import { runCheckSample } from '#tests/setup/fixes.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
+import { buildCheckInput } from '#tests/setup/check-input.ts';
+import { nextjsTsc, nextConfig } from '#cli/checks/framework/nextjs.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
-import { nextjsTsc, nextConfig, parseNextBuildFlags } from '#cli/checks/framework/nextjs.ts';
 
 import {
     NEXT_CACHE_BYTES,
     NEXT_CONFIG_CASES,
     TSC_FAILURE_OUTPUT,
     NEXT_VERSION_OUTPUT,
-    BUILD_FAILURE_OUTPUT,
     TYPESCRIPT_VERSION_OUTPUT,
 } from '#tests/config/nextjs.ts';
 
@@ -39,19 +38,17 @@ for (const entry of nextjs.NEXT_CASES) {
 
 /**
  * Replace executable lookup and both process runners until disposal. Simulate generated files and diagnostics.
- * @param check the Next.js command whose diagnostic format to simulate.
  * @param runCallback the native command result for tests with a different process outcome.
  * @returns captured commands and a disposer that restores the mocked boundaries.
  */
 function mockNextjsCommands(
-    check: string,
     runCallback?: (command: readonly string[], options: AsyncSpawnOptions) => Promise<SpawnResult>,
 ) {
     using resources = new DisposableStack();
 
     const failureOutput = {
-        stdout: check === 'nextjs/tsc' ? TSC_FAILURE_OUTPUT : '',
-        stderr: check === 'nextjs/build' ? BUILD_FAILURE_OUTPUT : '',
+        stdout: TSC_FAILURE_OUTPUT,
+        stderr: '',
     };
     const directories: string[] = [];
     const commands: string[][] = [];
@@ -102,7 +99,7 @@ function mockNextjsCommands(
 }
 
 for (const scope of ['', 'app'])
-    for (const check of ['nextjs/tsc', 'nextjs/build'])
+    for (const check of ['nextjs/tsc'])
         test(`Next.js output preservation in ${scope || 'root'}: ${check} reports its finding, passes after the fix, and preserves source output`, async () => {
             await using directory = await testdir();
             const session = await prepareNextjsBuild(directory.path, scope);
@@ -115,10 +112,9 @@ for (const scope of ['', 'app'])
             await using originalFile = await open(config, 'r');
             const original = await originalFile.readFile();
             const { mode } = await originalFile.stat();
-            using read = mockNextjsCommands(check);
-            const { directories, routesSeen, commands } = read;
+            using read = mockNextjsCommands();
+            const { directories, routesSeen } = read;
             const execute = async () => {
-                if (check === 'nextjs/build') return await checkFindings(session.root, check, { scope });
                 const result = await nextjsTsc(session, planned);
                 return result.findings;
             };
@@ -126,18 +122,13 @@ for (const scope of ['', 'app'])
             expect(found).toHaveLength(1);
             expect(found[0]).toMatchObject({
                 check,
-                file: toPosix(join(scope, check === 'nextjs/tsc' ? 'src/app/page.ts' : 'package.json')),
+                file: toPosix(join(scope, 'src/app/page.ts')),
                 line: 1,
             });
-            expect(found[0]!.message).toContain(check === 'nextjs/tsc' ? 'Type mismatch' : 'Page is invalid');
+            expect(found[0]!.message).toContain('Type mismatch');
             await writeFile(join(directory.path, join(scope, 'src/app/page.ts')), 'corrected input\n');
             expect(await execute()).toStrictEqual([]);
-            if (check === 'nextjs/build')
-                expect(commands.map((command) => command.slice(1))).toContainEqual([
-                    'build',
-                    scope === '' ? '--webpack' : '--turbopack',
-                ]);
-            else expect(routesSeen.every((text) => text === '// Generated routes\n')).toBe(true);
+            expect(routesSeen.every((text) => text === '// Generated routes\n')).toBe(true);
             expect(directories).not.toContain(join(directory.path, scope));
             expect(await Promise.all(directories.map((cwd) => pathExists(cwd)))).toStrictEqual(
                 directories.map(() => false),
@@ -173,7 +164,7 @@ test("a failed type generation removes the scratch copy and keeps the developer'
     const planned = planRun(session, { stage: 'push', only: ['nextjs/tsc'] })[0]!;
     let scratch = '';
     resources.use(
-        mockNextjsCommands('nextjs/tsc', async (...[, options]) => {
+        mockNextjsCommands(async (...[, options]) => {
             scratch = options.cwd;
             await writeFile(join(scratch, 'tsconfig.json'), 'partial generator output\n');
             await writeFile(join(directory.path, 'tsconfig.json'), 'Concurrent developer edit\n');
@@ -236,7 +227,7 @@ for (const scope of ['', 'apps/web'])
         const planned = planRun(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
             (entry) => entry.scope.scope.path === scope,
         )!;
-        using read = mockNextjsCommands('nextjs/tsc', async (command, options) => {
+        using read = mockNextjsCommands(async (command, options) => {
             if (command[1] === 'typegen')
                 await writeFile(join(options.cwd, 'next-env.d.ts'), '// Generated in this copy\n');
             else expect(await readFile(join(options.cwd, 'next-env.d.ts'), 'utf8')).toBe('// Generated in this copy\n');
@@ -254,19 +245,6 @@ for (const scope of ['', 'apps/web'])
             '// Authored type declaration\n',
         );
     });
-
-test('next build flags keep quoted paths and empty flags and refuse unresolved expansions', () => {
-    expect(parseNextBuildFlags(`NODE_ENV=production next build "two words" "" --webpack && echo done`)).toStrictEqual([
-        'two words',
-        '',
-        '--webpack',
-    ]);
-    expect(() => parseNextBuildFlags('next build $FLAGS')).toThrow('unresolved command or flag expansions');
-});
-
-test('next build flags read an escaped space as part of one argument', () => {
-    expect(parseNextBuildFlags(String.raw`next build two\ words`)).toStrictEqual(['two words']);
-});
 
 test.each([...NEXT_CONFIG_CASES])('next.config secrets and turned-off checks: $name', async ({ source, expected }) => {
     await using sandbox = await testdir({

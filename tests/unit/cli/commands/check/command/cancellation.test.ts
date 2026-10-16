@@ -10,6 +10,7 @@ import type { PausedGit } from '#tests/types/processes.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
 import { environmentVariables } from '#cli/system/environment.ts';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { CLI_MAIN, runGspot, checkReport } from '#tests/setup/run-gspot.ts';
@@ -78,7 +79,7 @@ test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'] as const)(
     async (operation) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': settingsText(['bash']),
+            'gspot.toml': settingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
             'source.sh': 'echo indexed\n',
             scratch: {},
             bin: {},
@@ -94,7 +95,7 @@ test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'] as const)(
         const bin = join(sandbox.path, 'bin');
         const environment = await fakeGit(bin, { operation, marker, pauseOnCall: 1, executable: nativeGit! });
         await using capture = startCommand(
-            [process.execPath, CLI_MAIN, 'check', '--staged', '--only', 'bash/bash-syntax', '--json'],
+            [process.execPath, CLI_MAIN, 'check', '--staged', '--only', 'project/bash-syntax', '--json'],
             {
                 cwd: sandbox.path,
                 env: { ...environmentVariables(), NO_COLOR: '1', CI: '1', ...environment, TMPDIR: scratch },
@@ -119,7 +120,7 @@ test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'] as const)(
         expect(await readdir(scratch)).toStrictEqual([]);
         expect(gitOutput(sandbox.path, ['ls-files', '--stage', '-z'])).toBe(indexed);
         expect(await readFile(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
-        const retry = await checkReport(sandbox.path, ['check', '--staged', '--only', 'bash/bash-syntax', '--json']);
+        const retry = await checkReport(sandbox.path, ['check', '--staged', '--only', 'project/bash-syntax', '--json']);
         expect(retry.code, retry.stdout + retry.stderr).toBe(0);
         expect(retry.report.checks[0]!.status).toBe('passed');
     },
@@ -129,7 +130,7 @@ test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'] as const)(
 test.skipIf(isWindows)('push cancellation retains completed reports and names references not checked', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': settingsText(['bash']),
+        'gspot.toml': settingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'source.sh': 'echo first\n',
     });
     commitAll(sandbox.path);
@@ -144,7 +145,7 @@ test.skipIf(isWindows)('push cancellation retains completed reports and names re
     await mkdir(binaryDirectory);
     const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(first.length)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(second.length)}\n`;
     await using capture = startCommand(
-        [process.execPath, CLI_MAIN, 'check', '--hook', 'pre-push', '--only', 'bash/bash-syntax', '--json'],
+        [process.execPath, CLI_MAIN, 'check', '--hook', 'pre-push', '--only', 'project/bash-syntax', '--json'],
         {
             cwd: sandbox.path,
             env: {
@@ -185,7 +186,7 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
         await using sandbox = await testdir();
         const root = sandbox.path;
         await createFileTree(root, {
-            'gspot.toml': settingsText(['bash']),
+            'gspot.toml': settingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
             'source.sh': 'echo indexed\n',
         });
         commitAll(root);
@@ -224,7 +225,7 @@ await import(${JSON.stringify(CLI_MAIN)});
             const protocol = `${ref} ${revision} ${ref} ${'0'.repeat(revision.length)}\n`;
             const retry = await runGspot(
                 root,
-                ['check', '--hook', 'pre-push', '--only', 'bash/bash-syntax', '--json'],
+                ['check', '--hook', 'pre-push', '--only', 'project/bash-syntax', '--json'],
                 {},
                 { stdin: protocol },
             );
@@ -233,7 +234,7 @@ await import(${JSON.stringify(CLI_MAIN)});
                 {
                     hash: revision,
                     refs: [ref],
-                    report: { exitCode: 0, checks: [{ check: 'bash/bash-syntax', status: 'passed' }] },
+                    report: { exitCode: 0, checks: [{ check: 'project/bash-syntax', status: 'passed' }] },
                 },
             ]);
         } finally {

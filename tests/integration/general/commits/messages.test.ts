@@ -1,9 +1,6 @@
-/** Derived scope names retain the case of project folders; messages may omit a scope. */
-
 /** Native preparation commands shared by the four installed commit scenarios. */
-
 // Completed history includes every selected commit and passes its range check.
-
+/** Derived scope names retain the case of project folders; messages may omit a scope. */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
@@ -13,10 +10,10 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/bash/tools.ts';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { COMMITS_FILES, COMMIT_MESSAGES } from '#tests/config/commitlint.ts';
+import { BASH_SYNTAX_CHECK, CLEAN_BASH_SCRIPT } from '#tests/config/bash/tools.ts';
 import { test, expect, afterAll, describe, beforeAll, beforeEach } from 'bun:test';
 import { toolsPath, sandboxPath, installToolProjects } from '#tests/setup/install.ts';
 
@@ -156,9 +153,7 @@ test('a shallow push checks source content but refuses incomplete required histo
     const source = join(sandbox.path, 'source');
 
     await createFileTree(source, {
-        'gspot.toml': settingsText(['bash', 'commits'], {
-            level: 'all',
-        }),
+        'gspot.toml': settingsText(['bash', 'commits'], { tables: BASH_SYNTAX_CHECK, level: 'all' }),
         'source.sh': 'echo base\n',
     });
     expect(git(source, ['init', '-q']).code).toBe(0);
@@ -181,7 +176,7 @@ test('a shallow push checks source content but refuses incomplete required histo
     };
     expect(git(checkout, ['remote', 'add', 'unseen', pathToFileURL(source).href]).code).toBe(0);
     await installToolProjects(checkout);
-    const content = await spawnGspot(checkout, [...command, 'bash/bash-syntax', ...remote], env, input);
+    const content = await spawnGspot(checkout, [...command, 'project/bash-syntax', ...remote], env, input);
     expect(content.code, content.stdout + content.stderr).toBe(0);
     expect((JSON.parse(content.stdout) as PushReport).revisions[0]).toMatchObject({
         historyComplete: false,

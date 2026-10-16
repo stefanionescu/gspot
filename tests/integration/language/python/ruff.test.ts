@@ -125,19 +125,16 @@ answer = 42
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-test('python/function-size is the only function size limit, and Ruff reports no statement count', async () => {
+test('Ruff reports the configured statement limit at level all', async () => {
     await using sandbox = await testdir({
         'gspot.toml': settingsText(['python'], { level: 'all' }),
         'sample.py': FUNCTION_SOURCE,
     });
     await installToolProjects(sandbox.path);
     const checked = await spawnGspot(sandbox.path, ['check', 'sample.py', '--only', 'python/ruff', '--json']);
-    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect((JSON.parse(checked.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
-    const sized = await spawnGspot(sandbox.path, ['check', '--only', 'python/function-size', '--json']);
-    expect(sized.code, sized.stdout + sized.stderr).toBe(0);
-    expect((JSON.parse(sized.stdout) as RunReport).checks).toMatchObject([
-        { check: 'python/function-size', status: 'passed', findings: [] },
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    expect((JSON.parse(checked.stdout) as RunReport).checks.flatMap((check) => check.findings)).toMatchObject([
+        { check: 'python/ruff', file: 'sample.py', rule: 'PLR0915' },
     ]);
 });
 

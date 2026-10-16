@@ -44,7 +44,7 @@ npm exec --no -- gspot check
 
 With mise, run `mise exec -- gspot install`, then `mise exec -- gspot check`.
 
-Run manual checks by name, for example `npm exec --no -- gspot check --only security/codeql`. Keep the exit code of gspot: `1` means
+Run manual checks by name, for example `npm exec --no -- gspot check --only security/semgrep-registry`. Keep the exit code of gspot: `1` means
 findings, and `2` means the run did not finish; a missing program gives exit 2, and the report names it. `gspot
 check --json` prints the report as JSON. Do not cache or upload `.gspot/state/`, installed tools, or credentials.
 

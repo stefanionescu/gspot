@@ -1,7 +1,7 @@
 [configuration]
 title = "Swift Tests"
 requires = ["swift", "coverage"]
-description = "Swift test files under XCTest and Swift Testing. A disabled test says why, no test sleeps, and coverage holds a floor."
+description = "Swift test files under XCTest and Swift Testing. A disabled test says why, and coverage holds a floor."
 
 [detect]
 tags = ["swift-test", "swift-test-target"]
@@ -27,16 +27,6 @@ files = { tags = ["swift-test"] }
 summary = "Checks that skip calls and disabled traits name a nonempty reason, and unavailable tests carry an explanation."
 why = "A test turned off with no reason stays off, because nobody knows when it is safe to turn on."
 help = "Say why the test is off and what turns it back on, or delete the test."
-
-[[check]]
-name = "sleep"
-example = "A test using a fixed sleep to wait for asynchronous work reports a timing finding. Wait for the actual completion expectation or poll the required condition with a bounded timeout."
-level = "all"
-stage = "commit"
-files = { tags = ["swift-test"] }
-summary = "Refuses sleep calls in test files."
-why = "A sleep makes a test slow when it passes and flaky when the machine is slower than the number."
-help = "Wait on an expectation or a confirmation, or poll a condition with a timeout."
 
 [[check]]
 name = "coverage"

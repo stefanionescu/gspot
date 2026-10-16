@@ -1,17 +1,6 @@
-import { isRecord } from '#cli/objects.ts';
-import { createRequire } from 'node:module';
-import { parse as parseToml } from 'smol-toml';
-import { parseJsonc } from '#cli/parsers/json.ts';
-import type { Parsed } from '#cli/types/errors.ts';
-import { join, dirname, relative } from 'node:path';
 import { readSource } from '#cli/system/file-reads.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
-import { parseOutput } from '#cli/parsers/output/formats.ts';
-import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
-import { toolFindings } from '#cli/execution/command/output.ts';
-import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
-import { inspectTool, toolAvailability } from '#cli/tools/find.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import type { HeaderBlock, HeaderBlocks } from '#cli/types/checks/platform.ts';
 
@@ -19,10 +8,8 @@ import {
     DETACH_PREFIX,
     REDIRECT_PARTS,
     REDIRECTS_FILE,
-    WRANGLER_FILES,
     FRAME_ANCESTORS,
     SOURCE_PREFIXES,
-    WRANGLER_FIELDS,
     HTTP_HEADER_LINE,
     REQUIRED_HEADERS,
     REDIRECT_STATUS_CODES,
@@ -33,22 +20,6 @@ function contentLines(text: string): NumberedLine[] {
         .split('\n')
         .map((text, index) => ({ text, number: index + 1 }))
         .filter((line) => line.text.trim() !== '' && !line.text.trimStart().startsWith('#'));
-}
-
-/**
- * Parse a Wrangler document without repository I/O.
- * @param text the document contents.
- * @param path the document path for selecting TOML or JSON with comments.
- * @returns the parsed object or its syntax diagnostic.
- */
-function parseWrangler(text: string, path: string): Parsed<Record<string, unknown>> {
-    try {
-        if (path.endsWith('.toml')) return { value: parseToml(text) };
-        const parsed = parseJsonc(text);
-        return isRecord(parsed) ? { value: parsed } : { error: 'The file does not parse as JSON with comments.' };
-    } catch (error) {
-        return { error: error instanceof Error ? error.message : 'The file does not parse.' };
-    }
 }
 
 /**
@@ -119,49 +90,6 @@ export function cloudflareRedirects(input: CheckInput): Finding[] {
             findingAt(input, { file: path, line: entry.number }, 'syntax', entry.text),
         ),
     );
-}
-
-/**
- * Every wrangler configuration parses, names the worker, and pins a compatibility date.
- * @param input the check input.
- * @returns the findings.
- */
-export async function cloudflareWrangler(input: CheckInput): Promise<Finding[]> {
-    const paths = WRANGLER_FILES.flatMap((name) => sourcePaths(input, [name]));
-    const wrangler = toolDeclaration(input.manifests.values(), 'wrangler');
-    const context = {
-        ...input,
-        cwd: join(
-            input.installedRoot ?? input.root,
-            relative(input.root, join(input.root, input.selection.scope.path)),
-        ),
-    };
-    const executable = toolAvailability(wrangler, inspectTool(context, wrangler));
-    if ('status' in executable) throw new Error(executable.note);
-    const schema = join(dirname(createRequire(executable.path).resolve('wrangler/package.json')), 'config-schema.json');
-    const result = await runCheckTool(
-        input,
-        (input.check.command as string[]).flatMap((part) =>
-            part === '{files}' ? paths : [part === '{wrangler_schema}' ? schema : part],
-        ),
-        { cwd: input.root },
-    );
-    const schemaFindings = parseOutput(input.check, result.stdout, result.stderr, {
-        root: input.root,
-        cwd: input.root,
-    });
-    return [
-        ...toolFindings(result, schemaFindings, 'v8r'),
-        ...paths.flatMap((path): Finding[] => {
-            const read = parseWrangler(readSource(input.root, path, input.reads).toString('utf8'), path);
-            if ('error' in read) return [findingAt(input, { file: path, line: 1 }, 'syntax', read.error)];
-            const missing = Object.entries(WRANGLER_FIELDS).flatMap(([field, { pattern, rule, message }]) => {
-                const value = read.value[field];
-                return typeof value === 'string' && pattern.test(value) ? [] : [{ rule, message }];
-            });
-            return missing.map(({ rule, message }) => findingAt(input, { file: path, line: 1 }, rule, message));
-        }),
-    ];
 }
 /**
  * The syntax findings of every headers file.

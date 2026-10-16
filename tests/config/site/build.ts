@@ -4,7 +4,6 @@ export const BUILD_OUTPUT_CHECKS = [
     'site/html-validate',
     'site/purgecss',
     'site/linkinator',
-    'site/linkinator-external',
     'site/size',
     'site/sitemap',
 ] as const;

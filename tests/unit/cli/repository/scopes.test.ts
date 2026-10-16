@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/file-reads.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
+import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
@@ -19,27 +20,25 @@ import {
     INVALID_WORKSPACE_FILES,
 } from '#tests/config/repository.ts';
 
-test('each file is checked once, in its deepest scope', async () => {
+test('a command check reads each matching file once across nested scopes', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': NESTED_SCOPES_SETTINGS,
+        'gspot.toml': NESTED_SCOPES_SETTINGS + BASH_SYNTAX_CHECK,
         'api/entry.sh': 'if then\n',
         'api/worker/entry.sh': 'if then\n',
         'api/worker/query.sql': 'SELECT 1;\n',
     });
     const applied = await runGspot(directory.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const checked = await checkReport(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
+    const checked = await checkReport(directory.path, ['check', '--only', 'project/bash-syntax', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const checks = checked.report.checks;
     expect(
         checks.map((check) => ({ check: check.check, scope: check.scope, fileCount: check.fileCount })),
-    ).toStrictEqual([
-        { check: 'bash/bash-syntax', scope: 'api', fileCount: 1 },
-        { check: 'bash/bash-syntax', scope: 'api/worker', fileCount: 1 },
-    ]);
-    expect(new Set(checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(new Set(['api/entry.sh']));
-    expect(new Set(checks[1]?.findings.map((finding) => finding.file))).toStrictEqual(new Set(['api/worker/entry.sh']));
+    ).toStrictEqual([{ check: 'project/bash-syntax', scope: '', fileCount: 2 }]);
+    expect(new Set(checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(
+        new Set(['api/entry.sh', 'api/worker/entry.sh']),
+    );
 });
 
 test.each(PROJECT_FILE_FOLDERS)('%s with the project file %s marks the folder %j', (path, pattern, folder) => {

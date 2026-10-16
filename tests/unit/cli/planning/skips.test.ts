@@ -90,7 +90,7 @@ test('vue/vue-tsc without the typescript configuration is skipped with its condi
     ]);
 });
 
-test('security/codeql waits for tools.codeql.languages while security/semgrep-registry runs', async () => {
+test('security/semgrep-registry runs when its registry packs are set', async () => {
     await using sandbox = await testdir({
         'gspot.toml': settingsText(['security']),
         'source.js': 'export const port = 8080;\n',
@@ -98,7 +98,7 @@ test('security/codeql waits for tools.codeql.languages while security/semgrep-re
     const checks = planRun(await openSession(sandbox.path), {
         stage: 'all',
         includeUnsupported: true,
-        only: ['security/semgrep-registry', 'security/codeql'],
+        only: ['security/semgrep-registry'],
     });
     expect(
         checks.map((check) => ({ check: check.check.name, cause: check.skip?.cause, note: check.skip?.note })),
@@ -107,11 +107,6 @@ test('security/codeql waits for tools.codeql.languages while security/semgrep-re
             check: 'security/semgrep-registry',
             cause: undefined,
             note: undefined,
-        },
-        {
-            check: 'security/codeql',
-            cause: 'setting',
-            note: 'requires project setting tools.codeql.languages',
         },
     ]);
 });

@@ -3,10 +3,10 @@ import * as assets from '#cli/system/assets.ts';
 import { knownSettings } from '#cli/settings/view.ts';
 import { buildManifest } from '#tests/setup/manifest.ts';
 import { declarationFor } from '#cli/settings/inherit.ts';
+import { TOOL_DECLARATION } from '#tests/config/manifests.ts';
 import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
 import { toolDeclarationSchema } from '#cli/configurations/schema/tool.ts';
-import { TOOL_DECLARATION, SECURITY_DECLARATION } from '#tests/config/manifests.ts';
 import { SEMGREP_ASSETS, CONFIGURATION_TABLE } from '#tests/config/configurations.ts';
 import { parseManifest, configurationManifests } from '#cli/configurations/manifests.ts';
 
@@ -95,21 +95,6 @@ test('the folder gives a configuration its name and group', () => {
             'configurations/tool/example',
         ),
     ).toThrow('configuration.group');
-});
-
-test('a query pack needs an exact version, not a range', () => {
-    expect(() =>
-        buildManifest('security', {
-            group: 'general',
-            tables: `${SECURITY_DECLARATION}query_packs = {python = "^1.2.3"}\n`,
-        }),
-    ).toThrow('tool.0.query_packs.python');
-    const declared = buildManifest('security', {
-        group: 'general',
-        tables: `${SECURITY_DECLARATION}query_packs = {python = "1.7.8"}\n`,
-    }).tools[0]!;
-    if (typeof declared === 'string') throw new Error('The fixture must declare codeql.');
-    expect(declared.query_packs).toStrictEqual({ python: '1.7.8' });
 });
 
 test('a tool rule page needs the {rule} placeholder, and its crash pattern must be a regular expression', () => {

@@ -2,7 +2,7 @@ allowed_words = ["SQL"]
 [configuration]
 title = "SQL"
 suggests = []
-description = "SQLFluff checks layout and style in the project dialect. At all, SQL checks line comments, file length, and PostgreSQL function structure."
+description = "SQLFluff checks layout and style in the project dialect. At all, SQL checks line comments and file length."
 
 [files]
 extensions = [".sql", ".pgsql", ".psql"]
@@ -57,12 +57,3 @@ output = { format = "json", children = "violations", fields = { file = "filepath
 summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database configuration names."
 why = "SQL that reads one way in every file lets a reviewer look at what the statement does."
 help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule `<code>` --reason \"`<why>`\"."
-
-[[check]]
-name = "functions"
-example = "A SQL function that only forwards one expression reports a trivial-function finding. Inline unnecessary calls and delete the function. If an external API requires the signature, record that with `gspot ignore` and a reason."
-level = "all"
-stage = "commit"
-summary = "For the postgres dialect, reports trivial SQL and PL/pgSQL functions and excessive declared input parameters."
-why = "Unnecessary functions add indirection; excessive parameters obscure responsibilities."
-help = "Inline unnecessary functions. If a required API needs one, run `gspot ignore sql/functions --paths <file> --reason <why>`. Reduce parameters or configure limits.sql.function_parameters."

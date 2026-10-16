@@ -4,12 +4,11 @@ import { executeRun } from '#cli/execution/run.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
-import { containing } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import * as environment from '#cli/system/environment.ts';
+import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { buildFolder } from '#cli/checks/language/swift/build-folder.ts';
-import { checkReport, buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { checkFindings, isolateCompilerCache } from '#tests/setup/check-input.ts';
 import { coverageShortfalls, parseSwiftCoverage } from '#cli/checks/testing/swift-tests.ts';
@@ -18,7 +17,6 @@ import {
     XCTEST_SETTINGS,
     XCTEST_FAILURES,
     SKIP_REASON_CASES,
-    SLEEP_SYNTAX_CASES,
     SWIFT_PACKAGE_COVERAGE_FILES,
     SWIFT_PACKAGE_COVERAGE_TARGETS,
 } from '#tests/config/swift-tests.ts';
@@ -150,29 +148,6 @@ test('the shared coverage limit applies to every source target without overridin
     });
 }
 
-test('Swift Testing outside test folders reports a sleep and passes after the fix', async () => {
-    await using sandbox = await testdir();
-    const source = 'import Testing\n@Test func checks() async {\n    try await Task.sleep(for: .seconds(1))\n}\n';
-    await createFileTree(sandbox.path, {
-        'gspot.toml': settingsText(['swift-tests'], { level: 'all' }),
-        'Examples/Checks.swift': source,
-        'AppTests/Helper.swift': 'func waits() { sleep(1) }\n',
-    });
-    const command = ['check', '--only', 'swift-tests/sleep', '--json'];
-    const broken = await checkReport(sandbox.path, command);
-    expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect(broken.report.checks[0]!.findings).toStrictEqual([
-        containing({ file: 'Examples/Checks.swift', rule: 'sleep', line: 3 }),
-    ]);
-    await Bun.write(
-        `${sandbox.path}/Examples/Checks.swift`,
-        source.replace('try await Task.sleep(for: .seconds(1))', '#expect(true)'),
-    );
-    const corrected = await checkReport(sandbox.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ check: 'swift-tests/sleep', status: 'passed', findings: [] }]);
-});
-
 test.each([...SKIP_REASON_CASES])('Swift skip reason belongs to its argument: $body', async ({ body, missing }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -184,18 +159,6 @@ test.each([...SKIP_REASON_CASES])('Swift skip reason belongs to its argument: $b
     expect(findings.map(({ file, rule, line }) => ({ file, rule, line }))).toStrictEqual(
         missing ? [{ file: 'Examples/Checks.swift', rule: 'disabled', line: 3 }] : [],
     );
-});
-
-test.each([...SLEEP_SYNTAX_CASES])('swift-tests/sleep reads Swift syntax: $body', async ({ body, count }) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': settingsText(['swift-tests'], { level: 'all' }),
-        'Examples/Checks.swift': `import Testing\n@Test func checks() {\n    ${body}\n}\n`,
-    });
-    const session = await openSession(sandbox.path);
-    const findings = await checkFindings(session.root, 'swift-tests/sleep');
-    expect(findings).toHaveLength(count);
-    if (count > 0) expect(findings[0]).toMatchObject({ file: 'Examples/Checks.swift', line: 3 });
 });
 
 test('Swift package coverage measures actual custom target paths and applies every target limit', async () => {

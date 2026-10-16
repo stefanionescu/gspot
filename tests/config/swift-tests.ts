@@ -30,8 +30,6 @@ export const XCTEST_SCOPES = [
     { name: 'in a scope whose path has a space and #', scope: 'ios # app' },
 ] as const;
 
-export const CLEAN_XCTEST = `import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n        XCTAssertEqual("Home", "Home")\n    }\n}\n`;
-
 export const XCTEST_SETTINGS = `configurations = ["swift-tests", "xcode"]
 [xcode]
 project = "Example.xcodeproj"
@@ -134,12 +132,6 @@ export const SKIP_REASON_CASES = [
         missing: false,
     },
     { body: 'let example = "XCTSkip()"\n/* XCTSkip() */\n// XCTSkip()', missing: false },
-] as const;
-
-export const SLEEP_SYNTAX_CASES = [
-    { body: 'let example = "Task.sleep(1)"', count: 0 },
-    { body: 'Task<Never, Never>.sleep(nanoseconds: 1)', count: 1 },
-    { body: 'Thread\n.sleep(forTimeInterval: 1)', count: 1 },
 ] as const;
 
 export const SWIFTLINT_COMMAND = ['check', '--only', 'swift/swiftlint', '--json'];

@@ -93,12 +93,6 @@ export const COUNT_LIMITS = [
     { limit: 'assignments', noun: 'assignments' },
 ] as const;
 
-/** The include guard a configuration owner opens with, and the line after it. */
-export const INCLUDE_GUARD = /^\[\[ -n \$\{(?<name>[A-Z_][A-Z0-9_]*):-\} \]\] && return 0$/u;
-
-/** A variable read with a non-empty default. */
-export const DEFAULT_EXPANSION = /\$\{[A-Z_][A-Z0-9_]*:-[^}]+\}/u;
-
 /** A comment that directs ShellCheck, which must sit on the line it covers. */
 export const SHELLCHECK_TOOL_COMMENT = /^#\s*shellcheck\b/u;
 
@@ -107,7 +101,5 @@ export const DECLARATION_WORDS = new Set(['export', 'readonly', 'local', 'declar
 export const SET_COMMAND = 'set ';
 
 export const LEADING_UNDERSCORES = /^_+/u;
-
-export const PRIVATE_PREFIX = '_';
 
 export const BASH_OPTION_COMMANDS = [SET_COMMAND, 'shopt '] as const;

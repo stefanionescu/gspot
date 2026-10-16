@@ -14,10 +14,8 @@ import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 
 import {
-    SLEEP_CALLS,
     COMMENT_LINE,
     XCTEST_PREFIX,
-    TYPED_TASK_CALL,
     TEST_TARGET_TYPE,
     APP_TARGET_SUFFIX,
     SWIFT_TARGET_MODULE,
@@ -116,30 +114,6 @@ export async function swiftTestsSkipReasons(input: CheckInput): Promise<Finding[
                     'Explain why this test is disabled in its reason argument or availability annotation.',
                 ),
             );
-    });
-    return findings;
-}
-/**
- * One finding for each sleep in a selected test file.
- * @param input the check input.
- * @returns the findings.
- */
-export async function swiftTestsSleep(input: CheckInput): Promise<Finding[]> {
-    const files = input.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
-    const findings: Finding[] = [];
-    await visitParsedSources({ ...input, files }, (source) => {
-        for (const node of source.rootNode.descendantsOfType('call_expression')) {
-            const callee = node.firstNamedChild?.text.replaceAll(/\s/gu, '') ?? '';
-            if (!SLEEP_CALLS.has(callee.replace(TYPED_TASK_CALL, 'Task.'))) continue;
-            findings.push(
-                findingAt(
-                    input,
-                    { file: source.path, line: node.startPosition.row + 1 },
-                    'sleep',
-                    'Replace this sleep with an expectation that waits for the tested condition.',
-                ),
-            );
-        }
     });
     return findings;
 }

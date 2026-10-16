@@ -37,14 +37,7 @@ export const ASSET_FOLDER = /(?:^|\/)(?:assets|public|static)\//u;
 export const OUTPUT_TAIL_LINES = 10;
 
 export const LINKINATOR_STATES = ['OK', 'BROKEN', 'SKIPPED'] as const;
-
-export const SVGO_COMMAND = ['svgo', '--input', '-', '--output', '-'] as const;
 export const GIT_FILE_MODES = ['100644', '100755'] as const;
-export const SVG_EXTENSION = '.svg';
-export const WEB_MANIFEST_EXTENSION = '.webmanifest';
-export const HTML_FILE = /\.html?$/u;
-export const MANIFEST_REL = 'manifest';
-export const PLACEHOLDER_ORIGIN = 'https://site.invalid/';
 export const LINKINATOR = 'linkinator';
 export const LOCAL_HOSTS = ['localhost', '127.0.0.1'] as const;
 export const INDEX_PAGE = 'index.html';

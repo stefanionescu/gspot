@@ -186,7 +186,7 @@ function swiftFunctionName(node: Node): string {
  * @param input the selected source files and their language-specific statement limits.
  * @returns findings with the original statement counts and locations.
  */
-export async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
+async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
     const parsed = await conventionSources(input);
     const files: Finding[] = [];
     const functions = parsed.flatMap((source) => {
@@ -238,7 +238,9 @@ export async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
  * @param limit the statement limit.
  * @returns the message.
  */
-export function trivialText(name: string, count: number, limit: number): string {
+function trivialText(name: string, count: number, limit: number): string {
     const statements = count === 1 ? '1 statement' : `${String(count)} statements`;
     return `${name} has ${statements}. Functions with ${String(limit)} or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.`;
 }
+
+export { trivialFunctions };

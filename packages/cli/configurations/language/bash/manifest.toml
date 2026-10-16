@@ -40,19 +40,7 @@ scoop = "shfmt"
 github = { name = "mvdan/sh", version = "v3.12.0" }
 
 [[tool]]
-name = "bash"
-min_version = "4.4"
-install_hint = "install Bash 4.4 or newer, such as with brew install bash on macOS"
-system = true
-version_command = ["--version"]
-version_pattern = "version (\\d+\\.\\d+(?:\\.\\d+)?)"
-
-[[tool]]
 name = "zsh"
-system = true
-
-[[tool]]
-name = "bats"
 system = true
 
 [[tool_file]]
@@ -60,18 +48,6 @@ target = ".gspot/config/shellcheckrc"
 tool = "shellcheck"
 rule_keys = ["enable", "disable"]
 per_scope = true
-
-[[check]]
-name = "bash-syntax"
-example = "In `greet.sh`, `if then` has no condition. Use a real test: `if [ -f \"$file\" ]; then printf \"%s\\n\" \"$file\"; fi`, then rerun the syntax check."
-level = "recommended"
-stage = "commit"
-command = ["bash", "-n", "{file}"]
-files = { tags = ["bash"] }
-output = { format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$" }
-summary = "Checks that Bash scripts parse before running them."
-why = "A script with a syntax error stops at the broken line, sometimes after it has already done half its work."
-help = "Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about."
 
 [[check]]
 name = "zsh-syntax"
@@ -84,20 +60,6 @@ output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):\\s*(?<mes
 summary = "Checks Zsh syntax with the Zsh interpreter."
 why = "Zsh syntax differs from Bash, so a Bash parser rejects valid Zsh programs."
 help = "Fix the syntax at the line Zsh reports. Install zsh when the command is missing."
-
-[[check]]
-name = "bats-syntax"
-example = "In a `.bats` file, an unterminated `@test \"greeting\" {` block fails parsing. Complete the test body and close it with `}` before rerunning with Bats installed."
-level = "recommended"
-stage = "commit"
-command = ["bats", "--count", "{file}"]
-# Bats parses the file with the bash on PATH, and under Bash 3.2 it passes a file that does not parse.
-tool = ["bats", "bash"]
-files = { tags = ["bats"] }
-output = { format = "regex", pattern = "^# (?<file>[^:]+): line (?<line>\\d+): (?<message>.*)$" }
-summary = "Parses Bats test files while counting their test cases."
-why = "Bats test declarations need the Bats parser before Bash can read them."
-help = "Fix the syntax reported by Bats. Install bats-core when the command is missing."
 
 [[check]]
 name = "shellcheck"
@@ -164,25 +126,6 @@ why = "A caller that passes an argument expects it to affect the result. An unre
 help = "Read the argument in the function, or drop it from every call."
 
 [[check]]
-name = "source-order"
-example = "A block of `source` lines that is not ordered shortest first reports the sorted order. Reorder the lines."
-level = "all"
-stage = "commit"
-summary = "Checks that the source statements of a block go shortest first, alphabetically among lines of one length."
-why = "One order for every block means a reader never searches it."
-help = "Reorder the source statements shortest first."
-
-[[check]]
-name = "private-prefix"
-example = "A function `build_it` called only from its own script reports a missing private prefix. Rename it `_build_it` and update each local call. A function called from another script keeps its public name."
-level = "all"
-stage = "commit"
-runs = "scope"
-summary = "Checks that a shell function no other file calls starts with an underscore, and that an underscore function is not called from outside."
-why = "The underscore tells a reader what the file publishes without reading every caller."
-help = "Rename the function with a leading underscore, or drop the underscore when another file calls it."
-
-[[check]]
 name = "function-size"
 example = "A function over `limits.bash.function_lines`, `limits.bash.branches`, `limits.bash.nesting`, or `limits.bash.assignments` reports the count and the ceiling under `function-lines`, `branches`, `nesting`, or `assignments`. Split the function by the job, then rerun."
 level = "all"
@@ -208,25 +151,6 @@ stage = "commit"
 summary = "Finds inline Python, Node, and generated-script heredocs in shell scripts."
 why = "Code inside a heredoc is checked by nothing."
 help = "Move the embedded code into its own file and run that."
-
-[[check]]
-name = "variable-defaults"
-example = "A default such as `${PORT:-8080}` outside a declared environment reader reports a misplaced default. Set the default in a path listed in `architecture.roles.environment_readers` and consume the configured value elsewhere."
-level = "all"
-stage = "commit"
-summary = "Finds variable defaults of the form name:-value outside the environment readers."
-why = "A default set in three places is three settings with one name."
-help = "Set the default in an environment reader named under architecture.roles.environment_readers and read the variable everywhere else."
-
-[[check]]
-name = "include-guards"
-example = "A sourced environment reader without a load guard reports a guard finding. Begin it with `[[ -n ${APP_CONFIG_READY:-} ]] && return 0`, followed by `readonly APP_CONFIG_READY=1`, before declaring its configuration."
-level = "all"
-stage = "commit"
-runs = "scope"
-summary = "Checks that each script in architecture.roles.environment_readers starts with an include guard of its own."
-why = "A configuration file sourced twice runs its side effects twice."
-help = "Open the owner with [[ -n ${NAME_READY:-} ]] && return 0 and then readonly NAME_READY=1, with a guard name no other owner uses."
 
 [[check]]
 name = "safety"

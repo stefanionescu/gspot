@@ -78,18 +78,6 @@ target = ".gspot/config/v8r.yml"
 tool = "v8r"
 
 [[check]]
-name = "taplo"
-example = "The TOML line `enabled =` lacks a value and reports a parse error. Use `enabled = true` when the setting is a boolean."
-level = "recommended"
-stage = "commit"
-command = ["taplo", "check", "--config", "{tool_file:taplo}", "--colors", "never", "{files}"]
-files = { extensions = [".toml"] }
-output = { format = "regex", pattern = "^\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)$", message = "The file does not parse as TOML." }
-summary = "Parses every TOML file with taplo; the schema check runs at push through v8r."
-why = "A TOML file that does not parse stops the tool that reads it at the worst moment."
-help = "Fix the line taplo names."
-
-[[check]]
 name = "taplo-format"
 example = "The TOML assignment `enabled=true` differs from the configured formatter output. Run the formatter to obtain `enabled = true` and rerun."
 level = "recommended"
@@ -97,8 +85,8 @@ stage = "commit"
 command = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
 fix = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "{files}"]
 files = { extensions = [".toml"] }
-output = { format = "regex", pattern = "^(?:--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path=\"(?<file>[^\"]+)\")$", message = "The file is not formatted with the configured TOML settings." }
-summary = "Checks that every TOML file is formatted the way taplo formats it with the shared settings."
+output = { format = "regex", pattern = "^(?:\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)|--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path=\"(?<file>[^\"]+)\")$", message = "The file does not parse as TOML, or it is not in the format of the configured TOML settings.", fixable = "^(?:--- a/|ERROR taplo:format_files)" }
+summary = "Checks that every TOML file parses and is formatted the way taplo formats it with the shared settings."
 why = "One formatter keeps a diff about the values, not the spacing."
 help = "Run gspot check --fix."
 

@@ -73,7 +73,7 @@ function knownPaths(input: CheckInput): Set<string> {
                 ),
         );
     for (const path of includeParentFolders(ignored)) known.add(path);
-    // Check names resemble paths. A reference to supabase/project-file identifies that check.
+    // Check names resemble paths. A reference to postgres/migration-order identifies that check.
     for (const manifest of input.manifests.values()) for (const check of manifest.checks) known.add(check.name);
     for (const check of Object.values(input.settingsFile.settings.check)) known.add(check.name);
     return known;

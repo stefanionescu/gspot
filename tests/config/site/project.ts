@@ -88,5 +88,3 @@ export const SITE_SANDBOX = {
 
     files: STATIC_SITE_FILES,
 } as const;
-
-export const SVG_CHECK_COMMAND = ['check', '--only', 'site/svgo', '--json'];

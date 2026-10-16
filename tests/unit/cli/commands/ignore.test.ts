@@ -7,6 +7,7 @@ import { TWO_RULES } from '#tests/config/ignore.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
+import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 
 test('ignore of an unknown check exits 2 and leaves gspot.toml byte for byte', async () => {
@@ -29,7 +30,9 @@ test('ignore merges paths into one entry and prints them, and unignore removes o
             '# Comment on configurations.\n' +
             settingsText(['bash'], {
                 rules: true,
-                tables: `[rules]
+                tables:
+                    BASH_SYNTAX_CHECK +
+                    `[rules]
 enabled = false
 [hooks]
 # Keep the push selection.
@@ -59,7 +62,7 @@ enabled = false
 test('ignore merges entries with the same --until date, keeps other dates apart, and unignore removes one path', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': settingsText(['bash'], { rules: true, tables: '[rules]\nenabled = false\n' }),
+        'gspot.toml': settingsText(['bash'], { rules: true, tables: BASH_SYNTAX_CHECK + '[rules]\nenabled = false\n' }),
         'a.sh': 'echo a\n',
         'b.sh': 'echo b\n',
         'c.sh': 'echo c\n',
@@ -117,7 +120,7 @@ test('ignore merges entries with the same --until date, keeps other dates apart,
 test('ignore rejects an invalid expiry without changing authored settings', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': settingsText(['bash']),
+        'gspot.toml': settingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'example.sh': 'echo ready\n',
     });
     const before = await readFile(join(directory.path, 'gspot.toml'), 'utf8');
@@ -139,7 +142,7 @@ test('ignore rejects an invalid expiry without changing authored settings', asyn
 test('ignore merges matching paths, keeps different reasons apart, and an entry without paths covers the scope', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': settingsText(['bash']),
+        'gspot.toml': settingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'a.sh': 'echo a\n',
         'b.sh': 'echo b\n',
         'other.sh': 'echo other\n',
@@ -212,14 +215,14 @@ stage = "commit"
 test('an ignored folder covers its subfolders, and a negated file in it is still checked', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': settingsText(['bash']),
+        'gspot.toml': settingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'legacy scripts/nested/example.sh': 'if then\n',
         'legacy scripts/required.sh': 'if then\n',
         'entry.sh': 'echo example\n',
     });
     const ignored = await runGspot(directory.path, [
         'ignore',
-        'bash/bash-syntax',
+        'project/bash-syntax',
         '--reason',
         'The legacy files retain malformed syntax.',
         '--paths',
@@ -227,7 +230,7 @@ test('an ignored folder covers its subfolders, and a negated file in it is still
         '!legacy scripts/required.sh',
     ]);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const command = ['check', '--only', 'bash/bash-syntax', '--json'];
+    const command = ['check', '--only', 'project/bash-syntax', '--json'];
     const checked = await checkReport(directory.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = checked.report;
@@ -240,7 +243,7 @@ test('an ignored folder covers its subfolders, and a negated file in it is still
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const removed = await runGspot(directory.path, [
         'unignore',
-        'bash/bash-syntax',
+        'project/bash-syntax',
         '--paths',
         'legacy scripts',
         '!legacy scripts/required.sh',

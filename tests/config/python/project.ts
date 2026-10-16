@@ -1,4 +1,4 @@
-export const PYTHON_PROJECT_OPTIONS = `requires-python = ">=3.12"
+const PYTHON_PROJECT_OPTIONS = `requires-python = ">=3.12"
 dependencies = []
 `;
 

@@ -3,7 +3,7 @@ allowed_words = ["Drizzle"]
 [configuration]
 title = "Drizzle"
 requires = ["javascript"]
-description = "Drizzle: no update or delete without a where, raw SQL only where the settings allow it, relations for every reference, and migrations that match the schema."
+description = "Drizzle: no update or delete without a where, raw SQL only where the settings allow it, and migrations that match the schema."
 
 [detect]
 dependencies = ["drizzle-orm"]
@@ -22,19 +22,6 @@ system = true
 version_command = ["--version"]
 min_version = "0.21.0"
 npm = "drizzle-kit"
-
-[[check]]
-name = "relations"
-example = "An exported `orders` table whose column uses `.references(() => users.id)` reports `relations` when the scope has no `relations(orders, ...)` declaration. Add that declaration with the table's actual relationships and rerun. The check recognizes the supported source forms; it does not execute the schema."
-level = "all"
-stage = "commit"
-runs = "scope"
-summary = "Checks that every table with a reference has a relations entry."
-why = "Relational queries through `db.query` read relations. SQL joins do not need them."
-help = "Add a relations call for the table."
-
-[check.files]
-extensions = [".ts"]
 
 [[check]]
 name = "stale-migrations"

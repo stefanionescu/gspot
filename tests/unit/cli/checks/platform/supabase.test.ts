@@ -1,8 +1,8 @@
 import { join } from 'node:path';
+import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
-import { rename, writeFile } from 'node:fs/promises';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
@@ -33,52 +33,18 @@ test('Supabase config.toml and function folders are read per scope', async () =>
         'apps/api/edge/_shared/index.ts': 'export {};\n',
     });
     const session = await openSession(sandbox.path);
-    const root = buildCheckInput(session, 'supabase/project-file');
-    const nested = buildCheckInput(session, 'supabase/project-file', { scope: 'apps/api' });
+    const root = buildCheckInput(session, 'supabase/deno-lint');
+    const nested = buildCheckInput(session, 'supabase/deno-lint', { scope: 'apps/api' });
     expect(functionFolders(root)).toStrictEqual(['supabase/functions/root']);
     expect(functionFolders(nested)).toStrictEqual(['apps/api/edge/hello']);
-    expect(await checkFindings(sandbox.path, 'supabase/project-file')).toMatchObject([
-        { file: 'supabase/config.toml', line: 1, rule: 'function' },
-    ]);
-    expect(await checkFindings(sandbox.path, 'supabase/project-file', { scope: 'apps/api' })).toStrictEqual([]);
-    await writeFile(join(sandbox.path, 'supabase/config.toml'), '[functions.root]\nverify_jwt = true\n');
-    expect(await checkFindings(sandbox.path, 'supabase/project-file')).toStrictEqual([]);
 });
 
-test('a malformed config.toml is a syntax finding and storage analysis skips it', async () => {
+test('storage analysis skips a malformed config.toml', async () => {
     await using sandbox = await testdir({
         'gspot.toml': settingsText(['supabase'], { tables: '[[scope]]\npath = "apps/api"\n' }),
         'apps/api/supabase/config.toml': '[broken',
     });
-    expect(await checkFindings(sandbox.path, 'supabase/project-file', { scope: 'apps/api' })).toMatchObject([
-        { file: 'apps/api/supabase/config.toml', line: 1, rule: 'syntax' },
-    ]);
     expect(await checkFindings(sandbox.path, 'supabase/storage-policies', { scope: 'apps/api' })).toStrictEqual([]);
-});
-
-test('Supabase migration names are checked without parsing SQL or reading another scope', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': settingsText(['supabase'], {
-            tables: '[[scope]]\npath = "apps/api"\nconfigurations = ["supabase"]\n',
-        }),
-        'supabase/migrations/20261005000000_valid.sql': 'CREATE TABLE ;',
-        'apps/api/supabase/migrations/bad.sql': 'invalid SQL;',
-    });
-    const session = await openSession(sandbox.path);
-    expect(await checkFindings(session.root, 'supabase/migration-names')).toStrictEqual([]);
-    expect(await checkFindings(session.root, 'supabase/migration-names', { scope: 'apps/api' })).toMatchObject([
-        {
-            file: 'apps/api/supabase/migrations/bad.sql',
-            rule: 'migration-name',
-            message: 'Name the migration <14-digit timestamp>_<snake_case>.sql.',
-        },
-    ]);
-    await rename(
-        join(sandbox.path, 'apps/api/supabase/migrations/bad.sql'),
-        join(sandbox.path, 'apps/api/supabase/migrations/20261005000001_valid.sql'),
-    );
-    expect(await checkFindings(sandbox.path, 'supabase/migration-names', { scope: 'apps/api' })).toStrictEqual([]);
 });
 
 test.each([1, 2])("Deno lint exit %s without JSON reports Deno's error text", async (code) => {

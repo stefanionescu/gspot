@@ -156,11 +156,6 @@ export const HEADERS_FILE = `/*
 
 export const SCOPE_FINDINGS = [
     {
-        check: 'supabase/project-file',
-        root: [],
-        nested: [{ file: 'apps/backend/supabase/config.toml', rule: 'function' }],
-    },
-    {
         check: 'supabase/service-role-key',
         root: [],
         nested: [{ file: 'apps/backend/client.ts', rule: 'admin-key' }],

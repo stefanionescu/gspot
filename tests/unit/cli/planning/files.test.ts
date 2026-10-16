@@ -19,7 +19,6 @@ import { EDITORCONFIG_FILES } from '#tests/config/formatting.ts';
 import { type CheckDeclaration } from '#cli/types/configurations.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/config/settings/scopes.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
-import { NEXT_BUILD_FILES, NEXT_BUILD_ROUTES, NEXT_BUILD_TABLES } from '#tests/config/nextjs.ts';
 
 import {
     PROJECT_OPTIONS,
@@ -277,39 +276,5 @@ test.each(['gspot.toml', '.gspot/config/lychee.toml'])(
             { scope: '', files: ['README.md'] },
             { scope: 'api', files: ['api/guide.md'] },
         ]);
-    },
-);
-
-test.each([
-    { level: 'recommended' as const, route: NEXT_BUILD_ROUTES[0] },
-    ...NEXT_BUILD_ROUTES.map((route) => ({ level: 'all' as const, route })),
-])(
-    '$level plans nextjs/build for $route only in the app scope with all its project files',
-    async ({ level, route }) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': settingsText(['nextjs'], { level, tables: NEXT_BUILD_TABLES }),
-            ...NEXT_BUILD_FILES,
-            [`web/${route}`]: 'export default function Page() { return null; }\n',
-        });
-        const planned = planRun(await openSession(sandbox.path), {
-            stage: 'push',
-            only: ['nextjs/build'],
-        });
-        if (level === 'recommended') {
-            expect(planned).toStrictEqual([]);
-            return;
-        }
-        expect(planned.find((entry) => entry.scope.scope.path === '')).toMatchObject({
-            files: [],
-            triggerPaths: [],
-        });
-        const app = planned.find((entry) => entry.scope.scope.path === 'web');
-        expect(app?.skip).toBeUndefined();
-        expect(app?.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
-            ['web/package.json', 'web/src/data.ts', 'web/tsconfig.json', `web/${route}`].toSorted((left, right) =>
-                left.localeCompare(right),
-            ),
-        );
     },
 );

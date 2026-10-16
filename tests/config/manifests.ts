@@ -47,6 +47,4 @@ export const TOOL_PROJECT_PACKAGES = [
     },
 ] as const;
 
-export const SECURITY_DECLARATION = '[[tool]]\nname = "codeql"\nversion = "2.24.3"\n';
-
 export const TOOL_DECLARATION = '[[tool]]\nname = "example"\nversion = "1.0.0"\n';

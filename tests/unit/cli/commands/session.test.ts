@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
+import { SQL_CHECK } from '#tests/config/sql.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { settingsText } from '#tests/setup/settings.ts';
@@ -45,7 +46,7 @@ test('a gspot.toml below the Git root writes and checks only its own folder', as
     await using directory = await testdir();
     const outerPolicy = settingsText(['bash']);
     const innerPolicy = settingsText(['sql'], {
-        tables: '[tools.sqlfluff]\ndialect = "postgres"\n',
+        tables: SQL_CHECK + '[tools.sqlfluff]\ndialect = "postgres"\n',
     });
     await createFileTree(directory.path, {
         'gspot.toml': outerPolicy,
@@ -76,12 +77,12 @@ test('a gspot.toml below the Git root writes and checks only its own folder', as
         '--base',
         'HEAD',
         '--only',
-        'sql/functions',
+        'project/read-sql',
         '--json',
     ]);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const checks = checked.report.checks;
     expect(checks.map(({ check, fileCount }) => ({ check, fileCount }))).toStrictEqual([
-        { check: 'sql/functions', fileCount: 1 },
+        { check: 'project/read-sql', fileCount: 1 },
     ]);
 });

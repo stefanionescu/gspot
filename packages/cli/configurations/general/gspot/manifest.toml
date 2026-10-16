@@ -14,16 +14,6 @@ brew = "node@24"
 winget = "OpenJS.NodeJS.LTS"
 
 [[check]]
-name = "settings-format"
-example = "A hand-edited gspot.toml with separated tables reports a layout finding. Run gspot check --fix --only gspot/settings-format to regroup its tables and retain their comments."
-level = "recommended"
-stage = "commit"
-files = { paths = ["gspot.toml"] }
-summary = "Keeps gspot.toml formatted."
-why = "One settings layout keeps related settings and their reasons together."
-help = "Run gspot check --fix --only gspot/settings-format."
-
-[[check]]
 name = "generated-files"
 example = "A file under `.gspot/config/` edited by hand differs from what gspot writes from gspot.toml and reports drift. Change the settings in gspot.toml and run gspot apply, or move the edited file aside so apply writes it again."
 level = "recommended"

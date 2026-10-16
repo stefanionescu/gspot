@@ -1,9 +1,10 @@
 // Reads Xcode projects, source groups, and build settings.
+// Reads Xcode projects, source groups, and build settings.
 import { z } from 'zod';
 import { posix } from 'node:path';
 import { parse } from '@bacons/xcode/json';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { TEST_PRODUCT_TYPE, SETTING_REFERENCE } from '#cli/config/parsers/xcode.ts';
+import { SETTING_REFERENCE } from '#cli/config/parsers/xcode.ts';
 
 import type {
     Folder,
@@ -156,22 +157,6 @@ export function parsePbxproj(text: string, directory: string): ProjectSources {
         folders.push(...targetFolders(project, id, target));
     }
     return { sources, folders };
-}
-
-/**
- * Find test-target names without requiring build settings for their source paths.
- * @param text the project file text.
- * @returns the names of the test targets.
- */
-export function testTargets(text: string): string[] {
-    const project = readProject(text);
-    const root = project.root;
-    return (root.targets ?? []).flatMap((id) => {
-        const target = projectItem(project, id);
-        if (!TEST_PRODUCT_TYPE.test(target.productType ?? '')) return [];
-        if (target.name === undefined) throw new Error('An Xcode test target has no name.');
-        return [target.name];
-    });
 }
 
 /**

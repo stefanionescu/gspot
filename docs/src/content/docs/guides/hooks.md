@@ -54,7 +54,7 @@ gspot install
 
 `git commit --no-verify` and `git push --no-verify` bypass the local hooks once. CI still runs. To stop a finding for good, add an ignore. See [Ignore a finding](/guides/exclude/#ignore-a-finding).
 
-Checks at the manual stage run only when named with `--only`, for example `gspot check --only security/codeql`. See [CI](/guides/ci/) for pipeline setup.
+Checks at the manual stage run only when named with `--only`, for example `gspot check --only security/semgrep-registry`. See [CI](/guides/ci/) for pipeline setup.
 
 ## Turn hooks off
 

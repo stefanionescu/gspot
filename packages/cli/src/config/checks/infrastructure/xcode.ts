@@ -16,12 +16,6 @@ export const ARBITRARY_LOADS = /<key>NSAllowsArbitraryLoads<\/key>\s*<true\s*\/>
 
 export const XCODEPROJ_SUFFIX = '.xcodeproj';
 
-export const TEST_PLAN_SUFFIX = '.xctestplan';
-
-export const SCHEME_SUFFIX = '.xcscheme';
-
-export const SHARED_DATA_FOLDER = '/xcshareddata/';
-
 export const ASSET_CONTENTS = 'Contents.json';
 
 export const XCASSETS_FOLDER = '.xcassets/';

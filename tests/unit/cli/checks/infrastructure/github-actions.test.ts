@@ -1,19 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/errors.ts';
 import { stat, chmod } from 'node:fs/promises';
 import { planRun } from '#cli/planning/checks.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { containing } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
-import { processResult } from '#tests/setup/processes.ts';
 import { fileMode } from '#cli/system/safe-folder/reads.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
-import { checkedFindings } from '#cli/execution/command/output.ts';
 import { actionlintSource } from '#cli/checks/infrastructure/github-actions.ts';
 import { CALLED_WORKFLOW, ACTIONLINT_EXITS, CALLED_WORKFLOW_REFERENCES } from '#tests/config/github-actions.ts';
 
@@ -68,37 +64,3 @@ test.each([...ACTIONLINT_EXITS])(
         expect(result.findings).toMatchObject(findings);
     },
 );
-
-test('pinact reports a rate limit as an error and a finished read as findings', async () => {
-    const failure = '429 Too Many Requests';
-    await using sandbox = await testdir();
-    const workflow = 'jobs:\n  check:\n    steps:\n      - uses: actions/checkout@v4\n';
-    await createFileTree(sandbox.path, {
-        'gspot.toml': settingsText(['github-actions']),
-        '.github/workflows/check.yml': workflow,
-    });
-    const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'push', only: ['github-actions/pinact'] });
-    const planned = plans[0]!;
-    const result = processResult({
-        code: 1,
-        stderr: `ERROR failed to handle a line: GET https://api.github.com/repos/actions/checkout/commits/v4: ${failure}`,
-    });
-    expect(() => checkedFindings(planned, result, { cwd: sandbox.path, root: sandbox.path })).toThrow(GspotError);
-    expect(
-        checkedFindings(
-            planned,
-            { ...result, stderr: 'invalid action pin: .github/workflows/check.yml:4' },
-            { cwd: sandbox.path, root: sandbox.path },
-        ),
-    ).toStrictEqual([
-        containing({
-            check: 'github-actions/pinact',
-            message: 'invalid action pin: .github/workflows/check.yml:4',
-        }),
-    ]);
-    expect(
-        checkedFindings(planned, { ...result, code: 0, stderr: '' }, { cwd: sandbox.path, root: sandbox.path }),
-    ).toStrictEqual([]);
-    expect(await Bun.file(join(sandbox.path, '.github/workflows/check.yml')).text()).toBe(workflow);
-});

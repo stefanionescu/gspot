@@ -61,7 +61,7 @@ export type ParsedManifest = {
         requires: string[];
         suggests: string[];
         always_selected: boolean;
-        when?: { git: boolean } | undefined;
+        when?: { git: true } | undefined;
         description: string;
     };
     detect: {
@@ -225,7 +225,6 @@ export type ToolDeclaration = {
     };
     env?: Record<string, string>;
     refused_options?: { paths: string[]; message: string; values?: (string | number | boolean)[] | undefined }[];
-    query_packs?: Record<string, string>;
     prettier?: {
         entry: string;
         extensions: string[];
@@ -253,7 +252,7 @@ export type GeneratedPath = NonNullable<CheckDeclaration['generated_paths']>[num
 export type ConditionFields = Pick<
     ParsedManifest['detect'],
     'dependencies' | 'absent_dependencies' | 'filenames' | 'tags' | 'runtimes'
-> & { configuration: string; level: Level; setting: string; value: string | number | boolean; git: boolean };
+> & { configuration: string; level: Level; setting: string; value: string | number | boolean; git: true };
 
 /** Native tool fields before consumers resolve installer names and omitted values. */
 export type ToolFields = Pick<ToolDeclaration, 'name' | 'kind'> &

@@ -1,4 +1,4 @@
-import { PYPROJECT, PYDOCLINT_GOOGLE, PYTHON_PROJECT_OPTIONS } from '#tests/config/python/project.ts';
+import { PYPROJECT, PYDOCLINT_GOOGLE } from '#tests/config/python/project.ts';
 
 // pydoclint gets the Google docstring style from the project.
 
@@ -106,17 +106,6 @@ ${ARITHMETIC_DOUBLE_RETURNS}    return value * 2
 `,
         },
         expected: { file: ARITHMETIC_MODULE_PATH, rule: 'DOC103', line: 4 },
-    },
-    {
-        check: 'python/pyproject',
-        files: {
-            'pyproject.toml': `[project]
-name = "example"
-version = 7
-${PYTHON_PROJECT_OPTIONS}
-${PYDOCLINT_GOOGLE}`,
-        },
-        expected: { file: 'pyproject.toml' },
     },
 ] as const;
 
