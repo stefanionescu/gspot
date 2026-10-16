@@ -28,6 +28,7 @@ import {
     HTML_REPORT_FILE,
     PURGECSS_CONTENT,
     SITEMAP_LOCATION,
+    PURGECSS_PROCESS,
     LINKINATOR_STATES,
     LINKINATOR_PROCESS,
 } from '#cli/config/checks/framework/site.ts';
@@ -188,8 +189,8 @@ export async function checkSitePurgecss(input: CheckInput): Promise<Finding[]> {
     const toolFile = join(input.root, selectToolFilePath(input, input, PURGECSS));
     const result = await runCheckTool(
         input,
-        [PURGECSS, '--config', toolFile, '--css', ...sheets, '--content', ...PURGECSS_CONTENT, '--rejected'],
-        { cwd: build.folder },
+        { tool: PURGECSS, entry: PURGECSS_PROCESS },
+        { cwd: build.folder, stdin: JSON.stringify({ toolFile, css: sheets, content: PURGECSS_CONTENT }) },
     );
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
     const report = purgecssReportSchema.parse(JSON.parse(result.stdout));

@@ -8,6 +8,8 @@ export const HTTP_OK_STATUS = 200;
 
 export const LINKINATOR_PROCESS = 'dist/linkinator-process.js';
 
+export const PURGECSS_PROCESS = 'dist/purgecss-process.js';
+
 export const TEXT_SUFFIXES = new Set([
     '.htm',
     '.html',

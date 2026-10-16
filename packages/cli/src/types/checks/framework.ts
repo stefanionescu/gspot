@@ -9,6 +9,11 @@ export type SiteBuild = {
     outputTail: string;
 };
 
+/** The PurgeCSS class: purge takes the tool file options with the stylesheets and pages to compare. */
+export type PurgecssConstructor = new () => {
+    purge(options: Record<string, unknown>): Promise<{ file?: string; rejected?: string[] }[]>;
+};
+
 /** The selected package's public LinkChecker API with CLI option delivery. */
 export type LinkinatorConstructor = new () => {
     on(event: 'pagestart', listener: (url: string) => void): unknown;

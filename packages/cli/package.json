@@ -32,6 +32,7 @@
     "files": [
         "dist/gspot.js",
         "dist/linkinator-process.js",
+        "dist/purgecss-process.js",
         "configurations",
         "grammars"
     ],
